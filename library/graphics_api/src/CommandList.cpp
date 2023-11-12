@@ -35,6 +35,20 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
    return *this;
 }
 
+Status CommandList::begin_one_time()
+{
+   m_isOneTime = true;
+
+   VkCommandBufferBeginInfo beginInfo{};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+   if (vkBeginCommandBuffer(this->vulkan_command_buffer(), &beginInfo) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+
+   return Status::Success;
+}
+
 Status CommandList::finish() const
 {
    if (not m_isOneTime) {
@@ -65,11 +79,21 @@ void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
    vkCmdDraw(m_commandBuffer, vertexCount, 1, vertexOffset, 0);
 }
 
-void CommandList::bind_vertex_buffer(const Buffer &buffer, uint32_t vertexLayout) const
+void CommandList::draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const
+{
+   vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
+}
+
+void CommandList::bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const
 {
    std::array<VkBuffer, 1> buffers{buffer.vulkan_buffer()};
    std::array<VkDeviceSize, 1> offsets{0};
-   vkCmdBindVertexBuffers(m_commandBuffer, vertexLayout, buffers.size(), buffers.data(), offsets.data());
+   vkCmdBindVertexBuffers(m_commandBuffer, layoutIndex, buffers.size(), buffers.data(), offsets.data());
+}
+
+void CommandList::bind_index_buffer(const Buffer &buffer) const
+{
+   vkCmdBindIndexBuffer(m_commandBuffer, buffer.vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
 void CommandList::copy_buffer(const Buffer &source, const Buffer &dest)
@@ -134,6 +158,14 @@ void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &de
 
    vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
                         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &fragmentShaderBarrier);
+}
+
+Status CommandList::reset()
+{
+   if (vkResetCommandBuffer(m_commandBuffer, 0) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+   return Status::Success;
 }
 
 }// namespace graphics_api

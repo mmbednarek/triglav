@@ -190,12 +190,7 @@ int main()
            .surface = state.wl_surface,
    };
 
-   renderer::Renderer renderer;
-   if (not renderer.on_init(surface, g_width, g_height))
-   {
-      std::cerr << "failed to init renderer\n";
-      return 1;
-   }
+   auto renderer = renderer::init_renderer(surface, g_width, g_height);
 
    bool is_running{true};
 
@@ -206,21 +201,14 @@ int main()
          g_width = g_new_width;
          g_height = g_new_height;
 
-         if (not renderer.on_resize(g_width, g_height)) {
-            g_should_quit = true;
-            continue;
-         }
+         renderer.on_resize(g_width, g_height);
       }
 
       if (g_should_quit) {
          is_running = false;
       }
 
-      if (not renderer.on_render()) {
-         std::cerr << "failed to render image\n";
-         is_running = false;
-      }
-
+      renderer.on_render();
 
       wl_display_dispatch(state.wl_display);
    }

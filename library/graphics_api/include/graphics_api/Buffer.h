@@ -10,6 +10,7 @@ enum class BufferPurpose
    TransferBuffer,
    VertexBuffer,
    UniformBuffer,
+   IndexBuffer
 };
 
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(Buffer, Device);

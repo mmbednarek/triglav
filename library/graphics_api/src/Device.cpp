@@ -47,6 +47,7 @@ VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose
    case BufferPurpose::VertexBuffer:
       return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
    case BufferPurpose::UniformBuffer: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+   case BufferPurpose::IndexBuffer: return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
    }
    return 0;
 }
@@ -54,10 +55,11 @@ VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose
 VkMemoryPropertyFlags map_buffer_purpose_to_memory_properties(const BufferPurpose purpose)
 {
    switch (purpose) {
-   case BufferPurpose::TransferBuffer://fallthrough
+   case BufferPurpose::TransferBuffer: //fallthrough
    case BufferPurpose::UniformBuffer:
       return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-   case BufferPurpose::VertexBuffer: return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+   case BufferPurpose::VertexBuffer: //fallthrough
+   case BufferPurpose::IndexBuffer: return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
    }
    return 0;
 }
