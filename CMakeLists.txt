@@ -9,7 +9,6 @@ find_package(Fmt)
 set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(OpenGL)
 find_package(glm)
-find_package(stb_image)
 
 find_library(WAYLAND_CLIENT_LIBRARY_PATH NAMES wayland-client)
 if (WAYLAND_CLIENT_LIBRARY_PATH)

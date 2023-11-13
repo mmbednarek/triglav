@@ -7,6 +7,12 @@
 
 namespace renderer {
 
+struct Object3d {
+   graphics_api::DescriptorGroup descGroup;
+   std::vector<graphics_api::Buffer> uniformBuffers;
+   std::vector<graphics_api::MappedMemory> uniformBufferMappings;
+};
+
 struct RendererObjects {
    uint32_t width{};
    uint32_t height{};
@@ -21,8 +27,8 @@ struct RendererObjects {
    graphics_api::Fence inFlightFence;
    graphics_api::CommandList commandList;
    graphics_api::Texture texture;
-   std::vector<graphics_api::Buffer> uniformBuffers;
-   std::vector<graphics_api::MappedMemory> uniformBufferMappings;
+   Object3d object1;
+   Object3d object2;
 };
 
 class Renderer
@@ -51,8 +57,8 @@ class Renderer
    graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
    graphics_api::Texture m_texture;
-   std::vector<graphics_api::Buffer> m_uniformBuffers;
-   std::vector<graphics_api::MappedMemory> m_uniformBufferMappings;
+   Object3d m_object1;
+   Object3d m_object2;
 };
 
 Renderer init_renderer(const graphics_api::Surface& surface, uint32_t width, uint32_t height);

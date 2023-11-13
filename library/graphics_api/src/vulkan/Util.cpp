@@ -29,6 +29,12 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
          return VK_FORMAT_D16_UNORM_S8_UINT;
       }
       return std::unexpected{Status::UnsupportedFormat};
+   case ColorFormatOrder::D:
+      switch (format.parts[0]) {
+      case ColorFormatPart::Float32: return VK_FORMAT_D32_SFLOAT;
+      default: break;
+      }
+      return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::RG:
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8_SRGB;

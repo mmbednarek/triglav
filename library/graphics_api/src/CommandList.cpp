@@ -67,11 +67,17 @@ VkCommandBuffer CommandList::vulkan_command_buffer() const
    return m_commandBuffer;
 }
 
-void CommandList::bind_pipeline(const Pipeline &pipeline, uint32_t framebufferIndex) const
+void CommandList::bind_pipeline(const Pipeline &pipeline) const
 {
    vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vulkan_pipeline());
-   vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline.layout(), 0, 1,
-                           &pipeline.descriptor_sets()[framebufferIndex], 0, nullptr);
+}
+
+void CommandList::bind_descriptor_group(const DescriptorGroup &descriptorGroup,
+                                        uint32_t framebufferIndex) const
+{
+   vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                           descriptorGroup.pipeline_layout(), 0, 1, &descriptorGroup.at(framebufferIndex), 0,
+                           nullptr);
 }
 
 void CommandList::draw_primitives(const int vertexCount, const int vertexOffset) const
@@ -79,15 +85,16 @@ void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
    vkCmdDraw(m_commandBuffer, vertexCount, 1, vertexOffset, 0);
 }
 
-void CommandList::draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const
+void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset,
+                                          const int vertexOffset) const
 {
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
 
 void CommandList::bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const
 {
-   std::array<VkBuffer, 1> buffers{buffer.vulkan_buffer()};
-   std::array<VkDeviceSize, 1> offsets{0};
+   const std::array buffers{buffer.vulkan_buffer()};
+   constexpr std::array<VkDeviceSize, 1> offsets{0};
    vkCmdBindVertexBuffers(m_commandBuffer, layoutIndex, buffers.size(), buffers.data(), offsets.data());
 }
 
@@ -157,7 +164,8 @@ void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &de
    fragmentShaderBarrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
 
    vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &fragmentShaderBarrier);
+                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1,
+                        &fragmentShaderBarrier);
 }
 
 Status CommandList::reset()

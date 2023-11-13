@@ -47,7 +47,8 @@ VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose
    case BufferPurpose::VertexBuffer:
       return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
    case BufferPurpose::UniformBuffer: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-   case BufferPurpose::IndexBuffer: return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+   case BufferPurpose::IndexBuffer:
+      return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
    }
    return 0;
 }
@@ -55,10 +56,10 @@ VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose
 VkMemoryPropertyFlags map_buffer_purpose_to_memory_properties(const BufferPurpose purpose)
 {
    switch (purpose) {
-   case BufferPurpose::TransferBuffer: //fallthrough
+   case BufferPurpose::TransferBuffer://fallthrough
    case BufferPurpose::UniformBuffer:
       return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-   case BufferPurpose::VertexBuffer: //fallthrough
+   case BufferPurpose::VertexBuffer://fallthrough
    case BufferPurpose::IndexBuffer: return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
    }
    return 0;
@@ -242,10 +243,18 @@ Status Device::init_swapchain(const Resolution &resolution)
       m_swapchainImageViews.emplace_back(std::move(imageView));
    }
 
+   auto depthTexture =
+           this->create_texture(GAPI_COLOR_FORMAT(D, Float32), resolution, TextureType::DepthBuffer);
+   if (not depthTexture.has_value())
+      return Status::UnsupportedDevice;
+
+   m_depthTexture.reset();
+   m_depthTexture = std::move(*depthTexture);
+
    m_swapchainFramebuffers.clear();
 
    for (const auto &imageView : m_swapchainImageViews) {
-      std::array<VkImageView, 1> attachments{*imageView};
+      std::array<VkImageView, 2> attachments{*imageView, m_depthTexture->vulkan_image_view()};
 
       VkFramebufferCreateInfo framebufferInfo{};
       framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -274,7 +283,8 @@ constexpr std::array<VkDynamicState, 2> g_dynamicStates{
 
 Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
                                          const std::span<VertexInputLayout> layouts,
-                                         std::span<DescriptorBinding> descriptorBindings)
+                                         std::span<DescriptorBinding> descriptorBindings,
+                                         const uint32_t descriptorBudget)
 {
    std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
    shaderStageInfos.resize(shaders.size());
@@ -361,7 +371,7 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
    rasterizationStateInfo.polygonMode             = VK_POLYGON_MODE_FILL;
    rasterizationStateInfo.lineWidth               = 1.0f;
-   rasterizationStateInfo.cullMode                = VK_CULL_MODE_BACK_BIT;
+   rasterizationStateInfo.cullMode                = VK_CULL_MODE_FRONT_BIT;
    rasterizationStateInfo.frontFace               = VK_FRONT_FACE_CLOCKWISE;
    rasterizationStateInfo.depthBiasEnable         = VK_FALSE;
    rasterizationStateInfo.depthBiasConstantFactor = 0.0f;
@@ -417,6 +427,14 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
    if (descriptorSetLayout.construct(&descriptorSetLayoutInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
+   VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo{};
+   depthStencilStateInfo.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+   depthStencilStateInfo.depthTestEnable       = true;
+   depthStencilStateInfo.depthWriteEnable      = true;
+   depthStencilStateInfo.depthCompareOp        = VK_COMPARE_OP_LESS_OR_EQUAL;
+   depthStencilStateInfo.depthBoundsTestEnable = false;
+   depthStencilStateInfo.stencilTestEnable     = false;
+
    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
    pipelineLayoutInfo.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
    pipelineLayoutInfo.setLayoutCount = 1;
@@ -439,6 +457,7 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
    pipelineInfo.pColorBlendState    = &colorBlendingInfo;
    pipelineInfo.pVertexInputState   = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
+   pipelineInfo.pDepthStencilState  = &depthStencilStateInfo;
    pipelineInfo.renderPass          = *m_renderPass;
    pipelineInfo.subpass             = 0;
    pipelineInfo.basePipelineHandle  = nullptr;
@@ -451,13 +470,13 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
 
    std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes{
            VkDescriptorPoolSize{
-                   .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                   .descriptorCount = static_cast<uint32_t>(m_swapchainImageViews.size()),
-           },
+                                .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                .descriptorCount = descriptorBudget * static_cast<uint32_t>(m_swapchainImageViews.size()),
+                                },
            {
-                   .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                   .descriptorCount = static_cast<uint32_t>(m_swapchainImageViews.size()),
-           },
+                                .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                .descriptorCount = descriptorBudget * static_cast<uint32_t>(m_swapchainImageViews.size()),
+                                },
    };
 
    VkDescriptorPoolCreateInfo descriptorPoolInfo{};
@@ -465,29 +484,18 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
    descriptorPoolInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
    descriptorPoolInfo.poolSizeCount = descriptorPoolSizes.size();
    descriptorPoolInfo.pPoolSizes    = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets       = m_swapchainImageViews.size();
+   descriptorPoolInfo.maxSets       = descriptorBudget * m_swapchainImageViews.size();
 
    vulkan::DescriptorPool descriptorPool{*m_device};
    if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   std::vector<VkDescriptorSetLayout> descriptorLayouts{};
-   descriptorLayouts.resize(m_swapchainImageViews.size(), *descriptorSetLayout);
-
-   VkDescriptorSetAllocateInfo descriptorSetsInfo{};
-   descriptorSetsInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-   descriptorSetsInfo.descriptorPool     = *descriptorPool;
-   descriptorSetsInfo.descriptorSetCount = descriptorLayouts.size();
-   descriptorSetsInfo.pSetLayouts        = descriptorLayouts.data();
-
-   std::vector<VkDescriptorSet> descriptorSets{};
-   descriptorSets.resize(m_swapchainImageViews.size());
-   if (auto res = vkAllocateDescriptorSets(*m_device, &descriptorSetsInfo, descriptorSets.data()); res != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
-   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorPool),
-                   std::move(descriptorSetLayout), std::move(descriptorSets), *m_sampler};
+   return Pipeline{std::move(pipelineLayout),
+                   std::move(pipeline),
+                   std::move(descriptorPool),
+                   std::move(descriptorSetLayout),
+                   *m_sampler,
+                   static_cast<uint32_t>(m_swapchainImageViews.size())};
 }
 
 Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t size)
@@ -566,10 +574,11 @@ Status Device::begin_graphic_commands(CommandList &commandList, uint32_t framebu
       return Status::UnsupportedDevice;
    }
 
-   VkClearValue clearValue;
-   clearValue.color = {
+   std::array<VkClearValue, 2> clearValues;
+   clearValues[0].color = {
            {clearColor.r, clearColor.g, clearColor.b, clearColor.a}
    };
+   clearValues[1] = {1.0f, 0.0f};
 
    VkRenderPassBeginInfo renderPassInfo{};
    renderPassInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -578,8 +587,8 @@ Status Device::begin_graphic_commands(CommandList &commandList, uint32_t framebu
    renderPassInfo.renderArea.offset        = {0, 0};
    renderPassInfo.renderArea.extent.width  = m_surfaceResolution.width;
    renderPassInfo.renderArea.extent.height = m_surfaceResolution.height;
-   renderPassInfo.clearValueCount          = 1;
-   renderPassInfo.pClearValues             = &clearValue;
+   renderPassInfo.clearValueCount          = clearValues.size();
+   renderPassInfo.pClearValues             = clearValues.data();
 
    vkCmdBeginRenderPass(commandList.vulkan_command_buffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -698,31 +707,60 @@ Status Device::init_color_format(const ColorFormat &colorFormat, ColorSpace colo
    m_surfaceFormat = colorFormat;
    m_colorSpace    = colorSpace;
 
-   VkAttachmentDescription colorAttachment{};
-   colorAttachment.format  = vulkan::to_vulkan_color_format(m_surfaceFormat).value_or(VK_FORMAT_UNDEFINED);
-   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-   colorAttachment.loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-   colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-   colorAttachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+   std::array<VkAttachmentDescription, 2> attachments{};
+   // color attachment
+   attachments[0].format  = vulkan::to_vulkan_color_format(m_surfaceFormat).value_or(VK_FORMAT_UNDEFINED);
+   attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;
+   attachments[0].loadOp  = VK_ATTACHMENT_LOAD_OP_CLEAR;
+   attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+   attachments[0].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachments[0].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+   attachments[0].finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+   // depth attachment
+   attachments[1].format         = VK_FORMAT_D32_SFLOAT;
+   attachments[1].samples        = VK_SAMPLE_COUNT_1_BIT;
+   attachments[1].loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
+   attachments[1].storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachments[1].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+   attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+   attachments[1].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+   attachments[1].finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
    VkAttachmentReference colorAttachmentRef{};
    colorAttachmentRef.attachment = 0;
    colorAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
+   VkAttachmentReference depthAttachmentRef{};
+   depthAttachmentRef.attachment = 1;
+   depthAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
    VkSubpassDescription subpass{};
-   subpass.pipelineBindPoint    = VK_PIPELINE_BIND_POINT_GRAPHICS;
-   subpass.colorAttachmentCount = 1;
-   subpass.pColorAttachments    = &colorAttachmentRef;
+   subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
+   subpass.colorAttachmentCount    = 1;
+   subpass.pColorAttachments       = &colorAttachmentRef;
+   subpass.pDepthStencilAttachment = &depthAttachmentRef;
+
+   VkSubpassDependency dependency{};
+   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+   dependency.dstSubpass = 0;
+   dependency.srcStageMask =
+           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+   dependency.srcAccessMask = 0;
+   dependency.dstStageMask =
+           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+   dependency.dstAccessMask =
+           VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-   renderPassInfo.attachmentCount = 1;
-   renderPassInfo.pAttachments    = &colorAttachment;
+   renderPassInfo.attachmentCount = attachments.size();
+   renderPassInfo.pAttachments    = attachments.data();
    renderPassInfo.subpassCount    = 1;
    renderPassInfo.pSubpasses      = &subpass;
+   renderPassInfo.dependencyCount = 1;
+   renderPassInfo.pDependencies   = &dependency;
 
    if (const auto res = m_renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {
       return Status::UnsupportedDevice;
@@ -732,19 +770,19 @@ Status Device::init_color_format(const ColorFormat &colorFormat, ColorSpace colo
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
    VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter = VK_FILTER_LINEAR;
-   samplerInfo.minFilter = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable = VK_FALSE;
-   samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-   samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = VK_FALSE;
-   samplerInfo.compareEnable = VK_FALSE;
-   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   samplerInfo.magFilter               = VK_FILTER_LINEAR;
+   samplerInfo.minFilter               = VK_FILTER_LINEAR;
+   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.anisotropyEnable        = false;
+   samplerInfo.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
+   samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   samplerInfo.unnormalizedCoordinates = false;
+   samplerInfo.compareEnable           = false;
+   samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+   samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
    if (m_sampler.construct(&samplerInfo) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
@@ -762,7 +800,7 @@ Status Device::submit_command_list_one_time(const CommandList &commandList) cons
    submitInfo.commandBufferCount = 1;
    submitInfo.pCommandBuffers    = &vulkanCommandList;
 
-   vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+   vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, nullptr);
    vkQueueWaitIdle(m_graphicsQueue);
 
    return Status::Success;
@@ -773,22 +811,55 @@ uint32_t Device::framebuffer_count() const
    return m_swapchainImageViews.size();
 }
 
-Result<Texture> Device::create_texture(ColorFormat format, const Resolution &imageSize) const
+namespace {
+
+VkImageTiling to_vulkan_image_tiling(const TextureType type)
 {
-   auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
+   switch (type) {
+   case TextureType::SampledImage: return VK_IMAGE_TILING_LINEAR;
+   case TextureType::DepthBuffer: return VK_IMAGE_TILING_OPTIMAL;
+   }
+   return {};
+}
+
+VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
+{
+   switch (type) {
+   case TextureType::SampledImage: return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+   }
+   return {};
+}
+
+VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
+{
+   switch (type) {
+   case TextureType::SampledImage: return VK_IMAGE_ASPECT_COLOR_BIT;
+   case TextureType::DepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
+   }
+   return {};
+}
+
+
+}// namespace
+
+Result<Texture> Device::create_texture(const ColorFormat &format, const Resolution &imageSize,
+                                       const TextureType type) const
+{
+   const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
    VkImageCreateInfo imageInfo{};
-   imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-   imageInfo.format = vulkanColorFormat;
-   imageInfo.extent = VkExtent3D{imageSize.width, imageSize.height, 1};
-   imageInfo.imageType = VK_IMAGE_TYPE_2D;
-   imageInfo.mipLevels = 1;
-   imageInfo.arrayLayers = 1;
-   imageInfo.tiling = VK_IMAGE_TILING_LINEAR;
+   imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+   imageInfo.format        = vulkanColorFormat;
+   imageInfo.extent        = VkExtent3D{imageSize.width, imageSize.height, 1};
+   imageInfo.imageType     = VK_IMAGE_TYPE_2D;
+   imageInfo.mipLevels     = 1;
+   imageInfo.arrayLayers   = 1;
+   imageInfo.tiling        = to_vulkan_image_tiling(type);
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-   imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   imageInfo.samples       = VK_SAMPLE_COUNT_1_BIT;
+   imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+   imageInfo.usage         = to_vulkan_image_usage(type);
 
    vulkan::Image image(*m_device);
    if (image.construct(&imageInfo) != VK_SUCCESS)
@@ -798,9 +869,10 @@ Result<Texture> Device::create_texture(ColorFormat format, const Resolution &ima
    vkGetImageMemoryRequirements(*m_device, *image, &memRequirements);
 
    VkMemoryAllocateInfo allocInfo{};
-   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.sType          = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
    allocInfo.allocationSize = memRequirements.size;
-   allocInfo.memoryTypeIndex = find_memory_type(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+   allocInfo.memoryTypeIndex =
+           find_memory_type(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
    vulkan::DeviceMemory imageMemory(*m_device);
    if (imageMemory.construct(&allocInfo) != VK_SUCCESS)
@@ -817,7 +889,7 @@ Result<Texture> Device::create_texture(ColorFormat format, const Resolution &ima
    imageViewInfo.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+   imageViewInfo.subresourceRange.aspectMask     = to_vulkan_image_aspect(type);
    imageViewInfo.subresourceRange.baseMipLevel   = 0;
    imageViewInfo.subresourceRange.levelCount     = 1;
    imageViewInfo.subresourceRange.baseArrayLayer = 0;
@@ -827,19 +899,19 @@ Result<Texture> Device::create_texture(ColorFormat format, const Resolution &ima
    if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), imageSize.width, imageSize.height);
+   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), imageSize.width,
+                  imageSize.height);
 }
 
-constexpr std::array g_vulkanInstanceExtensions
-{
-   VK_KHR_SURFACE_EXTENSION_NAME,
+constexpr std::array g_vulkanInstanceExtensions{
+        VK_KHR_SURFACE_EXTENSION_NAME,
 #if GAPI_PLATFORM_WINDOWS
-           VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+        VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif GAPI_PLATFORM_WAYLAND
-           VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
+        VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
 #endif
 #if GAPI_ENABLE_VALIDATION
-           VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
 };
 
@@ -847,10 +919,9 @@ constexpr std::array g_vulkanDeviceExtensions{
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
 
-constexpr std::array g_vulkanInstanceLayers
-{
+constexpr std::array g_vulkanInstanceLayers{
 #if GAPI_ENABLE_VALIDATION
-   "VK_LAYER_KHRONOS_validation",
+        "VK_LAYER_KHRONOS_validation",
 #endif
 };
 

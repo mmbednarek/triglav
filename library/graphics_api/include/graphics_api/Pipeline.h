@@ -2,6 +2,7 @@
 
 #include "GraphicsApi.hpp"
 #include "vulkan/ObjectWrapper.hpp"
+#include "DescriptorGroup.h"
 
 #include <variant>
 
@@ -18,31 +19,15 @@ namespace vulkan {
 using Pipeline = WrappedObject<VkPipeline, vkCreateGraphicsPipelines, vkDestroyPipeline, VkDevice>;
 }
 
-struct DescriptorWrite
-{
-   DescriptorType type{};
-   int binding{};
-   std::variant<Buffer *, Texture *> data;
-};
-
 class Pipeline
 {
  public:
    Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorPool descriptorPool,
-            vulkan::DescriptorSetLayout descriptorSetLayout, std::vector<VkDescriptorSet> descriptorSets, VkSampler sampler);
-   ~Pipeline();
-
-   Pipeline(const Pipeline& other) = delete;
-   Pipeline& operator=(const Pipeline& other) = delete;
-   Pipeline(Pipeline&& other) noexcept;
-   Pipeline& operator=(Pipeline&& other) noexcept;
+            vulkan::DescriptorSetLayout descriptorSetLayout, VkSampler sampler, uint32_t framebufferCount);
 
    [[nodiscard]] VkPipeline vulkan_pipeline() const;
    [[nodiscard]] const vulkan::PipelineLayout &layout() const;
-   [[nodiscard]] const std::vector<VkDescriptorSet> &descriptor_sets() const;
-   [[nodiscard]] size_t descriptor_set_count() const;
-
-   void update_descriptors(size_t descriptorId, std::span<DescriptorWrite> descriptors);
+   [[nodiscard]] Result<DescriptorGroup> allocate_descriptors();
 
  private:
    vulkan::PipelineLayout m_layout;
@@ -50,7 +35,7 @@ class Pipeline
    vulkan::DescriptorPool m_descriptorPool;
    vulkan::DescriptorSetLayout m_descriptorSetLayout;
    VkSampler m_sampler;
-   std::vector<VkDescriptorSet> m_descriptorSets;
+   uint32_t m_framebufferCount{};
 };
 
 }// namespace graphics_api

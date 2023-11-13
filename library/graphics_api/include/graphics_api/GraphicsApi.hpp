@@ -21,6 +21,7 @@ enum class ColorFormatOrder
    RGBA,
    BGRA,
    DS,
+   D
 };
 
 enum class ColorFormatPart
@@ -97,6 +98,11 @@ enum class DescriptorType {
    UniformBuffer,
    Sampler,
    ImageSampler,
+};
+
+enum class TextureType {
+   SampledImage,
+   DepthBuffer
 };
 
 struct DescriptorBinding {

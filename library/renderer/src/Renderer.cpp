@@ -59,6 +59,44 @@ void checkStatus(graphics_api::Status status)
    }
 }
 
+renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::Pipeline &pipeline,
+                                    graphics_api::Texture &texture)
+{
+   auto descriptors = checkResult(pipeline.allocate_descriptors());
+
+   std::vector<graphics_api::Buffer> uniformBuffers;
+   std::vector<graphics_api::MappedMemory> uniformBufferMappings;
+
+   for (int i{}; i < device.framebuffer_count(); ++i) {
+      auto buffer = checkResult(
+              device.create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(UniformBufferObject)));
+      auto &movedBuffer = uniformBuffers.emplace_back(std::move(buffer));
+
+      auto mappedMemory = checkResult(movedBuffer.map_memory());
+      uniformBufferMappings.emplace_back(std::move(mappedMemory));
+   }
+
+   for (int i = 0; i < device.framebuffer_count(); ++i) {
+      std::array<graphics_api::DescriptorWrite, 2> writes{
+              graphics_api::DescriptorWrite{
+                                            .type    = graphics_api::DescriptorType::UniformBuffer,
+                                            .binding = 0,
+                                            .data    = &uniformBuffers[i],
+                                            },
+              {
+                                            .type    = graphics_api::DescriptorType::ImageSampler,
+                                            .binding = 1,
+                                            .data    = &texture,
+                                            }
+      };
+      descriptors.update(i, writes);
+   }
+
+   return renderer::Object3d{.descGroup             = std::move(descriptors),
+                             .uniformBuffers        = std::move(uniformBuffers),
+                             .uniformBufferMappings = std::move(uniformBufferMappings)};
+}
+
 }// namespace
 
 namespace renderer {
@@ -77,8 +115,8 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_inFlightFence(std::move(objects.inFlightFence)),
     m_commandList(std::move(objects.commandList)),
     m_texture(std::move(objects.texture)),
-    m_uniformBuffers(std::move(objects.uniformBuffers)),
-    m_uniformBufferMappings(std::move(objects.uniformBufferMappings))
+    m_object1(std::move(objects.object1)),
+    m_object2(std::move(objects.object2))
 {
    this->update_vertex_data();
    this->write_to_texture();
@@ -93,10 +131,13 @@ void Renderer::on_render()
    checkStatus(m_device->begin_graphic_commands(m_commandList, framebufferIndex,
                                                 graphics_api::ColorPalette::Black));
 
-   m_commandList.bind_pipeline(m_pipeline, framebufferIndex);
+   m_commandList.bind_pipeline(m_pipeline);
+   m_commandList.bind_descriptor_group(m_object1.descGroup, framebufferIndex);
    m_commandList.bind_vertex_buffer(m_vertexBuffer, 0);
    m_commandList.bind_index_buffer(m_indexBuffer);
-   m_commandList.draw_indexed_primitives(6, 0, 0);
+   m_commandList.draw_indexed_primitives(36, 0, 0);
+   m_commandList.bind_descriptor_group(m_object2.descGroup, framebufferIndex);
+   m_commandList.draw_indexed_primitives(36, 0, 0);
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -116,12 +157,19 @@ void Renderer::on_resize(uint32_t width, uint32_t height) const
 
 void Renderer::update_vertex_data()
 {
-   std::array<Vertex, 4> vertices{
-           Vertex
-           {{-0.5f, -0.5f, 0.0f}, {0, 0}},
-           {{-0.5f, 0.5f, 0.0f}, {0, 1}},
-           {{0.5f, 0.5f, 0.0f}, {1, 1}},
-           {{0.5f, -0.5f, 0.0f}, {1, 0}},
+   std::array<Vertex, 12> vertices{
+           Vertex{{-0.5f, -0.5f, -0.5f}, {0, 0}}, // A
+           { {0.5f, -0.5f, -0.5f}, {1, 0}}, // B
+           {  {0.5f, 0.5f, -0.5f}, {1, 1}}, // C
+           { {-0.5f, 0.5f, -0.5f}, {0, 1}}, // D
+           { {-0.5f, -0.5f, 0.5f}, {0, 1}}, // E1
+           {  {0.5f, -0.5f, 0.5f}, {1, 1}}, // F1
+           {   {0.5f, 0.5f, 0.5f}, {1, 0}}, // G1
+           {  {-0.5f, 0.5f, 0.5f}, {0, 0}}, // H1
+           { {-0.5f, -0.5f, 0.5f}, {1, 0}}, // E2
+           {  {0.5f, -0.5f, 0.5f}, {0, 0}}, // F2
+           {   {0.5f, 0.5f, 0.5f}, {0, 1}}, // G2
+           {  {-0.5f, 0.5f, 0.5f}, {1, 1}}, // H2
    };
 
    auto transferBuffer = checkResult(
@@ -139,11 +187,19 @@ void Renderer::update_vertex_data()
 
    checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
 
-   const std::array<uint32_t, 6> indices{
-           0, 2, 1,
-           0, 3, 2,
-   };
-   auto indexTransferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer, sizeof(indices)));
+   const std::array<uint32_t, 36> indices{3, 0,  1,  3, 1,  2,
+
+                                          0, 4,  5,  0, 5,  1,
+
+                                          4, 7,  6,  4, 6,  5,
+
+                                          7, 3,  2,  7, 2,  6,
+
+                                          1, 9,  10, 1, 10, 2,
+
+                                          3, 11, 8,  3, 8,  0};
+   auto indexTransferBuffer =
+           checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer, sizeof(indices)));
    {
       auto mappedMemory = checkResult(indexTransferBuffer.map_memory());
       mappedMemory.write(indices.data(), sizeof(indices));
@@ -163,14 +219,24 @@ void Renderer::update_uniform_data(uint32_t frame)
    auto currentTime      = std::chrono::high_resolution_clock::now();
    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-   UniformBufferObject object{};
-   object.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   object.view =
-           glm::lookAt(glm::vec3(2.0f, 2.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   object.proj = glm::perspective(glm::radians(45.0f),
-                                  static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 10.0f);
+   glm::vec3 eye{0.0f, -7.0f, -3.0f};
 
-   m_uniformBufferMappings[frame].write(&object, sizeof(UniformBufferObject));
+   UniformBufferObject object1{};
+   object1.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, -0.5f));
+   object1.view  = glm::lookAt(eye, glm::vec3(0.0f, 0.0f, 0.0f),
+                              glm::vec3(0.0f, 0.0f, 1.0f));
+   object1.proj  = glm::perspective(glm::radians(45.0f),
+                                   static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 10.0f);
+   m_object1.uniformBufferMappings[frame].write(&object1, sizeof(UniformBufferObject));
+
+   UniformBufferObject object2{};
+   object2.model = glm::translate(glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(0.7f)), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(3.0f, 0.0f, 0.0f));
+   object2.view  = glm::lookAt(eye, glm::vec3(0.0f, 0.0f, 0.0f),
+                               glm::vec3(0.0f, 0.0f, 1.0f));
+   object2.proj  = glm::perspective(glm::radians(45.0f),
+                                    static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 10.0f);
+   m_object2.uniformBufferMappings[frame].write(&object2, sizeof(UniformBufferObject));
+
 }
 
 void Renderer::write_to_texture()
@@ -270,46 +336,18 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
                                            },
    };
 
-   auto pipeline = checkResult(device->create_pipeline(shaders, vertex_layout, descriptor_bindings));
-
-   std::vector<graphics_api::Buffer> uniformBuffers;
-   std::vector<graphics_api::MappedMemory> uniformBufferMappings;
-
-   for (int i{}; i < device->framebuffer_count(); ++i) {
-      auto buffer = checkResult(
-              device->create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(UniformBufferObject)));
-      auto &movedBuffer = uniformBuffers.emplace_back(std::move(buffer));
-
-      auto mappedMemory = checkResult(movedBuffer.map_memory());
-      uniformBufferMappings.emplace_back(std::move(mappedMemory));
-   }
-
-   auto texture = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {700, 700}));
-
-   for (int i = 0; i < device->framebuffer_count(); ++i) {
-      std::array<graphics_api::DescriptorWrite, 2> writes{
-              graphics_api::DescriptorWrite{
-                                            .type    = graphics_api::DescriptorType::UniformBuffer,
-                                            .binding = 0,
-                                            .data    = &uniformBuffers[i],
-                                            },
-              {
-                                            .type    = graphics_api::DescriptorType::ImageSampler,
-                                            .binding = 1,
-                                            .data    = &texture,
-                                            }
-      };
-      pipeline.update_descriptors(i, writes);
-   }
-
-   auto oneTimeCommandList   = checkResult(device->create_command_list());
+   auto pipeline = checkResult(device->create_pipeline(shaders, vertex_layout, descriptor_bindings, 10));
+   auto texture  = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {700, 700}));
    auto vertexBuffer =
-           checkResult(device->create_buffer(graphics_api::BufferPurpose::VertexBuffer, 4 * sizeof(Vertex)));
-   auto indexBuffer = checkResult(device->create_buffer(graphics_api::BufferPurpose::IndexBuffer, 6 * sizeof(uint32_t)));
+           checkResult(device->create_buffer(graphics_api::BufferPurpose::VertexBuffer, 12 * sizeof(Vertex)));
+   auto indexBuffer = checkResult(
+           device->create_buffer(graphics_api::BufferPurpose::IndexBuffer, 36 * sizeof(uint32_t)));
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());
    auto renderFinishedSemaphore   = checkResult(device->create_semaphore());
    auto inFlightFence             = checkResult(device->create_fence());
    auto commandList               = checkResult(device->create_command_list());
+   auto object1                    = create_object_3d(*device, pipeline, texture);
+   auto object2                    = create_object_3d(*device, pipeline, texture);
 
    return Renderer(RendererObjects{
            .width                     = width,
@@ -325,8 +363,8 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            .inFlightFence             = std::move(inFlightFence),
            .commandList               = std::move(commandList),
            .texture                   = std::move(texture),
-           .uniformBuffers            = std::move(uniformBuffers),
-           .uniformBufferMappings     = std::move(uniformBufferMappings),
+           .object1                    = std::move(object1),
+           .object2                    = std::move(object2),
    });
 }
 }// namespace renderer

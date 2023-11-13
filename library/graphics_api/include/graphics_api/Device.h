@@ -13,6 +13,7 @@
 #include <memory>
 #include <span>
 #include <vector>
+#include <optional>
 
 #if NDEBUG
 #define GAPI_ENABLE_VALIDATION 0
@@ -63,14 +64,16 @@ class Device
 
    [[nodiscard]] Result<Pipeline> create_pipeline(std::span<Shader *> shaders,
                                                   std::span<VertexInputLayout> layouts,
-                                                  std::span<DescriptorBinding> descriptorBindings);
+                                                  std::span<DescriptorBinding> descriptorBindings,
+                                                  uint32_t descriptorBudget);
    [[nodiscard]] Result<Shader> create_shader(ShaderStage stage, std::string_view entrypoint,
                                               std::span<const uint8_t> code);
    [[nodiscard]] Result<CommandList> create_command_list() const;
    [[nodiscard]] Result<Buffer> create_buffer(BufferPurpose purpose, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
-   [[nodiscard]] Result<Texture> create_texture(ColorFormat format, const Resolution &imageSize) const;
+   [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
+                                                TextureType type = TextureType::SampledImage) const;
 
    [[nodiscard]] Status begin_graphic_commands(CommandList &commandList, uint32_t framebufferIndex,
                                                const Color &clearColor) const;
@@ -95,6 +98,7 @@ class Device
    vulkan::Device m_device;
    vulkan::PhysicalDevice m_physicalDevice;
    vulkan::SwapchainKHR m_swapchain;
+   std::optional<Texture> m_depthTexture;
    Resolution m_surfaceResolution;
    ColorFormat m_surfaceFormat;
    ColorSpace m_colorSpace;

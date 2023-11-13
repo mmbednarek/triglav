@@ -23,7 +23,8 @@ class CommandList
    [[nodiscard]] Status finish() const;
    [[nodiscard]] VkCommandBuffer vulkan_command_buffer() const;
 
-   void bind_pipeline(const Pipeline &pipeline, uint32_t framebufferIndex) const;
+   void bind_pipeline(const Pipeline &pipeline) const;
+   void bind_descriptor_group(const DescriptorGroup& descriptorGroup, uint32_t framebufferIndex) const;
    void draw_primitives(int vertexCount, int vertexOffset) const;
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const;
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;

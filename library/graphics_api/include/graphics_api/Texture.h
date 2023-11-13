@@ -11,7 +11,7 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(Image, Device)
 class Texture
 {
  public:
-   Texture(vulkan::Image image, vulkan::DeviceMemory memory, graphics_api::vulkan::ImageView imageView,
+   Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::ImageView imageView,
            uint32_t width, uint32_t height);
 
    [[nodiscard]] VkImage vulkan_image() const;
