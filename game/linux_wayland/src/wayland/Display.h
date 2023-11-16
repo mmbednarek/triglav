@@ -1,35 +1,44 @@
 #pragma once
 
-#include "xdg-shell-client-protocol.h"
+#include "api/PointerConstraints.h"
+#include "api/RelativePointer.h"
+#include "api/XdgShell.h"
+#include "IDisplayEventListener.hpp"
 
-#include <wayland-client.h>
-#include <string_view>
 #include <functional>
+#include <map>
+#include <string_view>
+#include <wayland-client.h>
 
 namespace wayland {
 
-using MouseMoveCallback = std::function<void(float pos_x, float pos_y)>;
+class Surface;
 
 class Display
 {
  public:
-   Display();
+   explicit Display(IDisplayEventListener &eventListener);
    ~Display();
-
-   MouseMoveCallback OnMouseMove;
 
    void on_register_global(uint32_t name, std::string_view interface, uint32_t version);
    void on_xdg_ping(uint32_t serial) const;
    void on_seat_capabilities(uint32_t capabilities);
-   void on_seat_name(std::string_view name) const;
    void on_pointer_motion(uint32_t time, int32_t x, int32_t y) const;
-   void on_pointer_enter(uint32_t serial, wl_surface * surface, int32_t x, int32_t y) const;
+   void on_pointer_enter(uint32_t serial, wl_surface *surface, int32_t x, int32_t y);
+   void on_pointer_leave(uint32_t serial, wl_surface *surface) const;
    void dispatch() const;
+   void register_surface(wl_surface *wayland_surface, Surface *surface);
+   void on_pointer_relative_motion(uint32_t utime_hi, uint32_t utime_lo, int32_t dx, int32_t dy,
+                                   int32_t dx_unaccel, int32_t dy_unaccel) const;
+   void on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const;
+   void on_pointer_button(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const;
+   void hide_pointer() const;
 
    [[nodiscard]] constexpr wl_display *display() const noexcept
    {
       return m_display;
    }
+
    [[nodiscard]] constexpr wl_compositor *compositor() const noexcept
    {
       return m_compositor;
@@ -40,7 +49,18 @@ class Display
       return m_wmBase;
    }
 
+   [[nodiscard]] constexpr wl_pointer *pointer() const noexcept
+   {
+      return m_pointer;
+   }
+
+   [[nodiscard]] constexpr zwp_pointer_constraints_v1 *pointer_constraints() const noexcept
+   {
+      return m_pointerConstraints;
+   }
+
  private:
+   IDisplayEventListener &m_eventListener;
    wl_display *m_display;
    wl_registry *m_registry;
    wl_registry_listener m_registryListener{};
@@ -51,6 +71,12 @@ class Display
    wl_seat_listener m_seatListener{};
    wl_pointer *m_pointer{};
    wl_pointer_listener m_poinerListener{};
+   zwp_pointer_constraints_v1 *m_pointerConstraints{};
+   zwp_relative_pointer_manager_v1 *m_relativePointerManager{};
+   zwp_relative_pointer_v1 *m_relativePointer{};
+   zwp_relative_pointer_v1_listener m_relativePointerListener{};
+   std::map<wl_surface *, Surface *> m_surfaceMap{};
+   uint32_t m_pointerEnterSerial{};
 };
 
 }// namespace wayland

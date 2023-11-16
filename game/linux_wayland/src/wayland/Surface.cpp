@@ -6,8 +6,8 @@
 
 namespace wayland {
 
-Surface::Surface(const Display &display) :
-    m_display(display.display()),
+Surface::Surface(Display &display) :
+    m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
     m_xdgSurface(xdg_wm_base_get_xdg_surface(display.wm_base(), m_surface)),
     m_topLevel(xdg_surface_get_toplevel(m_xdgSurface))
@@ -34,6 +34,8 @@ Surface::Surface(const Display &display) :
    xdg_toplevel_set_title(m_topLevel, "Example client");
    xdg_toplevel_set_app_id(m_topLevel, "example-client");
    wl_surface_commit(m_surface);
+
+   display.register_surface(m_surface, this);
 }
 
 Surface::~Surface()
@@ -68,9 +70,31 @@ void Surface::on_toplevel_close()
    m_closeState = PendingState::Requested;
 }
 
+void Surface::lock_cursor()
+{
+   if (m_lockedPointer != nullptr) {
+      zwp_locked_pointer_v1_destroy(m_lockedPointer);
+   }
+   m_lockedPointer = zwp_pointer_constraints_v1_lock_pointer(m_display.pointer_constraints(), m_surface, m_display.pointer(),
+                                           nullptr, 1);
+}
+
+void Surface::unlock_cursor()
+{
+   if (m_lockedPointer != nullptr) {
+      zwp_locked_pointer_v1_destroy(m_lockedPointer);
+      m_lockedPointer = nullptr;
+   }
+}
+
+bool Surface::is_cursor_locked() const
+{
+   return m_lockedPointer != nullptr;
+}
+
 graphics_api::Surface Surface::to_grahics_surface() const
 {
-   return graphics_api::Surface{.display = m_display, .surface = m_surface};
+   return graphics_api::Surface{.display = m_display.display(), .surface = m_surface};
 }
 
 Dimension Surface::dimension() const

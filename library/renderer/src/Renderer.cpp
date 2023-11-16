@@ -146,22 +146,18 @@ void Renderer::on_close() const
    m_inFlightFence.await();
 }
 
-void Renderer::on_mouse_move(float mouseX, float mouseY)
+void Renderer::on_mouse_relative_move(const float dx, const float dy)
 {
-   if (not m_receivedMouseInput) {
-      m_receivedMouseInput = true;
-      m_lastMouseX         = mouseX;
-      m_lastMouseY         = mouseY;
-      return;
+   m_yaw += dx * 0.01f;
+   while (m_yaw < 0) {
+      m_yaw += 2 * M_PI;
+   }
+   while (m_yaw >= 2 * M_PI) {
+      m_yaw -= 2 * M_PI;
    }
 
-   const auto diffX = mouseX - m_lastMouseX;
-   const auto diffY = mouseY - m_lastMouseY;
-   m_lastMouseX     = mouseX;
-   m_lastMouseY     = mouseY;
-
-   m_yaw += diffX * 0.005f;
-   m_pitch += diffY * 0.005f;
+   m_pitch += dy * 0.01f;
+   m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f, static_cast<float>(M_PI) / 2.0f - 0.01f);
 }
 
 CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
@@ -200,6 +196,12 @@ CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
    return CompiledMesh{std::move(indexBuffer), std::move(vertexBuffer), mesh.indicies.size()};
 }
 
+void Renderer::on_mouse_wheel_turn(const float x)
+{
+   m_distance += x;
+   m_distance = std::clamp(m_distance, 1.0f, 100.0f);
+}
+
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
    checkStatus(m_device->init_swapchain(graphics_api::Resolution{width, height}));
@@ -213,7 +215,7 @@ void Renderer::update_uniform_data(uint32_t frame)
    auto currentTime      = std::chrono::high_resolution_clock::now();
    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-   const auto eye = glm::vec4{0.0f, -20, 0, 1.0f};
+   const auto eye = glm::vec4{0.0f, m_distance, 0, 1.0f};
    auto eye_yaw   = glm::rotate(glm::mat4(1), m_yaw, glm::vec3{0.0f, 0.0f, 1.0f});
    auto eye_pitch = glm::rotate(glm::mat4(1), m_pitch, glm::vec3{1.0f, 0.0f, 0.0f});
    auto eye_final = eye_yaw * eye_pitch * eye;
@@ -224,8 +226,8 @@ void Renderer::update_uniform_data(uint32_t frame)
 
    UniformBufferObject object1{};
    object1.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   object1.view = view;
-   object1.proj = projection;
+   object1.view  = view;
+   object1.proj  = projection;
    m_object1.uniformBufferMappings[frame].write(&object1, sizeof(UniformBufferObject));
 
    UniformBufferObject object2{};

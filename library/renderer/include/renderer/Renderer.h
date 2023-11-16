@@ -39,8 +39,9 @@ class Renderer
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
-   void on_mouse_move(float mouseX, float mouseY);
+   void on_mouse_relative_move(float dx, float dy);
    [[nodiscard]] CompiledMesh compile_mesh(const Mesh &mesh) const;
+   void on_mouse_wheel_turn(float x);
 
  private:
    void update_uniform_data(uint32_t frame);
@@ -52,6 +53,7 @@ class Renderer
 
    float m_yaw{-10};
    float m_pitch{-2};
+   float m_distance{12};
 
    uint32_t m_width{};
    uint32_t m_height{};
