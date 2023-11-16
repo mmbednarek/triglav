@@ -10,5 +10,6 @@ target_link_libraries(linux_wayland
         renderer
         Wayland::Client
         fmt::fmt
+        xkbcommon
 )
 

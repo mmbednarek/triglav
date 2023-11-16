@@ -148,7 +148,7 @@ void Renderer::on_close() const
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
 {
-   m_yaw += dx * 0.01f;
+   m_yaw -= dx * 0.01f;
    while (m_yaw < 0) {
       m_yaw += 2 * M_PI;
    }
@@ -156,7 +156,7 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
       m_yaw -= 2 * M_PI;
    }
 
-   m_pitch += dy * 0.01f;
+   m_pitch -= dy * 0.01f;
    m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f, static_cast<float>(M_PI) / 2.0f - 0.01f);
 }
 

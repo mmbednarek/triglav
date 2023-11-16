@@ -51,8 +51,8 @@ class Renderer
    float m_lastMouseX{};
    float m_lastMouseY{};
 
-   float m_yaw{-10};
-   float m_pitch{-2};
+   float m_yaw{0};
+   float m_pitch{0};
    float m_distance{12};
 
    uint32_t m_width{};

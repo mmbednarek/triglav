@@ -2,104 +2,83 @@
 #include "wayland/Display.h"
 #include "wayland/Surface.h"
 
-#include <iostream>
-
 constexpr auto g_initialWidth  = 1280;
 constexpr auto g_initialHeight = 720;
 
-class EventListener final : public wayland::IDisplayEventListener
+class EventListener final : public wayland::DefaultSurfaceEventListener
 {
  public:
-   void on_pointer_enter_surface(wayland::Surface &surface, float pos_x, float pos_y) override
+   EventListener(wayland::Surface& surface, renderer::Renderer& renderer) :
+      m_surface(surface),
+      m_renderer(renderer)
    {
-      // std::cout << "pointer enter\n";
-      m_pointerSurface = &surface;
-      // surface.lock_cursor();
    }
 
-   void on_pointer_change_position(const float /*pos_x*/, const float /*pos_y*/) override {}
-
-   void on_pointer_relative_motion(const float dx, const float dy) override
+   void on_mouse_relative_move(const float dx, const float dy) override
    {
-      if (m_renderer == nullptr)
+      if (not m_surface.is_cursor_locked())
          return;
-      if (m_pointerSurface == nullptr)
-         return;
-      if (not m_pointerSurface->is_cursor_locked())
-         return;
-      m_renderer->on_mouse_relative_move(dx, dy);
+
+      m_renderer.on_mouse_relative_move(dx, dy);
    }
 
-   void on_pointer_leave_surface(wayland::Surface &surface) override
+   void on_mouse_leave() override
    {
-      surface.unlock_cursor();
-      m_pointerSurface = nullptr;
+      m_surface.unlock_cursor();
    }
 
    void on_mouse_wheel_turn(const float x) override
    {
-      if (m_renderer == nullptr)
-         return;
-      if (m_pointerSurface == nullptr)
-         return;
-      if (not m_pointerSurface->is_cursor_locked())
-         return;
-      m_renderer->on_mouse_wheel_turn(x);
+      m_renderer.on_mouse_wheel_turn(x);
    }
 
-   void on_mouse_button_is_pressed(const uint32_t button) override
+   void on_mouse_button_is_pressed(const wayland::MouseButton button) override
    {
-      if (button != 274)
-         return;
-      if (m_pointerSurface == nullptr)
-         return;
-
-      if (m_pointerSurface->is_cursor_locked()) {
-         m_pointerSurface->unlock_cursor();
-      } else {
-         m_pointerSurface->lock_cursor();
-         m_waylandDisplay->hide_pointer();
+      if (not m_surface.is_cursor_locked() && button == wayland::MouseButton_Middle) {
+         m_surface.lock_cursor();
       }
    }
 
-   void set_renderer(renderer::Renderer *renderer)
+   void on_mouse_button_is_released(const wayland::MouseButton button) override
    {
-      m_renderer = renderer;
+      if (m_surface.is_cursor_locked() && button == wayland::MouseButton_Middle) {
+         m_surface.unlock_cursor();
+      }
    }
 
-   void set_display(wayland::Display *display)
+   void on_resize(const int width, const int height) override
    {
-      m_waylandDisplay = display;
+     m_renderer.on_resize(width, height);
+   }
+
+   void on_close() override
+   {
+      m_isRunning = false;
+   }
+
+   [[nodiscard]] bool is_running() const
+   {
+      return m_isRunning;
    }
 
  private:
-   renderer::Renderer *m_renderer{};
-   wayland::Display *m_waylandDisplay{};
-   wayland::Surface *m_pointerSurface{};
+   wayland::Surface &m_surface;
+   renderer::Renderer &m_renderer;
+   bool m_isRunning{true};
 };
 
 int main()
 {
-   EventListener eventListener;
-   wayland::Display display(eventListener);
+   wayland::Display display;
    wayland::Surface surface(display);
 
    auto renderer = renderer::init_renderer(surface.to_grahics_surface(), g_initialWidth, g_initialHeight);
-   eventListener.set_renderer(&renderer);
-   eventListener.set_display(&display);
 
-   bool isRunning{true};
-   while (isRunning) {
-      switch (surface.message()) {
-      case wayland::SurfaceMessage::None: display.dispatch(); break;
-      case wayland::SurfaceMessage::Resize: {
-         const auto [width, height] = surface.dimension();
-         renderer.on_resize(width, height);
-         break;
-      }
-      case wayland::SurfaceMessage::Close: isRunning = false; break;
-      }
+   EventListener eventListener(surface, renderer);
+   surface.set_event_listener(&eventListener);
 
+   while (eventListener.is_running()) {
+      display.dispatch();
       renderer.on_render();
    }
 

@@ -10,7 +10,7 @@ target_sources(linux_wayland
         ${CMAKE_CURRENT_SOURCE_DIR}/wayland/api/XdgShell.c
         ${CMAKE_CURRENT_SOURCE_DIR}/wayland/Display.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/wayland/Display.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/wayland/IDisplayEventListener.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/wayland/ISurfaceEventListener.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/wayland/Surface.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/wayland/Surface.h
 )

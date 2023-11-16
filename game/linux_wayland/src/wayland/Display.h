@@ -3,12 +3,13 @@
 #include "api/PointerConstraints.h"
 #include "api/RelativePointer.h"
 #include "api/XdgShell.h"
-#include "IDisplayEventListener.hpp"
+#include "ISurfaceEventListener.hpp"
 
 #include <functional>
 #include <map>
 #include <string_view>
 #include <wayland-client.h>
+#include <xkbcommon/xkbcommon.h>
 
 namespace wayland {
 
@@ -16,23 +17,12 @@ class Surface;
 
 class Display
 {
+   friend Surface;
  public:
-   explicit Display(IDisplayEventListener &eventListener);
+   Display();
    ~Display();
 
-   void on_register_global(uint32_t name, std::string_view interface, uint32_t version);
-   void on_xdg_ping(uint32_t serial) const;
-   void on_seat_capabilities(uint32_t capabilities);
-   void on_pointer_motion(uint32_t time, int32_t x, int32_t y) const;
-   void on_pointer_enter(uint32_t serial, wl_surface *surface, int32_t x, int32_t y);
-   void on_pointer_leave(uint32_t serial, wl_surface *surface) const;
    void dispatch() const;
-   void register_surface(wl_surface *wayland_surface, Surface *surface);
-   void on_pointer_relative_motion(uint32_t utime_hi, uint32_t utime_lo, int32_t dx, int32_t dy,
-                                   int32_t dx_unaccel, int32_t dy_unaccel) const;
-   void on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const;
-   void on_pointer_button(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const;
-   void hide_pointer() const;
 
    [[nodiscard]] constexpr wl_display *display() const noexcept
    {
@@ -60,7 +50,22 @@ class Display
    }
 
  private:
-   IDisplayEventListener &m_eventListener;
+   void register_surface(wl_surface *wayland_surface, Surface *surface);
+
+   void on_register_global(uint32_t name, std::string_view interface, uint32_t version);
+   void on_xdg_ping(uint32_t serial) const;
+   void on_seat_capabilities(uint32_t capabilities);
+   void on_pointer_motion(uint32_t time, int32_t x, int32_t y) const;
+   void on_pointer_enter(uint32_t serial, wl_surface *surface, int32_t x, int32_t y);
+   void on_pointer_leave(uint32_t serial, wl_surface *surface);
+   void on_pointer_relative_motion(uint32_t utime_hi, uint32_t utime_lo, int32_t dx, int32_t dy,
+                                   int32_t dx_unaccel, int32_t dy_unaccel) const;
+   void on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const;
+   void on_pointer_button(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const;
+   void on_keyboard_enter(uint32_t serial, wl_surface * surface, wl_array * wls);
+   void on_keymap(uint32_t format, int32_t fd, uint32_t size);
+   void on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
+
    wl_display *m_display;
    wl_registry *m_registry;
    wl_registry_listener m_registryListener{};
@@ -70,13 +75,19 @@ class Display
    wl_seat *m_seat{};
    wl_seat_listener m_seatListener{};
    wl_pointer *m_pointer{};
-   wl_pointer_listener m_poinerListener{};
+   wl_pointer_listener m_pointerListener{};
+   wl_keyboard *m_keyboard{};
+   wl_keyboard_listener m_keyboardListener{};
    zwp_pointer_constraints_v1 *m_pointerConstraints{};
    zwp_relative_pointer_manager_v1 *m_relativePointerManager{};
    zwp_relative_pointer_v1 *m_relativePointer{};
    zwp_relative_pointer_v1_listener m_relativePointerListener{};
+   xkb_context *m_xkbContext;
+   xkb_keymap *m_xkbKeymap;
+
    std::map<wl_surface *, Surface *> m_surfaceMap{};
-   uint32_t m_pointerEnterSerial{};
+   Surface *m_pointerSurface{};
+   Surface *m_keyboardSurface{};
 };
 
 }// namespace wayland

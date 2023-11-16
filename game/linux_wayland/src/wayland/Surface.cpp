@@ -6,6 +6,8 @@
 
 namespace wayland {
 
+DefaultSurfaceEventListener g_defaultListener;
+
 Surface::Surface(Display &display) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
@@ -24,7 +26,7 @@ Surface::Surface(Display &display) :
       surface->on_toplevel_configure(width, height, states);
    };
    m_topLevelListener.close = [](void *data, xdg_toplevel *xdg_toplevel) {
-      auto *surface = static_cast<Surface *>(data);
+      const auto *surface = static_cast<Surface *>(data);
       assert(surface->m_topLevel == xdg_toplevel);
       surface->on_toplevel_close();
    };
@@ -47,10 +49,13 @@ Surface::~Surface()
 
 void Surface::on_configure(const uint32_t serial)
 {
-   if (m_resizeState == PendingState::Requested) {
-      m_resizeState = PendingState::Responded;
-   }
    xdg_surface_ack_configure(m_xdgSurface, serial);
+
+   if (m_penndingDimension.has_value()) {
+      m_dimension = *m_penndingDimension;
+      m_penndingDimension.reset();
+      this->event_listener().on_resize(m_dimension.width, m_dimension.height);
+   }
 }
 
 void Surface::on_toplevel_configure(const int32_t width, const int32_t height, wl_array * /*states*/)
@@ -61,13 +66,12 @@ void Surface::on_toplevel_configure(const int32_t width, const int32_t height, w
    if (width == m_dimension.width && height == m_dimension.height)
       return;
 
-   m_resizeState       = PendingState::Requested;
-   m_penndingDimension = {width, height};
+   m_penndingDimension = Dimension{width, height};
 }
 
-void Surface::on_toplevel_close()
+void Surface::on_toplevel_close() const
 {
-   m_closeState = PendingState::Requested;
+   this->event_listener().on_close();
 }
 
 void Surface::lock_cursor()
@@ -75,8 +79,8 @@ void Surface::lock_cursor()
    if (m_lockedPointer != nullptr) {
       zwp_locked_pointer_v1_destroy(m_lockedPointer);
    }
-   m_lockedPointer = zwp_pointer_constraints_v1_lock_pointer(m_display.pointer_constraints(), m_surface, m_display.pointer(),
-                                           nullptr, 1);
+   m_lockedPointer = zwp_pointer_constraints_v1_lock_pointer(m_display.pointer_constraints(), m_surface,
+                                                             m_display.pointer(), nullptr, 1);
 }
 
 void Surface::unlock_cursor()
@@ -85,6 +89,16 @@ void Surface::unlock_cursor()
       zwp_locked_pointer_v1_destroy(m_lockedPointer);
       m_lockedPointer = nullptr;
    }
+}
+
+void Surface::hide_cursor() const
+{
+   wl_pointer_set_cursor(m_display.pointer(), m_pointerSerial, nullptr, 0, 0);
+}
+
+void Surface::set_event_listener(ISurfaceEventListener *eventListener)
+{
+   m_eventListener = eventListener;
 }
 
 bool Surface::is_cursor_locked() const
@@ -102,19 +116,13 @@ Dimension Surface::dimension() const
    return m_dimension;
 }
 
-SurfaceMessage Surface::message()
+ISurfaceEventListener &Surface::event_listener() const
 {
-   if (m_resizeState == PendingState::Responded) {
-      m_resizeState = PendingState::None;
-      m_dimension   = m_penndingDimension;
-      return SurfaceMessage::Resize;
+   if (m_eventListener != nullptr) {
+      return *m_eventListener;
    }
-   if (m_closeState != PendingState::None) {
-      m_closeState = PendingState::None;
-      return SurfaceMessage::Close;
-   }
-   return SurfaceMessage::None;
-}
 
+   return g_defaultListener;
+}
 
 }// namespace wayland

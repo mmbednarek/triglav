@@ -2,17 +2,21 @@
 
 
 #include "api/RelativePointer.h"
+#include "Surface.h"
 
 #include <cassert>
 #include <format>
 #include <iostream>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <xkbcommon/xkbcommon.h>
 
 namespace wayland {
 
-Display::Display(IDisplayEventListener &eventListener) :
-    m_eventListener(eventListener),
+Display::Display() :
     m_display(wl_display_connect(nullptr)),
-    m_registry(wl_display_get_registry(m_display))
+    m_registry(wl_display_get_registry(m_display)),
+    m_xkbContext(xkb_context_new(XKB_CONTEXT_NO_FLAGS))
 {
    m_registryListener.global = [](void *data, wl_registry *wl_registry, const uint32_t name,
                                   const char *interface, const uint32_t version) {
@@ -38,67 +42,67 @@ Display::Display(IDisplayEventListener &eventListener) :
 
    m_seatListener.name = [](void *, wl_seat *, const char *) {};
 
-   m_poinerListener.enter = [](void *data, wl_pointer *wl_pointer, uint32_t serial, wl_surface *surface,
-                               wl_fixed_t surface_x, wl_fixed_t surface_y) {
+   m_pointerListener.enter = [](void *data, wl_pointer *wl_pointer, uint32_t serial, wl_surface *surface,
+                                wl_fixed_t surface_x, wl_fixed_t surface_y) {
       auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_enter(serial, surface, surface_x, surface_y);
    };
 
-   m_poinerListener.leave = [](void *data, wl_pointer *wl_pointer, uint32_t serial, wl_surface *surface) {
-      const auto *display = static_cast<Display *>(data);
+   m_pointerListener.leave = [](void *data, wl_pointer *wl_pointer, uint32_t serial, wl_surface *surface) {
+      auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_leave(serial, surface);
    };
 
-   m_poinerListener.motion = [](void *data, struct wl_pointer *wl_pointer, uint32_t time,
-                                wl_fixed_t surface_x, wl_fixed_t surface_y) {
+   m_pointerListener.motion = [](void *data, struct wl_pointer *wl_pointer, uint32_t time,
+                                 wl_fixed_t surface_x, wl_fixed_t surface_y) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_motion(time, surface_x, surface_y);
    };
 
-   m_poinerListener.button = [](void *data, wl_pointer *wl_pointer, uint32_t serial, uint32_t time,
-                                uint32_t button, uint32_t state) {
+   m_pointerListener.button = [](void *data, wl_pointer *wl_pointer, uint32_t serial, uint32_t time,
+                                 uint32_t button, uint32_t state) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_button(serial, time, button, state);
    };
 
-   m_poinerListener.axis = [](void *data, wl_pointer *wl_pointer, uint32_t time, uint32_t axis,
-                              wl_fixed_t value) {
+   m_pointerListener.axis = [](void *data, wl_pointer *wl_pointer, uint32_t time, uint32_t axis,
+                               wl_fixed_t value) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_axis(time, axis, value);
    };
 
-   m_poinerListener.frame = [](void *data, struct wl_pointer *wl_pointer) {
+   m_pointerListener.frame = [](void *data, struct wl_pointer *wl_pointer) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_poinerListener.axis_source = [](void *data, wl_pointer *wl_pointer, uint32_t axis_source) {
+   m_pointerListener.axis_source = [](void *data, wl_pointer *wl_pointer, uint32_t axis_source) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_poinerListener.axis_stop = [](void *data, wl_pointer *wl_pointer, uint32_t time, uint32_t axis) {
+   m_pointerListener.axis_stop = [](void *data, wl_pointer *wl_pointer, uint32_t time, uint32_t axis) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_poinerListener.axis_discrete = [](void *data, wl_pointer *wl_pointer, uint32_t axis, int32_t discrete) {
+   m_pointerListener.axis_discrete = [](void *data, wl_pointer *wl_pointer, uint32_t axis, int32_t discrete) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_poinerListener.axis_value120 = [](void *data, wl_pointer *wl_pointer, uint32_t axis, int32_t value120) {
+   m_pointerListener.axis_value120 = [](void *data, wl_pointer *wl_pointer, uint32_t axis, int32_t value120) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_poinerListener.axis_relative_direction = [](void *data, struct wl_pointer *wl_pointer, uint32_t axis,
-                                                 uint32_t direction) {
+   m_pointerListener.axis_relative_direction = [](void *data, struct wl_pointer *wl_pointer, uint32_t axis,
+                                                  uint32_t direction) {
       const auto *display = static_cast<Display *>(data);
       assert(display->m_pointer == wl_pointer);
    };
@@ -111,12 +115,47 @@ Display::Display(IDisplayEventListener &eventListener) :
               display->on_pointer_relative_motion(utime_hi, utime_lo, dx, dy, dx_unaccel, dy_unaccel);
            };
 
+   m_keyboardListener.keymap = [](void *data, struct wl_keyboard *wl_keyboard, uint32_t format, int32_t fd,
+                                  uint32_t size) {
+      auto *display = static_cast<Display *>(data);
+      display->on_keymap(format, fd, size);
+   };
+
+   m_keyboardListener.enter = [](void *data, wl_keyboard *wl_keyboard, uint32_t serial, wl_surface *surface,
+                                 wl_array *keys) {
+      auto *display = static_cast<Display *>(data);
+      display->on_keyboard_enter(serial, surface, keys);
+   };
+
+   m_keyboardListener.leave = [](void *data, wl_keyboard *wl_keyboard, uint32_t serial, wl_surface *surface) {
+      const auto *display = static_cast<Display *>(data);
+   };
+
+   m_keyboardListener.key = [](void *data, wl_keyboard *wl_keyboard, uint32_t serial, uint32_t time,
+                               uint32_t key, uint32_t state) {
+      const auto *display = static_cast<Display *>(data);
+      display->on_key(serial, time, key, state);
+   };
+
+   m_keyboardListener.modifiers = [](void *data, wl_keyboard *wl_keyboard, uint32_t serial,
+                                     uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+                                     uint32_t group) {
+      const auto *display = static_cast<Display *>(data);
+      std::cout << "modifiers state changes\n";
+   };
+
+   m_keyboardListener.repeat_info = [](void *data, wl_keyboard *wl_keyboard, int32_t rate, int32_t delay) {
+      const auto *display = static_cast<Display *>(data);
+   };
+
+
    wl_registry_add_listener(m_registry, &m_registryListener, this);
    wl_display_roundtrip(m_display);
 }
 
 Display::~Display()
 {
+   xkb_context_unref(m_xkbContext);
    xdg_wm_base_destroy(m_wmBase);
    wl_compositor_destroy(m_compositor);
    wl_registry_destroy(m_registry);
@@ -159,7 +198,7 @@ void Display::on_seat_capabilities(const uint32_t capabilities)
 {
    if ((capabilities & WL_SEAT_CAPABILITY_POINTER) != 0) {
       m_pointer = wl_seat_get_pointer(m_seat);
-      wl_pointer_add_listener(m_pointer, &m_poinerListener, this);
+      wl_pointer_add_listener(m_pointer, &m_pointerListener, this);
 
       if (m_relativePointerManager) {
          m_relativePointer =
@@ -167,30 +206,50 @@ void Display::on_seat_capabilities(const uint32_t capabilities)
          zwp_relative_pointer_v1_add_listener(m_relativePointer, &m_relativePointerListener, this);
       }
    }
+
+   if ((capabilities & WL_SEAT_CAPABILITY_KEYBOARD) != 0) {
+      m_keyboard = wl_seat_get_keyboard(m_seat);
+      wl_keyboard_add_listener(m_keyboard, &m_keyboardListener, this);
+   }
 }
 
-void Display::on_pointer_enter(const uint32_t serial, wl_surface *surface, const int32_t x,
-                               const int32_t y)
+void Display::on_pointer_enter(const uint32_t serial, wl_surface *surface, const int32_t x, const int32_t y)
 {
    if (not m_surfaceMap.contains(surface))
       return;
 
-   m_pointerEnterSerial = serial;
-   m_eventListener.on_pointer_enter_surface(*m_surfaceMap.at(surface), static_cast<float>(x) / 256.0f,
-                                            static_cast<float>(y) / 256.0f);
+   m_pointerSurface = m_surfaceMap.at(surface);
+
+   if (m_pointerSurface == nullptr)
+      return;
+
+   m_pointerSurface->m_pointerSerial = serial;
+   m_pointerSurface->event_listener().on_mouse_enter(static_cast<float>(x) / 256.0f,
+                                                     static_cast<float>(y) / 256.0f);
 }
 
-void Display::on_pointer_leave(uint32_t /*serial*/, wl_surface *surface) const
+void Display::on_pointer_leave(uint32_t /*serial*/, wl_surface *surface)
 {
    if (not m_surfaceMap.contains(surface))
       return;
 
-   m_eventListener.on_pointer_leave_surface(*m_surfaceMap.at(surface));
+   if (m_pointerSurface == nullptr)
+      return;
+
+   assert(m_pointerSurface == m_surfaceMap.at(surface));
+
+   m_pointerSurface->event_listener().on_mouse_leave();
+
+   m_pointerSurface = nullptr;
 }
 
 void Display::on_pointer_motion(uint32_t /*time*/, const int32_t x, const int32_t y) const
 {
-   m_eventListener.on_pointer_change_position(static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f);
+   if (m_pointerSurface == nullptr)
+      return;
+
+   m_pointerSurface->event_listener().on_mouse_move(static_cast<float>(x) / 256.0f,
+                                                    static_cast<float>(y) / 256.0f);
 }
 
 void Display::dispatch() const
@@ -207,25 +266,64 @@ void Display::on_pointer_relative_motion(uint32_t /*utime_hi*/, uint32_t /*utime
                                          const int32_t dy, int32_t /*dx_unaccel*/,
                                          int32_t /*dy_unaccel*/) const
 {
-   m_eventListener.on_pointer_relative_motion(static_cast<float>(dx) / 256.0f,
-                                              static_cast<float>(dy) / 256.0f);
+   if (m_pointerSurface == nullptr)
+      return;
+   m_pointerSurface->event_listener().on_mouse_relative_move(static_cast<float>(dx) / 256.0f,
+                                                             static_cast<float>(dy) / 256.0f);
 }
 
 void Display::on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const
 {
-   m_eventListener.on_mouse_wheel_turn(static_cast<float>(value) / 2560.0f);
+   if (m_pointerSurface == nullptr)
+      return;
+   m_pointerSurface->event_listener().on_mouse_wheel_turn(static_cast<float>(value) / 2560.0f);
 }
 
-void Display::on_pointer_button(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const
+void Display::on_pointer_button(uint32_t serial, uint32_t time, const uint32_t button,
+                                const uint32_t state) const
 {
-   if (state == 0) {
-      m_eventListener.on_mouse_button_is_pressed(button);
+   if (m_pointerSurface == nullptr)
+      return;
+
+   if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+      m_pointerSurface->event_listener().on_mouse_button_is_pressed(button);
+   } else if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
+      m_pointerSurface->event_listener().on_mouse_button_is_released(button);
    }
 }
 
-void Display::hide_pointer() const
+void Display::on_keyboard_enter(uint32_t serial, wl_surface *surface, wl_array *wls)
 {
-   wl_pointer_set_cursor(m_pointer, m_pointerEnterSerial, nullptr, 0, 0);
+   if (not m_surfaceMap.contains(surface))
+      return;
+
+   m_keyboardSurface = m_surfaceMap.at(surface);
+}
+
+void Display::on_keymap(const uint32_t format, const int32_t fd, const uint32_t size)
+{
+   if (format != 1)
+      return;
+
+   auto *mapped = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+   m_xkbKeymap = xkb_keymap_new_from_string(m_xkbContext, static_cast<const char *>(mapped),
+                                            XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+
+   munmap(mapped, size);
+   close(fd);
+}
+
+void Display::on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const
+{
+   if (m_keyboardSurface == nullptr)
+      return;
+
+   if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+      m_keyboardSurface->event_listener().on_key_is_pressed(key);
+   } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+      m_keyboardSurface->event_listener().on_key_is_released(key);
+   }
 }
 
 }// namespace wayland
