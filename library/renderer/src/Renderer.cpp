@@ -7,23 +7,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "../include/renderer/Core.h"
+#include "../include/renderer/DebugMeshes.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 namespace {
-
-struct Vertex
-{
-   glm::vec3 position;
-   glm::vec2 uv;
-};
-
-struct UniformBufferObject
-{
-   alignas(16) glm::mat4 model;
-   alignas(16) glm::mat4 view;
-   alignas(16) glm::mat4 proj;
-};
 
 std::vector<uint8_t> read_whole_file(std::string_view name)
 {
@@ -68,8 +58,8 @@ renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::
    std::vector<graphics_api::MappedMemory> uniformBufferMappings;
 
    for (int i{}; i < device.framebuffer_count(); ++i) {
-      auto buffer = checkResult(
-              device.create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(UniformBufferObject)));
+      auto buffer       = checkResult(device.create_buffer(graphics_api::BufferPurpose::UniformBuffer,
+                                                           sizeof(renderer::UniformBufferObject)));
       auto &movedBuffer = uniformBuffers.emplace_back(std::move(buffer));
 
       auto mappedMemory = checkResult(movedBuffer.map_memory());
@@ -108,18 +98,20 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_vertexShader(std::move(objects.vertexShader)),
     m_fragmentShader(std::move(objects.fragmentShader)),
     m_pipeline(std::move(objects.pipeline)),
-    m_vertexBuffer(std::move(objects.vertexBuffer)),
-    m_indexBuffer(std::move(objects.indexBuffer)),
     m_framebufferReadySemaphore(std::move(objects.framebufferReadySemaphore)),
     m_renderFinishedSemaphore(std::move(objects.renderFinishedSemaphore)),
     m_inFlightFence(std::move(objects.inFlightFence)),
     m_commandList(std::move(objects.commandList)),
-    m_texture(std::move(objects.texture)),
+    m_texture1(std::move(objects.texture1)),
+    m_texture2(std::move(objects.texture2)),
     m_object1(std::move(objects.object1)),
     m_object2(std::move(objects.object2))
 {
-   this->update_vertex_data();
-   this->write_to_texture();
+   this->write_to_texture("texture/earth.png", m_texture1);
+   this->write_to_texture("texture/moon.png", m_texture2);
+
+   m_sphereMesh   = this->compile_mesh(create_sphere(48, 24, 3.0f));
+   m_cilinderMesh = this->compile_mesh(create_sphere(32, 16, 1.0f));
 }
 
 void Renderer::on_render()
@@ -132,12 +124,16 @@ void Renderer::on_render()
                                                 graphics_api::ColorPalette::Black));
 
    m_commandList.bind_pipeline(m_pipeline);
+
    m_commandList.bind_descriptor_group(m_object1.descGroup, framebufferIndex);
-   m_commandList.bind_vertex_buffer(m_vertexBuffer, 0);
-   m_commandList.bind_index_buffer(m_indexBuffer);
-   m_commandList.draw_indexed_primitives(36, 0, 0);
+   m_commandList.bind_vertex_buffer(m_sphereMesh->vertex_buffer, 0);
+   m_commandList.bind_index_buffer(m_sphereMesh->index_buffer);
+   m_commandList.draw_indexed_primitives(m_sphereMesh->index_count, 0, 0);
+
    m_commandList.bind_descriptor_group(m_object2.descGroup, framebufferIndex);
-   m_commandList.draw_indexed_primitives(36, 0, 0);
+   m_commandList.bind_vertex_buffer(m_cilinderMesh->vertex_buffer, 0);
+   m_commandList.bind_index_buffer(m_cilinderMesh->index_buffer);
+   m_commandList.draw_indexed_primitives(m_cilinderMesh->index_count, 0, 0);
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -150,67 +146,65 @@ void Renderer::on_close() const
    m_inFlightFence.await();
 }
 
-void Renderer::on_resize(uint32_t width, uint32_t height) const
+void Renderer::on_mouse_move(float mouseX, float mouseY)
 {
-   checkStatus(m_device->init_swapchain(graphics_api::Resolution{width, height}));
+   if (not m_receivedMouseInput) {
+      m_receivedMouseInput = true;
+      m_lastMouseX         = mouseX;
+      m_lastMouseY         = mouseY;
+      return;
+   }
+
+   const auto diffX = mouseX - m_lastMouseX;
+   const auto diffY = mouseY - m_lastMouseY;
+   m_lastMouseX     = mouseX;
+   m_lastMouseY     = mouseY;
+
+   m_yaw += diffX * 0.005f;
+   m_pitch += diffY * 0.005f;
 }
 
-void Renderer::update_vertex_data()
+CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
 {
-   std::array<Vertex, 12> vertices{
-           Vertex{{-0.5f, -0.5f, -0.5f}, {0, 0}}, // A
-           { {0.5f, -0.5f, -0.5f}, {1, 0}}, // B
-           {  {0.5f, 0.5f, -0.5f}, {1, 1}}, // C
-           { {-0.5f, 0.5f, -0.5f}, {0, 1}}, // D
-           { {-0.5f, -0.5f, 0.5f}, {0, 1}}, // E1
-           {  {0.5f, -0.5f, 0.5f}, {1, 1}}, // F1
-           {   {0.5f, 0.5f, 0.5f}, {1, 0}}, // G1
-           {  {-0.5f, 0.5f, 0.5f}, {0, 0}}, // H1
-           { {-0.5f, -0.5f, 0.5f}, {1, 0}}, // E2
-           {  {0.5f, -0.5f, 0.5f}, {0, 0}}, // F2
-           {   {0.5f, 0.5f, 0.5f}, {0, 1}}, // G2
-           {  {-0.5f, 0.5f, 0.5f}, {1, 1}}, // H2
-   };
-
-   auto transferBuffer = checkResult(
-           m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer, sizeof(vertices)));
+   auto vertexBuffer   = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::VertexBuffer,
+                                                             sizeof(Vertex) * mesh.vertices.size()));
+   auto transferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
+                                                             sizeof(Vertex) * mesh.vertices.size()));
    {
       auto mappedMemory = checkResult(transferBuffer.map_memory());
-      mappedMemory.write(vertices.data(), sizeof(vertices));
+      mappedMemory.write(mesh.vertices.data(), sizeof(Vertex) * mesh.vertices.size());
    }
 
    auto oneTimeCommands = checkResult(m_device->create_command_list());
 
    checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer(transferBuffer, m_vertexBuffer);
+   oneTimeCommands.copy_buffer(transferBuffer, vertexBuffer);
    checkStatus(oneTimeCommands.finish());
-
    checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
 
-   const std::array<uint32_t, 36> indices{3, 0,  1,  3, 1,  2,
-
-                                          0, 4,  5,  0, 5,  1,
-
-                                          4, 7,  6,  4, 6,  5,
-
-                                          7, 3,  2,  7, 2,  6,
-
-                                          1, 9,  10, 1, 10, 2,
-
-                                          3, 11, 8,  3, 8,  0};
-   auto indexTransferBuffer =
-           checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer, sizeof(indices)));
+   auto indexBuffer         = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::IndexBuffer,
+                                                                  sizeof(uint32_t) * mesh.indicies.size()));
+   auto indexTransferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
+                                                                  sizeof(uint32_t) * mesh.indicies.size()));
    {
       auto mappedMemory = checkResult(indexTransferBuffer.map_memory());
-      mappedMemory.write(indices.data(), sizeof(indices));
+      mappedMemory.write(mesh.indicies.data(), sizeof(uint32_t) * mesh.indicies.size());
    }
 
    checkStatus(oneTimeCommands.reset());
    checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer(indexTransferBuffer, m_indexBuffer);
+   oneTimeCommands.copy_buffer(indexTransferBuffer, indexBuffer);
    checkStatus(oneTimeCommands.finish());
-
    checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
+
+   return CompiledMesh{std::move(indexBuffer), std::move(vertexBuffer), mesh.indicies.size()};
+}
+
+void Renderer::on_resize(const uint32_t width, const uint32_t height)
+{
+   checkStatus(m_device->init_swapchain(graphics_api::Resolution{width, height}));
+   m_width  = width;
+   m_height = height;
 }
 
 void Renderer::update_uniform_data(uint32_t frame)
@@ -219,30 +213,34 @@ void Renderer::update_uniform_data(uint32_t frame)
    auto currentTime      = std::chrono::high_resolution_clock::now();
    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-   glm::vec3 eye{0.0f, -7.0f, -3.0f};
+   const auto eye = glm::vec4{0.0f, -20, 0, 1.0f};
+   auto eye_yaw   = glm::rotate(glm::mat4(1), m_yaw, glm::vec3{0.0f, 0.0f, 1.0f});
+   auto eye_pitch = glm::rotate(glm::mat4(1), m_pitch, glm::vec3{1.0f, 0.0f, 0.0f});
+   auto eye_final = eye_yaw * eye_pitch * eye;
+
+   auto view = glm::lookAt(glm::vec3(eye_final), glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
+   auto projection = glm::perspective(
+           glm::radians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
 
    UniformBufferObject object1{};
-   object1.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, -0.5f));
-   object1.view  = glm::lookAt(eye, glm::vec3(0.0f, 0.0f, 0.0f),
-                              glm::vec3(0.0f, 0.0f, 1.0f));
-   object1.proj  = glm::perspective(glm::radians(45.0f),
-                                   static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 10.0f);
+   object1.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   object1.view = view;
+   object1.proj = projection;
    m_object1.uniformBufferMappings[frame].write(&object1, sizeof(UniformBufferObject));
 
    UniformBufferObject object2{};
-   object2.model = glm::translate(glm::rotate(glm::scale(glm::mat4(1.0f), glm::vec3(0.7f)), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(3.0f, 0.0f, 0.0f));
-   object2.view  = glm::lookAt(eye, glm::vec3(0.0f, 0.0f, 0.0f),
-                               glm::vec3(0.0f, 0.0f, 1.0f));
-   object2.proj  = glm::perspective(glm::radians(45.0f),
-                                    static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 10.0f);
+   auto rot      = glm::rotate(glm::mat4(1.0f), -time * glm::radians(5.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   auto trans    = glm::translate(rot, glm::vec3(0.0f, 8.0f, 0.0f));
+   object2.model = trans;
+   object2.view  = view;
+   object2.proj  = projection;
    m_object2.uniformBufferMappings[frame].write(&object2, sizeof(UniformBufferObject));
-
 }
 
-void Renderer::write_to_texture()
+void Renderer::write_to_texture(std::string_view path, graphics_api::Texture &texture)
 {
    int texWidth, texHeight, texChannels;
-   stbi_uc *pixels = stbi_load("texture/cat.png", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+   stbi_uc *pixels = stbi_load(path.data(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
    if (pixels == nullptr)
       return;
 
@@ -256,7 +254,7 @@ void Renderer::write_to_texture()
    auto oneTimeCommands = checkResult(m_device->create_command_list());
 
    checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer_to_texture(transferBuffer, m_texture);
+   oneTimeCommands.copy_buffer_to_texture(transferBuffer, texture);
    checkStatus(oneTimeCommands.finish());
 
    checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
@@ -300,7 +298,7 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            &fragmentShader,
    };
 
-   std::array<graphics_api::VertexInputAttribute, 2> vertex_attributes{
+   std::array<graphics_api::VertexInputAttribute, 3> vertex_attributes{
            graphics_api::VertexInputAttribute{
                                               .location = 0,
                                               .format   = GAPI_COLOR_FORMAT(RGB, Float32),
@@ -310,6 +308,11 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
                                               .location = 1,
                                               .format   = GAPI_COLOR_FORMAT(RG, Float32),
                                               .offset   = offsetof(Vertex,       uv),
+                                              },
+           graphics_api::VertexInputAttribute{
+                                              .location = 2,
+                                              .format   = GAPI_COLOR_FORMAT(RGB, Float32),
+                                              .offset   = offsetof(Vertex,   normal),
                                               },
    };
    std::array<graphics_api::VertexInputLayout, 1> vertex_layout{
@@ -337,17 +340,14 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
    };
 
    auto pipeline = checkResult(device->create_pipeline(shaders, vertex_layout, descriptor_bindings, 10));
-   auto texture  = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {700, 700}));
-   auto vertexBuffer =
-           checkResult(device->create_buffer(graphics_api::BufferPurpose::VertexBuffer, 12 * sizeof(Vertex)));
-   auto indexBuffer = checkResult(
-           device->create_buffer(graphics_api::BufferPurpose::IndexBuffer, 36 * sizeof(uint32_t)));
+   auto texture1 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {3600, 1673}));
+   auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {2048, 1024}));
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());
    auto renderFinishedSemaphore   = checkResult(device->create_semaphore());
    auto inFlightFence             = checkResult(device->create_fence());
    auto commandList               = checkResult(device->create_command_list());
-   auto object1                    = create_object_3d(*device, pipeline, texture);
-   auto object2                    = create_object_3d(*device, pipeline, texture);
+   auto object1                   = create_object_3d(*device, pipeline, texture1);
+   auto object2                   = create_object_3d(*device, pipeline, texture2);
 
    return Renderer(RendererObjects{
            .width                     = width,
@@ -356,15 +356,14 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            .vertexShader              = std::move(vertexShader),
            .fragmentShader            = std::move(fragmentShader),
            .pipeline                  = std::move(pipeline),
-           .vertexBuffer              = std::move(vertexBuffer),
-           .indexBuffer               = std::move(indexBuffer),
            .framebufferReadySemaphore = std::move(framebufferReadySemaphore),
            .renderFinishedSemaphore   = std::move(renderFinishedSemaphore),
            .inFlightFence             = std::move(inFlightFence),
            .commandList               = std::move(commandList),
-           .texture                   = std::move(texture),
-           .object1                    = std::move(object1),
-           .object2                    = std::move(object2),
+           .texture1                  = std::move(texture1),
+           .texture2                  = std::move(texture2),
+           .object1                   = std::move(object1),
+           .object2                   = std::move(object2),
    });
 }
 }// namespace renderer

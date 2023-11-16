@@ -99,6 +99,7 @@ class Device
    vulkan::PhysicalDevice m_physicalDevice;
    vulkan::SwapchainKHR m_swapchain;
    std::optional<Texture> m_depthTexture;
+   std::optional<Texture> m_multisampleTexture;
    Resolution m_surfaceResolution;
    ColorFormat m_surfaceFormat;
    ColorSpace m_colorSpace;

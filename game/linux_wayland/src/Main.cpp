@@ -7,10 +7,14 @@ constexpr auto g_initialHeight = 720;
 
 int main()
 {
-   const wayland::Display display;
+   wayland::Display display;
    wayland::Surface surface(display);
 
    auto renderer = renderer::init_renderer(surface.to_grahics_surface(), g_initialWidth, g_initialHeight);
+
+   display.OnMouseMove = [&renderer](const float mouseX, const float mouseY) {
+      renderer.on_mouse_move(mouseX, mouseY);
+   };
 
    bool isRunning{true};
    while (isRunning) {

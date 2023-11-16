@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Core.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PlatformSurface.h"
 
 #include <optional>
+#include <string_view>
 
 namespace renderer {
 
@@ -20,13 +22,12 @@ struct RendererObjects {
    graphics_api::Shader vertexShader;
    graphics_api::Shader fragmentShader;
    graphics_api::Pipeline pipeline;
-   graphics_api::Buffer vertexBuffer;
-   graphics_api::Buffer indexBuffer;
    graphics_api::Semaphore framebufferReadySemaphore;
    graphics_api::Semaphore renderFinishedSemaphore;
    graphics_api::Fence inFlightFence;
    graphics_api::CommandList commandList;
-   graphics_api::Texture texture;
+   graphics_api::Texture texture1;
+   graphics_api::Texture texture2;
    Object3d object1;
    Object3d object2;
 };
@@ -36,13 +37,21 @@ class Renderer
  public:
    explicit Renderer(RendererObjects&& objects);
    void on_render();
-   void on_resize(uint32_t width, uint32_t height) const;
+   void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
+   void on_mouse_move(float mouseX, float mouseY);
+   [[nodiscard]] CompiledMesh compile_mesh(const Mesh &mesh) const;
 
  private:
-   void update_vertex_data();
    void update_uniform_data(uint32_t frame);
-   void write_to_texture();
+   void write_to_texture(std::string_view path, graphics_api::Texture& texture);
+
+   bool m_receivedMouseInput{false};
+   float m_lastMouseX{};
+   float m_lastMouseY{};
+
+   float m_yaw{-10};
+   float m_pitch{-2};
 
    uint32_t m_width{};
    uint32_t m_height{};
@@ -50,15 +59,16 @@ class Renderer
    graphics_api::Shader m_vertexShader;
    graphics_api::Shader m_fragmentShader;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Buffer m_vertexBuffer;
-   graphics_api::Buffer m_indexBuffer;
    graphics_api::Semaphore m_framebufferReadySemaphore;
    graphics_api::Semaphore m_renderFinishedSemaphore;
    graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
-   graphics_api::Texture m_texture;
+   graphics_api::Texture m_texture1;
+   graphics_api::Texture m_texture2;
    Object3d m_object1;
    Object3d m_object2;
+   std::optional<CompiledMesh> m_sphereMesh;
+   std::optional<CompiledMesh> m_cilinderMesh;
 };
 
 Renderer init_renderer(const graphics_api::Surface& surface, uint32_t width, uint32_t height);

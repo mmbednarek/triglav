@@ -102,7 +102,8 @@ enum class DescriptorType {
 
 enum class TextureType {
    SampledImage,
-   DepthBuffer
+   DepthBuffer,
+   MultisampleImage,
 };
 
 struct DescriptorBinding {
