@@ -86,7 +86,7 @@ Device::Device(vulkan::Instance instance,
                vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
                vulkan::SurfaceKHR surface, vulkan::Device device, VkPhysicalDevice physicalDevice,
-               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool) :
+               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool, vulkan::Sampler sampler) :
     m_instance(std::move(instance)),
 #if GAPI_ENABLE_VALIDATION
     m_debugMessenger(std::move(debugMessenger)),
@@ -96,92 +96,27 @@ Device::Device(vulkan::Instance instance,
     m_physicalDevice(physicalDevice),
     m_swapchain(*m_device),
     m_queueFamilies(queueFamilies),
-    m_renderPass(*m_device),
     m_commandPool(std::move(commandPool)),
-    m_sampler(*m_device)
+    m_sampler(std::move(sampler))
 {
    vkGetDeviceQueue(*m_device, m_queueFamilies.graphicsQueue, 0, &m_graphicsQueue);
    vkGetDeviceQueue(*m_device, m_queueFamilies.presentQueue, 0, &m_presentQueue);
 }
 
-bool Device::is_surface_format_supported(const ColorFormat &colorFormat, const ColorSpace colorSpace) const
+Status Device::init_swapchain(const RenderPass &renderPass, const ColorSpace colorSpace)
 {
-   const auto formats = vulkan::get_surface_formats(m_physicalDevice, *m_surface);
+   if (not this->is_surface_format_supported(renderPass.color_format(), colorSpace))
+      return Status::UnsupportedFormat;
 
-   const auto targetVulkanFormat = vulkan::to_vulkan_color_format(colorFormat);
-   if (not targetVulkanFormat.has_value()) {
-      return false;
-   }
-
-   const auto targetVulkanColorSpace = vulkan::to_vulkan_color_space(colorSpace);
-   if (not targetVulkanColorSpace.has_value()) {
-      return false;
-   }
-
-   for (const auto [vulkanFormat, vulkanColorSpace] : formats) {
-      if (vulkanFormat != targetVulkanFormat)
-         continue;
-      if (vulkanColorSpace != targetVulkanColorSpace)
-         continue;
-
-      return true;
-   }
-
-   return false;
-}
-
-std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
-{
-   VkSurfaceCapabilitiesKHR capabilities;
-   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, *m_surface, &capabilities);
-
-   return {
-           Resolution{capabilities.minImageExtent.width, capabilities.minImageExtent.height},
-           Resolution{capabilities.maxImageExtent.width, capabilities.maxImageExtent.height}
-   };
-}
-
-Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,
-                                     const std::span<const uint8_t> code)
-{
-   VkShaderModuleCreateInfo shaderModuleInfo{};
-   shaderModuleInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-   shaderModuleInfo.codeSize = code.size();
-   shaderModuleInfo.pCode    = reinterpret_cast<const uint32_t *>(code.data());
-
-   vulkan::ShaderModule shaderModule(*m_device);
-   if (shaderModule.construct(&shaderModuleInfo) != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
-   return Shader(std::string{entrypoint}, stage, std::move(shaderModule));
-}
-
-Result<CommandList> Device::create_command_list() const
-{
-   VkCommandBufferAllocateInfo allocateInfo{};
-   allocateInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocateInfo.commandPool        = *m_commandPool;
-   allocateInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocateInfo.commandBufferCount = 1;
-
-   VkCommandBuffer commandBuffer;
-   if (vkAllocateCommandBuffers(*m_device, &allocateInfo, &commandBuffer) != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
-   return CommandList(commandBuffer, *m_device, *m_commandPool);
-}
-
-Status Device::init_swapchain(const Resolution &resolution)
-{
-   const auto vulkanColorFormat = vulkan::to_vulkan_color_format(m_surfaceFormat);
+   const auto vulkanColorFormat = vulkan::to_vulkan_color_format(renderPass.color_format());
    if (not vulkanColorFormat.has_value())
       return Status::UnsupportedFormat;
 
-   const auto vulkanColorSpace = vulkan::to_vulkan_color_space(m_colorSpace);
+   const auto vulkanColorSpace = vulkan::to_vulkan_color_space(colorSpace);
    if (not vulkanColorSpace.has_value())
       return Status::UnsupportedFormat;
+
+   auto [width, height] = renderPass.resolution();
 
    VkSurfaceCapabilitiesKHR capabilities;
    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, *m_surface, &capabilities);
@@ -190,7 +125,7 @@ Status Device::init_swapchain(const Resolution &resolution)
    swapchainInfo.sType            = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
    swapchainInfo.surface          = *m_surface;
    swapchainInfo.presentMode      = VK_PRESENT_MODE_MAILBOX_KHR;
-   swapchainInfo.imageExtent      = VkExtent2D{resolution.width, resolution.height};
+   swapchainInfo.imageExtent      = VkExtent2D{width, height};
    swapchainInfo.imageFormat      = *vulkanColorFormat;
    swapchainInfo.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
    swapchainInfo.oldSwapchain     = *m_swapchain;
@@ -201,7 +136,7 @@ Status Device::init_swapchain(const Resolution &resolution)
    swapchainInfo.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    swapchainInfo.clipped          = true;
 
-   const std::array<uint32_t, 2> queueFamilyIndices{m_queueFamilies.graphicsQueue,
+   const std::array queueFamilyIndices{m_queueFamilies.graphicsQueue,
                                                     m_queueFamilies.presentQueue};
    if (m_queueFamilies.graphicsQueue != m_queueFamilies.presentQueue) {
       swapchainInfo.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
@@ -215,7 +150,6 @@ Status Device::init_swapchain(const Resolution &resolution)
       return Status::UnsupportedDevice;
    }
 
-   m_surfaceResolution = resolution;
    m_swapchainImageViews.clear();
 
    const auto images = vulkan::get_swapchain_images(*m_device, *m_swapchain);
@@ -243,34 +177,22 @@ Status Device::init_swapchain(const Resolution &resolution)
       m_swapchainImageViews.emplace_back(std::move(imageView));
    }
 
-   auto depthTexture =
-           this->create_texture(GAPI_COLOR_FORMAT(D, Float32), resolution, TextureType::DepthBuffer);
-   if (not depthTexture.has_value())
-      return Status::UnsupportedDevice;
-
-   m_depthTexture.reset();
-   m_depthTexture = std::move(*depthTexture);
-
-   auto multisampleTexture = this->create_texture(m_surfaceFormat, resolution, TextureType::MultisampleImage);
-   if (not multisampleTexture.has_value())
-      return Status::UnsupportedDevice;
-
-   m_multisampleTexture.reset();
-   m_multisampleTexture = std::move(*multisampleTexture);
-
    m_swapchainFramebuffers.clear();
 
+   auto attachments = renderPass.image_views();
+   const auto resolve_attachment_id = renderPass.resolve_attachment_id();
+   assert(resolve_attachment_id < attachments.size());
+
    for (const auto &imageView : m_swapchainImageViews) {
-      std::array attachments{m_multisampleTexture->vulkan_image_view(), m_depthTexture->vulkan_image_view(),
-                             *imageView};
+      attachments[resolve_attachment_id] = *imageView;
 
       VkFramebufferCreateInfo framebufferInfo{};
       framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-      framebufferInfo.renderPass      = *m_renderPass;
+      framebufferInfo.renderPass      = renderPass.vulkan_render_pass();
       framebufferInfo.attachmentCount = attachments.size();
       framebufferInfo.pAttachments    = attachments.data();
-      framebufferInfo.width           = m_surfaceResolution.width;
-      framebufferInfo.height          = m_surfaceResolution.height;
+      framebufferInfo.width           = width;
+      framebufferInfo.height          = height;
       framebufferInfo.layers          = 1;
 
       vulkan::Framebuffer framebuffer(*m_device);
@@ -284,14 +206,187 @@ Status Device::init_swapchain(const Resolution &resolution)
    return Status::Success;
 }
 
-constexpr std::array<VkDynamicState, 2> g_dynamicStates{
+namespace {
+
+VkSampleCountFlagBits to_vulkan_sample_count(const AttachmentType attachmentType,
+                                             const SampleCount sampleCount)
+{
+   if (attachmentType == AttachmentType::ResolveAttachment) {
+      return VK_SAMPLE_COUNT_1_BIT;
+   }
+
+   return static_cast<VkSampleCountFlagBits>(sampleCount);
+}
+
+std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp>
+to_vulkan_load_store_op(const AttachmentType attachmentType)
+{
+   switch (attachmentType) {
+   case AttachmentType::ColorAttachment: return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE};
+   case AttachmentType::DepthAttachment:
+      return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE};
+   case AttachmentType::ResolveAttachment:
+      return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_STORE};
+   }
+
+   return {};
+}
+
+VkImageLayout to_vulkan_final_layout(const AttachmentType attachmentType)
+{
+   switch (attachmentType) {
+   case AttachmentType::ColorAttachment: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+   case AttachmentType::DepthAttachment: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+   case AttachmentType::ResolveAttachment: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+   }
+
+   return {};
+}
+
+ColorFormat to_vulkan_format(const AttachmentType attachmentType, const ColorFormat &colorFormat,
+                             const ColorFormat &depthFormat)
+{
+   switch (attachmentType) {
+   case AttachmentType::ColorAttachment: return colorFormat;
+   case AttachmentType::DepthAttachment: return depthFormat;
+   case AttachmentType::ResolveAttachment: return colorFormat;
+   }
+
+   return {};
+}
+
+std::tuple<TextureType, SampleCount> to_texture_type(const AttachmentType attachmentType,
+                                                     const SampleCount sampleCount)
+{
+   switch (attachmentType) {
+   case AttachmentType::ColorAttachment: return {TextureType::MultisampleImage, sampleCount};
+   case AttachmentType::DepthAttachment: return {TextureType::DepthBuffer, sampleCount};
+   case AttachmentType::ResolveAttachment: return {TextureType::MultisampleImage, SampleCount::Bits1};
+   }
+
+   return {};
+}
+
+}// namespace
+
+Result<RenderPass> Device::create_render_pass(const std::span<AttachmentType> attachmentTypes,
+                                              ColorFormat colorFormat, ColorFormat depthFormat,
+                                              SampleCount sampleCount, const Resolution &resolution)
+{
+   std::vector<VkAttachmentDescription> attachments{};
+   attachments.resize(attachmentTypes.size());
+
+   std::vector<VkAttachmentReference> colorAttachmentRefs{};
+   std::optional<VkAttachmentReference> depthAttachmentRef{};
+   std::optional<VkAttachmentReference> resolveAttachmentRefs{};
+
+   for (size_t i = {}; i < attachments.size(); ++i) {
+      auto &dstAttachment       = attachments[i];
+      const auto attachmentType = attachmentTypes[i];
+
+      const auto format       = to_vulkan_format(attachmentType, colorFormat, depthFormat);
+      const auto vulkanFormat = vulkan::to_vulkan_color_format(format).value_or(VK_FORMAT_UNDEFINED);
+      assert(vulkanFormat != VK_FORMAT_UNDEFINED);
+
+      auto [loadOp, storeOp]       = to_vulkan_load_store_op(attachmentType);
+      dstAttachment.format         = vulkanFormat;
+      dstAttachment.samples        = to_vulkan_sample_count(attachmentType, sampleCount);
+      dstAttachment.loadOp         = loadOp;
+      dstAttachment.storeOp        = storeOp;
+      dstAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+      dstAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      dstAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+      dstAttachment.finalLayout    = to_vulkan_final_layout(attachmentType);
+
+      if (attachmentType == AttachmentType::ColorAttachment) {
+         VkAttachmentReference reference{};
+         reference.attachment = i;
+         reference.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+         colorAttachmentRefs.push_back(reference);
+      }
+      if (attachmentType == AttachmentType::DepthAttachment) {
+         VkAttachmentReference reference{};
+         reference.attachment = i;
+         reference.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+         depthAttachmentRef   = reference;
+      }
+      if (attachmentType == AttachmentType::ResolveAttachment) {
+         VkAttachmentReference reference{};
+         reference.attachment  = i;
+         reference.layout      = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+         resolveAttachmentRefs = reference;
+      }
+   }
+
+   VkSubpassDescription subpass{};
+   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+   if (not colorAttachmentRefs.empty()) {
+      subpass.colorAttachmentCount = colorAttachmentRefs.size();
+      subpass.pColorAttachments    = colorAttachmentRefs.data();
+   }
+   if (depthAttachmentRef.has_value()) {
+      subpass.pDepthStencilAttachment = &(*depthAttachmentRef);
+   }
+   if (resolveAttachmentRefs.has_value()) {
+      subpass.pResolveAttachments = &(*resolveAttachmentRefs);
+   }
+
+   VkSubpassDependency dependency{};
+   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+   dependency.dstSubpass = 0;
+   dependency.srcStageMask =
+           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+   dependency.srcAccessMask = 0;
+   dependency.dstStageMask =
+           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+   dependency.dstAccessMask =
+           VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+   VkRenderPassCreateInfo renderPassInfo{};
+   renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+   renderPassInfo.attachmentCount = attachments.size();
+   renderPassInfo.pAttachments    = attachments.data();
+   renderPassInfo.subpassCount    = 1;
+   renderPassInfo.pSubpasses      = &subpass;
+   renderPassInfo.dependencyCount = 1;
+   renderPassInfo.pDependencies   = &dependency;
+
+   vulkan::RenderPass renderPass(*m_device);
+   if (const auto res = renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   VkPhysicalDeviceProperties properties{};
+   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+
+   std::vector<Texture> textures{};
+   for (const auto attachmentType : attachmentTypes) {
+      if (attachmentType == AttachmentType::ResolveAttachment)
+         continue;
+
+      const auto format = to_vulkan_format(attachmentType, colorFormat, depthFormat);
+      auto const [textureType, textureSampleCount] = to_texture_type(attachmentType, sampleCount);
+
+      auto texture = this->create_texture(format, resolution, textureType, textureSampleCount);
+      if (not texture.has_value()) {
+         return std::unexpected(texture.error());
+      }
+      textures.emplace_back(std::move(*texture));
+   }
+
+   std::vector attachmentLayout(attachmentTypes.begin(), attachmentTypes.end());
+
+   return RenderPass(std::move(renderPass), std::move(textures), std::move(attachmentLayout), resolution, colorFormat);
+}
+
+constexpr std::array g_dynamicStates{
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR,
 };
 
-Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
+Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass, const std::span<Shader *> shaders,
                                          const std::span<VertexInputLayout> layouts,
-                                         std::span<DescriptorBinding> descriptorBindings,
+                                         const std::span<DescriptorBinding> descriptorBindings,
                                          const uint32_t descriptorBudget)
 {
    std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
@@ -354,17 +449,19 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
    inputAssemblyInfo.topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
+   auto resolution = renderPass.resolution();
+
    VkViewport viewport{};
    viewport.x        = 0.0f;
    viewport.y        = 0.0f;
-   viewport.width    = static_cast<float>(m_surfaceResolution.width);
-   viewport.height   = static_cast<float>(m_surfaceResolution.height);
+   viewport.width    = static_cast<float>(resolution.width);
+   viewport.height   = static_cast<float>(resolution.height);
    viewport.minDepth = 0.0f;
    viewport.maxDepth = 100.0f;
 
    VkRect2D scissor{};
    scissor.offset = {0, 0};
-   scissor.extent = VkExtent2D{m_surfaceResolution.width, m_surfaceResolution.height};
+   scissor.extent = VkExtent2D{resolution.width, resolution.height};
 
    VkPipelineViewportStateCreateInfo viewportStateInfo{};
    viewportStateInfo.sType         = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -466,7 +563,7 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
    pipelineInfo.pVertexInputState   = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
    pipelineInfo.pDepthStencilState  = &depthStencilStateInfo;
-   pipelineInfo.renderPass          = *m_renderPass;
+   pipelineInfo.renderPass          = renderPass.vulkan_render_pass();
    pipelineInfo.subpass             = 0;
    pipelineInfo.basePipelineHandle  = nullptr;
    pipelineInfo.basePipelineIndex   = -1;
@@ -504,6 +601,38 @@ Result<Pipeline> Device::create_pipeline(const std::span<Shader *> shaders,
                    std::move(descriptorSetLayout),
                    *m_sampler,
                    static_cast<uint32_t>(m_swapchainImageViews.size())};
+}
+
+Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,
+                                     const std::span<const uint8_t> code)
+{
+   VkShaderModuleCreateInfo shaderModuleInfo{};
+   shaderModuleInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+   shaderModuleInfo.codeSize = code.size();
+   shaderModuleInfo.pCode    = reinterpret_cast<const uint32_t *>(code.data());
+
+   vulkan::ShaderModule shaderModule(*m_device);
+   if (shaderModule.construct(&shaderModuleInfo) != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return Shader(std::string{entrypoint}, stage, std::move(shaderModule));
+}
+
+Result<CommandList> Device::create_command_list() const
+{
+   VkCommandBufferAllocateInfo allocateInfo{};
+   allocateInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+   allocateInfo.commandPool        = *m_commandPool;
+   allocateInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   allocateInfo.commandBufferCount = 1;
+
+   VkCommandBuffer commandBuffer;
+   if (vkAllocateCommandBuffers(*m_device, &allocateInfo, &commandBuffer) != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return CommandList(commandBuffer, *m_device, *m_commandPool);
 }
 
 Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t size)
@@ -567,279 +696,6 @@ Result<Semaphore> Device::create_semaphore() const
    return Semaphore(std::move(semaphore));
 }
 
-Status Device::begin_graphic_commands(CommandList &commandList, uint32_t framebufferIndex,
-                                      const Color &clearColor) const
-{
-   assert(framebufferIndex < m_swapchainFramebuffers.size());
-
-   commandList.set_is_one_time(false);
-
-   vkResetCommandBuffer(commandList.vulkan_command_buffer(), 0);
-
-   VkCommandBufferBeginInfo beginInfo{};
-   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   if (vkBeginCommandBuffer(commandList.vulkan_command_buffer(), &beginInfo) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-
-   std::array<VkClearValue, 3> clearValues;
-   clearValues[0].color = {
-           {clearColor.r, clearColor.g, clearColor.b, clearColor.a}
-   };
-   clearValues[1].depthStencil.depth = 1.0f;
-   clearValues[1].depthStencil.stencil = 0.0f;
-   clearValues[2].color = clearValues[0].color;
-
-   VkRenderPassBeginInfo renderPassInfo{};
-   renderPassInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-   renderPassInfo.renderPass               = *m_renderPass;
-   renderPassInfo.framebuffer              = *m_swapchainFramebuffers[framebufferIndex];
-   renderPassInfo.renderArea.offset        = {0, 0};
-   renderPassInfo.renderArea.extent.width  = m_surfaceResolution.width;
-   renderPassInfo.renderArea.extent.height = m_surfaceResolution.height;
-   renderPassInfo.clearValueCount          = clearValues.size();
-   renderPassInfo.pClearValues             = clearValues.data();
-
-   vkCmdBeginRenderPass(commandList.vulkan_command_buffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-   VkViewport viewport{};
-   viewport.x        = 0.0f;
-   viewport.y        = 0.0f;
-   viewport.width    = static_cast<float>(m_surfaceResolution.width);
-   viewport.height   = static_cast<float>(m_surfaceResolution.height);
-   viewport.minDepth = 0.0f;
-   viewport.maxDepth = 1.0f;
-   vkCmdSetViewport(commandList.vulkan_command_buffer(), 0, 1, &viewport);
-
-   VkRect2D scissor{};
-   scissor.offset = {0, 0};
-   scissor.extent = VkExtent2D{m_surfaceResolution.width, m_surfaceResolution.height};
-   vkCmdSetScissor(commandList.vulkan_command_buffer(), 0, 1, &scissor);
-
-   return Status::Success;
-}
-
-Status Device::begin_one_time_commands(CommandList &commandList) const
-{
-   commandList.set_is_one_time(true);
-
-   VkCommandBufferBeginInfo beginInfo{};
-   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-   if (vkBeginCommandBuffer(commandList.vulkan_command_buffer(), &beginInfo) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-   return Status::Success;
-}
-
-uint32_t Device::get_available_framebuffer(const Semaphore &semaphore) const
-{
-   uint32_t imageIndex;
-   vkAcquireNextImageKHR(*m_device, *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE,
-                         &imageIndex);
-   return imageIndex;
-}
-
-Status Device::submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
-                                   const Semaphore &signalSemaphore, const Fence &fence) const
-{
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-   const std::array waitSemaphores{waitSemaphore.vulkan_semaphore()};
-   const std::array signalSemaphores{signalSemaphore.vulkan_semaphore()};
-   static constexpr std::array<VkPipelineStageFlags, 1> waitStages{
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-   const std::array commandBuffers{commandList.vulkan_command_buffer()};
-
-   submitInfo.waitSemaphoreCount   = waitSemaphores.size();
-   submitInfo.pWaitSemaphores      = waitSemaphores.data();
-   submitInfo.pWaitDstStageMask    = waitStages.data();
-   submitInfo.commandBufferCount   = commandBuffers.size();
-   submitInfo.pCommandBuffers      = commandBuffers.data();
-   submitInfo.signalSemaphoreCount = signalSemaphores.size();
-   submitInfo.pSignalSemaphores    = signalSemaphores.data();
-
-   if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, fence.vulkan_fence()) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-
-   return Status::Success;
-}
-
-Status Device::present(const Semaphore &semaphore, const uint32_t framebufferIndex) const
-{
-   std::array<VkSemaphore, 1> waitSemaphores{semaphore.vulkan_semaphore()};
-   std::array<VkSwapchainKHR, 1> swapchains{*m_swapchain};
-   std::array<uint32_t, 1> imageIndices{framebufferIndex};
-
-   VkPresentInfoKHR presentInfo{};
-   presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-   presentInfo.waitSemaphoreCount = waitSemaphores.size();
-   presentInfo.pWaitSemaphores    = waitSemaphores.data();
-   presentInfo.swapchainCount     = swapchains.size();
-   presentInfo.pSwapchains        = swapchains.data();
-   presentInfo.pImageIndices      = imageIndices.data();
-   presentInfo.pResults           = nullptr;
-
-   if (vkQueuePresentKHR(m_presentQueue, &presentInfo) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-
-   return Status::Success;
-}
-
-void Device::await_all() const
-{
-   vkDeviceWaitIdle(*m_device);
-}
-
-uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
-{
-   VkPhysicalDeviceMemoryProperties memProperties;
-   vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
-
-   for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-      if ((typeFilter & (1 << i)) &&
-          (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
-         return i;
-      }
-   }
-
-   return 0;
-}
-
-Status Device::init_color_format(const ColorFormat &colorFormat, ColorSpace colorSpace)
-{
-   if (not this->is_surface_format_supported(colorFormat, colorSpace))
-      return Status::UnsupportedFormat;
-
-   m_surfaceFormat = colorFormat;
-   m_colorSpace    = colorSpace;
-
-   const auto vulkan_format = vulkan::to_vulkan_color_format(m_surfaceFormat).value_or(VK_FORMAT_UNDEFINED);
-   if (vulkan_format == VK_FORMAT_UNDEFINED)
-      return Status::UnsupportedFormat;
-
-   std::array<VkAttachmentDescription, 3> attachments{};
-   // multisample attachment
-   attachments[0].format         = vulkan_format;
-   attachments[0].samples        = VK_SAMPLE_COUNT_4_BIT;
-   attachments[0].loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   attachments[0].storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-   attachments[0].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   attachments[0].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-   attachments[0].finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-   // depth attachment
-   attachments[1].format         = VK_FORMAT_D32_SFLOAT;
-   attachments[1].samples        = VK_SAMPLE_COUNT_4_BIT;
-   attachments[1].loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   attachments[1].storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   attachments[1].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   attachments[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   attachments[1].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-   attachments[1].finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-   // color attachment
-   attachments[2].format         = vulkan_format;
-   attachments[2].samples        = VK_SAMPLE_COUNT_1_BIT;
-   attachments[2].loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   attachments[2].storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-   attachments[2].stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   attachments[2].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   attachments[2].initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-   attachments[2].finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-   VkAttachmentReference colorAttachmentRef{};
-   colorAttachmentRef.attachment = 0;
-   colorAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-   VkAttachmentReference depthAttachmentRef{};
-   depthAttachmentRef.attachment = 1;
-   depthAttachmentRef.layout     = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-   VkAttachmentReference resolveAttachmentRef{};
-   resolveAttachmentRef.attachment = 2;
-   resolveAttachmentRef.layout     = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-   VkSubpassDescription subpass{};
-   subpass.pipelineBindPoint       = VK_PIPELINE_BIND_POINT_GRAPHICS;
-   subpass.colorAttachmentCount    = 1;
-   subpass.pColorAttachments       = &colorAttachmentRef;
-   subpass.pDepthStencilAttachment = &depthAttachmentRef;
-   subpass.pResolveAttachments     = &resolveAttachmentRef;
-
-   VkSubpassDependency dependency{};
-   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-   dependency.dstSubpass = 0;
-   dependency.srcStageMask =
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-   dependency.srcAccessMask = 0;
-   dependency.dstStageMask =
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-   dependency.dstAccessMask =
-           VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
-   VkRenderPassCreateInfo renderPassInfo{};
-   renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-   renderPassInfo.attachmentCount = attachments.size();
-   renderPassInfo.pAttachments    = attachments.data();
-   renderPassInfo.subpassCount    = 1;
-   renderPassInfo.pSubpasses      = &subpass;
-   renderPassInfo.dependencyCount = 1;
-   renderPassInfo.pDependencies   = &dependency;
-
-   if (const auto res = m_renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-
-   VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
-
-   VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter               = VK_FILTER_LINEAR;
-   samplerInfo.minFilter               = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable        = true;
-   samplerInfo.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
-   samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = false;
-   samplerInfo.compareEnable           = false;
-   samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-   if (m_sampler.construct(&samplerInfo) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-
-   return Status::Success;
-}
-
-Status Device::submit_command_list_one_time(const CommandList &commandList) const
-{
-   const auto vulkanCommandList = commandList.vulkan_command_buffer();
-
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers    = &vulkanCommandList;
-
-   vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, nullptr);
-   vkQueueWaitIdle(m_graphicsQueue);
-
-   return Status::Success;
-}
-
-uint32_t Device::framebuffer_count() const
-{
-   return m_swapchainImageViews.size();
-}
-
 namespace {
 
 VkImageTiling to_vulkan_image_tiling(const TextureType type)
@@ -873,20 +729,10 @@ VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
    return {};
 }
 
-VkSampleCountFlagBits to_vulkan_sample_count(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage: return VK_SAMPLE_COUNT_1_BIT;
-   case TextureType::DepthBuffer:// fallthrough
-   case TextureType::MultisampleImage: return VK_SAMPLE_COUNT_4_BIT;
-   }
-   return {};
-}
-
 }// namespace
 
 Result<Texture> Device::create_texture(const ColorFormat &format, const Resolution &imageSize,
-                                       const TextureType type) const
+                                       const TextureType type, SampleCount sampleCount) const
 {
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
@@ -899,7 +745,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    imageInfo.arrayLayers   = 1;
    imageInfo.tiling        = to_vulkan_image_tiling(type);
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-   imageInfo.samples       = to_vulkan_sample_count(type);
+   imageInfo.samples       = static_cast<VkSampleCountFlagBits>(sampleCount);
    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
    imageInfo.usage         = to_vulkan_image_usage(type);
 
@@ -943,6 +789,194 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
 
    return Texture(std::move(image), std::move(imageMemory), std::move(imageView), imageSize.width,
                   imageSize.height);
+}
+
+Status Device::begin_graphic_commands(const RenderPass &renderPass, CommandList &commandList,
+                                      const uint32_t framebufferIndex, const Color &clearColor) const
+{
+   assert(framebufferIndex < m_swapchainFramebuffers.size());
+
+   commandList.set_is_one_time(false);
+
+   vkResetCommandBuffer(commandList.vulkan_command_buffer(), 0);
+
+   VkCommandBufferBeginInfo beginInfo{};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+   if (vkBeginCommandBuffer(commandList.vulkan_command_buffer(), &beginInfo) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+
+   std::array<VkClearValue, 3> clearValues{};
+   clearValues[0].color = {
+           {clearColor.r, clearColor.g, clearColor.b, clearColor.a}
+   };
+   clearValues[1].depthStencil.depth   = 1.0f;
+   clearValues[1].depthStencil.stencil = 0.0f;
+   clearValues[2].color                = clearValues[0].color;
+
+   const auto resolution = renderPass.resolution();
+
+   VkRenderPassBeginInfo renderPassInfo{};
+   renderPassInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   renderPassInfo.renderPass               = renderPass.vulkan_render_pass();
+   renderPassInfo.framebuffer              = *m_swapchainFramebuffers[framebufferIndex];
+   renderPassInfo.renderArea.offset        = {0, 0};
+   renderPassInfo.renderArea.extent.width  = resolution.width;
+   renderPassInfo.renderArea.extent.height = resolution.height;
+   renderPassInfo.clearValueCount          = clearValues.size();
+   renderPassInfo.pClearValues             = clearValues.data();
+
+   vkCmdBeginRenderPass(commandList.vulkan_command_buffer(), &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+   VkViewport viewport{};
+   viewport.x        = 0.0f;
+   viewport.y        = 0.0f;
+   viewport.width    = static_cast<float>(resolution.width);
+   viewport.height   = static_cast<float>(resolution.height);
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
+   vkCmdSetViewport(commandList.vulkan_command_buffer(), 0, 1, &viewport);
+
+   VkRect2D scissor{};
+   scissor.offset = {0, 0};
+   scissor.extent = VkExtent2D{resolution.width, resolution.height};
+   vkCmdSetScissor(commandList.vulkan_command_buffer(), 0, 1, &scissor);
+
+   return Status::Success;
+}
+
+bool Device::is_surface_format_supported(const ColorFormat &colorFormat, const ColorSpace colorSpace) const
+{
+   const auto formats = vulkan::get_surface_formats(m_physicalDevice, *m_surface);
+
+   const auto targetVulkanFormat = vulkan::to_vulkan_color_format(colorFormat);
+   if (not targetVulkanFormat.has_value()) {
+      return false;
+   }
+
+   const auto targetVulkanColorSpace = vulkan::to_vulkan_color_space(colorSpace);
+   if (not targetVulkanColorSpace.has_value()) {
+      return false;
+   }
+
+   for (const auto [vulkanFormat, vulkanColorSpace] : formats) {
+      if (vulkanFormat != targetVulkanFormat)
+         continue;
+      if (vulkanColorSpace != targetVulkanColorSpace)
+         continue;
+
+      return true;
+   }
+
+   return false;
+}
+
+std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
+{
+   VkSurfaceCapabilitiesKHR capabilities;
+   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, *m_surface, &capabilities);
+
+   return {
+           Resolution{capabilities.minImageExtent.width, capabilities.minImageExtent.height},
+           Resolution{capabilities.maxImageExtent.width, capabilities.maxImageExtent.height}
+   };
+}
+
+uint32_t Device::get_available_framebuffer(const Semaphore &semaphore) const
+{
+   uint32_t imageIndex;
+   vkAcquireNextImageKHR(*m_device, *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE,
+                         &imageIndex);
+   return imageIndex;
+}
+
+Status Device::submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
+                                   const Semaphore &signalSemaphore, const Fence &fence) const
+{
+   VkSubmitInfo submitInfo{};
+   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+   const std::array waitSemaphores{waitSemaphore.vulkan_semaphore()};
+   const std::array signalSemaphores{signalSemaphore.vulkan_semaphore()};
+   static constexpr std::array<VkPipelineStageFlags, 1> waitStages{
+           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+   const std::array commandBuffers{commandList.vulkan_command_buffer()};
+
+   submitInfo.waitSemaphoreCount   = waitSemaphores.size();
+   submitInfo.pWaitSemaphores      = waitSemaphores.data();
+   submitInfo.pWaitDstStageMask    = waitStages.data();
+   submitInfo.commandBufferCount   = commandBuffers.size();
+   submitInfo.pCommandBuffers      = commandBuffers.data();
+   submitInfo.signalSemaphoreCount = signalSemaphores.size();
+   submitInfo.pSignalSemaphores    = signalSemaphores.data();
+
+   if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, fence.vulkan_fence()) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+
+   return Status::Success;
+}
+
+Status Device::submit_command_list_one_time(const CommandList &commandList) const
+{
+   const auto vulkanCommandList = commandList.vulkan_command_buffer();
+
+   VkSubmitInfo submitInfo{};
+   submitInfo.sType              = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   submitInfo.commandBufferCount = 1;
+   submitInfo.pCommandBuffers    = &vulkanCommandList;
+
+   vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, nullptr);
+   vkQueueWaitIdle(m_graphicsQueue);
+
+   return Status::Success;
+}
+
+Status Device::present(const Semaphore &semaphore, const uint32_t framebufferIndex) const
+{
+   std::array<VkSemaphore, 1> waitSemaphores{semaphore.vulkan_semaphore()};
+   std::array<VkSwapchainKHR, 1> swapchains{*m_swapchain};
+   std::array<uint32_t, 1> imageIndices{framebufferIndex};
+
+   VkPresentInfoKHR presentInfo{};
+   presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+   presentInfo.waitSemaphoreCount = waitSemaphores.size();
+   presentInfo.pWaitSemaphores    = waitSemaphores.data();
+   presentInfo.swapchainCount     = swapchains.size();
+   presentInfo.pSwapchains        = swapchains.data();
+   presentInfo.pImageIndices      = imageIndices.data();
+   presentInfo.pResults           = nullptr;
+
+   if (vkQueuePresentKHR(m_presentQueue, &presentInfo) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+
+   return Status::Success;
+}
+
+uint32_t Device::framebuffer_count() const
+{
+   return m_swapchainImageViews.size();
+}
+
+void Device::await_all() const
+{
+   vkDeviceWaitIdle(*m_device);
+}
+
+uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+{
+   VkPhysicalDeviceMemoryProperties memProperties;
+   vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
+
+   for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+      if ((typeFilter & (1 << i)) &&
+          (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+         return i;
+      }
+   }
+
+   return 0;
 }
 
 constexpr std::array g_vulkanInstanceExtensions{
@@ -1075,8 +1109,8 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
                   });
 
    VkPhysicalDeviceFeatures deviceFeatures{
-      .sampleRateShading = true,
-      .samplerAnisotropy = true,
+           .sampleRateShading = true,
+           .samplerAnisotropy = true,
    };
 
    VkDeviceCreateInfo deviceInfo{};
@@ -1102,12 +1136,35 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
       return std::unexpected(Status::UnsupportedDevice);
    }
 
+   VkPhysicalDeviceProperties properties{};
+   vkGetPhysicalDeviceProperties(*pickedDevice, &properties);
+
+   VkSamplerCreateInfo samplerInfo{};
+   samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   samplerInfo.magFilter               = VK_FILTER_LINEAR;
+   samplerInfo.minFilter               = VK_FILTER_LINEAR;
+   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.anisotropyEnable        = true;
+   samplerInfo.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
+   samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   samplerInfo.unnormalizedCoordinates = false;
+   samplerInfo.compareEnable           = false;
+   samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+   samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+   vulkan::Sampler sampler(*device);
+   if (sampler.construct(&samplerInfo) != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
    return std::make_unique<Device>(std::move(instance),
 #if GAPI_ENABLE_VALIDATION
                                    std::move(debugMessenger),
 #endif
                                    std::move(vulkan_surface), std::move(device), *pickedDevice,
-                                   queueFamilyIndices, std::move(commandPool));
+                                   queueFamilyIndices, std::move(commandPool), std::move(sampler));
 }
 
 }// namespace graphics_api

@@ -8,9 +8,9 @@ constexpr auto g_initialHeight = 720;
 class EventListener final : public wayland::DefaultSurfaceEventListener
 {
  public:
-   EventListener(wayland::Surface& surface, renderer::Renderer& renderer) :
-      m_surface(surface),
-      m_renderer(renderer)
+   EventListener(wayland::Surface &surface, renderer::Renderer &renderer) :
+       m_surface(surface),
+       m_renderer(renderer)
    {
    }
 
@@ -48,7 +48,7 @@ class EventListener final : public wayland::DefaultSurfaceEventListener
 
    void on_resize(const int width, const int height) override
    {
-     m_renderer.on_resize(width, height);
+      m_renderer.on_resize(width, height);
    }
 
    void on_close() override

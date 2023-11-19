@@ -5,15 +5,16 @@
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
 #include "PlatformSurface.h"
+#include "RenderPass.h"
 #include "Shader.h"
 #include "Synchronization.h"
 #include "Texture.h"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
+#include <optional>
 #include <span>
 #include <vector>
-#include <optional>
 
 #if NDEBUG
 #define GAPI_ENABLE_VALIDATION 0
@@ -26,7 +27,6 @@ namespace graphics_api {
 DECLARE_VLK_WRAPPED_OBJECT(Instance)
 DECLARE_VLK_WRAPPED_OBJECT(Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(SwapchainKHR, Device)
-DECLARE_VLK_WRAPPED_CHILD_OBJECT(RenderPass, Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(Framebuffer, Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(Sampler, Device)
@@ -53,16 +53,14 @@ class Device
           vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
           vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
-          const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool);
+          const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool, vulkan::Sampler sampler);
 
-   [[nodiscard]] Status init_color_format(const ColorFormat &colorFormat, ColorSpace colorSpace);
-   [[nodiscard]] Status init_swapchain(const Resolution &resolution);
+   [[nodiscard]] Status init_swapchain(const RenderPass &renderPass, ColorSpace colorSpace);
 
-   [[nodiscard]] bool is_surface_format_supported(const ColorFormat &colorFormat,
-                                                  ColorSpace colorSpace) const;
-   [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
-
-   [[nodiscard]] Result<Pipeline> create_pipeline(std::span<Shader *> shaders,
+   [[nodiscard]] Result<RenderPass> create_render_pass(std::span<AttachmentType> attachmentTypes,
+                                                       ColorFormat colorFormat, ColorFormat depthFormat,
+                                                       SampleCount sampleCount, const Resolution &resolution);
+   [[nodiscard]] Result<Pipeline> create_pipeline(const RenderPass &renderPass, std::span<Shader *> shaders,
                                                   std::span<VertexInputLayout> layouts,
                                                   std::span<DescriptorBinding> descriptorBindings,
                                                   uint32_t descriptorBudget);
@@ -73,12 +71,15 @@ class Device
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
-                                                TextureType type = TextureType::SampledImage) const;
+                                                TextureType type        = TextureType::SampledImage,
+                                                SampleCount sampleCount = SampleCount::Bits1) const;
 
-   [[nodiscard]] Status begin_graphic_commands(CommandList &commandList, uint32_t framebufferIndex,
-                                               const Color &clearColor) const;
-   [[nodiscard]] Status begin_one_time_commands(CommandList &commandList) const;
+   [[nodiscard]] Status begin_graphic_commands(const RenderPass &renderPass, CommandList &commandList,
+                                               uint32_t framebufferIndex, const Color &clearColor) const;
 
+   [[nodiscard]] bool is_surface_format_supported(const ColorFormat &colorFormat,
+                                                  ColorSpace colorSpace) const;
+   [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
    [[nodiscard]] uint32_t get_available_framebuffer(const Semaphore &semaphore) const;
    [[nodiscard]] Status submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
                                             const Semaphore &signalSemaphore, const Fence &fence) const;
@@ -98,15 +99,9 @@ class Device
    vulkan::Device m_device;
    vulkan::PhysicalDevice m_physicalDevice;
    vulkan::SwapchainKHR m_swapchain;
-   std::optional<Texture> m_depthTexture;
-   std::optional<Texture> m_multisampleTexture;
-   Resolution m_surfaceResolution;
-   ColorFormat m_surfaceFormat;
-   ColorSpace m_colorSpace;
    vulkan::QueueFamilyIndices m_queueFamilies;
    std::vector<vulkan::ImageView> m_swapchainImageViews;
    std::vector<vulkan::Framebuffer> m_swapchainFramebuffers;
-   vulkan::RenderPass m_renderPass;
    vulkan::CommandPool m_commandPool;
    vulkan::Sampler m_sampler;
    VkQueue m_graphicsQueue;

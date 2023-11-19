@@ -19,6 +19,7 @@ struct RendererObjects {
    uint32_t width{};
    uint32_t height{};
    graphics_api::DeviceUPtr device;
+   graphics_api::RenderPass renderPass;
    graphics_api::Shader vertexShader;
    graphics_api::Shader fragmentShader;
    graphics_api::Pipeline pipeline;
@@ -58,6 +59,7 @@ class Renderer
    uint32_t m_width{};
    uint32_t m_height{};
    graphics_api::DeviceUPtr m_device;
+   graphics_api::RenderPass m_renderPass;
    graphics_api::Shader m_vertexShader;
    graphics_api::Shader m_fragmentShader;
    graphics_api::Pipeline m_pipeline;

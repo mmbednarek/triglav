@@ -91,10 +91,14 @@ renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::
 
 namespace renderer {
 
+constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
+constexpr auto g_depthFormat = GAPI_COLOR_FORMAT(D, Float32);
+
 Renderer::Renderer(RendererObjects &&objects) :
     m_width(objects.width),
     m_height(objects.height),
     m_device(std::move(objects.device)),
+    m_renderPass(std::move(objects.renderPass)),
     m_vertexShader(std::move(objects.vertexShader)),
     m_fragmentShader(std::move(objects.fragmentShader)),
     m_pipeline(std::move(objects.pipeline)),
@@ -120,7 +124,7 @@ void Renderer::on_render()
    this->update_uniform_data(framebufferIndex);
    m_inFlightFence.await();
 
-   checkStatus(m_device->begin_graphic_commands(m_commandList, framebufferIndex,
+   checkStatus(m_device->begin_graphic_commands(m_renderPass, m_commandList, framebufferIndex,
                                                 graphics_api::ColorPalette::Black));
 
    m_commandList.bind_pipeline(m_pipeline);
@@ -157,7 +161,8 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
    }
 
    m_pitch -= dy * 0.01f;
-   m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f, static_cast<float>(M_PI) / 2.0f - 0.01f);
+   m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f,
+                        static_cast<float>(M_PI) / 2.0f - 0.01f);
 }
 
 CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
@@ -167,7 +172,7 @@ CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
    auto transferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
                                                              sizeof(Vertex) * mesh.vertices.size()));
    {
-      auto mappedMemory = checkResult(transferBuffer.map_memory());
+      const auto mappedMemory = checkResult(transferBuffer.map_memory());
       mappedMemory.write(mesh.vertices.data(), sizeof(Vertex) * mesh.vertices.size());
    }
 
@@ -204,12 +209,26 @@ void Renderer::on_mouse_wheel_turn(const float x)
 
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
-   checkStatus(m_device->init_swapchain(graphics_api::Resolution{width, height}));
+   std::array attachments{
+           graphics_api::AttachmentType::ColorAttachment,
+           graphics_api::AttachmentType::DepthAttachment,
+           graphics_api::AttachmentType::ResolveAttachment,
+   };
+
+   const graphics_api::Resolution resolution{width, height};
+
+   m_device->await_all();
+
+   m_renderPass =
+           checkResult(m_device->create_render_pass(attachments, g_colorFormat, GAPI_COLOR_FORMAT(D, Float32),
+                                                    graphics_api::SampleCount::Bits4, resolution));
+
+   checkStatus(m_device->init_swapchain(m_renderPass, graphics_api::ColorSpace::sRGB));
    m_width  = width;
    m_height = height;
 }
 
-void Renderer::update_uniform_data(uint32_t frame)
+void Renderer::update_uniform_data(const uint32_t frame)
 {
    static auto startTime = std::chrono::high_resolution_clock::now();
    auto currentTime      = std::chrono::high_resolution_clock::now();
@@ -266,8 +285,6 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
 {
    auto device = checkResult(graphics_api::initialize_device(surface));
 
-   checkStatus(device->init_color_format(GAPI_COLOR_FORMAT(BGRA, sRGB), graphics_api::ColorSpace::sRGB));
-
    graphics_api::Resolution resolution{
            .width  = width,
            .height = height,
@@ -277,7 +294,16 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
    resolution.width  = std::clamp(resolution.width, minResolution.width, maxResolution.width);
    resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
 
-   checkStatus(device->init_swapchain(resolution));
+   std::array attachments{
+           graphics_api::AttachmentType::ColorAttachment,
+           graphics_api::AttachmentType::DepthAttachment,
+           graphics_api::AttachmentType::ResolveAttachment,
+   };
+
+   auto renderPass = checkResult(device->create_render_pass(attachments, g_colorFormat, g_depthFormat,
+                                                            graphics_api::SampleCount::Bits4, resolution));
+
+   checkStatus(device->init_swapchain(renderPass, graphics_api::ColorSpace::sRGB));
 
    const auto vertexShaderData = read_whole_file("shader/example_vertex.spv");
    if (vertexShaderData.empty()) {
@@ -341,7 +367,8 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
                                            },
    };
 
-   auto pipeline = checkResult(device->create_pipeline(shaders, vertex_layout, descriptor_bindings, 10));
+   auto pipeline =
+           checkResult(device->create_pipeline(renderPass, shaders, vertex_layout, descriptor_bindings, 10));
    auto texture1 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {3600, 1673}));
    auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {2048, 1024}));
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());
@@ -355,6 +382,7 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            .width                     = width,
            .height                    = height,
            .device                    = std::move(device),
+           .renderPass                = std::move(renderPass),
            .vertexShader              = std::move(vertexShader),
            .fragmentShader            = std::move(fragmentShader),
            .pipeline                  = std::move(pipeline),

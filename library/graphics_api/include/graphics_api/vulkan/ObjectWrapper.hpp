@@ -35,6 +35,9 @@ class WrappedObject
    {
       if (this == &other)
          return *this;
+
+      this->destroy(m_wrapped);
+
       m_wrapped = std::exchange(other.m_wrapped, nullptr);
       m_parent  = std::exchange(other.m_parent, TParentObject{});
       return *this;
@@ -42,13 +45,7 @@ class WrappedObject
 
    constexpr ~WrappedObject()
    {
-      if (m_wrapped != nullptr) {
-         if constexpr (std::is_same_v<TParentObject, NoParent>) {
-            TDestructor(m_wrapped, nullptr);
-         } else {
-            TDestructor(m_parent, m_wrapped, nullptr);
-         }
-      }
+      this->destroy(m_wrapped);
    }
 
    [[nodiscard]] constexpr TWrapped &operator*()
@@ -83,18 +80,24 @@ class WrappedObject
          result = TConstructor(m_parent, std::forward<TArgs>(args)..., nullptr, &m_wrapped);
       }
 
-      if (old_ptr != nullptr) {
-         if constexpr (std::is_same_v<TParentObject, NoParent>) {
-            TDestructor(old_ptr, nullptr);
-         } else {
-            TDestructor(m_parent, old_ptr, nullptr);
-         }
-      }
+      this->destroy(old_ptr);
 
       return result;
    }
 
  private:
+   void destroy(TWrapped wrapped)
+   {
+      if (wrapped == nullptr)
+         return;
+
+      if constexpr (std::is_same_v<TParentObject, NoParent>) {
+         TDestructor(wrapped, nullptr);
+      } else {
+         TDestructor(m_parent, wrapped, nullptr);
+      }
+   }
+
    TWrapped m_wrapped{};
    TParentObject m_parent{};
 };

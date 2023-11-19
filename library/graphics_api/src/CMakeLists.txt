@@ -9,6 +9,7 @@ target_sources(graphics_api
         ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorGroup.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Pipeline.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/PlatformSurface.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/RenderPass.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Texture.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Shader.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Synchronization.cpp
@@ -25,6 +26,7 @@ target_sources(graphics_api
         ${GRAPHICS_API_INCLUDE_DIR}/DescriptorGroup.h
         ${GRAPHICS_API_INCLUDE_DIR}/Pipeline.h
         ${GRAPHICS_API_INCLUDE_DIR}/PlatformSurface.h
+        ${GRAPHICS_API_INCLUDE_DIR}/RenderPass.h
         ${GRAPHICS_API_INCLUDE_DIR}/Shader.h
         ${GRAPHICS_API_INCLUDE_DIR}/Synchronization.h
         ${GRAPHICS_API_INCLUDE_DIR}/Texture.h

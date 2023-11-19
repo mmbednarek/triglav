@@ -41,22 +41,25 @@ enum class ColorSpace
 
 enum class ShaderStage : uint32_t
 {
-   None = 0,
-   Vertex = (1 << 0),
+   None     = 0,
+   Vertex   = (1 << 0),
    Fragment = (1 << 1),
 };
 
 using ShaderStageFlags = std::underlying_type_t<ShaderStage>;
 
-constexpr ShaderStageFlags operator|(ShaderStage lhs, ShaderStage rhs) {
+constexpr ShaderStageFlags operator|(ShaderStage lhs, ShaderStage rhs)
+{
    return static_cast<ShaderStageFlags>(lhs) | static_cast<ShaderStageFlags>(rhs);
 }
 
-constexpr ShaderStageFlags operator|(ShaderStageFlags lhs, ShaderStage rhs) {
+constexpr ShaderStageFlags operator|(ShaderStageFlags lhs, ShaderStage rhs)
+{
    return lhs | static_cast<ShaderStageFlags>(rhs);
 }
 
-constexpr bool operator&(ShaderStageFlags lhs, ShaderStage rhs) {
+constexpr bool operator&(ShaderStageFlags lhs, ShaderStage rhs)
+{
    return (lhs & static_cast<ShaderStageFlags>(rhs)) != 0;
 }
 
@@ -89,28 +92,50 @@ struct VertexInputAttribute
    size_t offset{};
 };
 
-struct VertexInputLayout {
+struct VertexInputLayout
+{
    std::span<VertexInputAttribute> attributes{};
    size_t structure_size{};
 };
 
-enum class DescriptorType {
+enum class DescriptorType
+{
    UniformBuffer,
    Sampler,
    ImageSampler,
 };
 
-enum class TextureType {
+enum class TextureType
+{
    SampledImage,
    DepthBuffer,
    MultisampleImage,
 };
 
-struct DescriptorBinding {
+struct DescriptorBinding
+{
    int binding{};
    int descriptorCount{};
    DescriptorType type{};
    ShaderStageFlags shaderStages{};
+};
+
+enum class AttachmentType
+{
+   ColorAttachment,
+   DepthAttachment,
+   ResolveAttachment
+};
+
+enum class SampleCount : uint32_t
+{
+   Bits1 = (1 << 0),
+   Bits2 = (1 << 1),
+   Bits4 = (1 << 2),
+   Bits8 = (1 << 3),
+   Bits16 = (1 << 4),
+   Bits32 = (1 << 5),
+   Bits64 = (1 << 6),
 };
 
 template<typename T>
