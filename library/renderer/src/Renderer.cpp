@@ -7,8 +7,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "../include/renderer/Core.h"
-#include "../include/renderer/DebugMeshes.h"
+#include "Core.h"
+#include "DebugMeshes.h"
+#include "graphics_api/PipelineBuilder.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -33,36 +34,20 @@ std::vector<uint8_t> read_whole_file(std::string_view name)
    return result;
 }
 
-template<typename TObject>
-TObject checkResult(std::expected<TObject, graphics_api::Status> &&object)
-{
-   if (not object.has_value()) {
-      throw std::runtime_error("failed to init graphics_api object");
-   }
-   return std::move(object.value());
-}
-
-void checkStatus(graphics_api::Status status)
-{
-   if (status != graphics_api::Status::Success) {
-      throw std::runtime_error("failed to init graphics_api object");
-   }
-}
-
 renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::Pipeline &pipeline,
                                     graphics_api::Texture &texture)
 {
-   auto descriptors = checkResult(pipeline.allocate_descriptors());
+   auto descriptors = renderer::checkResult(pipeline.allocate_descriptors(device.framebuffer_count()));
 
    std::vector<graphics_api::Buffer> uniformBuffers;
    std::vector<graphics_api::MappedMemory> uniformBufferMappings;
 
    for (int i{}; i < device.framebuffer_count(); ++i) {
-      auto buffer       = checkResult(device.create_buffer(graphics_api::BufferPurpose::UniformBuffer,
-                                                           sizeof(renderer::UniformBufferObject)));
+      auto buffer = renderer::checkResult(device.create_buffer(graphics_api::BufferPurpose::UniformBuffer,
+                                                               sizeof(renderer::UniformBufferObject)));
       auto &movedBuffer = uniformBuffers.emplace_back(std::move(buffer));
 
-      auto mappedMemory = checkResult(movedBuffer.map_memory());
+      auto mappedMemory = renderer::checkResult(movedBuffer.map_memory());
       uniformBufferMappings.emplace_back(std::move(mappedMemory));
    }
 
@@ -93,6 +78,7 @@ namespace renderer {
 
 constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_COLOR_FORMAT(D, Float32);
+constexpr auto g_sampleCount = graphics_api::SampleCount::Bits2;
 
 Renderer::Renderer(RendererObjects &&objects) :
     m_width(objects.width),
@@ -109,7 +95,8 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_texture1(std::move(objects.texture1)),
     m_texture2(std::move(objects.texture2)),
     m_object1(std::move(objects.object1)),
-    m_object2(std::move(objects.object2))
+    m_object2(std::move(objects.object2)),
+    m_skyBox(*this)
 {
    this->write_to_texture("texture/earth.png", m_texture1);
    this->write_to_texture("texture/moon.png", m_texture2);
@@ -126,6 +113,9 @@ void Renderer::on_render()
 
    checkStatus(m_device->begin_graphic_commands(m_renderPass, m_commandList, framebufferIndex,
                                                 graphics_api::ColorPalette::Black));
+
+   m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
+                      static_cast<float>(m_height));
 
    m_commandList.bind_pipeline(m_pipeline);
 
@@ -207,6 +197,52 @@ void Renderer::on_mouse_wheel_turn(const float x)
    m_distance = std::clamp(m_distance, 1.0f, 100.0f);
 }
 
+graphics_api::Texture Renderer::load_texture(const std::string_view path) const
+{
+   int texWidth, texHeight, texChannels;
+   stbi_uc *pixels = stbi_load(path.data(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+   if (pixels == nullptr) {
+      throw std::runtime_error("failed to load texture");
+   }
+
+   auto transferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
+                                                             texWidth * texHeight * sizeof(uint32_t)));
+   {
+      auto mapped_memory = checkResult(transferBuffer.map_memory());
+      mapped_memory.write(pixels, texWidth * texHeight * sizeof(uint32_t));
+   }
+
+   auto texture = checkResult(
+           m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB),
+                                    {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)}));
+
+   auto oneTimeCommands = checkResult(m_device->create_command_list());
+
+   checkStatus(oneTimeCommands.begin_one_time());
+   oneTimeCommands.copy_buffer_to_texture(transferBuffer, texture);
+   checkStatus(oneTimeCommands.finish());
+
+   checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
+
+   return texture;
+}
+
+graphics_api::Shader Renderer::load_shader(const graphics_api::ShaderStage stage,
+                                           const std::string_view path) const
+{
+   const auto shaderData = read_whole_file(path.data());
+   if (shaderData.empty()) {
+      throw std::runtime_error("failed to open vertex shader file");
+   }
+
+   return checkResult(m_device->create_shader(stage, "main", shaderData));
+}
+
+graphics_api::PipelineBuilder Renderer::create_pipeline()
+{
+   return {*m_device, m_renderPass};
+}
+
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
    std::array attachments{
@@ -219,9 +255,8 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_device->await_all();
 
-   m_renderPass =
-           checkResult(m_device->create_render_pass(attachments, g_colorFormat, GAPI_COLOR_FORMAT(D, Float32),
-                                                    graphics_api::SampleCount::Bits4, resolution));
+   m_renderPass = checkResult(m_device->create_render_pass(
+           attachments, g_colorFormat, GAPI_COLOR_FORMAT(D, Float32), g_sampleCount, resolution));
 
    checkStatus(m_device->init_swapchain(m_renderPass, graphics_api::ColorSpace::sRGB));
    m_width  = width;
@@ -300,8 +335,8 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            graphics_api::AttachmentType::ResolveAttachment,
    };
 
-   auto renderPass = checkResult(device->create_render_pass(attachments, g_colorFormat, g_depthFormat,
-                                                            graphics_api::SampleCount::Bits4, resolution));
+   auto renderPass = checkResult(
+           device->create_render_pass(attachments, g_colorFormat, g_depthFormat, g_sampleCount, resolution));
 
    checkStatus(device->init_swapchain(renderPass, graphics_api::ColorSpace::sRGB));
 
@@ -321,54 +356,25 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
    auto fragmentShader = checkResult(
            device->create_shader(graphics_api::ShaderStage::Fragment, "main", fragmentShaderData));
 
-   std::array shaders{
-           &vertexShader,
-           &fragmentShader,
-   };
-
-   std::array<graphics_api::VertexInputAttribute, 3> vertex_attributes{
-           graphics_api::VertexInputAttribute{
-                                              .location = 0,
-                                              .format   = GAPI_COLOR_FORMAT(RGB, Float32),
-                                              .offset   = offsetof(Vertex, position),
-                                              },
-           graphics_api::VertexInputAttribute{
-                                              .location = 1,
-                                              .format   = GAPI_COLOR_FORMAT(RG, Float32),
-                                              .offset   = offsetof(Vertex,       uv),
-                                              },
-           graphics_api::VertexInputAttribute{
-                                              .location = 2,
-                                              .format   = GAPI_COLOR_FORMAT(RGB, Float32),
-                                              .offset   = offsetof(Vertex,   normal),
-                                              },
-   };
-   std::array<graphics_api::VertexInputLayout, 1> vertex_layout{
-           graphics_api::VertexInputLayout{
-                                           .attributes     = vertex_attributes,
-                                           .structure_size = sizeof(Vertex),
-                                           },
-   };
-
-   std::array<graphics_api::DescriptorBinding, 2> descriptor_bindings{
-           graphics_api::DescriptorBinding{
-                                           .binding         = 0,
-                                           .descriptorCount = 1,
-                                           .type            = graphics_api::DescriptorType::UniformBuffer,
-                                           .shaderStages =
-                                           static_cast<graphics_api::ShaderStageFlags>(graphics_api::ShaderStage::Vertex),
-                                           },
-           graphics_api::DescriptorBinding{
-                                           .binding         = 1,
-                                           .descriptorCount = 1,
-                                           .type            = graphics_api::DescriptorType::ImageSampler,
-                                           .shaderStages =
-                                           static_cast<graphics_api::ShaderStageFlags>(graphics_api::ShaderStage::Fragment),
-                                           },
-   };
-
    auto pipeline =
-           checkResult(device->create_pipeline(renderPass, shaders, vertex_layout, descriptor_bindings, 10));
+           checkResult(graphics_api::PipelineBuilder(*device, renderPass)
+                               .fragment_shader(fragmentShader)
+                               .vertex_shader(vertexShader)
+                               // Vertex description
+                               .begin_vertex_layout<Vertex>()
+                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(Vertex, position))
+                               .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(Vertex, uv))
+                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(Vertex, normal))
+                               .end_vertex_layout()
+                               // Descriptor layout
+                               .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                                   graphics_api::ShaderStage::Vertex)
+                               .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                                   graphics_api::ShaderStage::Fragment)
+                               .descriptor_budget(10)
+                               .enable_depth_test(true)
+                               .build());
+
    auto texture1 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {3600, 1673}));
    auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {2048, 1024}));
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());

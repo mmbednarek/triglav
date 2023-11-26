@@ -1,6 +1,7 @@
 #include "DebugMeshes.h"
 
 #include <cstdint>
+#include <map>
 #include <vector>
 
 namespace renderer {
@@ -101,17 +102,17 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
       const auto base_index = vertices.size();
 
       for (int segment = 0; segment <= segment_count; ++segment) {
-         const auto u     = static_cast<float>(segment) / static_cast<float>(segment_count);
-         const auto angle = 2 * M_PI * segment / segment_count;
+         const auto u      = static_cast<float>(segment) / static_cast<float>(segment_count);
+         const auto angle  = 2 * M_PI * segment / segment_count;
          const auto norm_x = -sin(angle);
-         const auto x     = radius * norm_x;
+         const auto x      = radius * norm_x;
          const auto norm_y = cos(angle);
-         const auto y     = radius * norm_y;
+         const auto y      = radius * norm_y;
 
          vertices.push_back({
                  {x, y, z},
                  {u, v},
-            {norm_x, norm_y, 0.0f},
+                 {norm_x, norm_y, 0.0f},
          });
       }
 
@@ -154,6 +155,116 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
    }
 
    return {std::move(indicies), std::move(vertices)};
+}
+
+Mesh create_inner_box(const float width, const float height, const float depth)
+{
+   const auto widthHalf  = width / 2.0f;
+   const auto heightHalf = height / 2.0f;
+   const auto depthHalf  = depth / 2.0f;
+
+   std::vector<glm::vec3> vertices{
+           { widthHalf,  depthHalf, -heightHalf},
+           { widthHalf, -depthHalf, -heightHalf},
+           { widthHalf,  depthHalf,  heightHalf},
+           { widthHalf, -depthHalf,  heightHalf},
+           {-widthHalf,  depthHalf, -heightHalf},
+           {-widthHalf, -depthHalf, -heightHalf},
+           {-widthHalf,  depthHalf,  heightHalf},
+           {-widthHalf, -depthHalf,  heightHalf},
+   };
+
+   std::vector<glm::vec2> uvs{
+           {0.500000, 1.000000},
+           {0.500000, 0.666666},
+           {0.250000, 0.666666},
+           {0.250000, 0.333333},
+           {0.000000, 0.333333},
+           {1.000000, 0.666666},
+           {1.000000, 0.333333},
+           {0.750000, 0.333333},
+           {0.500000, 0.333333},
+           {0.500000, 0.000000},
+           {0.250000, 0.000000},
+           {0.750000, 0.666666},
+           {0.250000, 1.000000},
+           {0.000000, 0.666666},
+   };
+
+   std::vector<glm::vec3> normals{
+           {-0.0000, -1.0000, -0.0000},
+           {-0.0000, -0.0000, -1.0000},
+           { 1.0000, -0.0000, -0.0000},
+           {-0.0000,  1.0000, -0.0000},
+           {-1.0000, -0.0000, -0.0000},
+           {-0.0000, -0.0000,  1.0000},
+   };
+
+   std::vector<MeshObject::VertexIndex> faces{
+           {5,  1, 1},
+           {1,  2, 1},
+           {3,  3, 1},
+           {3,  3, 2},
+           {4,  4, 2},
+           {8,  5, 2},
+           {7,  6, 3},
+           {8,  7, 3},
+           {6,  8, 3},
+           {2,  9, 4},
+           {6, 10, 4},
+           {8, 11, 4},
+           {1,  2, 5},
+           {2,  9, 5},
+           {4,  4, 5},
+           {5, 12, 6},
+           {6,  8, 6},
+           {2,  9, 6},
+           {5,  1, 1},
+           {3,  3, 1},
+           {7, 13, 1},
+           {3,  3, 2},
+           {8,  5, 2},
+           {7, 14, 2},
+           {7,  6, 3},
+           {6,  8, 3},
+           {5, 12, 3},
+           {2,  9, 4},
+           {8, 11, 4},
+           {4,  4, 4},
+           {1,  2, 5},
+           {4,  4, 5},
+           {3,  3, 5},
+           {5, 12, 6},
+           {2,  9, 6},
+           {1,  2, 6},
+   };
+
+   return from_object(MeshObject(std::move(vertices), std::move(uvs), std::move(normals), std::move(faces)));
+}
+
+Mesh from_object(const MeshObject &object)
+{
+   std::vector<Vertex> vertices{};
+   std::vector<uint32_t> indices{};
+
+   std::map<MeshObject::VertexIndex, uint32_t> indexMap{};
+   uint32_t topIndex{0};
+   for (const auto &index : object.indicies) {
+      if (indexMap.contains(index)) {
+         indices.emplace_back(indexMap[index]);
+         continue;
+      }
+
+      auto vertex = object.vertices[index.vertex-1];
+
+      indexMap.emplace(index, topIndex);
+      vertices.emplace_back(
+              Vertex{{vertex.x, vertex.z, vertex.y}, object.uvs[index.uv-1], object.normals[index.normal-1]});
+      indices.emplace_back(topIndex);
+      ++topIndex;
+   }
+
+   return Mesh{std::move(indices), std::move(vertices)};
 }
 
 }// namespace renderer

@@ -45,6 +45,15 @@ struct QueueFamilyIndices
 };
 }// namespace vulkan
 
+struct RenderPassCreateInfo
+{
+   Resolution resolution;
+   bool is_depth_enabled;
+   ColorFormat depth_format;
+   SampleCount sample_count;
+   std::vector<ColorFormat> color_image_formats;
+};
+
 class Device
 {
  public:
@@ -57,13 +66,16 @@ class Device
 
    [[nodiscard]] Status init_swapchain(const RenderPass &renderPass, ColorSpace colorSpace);
 
+   // [[nodiscard]] Result<RenderPass> create_presentable_render_pass(std::span<AttachmentType> attachmentTypes,
+   //                                                     ColorFormat colorFormat, ColorFormat depthFormat,
+   //                                                     SampleCount sampleCount, const Resolution &resolution);
    [[nodiscard]] Result<RenderPass> create_render_pass(std::span<AttachmentType> attachmentTypes,
                                                        ColorFormat colorFormat, ColorFormat depthFormat,
                                                        SampleCount sampleCount, const Resolution &resolution);
-   [[nodiscard]] Result<Pipeline> create_pipeline(const RenderPass &renderPass, std::span<Shader *> shaders,
+   [[nodiscard]] Result<Pipeline> create_pipeline(const RenderPass &renderPass, std::span<const Shader *> shaders,
                                                   std::span<VertexInputLayout> layouts,
                                                   std::span<DescriptorBinding> descriptorBindings,
-                                                  uint32_t descriptorBudget);
+                                                  uint32_t descriptorBudget, bool enableDepthTest);
    [[nodiscard]] Result<Shader> create_shader(ShaderStage stage, std::string_view entrypoint,
                                               std::span<const uint8_t> code);
    [[nodiscard]] Result<CommandList> create_command_list() const;

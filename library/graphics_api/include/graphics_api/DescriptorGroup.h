@@ -33,7 +33,7 @@ class DescriptorGroup
    [[nodiscard]] size_t count() const;
    [[nodiscard]] VkPipelineLayout pipeline_layout() const;
    [[nodiscard]] const VkDescriptorSet& at(size_t index) const;
-   void update(size_t descriptorId, std::span<DescriptorWrite> descriptors);
+   void update(size_t descriptorId, std::span<DescriptorWrite> descriptors) const;
 
  private:
    VkDevice m_device;

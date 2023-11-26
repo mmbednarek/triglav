@@ -124,7 +124,7 @@ enum class AttachmentType
 {
    ColorAttachment,
    DepthAttachment,
-   ResolveAttachment
+   ResolveAttachment,
 };
 
 enum class SampleCount : uint32_t

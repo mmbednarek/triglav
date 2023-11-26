@@ -86,7 +86,8 @@ Device::Device(vulkan::Instance instance,
                vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
                vulkan::SurfaceKHR surface, vulkan::Device device, VkPhysicalDevice physicalDevice,
-               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool, vulkan::Sampler sampler) :
+               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool,
+               vulkan::Sampler sampler) :
     m_instance(std::move(instance)),
 #if GAPI_ENABLE_VALIDATION
     m_debugMessenger(std::move(debugMessenger)),
@@ -136,8 +137,7 @@ Status Device::init_swapchain(const RenderPass &renderPass, const ColorSpace col
    swapchainInfo.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    swapchainInfo.clipped          = true;
 
-   const std::array queueFamilyIndices{m_queueFamilies.graphicsQueue,
-                                                    m_queueFamilies.presentQueue};
+   const std::array queueFamilyIndices{m_queueFamilies.graphicsQueue, m_queueFamilies.presentQueue};
    if (m_queueFamilies.graphicsQueue != m_queueFamilies.presentQueue) {
       swapchainInfo.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
       swapchainInfo.queueFamilyIndexCount = queueFamilyIndices.size();
@@ -179,7 +179,7 @@ Status Device::init_swapchain(const RenderPass &renderPass, const ColorSpace col
 
    m_swapchainFramebuffers.clear();
 
-   auto attachments = renderPass.image_views();
+   auto attachments                 = renderPass.image_views();
    const auto resolve_attachment_id = renderPass.resolve_attachment_id();
    assert(resolve_attachment_id < attachments.size());
 
@@ -376,7 +376,8 @@ Result<RenderPass> Device::create_render_pass(const std::span<AttachmentType> at
 
    std::vector attachmentLayout(attachmentTypes.begin(), attachmentTypes.end());
 
-   return RenderPass(std::move(renderPass), std::move(textures), std::move(attachmentLayout), resolution, colorFormat);
+   return RenderPass(std::move(renderPass), std::move(textures), std::move(attachmentLayout), resolution,
+                     colorFormat, sampleCount);
 }
 
 constexpr std::array g_dynamicStates{
@@ -384,10 +385,11 @@ constexpr std::array g_dynamicStates{
         VK_DYNAMIC_STATE_SCISSOR,
 };
 
-Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass, const std::span<Shader *> shaders,
+Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass,
+                                         const std::span<const Shader *> shaders,
                                          const std::span<VertexInputLayout> layouts,
                                          const std::span<DescriptorBinding> descriptorBindings,
-                                         const uint32_t descriptorBudget)
+                                         const uint32_t descriptorBudget, bool enableDepthTest)
 {
    std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
    shaderStageInfos.resize(shaders.size());
@@ -475,6 +477,7 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass, const std
    rasterizationStateInfo.depthClampEnable = VK_FALSE;
    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
    rasterizationStateInfo.polygonMode             = VK_POLYGON_MODE_FILL;
+   // rasterizationStateInfo.polygonMode             = VK_POLYGON_MODE_LINE;
    rasterizationStateInfo.lineWidth               = 1.0f;
    rasterizationStateInfo.cullMode                = VK_CULL_MODE_FRONT_BIT;
    rasterizationStateInfo.frontFace               = VK_FRONT_FACE_CLOCKWISE;
@@ -483,10 +486,12 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass, const std
    rasterizationStateInfo.depthBiasClamp          = 0.0f;
    rasterizationStateInfo.depthBiasSlopeFactor    = 0.0f;
 
+   const auto sampleCount = renderPass.sample_count();
+
    VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
    multisamplingInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisamplingInfo.sampleShadingEnable  = true;
-   multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_4_BIT;
+   multisamplingInfo.sampleShadingEnable  = sampleCount != SampleCount::Bits1;
+   multisamplingInfo.rasterizationSamples = static_cast<VkSampleCountFlagBits>(sampleCount);
    multisamplingInfo.minSampleShading     = 1.0f;
 
    VkPipelineColorBlendAttachmentState colorBlendAttachment{};
@@ -534,8 +539,8 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass, const std
 
    VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo{};
    depthStencilStateInfo.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-   depthStencilStateInfo.depthTestEnable       = true;
-   depthStencilStateInfo.depthWriteEnable      = true;
+   depthStencilStateInfo.depthTestEnable       = enableDepthTest;
+   depthStencilStateInfo.depthWriteEnable      = enableDepthTest;
    depthStencilStateInfo.depthCompareOp        = VK_COMPARE_OP_LESS_OR_EQUAL;
    depthStencilStateInfo.depthBoundsTestEnable = false;
    depthStencilStateInfo.stencilTestEnable     = false;
@@ -595,12 +600,8 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass, const std
    if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Pipeline{std::move(pipelineLayout),
-                   std::move(pipeline),
-                   std::move(descriptorPool),
-                   std::move(descriptorSetLayout),
-                   *m_sampler,
-                   static_cast<uint32_t>(m_swapchainImageViews.size())};
+   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorPool),
+                   std::move(descriptorSetLayout), *m_sampler};
 }
 
 Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,

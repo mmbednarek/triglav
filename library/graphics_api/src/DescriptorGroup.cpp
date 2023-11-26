@@ -53,12 +53,12 @@ VkPipelineLayout DescriptorGroup::pipeline_layout() const
    return m_pipelineLayout;
 }
 
-const VkDescriptorSet &DescriptorGroup::at(size_t index) const
+const VkDescriptorSet &DescriptorGroup::at(const size_t index) const
 {
    return m_descriptorSets.at(index);
 }
 
-void DescriptorGroup::update(size_t descriptorId, std::span<DescriptorWrite> descriptors)
+void DescriptorGroup::update(const size_t descriptorId, const std::span<DescriptorWrite> descriptors) const
 {
    std::vector<VkDescriptorBufferInfo> descriptorBufferInfos{};
    std::vector<VkDescriptorImageInfo> descriptorImageInfos{};

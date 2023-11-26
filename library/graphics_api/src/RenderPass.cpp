@@ -1,18 +1,18 @@
 #include "RenderPass.h"
 
-
 #include <limits>
 
 namespace graphics_api {
 
 RenderPass::RenderPass(vulkan::RenderPass renderPass, std::vector<Texture> textures,
                        std::vector<AttachmentType> attachmentLayout, const Resolution &resolution,
-                       const ColorFormat& colorFormat) :
+                       const ColorFormat &colorFormat, const SampleCount sampleCount) :
     m_renderPass(std::move(renderPass)),
     m_textures(std::move(textures)),
     m_attachmentLayout(std::move(attachmentLayout)),
     m_resolution(resolution),
-    m_colorFormat(colorFormat)
+    m_colorFormat(colorFormat),
+    m_sampleCount(sampleCount)
 {
 }
 
@@ -57,6 +57,11 @@ Resolution RenderPass::resolution() const
 ColorFormat RenderPass::color_format() const
 {
    return m_colorFormat;
+}
+
+SampleCount RenderPass::sample_count() const
+{
+   return m_sampleCount;
 }
 
 }// namespace graphics_api

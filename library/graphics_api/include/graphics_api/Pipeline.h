@@ -23,11 +23,11 @@ class Pipeline
 {
  public:
    Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorPool descriptorPool,
-            vulkan::DescriptorSetLayout descriptorSetLayout, VkSampler sampler, uint32_t framebufferCount);
+            vulkan::DescriptorSetLayout descriptorSetLayout, VkSampler sampler);
 
    [[nodiscard]] VkPipeline vulkan_pipeline() const;
    [[nodiscard]] const vulkan::PipelineLayout &layout() const;
-   [[nodiscard]] Result<DescriptorGroup> allocate_descriptors();
+   [[nodiscard]] Result<DescriptorGroup> allocate_descriptors(size_t descriptorCount);
 
  private:
    vulkan::PipelineLayout m_layout;
@@ -35,7 +35,6 @@ class Pipeline
    vulkan::DescriptorPool m_descriptorPool;
    vulkan::DescriptorSetLayout m_descriptorSetLayout;
    VkSampler m_sampler;
-   uint32_t m_framebufferCount{};
 };
 
 }// namespace graphics_api
