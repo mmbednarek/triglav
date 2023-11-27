@@ -7,15 +7,10 @@ layout(binding = 1) uniform sampler2D texSampler;
 
 layout(location = 0) out vec4 outColor;
 
-const float twoPi        = 6.2831853;
 const float oneOverTwoPi = 0.1591550;
 const float oneOverPi    = 0.3183099;
 const float pi     = 3.1415927;
 const float halfPi = 1.5707963;
-
-float fix_angle(float angle) {
-    return mod(twoPi + angle, twoPi);
-}
 
 void main() {
     vec3 normal = normalize(fragPosition);
