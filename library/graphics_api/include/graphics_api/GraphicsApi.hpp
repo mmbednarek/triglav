@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <expected>
 #include <span>
+#include <string>
 
 namespace graphics_api {
 enum class Status
@@ -129,10 +130,10 @@ enum class AttachmentType
 
 enum class SampleCount : uint32_t
 {
-   Bits1 = (1 << 0),
-   Bits2 = (1 << 1),
-   Bits4 = (1 << 2),
-   Bits8 = (1 << 3),
+   Bits1  = (1 << 0),
+   Bits2  = (1 << 1),
+   Bits4  = (1 << 2),
+   Bits8  = (1 << 3),
    Bits16 = (1 << 4),
    Bits32 = (1 << 5),
    Bits64 = (1 << 6),
@@ -140,6 +141,41 @@ enum class SampleCount : uint32_t
 
 template<typename T>
 using Result = std::expected<T, Status>;
+
+class Exception final : public std::exception
+{
+ public:
+   Status status;
+   std::string invoked_function;
+
+   Exception(const Status status, const std::string_view invoked_function) :
+       status(status),
+       invoked_function(std::string(invoked_function))
+   {
+   }
+
+   [[nodiscard]] const char *what() const noexcept override
+   {
+      return "graphics_api exception";
+   }
+};
+
+template<typename TResultValue>
+TResultValue check_result(Result<TResultValue> result, const std::string_view message)
+{
+   if (not result.has_value()) {
+      throw Exception(result.error(), message);
+   }
+   return std::move(*result);
+}
+
+inline void check_status(const Status status, const std::string_view message)
+{
+   if (status != Status::Success) {
+      throw Exception(status, message);
+   }
+}
+
 }// namespace graphics_api
 
 #define GAPI_PARENS ()
@@ -165,6 +201,9 @@ using Result = std::expected<T, Status>;
          GAPI_FOR_EACH(GAPI_PREPEND_FORMAT_PART, __VA_ARGS__)      \
       }                                                            \
    }
+
+#define GAPI_CHECK(stmt) ::graphics_api::check_result(stmt, #stmt)
+#define GAPI_CHECK_STATUS(stmt) ::graphics_api::check_status(stmt, #stmt)
 
 #ifdef _WIN32
 #define GAPI_PLATFORM_WINDOWS 1

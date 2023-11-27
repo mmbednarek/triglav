@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Buffer.h"
-#include "CommandList.h"
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
 #include "PlatformSurface.h"
@@ -23,6 +22,8 @@
 #endif
 
 namespace graphics_api {
+
+class CommandList;
 
 DECLARE_VLK_WRAPPED_OBJECT(Instance)
 DECLARE_VLK_WRAPPED_OBJECT(Device)

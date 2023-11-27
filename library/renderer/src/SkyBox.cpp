@@ -74,9 +74,7 @@ void SkyBox::on_render(const graphics_api::CommandList& commandList, float yaw, 
 
    commandList.bind_pipeline(m_pipeline);
    commandList.bind_descriptor_group(m_descGroup, 0);
-   commandList.bind_vertex_buffer(m_mesh.vertex_buffer, 0);
-   commandList.bind_index_buffer(m_mesh.index_buffer);
-   commandList.draw_indexed_primitives(m_mesh.index_count, 0, 0);
+   commandList.draw_mesh(m_mesh);
 }
 
 }// namespace renderer

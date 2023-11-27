@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Array.hpp"
 #include "Buffer.h"
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
@@ -29,9 +30,24 @@ class CommandList
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const;
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer &buffer) const;
+   void bind_index_array(const IndexArray &array) const;
    void copy_buffer(const Buffer &source, const Buffer &dest);
    void copy_buffer_to_texture(const Buffer &source, const Texture &destination);
    void set_is_one_time(bool value);
+
+   template<typename TVertex>
+   void bind_vertex_array(const VertexArray<TVertex> &array, const uint32_t binding = 0) const
+   {
+      this->bind_vertex_buffer(array.buffer(), binding);
+   }
+
+   template<typename TVertex>
+   void draw_mesh(const Mesh<TVertex> &mesh) const
+   {
+      this->bind_vertex_array(mesh.vertices, 0);
+      this->bind_index_array(mesh.indices);
+      this->draw_indexed_primitives(mesh.indices.count(), 0, 0);
+   }
 
  private:
    VkCommandBuffer m_commandBuffer;

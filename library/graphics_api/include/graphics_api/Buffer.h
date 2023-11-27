@@ -5,6 +5,8 @@
 
 namespace graphics_api {
 
+class Device;
+
 enum class BufferPurpose
 {
    TransferBuffer,
@@ -56,5 +58,7 @@ class Buffer
    vulkan::Buffer m_buffer;
    vulkan::DeviceMemory m_memory;
 };
+
+Status write_to_buffer(Device& device, const Buffer & buffer, const void * data, size_t size);
 
 }// namespace graphics_api

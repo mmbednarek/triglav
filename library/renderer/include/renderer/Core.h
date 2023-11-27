@@ -6,7 +6,7 @@
 #include <vector>
 #include <stdexcept>
 
-#include "graphics_api/Buffer.h"
+#include "graphics_api/Array.hpp"
 
 namespace renderer {
 
@@ -48,13 +48,7 @@ struct Mesh
    std::vector<Vertex> vertices{};
 };
 
-struct CompiledMesh
-{
-   graphics_api::Buffer index_buffer;
-   graphics_api::Buffer vertex_buffer;
-   uint32_t index_count;
-};
-
+using CompiledMesh = graphics_api::Mesh<Vertex>;
 
 template<typename TObject>
 TObject checkResult(std::expected<TObject, graphics_api::Status> &&object)

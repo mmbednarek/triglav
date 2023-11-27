@@ -120,14 +120,10 @@ void Renderer::on_render()
    m_commandList.bind_pipeline(m_pipeline);
 
    m_commandList.bind_descriptor_group(m_object1.descGroup, framebufferIndex);
-   m_commandList.bind_vertex_buffer(m_sphereMesh->vertex_buffer, 0);
-   m_commandList.bind_index_buffer(m_sphereMesh->index_buffer);
-   m_commandList.draw_indexed_primitives(m_sphereMesh->index_count, 0, 0);
+   m_commandList.draw_mesh(*m_sphereMesh);
 
    m_commandList.bind_descriptor_group(m_object2.descGroup, framebufferIndex);
-   m_commandList.bind_vertex_buffer(m_cilinderMesh->vertex_buffer, 0);
-   m_commandList.bind_index_buffer(m_cilinderMesh->index_buffer);
-   m_commandList.draw_indexed_primitives(m_cilinderMesh->index_count, 0, 0);
+   m_commandList.draw_mesh(*m_cilinderMesh);
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -157,38 +153,10 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
 
 CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
 {
-   auto vertexBuffer   = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::VertexBuffer,
-                                                             sizeof(Vertex) * mesh.vertices.size()));
-   auto transferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
-                                                             sizeof(Vertex) * mesh.vertices.size()));
-   {
-      const auto mappedMemory = checkResult(transferBuffer.map_memory());
-      mappedMemory.write(mesh.vertices.data(), sizeof(Vertex) * mesh.vertices.size());
-   }
+   graphics_api::VertexArray vertices(*m_device, mesh.vertices);
+   graphics_api::IndexArray indices(*m_device, mesh.indicies);
 
-   auto oneTimeCommands = checkResult(m_device->create_command_list());
-
-   checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer(transferBuffer, vertexBuffer);
-   checkStatus(oneTimeCommands.finish());
-   checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
-
-   auto indexBuffer         = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::IndexBuffer,
-                                                                  sizeof(uint32_t) * mesh.indicies.size()));
-   auto indexTransferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
-                                                                  sizeof(uint32_t) * mesh.indicies.size()));
-   {
-      auto mappedMemory = checkResult(indexTransferBuffer.map_memory());
-      mappedMemory.write(mesh.indicies.data(), sizeof(uint32_t) * mesh.indicies.size());
-   }
-
-   checkStatus(oneTimeCommands.reset());
-   checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer(indexTransferBuffer, indexBuffer);
-   checkStatus(oneTimeCommands.finish());
-   checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
-
-   return CompiledMesh{std::move(indexBuffer), std::move(vertexBuffer), mesh.indicies.size()};
+   return CompiledMesh{std::move(vertices), std::move(indices)};
 }
 
 void Renderer::on_mouse_wheel_turn(const float x)

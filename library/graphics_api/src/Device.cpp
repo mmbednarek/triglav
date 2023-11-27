@@ -10,6 +10,7 @@
 #include <shared_mutex>
 #include <vector>
 
+#include "CommandList.h"
 #include "vulkan/Util.h"
 
 #undef max
