@@ -8,6 +8,7 @@ add_subdirectory("src")
 target_link_libraries(linux_wayland
         LINK_PRIVATE
         renderer
+        object_reader
         Wayland::Client
         fmt::fmt
         xkbcommon

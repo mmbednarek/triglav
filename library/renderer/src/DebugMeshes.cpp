@@ -200,68 +200,97 @@ Mesh create_inner_box(const float width, const float height, const float depth)
            {-0.0000, -0.0000,  1.0000},
    };
 
-   std::vector<MeshObject::VertexIndex> faces{
-           {5,  1, 1},
-           {1,  2, 1},
-           {3,  3, 1},
-           {3,  3, 2},
-           {4,  4, 2},
-           {8,  5, 2},
-           {7,  6, 3},
-           {8,  7, 3},
-           {6,  8, 3},
-           {2,  9, 4},
-           {6, 10, 4},
-           {8, 11, 4},
-           {1,  2, 5},
-           {2,  9, 5},
-           {4,  4, 5},
-           {5, 12, 6},
-           {6,  8, 6},
-           {2,  9, 6},
-           {5,  1, 1},
-           {3,  3, 1},
-           {7, 13, 1},
-           {3,  3, 2},
-           {8,  5, 2},
-           {7, 14, 2},
-           {7,  6, 3},
-           {6,  8, 3},
-           {5, 12, 3},
-           {2,  9, 4},
-           {8, 11, 4},
-           {4,  4, 4},
-           {1,  2, 5},
-           {4,  4, 5},
-           {3,  3, 5},
-           {5, 12, 6},
-           {2,  9, 6},
-           {1,  2, 6},
-   };
+   std::vector<object_reader::Face> faces{};
+   faces.push_back(object_reader::Face{
+           object_reader::Index{5, 1, 1},
+           object_reader::Index{1, 2, 1},
+           object_reader::Index{3, 3, 1}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{3, 3, 2},
+           object_reader::Index{4, 4, 2},
+           object_reader::Index{8, 5, 2}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{7, 6, 3},
+           object_reader::Index{8, 7, 3},
+           object_reader::Index{6, 8, 3}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{2,  9, 4},
+           object_reader::Index{6, 10, 4},
+           object_reader::Index{8, 11, 4}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{1, 2, 5},
+           object_reader::Index{2, 9, 5},
+           object_reader::Index{4, 4, 5}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{5, 12, 6},
+           object_reader::Index{6,  8, 6},
+           object_reader::Index{2,  9, 6}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{5,  1, 1},
+           object_reader::Index{3,  3, 1},
+           object_reader::Index{7, 13, 1}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{3,  3, 2},
+           object_reader::Index{8,  5, 2},
+           object_reader::Index{7, 14, 2}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{7,  6, 3},
+           object_reader::Index{6,  8, 3},
+           object_reader::Index{5, 12, 3}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{2,  9, 4},
+           object_reader::Index{8, 11, 4},
+           object_reader::Index{4,  4, 4}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{1, 2, 5},
+           object_reader::Index{4, 4, 5},
+           object_reader::Index{3, 3, 5}
+   });
+   faces.push_back(object_reader::Face{
+           object_reader::Index{5, 12, 6},
+           object_reader::Index{2,  9, 6},
+           object_reader::Index{1,  2, 6}
+   });
 
-   return from_object(MeshObject(std::move(vertices), std::move(uvs), std::move(normals), std::move(faces)));
+   return from_object(
+           object_reader::Object(std::move(vertices), std::move(uvs), std::move(normals), std::move(faces)));
 }
 
-Mesh from_object(const MeshObject &object)
+Mesh from_object(const object_reader::Object &object)
 {
    std::vector<Vertex> vertices{};
    std::vector<uint32_t> indices{};
 
-   std::map<MeshObject::VertexIndex, uint32_t> indexMap{};
+   std::map<object_reader::Index, uint32_t> indexMap{};
    uint32_t topIndex{0};
-   for (const auto &index : object.indicies) {
-      if (indexMap.contains(index)) {
-         indices.emplace_back(indexMap[index]);
-         continue;
+   for (const auto &face : object.faces) {
+      for (const auto &index : face.indices) {
+         if (indexMap.contains(index)) {
+            indices.emplace_back(indexMap[index]);
+            continue;
+         }
+
+         auto vertex = object.vertices[index.vertex_id - 1];
+
+         indexMap.emplace(index, topIndex);
+         vertices.emplace_back(Vertex{
+                 {vertex.x, vertex.z, vertex.y},
+                 object.uvs[index.uv_id - 1],
+                 object.normals[index.normal_id - 1]
+         });
+         indices.emplace_back(topIndex);
+         ++topIndex;
       }
-
-      auto vertex = object.vertices[index.vertex-1];
-
-      indexMap.emplace(index, topIndex);
-      vertices.emplace_back(
-              Vertex{{vertex.x, vertex.z, vertex.y}, object.uvs[index.uv-1], object.normals[index.normal-1]});
-      indices.emplace_back(topIndex);
-      ++topIndex;
    }
 
    return Mesh{std::move(indices), std::move(vertices)};

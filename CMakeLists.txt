@@ -30,6 +30,7 @@ endif ()
 
 add_subdirectory(library/graphics_api)
 add_subdirectory(library/renderer)
+add_subdirectory(library/object_reader)
 
 if (WIN32)
 	add_subdirectory(game/win32)

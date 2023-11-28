@@ -10,6 +10,7 @@
 #include "Core.h"
 #include "DebugMeshes.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "object_reader/Reader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -101,8 +102,13 @@ Renderer::Renderer(RendererObjects &&objects) :
    this->write_to_texture("texture/earth.png", m_texture1);
    this->write_to_texture("texture/moon.png", m_texture2);
 
+   std::ifstream stream("model/glass.obj", std::ios_base::binary);
+   assert(stream.is_open());
+
+   auto object = object_reader::read_object(stream);
+
    m_sphereMesh   = this->compile_mesh(create_sphere(48, 24, 3.0f));
-   m_cilinderMesh = this->compile_mesh(create_sphere(32, 16, 1.0f));
+   m_cilinderMesh = this->compile_mesh(from_object(object));
 }
 
 void Renderer::on_render()

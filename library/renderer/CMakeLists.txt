@@ -14,5 +14,6 @@ add_subdirectory("src")
 target_link_libraries(renderer
         LINK_PUBLIC
         graphics_api
+        object_reader
         glm
 )

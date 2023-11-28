@@ -1,6 +1,9 @@
 #include "renderer/Renderer.h"
 #include "wayland/Display.h"
 #include "wayland/Surface.h"
+#include "object_reader/Reader.h"
+
+#include <fstream>
 
 constexpr auto g_initialWidth  = 1280;
 constexpr auto g_initialHeight = 720;
@@ -73,6 +76,7 @@ int main()
    wayland::Surface surface(display);
 
    auto renderer = renderer::init_renderer(surface.to_grahics_surface(), g_initialWidth, g_initialHeight);
+
 
    EventListener eventListener(surface, renderer);
    surface.set_event_listener(&eventListener);
