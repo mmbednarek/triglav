@@ -58,14 +58,13 @@ SkyBox::SkyBox(Renderer &renderer) :
 
 void SkyBox::on_render(const graphics_api::CommandList& commandList, float yaw, float pitch, float width, float height) const
 {
-   const auto eye = glm::vec4{0.0f, 20, 0, 1.0f};
-   auto eye_yaw   = glm::rotate(glm::mat4(1), yaw, glm::vec3{0.0f, 0.0f, 1.0f});
-   auto eye_pitch = glm::rotate(glm::mat4(1), pitch, glm::vec3{1.0f, 0.0f, 0.0f});
-   auto eye_final = eye_yaw * eye_pitch * eye;
+   static constexpr auto yVector = glm::vec4{0.0f, 1.0f, 0, 1.0f};
+   const auto yawMatrix   = glm::rotate(glm::mat4(1), yaw, glm::vec3{0.0f, 0.0f, 1.0f});
+   const auto pitchMatrix = glm::rotate(glm::mat4(1), pitch, glm::vec3{1.0f, 0.0f, 0.0f});
+   const auto forwardVector = glm::vec3(yawMatrix * pitchMatrix * yVector);
 
-   auto view = glm::lookAt(glm::vec3{0.0f, 0.0f, 0.0f}, -glm::vec3(eye_final), glm::vec3{0.0f, 0.0f, 1.0f});
-   const auto projection = glm::perspective(
-           glm::radians(45.0f), width / height, 0.1f, 360.0f);
+   const auto view = glm::lookAt(glm::vec3{0, 0, 0}, forwardVector, glm::vec3{0.0f, 0.0f, 1.0f});
+   const auto projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 100.0f);
 
    SkyBoxUBO object1{};
    object1.view  = view;

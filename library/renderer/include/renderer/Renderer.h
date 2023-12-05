@@ -34,8 +34,7 @@ struct RendererObjects
    graphics_api::CommandList commandList;
    graphics_api::Texture texture1;
    graphics_api::Texture texture2;
-   Object3d object1;
-   Object3d object2;
+   Object3d house;
 };
 
 class Renderer
@@ -46,6 +45,8 @@ class Renderer
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
    void on_mouse_relative_move(float dx, float dy);
+   void on_key_pressed(uint32_t key);
+   void on_key_released(uint32_t key);
    [[nodiscard]] CompiledMesh compile_mesh(const Mesh &mesh) const;
    void on_mouse_wheel_turn(float x);
    [[nodiscard]] graphics_api::Texture load_texture(std::string_view path) const;
@@ -70,6 +71,13 @@ class Renderer
    float m_yaw{0};
    float m_pitch{0};
    float m_distance{12};
+   glm::vec3 m_position{};
+   bool m_isMovingForward{false};
+   bool m_isMovingBackwards{false};
+   bool m_isMovingLeft{false};
+   bool m_isMovingRight{false};
+   bool m_isMovingUp{false};
+   bool m_isMovingDown{false};
 
    uint32_t m_width{};
    uint32_t m_height{};
@@ -84,8 +92,7 @@ class Renderer
    graphics_api::CommandList m_commandList;
    graphics_api::Texture m_texture1;
    graphics_api::Texture m_texture2;
-   Object3d m_object1;
-   Object3d m_object2;
+   Object3d m_house;
    std::optional<CompiledMesh> m_sphereMesh;
    std::optional<CompiledMesh> m_cilinderMesh;
    SkyBox m_skyBox;

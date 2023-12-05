@@ -1,9 +1,9 @@
 #include "renderer/Renderer.h"
 #include "wayland/Display.h"
 #include "wayland/Surface.h"
-#include "object_reader/Reader.h"
 
-#include <fstream>
+
+#include <iostream>
 
 constexpr auto g_initialWidth  = 1280;
 constexpr auto g_initialHeight = 720;
@@ -59,6 +59,22 @@ class EventListener final : public wayland::DefaultSurfaceEventListener
       m_isRunning = false;
    }
 
+   void on_key_is_pressed(const uint32_t key) override
+   {
+      // W - 17
+      // A - 30
+      // S - 31
+      // S - 32
+      std::cout << "pressed key: " << key << '\n';
+      m_renderer.on_key_pressed(key);
+   }
+
+   void on_key_is_released(const uint32_t key) override
+   {
+      std::cout << "released key: " << key << '\n';
+      m_renderer.on_key_released(key);
+   }
+
    [[nodiscard]] bool is_running() const
    {
       return m_isRunning;
@@ -76,7 +92,6 @@ int main()
    wayland::Surface surface(display);
 
    auto renderer = renderer::init_renderer(surface.to_grahics_surface(), g_initialWidth, g_initialHeight);
-
 
    EventListener eventListener(surface, renderer);
    surface.set_event_listener(&eventListener);

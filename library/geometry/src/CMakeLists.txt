@@ -1,15 +1,15 @@
-set(OBJECT_READER_INCLUDE_DIR ${OBJECT_READER_DIR}/include/object_reader)
+set(OBJECT_READER_INCLUDE_DIR ${OBJECT_READER_DIR}/include/geometry)
 
-target_sources(object_reader
+target_sources(geometry
     # Source files
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/BufferedReader.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Parser.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Reader.cpp
 
     # Header files
     PUBLIC
         ${OBJECT_READER_INCLUDE_DIR}/BufferedReader.h
+        ${OBJECT_READER_INCLUDE_DIR}/Mesh.h
         ${OBJECT_READER_INCLUDE_DIR}/Parser.h
-        ${OBJECT_READER_INCLUDE_DIR}/Reader.h
 )

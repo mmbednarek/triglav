@@ -1,7 +1,11 @@
 #include "DebugMeshes.h"
 
+#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <CGAL/Polygon_mesh_processing/compute_normal.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
+#include <CGAL/Surface_mesh.h>
+#include <CGAL/Triangulation_3.h>
 #include <cstdint>
-#include <map>
 #include <vector>
 
 namespace renderer {
@@ -46,20 +50,20 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
             indicies.push_back(base_index + segment);
-            indicies.push_back(0);
             indicies.push_back(base_index + next_segment);
+            indicies.push_back(0);
          }
       } else {
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
 
             indicies.push_back(base_index + segment);
-            indicies.push_back(last_base_index + segment);
             indicies.push_back(last_base_index + next_segment);
+            indicies.push_back(last_base_index + segment);
 
             indicies.push_back(base_index + segment);
-            indicies.push_back(last_base_index + next_segment);
             indicies.push_back(base_index + next_segment);
+            indicies.push_back(last_base_index + next_segment);
          }
       }
 
@@ -76,8 +80,8 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    for (int segment = 0; segment < segment_count; ++segment) {
       const auto next_segment = segment + 1;
       indicies.push_back(last_base_index + segment);
-      indicies.push_back(last_base_index + next_segment);
       indicies.push_back(last_index);
+      indicies.push_back(last_base_index + next_segment);
    }
 
    return {std::move(indicies), std::move(vertices)};
@@ -157,6 +161,60 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
    return {std::move(indicies), std::move(vertices)};
 }
 
+struct Index
+{
+   uint32_t vertex_id;
+   uint32_t uv_id;
+   uint32_t normal_id;
+
+   auto operator<=>(const Index &rhs) const = default;
+};
+
+struct Face
+{
+   std::array<Index, 3> indices;
+};
+
+struct Object
+{
+   std::vector<glm::vec3> vertices;
+   std::vector<glm::vec2> uvs;
+   std::vector<glm::vec3> normals;
+   std::vector<Face> faces;
+};
+
+Mesh from_object(const Object &object)
+{
+   std::vector<Vertex> vertices{};
+   std::vector<uint32_t> indices{};
+
+   std::map<Index, uint32_t> indexMap{};
+   uint32_t topIndex{0};
+   for (const auto &face : object.faces) {
+      assert(face.indices.size() > 2);
+
+      for (const auto &index : face.indices) {
+         if (indexMap.contains(index)) {
+            indices.emplace_back(indexMap[index]);
+            continue;
+         }
+
+         auto vertex = object.vertices[index.vertex_id - 1];
+
+         indexMap.emplace(index, topIndex);
+         vertices.emplace_back(Vertex{
+                 {vertex.x, vertex.z, vertex.y},
+                 object.uvs[index.uv_id - 1],
+                 object.normals[index.normal_id - 1]
+         });
+         indices.emplace_back(topIndex);
+         ++topIndex;
+      }
+   }
+
+   return Mesh{std::move(indices), std::move(vertices)};
+}
+
 Mesh create_inner_box(const float width, const float height, const float depth)
 {
    const auto widthHalf  = width / 2.0f;
@@ -200,100 +258,93 @@ Mesh create_inner_box(const float width, const float height, const float depth)
            {-0.0000, -0.0000,  1.0000},
    };
 
-   std::vector<object_reader::Face> faces{};
-   faces.push_back(object_reader::Face{
-           object_reader::Index{5, 1, 1},
-           object_reader::Index{1, 2, 1},
-           object_reader::Index{3, 3, 1}
+   std::vector<Face> faces{};
+   faces.push_back(Face{
+           {Index{5, 1, 1}, Index{1, 2, 1}, Index{3, 3, 1}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{3, 3, 2},
-           object_reader::Index{4, 4, 2},
-           object_reader::Index{8, 5, 2}
+   faces.push_back(Face{
+           {Index{3, 3, 2}, Index{4, 4, 2}, Index{8, 5, 2}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{7, 6, 3},
-           object_reader::Index{8, 7, 3},
-           object_reader::Index{6, 8, 3}
+   faces.push_back(Face{
+           {Index{7, 6, 3}, Index{8, 7, 3}, Index{6, 8, 3}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{2,  9, 4},
-           object_reader::Index{6, 10, 4},
-           object_reader::Index{8, 11, 4}
+   faces.push_back(Face{
+           {Index{2, 9, 4}, Index{6, 10, 4}, Index{8, 11, 4}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{1, 2, 5},
-           object_reader::Index{2, 9, 5},
-           object_reader::Index{4, 4, 5}
+   faces.push_back(Face{
+           {Index{1, 2, 5}, Index{2, 9, 5}, Index{4, 4, 5}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{5, 12, 6},
-           object_reader::Index{6,  8, 6},
-           object_reader::Index{2,  9, 6}
+   faces.push_back(Face{
+           {Index{5, 12, 6}, Index{6, 8, 6}, Index{2, 9, 6}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{5,  1, 1},
-           object_reader::Index{3,  3, 1},
-           object_reader::Index{7, 13, 1}
+   faces.push_back(Face{
+           {Index{5, 1, 1}, Index{3, 3, 1}, Index{7, 13, 1}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{3,  3, 2},
-           object_reader::Index{8,  5, 2},
-           object_reader::Index{7, 14, 2}
+   faces.push_back(Face{
+           {Index{3, 3, 2}, Index{8, 5, 2}, Index{7, 14, 2}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{7,  6, 3},
-           object_reader::Index{6,  8, 3},
-           object_reader::Index{5, 12, 3}
+   faces.push_back(Face{
+           {Index{7, 6, 3}, Index{6, 8, 3}, Index{5, 12, 3}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{2,  9, 4},
-           object_reader::Index{8, 11, 4},
-           object_reader::Index{4,  4, 4}
+   faces.push_back(Face{
+           {Index{2, 9, 4}, Index{8, 11, 4}, Index{4, 4, 4}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{1, 2, 5},
-           object_reader::Index{4, 4, 5},
-           object_reader::Index{3, 3, 5}
+   faces.push_back(Face{
+           {Index{1, 2, 5}, Index{4, 4, 5}, Index{3, 3, 5}}
    });
-   faces.push_back(object_reader::Face{
-           object_reader::Index{5, 12, 6},
-           object_reader::Index{2,  9, 6},
-           object_reader::Index{1,  2, 6}
+   faces.push_back(Face{
+           {Index{5, 12, 6}, Index{2, 9, 6}, Index{1, 2, 6}}
    });
 
-   return from_object(
-           object_reader::Object(std::move(vertices), std::move(uvs), std::move(normals), std::move(faces)));
+   return from_object(Object(std::move(vertices), std::move(uvs), std::move(normals), std::move(faces)));
 }
 
-Mesh from_object(const object_reader::Object &object)
+glm::vec3 vector3_to_vector(const CGAL::Simple_cartesian<float>::Vector_3 &vec)
 {
-   std::vector<Vertex> vertices{};
-   std::vector<uint32_t> indices{};
+   return glm::vec3{vec.x(), vec.y(), vec.z()};
+}
 
-   std::map<object_reader::Index, uint32_t> indexMap{};
-   uint32_t topIndex{0};
-   for (const auto &face : object.faces) {
-      for (const auto &index : face.indices) {
+glm::vec3 point3_to_vector(const CGAL::Simple_cartesian<float>::Point_3 &point)
+{
+   return glm::vec3{point.x(), point.y(), point.z()};
+}
+
+glm::vec2 vector2_to_vector(const CGAL::Simple_cartesian<float>::Vector_2 &point)
+{
+   return glm::vec2{point.x(), point.y()};
+}
+
+Mesh from_mesh(object_reader::Mesh &mesh)
+{
+   // mesh.debug_stats();
+   mesh.triangulate_faces();
+   // mesh.debug_stats();
+
+   std::map<Index, uint32_t> indexMap;
+   std::vector<Vertex> out_vertices{};
+
+   std::vector<uint32_t> out_indices{};
+   for (const auto face_index : mesh.faces()) {
+      for (const auto halfedge_index : mesh.face_halfedges(face_index)) {
+         const auto vertex_index = mesh.halfedge_target(halfedge_index);
+         const auto normal       = mesh.normal_id(halfedge_index);
+         const auto uv           = mesh.uv_id(halfedge_index);
+         Index index{vertex_index.id(), uv, normal};
+
          if (indexMap.contains(index)) {
-            indices.emplace_back(indexMap[index]);
+            out_indices.push_back(indexMap[index]);
             continue;
          }
 
-         auto vertex = object.vertices[index.vertex_id - 1];
-
-         indexMap.emplace(index, topIndex);
-         vertices.emplace_back(Vertex{
-                 {vertex.x, vertex.z, vertex.y},
-                 object.uvs[index.uv_id - 1],
-                 object.normals[index.normal_id - 1]
-         });
-         indices.emplace_back(topIndex);
-         ++topIndex;
+         out_vertices.push_back(Vertex(point3_to_vector(mesh.location(vertex_index)),
+                                       vector2_to_vector(mesh.uv_by_id(uv)),
+                                       vector3_to_vector(mesh.normal_by_id(normal))));
+         indexMap[index] = out_vertices.size() - 1;
+         out_indices.push_back(out_vertices.size() - 1);
       }
    }
 
-   return Mesh{std::move(indices), std::move(vertices)};
+   return Mesh{std::move(out_indices), std::move(out_vertices)};
 }
 
 }// namespace renderer

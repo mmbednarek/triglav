@@ -10,14 +10,13 @@
 #include "Core.h"
 #include "DebugMeshes.h"
 #include "graphics_api/PipelineBuilder.h"
-#include "object_reader/Reader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 namespace {
 
-std::vector<uint8_t> read_whole_file(std::string_view name)
+std::vector<uint8_t> read_whole_file(const std::string_view name)
 {
    std::ifstream file(std::string{name}, std::ios::ate | std::ios::binary);
    if (not file.is_open()) {
@@ -95,20 +94,16 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_commandList(std::move(objects.commandList)),
     m_texture1(std::move(objects.texture1)),
     m_texture2(std::move(objects.texture2)),
-    m_object1(std::move(objects.object1)),
-    m_object2(std::move(objects.object2)),
+    m_house(std::move(objects.house)),
     m_skyBox(*this)
 {
    this->write_to_texture("texture/earth.png", m_texture1);
-   this->write_to_texture("texture/moon.png", m_texture2);
+   this->write_to_texture("texture/house.png", m_texture2);
 
-   std::ifstream stream("model/glass.obj", std::ios_base::binary);
-   assert(stream.is_open());
+   m_sphereMesh = this->compile_mesh(create_sphere(48, 24, 3.0f));
 
-   auto object = object_reader::read_object(stream);
-
-   m_sphereMesh   = this->compile_mesh(create_sphere(48, 24, 3.0f));
-   m_cilinderMesh = this->compile_mesh(from_object(object));
+   auto objMesh   = object_reader::Mesh::from_obj_file("model/house.obj");
+   m_cilinderMesh = this->compile_mesh(from_mesh(objMesh));
 }
 
 void Renderer::on_render()
@@ -125,10 +120,7 @@ void Renderer::on_render()
 
    m_commandList.bind_pipeline(m_pipeline);
 
-   m_commandList.bind_descriptor_group(m_object1.descGroup, framebufferIndex);
-   m_commandList.draw_mesh(*m_sphereMesh);
-
-   m_commandList.bind_descriptor_group(m_object2.descGroup, framebufferIndex);
+   m_commandList.bind_descriptor_group(m_house.descGroup, framebufferIndex);
    m_commandList.draw_mesh(*m_cilinderMesh);
 
    checkStatus(m_commandList.finish());
@@ -152,9 +144,43 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
       m_yaw -= 2 * M_PI;
    }
 
-   m_pitch -= dy * 0.01f;
+   m_pitch += dy * 0.01f;
    m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f,
                         static_cast<float>(M_PI) / 2.0f - 0.01f);
+}
+
+void Renderer::on_key_pressed(const uint32_t key)
+{
+   if (key == 17) {
+      m_isMovingForward = true;
+   } else if (key == 31) {
+      m_isMovingBackwards = true;
+   } else if (key == 30) {
+      m_isMovingLeft = true;
+   } else if (key == 32) {
+      m_isMovingRight = true;
+   } else if (key == 18) {
+      m_isMovingDown = true;
+   } else if (key == 16) {
+      m_isMovingUp = true;
+   }
+}
+
+void Renderer::on_key_released(const uint32_t key)
+{
+   if (key == 17) {
+      m_isMovingForward = false;
+   } else if (key == 31) {
+      m_isMovingBackwards = false;
+   } else if (key == 30) {
+      m_isMovingLeft = false;
+   } else if (key == 32) {
+      m_isMovingRight = false;
+   } else if (key == 18) {
+      m_isMovingDown = false;
+   } else if (key == 16) {
+      m_isMovingUp = false;
+   }
 }
 
 CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
@@ -239,32 +265,37 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
 void Renderer::update_uniform_data(const uint32_t frame)
 {
-   static auto startTime = std::chrono::high_resolution_clock::now();
-   auto currentTime      = std::chrono::high_resolution_clock::now();
-   float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+   const auto yVector = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f};
+   const auto xVector = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
+   const auto zVector = glm::vec3{0.0f, 0.0f, 1.0f};
+   auto yawMatrix     = glm::rotate(glm::mat4(1), m_yaw, glm::vec3{0.0f, 0.0f, 1.0f});
+   auto pitchMatrix   = glm::rotate(glm::mat4(1), m_pitch, glm::vec3{1.0f, 0.0f, 0.0f});
+   auto forwardVector = glm::vec3(yawMatrix * pitchMatrix * yVector);
+   auto rightVector   = glm::vec3(yawMatrix * pitchMatrix * xVector);
 
-   const auto eye = glm::vec4{0.0f, m_distance, 0, 1.0f};
-   auto eye_yaw   = glm::rotate(glm::mat4(1), m_yaw, glm::vec3{0.0f, 0.0f, 1.0f});
-   auto eye_pitch = glm::rotate(glm::mat4(1), m_pitch, glm::vec3{1.0f, 0.0f, 0.0f});
-   auto eye_final = eye_yaw * eye_pitch * eye;
+   if (m_isMovingForward) {
+      m_position += 0.005f * forwardVector;
+   } else if (m_isMovingBackwards) {
+      m_position -= 0.005f * forwardVector;
+   } else if (m_isMovingLeft) {
+      m_position -= 0.005f * rightVector;
+   } else if (m_isMovingRight) {
+      m_position += 0.005f * rightVector;
+   } else if (m_isMovingUp) {
+      m_position += 0.005f * zVector;
+   } else if (m_isMovingDown) {
+      m_position -= 0.005f * zVector;
+   }
 
-   auto view = glm::lookAt(glm::vec3(eye_final), glm::vec3{0.0f, 0.0f, 0.0f}, glm::vec3{0.0f, 0.0f, 1.0f});
+   auto view       = glm::lookAt(m_position, m_position + forwardVector, zVector);
    auto projection = glm::perspective(
            glm::radians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
 
-   UniformBufferObject object1{};
-   object1.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(30.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   object1.view  = view;
-   object1.proj  = projection;
-   m_object1.uniformBufferMappings[frame].write(&object1, sizeof(UniformBufferObject));
-
-   UniformBufferObject object2{};
-   auto rot      = glm::rotate(glm::mat4(1.0f), -time * glm::radians(5.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   auto trans    = glm::translate(rot, glm::vec3(0.0f, 8.0f, 0.0f));
-   object2.model = trans;
-   object2.view  = view;
-   object2.proj  = projection;
-   m_object2.uniformBufferMappings[frame].write(&object2, sizeof(UniformBufferObject));
+   UniformBufferObject houseUbo{};
+   houseUbo.model = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   houseUbo.view  = view;
+   houseUbo.proj  = projection;
+   m_house.uniformBufferMappings[frame].write(&houseUbo, sizeof(UniformBufferObject));
 }
 
 void Renderer::write_to_texture(std::string_view path, graphics_api::Texture &texture)
@@ -350,13 +381,12 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
                                .build());
 
    auto texture1 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {3600, 1673}));
-   auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {2048, 1024}));
+   auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {1024, 1024}));
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());
    auto renderFinishedSemaphore   = checkResult(device->create_semaphore());
    auto inFlightFence             = checkResult(device->create_fence());
    auto commandList               = checkResult(device->create_command_list());
-   auto object1                   = create_object_3d(*device, pipeline, texture1);
-   auto object2                   = create_object_3d(*device, pipeline, texture2);
+   auto house                     = create_object_3d(*device, pipeline, texture2);
 
    return Renderer(RendererObjects{
            .width                     = width,
@@ -372,8 +402,7 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            .commandList               = std::move(commandList),
            .texture1                  = std::move(texture1),
            .texture2                  = std::move(texture2),
-           .object1                   = std::move(object1),
-           .object2                   = std::move(object2),
+           .house                     = std::move(house),
    });
 }
 }// namespace renderer
