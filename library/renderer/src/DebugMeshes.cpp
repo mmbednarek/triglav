@@ -1,10 +1,5 @@
 #include "DebugMeshes.h"
 
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
-#include <CGAL/Polygon_mesh_processing/compute_normal.h>
-#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
-#include <CGAL/Surface_mesh.h>
-#include <CGAL/Triangulation_3.h>
 #include <cstdint>
 #include <vector>
 
@@ -13,7 +8,7 @@ namespace renderer {
 Mesh create_sphere(const int segment_count, const int ring_count, const float radius)
 {
    std::vector<uint32_t> indicies{};
-   std::vector<Vertex> vertices{};
+   std::vector<geometry::Vertex> vertices{};
 
    vertices.push_back({
            {0, 0, -radius},
@@ -90,7 +85,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
 Mesh create_cilinder(const int segment_count, const int ring_count, const float radius, const float depth)
 {
    std::vector<uint32_t> indicies{};
-   std::vector<Vertex> vertices{};
+   std::vector<geometry::Vertex> vertices{};
 
    vertices.push_back({
            {0, 0, -depth},
@@ -185,7 +180,7 @@ struct Object
 
 Mesh from_object(const Object &object)
 {
-   std::vector<Vertex> vertices{};
+   std::vector<geometry::Vertex> vertices{};
    std::vector<uint32_t> indices{};
 
    std::map<Index, uint32_t> indexMap{};
@@ -202,7 +197,7 @@ Mesh from_object(const Object &object)
          auto vertex = object.vertices[index.vertex_id - 1];
 
          indexMap.emplace(index, topIndex);
-         vertices.emplace_back(Vertex{
+         vertices.emplace_back(geometry::Vertex{
                  {vertex.x, vertex.z, vertex.y},
                  object.uvs[index.uv_id - 1],
                  object.normals[index.normal_id - 1]
@@ -297,54 +292,6 @@ Mesh create_inner_box(const float width, const float height, const float depth)
    });
 
    return from_object(Object(std::move(vertices), std::move(uvs), std::move(normals), std::move(faces)));
-}
-
-glm::vec3 vector3_to_vector(const CGAL::Simple_cartesian<float>::Vector_3 &vec)
-{
-   return glm::vec3{vec.x(), vec.y(), vec.z()};
-}
-
-glm::vec3 point3_to_vector(const CGAL::Simple_cartesian<float>::Point_3 &point)
-{
-   return glm::vec3{point.x(), point.y(), point.z()};
-}
-
-glm::vec2 vector2_to_vector(const CGAL::Simple_cartesian<float>::Vector_2 &point)
-{
-   return glm::vec2{point.x(), point.y()};
-}
-
-Mesh from_mesh(object_reader::Mesh &mesh)
-{
-   // mesh.debug_stats();
-   mesh.triangulate_faces();
-   // mesh.debug_stats();
-
-   std::map<Index, uint32_t> indexMap;
-   std::vector<Vertex> out_vertices{};
-
-   std::vector<uint32_t> out_indices{};
-   for (const auto face_index : mesh.faces()) {
-      for (const auto halfedge_index : mesh.face_halfedges(face_index)) {
-         const auto vertex_index = mesh.halfedge_target(halfedge_index);
-         const auto normal       = mesh.normal_id(halfedge_index);
-         const auto uv           = mesh.uv_id(halfedge_index);
-         Index index{vertex_index.id(), uv, normal};
-
-         if (indexMap.contains(index)) {
-            out_indices.push_back(indexMap[index]);
-            continue;
-         }
-
-         out_vertices.push_back(Vertex(point3_to_vector(mesh.location(vertex_index)),
-                                       vector2_to_vector(mesh.uv_by_id(uv)),
-                                       vector3_to_vector(mesh.normal_by_id(normal))));
-         indexMap[index] = out_vertices.size() - 1;
-         out_indices.push_back(out_vertices.size() - 1);
-      }
-   }
-
-   return Mesh{std::move(out_indices), std::move(out_vertices)};
 }
 
 }// namespace renderer

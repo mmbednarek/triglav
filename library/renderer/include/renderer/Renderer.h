@@ -93,7 +93,6 @@ class Renderer
    graphics_api::Texture m_texture1;
    graphics_api::Texture m_texture2;
    Object3d m_house;
-   std::optional<CompiledMesh> m_sphereMesh;
    std::optional<CompiledMesh> m_cilinderMesh;
    SkyBox m_skyBox;
 };

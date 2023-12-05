@@ -5,7 +5,7 @@
 
 #include "BufferedReader.h"
 
-namespace object_reader {
+namespace geometry {
 
 enum class State
 {

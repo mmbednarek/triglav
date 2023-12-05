@@ -7,15 +7,9 @@
 #include <stdexcept>
 
 #include "graphics_api/Array.hpp"
+#include "geometry/Geometry.h"
 
 namespace renderer {
-
-struct Vertex
-{
-   glm::vec3 position;
-   glm::vec2 uv;
-   glm::vec3 normal;
-};
 
 struct UniformBufferObject
 {
@@ -39,16 +33,15 @@ struct MeshObject
    std::vector<glm::vec2> uvs{};
    std::vector<glm::vec3> normals{};
    std::vector<VertexIndex> indicies{};
-
 };
 
 struct Mesh
 {
    std::vector<uint32_t> indicies{};
-   std::vector<Vertex> vertices{};
+   std::vector<geometry::Vertex> vertices{};
 };
 
-using CompiledMesh = graphics_api::Mesh<Vertex>;
+using CompiledMesh = graphics_api::Mesh<geometry::Vertex>;
 
 template<typename TObject>
 TObject checkResult(std::expected<TObject, graphics_api::Status> &&object)

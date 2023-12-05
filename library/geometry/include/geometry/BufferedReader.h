@@ -3,7 +3,7 @@
 #include <array>
 #include <istream>
 
-namespace object_reader {
+namespace geometry {
 
 constexpr auto g_bufferSize = 256;
 

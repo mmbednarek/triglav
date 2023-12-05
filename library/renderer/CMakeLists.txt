@@ -16,5 +16,4 @@ target_link_libraries(renderer
         graphics_api
         geometry
         glm
-        CGAL::CGAL
 )

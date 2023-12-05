@@ -14,5 +14,7 @@ add_subdirectory("src")
 target_link_libraries(geometry
         LINK_PUBLIC
         glm
+        graphics_api
+        LINK_PRIVATE
         CGAL::CGAL
 )

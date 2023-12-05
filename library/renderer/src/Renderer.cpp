@@ -12,6 +12,7 @@
 #include "graphics_api/PipelineBuilder.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "geometry/Mesh.h"
 #include "stb_image.h"
 
 namespace {
@@ -100,10 +101,10 @@ Renderer::Renderer(RendererObjects &&objects) :
    this->write_to_texture("texture/earth.png", m_texture1);
    this->write_to_texture("texture/house.png", m_texture2);
 
-   m_sphereMesh = this->compile_mesh(create_sphere(48, 24, 3.0f));
+   const auto objMesh = geometry::Mesh::from_file("model/house.obj");
+   objMesh.triangulate();
 
-   auto objMesh   = object_reader::Mesh::from_obj_file("model/house.obj");
-   m_cilinderMesh = this->compile_mesh(from_mesh(objMesh));
+   m_cilinderMesh = objMesh.upload_to_device(*m_device);
 }
 
 void Renderer::on_render()
@@ -366,10 +367,10 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
                                .fragment_shader(fragmentShader)
                                .vertex_shader(vertexShader)
                                // Vertex description
-                               .begin_vertex_layout<Vertex>()
-                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(Vertex, position))
-                               .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(Vertex, uv))
-                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(Vertex, normal))
+                               .begin_vertex_layout<geometry::Vertex>()
+                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                               .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
+                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
                                .end_vertex_layout()
                                // Descriptor layout
                                .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,

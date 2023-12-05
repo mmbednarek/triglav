@@ -1,8 +1,6 @@
 #include "BufferedReader.h"
 
-#include <array>
-
-namespace object_reader {
+namespace geometry {
 
 BufferedReader::BufferedReader(std::istream &stream) :
    m_stream(stream)
