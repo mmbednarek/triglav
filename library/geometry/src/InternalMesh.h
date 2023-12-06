@@ -27,14 +27,20 @@ public:
 
    VertexIndex add_vertex(Point3 location);
    FaceIndex add_face(std::span<VertexIndex> vertices);
+   Index add_uv(Vector2 uv);
+   Index add_normal(Vector3 normal);
+   [[nodiscard]] size_t vertex_count() const;
    void triangulate_faces();
-   void recalculate_normals() const;
+   void recalculate_normals();
    [[nodiscard]] SurfaceMesh::Vertex_range vertices() const;
    [[nodiscard]] SurfaceMesh::Face_range faces() const;
 
    [[nodiscard]] SurfaceMesh::Vertex_around_face_range face_vertices(FaceIndex index) const;
    [[nodiscard]] SurfaceMesh::Halfedge_around_face_range face_halfedges(FaceIndex index) const;
    [[nodiscard]] VertexIndex halfedge_target(HalfedgeIndex index) const;
+
+   void set_face_uvs(Index face, std::span<Index> uvs);
+   void set_face_normals(Index face, std::span<Index> normals);
 
    [[nodiscard]] Point3 location(VertexIndex index) const;
    Vector3 normal(HalfedgeIndex index);
@@ -49,6 +55,7 @@ public:
    [[nodiscard]] bool is_triangulated();
 
    graphics_api::Mesh<Vertex> upload_to_device(graphics_api::Device &device);
+   void reverse_orientation();
 
    static InternalMesh from_obj_file(std::istream& stream);
    static InternalMesh from_obj_file(std::string_view path);

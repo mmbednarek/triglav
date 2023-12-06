@@ -27,7 +27,7 @@ class SkyBox
    graphics_api::Shader m_fragmentShader;
    graphics_api::Shader m_vertexShader;
    graphics_api::Texture m_texture;
-   CompiledMesh m_mesh;
+   GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorGroup m_descGroup;
    graphics_api::Buffer m_uniformBuffer;

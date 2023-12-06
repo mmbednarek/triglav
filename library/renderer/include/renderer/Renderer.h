@@ -47,7 +47,6 @@ class Renderer
    void on_mouse_relative_move(float dx, float dy);
    void on_key_pressed(uint32_t key);
    void on_key_released(uint32_t key);
-   [[nodiscard]] CompiledMesh compile_mesh(const Mesh &mesh) const;
    void on_mouse_wheel_turn(float x);
    [[nodiscard]] graphics_api::Texture load_texture(std::string_view path) const;
    [[nodiscard]] graphics_api::Shader load_shader(graphics_api::ShaderStage stage,
@@ -59,6 +58,8 @@ class Renderer
    {
       return checkResult(m_device->create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(TUbo)));
    }
+
+   [[nodiscard]] graphics_api::Device &device() const;
 
  private:
    void update_uniform_data(uint32_t frame);
@@ -93,7 +94,7 @@ class Renderer
    graphics_api::Texture m_texture1;
    graphics_api::Texture m_texture2;
    Object3d m_house;
-   std::optional<CompiledMesh> m_cilinderMesh;
+   std::optional<GpuMesh> m_cilinderMesh;
    SkyBox m_skyBox;
 };
 

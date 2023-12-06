@@ -1,12 +1,22 @@
 #include "SkyBox.h"
 
-
-#include "DebugMeshes.h"
+#include "geometry/DebugMesh.h"
 #include "Renderer.h"
-
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+
+namespace {
+
+graphics_api::Mesh<geometry::Vertex> create_skybox_mesh(graphics_api::Device& device)
+{
+   auto mesh = geometry::create_box({50, 50, 50});
+   mesh.reverse_orientation();
+   mesh.triangulate();
+   return mesh.upload_to_device(device);
+}
+
+}
 
 namespace renderer {
 
@@ -15,7 +25,7 @@ SkyBox::SkyBox(Renderer &renderer) :
             renderer.load_shader(graphics_api::ShaderStage::Fragment, "shader/skybox/fragment.spv")),
     m_vertexShader(renderer.load_shader(graphics_api::ShaderStage::Vertex, "shader/skybox/vertex.spv")),
     m_texture(renderer.load_texture("texture/skybox.png")),
-    m_mesh(renderer.compile_mesh(create_inner_box(50.0f, 50.0f, 50.0f))),
+    m_mesh(create_skybox_mesh(renderer.device())),
     m_pipeline(
             checkResult(renderer.create_pipeline()
                                 .fragment_shader(m_fragmentShader)

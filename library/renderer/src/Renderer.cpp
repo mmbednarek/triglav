@@ -7,12 +7,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Core.h"
-#include "DebugMeshes.h"
+#include "geometry/Mesh.h"
 #include "graphics_api/PipelineBuilder.h"
 
+#include "Core.h"
+
 #define STB_IMAGE_IMPLEMENTATION
-#include "geometry/Mesh.h"
 #include "stb_image.h"
 
 namespace {
@@ -184,14 +184,6 @@ void Renderer::on_key_released(const uint32_t key)
    }
 }
 
-CompiledMesh Renderer::compile_mesh(const Mesh &mesh) const
-{
-   graphics_api::VertexArray vertices(*m_device, mesh.vertices);
-   graphics_api::IndexArray indices(*m_device, mesh.indicies);
-
-   return CompiledMesh{std::move(vertices), std::move(indices)};
-}
-
 void Renderer::on_mouse_wheel_turn(const float x)
 {
    m_distance += x;
@@ -264,6 +256,11 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    m_height = height;
 }
 
+graphics_api::Device &Renderer::device() const
+{
+   return *m_device;
+}
+
 void Renderer::update_uniform_data(const uint32_t frame)
 {
    const auto yVector = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f};
@@ -293,7 +290,7 @@ void Renderer::update_uniform_data(const uint32_t frame)
            glm::radians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
 
    UniformBufferObject houseUbo{};
-   houseUbo.model = glm::rotate(glm::mat4(1.0f), glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   houseUbo.model = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
    houseUbo.view  = view;
    houseUbo.proj  = projection;
    m_house.uniformBufferMappings[frame].write(&houseUbo, sizeof(UniformBufferObject));
@@ -362,24 +359,24 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
    auto fragmentShader = checkResult(
            device->create_shader(graphics_api::ShaderStage::Fragment, "main", fragmentShaderData));
 
-   auto pipeline =
-           checkResult(graphics_api::PipelineBuilder(*device, renderPass)
-                               .fragment_shader(fragmentShader)
-                               .vertex_shader(vertexShader)
-                               // Vertex description
-                               .begin_vertex_layout<geometry::Vertex>()
-                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                               .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                               .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                               .end_vertex_layout()
-                               // Descriptor layout
-                               .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                   graphics_api::ShaderStage::Vertex)
-                               .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                   graphics_api::ShaderStage::Fragment)
-                               .descriptor_budget(10)
-                               .enable_depth_test(true)
-                               .build());
+   auto pipeline = checkResult(
+           graphics_api::PipelineBuilder(*device, renderPass)
+                   .fragment_shader(fragmentShader)
+                   .vertex_shader(vertexShader)
+                   // Vertex description
+                   .begin_vertex_layout<geometry::Vertex>()
+                   .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                   .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
+                   .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
+                   .end_vertex_layout()
+                   // Descriptor layout
+                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                       graphics_api::ShaderStage::Vertex)
+                   .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                       graphics_api::ShaderStage::Fragment)
+                   .descriptor_budget(10)
+                   .enable_depth_test(true)
+                   .build());
 
    auto texture1 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {3600, 1673}));
    auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {1024, 1024}));

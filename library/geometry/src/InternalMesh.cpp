@@ -4,6 +4,7 @@
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
+#include <CGAL/Polygon_mesh_processing/orientation.h>
 
 namespace {
 
@@ -66,6 +67,23 @@ InternalMesh::FaceIndex InternalMesh::add_face(const std::span<VertexIndex> vert
    return m_mesh.add_face(vertices);
 }
 
+Index InternalMesh::add_uv(Vector2 uv)
+{
+   m_uvs.emplace_back(uv);
+   return m_uvs.size() - 1;
+}
+
+Index InternalMesh::add_normal(Vector3 normal)
+{
+   m_normals.emplace_back(normal);
+   return m_normals.size() - 1;
+}
+
+size_t InternalMesh::vertex_count() const
+{
+   return m_mesh.vertices().size();
+}
+
 void InternalMesh::triangulate_faces()
 {
    if (this->is_triangulated())
@@ -94,9 +112,19 @@ void InternalMesh::triangulate_faces()
    m_isTriangulated = true;
 }
 
-void InternalMesh::recalculate_normals() const
+void InternalMesh::recalculate_normals()
 {
-   // CGAL::Polygon_mesh_processing::compute_vertex_normals(m_mesh, m_normals);
+   const auto vertexNormals =
+           m_mesh.add_property_map<VertexIndex, Vector3>("v:normals", Vector3(0, 0, 0)).first;
+   CGAL::Polygon_mesh_processing::compute_vertex_normals(m_mesh, vertexNormals);
+   m_normals.resize(m_mesh.vertices().size());
+
+   for (const auto vertex : m_mesh.vertices()) {
+      m_normals[vertex.id()] = vertexNormals[vertex];
+      for (const auto halfedge : m_mesh.halfedges_around_target(m_mesh.halfedge(vertex))) {
+         m_normalProperties[halfedge] = vertex.id();
+      }
+   }
 }
 
 InternalMesh::SurfaceMesh::Vertex_range InternalMesh::vertices() const
@@ -114,7 +142,8 @@ InternalMesh::SurfaceMesh::Vertex_around_face_range InternalMesh::face_vertices(
    return m_mesh.vertices_around_face(m_mesh.halfedge(index));
 }
 
-InternalMesh::SurfaceMesh::Halfedge_around_face_range InternalMesh::face_halfedges(const FaceIndex index) const
+InternalMesh::SurfaceMesh::Halfedge_around_face_range
+InternalMesh::face_halfedges(const FaceIndex index) const
 {
    return m_mesh.halfedges_around_face(m_mesh.halfedge(index));
 }
@@ -122,6 +151,32 @@ InternalMesh::SurfaceMesh::Halfedge_around_face_range InternalMesh::face_halfedg
 InternalMesh::VertexIndex InternalMesh::halfedge_target(const HalfedgeIndex index) const
 {
    return m_mesh.target(index);
+}
+
+void InternalMesh::set_face_uvs(const Index face, std::span<Index> uvs)
+{
+   auto it = uvs.begin();
+   for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
+      if (it == uvs.end())
+         break;
+
+      m_uvProperties[halfedge] = *it;
+
+      ++it;
+   }
+}
+
+void InternalMesh::set_face_normals(const Index face, std::span<Index> normals)
+{
+   auto it = normals.begin();
+   for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
+      if (it == normals.end())
+         break;
+
+      m_normalProperties[halfedge] = *it;
+
+      ++it;
+   }
 }
 
 InternalMesh::Point3 InternalMesh::location(const VertexIndex index) const
@@ -192,7 +247,7 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
                  Point3{std::stof(arguments[0]), -std::stof(arguments[1]), std::stof(arguments[2])});
       } else if (name == "vn") {
          assert(arguments.size() >= 3);
-         result.m_normals.emplace_back(std::stof(arguments[0]), -std::stof(arguments[1]),
+         result.m_normals.emplace_back(std::stof(arguments[0]), std::stof(arguments[1]),
                                        std::stof(arguments[2]));
       } else if (name == "vt") {
          assert(arguments.size() >= 2);
@@ -274,6 +329,14 @@ graphics_api::Mesh<Vertex> InternalMesh::upload_to_device(graphics_api::Device &
    gpuIndices.write(outIndices.data(), outIndices.size());
 
    return {std::move(gpuVertices), std::move(gpuIndices)};
+}
+
+void InternalMesh::reverse_orientation()
+{
+   CGAL::Polygon_mesh_processing::reverse_face_orientations(m_mesh);
+   for (auto& normal : m_normals) {
+      normal = -normal;
+   }
 }
 
 }// namespace geometry

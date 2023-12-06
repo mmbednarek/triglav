@@ -30,4 +30,11 @@ struct IndexedVertex
    auto operator<=>(const IndexedVertex &rhs) const = default;
 };
 
+struct Extent3D
+{
+   float width;
+   float height;
+   float depth;
+};
+
 }// namespace geometry
