@@ -37,4 +37,9 @@ struct Extent3D
    float depth;
 };
 
+struct Material
+{
+   std::string texturePath;
+};
+
 }// namespace geometry

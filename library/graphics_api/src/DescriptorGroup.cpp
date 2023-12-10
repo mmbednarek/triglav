@@ -75,14 +75,14 @@ void DescriptorGroup::update(const size_t descriptorId, const std::span<Descript
       writeDescriptorSet.descriptorType  = vulkan::to_vulkan_descriptor_type(descriptor.type);
 
       if (descriptor.type == DescriptorType::UniformBuffer) {
-         const auto *buffer = std::get<Buffer *>(descriptor.data);
+         const auto *buffer = std::get<const Buffer *>(descriptor.data);
          VkDescriptorBufferInfo bufferInfo{};
          bufferInfo.offset              = 0;
          bufferInfo.range               = buffer->size();
          bufferInfo.buffer              = buffer->vulkan_buffer();
          writeDescriptorSet.pBufferInfo = &descriptorBufferInfos.emplace_back(bufferInfo);
       } else if (descriptor.type == DescriptorType::ImageSampler) {
-         const auto *texture = std::get<Texture *>(descriptor.data);
+         const auto *texture = std::get<const Texture *>(descriptor.data);
          VkDescriptorImageInfo imageInfo{};
          imageInfo.imageLayout         = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
          imageInfo.imageView           = texture->vulkan_image_view();

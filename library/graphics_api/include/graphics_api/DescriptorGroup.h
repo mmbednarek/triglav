@@ -15,7 +15,7 @@ struct DescriptorWrite
 {
    DescriptorType type{};
    int binding{};
-   std::variant<Buffer *, Texture *> data;
+   std::variant<const Buffer *, const Texture *> data;
 };
 
 class DescriptorGroup

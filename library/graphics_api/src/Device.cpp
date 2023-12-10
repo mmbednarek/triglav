@@ -789,7 +789,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), imageSize.width,
+   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, imageSize.width,
                   imageSize.height);
 }
 

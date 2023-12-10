@@ -25,6 +25,19 @@ enum class ColorFormatOrder
    D
 };
 
+constexpr size_t color_format_order_count(const ColorFormatOrder order)
+{
+   switch (order) {
+   case ColorFormatOrder::RGB: return 3;
+   case ColorFormatOrder::RG: return 2;
+   case ColorFormatOrder::RGBA: return 4;
+   case ColorFormatOrder::BGRA: return 4;
+   case ColorFormatOrder::DS: return 2;
+   case ColorFormatOrder::D: return 1;
+   }
+   return 0;
+}
+
 enum class ColorFormatPart
 {
    Unknown,
@@ -33,6 +46,18 @@ enum class ColorFormatPart
    UInt,
    Float32
 };
+
+constexpr size_t color_format_part_size(const ColorFormatPart part)
+{
+   switch (part) {
+   case ColorFormatPart::Unknown: return 0;
+   case ColorFormatPart::sRGB: return 1;
+   case ColorFormatPart::UNorm16: return 2;
+   case ColorFormatPart::UInt: return 4;
+   case ColorFormatPart::Float32: return 4;
+   }
+   return 0;
+}
 
 enum class ColorSpace
 {
@@ -68,6 +93,22 @@ struct ColorFormat
 {
    ColorFormatOrder order;
    std::array<ColorFormatPart, 4> parts;
+
+   [[nodiscard]] size_t pixel_size() const
+   {
+      size_t result{};
+      ColorFormatPart lastPart{};
+      const auto count = color_format_order_count(this->order);
+      for (int i = 0; i < count; ++i) {
+         if (parts[i] == ColorFormatPart::Unknown) {
+            result += color_format_part_size(lastPart);
+         } else {
+            result += color_format_part_size(parts[i]);
+            lastPart = parts[i];
+         }
+      }
+      return result;
+   }
 };
 
 struct Resolution

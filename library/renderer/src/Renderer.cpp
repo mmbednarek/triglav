@@ -7,8 +7,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "AssetMap.hpp"
 #include "geometry/Mesh.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "Name.hpp"
+#include "ResourceManager.h"
 
 #include "Core.h"
 
@@ -36,7 +39,7 @@ std::vector<uint8_t> read_whole_file(const std::string_view name)
 }
 
 renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::Pipeline &pipeline,
-                                    graphics_api::Texture &texture)
+                                    const graphics_api::Texture &texture)
 {
    auto descriptors = renderer::checkResult(pipeline.allocate_descriptors(device.framebuffer_count()));
 
@@ -86,25 +89,15 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_height(objects.height),
     m_device(std::move(objects.device)),
     m_renderPass(std::move(objects.renderPass)),
-    m_vertexShader(std::move(objects.vertexShader)),
-    m_fragmentShader(std::move(objects.fragmentShader)),
     m_pipeline(std::move(objects.pipeline)),
     m_framebufferReadySemaphore(std::move(objects.framebufferReadySemaphore)),
     m_renderFinishedSemaphore(std::move(objects.renderFinishedSemaphore)),
     m_inFlightFence(std::move(objects.inFlightFence)),
     m_commandList(std::move(objects.commandList)),
-    m_texture1(std::move(objects.texture1)),
-    m_texture2(std::move(objects.texture2)),
-    m_house(std::move(objects.house)),
+    m_resourceManager(std::move(objects.resourceManager)),
     m_skyBox(*this)
 {
-   this->write_to_texture("texture/earth.png", m_texture1);
-   this->write_to_texture("texture/house.png", m_texture2);
-
-   const auto objMesh = geometry::Mesh::from_file("model/house.obj");
-   objMesh.triangulate();
-
-   m_cilinderMesh = objMesh.upload_to_device(*m_device);
+   m_house = create_object_3d(*m_device, m_pipeline, m_resourceManager->texture("tex:house"_name));
 }
 
 void Renderer::on_render()
@@ -121,8 +114,8 @@ void Renderer::on_render()
 
    m_commandList.bind_pipeline(m_pipeline);
 
-   m_commandList.bind_descriptor_group(m_house.descGroup, framebufferIndex);
-   m_commandList.draw_mesh(*m_cilinderMesh);
+   m_commandList.bind_descriptor_group(m_house->descGroup, framebufferIndex);
+   m_commandList.draw_mesh(m_resourceManager->mesh("msh:house"_name));
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -236,6 +229,11 @@ graphics_api::PipelineBuilder Renderer::create_pipeline()
    return {*m_device, m_renderPass};
 }
 
+ResourceManager &Renderer::resource_manager() const
+{
+   return *m_resourceManager;
+}
+
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
    std::array attachments{
@@ -293,7 +291,7 @@ void Renderer::update_uniform_data(const uint32_t frame)
    houseUbo.model = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
    houseUbo.view  = view;
    houseUbo.proj  = projection;
-   m_house.uniformBufferMappings[frame].write(&houseUbo, sizeof(UniformBufferObject));
+   m_house->uniformBufferMappings[frame].write(&houseUbo, sizeof(UniformBufferObject));
 }
 
 void Renderer::write_to_texture(std::string_view path, graphics_api::Texture &texture)
@@ -343,26 +341,16 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
 
    checkStatus(device->init_swapchain(renderPass, graphics_api::ColorSpace::sRGB));
 
-   const auto vertexShaderData = read_whole_file("shader/example_vertex.spv");
-   if (vertexShaderData.empty()) {
-      throw std::runtime_error("failed to open vertex shader file");
+   auto resourceManager = std::make_unique<ResourceManager>(*device);
+
+   for (const auto &[name, path] : g_assetMap) {
+      resourceManager->load_asset(name, path);
    }
-
-   auto vertexShader =
-           checkResult(device->create_shader(graphics_api::ShaderStage::Vertex, "main", vertexShaderData));
-
-   const auto fragmentShaderData = read_whole_file("shader/example_fragment.spv");
-   if (fragmentShaderData.empty()) {
-      throw std::runtime_error("failed to open fragment shader file");
-   }
-
-   auto fragmentShader = checkResult(
-           device->create_shader(graphics_api::ShaderStage::Fragment, "main", fragmentShaderData));
 
    auto pipeline = checkResult(
            graphics_api::PipelineBuilder(*device, renderPass)
-                   .fragment_shader(fragmentShader)
-                   .vertex_shader(vertexShader)
+                   .fragment_shader(resourceManager->shader("fsh:example"_name))
+                   .vertex_shader(resourceManager->shader("vsh:example"_name))
                    // Vertex description
                    .begin_vertex_layout<geometry::Vertex>()
                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
@@ -378,29 +366,22 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
                    .enable_depth_test(true)
                    .build());
 
-   auto texture1 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {3600, 1673}));
-   auto texture2 = checkResult(device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB), {1024, 1024}));
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());
    auto renderFinishedSemaphore   = checkResult(device->create_semaphore());
    auto inFlightFence             = checkResult(device->create_fence());
    auto commandList               = checkResult(device->create_command_list());
-   auto house                     = create_object_3d(*device, pipeline, texture2);
 
    return Renderer(RendererObjects{
            .width                     = width,
            .height                    = height,
            .device                    = std::move(device),
+           .resourceManager           = std::move(resourceManager),
            .renderPass                = std::move(renderPass),
-           .vertexShader              = std::move(vertexShader),
-           .fragmentShader            = std::move(fragmentShader),
            .pipeline                  = std::move(pipeline),
            .framebufferReadySemaphore = std::move(framebufferReadySemaphore),
            .renderFinishedSemaphore   = std::move(renderFinishedSemaphore),
            .inFlightFence             = std::move(inFlightFence),
            .commandList               = std::move(commandList),
-           .texture1                  = std::move(texture1),
-           .texture2                  = std::move(texture2),
-           .house                     = std::move(house),
    });
 }
 }// namespace renderer

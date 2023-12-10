@@ -5,6 +5,7 @@
 #include "graphics_api/PipelineBuilder.h"
 #include "graphics_api/PlatformSurface.h"
 #include "Renderer.h"
+#include "ResourceManager.h"
 #include "SkyBox.h"
 
 #include <optional>
@@ -24,17 +25,13 @@ struct RendererObjects
    uint32_t width{};
    uint32_t height{};
    graphics_api::DeviceUPtr device;
+   std::unique_ptr<ResourceManager> resourceManager;
    graphics_api::RenderPass renderPass;
-   graphics_api::Shader vertexShader;
-   graphics_api::Shader fragmentShader;
    graphics_api::Pipeline pipeline;
    graphics_api::Semaphore framebufferReadySemaphore;
    graphics_api::Semaphore renderFinishedSemaphore;
    graphics_api::Fence inFlightFence;
    graphics_api::CommandList commandList;
-   graphics_api::Texture texture1;
-   graphics_api::Texture texture2;
-   Object3d house;
 };
 
 class Renderer
@@ -52,6 +49,7 @@ class Renderer
    [[nodiscard]] graphics_api::Shader load_shader(graphics_api::ShaderStage stage,
                                                   std::string_view path) const;
    [[nodiscard]] graphics_api::PipelineBuilder create_pipeline();
+   [[nodiscard]] ResourceManager& resource_manager() const;
 
    template<typename TUbo>
    [[nodiscard]] graphics_api::Buffer create_ubo_buffer() const
@@ -84,18 +82,15 @@ class Renderer
    uint32_t m_height{};
    graphics_api::DeviceUPtr m_device;
    graphics_api::RenderPass m_renderPass;
-   graphics_api::Shader m_vertexShader;
-   graphics_api::Shader m_fragmentShader;
    graphics_api::Pipeline m_pipeline;
    graphics_api::Semaphore m_framebufferReadySemaphore;
    graphics_api::Semaphore m_renderFinishedSemaphore;
    graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
-   graphics_api::Texture m_texture1;
-   graphics_api::Texture m_texture2;
-   Object3d m_house;
-   std::optional<GpuMesh> m_cilinderMesh;
+   std::unique_ptr<ResourceManager> m_resourceManager;
+
    SkyBox m_skyBox;
+   std::optional<Object3d> m_house;
 };
 
 Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);

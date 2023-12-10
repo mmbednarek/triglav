@@ -3,12 +3,17 @@ set(RENDERER_INCLUDE_DIR ${RENDERER_DIR}/include/renderer)
 target_sources(renderer
     # Source files
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/AssetMap.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Renderer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/ResourceManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/SkyBox.cpp
 
     # Header files
     PUBLIC
         ${RENDERER_INCLUDE_DIR}/Core.h
+        ${RENDERER_INCLUDE_DIR}/Crc.hpp
+        ${RENDERER_INCLUDE_DIR}/Name.hpp
         ${RENDERER_INCLUDE_DIR}/Renderer.h
+        ${RENDERER_INCLUDE_DIR}/ResourceManager.h
         ${RENDERER_INCLUDE_DIR}/SkyBox.h
 )

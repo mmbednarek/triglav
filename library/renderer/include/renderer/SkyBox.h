@@ -9,6 +9,7 @@
 namespace renderer {
 
 class Renderer;
+class ResourceManager;
 
 struct SkyBoxUBO
 {
@@ -24,9 +25,7 @@ class SkyBox
    void on_render(const graphics_api::CommandList& commandList, float yaw, float pitch, float width, float height) const;
 
  private:
-   graphics_api::Shader m_fragmentShader;
-   graphics_api::Shader m_vertexShader;
-   graphics_api::Texture m_texture;
+   ResourceManager& m_resourceManager;
    GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorGroup m_descGroup;
