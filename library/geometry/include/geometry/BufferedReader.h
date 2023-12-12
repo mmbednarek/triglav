@@ -5,7 +5,7 @@
 
 namespace geometry {
 
-constexpr auto g_bufferSize = 256;
+constexpr auto g_bufferSize = 1024;
 
 class BufferedReader
 {

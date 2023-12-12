@@ -2,6 +2,7 @@
 cmake-build-debug
 build
 build-debug
+buildDir
 .cache
 compile_commands.json
 .docker-grpc

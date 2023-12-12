@@ -45,9 +45,6 @@ class Renderer
    void on_key_pressed(uint32_t key);
    void on_key_released(uint32_t key);
    void on_mouse_wheel_turn(float x);
-   [[nodiscard]] graphics_api::Texture load_texture(std::string_view path) const;
-   [[nodiscard]] graphics_api::Shader load_shader(graphics_api::ShaderStage stage,
-                                                  std::string_view path) const;
    [[nodiscard]] graphics_api::PipelineBuilder create_pipeline();
    [[nodiscard]] ResourceManager& resource_manager() const;
 
@@ -61,7 +58,6 @@ class Renderer
 
  private:
    void update_uniform_data(uint32_t frame);
-   void write_to_texture(std::string_view path, graphics_api::Texture &texture);
 
    bool m_receivedMouseInput{false};
    float m_lastMouseX{};

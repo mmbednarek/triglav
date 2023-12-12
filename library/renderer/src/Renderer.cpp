@@ -15,28 +15,7 @@
 
 #include "Core.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 namespace {
-
-std::vector<uint8_t> read_whole_file(const std::string_view name)
-{
-   std::ifstream file(std::string{name}, std::ios::ate | std::ios::binary);
-   if (not file.is_open()) {
-      return {};
-   }
-
-   file.seekg(0, std::ios::end);
-   const auto fileSize = file.tellg();
-   file.seekg(0, std::ios::beg);
-
-   std::vector<uint8_t> result{};
-   result.resize(fileSize);
-
-   file.read(reinterpret_cast<char *>(result.data()), fileSize);
-   return result;
-}
 
 renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::Pipeline &pipeline,
                                     const graphics_api::Texture &texture)
@@ -97,7 +76,7 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_resourceManager(std::move(objects.resourceManager)),
     m_skyBox(*this)
 {
-   m_house = create_object_3d(*m_device, m_pipeline, m_resourceManager->texture("tex:house"_name));
+   m_house = create_object_3d(*m_device, m_pipeline, m_resourceManager->texture("tex:bark"_name));
 }
 
 void Renderer::on_render()
@@ -115,7 +94,7 @@ void Renderer::on_render()
    m_commandList.bind_pipeline(m_pipeline);
 
    m_commandList.bind_descriptor_group(m_house->descGroup, framebufferIndex);
-   m_commandList.draw_mesh(m_resourceManager->mesh("msh:house"_name));
+   m_commandList.draw_mesh(m_resourceManager->mesh("msh:tree"_name));
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -181,47 +160,6 @@ void Renderer::on_mouse_wheel_turn(const float x)
 {
    m_distance += x;
    m_distance = std::clamp(m_distance, 1.0f, 100.0f);
-}
-
-graphics_api::Texture Renderer::load_texture(const std::string_view path) const
-{
-   int texWidth, texHeight, texChannels;
-   stbi_uc *pixels = stbi_load(path.data(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-   if (pixels == nullptr) {
-      throw std::runtime_error("failed to load texture");
-   }
-
-   auto transferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
-                                                             texWidth * texHeight * sizeof(uint32_t)));
-   {
-      auto mapped_memory = checkResult(transferBuffer.map_memory());
-      mapped_memory.write(pixels, texWidth * texHeight * sizeof(uint32_t));
-   }
-
-   auto texture = checkResult(
-           m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB),
-                                    {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)}));
-
-   auto oneTimeCommands = checkResult(m_device->create_command_list());
-
-   checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer_to_texture(transferBuffer, texture);
-   checkStatus(oneTimeCommands.finish());
-
-   checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
-
-   return texture;
-}
-
-graphics_api::Shader Renderer::load_shader(const graphics_api::ShaderStage stage,
-                                           const std::string_view path) const
-{
-   const auto shaderData = read_whole_file(path.data());
-   if (shaderData.empty()) {
-      throw std::runtime_error("failed to open vertex shader file");
-   }
-
-   return checkResult(m_device->create_shader(stage, "main", shaderData));
 }
 
 graphics_api::PipelineBuilder Renderer::create_pipeline()
@@ -292,29 +230,6 @@ void Renderer::update_uniform_data(const uint32_t frame)
    houseUbo.view  = view;
    houseUbo.proj  = projection;
    m_house->uniformBufferMappings[frame].write(&houseUbo, sizeof(UniformBufferObject));
-}
-
-void Renderer::write_to_texture(std::string_view path, graphics_api::Texture &texture)
-{
-   int texWidth, texHeight, texChannels;
-   stbi_uc *pixels = stbi_load(path.data(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-   if (pixels == nullptr)
-      return;
-
-   auto transferBuffer = checkResult(m_device->create_buffer(graphics_api::BufferPurpose::TransferBuffer,
-                                                             texWidth * texHeight * sizeof(uint32_t)));
-   {
-      auto mapped_memory = checkResult(transferBuffer.map_memory());
-      mapped_memory.write(pixels, texWidth * texHeight * sizeof(uint32_t));
-   }
-
-   auto oneTimeCommands = checkResult(m_device->create_command_list());
-
-   checkStatus(oneTimeCommands.begin_one_time());
-   oneTimeCommands.copy_buffer_to_texture(transferBuffer, texture);
-   checkStatus(oneTimeCommands.finish());
-
-   checkStatus(m_device->submit_command_list_one_time(oneTimeCommands));
 }
 
 Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height)

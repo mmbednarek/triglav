@@ -28,12 +28,14 @@ void Mesh::triangulate() const
    m_mesh->triangulate_faces();
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 Index Mesh::add_vertex(float x, float y, float z)
 {
    assert(m_mesh != nullptr);
    return m_mesh->add_vertex({x, y, z}).id();
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 Index Mesh::add_face_range(std::span<Index> vertices)
 {
    std::vector<InternalMesh::VertexIndex> vecVertices{};
@@ -43,36 +45,41 @@ Index Mesh::add_face_range(std::span<Index> vertices)
    return m_mesh->add_face(vecVertices);
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 Index Mesh::add_uv(float u, float v)
 {
    assert(m_mesh != nullptr);
    return m_mesh->add_uv({u, v});
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 Index Mesh::add_normal(float x, float y, float z)
 {
    assert(m_mesh != nullptr);
    return m_mesh->add_normal({x, y, z});
 }
 
-size_t Mesh::vertex_count()
+size_t Mesh::vertex_count() const
 {
    assert(m_mesh != nullptr);
    return m_mesh->vertex_count();
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::set_face_uvs_range(const Index face, const std::span<Index> vertices)
 {
    assert(m_mesh != nullptr);
    return m_mesh->set_face_uvs(face, vertices);
 }
 
-void Mesh::set_face_normals_range(Index face, std::span<Index> vertices)
+// ReSharper disable once CppMemberFunctionMayBeConst
+void Mesh::set_face_normals_range(const Index face, const std::span<Index> vertices)
 {
    assert(m_mesh != nullptr);
    return m_mesh->set_face_normals(face, vertices);
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::reverse_orientation()
 {
    assert(m_mesh != nullptr);
