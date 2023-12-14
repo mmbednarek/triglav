@@ -59,12 +59,6 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::descriptor_budget(const uint32_t budget)
-{
-   m_descriptorBudget = budget;
-   return *this;
-}
-
 PipelineBuilder &PipelineBuilder::enable_depth_test(const bool enabled)
 {
    m_depthTestEnabled = enabled;
@@ -96,7 +90,7 @@ Result<Pipeline> PipelineBuilder::build()
    }
    layouts[binding - 1].attributes = std::span{m_vertexAttributes}.subspan(lastStartIndex);
 
-   return m_device.create_pipeline(m_renderPass, m_shaders, layouts, m_descriptorBindings, m_descriptorBudget, m_depthTestEnabled);
+   return m_device.create_pipeline(m_renderPass, m_shaders, layouts, m_descriptorBindings, m_depthTestEnabled);
 }
 
 }// namespace graphics_api

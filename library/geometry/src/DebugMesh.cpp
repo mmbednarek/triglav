@@ -9,6 +9,7 @@ Mesh create_box(const Extent3D &extent)
    const Extent3D half{0.5f * extent.width, 0.5f * extent.height, 0.5f * extent.depth};
 
    Mesh mesh;
+   mesh.add_group({"box", ""});
 
    mesh.add_vertex(-half.width, -half.height, half.depth);
    mesh.add_vertex(-half.width, half.height, half.depth);
@@ -25,6 +26,13 @@ Mesh create_box(const Extent3D &extent)
    const auto back   = mesh.add_face(0, 1, 5, 4);
    const auto left   = mesh.add_face(0, 4, 6, 2);
    const auto right  = mesh.add_face(5, 1, 3, 7);
+
+   mesh.set_face_group(bottom, 0);
+   mesh.set_face_group(top, 0);
+   mesh.set_face_group(front, 0);
+   mesh.set_face_group(back, 0);
+   mesh.set_face_group(left, 0);
+   mesh.set_face_group(right, 0);
 
    constexpr static auto oneThird  = 1.0f / 3.0f;
    constexpr static auto twoThirds = 2.0f / 3.0f;
@@ -121,7 +129,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    return mesh;
 }
 
-Mesh create_cilinder(const int segment_count, const int ring_count, float radius, float depth)
+Mesh create_cilinder(const int segment_count, const int ring_count, const float radius, const float depth)
 {
    Mesh mesh;
 

@@ -22,7 +22,6 @@ class PipelineBuilder
    PipelineBuilder& vertex_attribute(const ColorFormat &format, size_t offset);
    PipelineBuilder& end_vertex_layout();
    PipelineBuilder& descriptor_binding(DescriptorType descriptorType, ShaderStage shaderStage);
-   PipelineBuilder& descriptor_budget(uint32_t budget);
    PipelineBuilder& enable_depth_test(bool enabled);
    [[nodiscard]] Result<Pipeline> build();
 
@@ -41,7 +40,6 @@ class PipelineBuilder
    std::vector<VertexInputLayout> m_vertexLayouts;
    std::vector<DescriptorBinding> m_descriptorBindings;
    std::vector<size_t> m_vertexLayoutSizes{};
-   uint32_t m_descriptorBudget{};
    uint32_t m_vertexLocation{0};
    bool m_depthTestEnabled{false};
 };

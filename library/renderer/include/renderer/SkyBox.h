@@ -28,7 +28,10 @@ class SkyBox
    ResourceManager& m_resourceManager;
    GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::DescriptorGroup m_descGroup;
+   graphics_api::DescriptorPool m_descPool;
+   graphics_api::DescriptorArray m_descArray;
+   graphics_api::DescriptorView m_descriptorSet;
+   graphics_api::Sampler m_sampler;
    graphics_api::Buffer m_uniformBuffer;
    graphics_api::MappedMemory m_uniformBufferMapping;
 };

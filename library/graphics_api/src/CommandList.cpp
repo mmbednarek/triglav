@@ -72,11 +72,11 @@ void CommandList::bind_pipeline(const Pipeline &pipeline) const
    vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vulkan_pipeline());
 }
 
-void CommandList::bind_descriptor_group(const DescriptorGroup &descriptorGroup,
-                                        uint32_t framebufferIndex) const
+void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
 {
+   const auto vulkanDescriptorSet = descriptorSet.vulkan_descriptor_set();
    vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                           descriptorGroup.pipeline_layout(), 0, 1, &descriptorGroup.at(framebufferIndex), 0,
+                           descriptorSet.vulkan_pipeline_layout(), 0, 1, &vulkanDescriptorSet, 0,
                            nullptr);
 }
 
@@ -101,11 +101,6 @@ void CommandList::bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex)
 void CommandList::bind_index_buffer(const Buffer &buffer) const
 {
    vkCmdBindIndexBuffer(m_commandBuffer, buffer.vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
-}
-
-void CommandList::bind_index_array(const IndexArray &array) const
-{
-   this->bind_index_buffer(array.buffer());
 }
 
 void CommandList::copy_buffer(const Buffer &source, const Buffer &dest)

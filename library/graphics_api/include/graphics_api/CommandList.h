@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Array.hpp"
 #include "Buffer.h"
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
@@ -25,24 +24,29 @@ class CommandList
    [[nodiscard]] VkCommandBuffer vulkan_command_buffer() const;
 
    void bind_pipeline(const Pipeline &pipeline) const;
-   void bind_descriptor_group(const DescriptorGroup& descriptorGroup, uint32_t framebufferIndex) const;
+   void bind_descriptor_set(const DescriptorView& descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset) const;
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const;
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer &buffer) const;
-   void bind_index_array(const IndexArray &array) const;
    void copy_buffer(const Buffer &source, const Buffer &dest);
    void copy_buffer_to_texture(const Buffer &source, const Texture &destination);
    void set_is_one_time(bool value);
 
-   template<typename TVertex>
-   void bind_vertex_array(const VertexArray<TVertex> &array, const uint32_t binding = 0) const
+   template<typename TIndexArray>
+   void bind_index_array(const TIndexArray &array) const
+   {
+      this->bind_index_buffer(array.buffer());
+   }
+
+   template<typename TVertexArray>
+   void bind_vertex_array(const TVertexArray &array, const uint32_t binding = 0) const
    {
       this->bind_vertex_buffer(array.buffer(), binding);
    }
 
-   template<typename TVertex>
-   void draw_mesh(const Mesh<TVertex> &mesh) const
+   template<typename TMesh>
+   void draw_mesh(const TMesh &mesh) const
    {
       this->bind_vertex_array(mesh.vertices, 0);
       this->bind_index_array(mesh.indices);

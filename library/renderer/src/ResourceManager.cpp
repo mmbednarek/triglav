@@ -4,6 +4,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <algorithm>
+#include <format>
 #include <fstream>
 
 namespace {
@@ -49,18 +51,43 @@ const graphics_api::Shader &ResourceManager::shader(const Name assetName) const
    return m_shaders.at(assetName);
 }
 
+const Material &ResourceManager::material(Name assetName) const
+{
+   return m_materials.at(assetName);
+}
+
+const Model &ResourceManager::model(Name assetName) const
+{
+   return m_models.at(assetName);
+}
+
 void ResourceManager::load_asset(const Name assetName, const std::string_view path)
 {
+   assert(not this->is_name_registered(assetName));
+
    switch (get_name_type(assetName)) {
    case NameType::Texture: m_textures.emplace(assetName, load_texture(path)); break;
-   case NameType::Mesh: m_meshes.emplace(assetName, load_mesh(path)); break;
+   case NameType::Model: this->load_model(assetName, path); break;
    case NameType::FragmentShader:
       m_shaders.emplace(assetName, load_shader(graphics_api::ShaderStage::Fragment, path));
       break;
    case NameType::VertexShader:
       m_shaders.emplace(assetName, load_shader(graphics_api::ShaderStage::Vertex, path));
       break;
+   default: break;
    }
+}
+
+void ResourceManager::add_material(const Name assetName, Material material)
+{
+   assert(not this->is_name_registered(assetName));
+   m_materials[assetName] = std::move(material);
+}
+
+void ResourceManager::add_model(const Name assetName, Model model)
+{
+   assert(not this->is_name_registered(assetName));
+   m_models[assetName] = std::move(model);
 }
 
 graphics_api::Texture ResourceManager::load_texture(const std::string_view path) const
@@ -76,11 +103,24 @@ graphics_api::Texture ResourceManager::load_texture(const std::string_view path)
    return texture;
 }
 
-graphics_api::Mesh<geometry::Vertex> ResourceManager::load_mesh(const std::string_view path) const
+void ResourceManager::load_model(const Name model, const std::string_view path)
 {
    const auto objMesh = geometry::Mesh::from_file(path);
    objMesh.triangulate();
-   return objMesh.upload_to_device(m_device);
+   auto deviceMesh = objMesh.upload_to_device(m_device);
+
+   Name meshName = model & (~0b111ull) | static_cast<uint64_t>(NameType::Mesh);
+   m_meshes.emplace(meshName, std::move(deviceMesh.mesh));
+
+   std::vector<MaterialRange> ranges{};
+   ranges.resize(deviceMesh.ranges.size());
+   std::transform(deviceMesh.ranges.begin(), deviceMesh.ranges.end(), ranges.begin(),
+                  [](const geometry::MaterialRange &range) {
+                     return MaterialRange{range.offset, range.size,
+                                          make_name(std::format("mat:{}", range.materialName))};
+                  });
+
+   m_models.emplace(model, Model{meshName, std::move(ranges)});
 }
 
 graphics_api::Shader ResourceManager::load_shader(const graphics_api::ShaderStage stage,
@@ -88,6 +128,22 @@ graphics_api::Shader ResourceManager::load_shader(const graphics_api::ShaderStag
 {
    const auto data = read_whole_file(path);
    return checkResult(m_device.create_shader(stage, "main", data));
+}
+
+bool ResourceManager::is_name_registered(const Name assetName) const
+{
+   if (m_textures.contains(assetName))
+      return true;
+   if (m_meshes.contains(assetName))
+      return true;
+   if (m_shaders.contains(assetName))
+      return true;
+   if (m_materials.contains(assetName))
+      return true;
+   if (m_models.contains(assetName))
+      return true;
+
+   return false;
 }
 
 }// namespace renderer

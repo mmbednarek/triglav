@@ -3,8 +3,8 @@
 #include "Parser.h"
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
-#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/Polygon_mesh_processing/orientation.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 
 namespace {
 
@@ -53,7 +53,8 @@ namespace geometry {
 
 InternalMesh::InternalMesh() :
     m_normalProperties(m_mesh.add_property_map<HalfedgeIndex, uint32_t>("h:normals", g_invalidIndex).first),
-    m_uvProperties(m_mesh.add_property_map<HalfedgeIndex, uint32_t>("h:uvs", g_invalidIndex).first)
+    m_uvProperties(m_mesh.add_property_map<HalfedgeIndex, uint32_t>("h:uvs", g_invalidIndex).first),
+    m_groupProperties(m_mesh.add_property_map<FaceIndex, Index>("f:groups", g_invalidIndex).first)
 {
 }
 
@@ -79,6 +80,12 @@ Index InternalMesh::add_normal(Vector3 normal)
    return m_normals.size() - 1;
 }
 
+Index InternalMesh::add_group(MeshGroup normal)
+{
+   m_groups.emplace_back(std::move(normal));
+   return m_groups.size() - 1;
+}
+
 size_t InternalMesh::vertex_count() const
 {
    return m_mesh.vertices().size();
@@ -91,6 +98,37 @@ void InternalMesh::triangulate_faces()
 
    CGAL::Polygon_mesh_processing::triangulate_faces(m_mesh);
 
+   // Fix group properties for faces.
+   bool allFacesFixed = false;
+   int limit = 3;
+   while (not allFacesFixed) {
+      if (limit == 0)
+         break;
+      --limit;
+
+      allFacesFixed = true;
+      for (const auto face : m_mesh.faces()) {
+         if (m_groupProperties[face] != g_invalidIndex)
+            continue;
+
+         auto origHalfedge = m_mesh.halfedge(face);
+         auto halfedge = m_mesh.prev_around_target(origHalfedge);
+         auto sourceFace = m_mesh.face(halfedge);
+         while (halfedge != origHalfedge && m_groupProperties[sourceFace] == g_invalidIndex) {
+            halfedge = m_mesh.prev_around_target(halfedge);
+            sourceFace = m_mesh.face(halfedge );
+         }
+
+         if (halfedge == origHalfedge) {
+            allFacesFixed = false;
+            continue;
+         }
+
+         m_groupProperties[face] = m_groupProperties[sourceFace];
+      }
+   }
+
+   // Fix normals and uvs for halfedges.
    for (const auto halfedge : m_mesh.halfedges()) {
       if (m_normalProperties[halfedge] != g_invalidIndex && m_uvProperties[halfedge] != g_invalidIndex)
          continue;
@@ -179,6 +217,11 @@ void InternalMesh::set_face_normals(const Index face, std::span<Index> normals)
    }
 }
 
+void InternalMesh::set_face_group(const Index face, const Index group)
+{
+   m_groupProperties[FaceIndex{face}] = group;
+}
+
 InternalMesh::Point3 InternalMesh::location(const VertexIndex index) const
 {
    return m_mesh.point(index);
@@ -240,6 +283,8 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
    Parser parser(stream);
    parser.parse();
 
+   Index lastGroupIndex = g_invalidIndex;
+
    for (const auto &[name, arguments] : parser.commands()) {
       if (name == "v") {
          assert(arguments.size() >= 3);
@@ -270,6 +315,8 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
          if (faceIndex.id() == g_invalidIndex)
             continue;
 
+         result.m_groupProperties[faceIndex] = lastGroupIndex;
+
          int i = 0;
          for (const auto halfEdge : result.m_mesh.halfedges_around_face(result.m_mesh.halfedge(faceIndex))) {
             if (indices[i].normal != -1)
@@ -279,6 +326,14 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
                result.m_uvProperties[halfEdge] = indices[i].uv - 1;
 
             ++i;
+         }
+      } else if (name == "o") {
+         assert(arguments.size() == 1);
+         lastGroupIndex = result.add_group({arguments[0], ""});
+      } else if (name == "usemtl") {
+         assert(arguments.size() == 1);
+         if (not result.m_groups.empty()) {
+            result.m_groups[lastGroupIndex].material = arguments[0];
          }
       }
    }
@@ -293,33 +348,55 @@ InternalMesh InternalMesh::from_obj_file(const std::string_view path)
    return InternalMesh::from_obj_file(stream);
 }
 
-graphics_api::Mesh<Vertex> InternalMesh::upload_to_device(graphics_api::Device &device)
+DeviceMesh InternalMesh::upload_to_device(graphics_api::Device &device)
 {
    if (not this->is_triangulated())
       throw std::runtime_error("mesh must be triangulated before upload to GPU");
+   assert(m_mesh.faces().size() > 0);
 
    std::map<IndexedVertex, uint32_t> indexMap;
    std::vector<Vertex> outVertices{};
 
+   std::vector<MaterialRange> materialRanges{};
+   std::string currentMaterial;
+
+   size_t lastOffset{};
+
    std::vector<uint32_t> outIndices{};
    for (const auto face_index : this->faces()) {
+      const auto groupId = m_groupProperties[face_index];
+      if (groupId != g_invalidIndex) {
+         const auto& group = m_groups[groupId];
+         if (group.material != currentMaterial) {
+            if (lastOffset != outIndices.size()) {
+               materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
+            }
+            currentMaterial = group.material;
+            lastOffset = outIndices.size();
+         }
+      }
+
       for (const auto halfedge_index : this->face_halfedges(face_index)) {
          const auto vertex_index = this->halfedge_target(halfedge_index);
          const auto normal       = this->normal_id(halfedge_index);
          const auto uv           = this->uv_id(halfedge_index);
+
          IndexedVertex index{vertex_index.id(), uv, normal};
 
          if (indexMap.contains(index)) {
             outIndices.push_back(indexMap[index]);
-            continue;
+         } else {
+            outVertices.push_back(Vertex(to_glm_vec3(this->location(vertex_index)),
+                                         to_glm_vec2(this->uv_by_id(uv)),
+                                         to_glm_vec3(this->normal_by_id(normal))));
+            indexMap[index] = outVertices.size() - 1;
+            outIndices.push_back(outVertices.size() - 1);
          }
-
-         outVertices.push_back(Vertex(to_glm_vec3(this->location(vertex_index)),
-                                      to_glm_vec2(this->uv_by_id(uv)),
-                                      to_glm_vec3(this->normal_by_id(normal))));
-         indexMap[index] = outVertices.size() - 1;
-         outIndices.push_back(outVertices.size() - 1);
       }
+   }
+
+   if (lastOffset != outIndices.size()) {
+      materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
    }
 
    graphics_api::VertexArray<Vertex> gpuVertices{device, outVertices.size()};
@@ -328,13 +405,13 @@ graphics_api::Mesh<Vertex> InternalMesh::upload_to_device(graphics_api::Device &
    graphics_api::IndexArray gpuIndices{device, outIndices.size()};
    gpuIndices.write(outIndices.data(), outIndices.size());
 
-   return {std::move(gpuVertices), std::move(gpuIndices)};
+   return {{std::move(gpuVertices), std::move(gpuIndices)}, std::move(materialRanges)};
 }
 
 void InternalMesh::reverse_orientation()
 {
    CGAL::Polygon_mesh_processing::reverse_face_orientations(m_mesh);
-   for (auto& normal : m_normals) {
+   for (auto &normal : m_normals) {
       normal = -normal;
    }
 }

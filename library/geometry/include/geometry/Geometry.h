@@ -1,7 +1,9 @@
 #pragma once
 
-#include "glm/vec2.hpp"
-#include "glm/vec3.hpp"
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+
+#include "graphics_api/Array.hpp"
 
 namespace geometry {
 
@@ -37,9 +39,23 @@ struct Extent3D
    float depth;
 };
 
-struct Material
+struct MeshGroup
 {
-   std::string texturePath;
+   std::string name;
+   std::string material;
+};
+
+struct MaterialRange
+{
+   size_t offset;
+   size_t size;
+   std::string materialName;
+};
+
+struct DeviceMesh
+{
+   graphics_api::Mesh<Vertex> mesh;
+   std::vector<MaterialRange> ranges;
 };
 
 }// namespace geometry

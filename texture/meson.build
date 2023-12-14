@@ -1,6 +1,7 @@
 texture_files = [
     'earth.png',
     'house.png',
+    'gold.png',
     'skybox.png',
     'bark.png',
     'leaves.png',

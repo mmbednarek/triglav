@@ -32,16 +32,18 @@ class Mesh
    Index add_face(TVertices... vertices);
    Index add_uv(float u, float v);
    Index add_normal(float x, float y, float z);
+   Index add_group(MeshGroup meshGroup);
    void set_face_uvs_range(Index face, std::span<Index> vertices);
    template<typename... TVertices>
    void set_face_uvs(Index face, TVertices... vertices);
    void set_face_normals_range(Index face, std::span<Index> vertices);
    template<typename... TVertices>
    void set_face_normals(Index face, TVertices... vertices);
+   void set_face_group(Index face, Index group);
 
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
-   [[nodiscard]] graphics_api::Mesh<Vertex> upload_to_device(graphics_api::Device &device) const;
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device) const;
 
    static Mesh from_file(std::string_view path);
 

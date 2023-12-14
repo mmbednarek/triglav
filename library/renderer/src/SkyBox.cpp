@@ -13,7 +13,7 @@ graphics_api::Mesh<geometry::Vertex> create_skybox_mesh(graphics_api::Device &de
    auto mesh = geometry::create_box({50, 50, 50});
    mesh.reverse_orientation();
    mesh.triangulate();
-   return mesh.upload_to_device(device);
+   return mesh.upload_to_device(device).mesh;
 }
 
 }// namespace
@@ -38,29 +38,20 @@ SkyBox::SkyBox(Renderer &renderer) :
                                         graphics_api::ShaderStage::Vertex)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
-                    .descriptor_budget(3)
                     .enable_depth_test(false)
                     .build()
 
                     )),
-    m_descGroup(checkResult(m_pipeline.allocate_descriptors(1))),
+    m_descPool(checkResult(m_pipeline.create_descriptor_pool(3, 3, 3))),
+    m_descArray(checkResult(m_descPool.allocate_array(1))),
+    m_descriptorSet(m_descArray[0]),
     m_uniformBuffer(renderer.create_ubo_buffer<SkyBoxUBO>()),
-    m_uniformBufferMapping(checkResult(m_uniformBuffer.map_memory()))
+    m_uniformBufferMapping(checkResult(m_uniformBuffer.map_memory())),
+    m_sampler(checkResult(renderer.device().create_sampler(false)))
 {
-   std::array<graphics_api::DescriptorWrite, 2> writes{
-           graphics_api::DescriptorWrite{
-                                         .type    = graphics_api::DescriptorType::UniformBuffer,
-                                         .binding = 0,
-                                         .data    = &m_uniformBuffer,
-                                         },
-           {
-                                         .type    = graphics_api::DescriptorType::ImageSampler,
-                                         .binding = 1,
-                                         .data    = &m_resourceManager.texture("tex:skybox"_name),
-                                         }
-   };
-
-   m_descGroup.update(0, writes);
+   m_descriptorSet.set_raw_uniform_buffer(0, m_uniformBuffer);
+   m_descriptorSet.set_sampled_texture(1, m_resourceManager.texture("tex:skybox"_name), m_sampler);
+   m_descriptorSet.update();
 }
 
 void SkyBox::on_render(const graphics_api::CommandList &commandList, float yaw, float pitch, float width,
@@ -80,7 +71,7 @@ void SkyBox::on_render(const graphics_api::CommandList &commandList, float yaw, 
    m_uniformBufferMapping.write(&object1, sizeof(UniformBufferObject));
 
    commandList.bind_pipeline(m_pipeline);
-   commandList.bind_descriptor_group(m_descGroup, 0);
+   commandList.bind_descriptor_set(m_descriptorSet);
    commandList.draw_mesh(m_mesh);
 }
 

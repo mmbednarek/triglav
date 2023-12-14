@@ -5,6 +5,7 @@
 #include "Pipeline.h"
 #include "PlatformSurface.h"
 #include "RenderPass.h"
+#include "Sampler.h"
 #include "Shader.h"
 #include "Synchronization.h"
 #include "Texture.h"
@@ -30,7 +31,6 @@ DECLARE_VLK_WRAPPED_OBJECT(Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(SwapchainKHR, Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(Framebuffer, Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
-DECLARE_VLK_WRAPPED_CHILD_OBJECT(Sampler, Device)
 
 #if GAPI_ENABLE_VALIDATION
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(DebugUtilsMessengerEXT, Instance)
@@ -63,7 +63,7 @@ class Device
           vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
           vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
-          const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool, vulkan::Sampler sampler);
+          const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool);
 
    [[nodiscard]] Status init_swapchain(const RenderPass &renderPass, ColorSpace colorSpace);
 
@@ -76,7 +76,7 @@ class Device
    [[nodiscard]] Result<Pipeline> create_pipeline(const RenderPass &renderPass, std::span<const Shader *> shaders,
                                                   std::span<VertexInputLayout> layouts,
                                                   std::span<DescriptorBinding> descriptorBindings,
-                                                  uint32_t descriptorBudget, bool enableDepthTest);
+                                                  bool enableDepthTest);
    [[nodiscard]] Result<Shader> create_shader(ShaderStage stage, std::string_view entrypoint,
                                               std::span<const uint8_t> code);
    [[nodiscard]] Result<CommandList> create_command_list() const;
@@ -86,6 +86,7 @@ class Device
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
                                                 TextureType type        = TextureType::SampledImage,
                                                 SampleCount sampleCount = SampleCount::Bits1) const;
+   [[nodiscard]] Result<Sampler> create_sampler(bool enableAnisotropy);
 
    [[nodiscard]] Status begin_graphic_commands(const RenderPass &renderPass, CommandList &commandList,
                                                uint32_t framebufferIndex, const Color &clearColor) const;
@@ -116,7 +117,6 @@ class Device
    std::vector<vulkan::ImageView> m_swapchainImageViews;
    std::vector<vulkan::Framebuffer> m_swapchainFramebuffers;
    vulkan::CommandPool m_commandPool;
-   vulkan::Sampler m_sampler;
    VkQueue m_graphicsQueue;
    VkQueue m_presentQueue;
 };

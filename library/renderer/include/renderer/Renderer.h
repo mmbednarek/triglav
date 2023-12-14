@@ -7,18 +7,11 @@
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "SkyBox.h"
+#include "Context3D.h"
 
 #include <optional>
-#include <string_view>
 
 namespace renderer {
-
-struct Object3d
-{
-   graphics_api::DescriptorGroup descGroup;
-   std::vector<graphics_api::Buffer> uniformBuffers;
-   std::vector<graphics_api::MappedMemory> uniformBufferMappings;
-};
 
 struct RendererObjects
 {
@@ -27,7 +20,6 @@ struct RendererObjects
    graphics_api::DeviceUPtr device;
    std::unique_ptr<ResourceManager> resourceManager;
    graphics_api::RenderPass renderPass;
-   graphics_api::Pipeline pipeline;
    graphics_api::Semaphore framebufferReadySemaphore;
    graphics_api::Semaphore renderFinishedSemaphore;
    graphics_api::Fence inFlightFence;
@@ -78,15 +70,16 @@ class Renderer
    uint32_t m_height{};
    graphics_api::DeviceUPtr m_device;
    graphics_api::RenderPass m_renderPass;
-   graphics_api::Pipeline m_pipeline;
    graphics_api::Semaphore m_framebufferReadySemaphore;
    graphics_api::Semaphore m_renderFinishedSemaphore;
    graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
    std::unique_ptr<ResourceManager> m_resourceManager;
+   Context3D m_context3D;
 
    SkyBox m_skyBox;
-   std::optional<Object3d> m_house;
+   std::optional<InstancedModel> m_tree;
+   std::optional<InstancedModel> m_cage;
 };
 
 Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);

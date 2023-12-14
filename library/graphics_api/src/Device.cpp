@@ -86,9 +86,8 @@ Device::Device(vulkan::Instance instance,
 #if GAPI_ENABLE_VALIDATION
                vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
-               vulkan::SurfaceKHR surface, vulkan::Device device, VkPhysicalDevice physicalDevice,
-               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool,
-               vulkan::Sampler sampler) :
+               vulkan::SurfaceKHR surface, vulkan::Device device, const VkPhysicalDevice physicalDevice,
+               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool) :
     m_instance(std::move(instance)),
 #if GAPI_ENABLE_VALIDATION
     m_debugMessenger(std::move(debugMessenger)),
@@ -98,8 +97,7 @@ Device::Device(vulkan::Instance instance,
     m_physicalDevice(physicalDevice),
     m_swapchain(*m_device),
     m_queueFamilies(queueFamilies),
-    m_commandPool(std::move(commandPool)),
-    m_sampler(std::move(sampler))
+    m_commandPool(std::move(commandPool))
 {
    vkGetDeviceQueue(*m_device, m_queueFamilies.graphicsQueue, 0, &m_graphicsQueue);
    vkGetDeviceQueue(*m_device, m_queueFamilies.presentQueue, 0, &m_presentQueue);
@@ -390,7 +388,7 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass,
                                          const std::span<const Shader *> shaders,
                                          const std::span<VertexInputLayout> layouts,
                                          const std::span<DescriptorBinding> descriptorBindings,
-                                         const uint32_t descriptorBudget, bool enableDepthTest)
+                                         bool enableDepthTest)
 {
    std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
    shaderStageInfos.resize(shaders.size());
@@ -579,30 +577,7 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass,
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   std::array<VkDescriptorPoolSize, 2> descriptorPoolSizes{
-           VkDescriptorPoolSize{
-                                .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                .descriptorCount = descriptorBudget * static_cast<uint32_t>(m_swapchainImageViews.size()),
-                                },
-           {
-                                .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                .descriptorCount = descriptorBudget * static_cast<uint32_t>(m_swapchainImageViews.size()),
-                                },
-   };
-
-   VkDescriptorPoolCreateInfo descriptorPoolInfo{};
-   descriptorPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-   descriptorPoolInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-   descriptorPoolInfo.poolSizeCount = descriptorPoolSizes.size();
-   descriptorPoolInfo.pPoolSizes    = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets       = descriptorBudget * m_swapchainImageViews.size();
-
-   vulkan::DescriptorPool descriptorPool{*m_device};
-   if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
-      return std::unexpected(Status::UnsupportedDevice);
-
-   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorPool),
-                   std::move(descriptorSetLayout), *m_sampler};
+   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout)};
 }
 
 Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,
@@ -791,6 +766,34 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
 
    return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, imageSize.width,
                   imageSize.height);
+}
+
+Result<Sampler> Device::create_sampler(const bool enableAnisotropy)
+{
+   VkPhysicalDeviceProperties properties{};
+   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+
+   VkSamplerCreateInfo samplerInfo{};
+   samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   samplerInfo.magFilter               = VK_FILTER_LINEAR;
+   samplerInfo.minFilter               = VK_FILTER_LINEAR;
+   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   samplerInfo.anisotropyEnable        = enableAnisotropy;
+   samplerInfo.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
+   samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   samplerInfo.unnormalizedCoordinates = false;
+   samplerInfo.compareEnable           = false;
+   samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+   samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+   vulkan::Sampler sampler(*m_device);
+   if (sampler.construct(&samplerInfo) != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return Sampler(std::move(sampler));
 }
 
 Status Device::begin_graphic_commands(const RenderPass &renderPass, CommandList &commandList,
@@ -1138,35 +1141,12 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(*pickedDevice, &properties);
-
-   VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter               = VK_FILTER_LINEAR;
-   samplerInfo.minFilter               = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable        = false;
-   samplerInfo.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
-   samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = false;
-   samplerInfo.compareEnable           = false;
-   samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-   vulkan::Sampler sampler(*device);
-   if (sampler.construct(&samplerInfo) != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
    return std::make_unique<Device>(std::move(instance),
 #if GAPI_ENABLE_VALIDATION
                                    std::move(debugMessenger),
 #endif
                                    std::move(vulkan_surface), std::move(device), *pickedDevice,
-                                   queueFamilyIndices, std::move(commandPool), std::move(sampler));
+                                   queueFamilyIndices, std::move(commandPool));
 }
 
 }// namespace graphics_api

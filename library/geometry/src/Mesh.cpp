@@ -59,6 +59,13 @@ Index Mesh::add_normal(float x, float y, float z)
    return m_mesh->add_normal({x, y, z});
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
+Index Mesh::add_group(MeshGroup meshGroup)
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->add_group(std::move(meshGroup));
+}
+
 size_t Mesh::vertex_count() const
 {
    assert(m_mesh != nullptr);
@@ -80,13 +87,20 @@ void Mesh::set_face_normals_range(const Index face, const std::span<Index> verti
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
+void Mesh::set_face_group(const Index face, const Index group)
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->set_face_group(face, group);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::reverse_orientation()
 {
    assert(m_mesh != nullptr);
    m_mesh->reverse_orientation();
 }
 
-graphics_api::Mesh<Vertex> Mesh::upload_to_device(graphics_api::Device &device) const
+DeviceMesh Mesh::upload_to_device(graphics_api::Device &device) const
 {
    assert(m_mesh != nullptr);
    return m_mesh->upload_to_device(device);

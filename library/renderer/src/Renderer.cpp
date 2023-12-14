@@ -15,68 +15,31 @@
 
 #include "Core.h"
 
-namespace {
-
-renderer::Object3d create_object_3d(graphics_api::Device &device, graphics_api::Pipeline &pipeline,
-                                    const graphics_api::Texture &texture)
-{
-   auto descriptors = renderer::checkResult(pipeline.allocate_descriptors(device.framebuffer_count()));
-
-   std::vector<graphics_api::Buffer> uniformBuffers;
-   std::vector<graphics_api::MappedMemory> uniformBufferMappings;
-
-   for (int i{}; i < device.framebuffer_count(); ++i) {
-      auto buffer = renderer::checkResult(device.create_buffer(graphics_api::BufferPurpose::UniformBuffer,
-                                                               sizeof(renderer::UniformBufferObject)));
-      auto &movedBuffer = uniformBuffers.emplace_back(std::move(buffer));
-
-      auto mappedMemory = renderer::checkResult(movedBuffer.map_memory());
-      uniformBufferMappings.emplace_back(std::move(mappedMemory));
-   }
-
-   for (int i = 0; i < device.framebuffer_count(); ++i) {
-      std::array<graphics_api::DescriptorWrite, 2> writes{
-              graphics_api::DescriptorWrite{
-                                            .type    = graphics_api::DescriptorType::UniformBuffer,
-                                            .binding = 0,
-                                            .data    = &uniformBuffers[i],
-                                            },
-              {
-                                            .type    = graphics_api::DescriptorType::ImageSampler,
-                                            .binding = 1,
-                                            .data    = &texture,
-                                            }
-      };
-      descriptors.update(i, writes);
-   }
-
-   return renderer::Object3d{.descGroup             = std::move(descriptors),
-                             .uniformBuffers        = std::move(uniformBuffers),
-                             .uniformBufferMappings = std::move(uniformBufferMappings)};
-}
-
-}// namespace
-
 namespace renderer {
 
 constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_COLOR_FORMAT(D, Float32);
-constexpr auto g_sampleCount = graphics_api::SampleCount::Bits2;
+constexpr auto g_sampleCount = graphics_api::SampleCount::Bits8;
 
 Renderer::Renderer(RendererObjects &&objects) :
     m_width(objects.width),
     m_height(objects.height),
     m_device(std::move(objects.device)),
     m_renderPass(std::move(objects.renderPass)),
-    m_pipeline(std::move(objects.pipeline)),
     m_framebufferReadySemaphore(std::move(objects.framebufferReadySemaphore)),
     m_renderFinishedSemaphore(std::move(objects.renderFinishedSemaphore)),
     m_inFlightFence(std::move(objects.inFlightFence)),
     m_commandList(std::move(objects.commandList)),
     m_resourceManager(std::move(objects.resourceManager)),
-    m_skyBox(*this)
+    m_skyBox(*this),
+    m_context3D(*m_device, m_renderPass, *m_resourceManager)
 {
-   m_house = create_object_3d(*m_device, m_pipeline, m_resourceManager->texture("tex:bark"_name));
+   m_resourceManager->add_material("mat:bark"_name, Material{"tex:bark"_name, 1.0f});
+   m_resourceManager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, 1.0f});
+   m_resourceManager->add_material("mat:gold"_name, Material{"tex:gold"_name, 1.0f});
+
+   m_cage = m_context3D.instance_model("mdl:cage"_name);
+   m_tree = m_context3D.instance_model("mdl:tree"_name);
 }
 
 void Renderer::on_render()
@@ -91,10 +54,10 @@ void Renderer::on_render()
    m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
                       static_cast<float>(m_height));
 
-   m_commandList.bind_pipeline(m_pipeline);
+   m_context3D.begin_render(&m_commandList);
 
-   m_commandList.bind_descriptor_group(m_house->descGroup, framebufferIndex);
-   m_commandList.draw_mesh(m_resourceManager->mesh("msh:tree"_name));
+   m_context3D.draw_model(*m_tree);
+   m_context3D.draw_model(*m_cage);
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -225,11 +188,13 @@ void Renderer::update_uniform_data(const uint32_t frame)
    auto projection = glm::perspective(
            glm::radians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
 
-   UniformBufferObject houseUbo{};
-   houseUbo.model = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   houseUbo.view  = view;
-   houseUbo.proj  = projection;
-   m_house->uniformBufferMappings[frame].write(&houseUbo, sizeof(UniformBufferObject));
+   const auto viewProj = projection * view;
+
+   m_cage->ubo->model    = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+   m_cage->ubo->viewProj = viewProj;
+
+   m_tree->ubo->model    = glm::translate(glm::mat4(1.0f), {20, 0, 0});
+   m_tree->ubo->viewProj = viewProj;
 }
 
 Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height)
@@ -262,25 +227,6 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
       resourceManager->load_asset(name, path);
    }
 
-   auto pipeline = checkResult(
-           graphics_api::PipelineBuilder(*device, renderPass)
-                   .fragment_shader(resourceManager->shader("fsh:example"_name))
-                   .vertex_shader(resourceManager->shader("vsh:example"_name))
-                   // Vertex description
-                   .begin_vertex_layout<geometry::Vertex>()
-                   .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                   .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                   .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                   .end_vertex_layout()
-                   // Descriptor layout
-                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                       graphics_api::ShaderStage::Vertex)
-                   .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                       graphics_api::ShaderStage::Fragment)
-                   .descriptor_budget(10)
-                   .enable_depth_test(true)
-                   .build());
-
    auto framebufferReadySemaphore = checkResult(device->create_semaphore());
    auto renderFinishedSemaphore   = checkResult(device->create_semaphore());
    auto inFlightFence             = checkResult(device->create_fence());
@@ -292,7 +238,6 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            .device                    = std::move(device),
            .resourceManager           = std::move(resourceManager),
            .renderPass                = std::move(renderPass),
-           .pipeline                  = std::move(pipeline),
            .framebufferReadySemaphore = std::move(framebufferReadySemaphore),
            .renderFinishedSemaphore   = std::move(renderFinishedSemaphore),
            .inFlightFence             = std::move(inFlightFence),

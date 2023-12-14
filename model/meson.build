@@ -1,6 +1,7 @@
 model_files = [
     'house.obj',
     'tree.obj',
+    'cage.obj',
 ]
 
 model_targets = []

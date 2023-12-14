@@ -15,6 +15,8 @@ enum class NameType : uint8_t
    Mesh           = 0b001,
    FragmentShader = 0b010,
    VertexShader   = 0b011,
+   Material       = 0b100,
+   Model          = 0b101,
 };
 
 constexpr Name make_name(const std::string_view value)
@@ -28,6 +30,10 @@ constexpr Name make_name(const std::string_view value)
       type = NameType::FragmentShader;
    else if (value.substr(0, 3) == "vsh")
       type = NameType::VertexShader;
+   else if (value.substr(0, 3) == "mat")
+      type = NameType::Material;
+   else if (value.substr(0, 3) == "mdl")
+      type = NameType::Model;
 
    return crc::hash_string(value.substr(4)) << 3 | static_cast<std::underlying_type_t<NameType>>(type);
 }

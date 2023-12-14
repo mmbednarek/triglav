@@ -3,25 +3,24 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Surface_mesh.h>
 
-#include "../../graphics_api/include/graphics_api/Array.hpp"
-
-#include "../include/geometry/Geometry.h"
+#include "Geometry.h"
 
 namespace geometry {
 
 class InternalMesh
 {
-public:
-   using Kernel = CGAL::Simple_cartesian<float>;
-   using Point3 = Kernel::Point_3;
-   using Vector3 = Kernel::Vector_3;
-   using Vector2 = Kernel::Vector_2;
-   using SurfaceMesh = CGAL::Surface_mesh<Point3>;
-   using VertexIndex = SurfaceMesh::vertex_index;
-   using FaceIndex = SurfaceMesh::face_index;
+ public:
+   using Kernel        = CGAL::Simple_cartesian<float>;
+   using Point3        = Kernel::Point_3;
+   using Vector3       = Kernel::Vector_3;
+   using Vector2       = Kernel::Vector_2;
+   using SurfaceMesh   = CGAL::Surface_mesh<Point3>;
+   using VertexIndex   = SurfaceMesh::vertex_index;
+   using FaceIndex     = SurfaceMesh::face_index;
    using HalfedgeIndex = SurfaceMesh::halfedge_index;
    using NormalPropMap = SurfaceMesh::Property_map<HalfedgeIndex, uint32_t>;
-   using UvPropMap = SurfaceMesh::Property_map<HalfedgeIndex, uint32_t>;
+   using UvPropMap     = SurfaceMesh::Property_map<HalfedgeIndex, uint32_t>;
+   using GroupPropMap  = SurfaceMesh::Property_map<FaceIndex, Index>;
 
    InternalMesh();
 
@@ -29,6 +28,7 @@ public:
    FaceIndex add_face(std::span<VertexIndex> vertices);
    Index add_uv(Vector2 uv);
    Index add_normal(Vector3 normal);
+   Index add_group(MeshGroup normal);
    [[nodiscard]] size_t vertex_count() const;
    void triangulate_faces();
    void recalculate_normals();
@@ -41,6 +41,7 @@ public:
 
    void set_face_uvs(Index face, std::span<Index> uvs);
    void set_face_normals(Index face, std::span<Index> normals);
+   void set_face_group(Index face, Index group);
 
    [[nodiscard]] Point3 location(VertexIndex index) const;
    Vector3 normal(HalfedgeIndex index);
@@ -54,19 +55,21 @@ public:
 
    [[nodiscard]] bool is_triangulated();
 
-   graphics_api::Mesh<Vertex> upload_to_device(graphics_api::Device &device);
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device);
    void reverse_orientation();
 
-   static InternalMesh from_obj_file(std::istream& stream);
+   static InternalMesh from_obj_file(std::istream &stream);
    static InternalMesh from_obj_file(std::string_view path);
 
-private:
+ private:
    SurfaceMesh m_mesh;
    NormalPropMap m_normalProperties;
    UvPropMap m_uvProperties;
+   GroupPropMap m_groupProperties;
    std::vector<Vector3> m_normals;
    std::vector<Vector2> m_uvs;
+   std::vector<MeshGroup> m_groups;
    bool m_isTriangulated{false};
 };
 
-}
+}// namespace geometry

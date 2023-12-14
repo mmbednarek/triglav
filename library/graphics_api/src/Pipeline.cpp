@@ -1,17 +1,14 @@
 #include "Pipeline.h"
-#include "Buffer.h"
+
 #include "vulkan/Util.h"
 
 namespace graphics_api {
 
 Pipeline::Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline,
-                   vulkan::DescriptorPool descriptorPool, vulkan::DescriptorSetLayout descriptorSetLayout,
-                   const VkSampler sampler) :
+                   vulkan::DescriptorSetLayout descriptorSetLayout) :
     m_layout(std::move(layout)),
     m_pipeline(std::move(pipeline)),
-    m_descriptorPool(std::move(descriptorPool)),
-    m_descriptorSetLayout(std::move(descriptorSetLayout)),
-    m_sampler(sampler)
+    m_descriptorSetLayout(std::move(descriptorSetLayout))
 {
 }
 
@@ -25,26 +22,33 @@ const vulkan::PipelineLayout &Pipeline::layout() const
    return m_layout;
 }
 
-Result<DescriptorGroup> Pipeline::allocate_descriptors(const size_t descriptorCount)
+Result<DescriptorPool> Pipeline::create_descriptor_pool(const uint32_t uniformBufferCount,
+                                                        const uint32_t sampledImageCount,
+                                                        const uint32_t maxDescriptorCount)
 {
-   std::vector<VkDescriptorSetLayout> descriptorLayouts{};
-   descriptorLayouts.resize(descriptorCount, *m_descriptorSetLayout);
+   const std::array descriptorPoolSizes{
+           VkDescriptorPoolSize{
+                                .type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                                .descriptorCount = uniformBufferCount,
+                                },
+           VkDescriptorPoolSize{
+                                .type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                .descriptorCount = sampledImageCount,
+                                },
+   };
 
-   VkDescriptorSetAllocateInfo descriptorSetsInfo{};
-   descriptorSetsInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-   descriptorSetsInfo.descriptorPool     = *m_descriptorPool;
-   descriptorSetsInfo.descriptorSetCount = descriptorLayouts.size();
-   descriptorSetsInfo.pSetLayouts        = descriptorLayouts.data();
+   VkDescriptorPoolCreateInfo descriptorPoolInfo{};
+   descriptorPoolInfo.sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+   descriptorPoolInfo.flags         = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+   descriptorPoolInfo.poolSizeCount = descriptorPoolSizes.size();
+   descriptorPoolInfo.pPoolSizes    = descriptorPoolSizes.data();
+   descriptorPoolInfo.maxSets       = maxDescriptorCount;
 
-   std::vector<VkDescriptorSet> descriptorSets{};
-   descriptorSets.resize(descriptorCount);
-   if (const auto res = vkAllocateDescriptorSets(m_pipeline.parent(), &descriptorSetsInfo, descriptorSets.data());
-       res != VK_SUCCESS) {
+   vulkan::DescriptorPool descriptorPool{m_pipeline.parent()};
+   if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
-   }
 
-   return DescriptorGroup(m_pipeline.parent(), *m_descriptorPool, m_sampler, *m_layout, std::move(descriptorSets));
+   return DescriptorPool(std::move(descriptorPool), *m_descriptorSetLayout, *m_layout);
 }
-
 
 }// namespace graphics_api

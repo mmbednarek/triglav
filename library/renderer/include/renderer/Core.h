@@ -1,8 +1,6 @@
 #pragma once
 
 #include <glm/mat4x4.hpp>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 #include <vector>
 #include <stdexcept>
 
@@ -14,8 +12,7 @@ namespace renderer {
 struct UniformBufferObject
 {
    alignas(16) glm::mat4 model;
-   alignas(16) glm::mat4 view;
-   alignas(16) glm::mat4 proj;
+   alignas(16) glm::mat4 viewProj;
 };
 
 using GpuMesh = graphics_api::Mesh<geometry::Vertex>;
