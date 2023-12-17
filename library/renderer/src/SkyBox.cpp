@@ -5,6 +5,7 @@
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <graphics_api/DescriptorWriter.h>
 
 namespace {
 
@@ -49,9 +50,9 @@ SkyBox::SkyBox(Renderer &renderer) :
     m_uniformBufferMapping(checkResult(m_uniformBuffer.map_memory())),
     m_sampler(checkResult(renderer.device().create_sampler(false)))
 {
-   m_descriptorSet.set_raw_uniform_buffer(0, m_uniformBuffer);
-   m_descriptorSet.set_sampled_texture(1, m_resourceManager.texture("tex:skybox"_name), m_sampler);
-   m_descriptorSet.update();
+   graphics_api::DescriptorWriter descWriter(renderer.device(), m_descriptorSet);
+   descWriter.set_raw_uniform_buffer(0, m_uniformBuffer);
+   descWriter.set_sampled_texture(1, m_resourceManager.texture("tex:skybox"_name), m_sampler);
 }
 
 void SkyBox::on_render(const graphics_api::CommandList &commandList, float yaw, float pitch, float width,

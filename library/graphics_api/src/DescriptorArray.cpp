@@ -52,7 +52,7 @@ VkPipelineLayout DescriptorArray::pipeline_layout() const
 
 DescriptorView DescriptorArray::at(const size_t index) const
 {
-   return {m_device, m_descriptorSets.at(index), m_pipelineLayout};
+   return {m_descriptorSets.at(index), m_pipelineLayout};
 }
 
 DescriptorView DescriptorArray::operator[](const size_t index) const

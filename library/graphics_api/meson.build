@@ -5,6 +5,7 @@ graphics_api_sources = files([
   'src/DescriptorArray.cpp',
   'src/DescriptorPool.cpp',
   'src/DescriptorView.cpp',
+  'src/DescriptorWriter.cpp',
   'src/Device.cpp',
   'src/PipelineBuilder.cpp',
   'src/Pipeline.cpp',

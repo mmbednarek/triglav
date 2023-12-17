@@ -964,6 +964,12 @@ uint32_t Device::framebuffer_count() const
    return m_swapchainImageViews.size();
 }
 
+
+VkDevice Device::vulkan_device() const
+{
+   return *m_device;
+}
+
 void Device::await_all() const
 {
    vkDeviceWaitIdle(*m_device);

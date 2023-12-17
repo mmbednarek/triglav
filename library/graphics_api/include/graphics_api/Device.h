@@ -100,6 +100,7 @@ class Device
    [[nodiscard]] Status submit_command_list_one_time(const CommandList &commandList) const;
    [[nodiscard]] Status present(const Semaphore &semaphore, uint32_t framebufferIndex) const;
    [[nodiscard]] uint32_t framebuffer_count() const;
+   [[nodiscard]] VkDevice vulkan_device() const;
    void await_all() const;
 
  private:

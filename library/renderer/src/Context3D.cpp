@@ -10,6 +10,7 @@
 
 
 #include <graphics_api/CommandList.h>
+#include <graphics_api/DescriptorWriter.h>
 
 namespace renderer {
 
@@ -52,10 +53,9 @@ InstancedModel Context3D::instance_model(const Name modelName)
       const auto &material = m_resourceManager.material(range.materialName);
       const auto &texture  = m_resourceManager.texture(material.texture);
 
-      auto descriptor = descriptors[index];
-      descriptor.set_uniform_buffer(0, ubo);
-      descriptor.set_sampled_texture(1, texture, m_sampler);
-      descriptor.update();
+      graphics_api::DescriptorWriter descWriter(m_device, descriptors[index]);
+      descWriter.set_uniform_buffer(0, ubo);
+      descWriter.set_sampled_texture(1, texture, m_sampler);
 
       ++index;
    }
