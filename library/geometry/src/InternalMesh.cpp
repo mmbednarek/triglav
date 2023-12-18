@@ -222,6 +222,11 @@ void InternalMesh::set_face_group(const Index face, const Index group)
    m_groupProperties[FaceIndex{face}] = group;
 }
 
+void InternalMesh::set_material(const Index meshGroup, std::string_view material)
+{
+   m_groups[meshGroup].material = material;
+}
+
 InternalMesh::Point3 InternalMesh::location(const VertexIndex index) const
 {
    return m_mesh.point(index);
@@ -292,7 +297,7 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
                  Point3{std::stof(arguments[0]), -std::stof(arguments[1]), std::stof(arguments[2])});
       } else if (name == "vn") {
          assert(arguments.size() >= 3);
-         result.m_normals.emplace_back(std::stof(arguments[0]), std::stof(arguments[1]),
+         result.m_normals.emplace_back(std::stof(arguments[0]), -std::stof(arguments[1]),
                                        std::stof(arguments[2]));
       } else if (name == "vt") {
          assert(arguments.size() >= 2);

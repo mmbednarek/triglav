@@ -17,10 +17,12 @@ constexpr std::array g_assetMap{
         NamePath{   "tex:bark"_name,            "texture/bark.png"},
         NamePath{ "tex:leaves"_name,          "texture/leaves.png"},
         NamePath{   "tex:gold"_name,            "texture/gold.png"},
+        NamePath{  "tex:grass"_name,           "texture/grass.png"},
  // ----- Models -----
         NamePath{  "mdl:house"_name,           "model/house.model"},
         NamePath{   "mdl:tree"_name,            "model/tree.model"},
         NamePath{   "mdl:cage"_name,            "model/cage.model"},
+        NamePath{"mdl:terrain"_name,         "model/terrain.model"},
  // ----- Shaders -----
         NamePath{"vsh:example"_name,   "shader/example_vertex.spv"},
         NamePath{"fsh:example"_name, "shader/example_fragment.spv"},

@@ -5,6 +5,7 @@ renderer_sources = files([
   'src/Model.cpp',
   'src/Renderer.cpp',
   'src/ResourceManager.cpp',
+  'src/Scene.cpp',
   'src/SkyBox.cpp',
   'src/stb_image.h',
 ])

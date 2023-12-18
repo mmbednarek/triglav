@@ -84,10 +84,32 @@ void ResourceManager::add_material(const Name assetName, Material material)
    m_materials[assetName] = std::move(material);
 }
 
+void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh& model)
+{
+   Name meshName = assetName & (~0b111ull) | static_cast<uint64_t>(NameType::Mesh);
+   m_meshes.emplace(meshName, std::move(model.mesh));
+
+   std::vector<MaterialRange> ranges{};
+   ranges.resize(model.ranges.size());
+   std::transform(model.ranges.begin(), model.ranges.end(), ranges.begin(),
+                  [](const geometry::MaterialRange &range) {
+                     return MaterialRange{range.offset, range.size,
+                                          make_name(std::format("mat:{}", range.materialName))};
+                  });
+
+   m_models.emplace(assetName, Model{meshName, std::move(ranges)});
+}
+
+void ResourceManager::add_mesh(const Name assetName, graphics_api::Mesh<geometry::Vertex> model)
+{
+   assert(not this->is_name_registered(assetName));
+   m_meshes.emplace(assetName, std::move(model));
+}
+
 void ResourceManager::add_model(const Name assetName, Model model)
 {
    assert(not this->is_name_registered(assetName));
-   m_models[assetName] = std::move(model);
+   m_models.emplace(assetName, std::move(model));
 }
 
 graphics_api::Texture ResourceManager::load_texture(const std::string_view path) const

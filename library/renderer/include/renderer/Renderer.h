@@ -1,13 +1,14 @@
 #pragma once
 
+#include "Context3D.h"
 #include "Core.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
 #include "graphics_api/PlatformSurface.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
+#include "Scene.h"
 #include "SkyBox.h"
-#include "Context3D.h"
 
 #include <optional>
 
@@ -38,7 +39,8 @@ class Renderer
    void on_key_released(uint32_t key);
    void on_mouse_wheel_turn(float x);
    [[nodiscard]] graphics_api::PipelineBuilder create_pipeline();
-   [[nodiscard]] ResourceManager& resource_manager() const;
+   [[nodiscard]] ResourceManager &resource_manager() const;
+   [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
 
    template<typename TUbo>
    [[nodiscard]] graphics_api::Buffer create_ubo_buffer() const
@@ -76,10 +78,9 @@ class Renderer
    graphics_api::CommandList m_commandList;
    std::unique_ptr<ResourceManager> m_resourceManager;
    Context3D m_context3D;
+   Scene m_scene;
 
    SkyBox m_skyBox;
-   std::optional<InstancedModel> m_tree;
-   std::optional<InstancedModel> m_cage;
 };
 
 Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);

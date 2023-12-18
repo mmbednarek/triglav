@@ -15,6 +15,9 @@
 
 #include "Core.h"
 
+
+#include <geometry/DebugMesh.h>
+
 namespace renderer {
 
 constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
@@ -32,14 +35,57 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_commandList(std::move(objects.commandList)),
     m_resourceManager(std::move(objects.resourceManager)),
     m_skyBox(*this),
-    m_context3D(*m_device, m_renderPass, *m_resourceManager)
+    m_context3D(*m_device, m_renderPass, *m_resourceManager),
+    m_scene(*this, m_context3D)
 {
+   auto sphere = geometry::create_sphere(40, 20, 4.0f);
+   sphere.set_material(0, "gold");
+   sphere.triangulate();
+   auto gpuBox = sphere.upload_to_device(*m_device);
+
+   m_resourceManager->add_mesh_and_model("mdl:cube"_name, gpuBox);
    m_resourceManager->add_material("mat:bark"_name, Material{"tex:bark"_name, 1.0f});
    m_resourceManager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, 1.0f});
    m_resourceManager->add_material("mat:gold"_name, Material{"tex:gold"_name, 1.0f});
+   m_resourceManager->add_material("mat:grass"_name, Material{"tex:grass"_name, 1.0f});
 
-   m_cage = m_context3D.instance_model("mdl:cage"_name);
-   m_tree = m_context3D.instance_model("mdl:tree"_name);
+   m_scene.add_object(SceneObject{
+      .model{"mdl:terrain"_name},
+      .position{0, 0, 0},
+      .rotation{1, 0, 0, 0},
+      .scale{1, 1, 1},
+   });
+   m_scene.add_object(SceneObject{
+      .model{"mdl:tree"_name},
+      .position{10, 0, 0},
+      .rotation{1, 0, 0, 0},
+      .scale{0.9, 0.9, 0.9},
+   });
+   m_scene.add_object(SceneObject{
+      .model{"mdl:tree"_name},
+      .position{-10, 0, 0},
+      .rotation{glm::vec3{0, 0, glm::radians(45.0f)}},
+      .scale{1, 1, 1},
+   });
+   m_scene.add_object(SceneObject{
+      .model{"mdl:tree"_name},
+      .position{0, 10, 0},
+      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
+      .scale{1.1, 1.1, 1.1},
+   });
+   m_scene.add_object(SceneObject{
+      .model{"mdl:tree"_name},
+      .position{0, -10, 0},
+      .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
+      .scale{1.2, 1.2, 1.2},
+   });
+   m_scene.add_object(SceneObject{
+      .model{"mdl:cage"_name},
+      .position{0, 0, 0},
+      .rotation{1, 0, 0, 0},
+      .scale{1, 1, 1},
+   });
+   m_scene.compile_scene();
 }
 
 void Renderer::on_render()
@@ -55,9 +101,7 @@ void Renderer::on_render()
                       static_cast<float>(m_height));
 
    m_context3D.begin_render(&m_commandList);
-
-   m_context3D.draw_model(*m_tree);
-   m_context3D.draw_model(*m_cage);
+   m_scene.render();
 
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
@@ -135,6 +179,11 @@ ResourceManager &Renderer::resource_manager() const
    return *m_resourceManager;
 }
 
+std::tuple<uint32_t, uint32_t> Renderer::screen_resolution() const
+{
+   return {m_width, m_height};
+}
+
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
    std::array attachments{
@@ -184,17 +233,8 @@ void Renderer::update_uniform_data(const uint32_t frame)
       m_position -= 0.005f * zVector;
    }
 
-   auto view       = glm::lookAt(m_position, m_position + forwardVector, zVector);
-   auto projection = glm::perspective(
-           glm::radians(45.0f), static_cast<float>(m_width) / static_cast<float>(m_height), 0.1f, 100.0f);
-
-   const auto viewProj = projection * view;
-
-   m_cage->ubo->model    = glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-   m_cage->ubo->viewProj = viewProj;
-
-   m_tree->ubo->model    = glm::translate(glm::mat4(1.0f), {20, 0, 0});
-   m_tree->ubo->viewProj = viewProj;
+   m_scene.set_camera(Camera{m_position, forwardVector});
+   m_scene.update();
 }
 
 Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height)

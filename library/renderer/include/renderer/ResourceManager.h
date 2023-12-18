@@ -18,6 +18,8 @@ class ResourceManager
 
    void load_asset(Name assetName, std::string_view path);
    void add_material(Name assetName, Material material);
+   void add_mesh_and_model(Name assetName, geometry::DeviceMesh& model);
+   void add_mesh(Name assetName, graphics_api::Mesh<geometry::Vertex> model);
    void add_model(Name assetName, Model model);
    [[nodiscard]] const graphics_api::Texture &texture(Name assetName) const;
    [[nodiscard]] const graphics_api::Mesh<geometry::Vertex> &mesh(Name assetName) const;

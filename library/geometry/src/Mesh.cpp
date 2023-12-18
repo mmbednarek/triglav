@@ -94,6 +94,13 @@ void Mesh::set_face_group(const Index face, const Index group)
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
+void Mesh::set_material(const Index meshGroup, const std::string_view material)
+{
+   assert(m_mesh != nullptr);
+   m_mesh->set_material(meshGroup, material);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::reverse_orientation()
 {
    assert(m_mesh != nullptr);

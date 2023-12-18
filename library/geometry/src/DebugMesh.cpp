@@ -66,6 +66,7 @@ Mesh create_box(const Extent3D &extent)
 Mesh create_sphere(const int segment_count, const int ring_count, const float radius)
 {
    Mesh mesh;
+   mesh.add_group({"sphere", ""});
 
    mesh.add_vertex(0, 0, -radius);
    mesh.add_uv(0.5f, 0);
@@ -100,14 +101,19 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
             const auto face         = mesh.add_face(0, base_index + next_segment, base_index + segment);
             mesh.set_face_uvs(face, 0, base_index + next_segment, base_index + segment);
             mesh.set_face_normals(face, 0, base_index + next_segment, base_index + segment);
+            mesh.set_face_group(face, 0);
          }
       } else {
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
 
-            const auto face = mesh.add_face(last_base_index + segment, last_base_index + next_segment, base_index + next_segment, base_index + segment);
-            mesh.set_face_uvs(face, last_base_index + segment, last_base_index + next_segment, base_index + next_segment, base_index + segment);
-            mesh.set_face_normals(face, last_base_index + segment, last_base_index + next_segment, base_index + next_segment, base_index + segment);
+            const auto face = mesh.add_face(last_base_index + segment, last_base_index + next_segment,
+                                            base_index + next_segment, base_index + segment);
+            mesh.set_face_uvs(face, last_base_index + segment, last_base_index + next_segment,
+                              base_index + next_segment, base_index + segment);
+            mesh.set_face_normals(face, last_base_index + segment, last_base_index + next_segment,
+                                  base_index + next_segment, base_index + segment);
+            mesh.set_face_group(face, 0);
          }
       }
 
@@ -124,6 +130,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
       const auto face = mesh.add_face(last_base_index + next_segment, last_index, last_base_index + segment);
       mesh.set_face_uvs(face, last_base_index + next_segment, last_index, last_base_index + segment);
       mesh.set_face_normals(face, last_base_index + next_segment, last_index, last_base_index + segment);
+      mesh.set_face_group(face, 0);
    }
 
    return mesh;
@@ -160,7 +167,7 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
       if (ring == 0) {
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
-            const auto face = mesh.add_face(base_index + segment, base_index + next_segment, 0);
+            const auto face         = mesh.add_face(base_index + segment, base_index + next_segment, 0);
             mesh.set_face_uvs(face, base_index + segment, base_index + next_segment, 0);
             mesh.set_face_normals(face, base_index + segment, base_index + next_segment, 0);
          }
@@ -168,9 +175,12 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
 
-            const auto face = mesh.add_face(base_index + segment, base_index + next_segment, last_base_index + next_segment, last_base_index + segment);
-            mesh.set_face_uvs(face, base_index + segment, base_index + next_segment, last_base_index + next_segment, last_base_index + segment);
-            mesh.set_face_normals(face, base_index + segment, base_index + next_segment, last_base_index + next_segment, last_base_index + segment);
+            const auto face = mesh.add_face(base_index + segment, base_index + next_segment,
+                                            last_base_index + next_segment, last_base_index + segment);
+            mesh.set_face_uvs(face, base_index + segment, base_index + next_segment,
+                              last_base_index + next_segment, last_base_index + segment);
+            mesh.set_face_normals(face, base_index + segment, base_index + next_segment,
+                                  last_base_index + next_segment, last_base_index + segment);
          }
       }
 

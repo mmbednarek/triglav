@@ -42,6 +42,7 @@ class InternalMesh
    void set_face_uvs(Index face, std::span<Index> uvs);
    void set_face_normals(Index face, std::span<Index> normals);
    void set_face_group(Index face, Index group);
+   void set_material(Index meshGroup, std::string_view material);
 
    [[nodiscard]] Point3 location(VertexIndex index) const;
    Vector3 normal(HalfedgeIndex index);

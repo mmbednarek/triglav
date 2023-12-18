@@ -1,18 +1,20 @@
 #pragma once
 
 #include <glm/mat4x4.hpp>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
-#include "graphics_api/Array.hpp"
 #include "geometry/Geometry.h"
+#include "graphics_api/Array.hpp"
 
 namespace renderer {
 
 struct UniformBufferObject
 {
    alignas(16) glm::mat4 model;
-   alignas(16) glm::mat4 viewProj;
+   alignas(16) glm::mat4 view;
+   alignas(16) glm::mat4 proj;
+   alignas(16) glm::mat4 normal;
 };
 
 using GpuMesh = graphics_api::Mesh<geometry::Vertex>;

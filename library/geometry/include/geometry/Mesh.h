@@ -40,6 +40,7 @@ class Mesh
    template<typename... TVertices>
    void set_face_normals(Index face, TVertices... vertices);
    void set_face_group(Index face, Index group);
+   void set_material(Index meshGroup, std::string_view material);
 
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
