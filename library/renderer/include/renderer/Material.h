@@ -7,6 +7,7 @@ namespace renderer {
 struct Material
 {
    Name texture{};
+   Name normal_texture{};
    float diffuseAmount{};
 };
 

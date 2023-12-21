@@ -32,11 +32,11 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
    writeDescriptorSet.descriptorCount = 1;
    writeDescriptorSet.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-   VkDescriptorBufferInfo bufferInfo{};
-   bufferInfo.offset              = 0;
-   bufferInfo.range               = buffer.size();
-   bufferInfo.buffer              = buffer.vulkan_buffer();
-   writeDescriptorSet.pBufferInfo = &m_descriptorBufferInfos.emplace_back(bufferInfo);
+   auto bufferInfo = std::make_unique<VkDescriptorBufferInfo>();
+   bufferInfo->offset              = 0;
+   bufferInfo->range               = buffer.size();
+   bufferInfo->buffer              = buffer.vulkan_buffer();
+   writeDescriptorSet.pBufferInfo = m_descriptorBufferInfos.emplace_back(std::move(bufferInfo)).get();
 
    m_descriptorWrites.emplace_back(writeDescriptorSet);
 }
@@ -52,11 +52,11 @@ void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture
    writeDescriptorSet.descriptorCount = 1;
    writeDescriptorSet.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
-   VkDescriptorImageInfo imageInfo{};
-   imageInfo.imageLayout         = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   imageInfo.imageView           = texture.vulkan_image_view();
-   imageInfo.sampler             = sampler.vulkan_sampler();
-   writeDescriptorSet.pImageInfo = &m_descriptorImageInfos.emplace_back(imageInfo);
+   auto imageInfo = std::make_unique<VkDescriptorImageInfo>();
+   imageInfo->imageLayout         = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   imageInfo->imageView           = texture.vulkan_image_view();
+   imageInfo->sampler             = sampler.vulkan_sampler();
+   writeDescriptorSet.pImageInfo = m_descriptorImageInfos.emplace_back(std::move(imageInfo)).get();
 
    m_descriptorWrites.emplace_back(writeDescriptorSet);
 }

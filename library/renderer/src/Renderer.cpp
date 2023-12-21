@@ -41,13 +41,15 @@ Renderer::Renderer(RendererObjects &&objects) :
    auto sphere = geometry::create_sphere(40, 20, 4.0f);
    sphere.set_material(0, "gold");
    sphere.triangulate();
+   sphere.recalculate_tangents();
    auto gpuBox = sphere.upload_to_device(*m_device);
 
-   m_resourceManager->add_mesh_and_model("mdl:cube"_name, gpuBox);
-   m_resourceManager->add_material("mat:bark"_name, Material{"tex:bark"_name, 1.0f});
-   m_resourceManager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, 1.0f});
-   m_resourceManager->add_material("mat:gold"_name, Material{"tex:gold"_name, 1.0f});
-   m_resourceManager->add_material("mat:grass"_name, Material{"tex:grass"_name, 1.0f});
+   m_resourceManager->add_mesh_and_model("mdl:sphere"_name, gpuBox);
+   m_resourceManager->add_material("mat:bark"_name, Material{"tex:bark"_name, "tex:bark/normal"_name, 1.0f});
+   m_resourceManager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, "tex:bark/normal"_name, 1.0f});
+   m_resourceManager->add_material("mat:gold"_name, Material{"tex:gold"_name, "tex:bark/normal"_name, 1.0f});
+   m_resourceManager->add_material("mat:grass"_name, Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
+   m_resourceManager->add_material("mat:pine"_name, Material{"tex:pine"_name, "tex:pine/normal"_name, 1.0f});
 
    m_scene.add_object(SceneObject{
       .model{"mdl:terrain"_name},
@@ -55,35 +57,35 @@ Renderer::Renderer(RendererObjects &&objects) :
       .rotation{1, 0, 0, 0},
       .scale{1, 1, 1},
    });
+//   m_scene.add_object(SceneObject{
+//      .model{"mdl:tree"_name},
+//      .position{10, 0, 0},
+//      .rotation{1, 0, 0, 0},
+//      .scale{0.9, 0.9, 0.9},
+//   });
+//   m_scene.add_object(SceneObject{
+//      .model{"mdl:tree"_name},
+//      .position{-10, 0, 0},
+//      .rotation{glm::vec3{0, 0, glm::radians(45.0f)}},
+//      .scale{1, 1, 1},
+//   });
+//   m_scene.add_object(SceneObject{
+//      .model{"mdl:tree"_name},
+//      .position{0, 10, 0},
+//      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
+//      .scale{1.1, 1.1, 1.1},
+//   });
+//   m_scene.add_object(SceneObject{
+//      .model{"mdl:tree"_name},
+//      .position{0, -10, 0},
+//      .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
+//      .scale{1.2, 1.2, 1.2},
+//   });
    m_scene.add_object(SceneObject{
-      .model{"mdl:tree"_name},
-      .position{10, 0, 0},
-      .rotation{1, 0, 0, 0},
-      .scale{0.9, 0.9, 0.9},
-   });
-   m_scene.add_object(SceneObject{
-      .model{"mdl:tree"_name},
-      .position{-10, 0, 0},
-      .rotation{glm::vec3{0, 0, glm::radians(45.0f)}},
-      .scale{1, 1, 1},
-   });
-   m_scene.add_object(SceneObject{
-      .model{"mdl:tree"_name},
-      .position{0, 10, 0},
-      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
-      .scale{1.1, 1.1, 1.1},
-   });
-   m_scene.add_object(SceneObject{
-      .model{"mdl:tree"_name},
-      .position{0, -10, 0},
-      .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
-      .scale{1.2, 1.2, 1.2},
-   });
-   m_scene.add_object(SceneObject{
-      .model{"mdl:cage"_name},
+      .model{"mdl:pine"_name},
       .position{0, 0, 0},
-      .rotation{1, 0, 0, 0},
-      .scale{1, 1, 1},
+      .rotation{glm::vec3{0, 0, glm::radians(270.0f)}},
+      .scale{30, 30, 30},
    });
    m_scene.compile_scene();
 }

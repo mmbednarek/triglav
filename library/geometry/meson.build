@@ -8,8 +8,11 @@ geometry_sources = files([
 ])
 
 geometry_pub_deps = [glm, graphics_api]
+
 geometry_priv_deps = geometry_pub_deps
 geometry_priv_deps += cgal
+geometry_priv_deps += mikktspace
+
 geometry_incl = include_directories(['include', 'include/geometry'])
 
 geometry_lib = static_library('geometry',

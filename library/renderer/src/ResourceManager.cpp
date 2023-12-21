@@ -86,7 +86,7 @@ void ResourceManager::add_material(const Name assetName, Material material)
 
 void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh& model)
 {
-   Name meshName = assetName & (~0b111ull) | static_cast<uint64_t>(NameType::Mesh);
+   Name meshName = (assetName & (~0b111ull)) | static_cast<uint64_t>(NameType::Mesh);
    m_meshes.emplace(meshName, std::move(model.mesh));
 
    std::vector<MaterialRange> ranges{};
@@ -129,6 +129,7 @@ void ResourceManager::load_model(const Name model, const std::string_view path)
 {
    const auto objMesh = geometry::Mesh::from_file(path);
    objMesh.triangulate();
+   objMesh.recalculate_tangents();
    auto deviceMesh = objMesh.upload_to_device(m_device);
 
    Name meshName = model & (~0b111ull) | static_cast<uint64_t>(NameType::Mesh);

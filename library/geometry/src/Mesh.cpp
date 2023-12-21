@@ -22,6 +22,12 @@ void Mesh::recalculate_normals() const
    return m_mesh->recalculate_normals();
 }
 
+void Mesh::recalculate_tangents() const
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->recalculate_tangents();
+}
+
 void Mesh::triangulate() const
 {
    assert(m_mesh != nullptr);

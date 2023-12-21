@@ -15,6 +15,7 @@ cgal = dependency('CGAL')
 wayland_client = dependency('wayland-client')
 xkb_common = dependency('xkbcommon')
 
+subdir('library/external/mikktspace')
 subdir('library/graphics_api')
 subdir('library/geometry')
 subdir('library/renderer')

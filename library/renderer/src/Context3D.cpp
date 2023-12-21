@@ -28,10 +28,14 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
                     .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                     .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
                     .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
+                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
+                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::ShaderStage::Vertex)
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::ShaderStage::Fragment)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
                     .enable_depth_test(true)
@@ -52,10 +56,12 @@ InstancedModel Context3D::instance_model(const Name modelName)
    for (const auto range : model.range) {
       const auto &material = m_resourceManager.material(range.materialName);
       const auto &texture  = m_resourceManager.texture(material.texture);
+      const auto &normalTexture  = m_resourceManager.texture(material.normal_texture);
 
       graphics_api::DescriptorWriter descWriter(m_device, descriptors[index]);
       descWriter.set_uniform_buffer(0, ubo);
       descWriter.set_sampled_texture(1, texture, m_sampler);
+      descWriter.set_sampled_texture(2, normalTexture, m_sampler);
 
       ++index;
    }

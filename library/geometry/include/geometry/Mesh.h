@@ -23,6 +23,7 @@ class Mesh
    Mesh &operator=(Mesh &&other) noexcept = default;
 
    void recalculate_normals() const;
+   void recalculate_tangents() const;
    void triangulate() const;
    void reverse_orientation();
 

@@ -21,6 +21,8 @@ struct Vertex
    glm::vec3 location;
    glm::vec2 uv;
    glm::vec3 normal;
+   glm::vec3 tangent;
+   glm::vec3 bitangent;
 };
 
 struct IndexedVertex
@@ -28,6 +30,7 @@ struct IndexedVertex
    Index location;
    Index uv;
    Index normal;
+   Index tangent;
 
    auto operator<=>(const IndexedVertex &rhs) const = default;
 };

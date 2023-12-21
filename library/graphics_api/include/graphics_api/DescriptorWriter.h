@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <memory>
 
 #include "DescriptorView.h"
 
@@ -42,8 +43,8 @@ class DescriptorWriter
    VkDevice m_device{};
    VkDescriptorSet m_descriptorSet{};
 
-   std::vector<VkDescriptorBufferInfo> m_descriptorBufferInfos{};
-   std::vector<VkDescriptorImageInfo> m_descriptorImageInfos{};
+   std::vector<std::unique_ptr<VkDescriptorBufferInfo>> m_descriptorBufferInfos{};
+   std::vector<std::unique_ptr<VkDescriptorImageInfo>> m_descriptorImageInfos{};
    std::vector<VkWriteDescriptorSet> m_descriptorWrites{};
 };
 
