@@ -1,8 +1,10 @@
 #include "CommandList.h"
+#include "Framebuffer.h"
 #include "Pipeline.h"
 #include "Texture.h"
 
 namespace graphics_api {
+
 CommandList::CommandList(const VkCommandBuffer commandBuffer, const VkDevice device,
                          const VkCommandPool commandPool) :
     m_commandBuffer(commandBuffer),
@@ -49,6 +51,57 @@ Status CommandList::begin_one_time()
    return Status::Success;
 }
 
+Status CommandList::begin_graphic_commands(const Framebuffer &framebuffer, const Color &clearColor)
+{
+   m_isOneTime = false;
+
+   vkResetCommandBuffer(m_commandBuffer, 0);
+
+   VkCommandBufferBeginInfo beginInfo{};
+   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+   if (vkBeginCommandBuffer(m_commandBuffer, &beginInfo) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+
+   std::array<VkClearValue, 3> clearValues{};
+   clearValues[0].color = {
+           {clearColor.r, clearColor.g, clearColor.b, clearColor.a}
+   };
+   clearValues[1].depthStencil.depth   = 1.0f;
+   clearValues[1].depthStencil.stencil = 0.0f;
+   clearValues[2].color                = clearValues[0].color;
+
+   const auto [width, height] = framebuffer.resolution();
+
+   VkRenderPassBeginInfo renderPassInfo{};
+   renderPassInfo.sType                    = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+   renderPassInfo.renderPass               = framebuffer.vulkan_render_pass();
+   renderPassInfo.framebuffer              = framebuffer.vulkan_framebuffer();
+   renderPassInfo.renderArea.offset        = {0, 0};
+   renderPassInfo.renderArea.extent.width  = width;
+   renderPassInfo.renderArea.extent.height = height;
+   renderPassInfo.clearValueCount          = clearValues.size();
+   renderPassInfo.pClearValues             = clearValues.data();
+
+   vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+   VkViewport viewport{};
+   viewport.x        = 0.0f;
+   viewport.y        = 0.0f;
+   viewport.width    = static_cast<float>(width);
+   viewport.height   = static_cast<float>(height);
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
+   vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+
+   VkRect2D scissor{};
+   scissor.offset = {0, 0};
+   scissor.extent = VkExtent2D{width, height};
+   vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
+
+   return Status::Success;
+}
+
 Status CommandList::finish() const
 {
    if (not m_isOneTime) {
@@ -76,8 +129,7 @@ void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
 {
    const auto vulkanDescriptorSet = descriptorSet.vulkan_descriptor_set();
    vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                           descriptorSet.vulkan_pipeline_layout(), 0, 1, &vulkanDescriptorSet, 0,
-                           nullptr);
+                           descriptorSet.vulkan_pipeline_layout(), 0, 1, &vulkanDescriptorSet, 0, nullptr);
 }
 
 void CommandList::draw_primitives(const int vertexCount, const int vertexOffset) const

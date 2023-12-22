@@ -5,7 +5,9 @@
 #include "Pipeline.h"
 
 namespace graphics_api {
+
 class Pipeline;
+class Framebuffer;
 
 class CommandList
 {
@@ -20,11 +22,12 @@ class CommandList
 
    [[nodiscard]] Status reset();
    [[nodiscard]] Status begin_one_time();
+   [[nodiscard]] Status begin_graphic_commands(const Framebuffer &framebuffer, const Color &clearColor);
    [[nodiscard]] Status finish() const;
    [[nodiscard]] VkCommandBuffer vulkan_command_buffer() const;
 
    void bind_pipeline(const Pipeline &pipeline) const;
-   void bind_descriptor_set(const DescriptorView& descriptorSet) const;
+   void bind_descriptor_set(const DescriptorView &descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset) const;
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const;
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;

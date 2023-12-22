@@ -19,6 +19,7 @@ struct RendererObjects
    uint32_t width{};
    uint32_t height{};
    graphics_api::DeviceUPtr device;
+   graphics_api::Swapchain swapchain;
    std::unique_ptr<ResourceManager> resourceManager;
    graphics_api::RenderPass renderPass;
    graphics_api::Semaphore framebufferReadySemaphore;
@@ -71,7 +72,9 @@ class Renderer
    uint32_t m_width{};
    uint32_t m_height{};
    graphics_api::DeviceUPtr m_device;
+   graphics_api::Swapchain m_swapchain;
    graphics_api::RenderPass m_renderPass;
+   std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
    graphics_api::Semaphore m_renderFinishedSemaphore;
    graphics_api::Fence m_inFlightFence;

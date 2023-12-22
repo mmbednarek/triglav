@@ -28,7 +28,9 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_width(objects.width),
     m_height(objects.height),
     m_device(std::move(objects.device)),
+    m_swapchain(std::move(objects.swapchain)),
     m_renderPass(std::move(objects.renderPass)),
+    m_framebuffers(checkResult(m_swapchain.create_framebuffers(m_renderPass))),
     m_framebufferReadySemaphore(std::move(objects.framebufferReadySemaphore)),
     m_renderFinishedSemaphore(std::move(objects.renderFinishedSemaphore)),
     m_inFlightFence(std::move(objects.inFlightFence)),
@@ -46,58 +48,60 @@ Renderer::Renderer(RendererObjects &&objects) :
 
    m_resourceManager->add_mesh_and_model("mdl:sphere"_name, gpuBox);
    m_resourceManager->add_material("mat:bark"_name, Material{"tex:bark"_name, "tex:bark/normal"_name, 1.0f});
-   m_resourceManager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, "tex:bark/normal"_name, 1.0f});
+   m_resourceManager->add_material("mat:leaves"_name,
+                                   Material{"tex:leaves"_name, "tex:bark/normal"_name, 1.0f});
    m_resourceManager->add_material("mat:gold"_name, Material{"tex:gold"_name, "tex:bark/normal"_name, 1.0f});
-   m_resourceManager->add_material("mat:grass"_name, Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
+   m_resourceManager->add_material("mat:grass"_name,
+                                   Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
    m_resourceManager->add_material("mat:pine"_name, Material{"tex:pine"_name, "tex:pine/normal"_name, 1.0f});
 
    m_scene.add_object(SceneObject{
-      .model{"mdl:terrain"_name},
-      .position{0, 0, 0},
-      .rotation{1, 0, 0, 0},
-      .scale{1, 1, 1},
+           .model{"mdl:terrain"_name},
+           .position{0, 0, 0},
+           .rotation{1, 0, 0, 0},
+           .scale{1, 1, 1},
    });
-//   m_scene.add_object(SceneObject{
-//      .model{"mdl:tree"_name},
-//      .position{10, 0, 0},
-//      .rotation{1, 0, 0, 0},
-//      .scale{0.9, 0.9, 0.9},
-//   });
-//   m_scene.add_object(SceneObject{
-//      .model{"mdl:tree"_name},
-//      .position{-10, 0, 0},
-//      .rotation{glm::vec3{0, 0, glm::radians(45.0f)}},
-//      .scale{1, 1, 1},
-//   });
-//   m_scene.add_object(SceneObject{
-//      .model{"mdl:tree"_name},
-//      .position{0, 10, 0},
-//      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
-//      .scale{1.1, 1.1, 1.1},
-//   });
-//   m_scene.add_object(SceneObject{
-//      .model{"mdl:tree"_name},
-//      .position{0, -10, 0},
-//      .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
-//      .scale{1.2, 1.2, 1.2},
-//   });
+   //   m_scene.add_object(SceneObject{
+   //      .model{"mdl:tree"_name},
+   //      .position{10, 0, 0},
+   //      .rotation{1, 0, 0, 0},
+   //      .scale{0.9, 0.9, 0.9},
+   //   });
+   //   m_scene.add_object(SceneObject{
+   //      .model{"mdl:tree"_name},
+   //      .position{-10, 0, 0},
+   //      .rotation{glm::vec3{0, 0, glm::radians(45.0f)}},
+   //      .scale{1, 1, 1},
+   //   });
+   //   m_scene.add_object(SceneObject{
+   //      .model{"mdl:tree"_name},
+   //      .position{0, 10, 0},
+   //      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
+   //      .scale{1.1, 1.1, 1.1},
+   //   });
+   //   m_scene.add_object(SceneObject{
+   //      .model{"mdl:tree"_name},
+   //      .position{0, -10, 0},
+   //      .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
+   //      .scale{1.2, 1.2, 1.2},
+   //   });
    m_scene.add_object(SceneObject{
-      .model{"mdl:pine"_name},
-      .position{0, 0, 0},
-      .rotation{glm::vec3{0, 0, glm::radians(270.0f)}},
-      .scale{30, 30, 30},
+           .model{"mdl:pine"_name},
+           .position{0, 0, 0},
+           .rotation{glm::vec3{0, 0, glm::radians(270.0f)}},
+           .scale{30, 30, 30},
    });
    m_scene.compile_scene();
 }
 
 void Renderer::on_render()
 {
-   const auto framebufferIndex = m_device->get_available_framebuffer(m_framebufferReadySemaphore);
+   const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(framebufferIndex);
    m_inFlightFence.await();
 
-   checkStatus(m_device->begin_graphic_commands(m_renderPass, m_commandList, framebufferIndex,
-                                                graphics_api::ColorPalette::Black));
+   checkStatus(m_commandList.begin_graphic_commands(m_framebuffers[framebufferIndex],
+                                                    graphics_api::ColorPalette::Black));
 
    m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
                       static_cast<float>(m_height));
@@ -108,7 +112,7 @@ void Renderer::on_render()
    checkStatus(m_commandList.finish());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
                                              m_renderFinishedSemaphore, m_inFlightFence));
-   checkStatus(m_device->present(m_renderFinishedSemaphore, framebufferIndex));
+   checkStatus(m_swapchain.present(m_renderFinishedSemaphore, framebufferIndex));
 }
 
 void Renderer::on_close() const
@@ -188,20 +192,18 @@ std::tuple<uint32_t, uint32_t> Renderer::screen_resolution() const
 
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
-   std::array attachments{
-           graphics_api::AttachmentType::ColorAttachment,
-           graphics_api::AttachmentType::DepthAttachment,
-           graphics_api::AttachmentType::ResolveAttachment,
-   };
-
    const graphics_api::Resolution resolution{width, height};
 
    m_device->await_all();
 
-   m_renderPass = checkResult(m_device->create_render_pass(
-           attachments, g_colorFormat, GAPI_COLOR_FORMAT(D, Float32), g_sampleCount, resolution));
+   m_framebuffers.clear();
 
-   checkStatus(m_device->init_swapchain(m_renderPass, graphics_api::ColorSpace::sRGB));
+   m_swapchain = checkResult(
+           m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB,
+                                      g_depthFormat, m_swapchain.sample_count(), resolution, &m_swapchain));
+   m_renderPass = checkResult(m_device->create_render_pass(m_swapchain));
+   m_framebuffers = checkResult(m_swapchain.create_framebuffers(m_renderPass));
+
    m_width  = width;
    m_height = height;
 }
@@ -239,7 +241,7 @@ void Renderer::update_uniform_data(const uint32_t frame)
    m_scene.update();
 }
 
-Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height)
+Renderer init_renderer(const graphics_api::Surface &surface, const uint32_t width, const uint32_t height)
 {
    auto device = checkResult(graphics_api::initialize_device(surface));
 
@@ -252,16 +254,9 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
    resolution.width  = std::clamp(resolution.width, minResolution.width, maxResolution.width);
    resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
 
-   std::array attachments{
-           graphics_api::AttachmentType::ColorAttachment,
-           graphics_api::AttachmentType::DepthAttachment,
-           graphics_api::AttachmentType::ResolveAttachment,
-   };
-
-   auto renderPass = checkResult(
-           device->create_render_pass(attachments, g_colorFormat, g_depthFormat, g_sampleCount, resolution));
-
-   checkStatus(device->init_swapchain(renderPass, graphics_api::ColorSpace::sRGB));
+   auto swapchain  = checkResult(device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
+                                                          g_depthFormat, g_sampleCount, resolution));
+   auto renderPass = checkResult(device->create_render_pass(swapchain));
 
    auto resourceManager = std::make_unique<ResourceManager>(*device);
 
@@ -278,6 +273,7 @@ Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uin
            .width                     = width,
            .height                    = height,
            .device                    = std::move(device),
+           .swapchain                 = std::move(swapchain),
            .resourceManager           = std::move(resourceManager),
            .renderPass                = std::move(renderPass),
            .framebufferReadySemaphore = std::move(framebufferReadySemaphore),
