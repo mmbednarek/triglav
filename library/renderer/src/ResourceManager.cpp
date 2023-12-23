@@ -132,7 +132,7 @@ void ResourceManager::load_model(const Name model, const std::string_view path)
    objMesh.recalculate_tangents();
    auto deviceMesh = objMesh.upload_to_device(m_device);
 
-   Name meshName = model & (~0b111ull) | static_cast<uint64_t>(NameType::Mesh);
+   Name meshName = (model & (~0b111ull)) | static_cast<uint64_t>(NameType::Mesh);
    m_meshes.emplace(meshName, std::move(deviceMesh.mesh));
 
    std::vector<MaterialRange> ranges{};

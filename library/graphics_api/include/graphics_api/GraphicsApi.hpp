@@ -99,7 +99,7 @@ struct ColorFormat
       size_t result{};
       ColorFormatPart lastPart{};
       const auto count = color_format_order_count(this->order);
-      for (int i = 0; i < count; ++i) {
+      for (size_t i = 0; i < count; ++i) {
          if (parts[i] == ColorFormatPart::Unknown) {
             result += color_format_part_size(lastPart);
          } else {
@@ -159,6 +159,13 @@ struct DescriptorBinding
    int binding{};
    int descriptorCount{};
    DescriptorType type{};
+   ShaderStageFlags shaderStages{};
+};
+
+struct PushConstant
+{
+   size_t offset{};
+   size_t size{};
    ShaderStageFlags shaderStages{};
 };
 
@@ -243,7 +250,7 @@ inline void check_status(const Status status, const std::string_view message)
       }                                                            \
    }
 
-#define GAPI_CHECK(stmt) ::graphics_api::check_result(stmt, #stmt)
+#define GAPI_CHECK(stmt)        ::graphics_api::check_result(stmt, #stmt)
 #define GAPI_CHECK_STATUS(stmt) ::graphics_api::check_status(stmt, #stmt)
 
 #ifdef _WIN32

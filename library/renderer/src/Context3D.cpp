@@ -38,6 +38,7 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
                                         graphics_api::ShaderStage::Fragment)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
+                    .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstant))
                     .enable_depth_test(true)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 100, 100))),
@@ -73,26 +74,32 @@ void Context3D::begin_render(graphics_api::CommandList *commandList)
 {
    m_commandList = commandList;
    m_commandList->bind_pipeline(m_pipeline);
+   m_commandList->push_constant(graphics_api::ShaderStage::Fragment, m_pushConstant);
 }
 
 void Context3D::draw_model(const InstancedModel &instancedModel) const
 {
    assert(m_commandList != nullptr);
 
-   const auto& model = m_resourceManager.model(instancedModel.modelName);
-   const auto& mesh = m_resourceManager.mesh(model.meshName);
+   const auto &model = m_resourceManager.model(instancedModel.modelName);
+   const auto &mesh  = m_resourceManager.mesh(model.meshName);
 
    m_commandList->bind_vertex_array(mesh.vertices);
    m_commandList->bind_index_array(mesh.indices);
 
    size_t index{};
-   for (const auto& range : model.range) {
+   for (const auto &range : model.range) {
       const auto descriptorSet = instancedModel.descriptors[index];
 
       m_commandList->bind_descriptor_set(descriptorSet);
       m_commandList->draw_indexed_primitives(static_cast<int>(range.size), static_cast<int>(range.offset), 0);
       ++index;
    }
+}
+
+void Context3D::set_light_position(const glm::vec3 pos)
+{
+   m_pushConstant.lightPosition = pos;
 }
 
 }// namespace renderer

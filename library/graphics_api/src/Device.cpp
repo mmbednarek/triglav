@@ -348,7 +348,7 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass,
                                          const std::span<const Shader *> shaders,
                                          const std::span<VertexInputLayout> layouts,
                                          const std::span<DescriptorBinding> descriptorBindings,
-                                         bool enableDepthTest)
+                                         const std::span<PushConstant> pushConstants, bool enableDepthTest)
 {
    std::vector<VkPipelineShaderStageCreateInfo> shaderStageInfos;
    shaderStageInfos.resize(shaders.size());
@@ -504,10 +504,21 @@ Result<Pipeline> Device::create_pipeline(const RenderPass &renderPass,
    depthStencilStateInfo.depthBoundsTestEnable = false;
    depthStencilStateInfo.stencilTestEnable     = false;
 
+   std::vector<VkPushConstantRange> pushConstantRanges{};
+   for (const auto &constant : pushConstants) {
+      VkPushConstantRange range;
+      range.offset     = constant.offset;
+      range.size       = constant.size;
+      range.stageFlags = vulkan::to_vulkan_shader_stage_flags(constant.shaderStages);
+      pushConstantRanges.emplace_back(range);
+   }
+
    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-   pipelineLayoutInfo.sType          = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-   pipelineLayoutInfo.setLayoutCount = 1;
-   pipelineLayoutInfo.pSetLayouts    = &(*descriptorSetLayout);
+   pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+   pipelineLayoutInfo.setLayoutCount         = 1;
+   pipelineLayoutInfo.pSetLayouts            = &(*descriptorSetLayout);
+   pipelineLayoutInfo.pushConstantRangeCount = pushConstantRanges.size();
+   pipelineLayoutInfo.pPushConstantRanges    = pushConstantRanges.data();
 
    vulkan::PipelineLayout pipelineLayout(*m_device);
    if (const auto res = pipelineLayout.construct(&pipelineLayoutInfo); res != VK_SUCCESS) {

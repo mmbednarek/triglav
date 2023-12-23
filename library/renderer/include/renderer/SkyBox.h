@@ -22,18 +22,19 @@ class SkyBox
  public:
    explicit SkyBox(Renderer &renderer);
 
-   void on_render(const graphics_api::CommandList& commandList, float yaw, float pitch, float width, float height) const;
+   void on_render(graphics_api::CommandList &commandList, float yaw, float pitch, float width,
+                  float height) const;
 
  private:
-   ResourceManager& m_resourceManager;
+   ResourceManager &m_resourceManager;
    GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descPool;
    graphics_api::DescriptorArray m_descArray;
    graphics_api::DescriptorView m_descriptorSet;
-   graphics_api::Sampler m_sampler;
    graphics_api::Buffer m_uniformBuffer;
    graphics_api::MappedMemory m_uniformBufferMapping;
+   graphics_api::Sampler m_sampler;
 };
 
 

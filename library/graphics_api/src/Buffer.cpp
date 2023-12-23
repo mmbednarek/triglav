@@ -99,7 +99,7 @@ Status write_to_buffer(Device &device, const Buffer &buffer, const void *data, c
 
    oneTimeCommands->copy_buffer(*transferBuffer, buffer);
 
-   if (const auto res = oneTimeCommands->finish(); res != Status::Success)
+   if (const auto res = oneTimeCommands->finish_one_time(); res != Status::Success)
       return res;
 
    if (const auto res = device.submit_command_list_one_time(*oneTimeCommands); res != Status::Success)

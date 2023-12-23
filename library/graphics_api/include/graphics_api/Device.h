@@ -67,16 +67,15 @@ class Device
           vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
           const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool);
 
-   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat,
-                                                    ColorSpace colorSpace, ColorFormat depthFormat,
-                                                    SampleCount sampleCount, const Resolution &resolution,
+   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
+                                                    ColorFormat depthFormat, SampleCount sampleCount,
+                                                    const Resolution &resolution,
                                                     Swapchain *oldSwapchain = nullptr);
-   [[nodiscard]] Result<RenderPass> create_render_pass(IRenderTarget& renderTarget);
-   [[nodiscard]] Result<Pipeline> create_pipeline(const RenderPass &renderPass,
-                                                  std::span<const Shader *> shaders,
-                                                  std::span<VertexInputLayout> layouts,
-                                                  std::span<DescriptorBinding> descriptorBindings,
-                                                  bool enableDepthTest);
+   [[nodiscard]] Result<RenderPass> create_render_pass(IRenderTarget &renderTarget);
+   [[nodiscard]] Result<Pipeline>
+   create_pipeline(const RenderPass &renderPass, std::span<const Shader *> shaders,
+                   std::span<VertexInputLayout> layouts, std::span<DescriptorBinding> descriptorBindings,
+                   std::span<PushConstant> pushConstants, bool enableDepthTest);
    [[nodiscard]] Result<Shader> create_shader(ShaderStage stage, std::string_view entrypoint,
                                               std::span<const uint8_t> code);
    [[nodiscard]] Result<CommandList> create_command_list() const;

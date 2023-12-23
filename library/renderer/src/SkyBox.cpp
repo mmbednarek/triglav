@@ -55,7 +55,7 @@ SkyBox::SkyBox(Renderer &renderer) :
    descWriter.set_sampled_texture(1, m_resourceManager.texture("tex:skybox"_name), m_sampler);
 }
 
-void SkyBox::on_render(const graphics_api::CommandList &commandList, float yaw, float pitch, float width,
+void SkyBox::on_render(graphics_api::CommandList &commandList, float yaw, float pitch, float width,
                        float height) const
 {
    static constexpr auto yVector = glm::vec4{0.0f, 1.0f, 0, 1.0f};

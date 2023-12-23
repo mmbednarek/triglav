@@ -21,12 +21,13 @@ class CommandList
    CommandList &operator=(CommandList &&other) noexcept;
 
    [[nodiscard]] Status reset();
-   [[nodiscard]] Status begin_one_time();
-   [[nodiscard]] Status begin_graphic_commands(const Framebuffer &framebuffer, const Color &clearColor);
-   [[nodiscard]] Status finish() const;
+   [[nodiscard]] Status begin_one_time() const;
+   [[nodiscard]] Status finish_one_time() const;
+   [[nodiscard]] Status begin_graphic(const Framebuffer &framebuffer, const Color &clearColor) const;
+   [[nodiscard]] Status finish_graphic() const;
    [[nodiscard]] VkCommandBuffer vulkan_command_buffer() const;
 
-   void bind_pipeline(const Pipeline &pipeline) const;
+   void bind_pipeline(const Pipeline &pipeline);
    void bind_descriptor_set(const DescriptorView &descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset) const;
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const;
@@ -34,7 +35,7 @@ class CommandList
    void bind_index_buffer(const Buffer &buffer) const;
    void copy_buffer(const Buffer &source, const Buffer &dest);
    void copy_buffer_to_texture(const Buffer &source, const Texture &destination);
-   void set_is_one_time(bool value);
+   void push_constant_ptr(ShaderStage stage, const void *ptr, size_t size, size_t offset = 0) const;
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray &array) const
@@ -46,6 +47,12 @@ class CommandList
    void bind_vertex_array(const TVertexArray &array, const uint32_t binding = 0) const
    {
       this->bind_vertex_buffer(array.buffer(), binding);
+   }
+
+   template<typename TPushConstant>
+   void push_constant(const ShaderStage stage, TPushConstant& pushConstant) const
+   {
+      this->push_constant_ptr(stage, &pushConstant, sizeof(TPushConstant));
    }
 
    template<typename TMesh>
@@ -60,6 +67,6 @@ class CommandList
    VkCommandBuffer m_commandBuffer;
    VkDevice m_device;
    VkCommandPool m_commandPool;
-   bool m_isOneTime;
+   VkPipelineLayout m_boundPipelineLayout{};
 };
 }// namespace graphics_api

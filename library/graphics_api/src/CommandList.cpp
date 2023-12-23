@@ -1,7 +1,9 @@
 #include "CommandList.h"
+
 #include "Framebuffer.h"
 #include "Pipeline.h"
 #include "Texture.h"
+#include "vulkan/Util.h"
 
 namespace graphics_api {
 
@@ -37,10 +39,8 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
    return *this;
 }
 
-Status CommandList::begin_one_time()
+Status CommandList::begin_one_time() const
 {
-   m_isOneTime = true;
-
    VkCommandBufferBeginInfo beginInfo{};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -51,10 +51,17 @@ Status CommandList::begin_one_time()
    return Status::Success;
 }
 
-Status CommandList::begin_graphic_commands(const Framebuffer &framebuffer, const Color &clearColor)
+Status CommandList::finish_one_time() const
 {
-   m_isOneTime = false;
+   if (vkEndCommandBuffer(m_commandBuffer) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
 
+   return Status::Success;
+}
+
+Status CommandList::begin_graphic(const Framebuffer &framebuffer, const Color &clearColor) const
+{
    vkResetCommandBuffer(m_commandBuffer, 0);
 
    VkCommandBufferBeginInfo beginInfo{};
@@ -102,17 +109,10 @@ Status CommandList::begin_graphic_commands(const Framebuffer &framebuffer, const
    return Status::Success;
 }
 
-Status CommandList::finish() const
+Status CommandList::finish_graphic() const
 {
-   if (not m_isOneTime) {
-      vkCmdEndRenderPass(m_commandBuffer);
-   }
-
-   if (vkEndCommandBuffer(m_commandBuffer) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-
-   return Status::Success;
+   vkCmdEndRenderPass(m_commandBuffer);
+   return this->finish_one_time();
 }
 
 VkCommandBuffer CommandList::vulkan_command_buffer() const
@@ -120,9 +120,10 @@ VkCommandBuffer CommandList::vulkan_command_buffer() const
    return m_commandBuffer;
 }
 
-void CommandList::bind_pipeline(const Pipeline &pipeline) const
+void CommandList::bind_pipeline(const Pipeline &pipeline)
 {
    vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vulkan_pipeline());
+   m_boundPipelineLayout = *pipeline.layout();
 }
 
 void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
@@ -160,11 +161,6 @@ void CommandList::copy_buffer(const Buffer &source, const Buffer &dest)
    VkBufferCopy region{};
    region.size = source.size();
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
-}
-
-void CommandList::set_is_one_time(bool value)
-{
-   m_isOneTime = value;
 }
 
 void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &destination)
@@ -218,6 +214,14 @@ void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &de
    vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
                         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1,
                         &fragmentShaderBarrier);
+}
+
+void CommandList::push_constant_ptr(const ShaderStage stage, const void *ptr, const size_t size,
+                                    const size_t offset) const
+{
+   assert(m_boundPipelineLayout != nullptr);
+   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout,
+                      vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | stage), offset, size, ptr);
 }
 
 Status CommandList::reset()

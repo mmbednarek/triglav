@@ -30,9 +30,9 @@ PipelineBuilder &PipelineBuilder::vertex_shader(const Shader &shader)
 PipelineBuilder &PipelineBuilder::vertex_attribute(const ColorFormat &format, const size_t offset)
 {
    const VertexInputAttribute attribute{
-      .location = m_vertexLocation,
-      .format = format,
-      .offset = offset,
+           .location = m_vertexLocation,
+           .format   = format,
+           .offset   = offset,
    };
    m_vertexAttributes.push_back(attribute);
 
@@ -47,7 +47,8 @@ PipelineBuilder &PipelineBuilder::end_vertex_layout()
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descriptorType, ShaderStage shaderStage)
+PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descriptorType,
+                                                     ShaderStage shaderStage)
 {
    const DescriptorBinding binding{
            .binding         = static_cast<int>(m_descriptorBindings.size()),
@@ -56,6 +57,12 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
            .shaderStages    = static_cast<ShaderStageFlags>(shaderStage),
    };
    m_descriptorBindings.push_back(binding);
+   return *this;
+}
+
+PipelineBuilder &PipelineBuilder::push_constant(const ShaderStage shaderStage, size_t size, size_t offset)
+{
+   m_pushConstants.emplace_back(offset, size, ShaderStage::None | shaderStage);
    return *this;
 }
 
@@ -70,10 +77,10 @@ Result<Pipeline> PipelineBuilder::build()
    std::vector<VertexInputLayout> layouts{};
    layouts.resize(m_vertexLayoutSizes.size());
 
-   size_t binding = 0;
+   size_t binding        = 0;
    size_t lastStartIndex = 0;
    size_t attributeIndex = 0;
-   for (const auto& attribute : m_vertexAttributes) {
+   for (const auto &attribute : m_vertexAttributes) {
       if (attribute.location != 0) {
          ++attributeIndex;
          continue;
@@ -81,7 +88,8 @@ Result<Pipeline> PipelineBuilder::build()
 
       layouts[binding].structure_size = m_vertexLayoutSizes[binding];
       if (binding != 0) {
-         layouts[binding - 1].attributes = std::span{m_vertexAttributes}.subspan(lastStartIndex, attributeIndex - lastStartIndex);
+         layouts[binding - 1].attributes =
+                 std::span{m_vertexAttributes}.subspan(lastStartIndex, attributeIndex - lastStartIndex);
       }
 
       lastStartIndex = attributeIndex;
@@ -90,7 +98,8 @@ Result<Pipeline> PipelineBuilder::build()
    }
    layouts[binding - 1].attributes = std::span{m_vertexAttributes}.subspan(lastStartIndex);
 
-   return m_device.create_pipeline(m_renderPass, m_shaders, layouts, m_descriptorBindings, m_depthTestEnabled);
+   return m_device.create_pipeline(m_renderPass, m_shaders, layouts, m_descriptorBindings, m_pushConstants,
+                                   m_depthTestEnabled);
 }
 
 }// namespace graphics_api

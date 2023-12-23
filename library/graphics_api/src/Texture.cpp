@@ -56,7 +56,7 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
 
    oneTimeCommands->copy_buffer_to_texture(*transferBuffer, *this);
 
-   if (const auto res = oneTimeCommands->finish(); res != Status::Success)
+   if (const auto res = oneTimeCommands->finish_one_time(); res != Status::Success)
       return res;
 
    if (const auto res = device.submit_command_list_one_time(*oneTimeCommands); res != Status::Success)

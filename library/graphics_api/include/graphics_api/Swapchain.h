@@ -40,7 +40,7 @@ class Swapchain final : public IRenderTarget
    SampleCount m_sampleCount;
    Resolution m_resolution;
    Texture m_depthAttachment;
-   std::optional<Texture> m_colorAttachment;// std::nullopt if multisampling is disabled
+   std::optional<Texture> m_colorAttachment; // std::nullopt if multisampling is disabled
    std::vector<vulkan::ImageView> m_imageViews;
    VkQueue m_presentQueue;
 

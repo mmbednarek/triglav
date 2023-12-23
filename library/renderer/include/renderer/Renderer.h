@@ -61,6 +61,7 @@ class Renderer
    float m_yaw{0};
    float m_pitch{0};
    float m_distance{12};
+   float m_lightX{-10};
    glm::vec3 m_position{};
    bool m_isMovingForward{false};
    bool m_isMovingBackwards{false};
@@ -68,6 +69,8 @@ class Renderer
    bool m_isMovingRight{false};
    bool m_isMovingUp{false};
    bool m_isMovingDown{false};
+   bool m_isLightMovingForward{false};
+   bool m_isLightMovingBackwards{false};
 
    uint32_t m_width{};
    uint32_t m_height{};

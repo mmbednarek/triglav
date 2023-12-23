@@ -100,16 +100,17 @@ void Renderer::on_render()
    this->update_uniform_data(framebufferIndex);
    m_inFlightFence.await();
 
-   checkStatus(m_commandList.begin_graphic_commands(m_framebuffers[framebufferIndex],
-                                                    graphics_api::ColorPalette::Black));
+   checkStatus(
+           m_commandList.begin_graphic(m_framebuffers[framebufferIndex], graphics_api::ColorPalette::Black));
 
    m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
                       static_cast<float>(m_height));
 
+   m_context3D.set_light_position(glm::vec3{m_lightX, -20, 0});
    m_context3D.begin_render(&m_commandList);
    m_scene.render();
 
-   checkStatus(m_commandList.finish());
+   checkStatus(m_commandList.finish_graphic());
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
                                              m_renderFinishedSemaphore, m_inFlightFence));
    checkStatus(m_swapchain.present(m_renderFinishedSemaphore, framebufferIndex));
@@ -149,6 +150,10 @@ void Renderer::on_key_pressed(const uint32_t key)
       m_isMovingDown = true;
    } else if (key == 16) {
       m_isMovingUp = true;
+   } else if (key == 19) {
+      m_isLightMovingBackwards = true;
+   } else if (key == 33) {
+      m_isLightMovingForward = true;
    }
 }
 
@@ -166,6 +171,10 @@ void Renderer::on_key_released(const uint32_t key)
       m_isMovingDown = false;
    } else if (key == 16) {
       m_isMovingUp = false;
+   } else if (key == 19) {
+      m_isLightMovingBackwards = false;
+   } else if (key == 33) {
+      m_isLightMovingForward = false;
    }
 }
 
@@ -201,7 +210,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    m_swapchain = checkResult(
            m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB,
                                       g_depthFormat, m_swapchain.sample_count(), resolution, &m_swapchain));
-   m_renderPass = checkResult(m_device->create_render_pass(m_swapchain));
+   m_renderPass   = checkResult(m_device->create_render_pass(m_swapchain));
    m_framebuffers = checkResult(m_swapchain.create_framebuffers(m_renderPass));
 
    m_width  = width;
@@ -235,6 +244,10 @@ void Renderer::update_uniform_data(const uint32_t frame)
       m_position += 0.005f * zVector;
    } else if (m_isMovingDown) {
       m_position -= 0.005f * zVector;
+   } else if (m_isLightMovingForward) {
+      m_lightX += 0.005f;
+   } else if (m_isLightMovingBackwards) {
+      m_lightX -= 0.005f;
    }
 
    m_scene.set_camera(Camera{m_position, forwardVector});
