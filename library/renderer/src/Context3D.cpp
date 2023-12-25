@@ -2,22 +2,22 @@
 
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
-#include "graphics_api/RenderPass.h"
 
 #include "Core.h"
 #include "Name.hpp"
 #include "ResourceManager.h"
-
+#include "ShadowMap.h"
 
 #include <graphics_api/CommandList.h>
 #include <graphics_api/DescriptorWriter.h>
 
 namespace renderer {
 
+constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
+
 Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
                      ResourceManager &resourceManager) :
     m_device(device),
-    m_renderPass(renderPass),
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderPass)
@@ -38,6 +38,8 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
                                         graphics_api::ShaderStage::Fragment)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::ShaderStage::Fragment)
                     .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstant))
                     .enable_depth_test(true)
                     .build())),
@@ -46,33 +48,39 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
 {
 }
 
-InstancedModel Context3D::instance_model(const Name modelName)
+InstancedModel Context3D::instance_model(const Name modelName, ShadowMap &shadowMap)
 {
-   const auto& model = m_resourceManager.model(modelName);
-   auto descriptors = checkResult(m_descriptorPool.allocate_array(model.range.size()));
+   const auto &model = m_resourceManager.model(modelName);
+   auto descriptors  = checkResult(m_descriptorPool.allocate_array(model.range.size()));
    size_t index{};
 
    graphics_api::UniformBuffer<UniformBufferObject> ubo(m_device);
 
    for (const auto range : model.range) {
-      const auto &material = m_resourceManager.material(range.materialName);
-      const auto &texture  = m_resourceManager.texture(material.texture);
-      const auto &normalTexture  = m_resourceManager.texture(material.normal_texture);
+      const auto &material      = m_resourceManager.material(range.materialName);
+      const auto &texture       = m_resourceManager.texture(material.texture);
+      const auto &normalTexture = m_resourceManager.texture(material.normal_texture);
 
       graphics_api::DescriptorWriter descWriter(m_device, descriptors[index]);
       descWriter.set_uniform_buffer(0, ubo);
       descWriter.set_sampled_texture(1, texture, m_sampler);
       descWriter.set_sampled_texture(2, normalTexture, m_sampler);
+      descWriter.set_sampled_texture(3, shadowMap.depth_texture(), m_sampler);
 
       ++index;
    }
 
-   return InstancedModel{modelName, std::move(ubo), std::move(descriptors)};
+   return InstancedModel{modelName, std::move(ubo), std::move(descriptors),
+                         shadowMap.create_model_properties()};
 }
 
-void Context3D::begin_render(graphics_api::CommandList *commandList)
+void Context3D::set_active_command_list(graphics_api::CommandList *commandList)
 {
    m_commandList = commandList;
+}
+
+void Context3D::begin_render()
+{
    m_commandList->bind_pipeline(m_pipeline);
    m_commandList->push_constant(graphics_api::ShaderStage::Fragment, m_pushConstant);
 }
@@ -100,6 +108,11 @@ void Context3D::draw_model(const InstancedModel &instancedModel) const
 void Context3D::set_light_position(const glm::vec3 pos)
 {
    m_pushConstant.lightPosition = pos;
+}
+
+graphics_api::CommandList &Context3D::command_list() const
+{
+   return *m_commandList;
 }
 
 }// namespace renderer

@@ -5,6 +5,7 @@
 #include <expected>
 #include <span>
 #include <string>
+#include <variant>
 
 namespace graphics_api {
 enum class Status
@@ -122,6 +123,17 @@ struct Color
    float r{}, g{}, b{}, a{};
 };
 
+struct DepthStenctilValue
+{
+   float depthValue{};
+   float stencilValue{};
+};
+
+struct ClearValue
+{
+   std::variant<Color, DepthStenctilValue> value;
+};
+
 namespace ColorPalette {
 constexpr Color Black{0.0f, 0.0f, 0.0f, 1.0f};
 constexpr Color Red{1.0f, 0.0f, 0.0f, 1.0f};
@@ -151,6 +163,7 @@ enum class TextureType
 {
    SampledImage,
    DepthBuffer,
+   SampledDepthBuffer,
    MultisampleImage,
 };
 
@@ -167,13 +180,6 @@ struct PushConstant
    size_t offset{};
    size_t size{};
    ShaderStageFlags shaderStages{};
-};
-
-enum class AttachmentType
-{
-   ColorAttachment,
-   DepthAttachment,
-   ResolveAttachment,
 };
 
 enum class SampleCount : uint32_t

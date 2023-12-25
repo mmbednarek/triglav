@@ -11,10 +11,9 @@
 namespace graphics_api {
 
 DescriptorWriter::DescriptorWriter(const Device &device, const DescriptorView &descView) :
-   m_device(device.vulkan_device()),
-   m_descriptorSet(descView.vulkan_descriptor_set())
+    m_device(device.vulkan_device()),
+    m_descriptorSet(descView.vulkan_descriptor_set())
 {
-
 }
 
 DescriptorWriter::~DescriptorWriter()
@@ -32,14 +31,26 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
    writeDescriptorSet.descriptorCount = 1;
    writeDescriptorSet.descriptorType  = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 
-   auto bufferInfo = std::make_unique<VkDescriptorBufferInfo>();
-   bufferInfo->offset              = 0;
-   bufferInfo->range               = buffer.size();
-   bufferInfo->buffer              = buffer.vulkan_buffer();
+   auto bufferInfo                = std::make_unique<VkDescriptorBufferInfo>();
+   bufferInfo->offset             = 0;
+   bufferInfo->range              = buffer.size();
+   bufferInfo->buffer             = buffer.vulkan_buffer();
    writeDescriptorSet.pBufferInfo = m_descriptorBufferInfos.emplace_back(std::move(bufferInfo)).get();
 
    m_descriptorWrites.emplace_back(writeDescriptorSet);
 }
+
+namespace {
+
+VkImageLayout texture_type_to_vulkan_image_layout(TextureType type)
+{
+   if (type == TextureType::SampledDepthBuffer) {
+      return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+   }
+   return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+}
+
+}// namespace
 
 void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture &texture,
                                            const Sampler &sampler)
@@ -52,10 +63,10 @@ void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture
    writeDescriptorSet.descriptorCount = 1;
    writeDescriptorSet.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
-   auto imageInfo = std::make_unique<VkDescriptorImageInfo>();
-   imageInfo->imageLayout         = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   imageInfo->imageView           = texture.vulkan_image_view();
-   imageInfo->sampler             = sampler.vulkan_sampler();
+   auto imageInfo                = std::make_unique<VkDescriptorImageInfo>();
+   imageInfo->imageLayout        = texture_type_to_vulkan_image_layout(texture.type());
+   imageInfo->imageView          = texture.vulkan_image_view();
+   imageInfo->sampler            = sampler.vulkan_sampler();
    writeDescriptorSet.pImageInfo = m_descriptorImageInfos.emplace_back(std::move(imageInfo)).get();
 
    m_descriptorWrites.emplace_back(writeDescriptorSet);

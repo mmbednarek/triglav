@@ -30,17 +30,6 @@ bool graphics_family_predicate(const VkQueueFamilyProperties &properties)
    return (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
 }
 
-bool present_only_family_predicate(const VkQueueFamilyProperties &properties)
-{
-   return ((properties.queueFlags & VK_QUEUE_TRANSFER_BIT) != 0) &&
-          ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) == 0);
-}
-
-bool present_family_predicate(const VkQueueFamilyProperties &properties)
-{
-   return (properties.queueFlags & VK_QUEUE_TRANSFER_BIT) != 0;
-}
-
 VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose)
 {
    switch (purpose) {
@@ -132,69 +121,6 @@ Device::Device(vulkan::Instance instance,
 {
    vkGetDeviceQueue(*m_device, m_queueFamilies.graphicsQueue, 0, &m_graphicsQueue);
 }
-
-namespace {
-
-VkSampleCountFlagBits to_vulkan_sample_count(const AttachmentType attachmentType,
-                                             const SampleCount sampleCount)
-{
-   if (attachmentType == AttachmentType::ResolveAttachment) {
-      return VK_SAMPLE_COUNT_1_BIT;
-   }
-
-   return static_cast<VkSampleCountFlagBits>(sampleCount);
-}
-
-std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp>
-to_vulkan_load_store_op(const AttachmentType attachmentType)
-{
-   switch (attachmentType) {
-   case AttachmentType::ColorAttachment: return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE};
-   case AttachmentType::DepthAttachment:
-      return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE};
-   case AttachmentType::ResolveAttachment:
-      return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_STORE};
-   }
-
-   return {};
-}
-
-VkImageLayout to_vulkan_final_layout(const AttachmentType attachmentType)
-{
-   switch (attachmentType) {
-   case AttachmentType::ColorAttachment: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-   case AttachmentType::DepthAttachment: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-   case AttachmentType::ResolveAttachment: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-   }
-
-   return {};
-}
-
-ColorFormat to_vulkan_format(const AttachmentType attachmentType, const ColorFormat &colorFormat,
-                             const ColorFormat &depthFormat)
-{
-   switch (attachmentType) {
-   case AttachmentType::ColorAttachment: return colorFormat;
-   case AttachmentType::DepthAttachment: return depthFormat;
-   case AttachmentType::ResolveAttachment: return colorFormat;
-   }
-
-   return {};
-}
-
-std::tuple<TextureType, SampleCount> to_texture_type(const AttachmentType attachmentType,
-                                                     const SampleCount sampleCount)
-{
-   switch (attachmentType) {
-   case AttachmentType::ColorAttachment: return {TextureType::MultisampleImage, sampleCount};
-   case AttachmentType::DepthAttachment: return {TextureType::DepthBuffer, sampleCount};
-   case AttachmentType::ResolveAttachment: return {TextureType::MultisampleImage, SampleCount::Bits1};
-   }
-
-   return {};
-}
-
-}// namespace
 
 Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
                                            ColorFormat depthFormat, SampleCount sampleCount,
@@ -304,19 +230,9 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
 
 Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
 {
-   const auto attachments = renderTarget.vulkan_attachments();
-   const auto subpass     = renderTarget.vulkan_subpass();
-
-   VkSubpassDependency dependency{};
-   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-   dependency.dstSubpass = 0;
-   dependency.srcStageMask =
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-   dependency.srcAccessMask = 0;
-   dependency.dstStageMask =
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-   dependency.dstAccessMask =
-           VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+   const auto attachments  = renderTarget.vulkan_attachments();
+   const auto subpass      = renderTarget.vulkan_subpass();
+   const auto dependencies = renderTarget.vulkan_subpass_dependencies();
 
    VkRenderPassCreateInfo renderPassInfo{};
    renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -324,8 +240,8 @@ Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
    renderPassInfo.pAttachments    = attachments.data();
    renderPassInfo.subpassCount    = 1;
    renderPassInfo.pSubpasses      = &subpass.description;
-   renderPassInfo.dependencyCount = 1;
-   renderPassInfo.pDependencies   = &dependency;
+   renderPassInfo.dependencyCount = dependencies.size();
+   renderPassInfo.pDependencies   = dependencies.data();
 
    vulkan::RenderPass renderPass(*m_device);
    if (const auto res = renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {
@@ -335,8 +251,7 @@ Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
    VkPhysicalDeviceProperties properties{};
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
-   return RenderPass(std::move(renderPass), renderTarget.resolution(), renderTarget.color_format(),
-                     renderTarget.sample_count());
+   return RenderPass(std::move(renderPass), renderTarget.resolution(), renderTarget.sample_count());
 }
 
 constexpr std::array g_dynamicStates{
@@ -650,7 +565,8 @@ VkImageTiling to_vulkan_image_tiling(const TextureType type)
 {
    switch (type) {
    case TextureType::SampledImage: return VK_IMAGE_TILING_LINEAR;
-   case TextureType::DepthBuffer:// fallthrough
+   case TextureType::DepthBuffer:       // fallthrough
+   case TextureType::SampledDepthBuffer:// fallthrough
    case TextureType::MultisampleImage: return VK_IMAGE_TILING_OPTIMAL;
    }
    return {};
@@ -661,6 +577,8 @@ VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
    switch (type) {
    case TextureType::SampledImage: return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+   case TextureType::SampledDepthBuffer:
+      return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    case TextureType::MultisampleImage:
       return VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
    }
@@ -672,6 +590,7 @@ VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
    switch (type) {
    case TextureType::SampledImage: return VK_IMAGE_ASPECT_COLOR_BIT;
    case TextureType::DepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
+   case TextureType::SampledDepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
    case TextureType::MultisampleImage: return VK_IMAGE_ASPECT_COLOR_BIT;
    }
    return {};
@@ -749,8 +668,8 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, imageSize.width,
-                  imageSize.height);
+   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, type,
+                  imageSize.width, imageSize.height);
 }
 
 Result<Sampler> Device::create_sampler(const bool enableAnisotropy)
@@ -779,6 +698,12 @@ Result<Sampler> Device::create_sampler(const bool enableAnisotropy)
    }
 
    return Sampler(std::move(sampler));
+}
+
+Result<DepthRenderTarget> Device::create_depth_render_target(const ColorFormat &depthFormat,
+                                                             const Resolution &resolution) const
+{
+   return DepthRenderTarget(*m_device, resolution, depthFormat);
 }
 
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const

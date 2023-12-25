@@ -1,6 +1,7 @@
 graphics_api_sources = files([
   'src/Buffer.cpp',
   'src/CommandList.cpp',
+  'src/DepthRenderTarget.cpp',
   'src/DescriptorArray.cpp',
   'src/DescriptorPool.cpp',
   'src/DescriptorView.cpp',

@@ -5,6 +5,9 @@
 #include "Texture.h"
 #include "vulkan/Util.h"
 
+
+#include <functional>
+
 namespace graphics_api {
 
 CommandList::CommandList(const VkCommandBuffer commandBuffer, const VkDevice device,
@@ -39,11 +42,14 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
    return *this;
 }
 
-Status CommandList::begin_one_time() const
+Status CommandList::begin(const SubmitType type) const
 {
    VkCommandBufferBeginInfo beginInfo{};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+   if (type == SubmitType::OneTime) {
+      beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+   }
+
    if (vkBeginCommandBuffer(this->vulkan_command_buffer(), &beginInfo) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
@@ -51,7 +57,7 @@ Status CommandList::begin_one_time() const
    return Status::Success;
 }
 
-Status CommandList::finish_one_time() const
+Status CommandList::finish() const
 {
    if (vkEndCommandBuffer(m_commandBuffer) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
@@ -60,23 +66,26 @@ Status CommandList::finish_one_time() const
    return Status::Success;
 }
 
-Status CommandList::begin_graphic(const Framebuffer &framebuffer, const Color &clearColor) const
+VkCommandBuffer CommandList::vulkan_command_buffer() const
 {
-   vkResetCommandBuffer(m_commandBuffer, 0);
+   return m_commandBuffer;
+}
 
-   VkCommandBufferBeginInfo beginInfo{};
-   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-   if (vkBeginCommandBuffer(m_commandBuffer, &beginInfo) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
+void CommandList::begin_render_pass(const Framebuffer &framebuffer, std::span<ClearValue> clearValues) const
+{
+   static constexpr auto maxClearValues{6};
+
+   std::array<VkClearValue, maxClearValues> vulkanClearValues{};
+   for (auto i = 0; i < clearValues.size(); ++i) {
+      if (std::holds_alternative<Color>(clearValues[i].value)) {
+         const auto [r, g, b, a]    = std::get<Color>(clearValues[i].value);
+         vulkanClearValues[i].color = {r, g, b, a};
+      } else if (std::holds_alternative<DepthStenctilValue>(clearValues[i].value)) {
+         const auto [depthValue, stencilValue]     = std::get<DepthStenctilValue>(clearValues[i].value);
+         vulkanClearValues[i].depthStencil.depth   = depthValue;
+         vulkanClearValues[i].depthStencil.stencil = stencilValue;
+      }
    }
-
-   std::array<VkClearValue, 3> clearValues{};
-   clearValues[0].color = {
-           {clearColor.r, clearColor.g, clearColor.b, clearColor.a}
-   };
-   clearValues[1].depthStencil.depth   = 1.0f;
-   clearValues[1].depthStencil.stencil = 0.0f;
-   clearValues[2].color                = clearValues[0].color;
 
    const auto [width, height] = framebuffer.resolution();
 
@@ -88,7 +97,7 @@ Status CommandList::begin_graphic(const Framebuffer &framebuffer, const Color &c
    renderPassInfo.renderArea.extent.width  = width;
    renderPassInfo.renderArea.extent.height = height;
    renderPassInfo.clearValueCount          = clearValues.size();
-   renderPassInfo.pClearValues             = clearValues.data();
+   renderPassInfo.pClearValues             = vulkanClearValues.data();
 
    vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -105,19 +114,11 @@ Status CommandList::begin_graphic(const Framebuffer &framebuffer, const Color &c
    scissor.offset = {0, 0};
    scissor.extent = VkExtent2D{width, height};
    vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
-
-   return Status::Success;
 }
 
-Status CommandList::finish_graphic() const
+void CommandList::end_render_pass() const
 {
    vkCmdEndRenderPass(m_commandBuffer);
-   return this->finish_one_time();
-}
-
-VkCommandBuffer CommandList::vulkan_command_buffer() const
-{
-   return m_commandBuffer;
 }
 
 void CommandList::bind_pipeline(const Pipeline &pipeline)
@@ -156,14 +157,14 @@ void CommandList::bind_index_buffer(const Buffer &buffer) const
    vkCmdBindIndexBuffer(m_commandBuffer, buffer.vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 }
 
-void CommandList::copy_buffer(const Buffer &source, const Buffer &dest)
+void CommandList::copy_buffer(const Buffer &source, const Buffer &dest) const
 {
    VkBufferCopy region{};
    region.size = source.size();
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
 }
 
-void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &destination)
+void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &destination) const
 {
    VkImageMemoryBarrier writeBarrier{};
    writeBarrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -224,7 +225,7 @@ void CommandList::push_constant_ptr(const ShaderStage stage, const void *ptr, co
                       vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | stage), offset, size, ptr);
 }
 
-Status CommandList::reset()
+Status CommandList::reset() const
 {
    if (vkResetCommandBuffer(m_commandBuffer, 0) != VK_SUCCESS) {
       return Status::UnsupportedDevice;

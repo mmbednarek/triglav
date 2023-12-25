@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "DescriptorView.h"
+#include "GraphicsApi.hpp"
 
 namespace graphics_api {
 

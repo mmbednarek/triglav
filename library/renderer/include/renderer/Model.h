@@ -22,11 +22,18 @@ struct Model
    std::vector<MaterialRange> range;
 };
 
+struct ModelShaderMapProperties
+{
+   graphics_api::UniformBuffer<ShadowMapUBO> ubo;
+   graphics_api::DescriptorArray descriptors;
+};
+
 struct InstancedModel
 {
    Name modelName;
    graphics_api::UniformBuffer<UniformBufferObject> ubo;
    graphics_api::DescriptorArray descriptors;
+   ModelShaderMapProperties shadowMap;
 };
 
-}
+}// namespace renderer

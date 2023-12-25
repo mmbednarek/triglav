@@ -15,6 +15,12 @@ struct UniformBufferObject
    alignas(16) glm::mat4 view;
    alignas(16) glm::mat4 proj;
    alignas(16) glm::mat4 normal;
+   alignas(16) glm::mat4 shadowMapMVP;
+};
+
+struct ShadowMapUBO
+{
+   alignas(16) glm::mat4 mvp;
 };
 
 using GpuMesh = graphics_api::Mesh<geometry::Vertex>;

@@ -5,12 +5,13 @@
 
 namespace graphics_api {
 
-Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory,
-                 vulkan::ImageView imageView, const ColorFormat &colorFormat, const uint32_t width,
+Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::ImageView imageView,
+                 const ColorFormat &colorFormat, TextureType type, const uint32_t width,
                  const uint32_t height) :
     m_image(std::move(image)),
     m_memory(std::move(memory)),
     m_colorFormat(colorFormat),
+    m_type(type),
     m_imageView(std::move(imageView)),
     m_width{width},
     m_height{height}
@@ -20,6 +21,11 @@ Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory,
 VkImage Texture::vulkan_image() const
 {
    return *m_image;
+}
+
+TextureType Texture::type() const
+{
+   return m_type;
 }
 
 uint32_t Texture::width() const
@@ -51,12 +57,12 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
    if (not oneTimeCommands.has_value())
       return oneTimeCommands.error();
 
-   if (const auto res = oneTimeCommands->begin_one_time(); res != Status::Success)
+   if (const auto res = oneTimeCommands->begin(SubmitType::OneTime); res != Status::Success)
       return res;
 
    oneTimeCommands->copy_buffer_to_texture(*transferBuffer, *this);
 
-   if (const auto res = oneTimeCommands->finish_one_time(); res != Status::Success)
+   if (const auto res = oneTimeCommands->finish(); res != Status::Success)
       return res;
 
    if (const auto res = device.submit_command_list_one_time(*oneTimeCommands); res != Status::Success)

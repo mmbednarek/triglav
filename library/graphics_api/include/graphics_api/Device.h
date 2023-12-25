@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Buffer.h"
+#include "DepthRenderTarget.h"
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
 #include "PlatformSurface.h"
@@ -86,6 +87,7 @@ class Device
                                                 TextureType type        = TextureType::SampledImage,
                                                 SampleCount sampleCount = SampleCount::Bits1) const;
    [[nodiscard]] Result<Sampler> create_sampler(bool enableAnisotropy);
+   [[nodiscard]] Result<DepthRenderTarget> create_depth_render_target(const ColorFormat &depthFormat, const Resolution &resolution) const;
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
 

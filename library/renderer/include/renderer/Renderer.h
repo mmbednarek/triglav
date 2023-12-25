@@ -9,8 +9,7 @@
 #include "ResourceManager.h"
 #include "Scene.h"
 #include "SkyBox.h"
-
-#include <optional>
+#include "ShadowMap.h"
 
 namespace renderer {
 
@@ -61,7 +60,7 @@ class Renderer
    float m_yaw{0};
    float m_pitch{0};
    float m_distance{12};
-   float m_lightX{-10};
+   float m_lightX{-40};
    glm::vec3 m_position{};
    bool m_isMovingForward{false};
    bool m_isMovingBackwards{false};
@@ -84,6 +83,7 @@ class Renderer
    graphics_api::CommandList m_commandList;
    std::unique_ptr<ResourceManager> m_resourceManager;
    Context3D m_context3D;
+   ShadowMap m_shadowMap;
    Scene m_scene;
 
    SkyBox m_skyBox;

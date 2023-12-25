@@ -38,7 +38,8 @@ Renderer::Renderer(RendererObjects &&objects) :
     m_resourceManager(std::move(objects.resourceManager)),
     m_skyBox(*this),
     m_context3D(*m_device, m_renderPass, *m_resourceManager),
-    m_scene(*this, m_context3D)
+    m_shadowMap(*m_device, *m_resourceManager),
+    m_scene(*this, m_context3D, m_shadowMap)
 {
    auto sphere = geometry::create_sphere(40, 20, 4.0f);
    sphere.set_material(0, "gold");
@@ -79,12 +80,12 @@ Renderer::Renderer(RendererObjects &&objects) :
    //      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
    //      .scale{1.1, 1.1, 1.1},
    //   });
-   //   m_scene.add_object(SceneObject{
-   //      .model{"mdl:tree"_name},
-   //      .position{0, -10, 0},
-   //      .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
-   //      .scale{1.2, 1.2, 1.2},
-   //   });
+   m_scene.add_object(SceneObject{
+           .model{"mdl:tree"_name},
+           .position{0, -10, 0},
+           .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
+           .scale{1.2, 1.2, 1.2},
+   });
    m_scene.add_object(SceneObject{
            .model{"mdl:pine"_name},
            .position{0, 0, 0},
@@ -100,17 +101,40 @@ void Renderer::on_render()
    this->update_uniform_data(framebufferIndex);
    m_inFlightFence.await();
 
-   checkStatus(
-           m_commandList.begin_graphic(m_framebuffers[framebufferIndex], graphics_api::ColorPalette::Black));
+   checkStatus(m_commandList.begin());
+   m_context3D.set_active_command_list(&m_commandList);
 
-   m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
-                      static_cast<float>(m_height));
+   {
+      std::array<graphics_api::ClearValue, 1> clearValues{
+              graphics_api::DepthStenctilValue{1.0f, 0.0f}
+      };
+      m_commandList.begin_render_pass(m_shadowMap.framebuffer(), clearValues);
 
-   m_context3D.set_light_position(glm::vec3{m_lightX, -20, 0});
-   m_context3D.begin_render(&m_commandList);
-   m_scene.render();
+      m_shadowMap.on_begin_render(m_context3D);
+      m_scene.render_shadow_map();
 
-   checkStatus(m_commandList.finish_graphic());
+      m_commandList.end_render_pass();
+   }
+
+   {
+      std::array<graphics_api::ClearValue, 3> clearValues{
+              graphics_api::ColorPalette::Black,
+              graphics_api::DepthStenctilValue{1.0f, 0.0f},
+              graphics_api::ColorPalette::Black,
+      };
+      m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
+
+      m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
+                         static_cast<float>(m_height));
+
+      m_context3D.begin_render();
+      m_scene.render();
+
+      m_commandList.end_render_pass();
+   }
+
+   checkStatus(m_commandList.finish());
+
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
                                              m_renderFinishedSemaphore, m_inFlightFence));
    checkStatus(m_swapchain.present(m_renderFinishedSemaphore, framebufferIndex));
@@ -251,6 +275,7 @@ void Renderer::update_uniform_data(const uint32_t frame)
    }
 
    m_scene.set_camera(Camera{m_position, forwardVector});
+   m_scene.set_shadow_x(m_lightX);
    m_scene.update();
 }
 
