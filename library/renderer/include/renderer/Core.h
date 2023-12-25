@@ -18,6 +18,11 @@ struct UniformBufferObject
    alignas(16) glm::mat4 shadowMapMVP;
 };
 
+struct SpriteUBO
+{
+   glm::mat3 model;
+};
+
 struct ShadowMapUBO
 {
    alignas(16) glm::mat4 mvp;

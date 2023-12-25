@@ -24,26 +24,33 @@ class PipelineBuilder
    PipelineBuilder &descriptor_binding(DescriptorType descriptorType, ShaderStage shaderStage);
    PipelineBuilder &push_constant(ShaderStage shaderStage, size_t size, size_t offset = 0);
    PipelineBuilder &enable_depth_test(bool enabled);
-   [[nodiscard]] Result<Pipeline> build();
+
+   [[nodiscard]] Result<Pipeline> new_build() const;
 
    template<typename TVertex>
    PipelineBuilder &begin_vertex_layout()
    {
-      m_vertexLayoutSizes.push_back(sizeof(TVertex));
+      VkVertexInputBindingDescription binding{};
+      binding.binding   = m_vertexBinding;
+      binding.stride    = sizeof(TVertex);
+      binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+      m_bindings.emplace_back(binding);
       return *this;
    }
 
  private:
    Device &m_device;
    RenderPass &m_renderPass;
-   std::vector<const Shader *> m_shaders;
-   std::vector<VertexInputAttribute> m_vertexAttributes;
-   std::vector<VertexInputLayout> m_vertexLayouts;
-   std::vector<DescriptorBinding> m_descriptorBindings;
-   std::vector<PushConstant> m_pushConstants;
-   std::vector<size_t> m_vertexLayoutSizes{};
+
    uint32_t m_vertexLocation{0};
+   uint32_t m_vertexBinding{0};
    bool m_depthTestEnabled{false};
+
+   std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageInfos;
+   std::vector<VkVertexInputBindingDescription> m_bindings{};
+   std::vector<VkVertexInputAttributeDescription> m_attributes{};
+   std::vector<VkDescriptorSetLayoutBinding> m_vulkanDescriptorBindings{};
+   std::vector<VkPushConstantRange> m_pushConstantRanges{};
 };
 
 }// namespace graphics_api

@@ -36,4 +36,10 @@ struct InstancedModel
    ModelShaderMapProperties shadowMap;
 };
 
+struct Sprite
+{
+   graphics_api::UniformBuffer<SpriteUBO> ubo;
+   graphics_api::DescriptorArray descriptors;
+};
+
 }// namespace renderer

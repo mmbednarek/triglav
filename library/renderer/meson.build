@@ -1,5 +1,6 @@
 renderer_sources = files([
   'src/AssetMap.hpp',
+  'src/Context2D.cpp',
   'src/Context3D.cpp',
   'src/Material.cpp',
   'src/Model.cpp',

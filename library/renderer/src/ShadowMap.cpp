@@ -31,7 +31,7 @@ ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceMana
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::ShaderStage::Vertex)
                     .enable_depth_test(true)
-                    .build())),
+                    .new_build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 1, 100)))
 {
 }
