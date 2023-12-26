@@ -20,7 +20,7 @@ struct UniformBufferObject
 
 struct SpriteUBO
 {
-   glm::mat3 model;
+   glm::mat4 transform;
 };
 
 struct ShadowMapUBO

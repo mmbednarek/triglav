@@ -12,13 +12,16 @@ class Context2D
    Context2D(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
              ResourceManager &resourceManager);
 
+   [[nodiscard]] Sprite create_sprite(Name textureName);
+
    void set_active_command_list(graphics_api::CommandList *commandList);
-   void begin_render();
-   void draw_sprite(const Sprite& sprite, glm::vec2 position) const;
+   void begin_render() const;
+   void draw_sprite(const Sprite &sprite, glm::vec2 position, glm::vec2 scale) const;
    [[nodiscard]] graphics_api::CommandList &command_list() const;
 
  private:
    graphics_api::Device &m_device;
+   graphics_api::RenderPass &m_renderPass;
    ResourceManager &m_resourceManager;
 
    graphics_api::Pipeline m_pipeline;

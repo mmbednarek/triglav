@@ -18,5 +18,6 @@ shader_targets += custom_target('shader_example_vertex',
 
 subdir('shadow_map')
 subdir('skybox')
+subdir('sprite')
 
 shaders = declare_dependency(sources: [shader_targets])

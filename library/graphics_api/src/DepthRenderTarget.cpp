@@ -76,7 +76,7 @@ Resolution DepthRenderTarget::resolution() const
 
 SampleCount DepthRenderTarget::sample_count() const
 {
-   return SampleCount::Bits1;
+   return SampleCount::Single;
 }
 
 Result<Framebuffer> DepthRenderTarget::create_framebuffer(const RenderPass &renderPass,

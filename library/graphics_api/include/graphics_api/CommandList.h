@@ -4,6 +4,8 @@
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
 
+#include <span>
+
 namespace graphics_api {
 
 class Pipeline;

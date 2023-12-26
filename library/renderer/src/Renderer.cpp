@@ -15,46 +15,76 @@
 
 #include "Core.h"
 
-
 #include <geometry/DebugMesh.h>
 
 namespace renderer {
 
 constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_COLOR_FORMAT(D, Float32);
-constexpr auto g_sampleCount = graphics_api::SampleCount::Bits8;
+constexpr auto g_sampleCount = graphics_api::SampleCount::Quadruple;
 
-Renderer::Renderer(RendererObjects &&objects) :
-    m_width(objects.width),
-    m_height(objects.height),
-    m_device(std::move(objects.device)),
-    m_swapchain(std::move(objects.swapchain)),
-    m_renderPass(std::move(objects.renderPass)),
-    m_framebuffers(checkResult(m_swapchain.create_framebuffers(m_renderPass))),
-    m_framebufferReadySemaphore(std::move(objects.framebufferReadySemaphore)),
-    m_renderFinishedSemaphore(std::move(objects.renderFinishedSemaphore)),
-    m_inFlightFence(std::move(objects.inFlightFence)),
-    m_commandList(std::move(objects.commandList)),
-    m_resourceManager(std::move(objects.resourceManager)),
-    m_skyBox(*this),
-    m_context3D(*m_device, m_renderPass, *m_resourceManager),
-    m_shadowMap(*m_device, *m_resourceManager),
-    m_scene(*this, m_context3D, m_shadowMap)
+namespace {
+
+graphics_api::Resolution create_viewport_resolution(const graphics_api::Device &device, const uint32_t width,
+                                                    const uint32_t height)
 {
+   graphics_api::Resolution resolution{
+           .width  = width,
+           .height = height,
+   };
+
+   const auto [minResolution, maxResolution] = device.get_surface_resolution_limits();
+   resolution.width  = std::clamp(resolution.width, minResolution.width, maxResolution.width);
+   resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
+
+   return resolution;
+}
+
+std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &device)
+{
+   auto manager = std::make_unique<ResourceManager>(device);
+
+   for (const auto &[name, path] : g_assetMap) {
+      manager->load_asset(name, path);
+   }
+
    auto sphere = geometry::create_sphere(40, 20, 4.0f);
    sphere.set_material(0, "gold");
    sphere.triangulate();
    sphere.recalculate_tangents();
-   auto gpuBox = sphere.upload_to_device(*m_device);
+   auto gpuSphere = sphere.upload_to_device(device);
 
-   m_resourceManager->add_mesh_and_model("mdl:sphere"_name, gpuBox);
-   m_resourceManager->add_material("mat:bark"_name, Material{"tex:bark"_name, "tex:bark/normal"_name, 1.0f});
-   m_resourceManager->add_material("mat:leaves"_name,
-                                   Material{"tex:leaves"_name, "tex:bark/normal"_name, 1.0f});
-   m_resourceManager->add_material("mat:gold"_name, Material{"tex:gold"_name, "tex:bark/normal"_name, 1.0f});
-   m_resourceManager->add_material("mat:grass"_name,
-                                   Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
-   m_resourceManager->add_material("mat:pine"_name, Material{"tex:pine"_name, "tex:pine/normal"_name, 1.0f});
+   manager->add_mesh_and_model("mdl:sphere"_name, gpuSphere);
+   manager->add_material("mat:bark"_name, Material{"tex:bark"_name, "tex:bark/normal"_name, 1.0f});
+   manager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, "tex:bark/normal"_name, 1.0f});
+   manager->add_material("mat:gold"_name, Material{"tex:gold"_name, "tex:bark/normal"_name, 1.0f});
+   manager->add_material("mat:grass"_name, Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
+   manager->add_material("mat:pine"_name, Material{"tex:pine"_name, "tex:pine/normal"_name, 1.0f});
+
+   return manager;
+}
+
+}// namespace
+
+Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, const uint32_t height) :
+    m_device(checkResult(graphics_api::initialize_device(surface))),
+    m_resourceManager(create_resource_manager(*m_device)),
+    m_resolution(create_viewport_resolution(*m_device, width, height)),
+    m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
+                                                       g_depthFormat, g_sampleCount, m_resolution))),
+    m_renderPass(checkResult(m_device->create_render_pass(m_swapchain))),
+    m_framebuffers(checkResult(m_swapchain.create_framebuffers(m_renderPass))),
+    m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
+    m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
+    m_inFlightFence(checkResult(m_device->create_fence())),
+    m_commandList(checkResult(m_device->create_command_list())),
+    m_context3D(*m_device, m_renderPass, *m_resourceManager),
+    m_context2D(*m_device, m_renderPass, *m_resourceManager),
+    m_shadowMap(*m_device, *m_resourceManager),
+    m_scene(*this, m_context3D, m_shadowMap),
+    m_skyBox(*this),
+    m_sprite(m_context2D.create_sprite("tex:grass"_name))
+{
 
    m_scene.add_object(SceneObject{
            .model{"mdl:terrain"_name},
@@ -81,7 +111,7 @@ Renderer::Renderer(RendererObjects &&objects) :
    //      .scale{1.1, 1.1, 1.1},
    //   });
    m_scene.add_object(SceneObject{
-           .model{"mdl:tree"_name},
+           .model{"mdl:teapot"_name},
            .position{0, -10, 0},
            .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
            .scale{1.2, 1.2, 1.2},
@@ -103,6 +133,7 @@ void Renderer::on_render()
 
    checkStatus(m_commandList.begin());
    m_context3D.set_active_command_list(&m_commandList);
+   m_context2D.set_active_command_list(&m_commandList);
 
    {
       std::array<graphics_api::ClearValue, 1> clearValues{
@@ -124,11 +155,14 @@ void Renderer::on_render()
       };
       m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
 
-      m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_width),
-                         static_cast<float>(m_height));
+      m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_resolution.width),
+                         static_cast<float>(m_resolution.height));
 
       m_context3D.begin_render();
       m_scene.render();
+
+      m_context2D.begin_render();
+      m_context2D.draw_sprite(m_sprite, {25.0f, 25.0f}, {0.25f, 0.25f});
 
       m_commandList.end_render_pass();
    }
@@ -220,7 +254,7 @@ ResourceManager &Renderer::resource_manager() const
 
 std::tuple<uint32_t, uint32_t> Renderer::screen_resolution() const
 {
-   return {m_width, m_height};
+   return {m_resolution.width, m_resolution.height};
 }
 
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
@@ -237,8 +271,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    m_renderPass   = checkResult(m_device->create_render_pass(m_swapchain));
    m_framebuffers = checkResult(m_swapchain.create_framebuffers(m_renderPass));
 
-   m_width  = width;
-   m_height = height;
+   m_resolution = {width, height};
 }
 
 graphics_api::Device &Renderer::device() const
@@ -279,45 +312,4 @@ void Renderer::update_uniform_data(const uint32_t frame)
    m_scene.update();
 }
 
-Renderer init_renderer(const graphics_api::Surface &surface, const uint32_t width, const uint32_t height)
-{
-   auto device = checkResult(graphics_api::initialize_device(surface));
-
-   graphics_api::Resolution resolution{
-           .width  = width,
-           .height = height,
-   };
-
-   const auto [minResolution, maxResolution] = device->get_surface_resolution_limits();
-   resolution.width  = std::clamp(resolution.width, minResolution.width, maxResolution.width);
-   resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
-
-   auto swapchain  = checkResult(device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
-                                                          g_depthFormat, g_sampleCount, resolution));
-   auto renderPass = checkResult(device->create_render_pass(swapchain));
-
-   auto resourceManager = std::make_unique<ResourceManager>(*device);
-
-   for (const auto &[name, path] : g_assetMap) {
-      resourceManager->load_asset(name, path);
-   }
-
-   auto framebufferReadySemaphore = checkResult(device->create_semaphore());
-   auto renderFinishedSemaphore   = checkResult(device->create_semaphore());
-   auto inFlightFence             = checkResult(device->create_fence());
-   auto commandList               = checkResult(device->create_command_list());
-
-   return Renderer(RendererObjects{
-           .width                     = width,
-           .height                    = height,
-           .device                    = std::move(device),
-           .swapchain                 = std::move(swapchain),
-           .resourceManager           = std::move(resourceManager),
-           .renderPass                = std::move(renderPass),
-           .framebufferReadySemaphore = std::move(framebufferReadySemaphore),
-           .renderFinishedSemaphore   = std::move(renderFinishedSemaphore),
-           .inFlightFence             = std::move(inFlightFence),
-           .commandList               = std::move(commandList),
-   });
-}
 }// namespace renderer

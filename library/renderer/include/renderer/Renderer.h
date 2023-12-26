@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Context3D.h"
+#include "Context2D.h"
 #include "Core.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
@@ -8,29 +9,15 @@
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "Scene.h"
-#include "SkyBox.h"
 #include "ShadowMap.h"
+#include "SkyBox.h"
 
 namespace renderer {
-
-struct RendererObjects
-{
-   uint32_t width{};
-   uint32_t height{};
-   graphics_api::DeviceUPtr device;
-   graphics_api::Swapchain swapchain;
-   std::unique_ptr<ResourceManager> resourceManager;
-   graphics_api::RenderPass renderPass;
-   graphics_api::Semaphore framebufferReadySemaphore;
-   graphics_api::Semaphore renderFinishedSemaphore;
-   graphics_api::Fence inFlightFence;
-   graphics_api::CommandList commandList;
-};
 
 class Renderer
 {
  public:
-   explicit Renderer(RendererObjects &&objects);
+   Renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
@@ -71,9 +58,11 @@ class Renderer
    bool m_isLightMovingForward{false};
    bool m_isLightMovingBackwards{false};
 
-   uint32_t m_width{};
-   uint32_t m_height{};
    graphics_api::DeviceUPtr m_device;
+
+   std::unique_ptr<ResourceManager> m_resourceManager;
+
+   graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
    graphics_api::RenderPass m_renderPass;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
@@ -81,14 +70,12 @@ class Renderer
    graphics_api::Semaphore m_renderFinishedSemaphore;
    graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
-   std::unique_ptr<ResourceManager> m_resourceManager;
    Context3D m_context3D;
+   Context2D m_context2D;
    ShadowMap m_shadowMap;
    Scene m_scene;
-
    SkyBox m_skyBox;
+   Sprite m_sprite;
 };
-
-Renderer init_renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);
 
 }// namespace renderer

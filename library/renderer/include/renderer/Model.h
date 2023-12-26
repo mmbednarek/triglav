@@ -38,6 +38,8 @@ struct InstancedModel
 
 struct Sprite
 {
+   float width{};
+   float height{};
    graphics_api::UniformBuffer<SpriteUBO> ubo;
    graphics_api::DescriptorArray descriptors;
 };

@@ -91,7 +91,7 @@ int main()
    wayland::Display display;
    wayland::Surface surface(display);
 
-   auto renderer = renderer::init_renderer(surface.to_grahics_surface(), g_initialWidth, g_initialHeight);
+   renderer::Renderer renderer(surface.to_grahics_surface(), g_initialWidth, g_initialHeight);
 
    EventListener eventListener(surface, renderer);
    surface.set_event_listener(&eventListener);

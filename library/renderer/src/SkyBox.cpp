@@ -40,7 +40,7 @@ SkyBox::SkyBox(Renderer &renderer) :
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
                     .enable_depth_test(false)
-                    .new_build()
+                    .build()
 
                     )),
     m_descPool(checkResult(m_pipeline.create_descriptor_pool(3, 3, 3))),

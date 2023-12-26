@@ -183,7 +183,7 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
 
    std::optional<Texture> colorAttachment{};
 
-   if (sampleCount != SampleCount::Bits1) {
+   if (sampleCount != SampleCount::Single) {
       auto texture =
               this->create_texture(colorFormat, resolution, TextureType::MultisampleImage, sampleCount);
       if (not texture.has_value()) {

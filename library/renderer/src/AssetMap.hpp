@@ -35,6 +35,8 @@ constexpr std::array g_assetMap{
         NamePath{      "vsh:skybox"_name,       "shader/skybox/vertex.spv"},
         NamePath{  "fsh:shadow_map"_name, "shader/shadow_map/fragment.spv"},
         NamePath{  "vsh:shadow_map"_name,   "shader/shadow_map/vertex.spv"},
+        NamePath{      "fsh:sprite"_name,     "shader/sprite/fragment.spv"},
+        NamePath{      "vsh:sprite"_name,       "shader/sprite/vertex.spv"},
 };
 
 }// namespace renderer

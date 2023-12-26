@@ -81,7 +81,7 @@ class Device
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
                                                 TextureType type        = TextureType::SampledImage,
-                                                SampleCount sampleCount = SampleCount::Bits1) const;
+                                                SampleCount sampleCount = SampleCount::Single) const;
    [[nodiscard]] Result<Sampler> create_sampler(bool enableAnisotropy);
    [[nodiscard]] Result<DepthRenderTarget> create_depth_render_target(const ColorFormat &depthFormat, const Resolution &resolution) const;
 

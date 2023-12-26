@@ -3,7 +3,6 @@
 #include <array>
 #include <cstdint>
 #include <expected>
-#include <span>
 #include <string>
 #include <variant>
 
@@ -80,12 +79,12 @@ constexpr ShaderStageFlags operator|(ShaderStage lhs, ShaderStage rhs)
    return static_cast<ShaderStageFlags>(lhs) | static_cast<ShaderStageFlags>(rhs);
 }
 
-constexpr ShaderStageFlags operator|(ShaderStageFlags lhs, ShaderStage rhs)
+constexpr ShaderStageFlags operator|(const ShaderStageFlags lhs, ShaderStage rhs)
 {
    return lhs | static_cast<ShaderStageFlags>(rhs);
 }
 
-constexpr bool operator&(ShaderStageFlags lhs, ShaderStage rhs)
+constexpr bool operator&(const ShaderStageFlags lhs, ShaderStage rhs)
 {
    return (lhs & static_cast<ShaderStageFlags>(rhs)) != 0;
 }
@@ -139,19 +138,6 @@ constexpr Color Black{0.0f, 0.0f, 0.0f, 1.0f};
 constexpr Color Red{1.0f, 0.0f, 0.0f, 1.0f};
 }// namespace ColorPalette
 
-struct VertexInputAttribute
-{
-   uint32_t location{};
-   ColorFormat format{};
-   size_t offset{};
-};
-
-struct VertexInputLayout
-{
-   std::span<VertexInputAttribute> attributes{};
-   size_t structure_size{};
-};
-
 enum class DescriptorType
 {
    UniformBuffer,
@@ -167,30 +153,33 @@ enum class TextureType
    MultisampleImage,
 };
 
-struct DescriptorBinding
-{
-   int binding{};
-   int descriptorCount{};
-   DescriptorType type{};
-   ShaderStageFlags shaderStages{};
-};
-
-struct PushConstant
-{
-   size_t offset{};
-   size_t size{};
-   ShaderStageFlags shaderStages{};
-};
-
 enum class SampleCount : uint32_t
 {
-   Bits1  = (1 << 0),
-   Bits2  = (1 << 1),
-   Bits4  = (1 << 2),
-   Bits8  = (1 << 3),
-   Bits16 = (1 << 4),
-   Bits32 = (1 << 5),
-   Bits64 = (1 << 6),
+   Single     = (1 << 0),
+   Double     = (1 << 1),
+   Quadruple  = (1 << 2),
+   Octuple    = (1 << 3),
+   Sexdecuple = (1 << 4),
+};
+
+enum class VertexTopology
+{
+   TriangleList,
+   TriangleFan,
+   TriangleStrip,
+};
+
+enum class RasterizationMethod
+{
+   Point,
+   Line,
+   Fill,
+};
+
+enum class Culling
+{
+   Clockwise,
+   CounterClockwise,
 };
 
 template<typename T>

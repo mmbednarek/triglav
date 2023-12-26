@@ -89,12 +89,41 @@ PipelineBuilder &PipelineBuilder::enable_depth_test(const bool enabled)
    return *this;
 }
 
+PipelineBuilder &PipelineBuilder::vertex_topology(const VertexTopology topology)
+{
+   switch (topology) {
+   case VertexTopology::TriangleList: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
+   case VertexTopology::TriangleFan: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN; break;
+   case VertexTopology::TriangleStrip: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
+   }
+   return *this;
+}
+
+PipelineBuilder &PipelineBuilder::razterization_method(const RasterizationMethod method)
+{
+   switch (method) {
+   case RasterizationMethod::Point: m_polygonMode = VK_POLYGON_MODE_POINT; break;
+   case RasterizationMethod::Line: m_polygonMode = VK_POLYGON_MODE_LINE; break;
+   case RasterizationMethod::Fill: m_polygonMode = VK_POLYGON_MODE_FILL; break;
+   }
+   return *this;
+}
+
+PipelineBuilder &PipelineBuilder::culling(const Culling cull)
+{
+   switch (cull) {
+   case Culling::Clockwise: m_frontFace = VK_FRONT_FACE_CLOCKWISE; break;
+   case Culling::CounterClockwise: m_frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE; break;
+   }
+   return *this;
+}
+
 constexpr std::array g_dynamicStates{
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR,
 };
 
-Result<Pipeline> PipelineBuilder::new_build() const
+Result<Pipeline> PipelineBuilder::build() const
 {
    VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
    dynamicStateInfo.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -110,7 +139,7 @@ Result<Pipeline> PipelineBuilder::new_build() const
 
    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
    inputAssemblyInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-   inputAssemblyInfo.topology               = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+   inputAssemblyInfo.topology               = m_primitiveTopology;
    inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
    auto resolution = m_renderPass.resolution();
@@ -138,7 +167,7 @@ Result<Pipeline> PipelineBuilder::new_build() const
    rasterizationStateInfo.sType            = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
    rasterizationStateInfo.depthClampEnable = VK_FALSE;
    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
-   rasterizationStateInfo.polygonMode             = VK_POLYGON_MODE_FILL;
+   rasterizationStateInfo.polygonMode             = m_polygonMode;
    rasterizationStateInfo.lineWidth               = 1.0f;
    rasterizationStateInfo.cullMode                = VK_CULL_MODE_FRONT_BIT;
    rasterizationStateInfo.frontFace               = VK_FRONT_FACE_CLOCKWISE;
@@ -151,7 +180,7 @@ Result<Pipeline> PipelineBuilder::new_build() const
 
    VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
    multisamplingInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisamplingInfo.sampleShadingEnable  = sampleCount != SampleCount::Bits1;
+   multisamplingInfo.sampleShadingEnable  = sampleCount != SampleCount::Single;
    multisamplingInfo.rasterizationSamples = static_cast<VkSampleCountFlagBits>(sampleCount);
    multisamplingInfo.minSampleShading     = 1.0f;
 
@@ -218,11 +247,11 @@ Result<Pipeline> PipelineBuilder::new_build() const
    pipelineInfo.pColorBlendState    = &colorBlendingInfo;
    pipelineInfo.pVertexInputState   = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
-   pipelineInfo.pDepthStencilState  = &depthStencilStateInfo;
-   pipelineInfo.renderPass          = m_renderPass.vulkan_render_pass();
-   pipelineInfo.subpass             = 0;
-   pipelineInfo.basePipelineHandle  = nullptr;
-   pipelineInfo.basePipelineIndex   = -1;
+   pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
+   pipelineInfo.renderPass         = m_renderPass.vulkan_render_pass();
+   pipelineInfo.subpass            = 0;
+   pipelineInfo.basePipelineHandle = nullptr;
+   pipelineInfo.basePipelineIndex  = -1;
 
    vulkan::Pipeline pipeline(m_device.vulkan_device());
    if (const auto res = pipeline.construct(nullptr, 1, &pipelineInfo); res != VK_SUCCESS) {

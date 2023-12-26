@@ -42,7 +42,7 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
                                         graphics_api::ShaderStage::Fragment)
                     .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstant))
                     .enable_depth_test(true)
-                    .new_build())),
+                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 100, 100))),
     m_sampler(checkResult(device.create_sampler(true)))
 {
