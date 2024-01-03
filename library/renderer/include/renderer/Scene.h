@@ -41,14 +41,16 @@ class Scene
    void set_camera(Camera camera);
    void set_shadow_x(float x);
 
+   [[nodiscard]] const Camera& camera() const;
+
  private:
    Renderer &m_renderer;
    Context3D &m_context3D;
    ShadowMap &m_shadowMap;
 
    Camera m_shadowMapCamera{
-           {-40, -40, -40},
-           {0.6, 0.6, 0.6}
+           {-40,   0, -50},
+           {0.6, 0.0, 0.6}
    };
    Camera m_camera{};
 

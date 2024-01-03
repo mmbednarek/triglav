@@ -4,8 +4,7 @@
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
 
-// #include <glm/gtx/matrix_transform_2d.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/matrix_transform_2d.hpp>
 
 namespace renderer {
 
@@ -22,15 +21,13 @@ Context2D::Context2D(graphics_api::Device &device, graphics_api::RenderPass &ren
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
                                    .fragment_shader(resourceManager.shader("fsh:sprite"_name))
                                    .vertex_shader(resourceManager.shader("vsh:sprite"_name))
-                                   .begin_vertex_layout<Vertex2D>()
-                                   .end_vertex_layout()
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                                        graphics_api::ShaderStage::Vertex)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                                        graphics_api::ShaderStage::Fragment)
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
-                                   .enable_depth_test(true)
+                                   .enable_depth_test(false)
                                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40))),
     m_sampler(checkResult(device.create_sampler(true)))
@@ -40,7 +37,11 @@ Context2D::Context2D(graphics_api::Device &device, graphics_api::RenderPass &ren
 Sprite Context2D::create_sprite(const Name textureName)
 {
    const auto &texture = m_resourceManager.texture(textureName);
+   return this->create_sprite_from_texture(texture);
+}
 
+Sprite Context2D::create_sprite_from_texture(const graphics_api::Texture &texture)
+{
    graphics_api::UniformBuffer<SpriteUBO> ubo(m_device);
 
    auto descriptors = checkResult(m_descriptorPool.allocate_array(1));
@@ -77,12 +78,8 @@ void Context2D::draw_sprite(const Sprite &sprite, const glm::vec2 position, cons
    const auto transX = (position.x - 0.5f * static_cast<float>(viewportWidth)) / scale.x / sprite.width;
    const auto transY = (position.y - 0.5f * static_cast<float>(viewportHeight)) / scale.y / sprite.height;
 
-   // auto sc = glm::scale(glm::mat3(1), glm::vec2(scaleX, scaleY));
-   // auto tr = glm::translate(sc, glm::vec2(transX, transY));
-   auto sc = glm::scale(glm::mat4(1), glm::vec3(scaleX, scaleY, 0.0f));
-   auto tr = glm::translate(sc, glm::vec3(transX, transY, 1.0f));
-
-   sprite.ubo->transform = tr;
+   const auto scaleMat   = glm::scale(glm::mat3(1), glm::vec2(scaleX, scaleY));
+   sprite.ubo->transform = glm::translate(scaleMat, glm::vec2(transX, transY));
 
    m_commandList->bind_descriptor_set(sprite.descriptors[0]);
    m_commandList->draw_primitives(4, 0);

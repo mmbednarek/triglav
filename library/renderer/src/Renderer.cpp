@@ -3,19 +3,18 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AssetMap.hpp"
+#include "geometry/DebugMesh.h"
 #include "geometry/Mesh.h"
 #include "graphics_api/PipelineBuilder.h"
+
+#include "AssetMap.hpp"
+#include "Core.h"
+#include "GlyphAtlas.h"
 #include "Name.hpp"
 #include "ResourceManager.h"
-
-#include "Core.h"
-
-#include <geometry/DebugMesh.h>
 
 namespace renderer {
 
@@ -40,9 +39,10 @@ graphics_api::Resolution create_viewport_resolution(const graphics_api::Device &
    return resolution;
 }
 
-std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &device)
+std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &device,
+                                                         font::FontManger &fontManger)
 {
-   auto manager = std::make_unique<ResourceManager>(device);
+   auto manager = std::make_unique<ResourceManager>(device, fontManger);
 
    for (const auto &[name, path] : g_assetMap) {
       manager->load_asset(name, path);
@@ -61,14 +61,49 @@ std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &d
    manager->add_material("mat:grass"_name, Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
    manager->add_material("mat:pine"_name, Material{"tex:pine"_name, "tex:pine/normal"_name, 1.0f});
 
+   std::vector<font::Rune> runes{};
+   for (font::Rune ch = 'A'; ch <= 'Z'; ++ch) {
+      runes.emplace_back(ch);
+   }
+   for (font::Rune ch = 'a'; ch <= 'z'; ++ch) {
+      runes.emplace_back(ch);
+   }
+   for (font::Rune ch = '0'; ch <= '9'; ++ch) {
+      runes.emplace_back(ch);
+   }
+
    return manager;
 }
+
+std::vector<font::Rune> make_runes()
+{
+   std::vector<font::Rune> runes{};
+   for (font::Rune ch = 'A'; ch <= 'Z'; ++ch) {
+      runes.emplace_back(ch);
+   }
+   for (font::Rune ch = 'a'; ch <= 'z'; ++ch) {
+      runes.emplace_back(ch);
+   }
+   for (font::Rune ch = '0'; ch <= '9'; ++ch) {
+      runes.emplace_back(ch);
+   }
+   runes.emplace_back('.');
+   runes.emplace_back(':');
+   runes.emplace_back('-');
+   runes.emplace_back(',');
+   runes.emplace_back(' ');
+   runes.emplace_back(281);
+   return runes;
+}
+
+auto g_runes{make_runes()};
 
 }// namespace
 
 Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
-    m_resourceManager(create_resource_manager(*m_device)),
+    m_fontManger(),
+    m_resourceManager(create_resource_manager(*m_device, m_fontManger)),
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
                                                        g_depthFormat, g_sampleCount, m_resolution))),
@@ -83,7 +118,17 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_shadowMap(*m_device, *m_resourceManager),
     m_scene(*this, m_context3D, m_shadowMap),
     m_skyBox(*this),
-    m_sprite(m_context2D.create_sprite("tex:grass"_name))
+    m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
+                     500),
+    m_glyphAtlas(*m_device, m_resourceManager->typeface("tfc:cantarell"_name), g_runes, 24, 500, 500),
+    m_sprite(m_context2D.create_sprite_from_texture(m_shadowMap.depth_texture())),
+    // m_sprite(m_context2D.create_sprite_from_texture(m_glyphAtlas.texture())),
+    m_textRenderer(*m_device, m_renderPass, *m_resourceManager),
+    m_titleLabel(m_textRenderer.create_text_object(m_glyphAtlas, "Triglav Engine Demo - 0.0.1")),
+    m_framerateLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Framerate")),
+    m_framerateValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
+    m_positionLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Position")),
+    m_positionValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0, 0"))
 {
 
    m_scene.add_object(SceneObject{
@@ -127,8 +172,17 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
 
 void Renderer::on_render()
 {
+   const auto deltaTime = calculate_frame_duration();
+   const auto framerate = calculate_framerate(deltaTime);
+
+   const auto framerateStr = std::format("{}", framerate);
+   m_textRenderer.update_text_object(m_glyphAtlas, m_framerateValue, framerateStr);
+   const auto camPos      = m_scene.camera().position;
+   const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
+   m_textRenderer.update_text_object(m_glyphAtlas, m_positionValue, positionStr);
+
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
-   this->update_uniform_data(framebufferIndex);
+   this->update_uniform_data(deltaTime);
    m_inFlightFence.await();
 
    checkStatus(m_commandList.begin());
@@ -161,8 +215,20 @@ void Renderer::on_render()
       m_context3D.begin_render();
       m_scene.render();
 
-      m_context2D.begin_render();
-      m_context2D.draw_sprite(m_sprite, {25.0f, 25.0f}, {0.25f, 0.25f});
+      // m_context2D.begin_render();
+      // m_context2D.draw_sprite(m_sprite, {0.0f, 0.0f}, {0.2f, 0.2f});
+
+      m_textRenderer.begin_render(m_commandList);
+      auto textY = 16.0f + m_titleLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_titleLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
+      textY += 16.0f + m_framerateLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_framerateLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_framerateValue,
+                                      {16.0f + m_framerateLabel.metric.width + 8.0f, textY},
+                                      {1.0f, 1.0f, 0.4f});
+      textY += 8.0f + m_positionLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_positionLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_positionValue, {16.0f + m_positionLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
 
       m_commandList.end_render_pass();
    }
@@ -257,6 +323,36 @@ std::tuple<uint32_t, uint32_t> Renderer::screen_resolution() const
    return {m_resolution.width, m_resolution.height};
 }
 
+float Renderer::calculate_frame_duration()
+{
+   static std::chrono::steady_clock::time_point last;
+
+   const auto now  = std::chrono::steady_clock::now();
+   const auto diff = now - last;
+   last            = now;
+
+   return static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(diff).count()) /
+          1000000.0f;
+}
+
+float Renderer::calculate_framerate(const float frameDuration)
+{
+   static float lastResult = 60.0f;
+   static float sum        = 0.0f;
+   static int count        = 0;
+
+   sum += 1.0f / frameDuration;
+   ++count;
+
+   if (count == 1000) {
+      lastResult = sum / static_cast<float>(count);
+      sum        = 0.0f;
+      count      = 0;
+   }
+
+   return std::ceil(lastResult);
+}
+
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
    const graphics_api::Resolution resolution{width, height};
@@ -279,7 +375,9 @@ graphics_api::Device &Renderer::device() const
    return *m_device;
 }
 
-void Renderer::update_uniform_data(const uint32_t frame)
+const auto g_movingSpeed = 10.0f;
+
+void Renderer::update_uniform_data(const float deltaTime)
 {
    const auto yVector = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f};
    const auto xVector = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
@@ -290,21 +388,21 @@ void Renderer::update_uniform_data(const uint32_t frame)
    auto rightVector   = glm::vec3(yawMatrix * pitchMatrix * xVector);
 
    if (m_isMovingForward) {
-      m_position += 0.005f * forwardVector;
+      m_position += deltaTime * g_movingSpeed * forwardVector;
    } else if (m_isMovingBackwards) {
-      m_position -= 0.005f * forwardVector;
+      m_position -= deltaTime * g_movingSpeed * forwardVector;
    } else if (m_isMovingLeft) {
-      m_position -= 0.005f * rightVector;
+      m_position -= deltaTime * g_movingSpeed * rightVector;
    } else if (m_isMovingRight) {
-      m_position += 0.005f * rightVector;
+      m_position += deltaTime * g_movingSpeed * rightVector;
    } else if (m_isMovingUp) {
-      m_position += 0.005f * zVector;
+      m_position += deltaTime * g_movingSpeed * zVector;
    } else if (m_isMovingDown) {
-      m_position -= 0.005f * zVector;
+      m_position -= deltaTime * g_movingSpeed * zVector;
    } else if (m_isLightMovingForward) {
-      m_lightX += 0.005f;
+      m_lightX += deltaTime * g_movingSpeed;
    } else if (m_isLightMovingBackwards) {
-      m_lightX -= 0.005f;
+      m_lightX -= deltaTime * g_movingSpeed;
    }
 
    m_scene.set_camera(Camera{m_position, forwardVector});

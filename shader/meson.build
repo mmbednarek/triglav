@@ -4,20 +4,10 @@ compile_vertex_cmds = [shader_compiler, '-fshader-stage=vert', '@INPUT@', '-o', 
 
 shader_targets = []
 
-shader_targets += custom_target('shader_example_fragment',
-    input: 'example_fragment.glsl',
-    output: '@BASENAME@.spv',
-    command: compile_fragment_cmds,
-)
-
-shader_targets += custom_target('shader_example_vertex',
-    input: 'example_vertex.glsl',
-    output: '@BASENAME@.spv',
-    command: compile_vertex_cmds,
-)
-
+subdir('model')
 subdir('shadow_map')
 subdir('skybox')
 subdir('sprite')
+subdir('text')
 
 shaders = declare_dependency(sources: [shader_targets])

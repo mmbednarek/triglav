@@ -2,7 +2,6 @@
 
 #include <glm/mat4x4.hpp>
 #include <stdexcept>
-#include <vector>
 
 #include "geometry/Geometry.h"
 #include "graphics_api/Array.hpp"
@@ -20,6 +19,8 @@ struct UniformBufferObject
 
 struct SpriteUBO
 {
+   // 3x3 matrix needs to aligned by 4 floats
+   // so we use 4x4 instead.
    glm::mat4 transform;
 };
 

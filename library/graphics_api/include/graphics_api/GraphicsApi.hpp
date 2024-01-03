@@ -19,6 +19,7 @@ enum class ColorFormatOrder
 {
    RGB,
    RG,
+   R,
    RGBA,
    BGRA,
    DS,
@@ -30,6 +31,7 @@ constexpr size_t color_format_order_count(const ColorFormatOrder order)
    switch (order) {
    case ColorFormatOrder::RGB: return 3;
    case ColorFormatOrder::RG: return 2;
+   case ColorFormatOrder::R: return 1;
    case ColorFormatOrder::RGBA: return 4;
    case ColorFormatOrder::BGRA: return 4;
    case ColorFormatOrder::DS: return 2;
@@ -53,7 +55,7 @@ constexpr size_t color_format_part_size(const ColorFormatPart part)
    case ColorFormatPart::Unknown: return 0;
    case ColorFormatPart::sRGB: return 1;
    case ColorFormatPart::UNorm16: return 2;
-   case ColorFormatPart::UInt: return 4;
+   case ColorFormatPart::UInt: return 1;
    case ColorFormatPart::Float32: return 4;
    }
    return 0;

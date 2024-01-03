@@ -14,15 +14,18 @@ glm = dependency('glm')
 cgal = dependency('CGAL')
 wayland_client = dependency('wayland-client')
 xkb_common = dependency('xkbcommon')
+freetype = dependency('freetype2')
 
-subdir('library/external/mikktspace')
-subdir('library/graphics_api')
-subdir('library/geometry')
-subdir('library/renderer')
-
+subdir('fonts')
 subdir('shader')
 subdir('texture')
 subdir('model')
+
+subdir('library/external/mikktspace')
+subdir('library/font')
+subdir('library/graphics_api')
+subdir('library/geometry')
+subdir('library/renderer')
 
 if host_machine.system() == 'windows'
   subdir('game/win32')

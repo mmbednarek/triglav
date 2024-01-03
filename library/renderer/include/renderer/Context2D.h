@@ -13,6 +13,7 @@ class Context2D
              ResourceManager &resourceManager);
 
    [[nodiscard]] Sprite create_sprite(Name textureName);
+   [[nodiscard]] Sprite create_sprite_from_texture(const graphics_api::Texture& texture);
 
    void set_active_command_list(graphics_api::CommandList *commandList);
    void begin_render() const;

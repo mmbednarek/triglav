@@ -91,4 +91,9 @@ void Scene::set_shadow_x(const float x)
    m_shadowMapCamera.position.x = x;
 }
 
+const Camera &Scene::camera() const
+{
+   return m_camera;
+}
+
 }// namespace renderer

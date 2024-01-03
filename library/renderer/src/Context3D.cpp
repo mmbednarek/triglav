@@ -21,8 +21,8 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderPass)
-                    .fragment_shader(resourceManager.shader("fsh:example"_name))
-                    .vertex_shader(resourceManager.shader("vsh:example"_name))
+                    .fragment_shader(resourceManager.shader("fsh:model"_name))
+                    .vertex_shader(resourceManager.shader("vsh:model"_name))
                     // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))

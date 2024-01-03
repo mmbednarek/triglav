@@ -598,9 +598,9 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
 {
    VkApplicationInfo appInfo{};
    appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-   appInfo.pApplicationName   = "Hello Triangle";
+   appInfo.pApplicationName   = "TRIGLAV Example";
    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-   appInfo.pEngineName        = "No Engine";
+   appInfo.pEngineName        = "TRIGLAV Engine";
    appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
    appInfo.apiVersion         = VK_API_VERSION_1_3;
 
@@ -703,6 +703,7 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
 
    VkPhysicalDeviceFeatures deviceFeatures{
            .sampleRateShading = true,
+           .logicOp           = true,
            .samplerAnisotropy = true,
    };
 

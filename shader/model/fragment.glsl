@@ -67,6 +67,7 @@ void main() {
 
     vec3 normal = 2 * texture(normalSampler, fragTexCoord).rgb - 1.0;
     vec3 normalVec = normalize(mat3( fragTangent, fragBitangent, fragNormal ) * normal);
+//    vec3 normalVec = fragNormal;
     vec3 lightDir = normalize(pc.lightPosition - fragPosition);
     float diffuse = max(dot(normalVec, normalize(lightDir)), 0);
     float specular = 0.0;

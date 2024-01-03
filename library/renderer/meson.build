@@ -2,6 +2,7 @@ renderer_sources = files([
   'src/AssetMap.hpp',
   'src/Context2D.cpp',
   'src/Context3D.cpp',
+  'src/GlyphAtlas.cpp',
   'src/Material.cpp',
   'src/Model.cpp',
   'src/Renderer.cpp',
@@ -10,9 +11,10 @@ renderer_sources = files([
   'src/ShadowMap.cpp',
   'src/SkyBox.cpp',
   'src/stb_image.h',
+  'src/TextRenderer.cpp',
 ])
 
-renderer_deps = [glm, graphics_api, geometry]
+renderer_deps = [glm, graphics_api, geometry, font, fonts]
 renderer_incl = include_directories(['include', 'include/renderer'])
 
 renderer_lib = static_library('renderer',

@@ -8,6 +8,8 @@
 #include <format>
 #include <fstream>
 
+#include "geometry/Mesh.h"
+
 namespace {
 std::vector<uint8_t> read_whole_file(const std::string_view name)
 {
@@ -31,8 +33,9 @@ std::vector<uint8_t> read_whole_file(const std::string_view name)
 
 namespace renderer {
 
-ResourceManager::ResourceManager(graphics_api::Device &device) :
-    m_device(device)
+ResourceManager::ResourceManager(graphics_api::Device &device, font::FontManger &fontManger) :
+    m_device(device),
+    m_fontManager(fontManger)
 {
 }
 
@@ -61,6 +64,11 @@ const Model &ResourceManager::model(Name assetName) const
    return m_models.at(assetName);
 }
 
+const font::Typeface &ResourceManager::typeface(Name assetName) const
+{
+   return m_typefaces.at(assetName);
+}
+
 void ResourceManager::load_asset(const Name assetName, const std::string_view path)
 {
    assert(not this->is_name_registered(assetName));
@@ -74,17 +82,18 @@ void ResourceManager::load_asset(const Name assetName, const std::string_view pa
    case NameType::VertexShader:
       m_shaders.emplace(assetName, load_shader(graphics_api::ShaderStage::Vertex, path));
       break;
+   case NameType::TypeFace: m_typefaces.emplace(assetName, load_typeface(path)); break;
    default: break;
    }
 }
 
-void ResourceManager::add_material(const Name assetName, Material material)
+void ResourceManager::add_material(const Name assetName, const Material &material)
 {
    assert(not this->is_name_registered(assetName));
-   m_materials[assetName] = std::move(material);
+   m_materials[assetName] = material;
 }
 
-void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh& model)
+void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh &model)
 {
    Name meshName = (assetName & (~0b111ull)) | static_cast<uint64_t>(NameType::Mesh);
    m_meshes.emplace(meshName, std::move(model.mesh));
@@ -112,6 +121,12 @@ void ResourceManager::add_model(const Name assetName, Model model)
    m_models.emplace(assetName, std::move(model));
 }
 
+void ResourceManager::add_texture(Name assetName, graphics_api::Texture texture)
+{
+   assert(not this->is_name_registered(assetName));
+   m_textures.emplace(assetName, std::move(texture));
+}
+
 graphics_api::Texture ResourceManager::load_texture(const std::string_view path) const
 {
    int texWidth, texHeight, texChannels;
@@ -123,6 +138,11 @@ graphics_api::Texture ResourceManager::load_texture(const std::string_view path)
                                    {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)}));
    checkStatus(texture.write(m_device, pixels));
    return texture;
+}
+
+font::Typeface ResourceManager::load_typeface(const std::string_view path) const
+{
+   return m_fontManager.create_typeface(path, 0);
 }
 
 void ResourceManager::load_model(const Name model, const std::string_view path)

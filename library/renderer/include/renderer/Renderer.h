@@ -1,16 +1,20 @@
 #pragma once
 
-#include "Context3D.h"
-#include "Context2D.h"
-#include "Core.h"
+#include "font/FontManager.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
 #include "graphics_api/PlatformSurface.h"
+
+#include "Context2D.h"
+#include "Context3D.h"
+#include "Core.h"
+#include "GlyphAtlas.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "Scene.h"
 #include "ShadowMap.h"
 #include "SkyBox.h"
+#include "TextRenderer.h"
 
 namespace renderer {
 
@@ -38,7 +42,9 @@ class Renderer
    [[nodiscard]] graphics_api::Device &device() const;
 
  private:
-   void update_uniform_data(uint32_t frame);
+   void update_uniform_data(float deltaTime);
+   static float calculate_frame_duration();
+   static float calculate_framerate(float frameDuration);
 
    bool m_receivedMouseInput{false};
    float m_lastMouseX{};
@@ -60,6 +66,7 @@ class Renderer
 
    graphics_api::DeviceUPtr m_device;
 
+   font::FontManger m_fontManger;
    std::unique_ptr<ResourceManager> m_resourceManager;
 
    graphics_api::Resolution m_resolution;
@@ -75,7 +82,15 @@ class Renderer
    ShadowMap m_shadowMap;
    Scene m_scene;
    SkyBox m_skyBox;
+   GlyphAtlas m_glyphAtlasBold;
+   GlyphAtlas m_glyphAtlas;
    Sprite m_sprite;
+   TextRenderer m_textRenderer;
+   TextObject m_titleLabel;
+   TextObject m_framerateLabel;
+   TextObject m_framerateValue;
+   TextObject m_positionLabel;
+   TextObject m_positionValue;
 };
 
 }// namespace renderer

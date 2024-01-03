@@ -8,6 +8,15 @@ namespace graphics_api::vulkan {
 Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
 {
    switch (format.order) {
+   case ColorFormatOrder::R:
+      switch (format.parts[0]) {
+      case ColorFormatPart::sRGB: return VK_FORMAT_R8_SRGB;
+      case ColorFormatPart::UNorm16: return VK_FORMAT_R16_UNORM;
+      case ColorFormatPart::UInt: return VK_FORMAT_R8_UINT;
+      case ColorFormatPart::Float32: return VK_FORMAT_R32_SFLOAT;
+      default: break;
+      }
+      return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::RGBA:
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8A8_SRGB;
@@ -115,12 +124,9 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(ShaderStageFlags flags)
 VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
 {
    switch (descriptorType) {
-   case DescriptorType::UniformBuffer:
-      return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   case DescriptorType::Sampler:
-      return VK_DESCRIPTOR_TYPE_SAMPLER;
-   case DescriptorType::ImageSampler:
-      return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   case DescriptorType::UniformBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   case DescriptorType::Sampler: return VK_DESCRIPTOR_TYPE_SAMPLER;
+   case DescriptorType::ImageSampler: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    }
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
