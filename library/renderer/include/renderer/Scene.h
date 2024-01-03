@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Camera.h"
 #include "Model.h"
 #include "Name.hpp"
 #include "ShadowMap.h"
@@ -21,37 +22,27 @@ struct SceneObject
    glm::vec3 scale;
 };
 
-struct Camera
-{
-   glm::vec3 position;
-   glm::vec3 lookDirection;
-};
-
 class Scene
 {
  public:
    Scene(Renderer &renderer, Context3D &context3D, ShadowMap &shadowMap);
 
-   void update() const;
+   void update();
    void add_object(SceneObject object);
    void compile_scene();
    void render() const;
    void render_shadow_map() const;
 
-   void set_camera(Camera camera);
-   void set_shadow_x(float x);
+   void set_camera(glm::vec3 position, glm::quat orientation);
 
-   [[nodiscard]] const Camera& camera() const;
+   [[nodiscard]] const Camera &camera() const;
 
  private:
    Renderer &m_renderer;
    Context3D &m_context3D;
    ShadowMap &m_shadowMap;
 
-   Camera m_shadowMapCamera{
-           {-40,   0, -50},
-           {0.6, 0.0, 0.6}
-   };
+   Camera m_shadowMapCamera{};
    Camera m_camera{};
 
    std::vector<SceneObject> m_objects;

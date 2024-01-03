@@ -14,25 +14,25 @@ Scene::Scene(Renderer &renderer, Context3D &context3D, ShadowMap &shadowMap) :
     m_context3D(context3D),
     m_shadowMap(shadowMap)
 {
+   m_shadowMapCamera.set_position(glm::vec3{-40, 0, -50});
+   m_shadowMapCamera.set_orientation(glm::quat{
+           glm::vec3{0.0f, 0.0f, 0.0f}
+   });
 }
 
-void Scene::update() const
+void Scene::update()
 {
    const auto [width, height] = m_renderer.screen_resolution();
+   m_camera.set_viewport_size(width, height);
 
-   const auto view = glm::lookAt(m_camera.position, m_camera.position + m_camera.lookDirection, g_upVector);
-   const auto projection = glm::perspective(
-           glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 100.0f);
-
-   const auto shadowMapView =
-           glm::lookAt(m_shadowMapCamera.position,
-                       m_shadowMapCamera.position + m_shadowMapCamera.lookDirection, g_upVector);
-   const auto shadowMapProjection = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+   const auto camMat       = m_camera.matrix();
+   const auto camMatShadow = m_shadowMapCamera.matrix();
+   // const auto camMat = glm::mat4(1);
+   // const auto camMatShadow = glm::mat4(1);
 
    for (const auto &obj : m_instancedObjects) {
-      obj.ubo->view          = view;
-      obj.ubo->proj          = projection;
-      obj.shadowMap.ubo->mvp = shadowMapProjection * shadowMapView * obj.ubo->model;
+      obj.ubo->viewProj      = camMat;
+      obj.shadowMap.ubo->mvp = camMatShadow * obj.ubo->model;
       obj.ubo->shadowMapMVP  = obj.shadowMap.ubo->mvp;
    }
 }
@@ -70,7 +70,7 @@ void Scene::render() const
 
 void Scene::render_shadow_map() const
 {
-   m_context3D.set_light_position(m_shadowMapCamera.position);
+   m_context3D.set_light_position(m_shadowMapCamera.position());
    // TODO: Render only objects visiable by camera.
 
    for (const auto &obj : m_instancedObjects) {
@@ -78,17 +78,10 @@ void Scene::render_shadow_map() const
    }
 }
 
-void Scene::set_camera(Camera camera)
+void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
 {
-   // std::cout << "cam: " << camera.position.x << ", " << camera.position.y << ", " << camera.position.y
-   //           << ", look: " << camera.lookDirection.x << ", " << camera.lookDirection.y << ", "
-   //           << camera.lookDirection.y << '\n';
-   m_camera = std::move(camera);
-}
-
-void Scene::set_shadow_x(const float x)
-{
-   m_shadowMapCamera.position.x = x;
+   m_camera.set_position(position);
+   m_camera.set_orientation(orientation);
 }
 
 const Camera &Scene::camera() const

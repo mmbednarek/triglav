@@ -177,7 +177,7 @@ void Renderer::on_render()
 
    const auto framerateStr = std::format("{}", framerate);
    m_textRenderer.update_text_object(m_glyphAtlas, m_framerateValue, framerateStr);
-   const auto camPos      = m_scene.camera().position;
+   const auto camPos      = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
    m_textRenderer.update_text_object(m_glyphAtlas, m_positionValue, positionStr);
 
@@ -228,7 +228,9 @@ void Renderer::on_render()
                                       {1.0f, 1.0f, 0.4f});
       textY += 8.0f + m_positionLabel.metric.height;
       m_textRenderer.draw_text_object(m_commandList, m_positionLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_positionValue, {16.0f + m_positionLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
+      m_textRenderer.draw_text_object(m_commandList, m_positionValue,
+                                      {16.0f + m_positionLabel.metric.width + 8.0f, textY},
+                                      {1.0f, 1.0f, 0.4f});
 
       m_commandList.end_render_pass();
    }
@@ -379,13 +381,11 @@ const auto g_movingSpeed = 10.0f;
 
 void Renderer::update_uniform_data(const float deltaTime)
 {
-   const auto yVector = glm::vec4{0.0f, 1.0f, 0.0f, 1.0f};
-   const auto xVector = glm::vec4{1.0f, 0.0f, 0.0f, 1.0f};
+   const auto rotation = glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}};
+
+   const auto forwardVector = rotation * glm::vec3{0.0f, 1.0f, 0.0f};
+   const auto rightVector = rotation * glm::vec3{1.0f, 0.0f, 0.0f};
    const auto zVector = glm::vec3{0.0f, 0.0f, 1.0f};
-   auto yawMatrix     = glm::rotate(glm::mat4(1), m_yaw, glm::vec3{0.0f, 0.0f, 1.0f});
-   auto pitchMatrix   = glm::rotate(glm::mat4(1), m_pitch, glm::vec3{1.0f, 0.0f, 0.0f});
-   auto forwardVector = glm::vec3(yawMatrix * pitchMatrix * yVector);
-   auto rightVector   = glm::vec3(yawMatrix * pitchMatrix * xVector);
 
    if (m_isMovingForward) {
       m_position += deltaTime * g_movingSpeed * forwardVector;
@@ -405,8 +405,8 @@ void Renderer::update_uniform_data(const float deltaTime)
       m_lightX -= deltaTime * g_movingSpeed;
    }
 
-   m_scene.set_camera(Camera{m_position, forwardVector});
-   m_scene.set_shadow_x(m_lightX);
+   m_scene.set_camera(m_position, rotation);
+   // m_scene.set_shadow_x(m_lightX);
    m_scene.update();
 }
 

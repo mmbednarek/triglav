@@ -1,5 +1,6 @@
 renderer_sources = files([
   'src/AssetMap.hpp',
+  'src/Camera.cpp',
   'src/Context2D.cpp',
   'src/Context3D.cpp',
   'src/GlyphAtlas.cpp',

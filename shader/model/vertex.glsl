@@ -8,8 +8,7 @@ layout(location = 4) in vec3 inBitangent;
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
-    mat4 view;
-    mat4 proj;
+    mat4 viewProj;
     mat4 normal;
     mat4 shadowMapMVP;
 } ubo;
@@ -25,7 +24,8 @@ const mat4 biasMat = mat4(
     0.5, 0.0, 0.0, 0.0,
     0.0, 0.5, 0.0, 0.0,
     0.0, 0.0, 1.0, 0.0,
-    0.5, 0.5, 0.0, 1.0 );
+    0.5, 0.5, 0.0, 1.0
+);
 
 void main() {
     vec4 viewSpace = ubo.model * vec4(inPosition, 1.0);
@@ -37,5 +37,5 @@ void main() {
     fragPosition = viewSpace.xyz;
     fragShadowUV = (biasMat * ubo.shadowMapMVP) * vec4(inPosition, 1.0);
 
-    gl_Position = ubo.proj * ubo.view * viewSpace;
+    gl_Position = ubo.viewProj * viewSpace;
 }

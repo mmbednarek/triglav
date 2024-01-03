@@ -11,8 +11,7 @@ namespace renderer {
 struct UniformBufferObject
 {
    alignas(16) glm::mat4 model;
-   alignas(16) glm::mat4 view;
-   alignas(16) glm::mat4 proj;
+   alignas(16) glm::mat4 viewProj;
    alignas(16) glm::mat4 normal;
    alignas(16) glm::mat4 shadowMapMVP;
 };
