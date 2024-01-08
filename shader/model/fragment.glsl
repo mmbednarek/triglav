@@ -6,22 +6,28 @@ layout(location = 2) in vec3 fragNormal;
 layout(location = 3) in vec3 fragTangent;
 layout(location = 4) in vec3 fragBitangent;
 layout(location = 5) in vec4 fragShadowUV;
+layout(location = 6) in float fragDepth;
 
 layout(binding = 1) uniform sampler2D texSampler;
 layout(binding = 2) uniform sampler2D normalSampler;
 layout(binding = 3) uniform sampler2D shadowMapSampler;
+layout(binding = 4) uniform MaterialProps {
+    bool hasNormalMap;
+    float diffuseAmount;
+} mp;
 
 layout(location = 0) out vec4 outColor;
 
 layout(push_constant) uniform Constants
 {
     vec3 lightPosition;
+    vec3 cameraPosition;
 } pc;
 
 const vec3 black = vec3(0, 0, 0);
 const vec3 white = vec3(1, 1, 1);
-const float ambientStrength = 0.1;
-const float shinniness = 60.0;
+const float ambient = 0.1;
+const float shinniness = 50.0;
 
 float textureProj(vec4 shadowCoord, vec2 off)
 {
@@ -60,24 +66,39 @@ float filterPCF(vec4 sc)
     return shadowFactor / count;
 }
 
+float LinearizeDepth(float depth)
+{
+    float n = 0.1;
+    float f = 200.0;
+    float z = depth;
+    return (2.0 * n) / (f + n - z * (f - n));
+}
+
 void main() {
     vec4 texPixel = texture(texSampler, fragTexCoord);
     vec4 shadowCoords = fragShadowUV / fragShadowUV.w;
     float shadow = filterPCF(shadowCoords);
 
     vec3 normal = 2 * texture(normalSampler, fragTexCoord).rgb - 1.0;
-    vec3 normalVec = normalize(mat3( fragTangent, fragBitangent, fragNormal ) * normal);
-//    vec3 normalVec = fragNormal;
+    vec3 normalVec;
+    if (mp.hasNormalMap) {
+        normalVec = normalize(mat3( fragTangent, fragBitangent, fragNormal ) * normal);
+    } else {
+        normalVec = normalize(fragNormal);
+    }
     vec3 lightDir = normalize(pc.lightPosition - fragPosition);
     float diffuse = max(dot(normalVec, normalize(lightDir)), 0);
     float specular = 0.0;
     if (diffuse > 0.0) {
-        vec3 viewVec = normalize(-fragPosition);
-        vec3 halfVec = normalize(viewVec + lightDir);
-        specular = pow(dot(halfVec, normalVec), shinniness);
+        vec3 viewDir = normalize(pc.cameraPosition - fragPosition);
+        vec3 reflectDir = normalize(reflect(-lightDir, normalVec));
+        specular = pow(max(dot(viewDir, reflectDir), 0.0), shinniness);
     }
 
-    float lightValue = ambientStrength + shadow * (diffuse + specular);
-    vec3 result = lightValue * texPixel.rgb;
+    float lightValue = ambient + shadow * (mp.diffuseAmount * diffuse + specular);
+
+//    float lightValue = specular;
+    vec3 result = clamp(lightValue, 0, 2) * texPixel.rgb;
+//    vec3 result = texPixel.rgb;
     outColor = vec4(result, 1);
 }

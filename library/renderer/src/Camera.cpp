@@ -1,8 +1,5 @@
 #include "Camera.h"
 
-#include <chrono>
-#include <iostream>
-
 namespace renderer {
 
 void Camera::set_position(const glm::vec3 position)
@@ -33,40 +30,94 @@ void Camera::set_viewport_size(const float width, const float height)
    m_viewportAspect  = aspect;
 }
 
+void Camera::rotate(const float pitch, const float yaw)
+{
+   m_hasCachedMatrix = false;
+   m_orientation     = glm::quat{
+           glm::vec3{pitch, 0.0f, yaw}
+   };
+}
+
 glm::vec3 Camera::position() const
 {
    return m_position;
 }
 
-bool Camera::is_point_visible(const glm::vec3 point) const
+glm::quat Camera::orientation() const
 {
-   const auto mat     = this->matrix();
-   const auto pointVP = mat * glm::vec4(point, 1.0f);
-
-   return pointVP.x >= -1.0f && pointVP.x <= 1.0f && pointVP.y >= -1.0f && pointVP.y <= 1.0f;
+   return m_orientation;
 }
 
-glm::mat4 Camera::matrix() const
+bool Camera::is_point_visible(const glm::vec3 point) const
 {
-   // if (not m_hasCachedMatrix) {
-   //    const auto lookVector = m_orientation * glm::vec3(0.0f, 1.0f, 0.0f);
-   //    const auto upVector   = m_orientation * glm::vec3(0.0f, 0.0f, 1.0f);
-   //
-   //    const auto view       = glm::lookAt(m_position, m_position + lookVector, upVector);
-   //    const auto projection = glm::perspective(m_angle, m_viewportAspect, m_nearPlane, m_farPlane);
-   //
-   //    m_viewProjMat     = projection * view;
-   //    m_hasCachedMatrix = true;
-   // }
-   //
-   // return m_viewProjMat;
+   const auto &mat = this->matrix();
+   auto pointVP    = mat * glm::vec4(point, 1.0f);
+   pointVP /= pointVP.w;
 
-   const auto lookVector = m_orientation * glm::vec3(0.0f, 1.0f, 0.0f);
-   const auto upVector   = m_orientation * glm::vec3(0.0f, 0.0f, 1.0f);
+   return (pointVP.x >= -1.0f) && (pointVP.x <= 1.0f) && (pointVP.y >= -1.0f) && (pointVP.y <= 1.0f);
+}
 
-   const auto view       = glm::lookAt(m_position, m_position + lookVector, upVector);
-   const auto projection = glm::perspective(m_angle, m_viewportAspect, m_nearPlane, m_farPlane);
-   return projection * view;
+bool Camera::is_bouding_box_visible(const geometry::BoundingBox &boudingBox, const glm::mat4 &modelMat) const
+{
+   const auto mat = this->matrix() * modelMat;
+   const std::array points{
+           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
+           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
+           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
+           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
+           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
+           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
+           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
+           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
+   };
+
+   glm::vec3 min{std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
+                 std::numeric_limits<float>::infinity()};
+   glm::vec3 max{-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+                 -std::numeric_limits<float>::infinity()};
+
+   for (const auto point : points) {
+      auto projectedPoint = mat * glm::vec4(point, 1.0);
+      projectedPoint /= projectedPoint.w;
+      const float linearZ = (2.0f * m_nearPlane) / (m_farPlane + m_nearPlane - projectedPoint.z * (m_farPlane - m_nearPlane));
+
+      if (projectedPoint.x < min.x) {
+         min.x = projectedPoint.x;
+      }
+      if (projectedPoint.y < min.y) {
+         min.y = projectedPoint.y;
+      }
+      if (linearZ < min.z) {
+         min.z = linearZ;
+      }
+      if (projectedPoint.x > max.x) {
+         max.x = projectedPoint.x;
+      }
+      if (projectedPoint.y > max.y) {
+         max.y = projectedPoint.y;
+      }
+      if (linearZ > max.z) {
+         max.z = linearZ;
+      }
+   }
+
+   return min.x <= 1.0f && max.x >= -1.0f && min.y <= 1.0f && max.y >= -1.0f && min.z <= 1.0f && max.z >= 0.0f;
+}
+
+const glm::mat4 &Camera::matrix() const
+{
+   if (not m_hasCachedMatrix) {
+      const auto lookVector = m_orientation * glm::vec3(0.0f, 1.0f, 0.0f);
+      const auto upVector   = m_orientation * glm::vec3(0.0f, 0.0f, 1.0f);
+
+      const auto view       = glm::lookAt(m_position, m_position + lookVector, upVector);
+      const auto projection = glm::perspective(m_angle, m_viewportAspect, m_nearPlane, m_farPlane);
+
+      m_viewProjMat     = projection * view;
+      m_hasCachedMatrix = true;
+   }
+
+   return m_viewProjMat;
 }
 
 }// namespace renderer

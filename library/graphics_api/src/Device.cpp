@@ -122,6 +122,19 @@ Device::Device(vulkan::Instance instance,
    vkGetDeviceQueue(*m_device, m_queueFamilies.graphicsQueue, 0, &m_graphicsQueue);
 }
 
+namespace {
+
+uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
+{
+   if (max == 0) {
+      return std::max(2u, min);
+   }
+
+   return std::min(std::max(2u, min), max);
+}
+
+}// namespace
+
 Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
                                            ColorFormat depthFormat, SampleCount sampleCount,
                                            const Resolution &resolution, Swapchain *oldSwapchain)
@@ -154,7 +167,8 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
    if (oldSwapchain != nullptr) {
       swapchainInfo.oldSwapchain = oldSwapchain->vulkan_swapchain();
    }
-   swapchainInfo.minImageCount    = capabilities.maxImageCount;
+   swapchainInfo.minImageCount =
+           swapchain_image_count(capabilities.minImageCount, capabilities.maxImageCount);
    swapchainInfo.imageColorSpace  = *vulkanColorSpace;
    swapchainInfo.imageArrayLayers = 1;
    swapchainInfo.preTransform     = capabilities.currentTransform;
@@ -304,7 +318,7 @@ Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t
 
    VkMemoryAllocateInfo allocateInfo{};
    allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-   allocateInfo.allocationSize  = size;
+   allocateInfo.allocationSize  = memRequirements.size;
    allocateInfo.memoryTypeIndex = this->find_memory_type(memRequirements.memoryTypeBits,
                                                          map_buffer_purpose_to_memory_properties(purpose));
 
@@ -385,20 +399,6 @@ VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
 }
 
 }// namespace
-
-/*
-Swapchain 1..n Framebuffer
-Swapchain 1..n Render Pass
-
-Swapchain -- Render Pass
-Render Pass -> Framebuffer
-Swapchain -> Framebuffer
-
-auto swapchain = device.create_swapchain(surface, ...);
-auto render_pass = device.create_render_pass(swapchain);
-auto framebuffers = swapchain.create_framebuffers(render_pass);
-
-*/
 
 Result<Texture> Device::create_texture(const ColorFormat &format, const Resolution &imageSize,
                                        const TextureType type, SampleCount sampleCount) const
@@ -704,6 +704,8 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
    VkPhysicalDeviceFeatures deviceFeatures{
            .sampleRateShading = true,
            .logicOp           = true,
+           .fillModeNonSolid  = true,
+           .wideLines         = true,
            .samplerAnisotropy = true,
    };
 

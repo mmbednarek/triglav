@@ -40,6 +40,8 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
                                         graphics_api::ShaderStage::Fragment)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
+                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                        graphics_api::ShaderStage::Fragment)
                     .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstant))
                     .enable_depth_test(true)
                     .build())),
@@ -55,22 +57,34 @@ InstancedModel Context3D::instance_model(const Name modelName, ShadowMap &shadow
    size_t index{};
 
    graphics_api::UniformBuffer<UniformBufferObject> ubo(m_device);
+   graphics_api::UniformBuffer<MaterialProps> uboMatProps(m_device);
 
    for (const auto range : model.range) {
-      const auto &material      = m_resourceManager.material(range.materialName);
-      const auto &texture       = m_resourceManager.texture(material.texture);
-      const auto &normalTexture = m_resourceManager.texture(material.normal_texture);
+      const auto &material = m_resourceManager.material(range.materialName);
+      const auto &texture  = m_resourceManager.texture(material.texture);
 
       graphics_api::DescriptorWriter descWriter(m_device, descriptors[index]);
       descWriter.set_uniform_buffer(0, ubo);
       descWriter.set_sampled_texture(1, texture, m_sampler);
-      descWriter.set_sampled_texture(2, normalTexture, m_sampler);
+
+      if (material.normal_texture != 0) {
+         const auto &normalTexture = m_resourceManager.texture(material.normal_texture);
+         descWriter.set_sampled_texture(2, normalTexture, m_sampler);
+      }
+
       descWriter.set_sampled_texture(3, shadowMap.depth_texture(), m_sampler);
+      *uboMatProps = material.props;
+      descWriter.set_uniform_buffer(4, uboMatProps);
 
       ++index;
    }
 
-   return InstancedModel{modelName, std::move(ubo), std::move(descriptors),
+   return InstancedModel{modelName,
+                         model.boudingBox,
+                         glm::vec3{},
+                         std::move(ubo),
+                         std::move(uboMatProps),
+                         std::move(descriptors),
                          shadowMap.create_model_properties()};
 }
 
@@ -108,6 +122,11 @@ void Context3D::draw_model(const InstancedModel &instancedModel) const
 void Context3D::set_light_position(const glm::vec3 pos)
 {
    m_pushConstant.lightPosition = pos;
+}
+
+void Context3D::set_camera_position(const glm::vec3 pos)
+{
+   m_pushConstant.cameraPosition = pos;
 }
 
 graphics_api::CommandList &Context3D::command_list() const

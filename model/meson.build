@@ -1,10 +1,12 @@
 model_files = [
     'cage.obj',
+    'column.obj',
     'tree.obj',
     'terrain.obj',
     'teapot.obj',
     'bunny.obj',
     'pine.obj',
+    'hall.obj',
 ]
 
 model_targets = []

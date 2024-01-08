@@ -19,6 +19,7 @@ layout(location = 2) out vec3 fragNormal;
 layout(location = 3) out vec3 fragTangent;
 layout(location = 4) out vec3 fragBitangent;
 layout(location = 5) out vec4 fragShadowUV;
+layout(location = 6) out float fragDepth;
 
 const mat4 biasMat = mat4(
     0.5, 0.0, 0.0, 0.0,
@@ -38,4 +39,5 @@ void main() {
     fragShadowUV = (biasMat * ubo.shadowMapMVP) * vec4(inPosition, 1.0);
 
     gl_Position = ubo.viewProj * viewSpace;
+    fragDepth = gl_Position.z / gl_Position.w;
 }

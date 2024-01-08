@@ -169,6 +169,8 @@ enum class VertexTopology
    TriangleList,
    TriangleFan,
    TriangleStrip,
+   LineStrip,
+   LineList,
 };
 
 enum class RasterizationMethod

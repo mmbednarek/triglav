@@ -106,6 +106,12 @@ void Mesh::set_material(const Index meshGroup, const std::string_view material)
    m_mesh->set_material(meshGroup, material);
 }
 
+BoundingBox Mesh::calculate_bouding_box() const
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->calculate_bouding_box();
+}
+
 // ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::reverse_orientation()
 {
@@ -126,7 +132,7 @@ Mesh Mesh::from_file(const std::string_view path)
 }
 
 Mesh::Mesh(std::unique_ptr<InternalMesh> mesh) :
-   m_mesh(std::move(mesh))
+    m_mesh(std::move(mesh))
 {
 }
 

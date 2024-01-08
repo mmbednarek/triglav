@@ -73,10 +73,13 @@ class CommandList
       this->draw_indexed_primitives(mesh.indices.count(), 0, 0);
    }
 
+   [[nodiscard]] uint64_t triangle_count() const;
+
  private:
    VkCommandBuffer m_commandBuffer;
    VkDevice m_device;
    VkCommandPool m_commandPool;
    VkPipelineLayout m_boundPipelineLayout{};
+   mutable uint64_t m_triangleCount{};
 };
 }// namespace graphics_api

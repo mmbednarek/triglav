@@ -93,7 +93,8 @@ void ResourceManager::add_material(const Name assetName, const Material &materia
    m_materials[assetName] = material;
 }
 
-void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh &model)
+void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh &model,
+                                         const geometry::BoundingBox &boudingBox)
 {
    Name meshName = (assetName & (~0b111ull)) | static_cast<uint64_t>(NameType::Mesh);
    m_meshes.emplace(meshName, std::move(model.mesh));
@@ -106,7 +107,7 @@ void ResourceManager::add_mesh_and_model(Name assetName, geometry::DeviceMesh &m
                                           make_name(std::format("mat:{}", range.materialName))};
                   });
 
-   m_models.emplace(assetName, Model{meshName, std::move(ranges)});
+   m_models.emplace(assetName, Model{meshName, boudingBox, std::move(ranges)});
 }
 
 void ResourceManager::add_mesh(const Name assetName, graphics_api::Mesh<geometry::Vertex> model)
@@ -163,7 +164,7 @@ void ResourceManager::load_model(const Name model, const std::string_view path)
                                           make_name(std::format("mat:{}", range.materialName))};
                   });
 
-   m_models.emplace(model, Model{meshName, std::move(ranges)});
+   m_models.emplace(model, Model{meshName, objMesh.calculate_bouding_box(), std::move(ranges)});
 }
 
 graphics_api::Shader ResourceManager::load_shader(const graphics_api::ShaderStage stage,

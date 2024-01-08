@@ -44,6 +44,8 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
 
 Status CommandList::begin(const SubmitType type) const
 {
+   m_triangleCount = 0;
+
    VkCommandBufferBeginInfo beginInfo{};
    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
    if (type == SubmitType::OneTime) {
@@ -136,12 +138,14 @@ void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
 
 void CommandList::draw_primitives(const int vertexCount, const int vertexOffset) const
 {
+   m_triangleCount += vertexCount / 3;
    vkCmdDraw(m_commandBuffer, vertexCount, 1, vertexOffset, 0);
 }
 
 void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset,
                                           const int vertexOffset) const
 {
+   m_triangleCount += indexCount / 3;
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
 
@@ -225,8 +229,14 @@ void CommandList::push_constant_ptr(const ShaderStage stage, const void *ptr, co
                       vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | stage), offset, size, ptr);
 }
 
+uint64_t CommandList::triangle_count() const
+{
+   return m_triangleCount;
+}
+
 Status CommandList::reset() const
 {
+   m_triangleCount = 0;
    if (vkResetCommandBuffer(m_commandBuffer, 0) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }

@@ -9,5 +9,6 @@ subdir('shadow_map')
 subdir('skybox')
 subdir('sprite')
 subdir('text')
+subdir('debug_lines')
 
 shaders = declare_dependency(sources: [shader_targets])

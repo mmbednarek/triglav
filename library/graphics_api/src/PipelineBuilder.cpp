@@ -95,6 +95,8 @@ PipelineBuilder &PipelineBuilder::vertex_topology(const VertexTopology topology)
    case VertexTopology::TriangleList: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
    case VertexTopology::TriangleFan: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN; break;
    case VertexTopology::TriangleStrip: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP; break;
+   case VertexTopology::LineStrip: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP; break;
+   case VertexTopology::LineList: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST; break;
    }
    return *this;
 }
@@ -168,7 +170,7 @@ Result<Pipeline> PipelineBuilder::build() const
    rasterizationStateInfo.depthClampEnable = VK_FALSE;
    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
    rasterizationStateInfo.polygonMode             = m_polygonMode;
-   rasterizationStateInfo.lineWidth               = 1.0f;
+   rasterizationStateInfo.lineWidth               = 2.0f;
    rasterizationStateInfo.cullMode                = VK_CULL_MODE_FRONT_BIT;
    rasterizationStateInfo.frontFace               = VK_FRONT_FACE_CLOCKWISE;
    rasterizationStateInfo.depthBiasEnable         = VK_FALSE;
@@ -247,11 +249,11 @@ Result<Pipeline> PipelineBuilder::build() const
    pipelineInfo.pColorBlendState    = &colorBlendingInfo;
    pipelineInfo.pVertexInputState   = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
-   pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
-   pipelineInfo.renderPass         = m_renderPass.vulkan_render_pass();
-   pipelineInfo.subpass            = 0;
-   pipelineInfo.basePipelineHandle = nullptr;
-   pipelineInfo.basePipelineIndex  = -1;
+   pipelineInfo.pDepthStencilState  = &depthStencilStateInfo;
+   pipelineInfo.renderPass          = m_renderPass.vulkan_render_pass();
+   pipelineInfo.subpass             = 0;
+   pipelineInfo.basePipelineHandle  = nullptr;
+   pipelineInfo.basePipelineIndex   = -1;
 
    vulkan::Pipeline pipeline(m_device.vulkan_device());
    if (const auto res = pipeline.construct(nullptr, 1, &pipelineInfo); res != VK_SUCCESS) {

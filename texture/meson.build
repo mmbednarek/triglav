@@ -1,6 +1,7 @@
 texture_files = [
     'earth.png',
     'gold.png',
+    'gold_normal.png',
     'grass.png',
     'grass_normal.png',
     'skybox.png',
@@ -9,6 +10,8 @@ texture_files = [
     'leaves.png',
     'pine.png',
     'pine_normal.png',
+    'quartz.png',
+    'quartz_normal.png',
 ]
 
 texture_targets = []

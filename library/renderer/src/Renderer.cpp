@@ -54,12 +54,37 @@ std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &d
    sphere.recalculate_tangents();
    auto gpuSphere = sphere.upload_to_device(device);
 
-   manager->add_mesh_and_model("mdl:sphere"_name, gpuSphere);
-   manager->add_material("mat:bark"_name, Material{"tex:bark"_name, "tex:bark/normal"_name, 1.0f});
-   manager->add_material("mat:leaves"_name, Material{"tex:leaves"_name, "tex:bark/normal"_name, 1.0f});
-   manager->add_material("mat:gold"_name, Material{"tex:gold"_name, "tex:bark/normal"_name, 1.0f});
-   manager->add_material("mat:grass"_name, Material{"tex:grass"_name, "tex:grass/normal"_name, 1.0f});
-   manager->add_material("mat:pine"_name, Material{"tex:pine"_name, "tex:pine/normal"_name, 1.0f});
+   manager->add_mesh_and_model("mdl:sphere"_name, gpuSphere, sphere.calculate_bouding_box());
+   manager->add_material("mat:bark"_name, Material{
+                                                  "tex:bark"_name,
+                                                  "tex:bark/normal"_name,
+                                                  {true, 1.0f}
+   });
+   manager->add_material("mat:leaves"_name, Material{
+                                                    "tex:leaves"_name,
+                                                    "tex:grass/normal"_name,
+                                                    {false, 1.0f}
+   });
+   manager->add_material("mat:gold"_name, Material{
+                                                  "tex:gold"_name,
+                                                  "tex:gold/normal"_name,
+                                                  {true, 1.0f}
+   });
+   manager->add_material("mat:grass"_name, Material{
+                                                   "tex:grass"_name,
+                                                   "tex:grass/normal"_name,
+                                                   {true, 1.0f}
+   });
+   manager->add_material("mat:pine"_name, Material{
+                                                  "tex:pine"_name,
+                                                  "tex:pine/normal"_name,
+                                                  {true, 1.0f}
+   });
+   manager->add_material("mat:quartz"_name, Material{
+                                                    "tex:quartz"_name,
+                                                    "tex:quartz/normal"_name,
+                                                    {false, 1.0f}
+   });
 
    std::vector<font::Rune> runes{};
    for (font::Rune ch = 'A'; ch <= 'Z'; ++ch) {
@@ -91,6 +116,8 @@ std::vector<font::Rune> make_runes()
    runes.emplace_back(':');
    runes.emplace_back('-');
    runes.emplace_back(',');
+   runes.emplace_back('(');
+   runes.emplace_back(')');
    runes.emplace_back(' ');
    runes.emplace_back(281);
    return runes;
@@ -116,7 +143,8 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_context3D(*m_device, m_renderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMap(*m_device, *m_resourceManager),
-    m_scene(*this, m_context3D, m_shadowMap),
+    m_debugLinesRenderer(*m_device, m_renderPass, *m_resourceManager),
+    m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
                      500),
@@ -128,45 +156,60 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_framerateLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Framerate")),
     m_framerateValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
     m_positionLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Position")),
-    m_positionValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0, 0"))
+    m_positionValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0, 0")),
+    m_triangleCountLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Triangle Count")),
+    m_triangleCountValue(m_textRenderer.create_text_object(m_glyphAtlas, "0"))
 {
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:terrain"_name},
+           .model{"mdl:hall"_name},
            .position{0, 0, 0},
            .rotation{1, 0, 0, 0},
-           .scale{1, 1, 1},
+           .scale{10, 10, 10},
    });
-   //   m_scene.add_object(SceneObject{
-   //      .model{"mdl:tree"_name},
-   //      .position{10, 0, 0},
-   //      .rotation{1, 0, 0, 0},
-   //      .scale{0.9, 0.9, 0.9},
-   //   });
-   //   m_scene.add_object(SceneObject{
-   //      .model{"mdl:tree"_name},
-   //      .position{-10, 0, 0},
-   //      .rotation{glm::vec3{0, 0, glm::radians(45.0f)}},
-   //      .scale{1, 1, 1},
-   //   });
-   //   m_scene.add_object(SceneObject{
-   //      .model{"mdl:tree"_name},
-   //      .position{0, 10, 0},
-   //      .rotation{glm::vec3{0, 0, glm::radians(90.0f)}},
-   //      .scale{1.1, 1.1, 1.1},
-   //   });
+
    m_scene.add_object(SceneObject{
            .model{"mdl:teapot"_name},
-           .position{0, -10, 0},
-           .rotation{glm::vec3{0, 0, glm::radians(135.0f)}},
+           .position{12.0f, -12.0f, 0},
+           .rotation{glm::vec3{0, 0, glm::radians(0.0f)}},
            .scale{1.2, 1.2, 1.2},
    });
+
    m_scene.add_object(SceneObject{
-           .model{"mdl:pine"_name},
-           .position{0, 0, 0},
-           .rotation{glm::vec3{0, 0, glm::radians(270.0f)}},
-           .scale{30, 30, 30},
+           .model{"mdl:column"_name},
+           .position{0.0f, -32.0f, 0.0f},
+           .rotation{1, 0, 0, 0},
+           .scale{10, 10, 10},
    });
+
+   m_scene.add_object(SceneObject{
+           .model{"mdl:column"_name},
+           .position{0.0f, -16.0f, 0.0f},
+           .rotation{1, 0, 0, 0},
+           .scale{10, 10, 10},
+   });
+
+   m_scene.add_object(SceneObject{
+           .model{"mdl:column"_name},
+           .position{0.0f, 0.0f, 0.0f},
+           .rotation{1, 0, 0, 0},
+           .scale{10, 10, 10},
+   });
+
+   m_scene.add_object(SceneObject{
+           .model{"mdl:column"_name},
+           .position{0.0f, 32.0f, 0.0f},
+           .rotation{1, 0, 0, 0},
+           .scale{10, 10, 10},
+   });
+
+   m_scene.add_object(SceneObject{
+           .model{"mdl:column"_name},
+           .position{0.0f, 16.0f, 0.0f},
+           .rotation{1, 0, 0, 0},
+           .scale{10, 10, 10},
+   });
+
    m_scene.compile_scene();
 }
 
@@ -178,8 +221,11 @@ void Renderer::on_render()
    const auto framerateStr = std::format("{}", framerate);
    m_textRenderer.update_text_object(m_glyphAtlas, m_framerateValue, framerateStr);
    const auto camPos      = m_scene.camera().position();
-   const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
+   const auto positionStr = std::format("({:.2f}, {:.2f}, {:.2f}) P{:.2f} Y{:.2f}", camPos.x, camPos.y,
+                                        camPos.z, m_pitch, m_yaw);
    m_textRenderer.update_text_object(m_glyphAtlas, m_positionValue, positionStr);
+   const auto triangleCountStr = std::format("{}", m_commandList.triangle_count());
+   m_textRenderer.update_text_object(m_glyphAtlas, m_triangleCountValue, triangleCountStr);
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);
@@ -215,6 +261,11 @@ void Renderer::on_render()
       m_context3D.begin_render();
       m_scene.render();
 
+      if (m_showDebugLines) {
+         m_debugLinesRenderer.begin_render(m_commandList);
+         m_scene.render_debug_lines();
+      }
+
       // m_context2D.begin_render();
       // m_context2D.draw_sprite(m_sprite, {0.0f, 0.0f}, {0.2f, 0.2f});
 
@@ -230,6 +281,12 @@ void Renderer::on_render()
       m_textRenderer.draw_text_object(m_commandList, m_positionLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_positionValue,
                                       {16.0f + m_positionLabel.metric.width + 8.0f, textY},
+                                      {1.0f, 1.0f, 0.4f});
+      textY += 8.0f + m_triangleCountLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_triangleCountLabel, {16.0f, textY},
+                                      {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_triangleCountValue,
+                                      {16.0f + m_triangleCountLabel.metric.width + 8.0f, textY},
                                       {1.0f, 1.0f, 0.4f});
 
       m_commandList.end_render_pass();
@@ -260,47 +317,41 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
    m_pitch += dy * 0.01f;
    m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f,
                         static_cast<float>(M_PI) / 2.0f - 0.01f);
+
+   m_scene.camera().set_orientation(glm::quat{
+           glm::vec3{m_pitch, 0.0f, m_yaw}
+   });
+}
+
+static Renderer::Moving map_direction(const uint32_t key)
+{
+   switch (key) {
+   case 17: return Renderer::Moving::Foward;
+   case 31: return Renderer::Moving::Backwards;
+   case 30: return Renderer::Moving::Left;
+   case 32: return Renderer::Moving::Right;
+   case 18: return Renderer::Moving::Up;
+   case 16: return Renderer::Moving::Down;
+   }
+
+   return Renderer::Moving::None;
 }
 
 void Renderer::on_key_pressed(const uint32_t key)
 {
-   if (key == 17) {
-      m_isMovingForward = true;
-   } else if (key == 31) {
-      m_isMovingBackwards = true;
-   } else if (key == 30) {
-      m_isMovingLeft = true;
-   } else if (key == 32) {
-      m_isMovingRight = true;
-   } else if (key == 18) {
-      m_isMovingDown = true;
-   } else if (key == 16) {
-      m_isMovingUp = true;
-   } else if (key == 19) {
-      m_isLightMovingBackwards = true;
-   } else if (key == 33) {
-      m_isLightMovingForward = true;
+   if (const auto dir = map_direction(key); dir != Moving::None) {
+      m_moveDirection = dir;
+   }
+   if (key == 61) {
+      m_showDebugLines = not m_showDebugLines;
    }
 }
 
 void Renderer::on_key_released(const uint32_t key)
 {
-   if (key == 17) {
-      m_isMovingForward = false;
-   } else if (key == 31) {
-      m_isMovingBackwards = false;
-   } else if (key == 30) {
-      m_isMovingLeft = false;
-   } else if (key == 32) {
-      m_isMovingRight = false;
-   } else if (key == 18) {
-      m_isMovingDown = false;
-   } else if (key == 16) {
-      m_isMovingUp = false;
-   } else if (key == 19) {
-      m_isLightMovingBackwards = false;
-   } else if (key == 33) {
-      m_isLightMovingForward = false;
+   const auto dir = map_direction(key);
+   if (m_moveDirection == dir) {
+      m_moveDirection = Moving::None;
    }
 }
 
@@ -343,16 +394,31 @@ float Renderer::calculate_framerate(const float frameDuration)
    static float sum        = 0.0f;
    static int count        = 0;
 
-   sum += 1.0f / frameDuration;
+   sum += frameDuration;
    ++count;
 
-   if (count == 1000) {
-      lastResult = sum / static_cast<float>(count);
+   if (sum >= 0.5f) {
+      lastResult = static_cast<float>(count) / sum;
       sum        = 0.0f;
       count      = 0;
    }
 
    return std::ceil(lastResult);
+}
+
+glm::vec3 Renderer::moving_direction() const
+{
+   switch (m_moveDirection) {
+   case Moving::None: break;
+   case Moving::Foward: return m_scene.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
+   case Moving::Backwards: return m_scene.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};
+   case Moving::Left: return m_scene.camera().orientation() * glm::vec3{-1.0f, 0.0f, 0.0f};
+   case Moving::Right: return m_scene.camera().orientation() * glm::vec3{1.0f, 0.0f, 0.0f};
+   case Moving::Up: return glm::vec3{0.0f, 0.0f, -1.0f};
+   case Moving::Down: return glm::vec3{0.0f, 0.0f, 1.0f};
+   }
+
+   return glm::vec3{0.0f, 0.0f, 0.0f};
 }
 
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
@@ -377,36 +443,14 @@ graphics_api::Device &Renderer::device() const
    return *m_device;
 }
 
-const auto g_movingSpeed = 10.0f;
+constexpr auto g_movingSpeed = 10.0f;
 
 void Renderer::update_uniform_data(const float deltaTime)
 {
-   const auto rotation = glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}};
-
-   const auto forwardVector = rotation * glm::vec3{0.0f, 1.0f, 0.0f};
-   const auto rightVector = rotation * glm::vec3{1.0f, 0.0f, 0.0f};
-   const auto zVector = glm::vec3{0.0f, 0.0f, 1.0f};
-
-   if (m_isMovingForward) {
-      m_position += deltaTime * g_movingSpeed * forwardVector;
-   } else if (m_isMovingBackwards) {
-      m_position -= deltaTime * g_movingSpeed * forwardVector;
-   } else if (m_isMovingLeft) {
-      m_position -= deltaTime * g_movingSpeed * rightVector;
-   } else if (m_isMovingRight) {
-      m_position += deltaTime * g_movingSpeed * rightVector;
-   } else if (m_isMovingUp) {
-      m_position += deltaTime * g_movingSpeed * zVector;
-   } else if (m_isMovingDown) {
-      m_position -= deltaTime * g_movingSpeed * zVector;
-   } else if (m_isLightMovingForward) {
-      m_lightX += deltaTime * g_movingSpeed;
-   } else if (m_isLightMovingBackwards) {
-      m_lightX -= deltaTime * g_movingSpeed;
+   if (m_moveDirection != Moving::None) {
+      m_scene.camera().set_position(m_scene.camera().position() +
+                                    this->moving_direction() * (g_movingSpeed * deltaTime));
    }
-
-   m_scene.set_camera(m_position, rotation);
-   // m_scene.set_shadow_x(m_lightX);
    m_scene.update();
 }
 

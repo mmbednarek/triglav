@@ -43,6 +43,7 @@ class Mesh
    void set_face_group(Index face, Index group);
    void set_material(Index meshGroup, std::string_view material);
 
+   [[nodiscard]] BoundingBox calculate_bouding_box() const;
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device) const;

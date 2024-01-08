@@ -277,7 +277,10 @@ InternalMesh::Vector2 InternalMesh::uv_by_id(const uint32_t index)
 InternalMesh::Tangent InternalMesh::tangent_by_id(const uint32_t index)
 {
    if (index >= m_tangents.size()) {
-      return {{0, 1, 0}, 1};
+      return {
+              {0, 1, 0},
+              1
+      };
    }
    return m_tangents[index];
 }
@@ -308,6 +311,41 @@ bool InternalMesh::is_triangulated()
    }
 
    return false;
+}
+
+BoundingBox InternalMesh::calculate_bouding_box() const
+{
+   BoundingBox result{
+           { std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::infinity() },
+           {-std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity()},
+   };
+   for (const auto vertex : m_mesh.vertices()) {
+      const auto point = m_mesh.point(vertex);
+
+      if (result.min.x > point.x()) {
+         result.min.x = point.x();
+      }
+      if (result.min.y > point.y()) {
+         result.min.y = point.y();
+      }
+      if (result.min.z > point.z()) {
+         result.min.z = point.z();
+      }
+
+      if (result.max.x < point.x()) {
+         result.max.x = point.x();
+      }
+      if (result.max.y < point.y()) {
+         result.max.y = point.y();
+      }
+      if (result.max.z < point.z()) {
+         result.max.z = point.z();
+      }
+   }
+
+   return result;
 }
 
 InternalMesh InternalMesh::from_obj_file(std::istream &stream)
@@ -422,17 +460,14 @@ DeviceMesh InternalMesh::upload_to_device(graphics_api::Device &device)
          if (indexMap.contains(index)) {
             outIndices.push_back(indexMap[index]);
          } else {
-            const auto normalVec = to_glm_vec3(this->normal_by_id(normal));
+            const auto normalVec      = to_glm_vec3(this->normal_by_id(normal));
             const auto tangentVecSign = this->tangent_by_id(tangent);
-            const auto tangentVec = to_glm_vec3(tangentVecSign.vector);
-            const auto bitangent = tangentVecSign.sign * glm::cross(normalVec, tangentVec);
+            const auto tangentVec     = to_glm_vec3(tangentVecSign.vector);
+            const auto bitangent      = tangentVecSign.sign * glm::cross(normalVec, tangentVec);
 
 
             outVertices.push_back(Vertex(to_glm_vec3(this->location(vertex_index)),
-                                         to_glm_vec2(this->uv_by_id(uv)),
-                                         normalVec,
-                                         tangentVec,
-                                         bitangent));
+                                         to_glm_vec2(this->uv_by_id(uv)), normalVec, tangentVec, bitangent));
             indexMap[index] = outVertices.size() - 1;
             outIndices.push_back(outVertices.size() - 1);
          }
@@ -466,64 +501,71 @@ void InternalMesh::reverse_orientation()
 void InternalMesh::recalculate_tangents()
 {
    SMikkTSpaceInterface interface{};
-   interface.m_getNumFaces = [] (const SMikkTSpaceContext *pContext) -> int {
-      const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
+   interface.m_getNumFaces = [](const SMikkTSpaceContext *pContext) -> int {
+      const auto *mesh = static_cast<InternalMesh *>(pContext->m_pUserData);
       return mesh->faces().size();
    };
-   interface.m_getNumVerticesOfFace = [] (const SMikkTSpaceContext * pContext, const int iFace) -> int {
-     const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
-     const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
-     return mesh->m_mesh.vertices_around_face(mesh->m_mesh.halfedge(faceIndex)).size();
+   interface.m_getNumVerticesOfFace = [](const SMikkTSpaceContext *pContext, const int iFace) -> int {
+      const auto *mesh = static_cast<InternalMesh *>(pContext->m_pUserData);
+      const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
+      return mesh->m_mesh.vertices_around_face(mesh->m_mesh.halfedge(faceIndex)).size();
    };
-   interface.m_getPosition = [] (const SMikkTSpaceContext * pContext, float fvPosOut[], const int iFace, const int iVert) {
-     const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
-     const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
-     auto halfedge = mesh->m_mesh.halfedge(faceIndex);
-     for (int i = 0; i < iVert; ++i) {
-        halfedge = mesh->m_mesh.next(halfedge);
-     }
-     const auto vertexIndex = mesh->m_mesh.target(halfedge);
-     const auto location = mesh->location(vertexIndex);
-     fvPosOut[0] = location.x();
-     fvPosOut[1] = location.y();
-     fvPosOut[2] = location.z();
+   interface.m_getPosition = [](const SMikkTSpaceContext *pContext, float fvPosOut[], const int iFace,
+                                const int iVert) {
+      const auto *mesh = static_cast<InternalMesh *>(pContext->m_pUserData);
+      const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
+      auto halfedge = mesh->m_mesh.halfedge(faceIndex);
+      for (int i = 0; i < iVert; ++i) {
+         halfedge = mesh->m_mesh.next(halfedge);
+      }
+      const auto vertexIndex = mesh->m_mesh.target(halfedge);
+      const auto location    = mesh->location(vertexIndex);
+      fvPosOut[0]            = location.x();
+      fvPosOut[1]            = location.y();
+      fvPosOut[2]            = location.z();
    };
-   interface.m_getNormal = [] (const SMikkTSpaceContext * pContext, float fvNormOut[], const int iFace, const int iVert) {
-     const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
-     const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
-     auto halfedge = mesh->m_mesh.halfedge(faceIndex);
-     for (int i = 0; i < iVert; ++i) {
-        halfedge = mesh->m_mesh.next(halfedge);
-     }
-     const auto normal = mesh->normal(halfedge);
-     if (normal.has_value()) {
-        fvNormOut[0] = normal->x();
-        fvNormOut[1] = normal->y();
-        fvNormOut[2] = normal->z();
-     }
+   interface.m_getNormal = [](const SMikkTSpaceContext *pContext, float fvNormOut[], const int iFace,
+                              const int iVert) {
+      const auto *mesh = static_cast<InternalMesh *>(pContext->m_pUserData);
+      const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
+      auto halfedge = mesh->m_mesh.halfedge(faceIndex);
+      for (int i = 0; i < iVert; ++i) {
+         halfedge = mesh->m_mesh.next(halfedge);
+      }
+      const auto normal = mesh->normal(halfedge);
+      if (normal.has_value()) {
+         fvNormOut[0] = normal->x();
+         fvNormOut[1] = normal->y();
+         fvNormOut[2] = normal->z();
+      }
    };
-   interface.m_getTexCoord = [] (const SMikkTSpaceContext * pContext, float fvTexcOut[], const int iFace, const int iVert) {
-     const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
-     const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
-     auto halfedge = mesh->m_mesh.halfedge(faceIndex);
-     for (int i = 0; i < iVert; ++i) {
-        halfedge = mesh->m_mesh.next(halfedge);
-     }
-     const auto uv = mesh->uv(halfedge);
-     if (uv.has_value()) {
-        fvTexcOut[0] = uv->x();
-        fvTexcOut[1] = uv->y();
-     }
+   interface.m_getTexCoord = [](const SMikkTSpaceContext *pContext, float fvTexcOut[], const int iFace,
+                                const int iVert) {
+      const auto *mesh = static_cast<InternalMesh *>(pContext->m_pUserData);
+      const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
+      auto halfedge = mesh->m_mesh.halfedge(faceIndex);
+      for (int i = 0; i < iVert; ++i) {
+         halfedge = mesh->m_mesh.next(halfedge);
+      }
+      const auto uv = mesh->uv(halfedge);
+      if (uv.has_value()) {
+         fvTexcOut[0] = uv->x();
+         fvTexcOut[1] = uv->y();
+      }
    };
-   interface.m_setTSpaceBasic = [] (const SMikkTSpaceContext * pContext, const float fvTangent[], const float fSign, const int iFace, const int iVert) {
-     auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
-     const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
-     auto halfedge = mesh->m_mesh.halfedge(faceIndex);
-     for (int i = 0; i < iVert; ++i) {
-        halfedge = mesh->m_mesh.next(halfedge);
-     }
-     mesh->m_tangents.emplace_back(Tangent{Vector3{fvTangent[0], fvTangent[1], fvTangent[2]}, fSign});
-     mesh->m_tangentProperties[halfedge] = mesh->m_tangents.size() - 1;
+   interface.m_setTSpaceBasic = [](const SMikkTSpaceContext *pContext, const float fvTangent[],
+                                   const float fSign, const int iFace, const int iVert) {
+      auto *mesh = static_cast<InternalMesh *>(pContext->m_pUserData);
+      const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
+      auto halfedge = mesh->m_mesh.halfedge(faceIndex);
+      for (int i = 0; i < iVert; ++i) {
+         halfedge = mesh->m_mesh.next(halfedge);
+      }
+      mesh->m_tangents.emplace_back(Tangent{
+              Vector3{fvTangent[0], fvTangent[1], fvTangent[2]},
+              fSign
+      });
+      mesh->m_tangentProperties[halfedge] = mesh->m_tangents.size() - 1;
    };
 
    SMikkTSpaceContext context{&interface, this};

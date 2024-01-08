@@ -8,6 +8,7 @@
 #include "Context2D.h"
 #include "Context3D.h"
 #include "Core.h"
+#include "DebugLinesRenderer.h"
 #include "GlyphAtlas.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
@@ -21,6 +22,17 @@ namespace renderer {
 class Renderer
 {
  public:
+   enum class Moving
+   {
+      None,
+      Foward,
+      Backwards,
+      Left,
+      Right,
+      Up,
+      Down
+   };
+
    Renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
@@ -45,6 +57,7 @@ class Renderer
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    static float calculate_framerate(float frameDuration);
+   glm::vec3 moving_direction() const;
 
    bool m_receivedMouseInput{false};
    float m_lastMouseX{};
@@ -54,15 +67,9 @@ class Renderer
    float m_pitch{0};
    float m_distance{12};
    float m_lightX{-40};
+   bool m_showDebugLines{false};
    glm::vec3 m_position{};
-   bool m_isMovingForward{false};
-   bool m_isMovingBackwards{false};
-   bool m_isMovingLeft{false};
-   bool m_isMovingRight{false};
-   bool m_isMovingUp{false};
-   bool m_isMovingDown{false};
-   bool m_isLightMovingForward{false};
-   bool m_isLightMovingBackwards{false};
+   Moving m_moveDirection{Moving::None};
 
    graphics_api::DeviceUPtr m_device;
 
@@ -80,6 +87,7 @@ class Renderer
    Context3D m_context3D;
    Context2D m_context2D;
    ShadowMap m_shadowMap;
+   DebugLinesRenderer m_debugLinesRenderer;
    Scene m_scene;
    SkyBox m_skyBox;
    GlyphAtlas m_glyphAtlasBold;
@@ -91,6 +99,8 @@ class Renderer
    TextObject m_framerateValue;
    TextObject m_positionLabel;
    TextObject m_positionValue;
+   TextObject m_triangleCountLabel;
+   TextObject m_triangleCountValue;
 };
 
 }// namespace renderer

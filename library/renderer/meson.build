@@ -3,6 +3,7 @@ renderer_sources = files([
   'src/Camera.cpp',
   'src/Context2D.cpp',
   'src/Context3D.cpp',
+  'src/DebugLinesRenderer.cpp',
   'src/GlyphAtlas.cpp',
   'src/Material.cpp',
   'src/Model.cpp',

@@ -4,11 +4,17 @@
 
 namespace renderer {
 
+struct MaterialProps
+{
+   alignas(4) int hasNormalMap{0};
+   alignas(4) float diffuseAmount{};
+};
+
 struct Material
 {
    Name texture{};
    Name normal_texture{};
-   float diffuseAmount{};
+   MaterialProps props{};
 };
 
-}
+}// namespace renderer

@@ -6,6 +6,7 @@
 
 #include "Core.h"
 #include "Name.hpp"
+#include "Material.h"
 
 namespace renderer {
 
@@ -19,6 +20,7 @@ struct MaterialRange
 struct Model
 {
    Name meshName;
+   geometry::BoundingBox boudingBox;
    std::vector<MaterialRange> range;
 };
 
@@ -31,7 +33,10 @@ struct ModelShaderMapProperties
 struct InstancedModel
 {
    Name modelName;
+   geometry::BoundingBox boudingBox;
+   glm::vec3 position{};
    graphics_api::UniformBuffer<UniformBufferObject> ubo;
+   graphics_api::UniformBuffer<MaterialProps> uboMatProps;
    graphics_api::DescriptorArray descriptors;
    ModelShaderMapProperties shadowMap;
 };

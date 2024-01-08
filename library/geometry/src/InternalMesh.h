@@ -67,6 +67,7 @@ class InternalMesh
    uint32_t tangent_id(HalfedgeIndex index);
 
    [[nodiscard]] bool is_triangulated();
+   [[nodiscard]] BoundingBox calculate_bouding_box() const;
 
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device);
    void reverse_orientation();

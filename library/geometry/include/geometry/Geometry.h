@@ -61,4 +61,10 @@ struct DeviceMesh
    std::vector<MaterialRange> ranges;
 };
 
+struct BoundingBox
+{
+   glm::vec3 min;
+   glm::vec3 max;
+};
+
 }// namespace geometry
