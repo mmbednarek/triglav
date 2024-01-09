@@ -23,6 +23,8 @@ struct Vertex
    glm::vec3 normal;
    glm::vec3 tangent;
    glm::vec3 bitangent;
+
+   bool operator==(const Vertex &rhs) const = default;
 };
 
 struct IndexedVertex
@@ -68,3 +70,35 @@ struct BoundingBox
 };
 
 }// namespace geometry
+
+namespace std {
+
+template<>
+struct hash<glm::vec3>
+{
+   size_t operator()(const glm::vec3 value) const noexcept
+   {
+      return static_cast<size_t>(3033917.0f * value.x + 5347961.0f * value.y + 5685221.0f * value.z);
+   }
+};
+
+template<>
+struct hash<glm::vec2>
+{
+   size_t operator()(const glm::vec2 value) const noexcept
+   {
+      return static_cast<size_t>(6878071.0f * value.x + 8562683.0f * value.y);
+   }
+};
+
+template<>
+struct hash<geometry::Vertex>
+{
+   size_t operator()(const geometry::Vertex &value) const noexcept
+   {
+      return 62327 * std::hash<glm::vec3>{}(value.location) + 36067 * std::hash<glm::vec3>{}(value.normal) +
+             44381 * std::hash<glm::vec2>{}(value.uv) + 15937 * std::hash<glm::vec3>{}(value.tangent);
+   }
+};
+
+}// namespace std

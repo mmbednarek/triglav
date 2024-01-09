@@ -7,6 +7,7 @@
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <glm/geometric.hpp>
 #include <mikktspace/mikktspace.h>
+#include <unordered_map>
 
 namespace {
 
@@ -34,19 +35,9 @@ geometry::IndexedVertex parse_index(const std::string &index)
    return {vertex_id, uv_id, normal_id};
 }
 
-glm::vec3 to_glm_vec3(const geometry::InternalMesh::Vector3 &vec)
-{
-   return glm::vec3{vec.x(), vec.y(), vec.z()};
-}
-
 glm::vec3 to_glm_vec3(const geometry::InternalMesh::Point3 &point)
 {
    return glm::vec3{point.x(), point.y(), point.z()};
-}
-
-glm::vec2 to_glm_vec2(const geometry::InternalMesh::Vector2 &point)
-{
-   return glm::vec2{point.x(), point.y()};
 }
 
 }// namespace
@@ -54,16 +45,18 @@ glm::vec2 to_glm_vec2(const geometry::InternalMesh::Vector2 &point)
 namespace geometry {
 
 InternalMesh::InternalMesh() :
-    m_normalProperties(m_mesh.add_property_map<HalfedgeIndex, uint32_t>("h:normals", g_invalidIndex).first),
-    m_uvProperties(m_mesh.add_property_map<HalfedgeIndex, uint32_t>("h:uvs", g_invalidIndex).first),
-    m_groupProperties(m_mesh.add_property_map<FaceIndex, Index>("f:groups", g_invalidIndex).first),
-    m_tangentProperties(m_mesh.add_property_map<HalfedgeIndex, uint32_t>("h:tangents", g_invalidIndex).first)
+    m_normals(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec3>>("h:normals", std::nullopt)
+                      .first),
+    m_uvs(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec2>>("h:uvs", std::nullopt).first),
+    m_groupIds(m_mesh.add_property_map<FaceIndex, Index>("f:groups", g_invalidIndex).first),
+    m_tangents(
+            m_mesh.add_property_map<HalfedgeIndex, std::optional<Tangent>>("h:tangents", std::nullopt).first)
 {
 }
 
-InternalMesh::VertexIndex InternalMesh::add_vertex(const Point3 location)
+InternalMesh::VertexIndex InternalMesh::add_vertex(const glm::vec3 location)
 {
-   return m_mesh.add_vertex(location);
+   return m_mesh.add_vertex(Point3{location.x, location.y, location.z});
 }
 
 InternalMesh::FaceIndex InternalMesh::add_face(const std::span<VertexIndex> vertices)
@@ -71,28 +64,10 @@ InternalMesh::FaceIndex InternalMesh::add_face(const std::span<VertexIndex> vert
    return m_mesh.add_face(vertices);
 }
 
-Index InternalMesh::add_uv(Vector2 uv)
-{
-   m_uvs.emplace_back(uv);
-   return m_uvs.size() - 1;
-}
-
-Index InternalMesh::add_normal(Vector3 normal)
-{
-   m_normals.emplace_back(normal);
-   return m_normals.size() - 1;
-}
-
 Index InternalMesh::add_group(MeshGroup normal)
 {
    m_groups.emplace_back(std::move(normal));
    return m_groups.size() - 1;
-}
-
-Index InternalMesh::add_tangent(Vector3 tangent)
-{
-   m_tangents.emplace_back(std::move(tangent));
-   return m_tangents.size() - 1;
 }
 
 size_t InternalMesh::vertex_count() const
@@ -117,13 +92,13 @@ void InternalMesh::triangulate_faces()
 
       allFacesFixed = true;
       for (const auto face : m_mesh.faces()) {
-         if (m_groupProperties[face] != g_invalidIndex)
+         if (m_groupIds[face] != g_invalidIndex)
             continue;
 
          auto origHalfedge = m_mesh.halfedge(face);
          auto halfedge     = m_mesh.prev_around_target(origHalfedge);
          auto sourceFace   = m_mesh.face(halfedge);
-         while (halfedge != origHalfedge && m_groupProperties[sourceFace] == g_invalidIndex) {
+         while (halfedge != origHalfedge && m_groupIds[sourceFace] == g_invalidIndex) {
             halfedge   = m_mesh.prev_around_target(halfedge);
             sourceFace = m_mesh.face(halfedge);
          }
@@ -133,27 +108,28 @@ void InternalMesh::triangulate_faces()
             continue;
          }
 
-         m_groupProperties[face] = m_groupProperties[sourceFace];
+         m_groupIds[face] = m_groupIds[sourceFace];
       }
    }
 
+   assert(allFacesFixed);
+
    // Fix normals and uvs for halfedges.
    for (const auto halfedge : m_mesh.halfedges()) {
-      if (m_normalProperties[halfedge] != g_invalidIndex && m_uvProperties[halfedge] != g_invalidIndex)
+      if (m_normals[halfedge].has_value() && m_uvs[halfedge].has_value())
          continue;
 
       HalfedgeIndex corresponding_halfedge = m_mesh.prev_around_target(halfedge);
-      while (corresponding_halfedge != halfedge &&
-             m_normalProperties[corresponding_halfedge] == g_invalidIndex &&
-             m_uvProperties[corresponding_halfedge] == g_invalidIndex) {
+      while (corresponding_halfedge != halfedge && not m_normals[corresponding_halfedge].has_value() &&
+             not m_uvs[corresponding_halfedge].has_value()) {
          corresponding_halfedge = m_mesh.prev_around_target(corresponding_halfedge);
       }
 
-      if (m_normalProperties[corresponding_halfedge] == g_invalidIndex)
+      if (not m_normals[corresponding_halfedge].has_value())
          continue;
 
-      m_normalProperties[halfedge] = m_normalProperties[corresponding_halfedge];
-      m_uvProperties[halfedge]     = m_uvProperties[corresponding_halfedge];
+      m_normals[halfedge] = m_normals[corresponding_halfedge];
+      m_uvs[halfedge]     = m_uvs[corresponding_halfedge];
    }
 
    m_isTriangulated = true;
@@ -164,12 +140,11 @@ void InternalMesh::recalculate_normals()
    const auto vertexNormals =
            m_mesh.add_property_map<VertexIndex, Vector3>("v:normals", Vector3(0, 0, 0)).first;
    CGAL::Polygon_mesh_processing::compute_vertex_normals(m_mesh, vertexNormals);
-   m_normals.resize(m_mesh.vertices().size());
 
    for (const auto vertex : m_mesh.vertices()) {
-      m_normals[vertex.id()] = vertexNormals[vertex];
+      const auto normal = vertexNormals[vertex];
       for (const auto halfedge : m_mesh.halfedges_around_target(m_mesh.halfedge(vertex))) {
-         m_normalProperties[halfedge] = vertex.id();
+         m_normals[halfedge] = glm::vec3{normal.x(), normal.y(), normal.z()};
       }
    }
 }
@@ -200,27 +175,27 @@ InternalMesh::VertexIndex InternalMesh::halfedge_target(const HalfedgeIndex inde
    return m_mesh.target(index);
 }
 
-void InternalMesh::set_face_uvs(const Index face, std::span<Index> uvs)
+void InternalMesh::set_face_uvs(const Index face, std::span<glm::vec2> uvs)
 {
    auto it = uvs.begin();
    for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
       if (it == uvs.end())
          break;
 
-      m_uvProperties[halfedge] = *it;
+      m_uvs[halfedge] = *it;
 
       ++it;
    }
 }
 
-void InternalMesh::set_face_normals(const Index face, std::span<Index> normals)
+void InternalMesh::set_face_normals(const Index face, std::span<glm::vec3> normals)
 {
    auto it = normals.begin();
    for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
       if (it == normals.end())
          break;
 
-      m_normalProperties[halfedge] = *it;
+      m_normals[halfedge] = *it;
 
       ++it;
    }
@@ -228,76 +203,28 @@ void InternalMesh::set_face_normals(const Index face, std::span<Index> normals)
 
 void InternalMesh::set_face_group(const Index face, const Index group)
 {
-   m_groupProperties[FaceIndex{face}] = group;
+   m_groupIds[FaceIndex{face}] = group;
 }
 
-void InternalMesh::set_material(const Index meshGroup, std::string_view material)
+void InternalMesh::set_material(const Index meshGroup, const std::string_view material)
 {
    m_groups[meshGroup].material = material;
 }
 
-InternalMesh::Point3 InternalMesh::location(const VertexIndex index) const
+glm::vec3 InternalMesh::location(const VertexIndex index) const
 {
-   return m_mesh.point(index);
+   const auto result = m_mesh.point(index);
+   return {result.x(), result.y(), result.z()};
 }
 
-std::optional<InternalMesh::Vector3> InternalMesh::normal(const HalfedgeIndex index) const
+std::optional<glm::vec3> InternalMesh::normal(const HalfedgeIndex index) const
 {
-   const auto normalIndex = m_normalProperties[index];
-   if (not is_valid(normalIndex))
-      return std::nullopt;
-   assert(normalIndex < m_normals.size());
-   return m_normals[normalIndex];
-}
-
-std::optional<InternalMesh::Vector2> InternalMesh::uv(const HalfedgeIndex index) const
-{
-   const auto uvIndex = m_uvProperties[index];
-   if (not is_valid(uvIndex))
-      return std::nullopt;
-   return m_uvs[uvIndex];
-}
-
-InternalMesh::Vector3 InternalMesh::normal_by_id(const uint32_t index)
-{
-   if (index >= m_normals.size()) {
-      return {0, 0, 1};
-   }
    return m_normals[index];
 }
 
-InternalMesh::Vector2 InternalMesh::uv_by_id(const uint32_t index)
+std::optional<glm::vec2> InternalMesh::uv(const HalfedgeIndex index) const
 {
-   if (index >= m_uvs.size()) {
-      return {0, 0};
-   }
    return m_uvs[index];
-}
-
-InternalMesh::Tangent InternalMesh::tangent_by_id(const uint32_t index)
-{
-   if (index >= m_tangents.size()) {
-      return {
-              {0, 1, 0},
-              1
-      };
-   }
-   return m_tangents[index];
-}
-
-uint32_t InternalMesh::normal_id(const HalfedgeIndex index)
-{
-   return m_normalProperties[index];
-}
-
-uint32_t InternalMesh::uv_id(const HalfedgeIndex index)
-{
-   return m_uvProperties[index];
-}
-
-uint32_t InternalMesh::tangent_id(InternalMesh::HalfedgeIndex index)
-{
-   return m_tangentProperties[index];
 }
 
 bool InternalMesh::is_triangulated()
@@ -355,28 +282,31 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
    Parser parser(stream);
    parser.parse();
 
+   std::vector<glm::vec3> normalPalette{};
+   std::vector<glm::vec2> uvPalette{};
+
    Index lastGroupIndex = g_invalidIndex;
 
    for (const auto &[name, arguments] : parser.commands()) {
       if (name == "v") {
          assert(arguments.size() >= 3);
          result.add_vertex(
-                 Point3{std::stof(arguments[0]), -std::stof(arguments[1]), std::stof(arguments[2])});
+                 glm::vec3{std::stof(arguments[0]), -std::stof(arguments[1]), std::stof(arguments[2])});
       } else if (name == "vn") {
          assert(arguments.size() >= 3);
-         result.m_normals.emplace_back(std::stof(arguments[0]), -std::stof(arguments[1]),
-                                       std::stof(arguments[2]));
+         normalPalette.emplace_back(std::stof(arguments[0]), -std::stof(arguments[1]),
+                                    std::stof(arguments[2]));
       } else if (name == "vt") {
          assert(arguments.size() >= 2);
-         result.m_uvs.emplace_back(std::stof(arguments[0]), 1 - std::stof(arguments[1]));
+         uvPalette.emplace_back(std::stof(arguments[0]), 1 - std::stof(arguments[1]));
       } else if (name == "f") {
          std::vector<SurfaceMesh::vertex_index> vertexIds;
          std::vector<IndexedVertex> indices;
 
          for (const auto &attribute : arguments) {
             const auto index = parse_index(attribute);
-            assert(index.uv <= result.m_uvs.size());
-            assert(index.normal <= result.m_normals.size());
+            assert(index.uv <= uvPalette.size());
+            assert(index.normal <= normalPalette.size());
 
             indices.push_back(index);
             SurfaceMesh::vertex_index vertexId{index.location - 1};
@@ -387,15 +317,15 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
          if (faceIndex.id() == g_invalidIndex)
             continue;
 
-         result.m_groupProperties[faceIndex] = lastGroupIndex;
+         result.m_groupIds[faceIndex] = lastGroupIndex;
 
          int i = 0;
          for (const auto halfEdge : result.m_mesh.halfedges_around_face(result.m_mesh.halfedge(faceIndex))) {
             if (indices[i].normal != -1)
-               result.m_normalProperties[halfEdge] = indices[i].normal - 1;
+               result.m_normals[halfEdge] = normalPalette[indices[i].normal - 1];
 
             if (indices[i].uv != -1)
-               result.m_uvProperties[halfEdge] = indices[i].uv - 1;
+               result.m_uvs[halfEdge] = uvPalette[indices[i].uv - 1];
 
             ++i;
          }
@@ -424,9 +354,9 @@ DeviceMesh InternalMesh::upload_to_device(graphics_api::Device &device)
 {
    if (not this->is_triangulated())
       throw std::runtime_error("mesh must be triangulated before upload to GPU");
-   assert(m_mesh.faces().size() > 0);
+   assert(not m_mesh.faces().empty());
 
-   std::map<IndexedVertex, uint32_t> indexMap;
+   std::unordered_map<Vertex, uint32_t> vertexMap{};
    std::vector<Vertex> outVertices{};
 
    std::vector<MaterialRange> materialRanges{};
@@ -436,7 +366,7 @@ DeviceMesh InternalMesh::upload_to_device(graphics_api::Device &device)
 
    std::vector<uint32_t> outIndices{};
    for (const auto face_index : this->faces()) {
-      const auto groupId = m_groupProperties[face_index];
+      const auto groupId = m_groupIds[face_index];
       if (groupId != g_invalidIndex) {
          const auto &group = m_groups[groupId];
          if (group.material != currentMaterial) {
@@ -451,24 +381,25 @@ DeviceMesh InternalMesh::upload_to_device(graphics_api::Device &device)
 
       for (const auto halfedge_index : this->face_halfedges(face_index)) {
          const auto vertex_index = this->halfedge_target(halfedge_index);
-         const auto normal       = this->normal_id(halfedge_index);
-         const auto uv           = this->uv_id(halfedge_index);
-         const auto tangent      = this->tangent_id(halfedge_index);
+         const auto normalVector = m_normals[halfedge_index].value_or(glm::vec3{0.0f, 1.0f, 0.0f});
+         const auto tangent      = m_tangents[halfedge_index].value_or(Tangent{
+                 glm::vec3{1.0f, 0.0f, 0.0f},
+                 1.0f
+         });
 
-         IndexedVertex index{vertex_index.id(), uv, normal, tangent};
+         Vertex vertex{
+                 this->location(vertex_index),
+                 m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)),
+                 normalVector,
+                 tangent.vector,
+                 tangent.sign * glm::cross(normalVector, tangent.vector),
+         };
 
-         if (indexMap.contains(index)) {
-            outIndices.push_back(indexMap[index]);
+         if (vertexMap.contains(vertex)) {
+            outIndices.push_back(vertexMap[vertex]);
          } else {
-            const auto normalVec      = to_glm_vec3(this->normal_by_id(normal));
-            const auto tangentVecSign = this->tangent_by_id(tangent);
-            const auto tangentVec     = to_glm_vec3(tangentVecSign.vector);
-            const auto bitangent      = tangentVecSign.sign * glm::cross(normalVec, tangentVec);
-
-
-            outVertices.push_back(Vertex(to_glm_vec3(this->location(vertex_index)),
-                                         to_glm_vec2(this->uv_by_id(uv)), normalVec, tangentVec, bitangent));
-            indexMap[index] = outVertices.size() - 1;
+            outVertices.push_back(vertex);
+            vertexMap[vertex] = outVertices.size() - 1;
             outIndices.push_back(outVertices.size() - 1);
          }
       }
@@ -494,7 +425,9 @@ void InternalMesh::reverse_orientation()
 {
    CGAL::Polygon_mesh_processing::reverse_face_orientations(m_mesh);
    for (auto &normal : m_normals) {
-      normal = -normal;
+      if (normal.has_value()) {
+         normal = -*normal;
+      }
    }
 }
 
@@ -520,9 +453,9 @@ void InternalMesh::recalculate_tangents()
       }
       const auto vertexIndex = mesh->m_mesh.target(halfedge);
       const auto location    = mesh->location(vertexIndex);
-      fvPosOut[0]            = location.x();
-      fvPosOut[1]            = location.y();
-      fvPosOut[2]            = location.z();
+      fvPosOut[0]            = location.x;
+      fvPosOut[1]            = location.y;
+      fvPosOut[2]            = location.z;
    };
    interface.m_getNormal = [](const SMikkTSpaceContext *pContext, float fvNormOut[], const int iFace,
                               const int iVert) {
@@ -534,9 +467,9 @@ void InternalMesh::recalculate_tangents()
       }
       const auto normal = mesh->normal(halfedge);
       if (normal.has_value()) {
-         fvNormOut[0] = normal->x();
-         fvNormOut[1] = normal->y();
-         fvNormOut[2] = normal->z();
+         fvNormOut[0] = normal->x;
+         fvNormOut[1] = normal->y;
+         fvNormOut[2] = normal->z;
       }
    };
    interface.m_getTexCoord = [](const SMikkTSpaceContext *pContext, float fvTexcOut[], const int iFace,
@@ -549,8 +482,8 @@ void InternalMesh::recalculate_tangents()
       }
       const auto uv = mesh->uv(halfedge);
       if (uv.has_value()) {
-         fvTexcOut[0] = uv->x();
-         fvTexcOut[1] = uv->y();
+         fvTexcOut[0] = uv->x;
+         fvTexcOut[1] = uv->y;
       }
    };
    interface.m_setTSpaceBasic = [](const SMikkTSpaceContext *pContext, const float fvTangent[],
@@ -561,11 +494,10 @@ void InternalMesh::recalculate_tangents()
       for (int i = 0; i < iVert; ++i) {
          halfedge = mesh->m_mesh.next(halfedge);
       }
-      mesh->m_tangents.emplace_back(Tangent{
-              Vector3{fvTangent[0], fvTangent[1], fvTangent[2]},
+      mesh->m_tangents[halfedge] = Tangent{
+              glm::vec3{fvTangent[0], fvTangent[1], fvTangent[2]},
               fSign
-      });
-      mesh->m_tangentProperties[halfedge] = mesh->m_tangents.size() - 1;
+      };
    };
 
    SMikkTSpaceContext context{&interface, this};

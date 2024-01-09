@@ -52,20 +52,6 @@ Index Mesh::add_face_range(std::span<Index> vertices)
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-Index Mesh::add_uv(float u, float v)
-{
-   assert(m_mesh != nullptr);
-   return m_mesh->add_uv({u, v});
-}
-
-// ReSharper disable once CppMemberFunctionMayBeConst
-Index Mesh::add_normal(float x, float y, float z)
-{
-   assert(m_mesh != nullptr);
-   return m_mesh->add_normal({x, y, z});
-}
-
-// ReSharper disable once CppMemberFunctionMayBeConst
 Index Mesh::add_group(MeshGroup meshGroup)
 {
    assert(m_mesh != nullptr);
@@ -79,14 +65,14 @@ size_t Mesh::vertex_count() const
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Mesh::set_face_uvs_range(const Index face, const std::span<Index> vertices)
+void Mesh::set_face_uvs_range(const Index face, const std::span<glm::vec2> vertices)
 {
    assert(m_mesh != nullptr);
    return m_mesh->set_face_uvs(face, vertices);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Mesh::set_face_normals_range(const Index face, const std::span<Index> vertices)
+void Mesh::set_face_normals_range(const Index face, const std::span<glm::vec3> vertices)
 {
    assert(m_mesh != nullptr);
    return m_mesh->set_face_normals(face, vertices);

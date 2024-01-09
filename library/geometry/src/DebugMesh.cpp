@@ -36,27 +36,30 @@ Mesh create_box(const Extent3D &extent)
 
    constexpr static auto oneThird  = 1.0f / 3.0f;
    constexpr static auto twoThirds = 2.0f / 3.0f;
-   mesh.add_uv(1, oneThird);
-   mesh.add_uv(1, twoThirds);
-   mesh.add_uv(0.75, twoThirds);
-   mesh.add_uv(0.75, oneThird);
-   mesh.add_uv(0.5, twoThirds);
-   mesh.add_uv(0.5, oneThird);
-   mesh.add_uv(0.25, twoThirds);
-   mesh.add_uv(0.25, oneThird);
-   mesh.add_uv(0, twoThirds);
-   mesh.add_uv(0, oneThird);
-   mesh.add_uv(0.5, 0);
-   mesh.add_uv(0.25, 0);
-   mesh.add_uv(0.5, 1);
-   mesh.add_uv(0.25, 1);
 
-   mesh.set_face_uvs(bottom, 3, 2, 1, 0);
-   mesh.set_face_uvs(top, 5, 4, 2, 3);
-   mesh.set_face_uvs(front, 7, 6, 4, 5);
-   mesh.set_face_uvs(back, 9, 8, 6, 7);
-   mesh.set_face_uvs(left, 11, 7, 5, 10);
-   mesh.set_face_uvs(right, 6, 13, 12, 4);
+   std::array uvs{
+           glm::vec2{   1,  oneThird},
+           glm::vec2{   1, twoThirds},
+           glm::vec2{0.75, twoThirds},
+           glm::vec2{0.75,  oneThird},
+           glm::vec2{ 0.5, twoThirds},
+           glm::vec2{ 0.5,  oneThird},
+           glm::vec2{0.25, twoThirds},
+           glm::vec2{0.25,  oneThird},
+           glm::vec2{   0, twoThirds},
+           glm::vec2{   0,  oneThird},
+           glm::vec2{ 0.5,         0},
+           glm::vec2{0.25,         0},
+           glm::vec2{ 0.5,         1},
+           glm::vec2{0.25,         1},
+   };
+
+   mesh.set_face_uvs(bottom, uvs[3], uvs[2], uvs[1], uvs[0]);
+   mesh.set_face_uvs(top, uvs[5], uvs[4], uvs[2], uvs[3]);
+   mesh.set_face_uvs(front, uvs[7], uvs[6], uvs[4], uvs[5]);
+   mesh.set_face_uvs(back, uvs[9], uvs[8], uvs[6], uvs[7]);
+   mesh.set_face_uvs(left, uvs[11], uvs[7], uvs[5], uvs[10]);
+   mesh.set_face_uvs(right, uvs[6], uvs[13], uvs[12], uvs[4]);
 
    mesh.recalculate_normals();
 
@@ -68,9 +71,12 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    Mesh mesh;
    mesh.add_group({"sphere", ""});
 
+   std::vector<glm::vec2> uvs{};
+   std::vector<glm::vec3> normals{};
+
    mesh.add_vertex(0, 0, -radius);
-   mesh.add_uv(0.5f, 0);
-   mesh.add_normal(0.0f, 0.0f, -1.0f);
+   uvs.emplace_back(0.5f, 0);
+   normals.emplace_back(0.0f, 0.0f, -1.0f);
 
    size_t last_base_index = 0;
 
@@ -91,16 +97,17 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
          const auto y      = radius * norm_y;
 
          mesh.add_vertex(x, y, z);
-         mesh.add_uv(u, v);
-         mesh.add_normal(norm_x, norm_y, norm_z);
+         uvs.emplace_back(u, v);
+         normals.emplace_back(norm_x, norm_y, norm_z);
       }
 
       if (ring == 1) {
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
             const auto face         = mesh.add_face(0, base_index + next_segment, base_index + segment);
-            mesh.set_face_uvs(face, 0, base_index + next_segment, base_index + segment);
-            mesh.set_face_normals(face, 0, base_index + next_segment, base_index + segment);
+            mesh.set_face_uvs(face, uvs[0], uvs[base_index + next_segment], uvs[base_index + segment]);
+            mesh.set_face_normals(face, normals[0], normals[base_index + next_segment],
+                                  normals[base_index + segment]);
             mesh.set_face_group(face, 0);
          }
       } else {
@@ -109,10 +116,11 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
 
             const auto face = mesh.add_face(last_base_index + segment, last_base_index + next_segment,
                                             base_index + next_segment, base_index + segment);
-            mesh.set_face_uvs(face, last_base_index + segment, last_base_index + next_segment,
-                              base_index + next_segment, base_index + segment);
-            mesh.set_face_normals(face, last_base_index + segment, last_base_index + next_segment,
-                                  base_index + next_segment, base_index + segment);
+            mesh.set_face_uvs(face, uvs[last_base_index + segment], uvs[last_base_index + next_segment],
+                              uvs[base_index + next_segment], uvs[base_index + segment]);
+            mesh.set_face_normals(face, normals[last_base_index + segment],
+                                  normals[last_base_index + next_segment], normals[base_index + next_segment],
+                                  normals[base_index + segment]);
             mesh.set_face_group(face, 0);
          }
       }
@@ -121,21 +129,24 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    }
 
    mesh.add_vertex(0, 0, radius);
-   mesh.add_uv(0.5, 1);
-   mesh.add_normal(0.0f, 0.0f, 1.0f);
+   uvs.emplace_back(0.5, 1);
+   normals.emplace_back(0.0f, 0.0f, 1.0f);
    const auto last_index = mesh.vertex_count() - 1;
 
    for (int segment = 0; segment < segment_count; ++segment) {
       const auto next_segment = segment + 1;
       const auto face = mesh.add_face(last_base_index + next_segment, last_index, last_base_index + segment);
-      mesh.set_face_uvs(face, last_base_index + next_segment, last_index, last_base_index + segment);
-      mesh.set_face_normals(face, last_base_index + next_segment, last_index, last_base_index + segment);
+      mesh.set_face_uvs(face, uvs[last_base_index + next_segment], uvs[last_index],
+                        uvs[last_base_index + segment]);
+      mesh.set_face_normals(face, normals[last_base_index + next_segment], normals[last_index],
+                            normals[last_base_index + segment]);
       mesh.set_face_group(face, 0);
    }
 
    return mesh;
 }
 
+/*
 Mesh create_cilinder(const int segment_count, const int ring_count, const float radius, const float depth)
 {
    Mesh mesh;
@@ -201,5 +212,6 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
 
    return mesh;
 }
+*/
 
 }// namespace geometry

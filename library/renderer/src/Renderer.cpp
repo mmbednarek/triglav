@@ -176,6 +176,13 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
    });
 
    m_scene.add_object(SceneObject{
+           .model{"mdl:pine"_name},
+           .position{12.0f, -20.0f, 0},
+           .rotation{glm::vec3{0, 0, glm::radians(0.0f)}},
+           .scale{30.0, 30.0, 30.0},
+   });
+
+   m_scene.add_object(SceneObject{
            .model{"mdl:column"_name},
            .position{0.0f, -32.0f, 0.0f},
            .rotation{1, 0, 0, 0},

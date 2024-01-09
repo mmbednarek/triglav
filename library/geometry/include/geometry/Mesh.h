@@ -31,15 +31,13 @@ class Mesh
    Index add_face_range(std::span<Index> vertices);
    template<typename... TVertices>
    Index add_face(TVertices... vertices);
-   Index add_uv(float u, float v);
-   Index add_normal(float x, float y, float z);
    Index add_group(MeshGroup meshGroup);
-   void set_face_uvs_range(Index face, std::span<Index> vertices);
-   template<typename... TVertices>
-   void set_face_uvs(Index face, TVertices... vertices);
-   void set_face_normals_range(Index face, std::span<Index> vertices);
-   template<typename... TVertices>
-   void set_face_normals(Index face, TVertices... vertices);
+   void set_face_uvs_range(Index face, std::span<glm::vec2> vertices);
+   template<typename... TUVs>
+   void set_face_uvs(Index face, TUVs... vertices);
+   void set_face_normals_range(Index face, std::span<glm::vec3> vertices);
+   template<typename... TNormals>
+   void set_face_normals(Index face, TNormals... vertices);
    void set_face_group(Index face, Index group);
    void set_material(Index meshGroup, std::string_view material);
 
@@ -64,19 +62,19 @@ Index Mesh::add_face(TVertices... vertices)
    return this->add_face_range(inVertices);
 }
 
-template<typename... TVertices>
-void Mesh::set_face_uvs(Index face, TVertices... vertices)
+template<typename... TUVs>
+void Mesh::set_face_uvs(Index face, TUVs... vertices)
 {
    static_assert(sizeof...(vertices) >= 3);
-   std::array<Index, sizeof...(vertices)> inVertices{static_cast<Index>(vertices)...};
+   std::array<glm::vec2, sizeof...(vertices)> inVertices{vertices...};
    this->set_face_uvs_range(face, inVertices);
 }
 
-template<typename... TVertices>
-void Mesh::set_face_normals(Index face, TVertices... vertices)
+template<typename... TNormals>
+void Mesh::set_face_normals(Index face, TNormals... vertices)
 {
    static_assert(sizeof...(vertices) >= 3);
-   std::array<Index, sizeof...(vertices)> inVertices{static_cast<Index>(vertices)...};
+   std::array<glm::vec3, sizeof...(vertices)> inVertices{vertices...};
    this->set_face_normals_range(face, inVertices);
 }
 
