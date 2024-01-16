@@ -7,6 +7,7 @@ renderer_sources = files([
   'src/GlyphAtlas.cpp',
   'src/Material.cpp',
   'src/Model.cpp',
+  'src/RectangleRenderer.cpp',
   'src/Renderer.cpp',
   'src/ResourceManager.cpp',
   'src/Scene.cpp',

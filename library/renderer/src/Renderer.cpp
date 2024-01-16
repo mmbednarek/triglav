@@ -4,7 +4,6 @@
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include "geometry/DebugMesh.h"
 #include "geometry/Mesh.h"
@@ -129,7 +128,6 @@ auto g_runes{make_runes()};
 
 Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
-    m_fontManger(),
     m_resourceManager(create_resource_manager(*m_device, m_fontManger)),
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
@@ -144,6 +142,8 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMap(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_renderPass, *m_resourceManager),
+    m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
+    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 180.0f})),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
@@ -157,6 +157,8 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_framerateValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
     m_positionLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Position")),
     m_positionValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0, 0")),
+    m_orientationLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Orientation")),
+    m_orientationValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0")),
     m_triangleCountLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Triangle Count")),
     m_triangleCountValue(m_textRenderer.create_text_object(m_glyphAtlas, "0"))
 {
@@ -228,9 +230,10 @@ void Renderer::on_render()
    const auto framerateStr = std::format("{}", framerate);
    m_textRenderer.update_text_object(m_glyphAtlas, m_framerateValue, framerateStr);
    const auto camPos      = m_scene.camera().position();
-   const auto positionStr = std::format("({:.2f}, {:.2f}, {:.2f}) P{:.2f} Y{:.2f}", camPos.x, camPos.y,
-                                        camPos.z, m_pitch, m_yaw);
+   const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
    m_textRenderer.update_text_object(m_glyphAtlas, m_positionValue, positionStr);
+   const auto orientationStr = std::format("{:.2f}, {:.2f}", m_pitch, m_yaw);
+   m_textRenderer.update_text_object(m_glyphAtlas, m_orientationValue, orientationStr);
    const auto triangleCountStr = std::format("{}", m_commandList.triangle_count());
    m_textRenderer.update_text_object(m_glyphAtlas, m_triangleCountValue, triangleCountStr);
 
@@ -273,23 +276,31 @@ void Renderer::on_render()
          m_scene.render_debug_lines();
       }
 
+      m_rectangleRenderer.begin_render(m_commandList);
+      m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle);
+
       // m_context2D.begin_render();
       // m_context2D.draw_sprite(m_sprite, {0.0f, 0.0f}, {0.2f, 0.2f});
 
       m_textRenderer.begin_render(m_commandList);
       auto textY = 16.0f + m_titleLabel.metric.height;
       m_textRenderer.draw_text_object(m_commandList, m_titleLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      textY += 16.0f + m_framerateLabel.metric.height;
+      textY += 24.0f + m_framerateLabel.metric.height;
       m_textRenderer.draw_text_object(m_commandList, m_framerateLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_framerateValue,
                                       {16.0f + m_framerateLabel.metric.width + 8.0f, textY},
                                       {1.0f, 1.0f, 0.4f});
-      textY += 8.0f + m_positionLabel.metric.height;
+      textY += 12.0f + m_positionLabel.metric.height;
       m_textRenderer.draw_text_object(m_commandList, m_positionLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_positionValue,
                                       {16.0f + m_positionLabel.metric.width + 8.0f, textY},
                                       {1.0f, 1.0f, 0.4f});
-      textY += 8.0f + m_triangleCountLabel.metric.height;
+      textY += 12.0f + m_orientationLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_orientationLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_orientationValue,
+                                      {16.0f + m_orientationLabel.metric.width + 8.0f, textY},
+                                      {1.0f, 1.0f, 0.4f});
+      textY += 12.0f + m_triangleCountLabel.metric.height;
       m_textRenderer.draw_text_object(m_commandList, m_triangleCountLabel, {16.0f, textY},
                                       {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_triangleCountValue,

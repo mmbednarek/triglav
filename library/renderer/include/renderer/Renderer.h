@@ -10,6 +10,7 @@
 #include "Core.h"
 #include "DebugLinesRenderer.h"
 #include "GlyphAtlas.h"
+#include "RectangleRenderer.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "Scene.h"
@@ -88,6 +89,8 @@ class Renderer
    Context2D m_context2D;
    ShadowMap m_shadowMap;
    DebugLinesRenderer m_debugLinesRenderer;
+   RectangleRenderer m_rectangleRenderer;
+   Rectangle m_rectangle;
    Scene m_scene;
    SkyBox m_skyBox;
    GlyphAtlas m_glyphAtlasBold;
@@ -99,6 +102,8 @@ class Renderer
    TextObject m_framerateValue;
    TextObject m_positionLabel;
    TextObject m_positionValue;
+   TextObject m_orientationLabel;
+   TextObject m_orientationValue;
    TextObject m_triangleCountLabel;
    TextObject m_triangleCountValue;
 };

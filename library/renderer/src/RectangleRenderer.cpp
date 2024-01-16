@@ -1,0 +1,74 @@
+#include "RectangleRenderer.h"
+
+#include "graphics_api/CommandList.h"
+#include "graphics_api/DescriptorWriter.h"
+#include "graphics_api/PipelineBuilder.h"
+
+namespace renderer {
+
+RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+                                     const ResourceManager &resourceManager) :
+    m_device(device),
+    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderPass)
+                                   .fragment_shader(resourceManager.shader("fsh:rectangle"_name))
+                                   .vertex_shader(resourceManager.shader("vsh:rectangle"_name))
+                                   .begin_vertex_layout<glm::vec2>()
+                                   .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), 0)
+                                   .end_vertex_layout()
+                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                                       graphics_api::ShaderStage::Vertex)
+                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                                       graphics_api::ShaderStage::Fragment)
+                                   .enable_depth_test(false)
+                                   .build())),
+    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 1, 20)))
+{
+}
+
+Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect)
+{
+   // rect: {left, top, right, bottom}
+   std::array vertices{
+           glm::vec2{rect.x, rect.y},
+           glm::vec2{rect.x, rect.w},
+           glm::vec2{rect.z, rect.y},
+           glm::vec2{rect.z, rect.y},
+           glm::vec2{rect.x, rect.w},
+           glm::vec2{rect.z, rect.w},
+   };
+   graphics_api::VertexArray<glm::vec2> array(m_device, vertices.size());
+   array.write(vertices.data(), vertices.size());
+
+   graphics_api::UniformBuffer<Rectangle::VertexUBO> vertexUbo{m_device};
+   *vertexUbo = Rectangle::VertexUBO{};
+   graphics_api::UniformBuffer<Rectangle::FragmentUBO> fragmentUbo{m_device};
+   *fragmentUbo = Rectangle::FragmentUBO{};
+
+   auto descriptors = checkResult(m_descriptorPool.allocate_array(1));
+
+   graphics_api::DescriptorWriter writer(m_device, descriptors[0]);
+   writer.set_uniform_buffer(0, vertexUbo);
+   writer.set_uniform_buffer(1, fragmentUbo);
+
+   return Rectangle{rect, std::move(array), std::move(vertexUbo), std::move(fragmentUbo),
+                    std::move(descriptors)};
+}
+
+void RectangleRenderer::begin_render(graphics_api::CommandList &cmdList) const
+{
+   cmdList.bind_pipeline(m_pipeline);
+}
+
+void RectangleRenderer::draw(const graphics_api::CommandList &cmdList,
+                             const graphics_api::RenderPass &renderPass, const Rectangle &rect) const
+{
+   rect.vertexUBO->viewportSize = {renderPass.resolution().width, renderPass.resolution().height};
+   rect.vertexUBO->position     = {rect.rect.x, rect.rect.y};
+   rect.fragmentUBO->rectSize   = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
+
+   cmdList.bind_descriptor_set(rect.descriptors[0]);
+   cmdList.bind_vertex_array(rect.array);
+   cmdList.draw_primitives(static_cast<int>(rect.array.count()), 0);
+}
+
+}// namespace renderer

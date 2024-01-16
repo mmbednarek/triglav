@@ -7,6 +7,7 @@ shader_targets = []
 subdir('model')
 subdir('shadow_map')
 subdir('skybox')
+subdir('rectangle')
 subdir('sprite')
 subdir('text')
 subdir('debug_lines')
