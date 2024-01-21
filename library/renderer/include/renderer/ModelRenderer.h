@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Model.h"
+#include "graphics_api/Pipeline.h"
+#include "graphics_api/DescriptorPool.h"
 
-#include <glm/vec3.hpp>
+#include "Model.h"
 
 namespace graphics_api {
 class Device;
@@ -15,24 +16,16 @@ namespace renderer {
 class ResourceManager;
 class ShadowMap;
 
-struct PushConstant
-{
-   alignas(16) glm::vec3 lightPosition{};
-   alignas(16) glm::vec3 cameraPosition{};
-};
-
-class Context3D
+class ModelRenderer
 {
  public:
-   Context3D(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-             ResourceManager &resourceManager);
+   ModelRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+                 ResourceManager &resourceManager);
 
    InstancedModel instance_model(Name modelName, ShadowMap &shadowMap);
    void set_active_command_list(graphics_api::CommandList *commandList);
    void begin_render();
    void draw_model(const InstancedModel &instancedModel) const;
-   void set_light_position(glm::vec3 pos);
-   void set_camera_position(glm::vec3 pos);
    [[nodiscard]] graphics_api::CommandList &command_list() const;
 
  private:
@@ -41,7 +34,6 @@ class Context3D
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descriptorPool;
    graphics_api::Sampler m_sampler;
-   PushConstant m_pushConstant;
 
    graphics_api::CommandList *m_commandList{};
 };

@@ -1,5 +1,7 @@
-#include "Context3D.h"
+#include "ModelRenderer.h"
 
+#include "graphics_api/CommandList.h"
+#include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
 
@@ -8,15 +10,12 @@
 #include "ResourceManager.h"
 #include "ShadowMap.h"
 
-#include <graphics_api/CommandList.h>
-#include <graphics_api/DescriptorWriter.h>
-
 namespace renderer {
 
 constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
 
-Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                     ResourceManager &resourceManager) :
+ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+                             ResourceManager &resourceManager) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
@@ -38,11 +37,8 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
                                         graphics_api::ShaderStage::Fragment)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::ShaderStage::Fragment)
-                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::ShaderStage::Fragment)
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::ShaderStage::Fragment)
-                    .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstant))
                     .enable_depth_test(true)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 100, 100))),
@@ -50,7 +46,7 @@ Context3D::Context3D(graphics_api::Device &device, graphics_api::RenderPass &ren
 {
 }
 
-InstancedModel Context3D::instance_model(const Name modelName, ShadowMap &shadowMap)
+InstancedModel ModelRenderer::instance_model(const Name modelName, ShadowMap &shadowMap)
 {
    const auto &model = m_resourceManager.model(modelName);
    auto descriptors  = checkResult(m_descriptorPool.allocate_array(model.range.size()));
@@ -72,9 +68,8 @@ InstancedModel Context3D::instance_model(const Name modelName, ShadowMap &shadow
          descWriter.set_sampled_texture(2, normalTexture, m_sampler);
       }
 
-      descWriter.set_sampled_texture(3, shadowMap.depth_texture(), m_sampler);
       *uboMatProps = material.props;
-      descWriter.set_uniform_buffer(4, uboMatProps);
+      descWriter.set_uniform_buffer(3, uboMatProps);
 
       ++index;
    }
@@ -88,18 +83,17 @@ InstancedModel Context3D::instance_model(const Name modelName, ShadowMap &shadow
                          shadowMap.create_model_properties()};
 }
 
-void Context3D::set_active_command_list(graphics_api::CommandList *commandList)
+void ModelRenderer::set_active_command_list(graphics_api::CommandList *commandList)
 {
    m_commandList = commandList;
 }
 
-void Context3D::begin_render()
+void ModelRenderer::begin_render()
 {
    m_commandList->bind_pipeline(m_pipeline);
-   m_commandList->push_constant(graphics_api::ShaderStage::Fragment, m_pushConstant);
 }
 
-void Context3D::draw_model(const InstancedModel &instancedModel) const
+void ModelRenderer::draw_model(const InstancedModel &instancedModel) const
 {
    assert(m_commandList != nullptr);
 
@@ -119,17 +113,7 @@ void Context3D::draw_model(const InstancedModel &instancedModel) const
    }
 }
 
-void Context3D::set_light_position(const glm::vec3 pos)
-{
-   m_pushConstant.lightPosition = pos;
-}
-
-void Context3D::set_camera_position(const glm::vec3 pos)
-{
-   m_pushConstant.cameraPosition = pos;
-}
-
-graphics_api::CommandList &Context3D::command_list() const
+graphics_api::CommandList &ModelRenderer::command_list() const
 {
    return *m_commandList;
 }

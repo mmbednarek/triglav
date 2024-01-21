@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "graphics_api/HostVisibleBuffer.hpp"
+#include "graphics_api/DescriptorArray.h"
 
 #include "Core.h"
 #include "Name.hpp"

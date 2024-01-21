@@ -79,6 +79,11 @@ SampleCount DepthRenderTarget::sample_count() const
    return SampleCount::Single;
 }
 
+int DepthRenderTarget::color_attachment_count() const
+{
+   return 0;
+}
+
 Result<Framebuffer> DepthRenderTarget::create_framebuffer(const RenderPass &renderPass,
                                                      const Texture &texture) const
 {

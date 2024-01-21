@@ -265,7 +265,8 @@ Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
    VkPhysicalDeviceProperties properties{};
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
-   return RenderPass(std::move(renderPass), renderTarget.resolution(), renderTarget.sample_count());
+   return RenderPass(std::move(renderPass), renderTarget.resolution(), renderTarget.sample_count(),
+                     renderTarget.color_attachment_count());
 }
 
 Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,
@@ -370,6 +371,9 @@ VkImageTiling to_vulkan_image_tiling(const TextureType type)
    case TextureType::DepthBuffer:       // fallthrough
    case TextureType::SampledDepthBuffer:// fallthrough
    case TextureType::MultisampleImage: return VK_IMAGE_TILING_OPTIMAL;
+   case TextureType::ColorAttachment:
+      return VK_IMAGE_TILING_OPTIMAL;
+      // case TextureType::ColorAttachment: return VK_IMAGE_TILING_LINEAR;
    }
    return {};
 }
@@ -383,6 +387,7 @@ VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
       return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    case TextureType::MultisampleImage:
       return VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+   case TextureType::ColorAttachment: return VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    }
    return {};
 }
@@ -394,6 +399,7 @@ VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
    case TextureType::DepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
    case TextureType::SampledDepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
    case TextureType::MultisampleImage: return VK_IMAGE_ASPECT_COLOR_BIT;
+   case TextureType::ColorAttachment: return VK_IMAGE_ASPECT_COLOR_BIT;
    }
    return {};
 }
@@ -492,6 +498,11 @@ Result<DepthRenderTarget> Device::create_depth_render_target(const ColorFormat &
                                                              const Resolution &resolution) const
 {
    return DepthRenderTarget(*m_device, resolution, depthFormat);
+}
+
+Result<TextureRenderTarget> Device::create_texture_render_target(const Resolution &resolution) const
+{
+   return TextureRenderTarget(*m_device, resolution);
 }
 
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const

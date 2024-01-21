@@ -17,6 +17,7 @@ graphics_api_sources = files([
   'src/Swapchain.cpp',
   'src/Synchronization.cpp',
   'src/Texture.cpp',
+  'src/TextureRenderTarget.cpp',
   'src/vulkan/Extensions.cpp',
   'src/vulkan/Util.cpp',
   'src/vulkan/Util.h',

@@ -23,6 +23,7 @@ class IRenderTarget
    [[nodiscard]] virtual std::vector<VkSubpassDependency> vulkan_subpass_dependencies() = 0;
    [[nodiscard]] virtual Resolution resolution() const                                  = 0;
    [[nodiscard]] virtual SampleCount sample_count() const                               = 0;
+   [[nodiscard]] virtual int color_attachment_count() const                             = 0;
 };
 
 }// namespace graphics_api

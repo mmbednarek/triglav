@@ -4,7 +4,7 @@
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
 
-#include "Context3D.h"
+#include "ModelRenderer.h"
 #include "Core.h"
 #include "ResourceManager.h"
 
@@ -46,12 +46,12 @@ const graphics_api::Framebuffer &ShadowMap::framebuffer() const
    return m_framebuffer;
 }
 
-void ShadowMap::on_begin_render(const Context3D &ctx) const
+void ShadowMap::on_begin_render(const ModelRenderer &ctx) const
 {
    ctx.command_list().bind_pipeline(m_pipeline);
 }
 
-void ShadowMap::draw_model(const Context3D &ctx, const InstancedModel &instancedModel) const
+void ShadowMap::draw_model(const ModelRenderer &ctx, const InstancedModel &instancedModel) const
 {
    const auto &model = m_resourceManager.model(instancedModel.modelName);
    const auto &mesh  = m_resourceManager.mesh(model.meshName);

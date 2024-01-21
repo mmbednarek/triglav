@@ -46,7 +46,8 @@ enum class ColorFormatPart
    sRGB,
    UNorm16,
    UInt,
-   Float32
+   Float32,
+   Float16
 };
 
 constexpr size_t color_format_part_size(const ColorFormatPart part)
@@ -56,6 +57,7 @@ constexpr size_t color_format_part_size(const ColorFormatPart part)
    case ColorFormatPart::sRGB: return 1;
    case ColorFormatPart::UNorm16: return 2;
    case ColorFormatPart::UInt: return 1;
+   case ColorFormatPart::Float16: return 2;
    case ColorFormatPart::Float32: return 4;
    }
    return 0;
@@ -153,6 +155,7 @@ enum class TextureType
    DepthBuffer,
    SampledDepthBuffer,
    MultisampleImage,
+   ColorAttachment,
 };
 
 enum class SampleCount : uint32_t
@@ -184,6 +187,29 @@ enum class Culling
 {
    Clockwise,
    CounterClockwise,
+};
+
+enum class AttachmentType
+{
+   Color,
+   Depth,
+   Presentable,
+};
+
+enum class AttachmentLifetime
+{
+   // Clear before rendering, preserve after rendering
+   ClearPreserve,
+   // Clear before rendering, discard output
+   ClearDiscard,
+   // Keep data before rendering, preserve after redering
+   KeepPreserve,
+   // Keep data before rendering, discard output
+   KeepDiscard,
+   // Ignore image data, preserve output
+   IgnorePreserve,
+   // Ignore image data, discard output
+   IgnoreDiscard,
 };
 
 template<typename T>

@@ -9,7 +9,7 @@
 namespace renderer {
 
 class ResourceManager;
-class Context3D;
+class ModelRenderer;
 
 class ShadowMap
 {
@@ -19,8 +19,8 @@ class ShadowMap
    [[nodiscard]] const graphics_api::Texture &depth_texture() const;
    [[nodiscard]] const graphics_api::Framebuffer &framebuffer() const;
 
-   void on_begin_render(const Context3D &ctx) const;
-   void draw_model(const Context3D &ctx, const InstancedModel &instancedModel) const;
+   void on_begin_render(const ModelRenderer &ctx) const;
+   void draw_model(const ModelRenderer &ctx, const InstancedModel &instancedModel) const;
    ModelShaderMapProperties create_model_properties();
 
  private:

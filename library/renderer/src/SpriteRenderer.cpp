@@ -1,4 +1,4 @@
-#include "Context2D.h"
+#include "SpriteRenderer.h"
 
 #include "graphics_api/CommandList.h"
 #include "graphics_api/DescriptorWriter.h"
@@ -13,7 +13,7 @@ struct Vertex2D
    glm::vec3 location;
 };
 
-Context2D::Context2D(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
                      ResourceManager &resourceManager) :
     m_device(device),
     m_renderPass(renderPass),
@@ -34,13 +34,13 @@ Context2D::Context2D(graphics_api::Device &device, graphics_api::RenderPass &ren
 {
 }
 
-Sprite Context2D::create_sprite(const Name textureName)
+Sprite SpriteRenderer::create_sprite(const Name textureName)
 {
    const auto &texture = m_resourceManager.texture(textureName);
    return this->create_sprite_from_texture(texture);
 }
 
-Sprite Context2D::create_sprite_from_texture(const graphics_api::Texture &texture)
+Sprite SpriteRenderer::create_sprite_from_texture(const graphics_api::Texture &texture)
 {
    graphics_api::UniformBuffer<SpriteUBO> ubo(m_device);
 
@@ -56,18 +56,18 @@ Sprite Context2D::create_sprite_from_texture(const graphics_api::Texture &textur
                  std::move(descriptors)};
 }
 
-void Context2D::set_active_command_list(graphics_api::CommandList *commandList)
+void SpriteRenderer::set_active_command_list(graphics_api::CommandList *commandList)
 {
    m_commandList = commandList;
 }
 
-void Context2D::begin_render() const
+void SpriteRenderer::begin_render() const
 {
    assert(m_commandList);
    m_commandList->bind_pipeline(m_pipeline);
 }
 
-void Context2D::draw_sprite(const Sprite &sprite, const glm::vec2 position, const glm::vec2 scale) const
+void SpriteRenderer::draw_sprite(const Sprite &sprite, const glm::vec2 position, const glm::vec2 scale) const
 {
    assert(m_commandList != nullptr);
 

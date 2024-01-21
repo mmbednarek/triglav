@@ -19,7 +19,7 @@ namespace renderer {
 
 constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_COLOR_FORMAT(D, Float32);
-constexpr auto g_sampleCount = graphics_api::SampleCount::Quadruple;
+constexpr auto g_sampleCount = graphics_api::SampleCount::Single;
 
 namespace {
 
@@ -122,6 +122,29 @@ std::vector<font::Rune> make_runes()
    return runes;
 }
 
+graphics_api::TextureRenderTarget create_render_target(const graphics_api::Device &device,
+                                                       const graphics_api::Resolution resolution)
+{
+   using graphics_api::AttachmentLifetime;
+   using graphics_api::AttachmentType;
+   using graphics_api::SampleCount;
+
+   auto renderTarget = checkResult(device.create_texture_render_target(resolution));
+   // Color
+   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve, g_colorFormat,
+                               SampleCount::Single);
+   // Position
+   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                               GAPI_COLOR_FORMAT(RGBA, Float16), SampleCount::Single);
+   // Normaal
+   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                               GAPI_COLOR_FORMAT(RGBA, Float16), SampleCount::Single);
+   // Depth
+   renderTarget.add_attachment(AttachmentType::Depth, AttachmentLifetime::ClearPreserve, g_depthFormat,
+                               SampleCount::Single);
+   return renderTarget;
+}
+
 auto g_runes{make_runes()};
 
 }// namespace
@@ -138,12 +161,30 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
     m_inFlightFence(checkResult(m_device->create_fence())),
     m_commandList(checkResult(m_device->create_command_list())),
-    m_context3D(*m_device, m_renderPass, *m_resourceManager),
+    m_modelRenderTarget(create_render_target(*m_device, m_renderPass.resolution())),
+    m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
+    m_modelColorTexture(checkResult(m_device->create_texture(g_colorFormat, m_renderPass.resolution(),
+                                                             graphics_api::TextureType::ColorAttachment))),
+    m_modelPositionTexture(
+            checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), m_renderPass.resolution(),
+                                                 graphics_api::TextureType::ColorAttachment))),
+    m_modelNormalTexture(
+            checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), m_renderPass.resolution(),
+                                                 graphics_api::TextureType::ColorAttachment))),
+    m_modelDepthTexture(checkResult(m_device->create_texture(g_depthFormat, m_renderPass.resolution(),
+                                                             graphics_api::TextureType::SampledDepthBuffer))),
+    m_modelFramebuffer(checkResult(m_modelRenderTarget.create_framebuffer(
+            m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
+            m_modelDepthTexture))),
+    m_context3D(*m_device, m_modelRenderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMap(*m_device, *m_resourceManager),
-    m_debugLinesRenderer(*m_device, m_renderPass, *m_resourceManager),
+    m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
     m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 180.0f})),
+    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_modelColorTexture,
+                             m_modelPositionTexture, m_modelNormalTexture, m_modelDepthTexture,
+                             m_resourceManager->texture("tex:noise"_name), m_shadowMap.depth_texture()),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
@@ -152,7 +193,7 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_sprite(m_context2D.create_sprite_from_texture(m_shadowMap.depth_texture())),
     // m_sprite(m_context2D.create_sprite_from_texture(m_glyphAtlas.texture())),
     m_textRenderer(*m_device, m_renderPass, *m_resourceManager),
-    m_titleLabel(m_textRenderer.create_text_object(m_glyphAtlas, "Triglav Engine Demo - 0.0.1")),
+    m_titleLabel(m_textRenderer.create_text_object(m_glyphAtlas, "Triglav Engine Demo")),
     m_framerateLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Framerate")),
     m_framerateValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
     m_positionLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Position")),
@@ -256,14 +297,14 @@ void Renderer::on_render()
 
       m_commandList.end_render_pass();
    }
-
    {
-      std::array<graphics_api::ClearValue, 3> clearValues{
+      std::array<graphics_api::ClearValue, 4> clearValues{
+              graphics_api::ColorPalette::Black,
+              graphics_api::ColorPalette::Black,
               graphics_api::ColorPalette::Black,
               graphics_api::DepthStenctilValue{1.0f, 0.0f},
-              graphics_api::ColorPalette::Black,
       };
-      m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
+      m_commandList.begin_render_pass(m_modelFramebuffer, clearValues);
 
       m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_resolution.width),
                          static_cast<float>(m_resolution.height));
@@ -275,6 +316,20 @@ void Renderer::on_render()
          m_debugLinesRenderer.begin_render(m_commandList);
          m_scene.render_debug_lines();
       }
+
+      m_commandList.end_render_pass();
+   }
+
+   {
+      std::array<graphics_api::ClearValue, 3> clearValues{
+              graphics_api::ColorPalette::Black,
+              graphics_api::DepthStenctilValue{1.0f, 0.0f},
+              graphics_api::ColorPalette::Black,
+      };
+      m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
+
+      m_postProcessingRenderer.draw(m_commandList, m_scene.shadow_map_camera().position(),
+                                    m_scene.camera().position(), m_scene.shadow_map_camera().matrix());
 
       m_rectangleRenderer.begin_render(m_commandList);
       m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle);
@@ -381,7 +436,7 @@ void Renderer::on_mouse_wheel_turn(const float x)
 
 graphics_api::PipelineBuilder Renderer::create_pipeline()
 {
-   return {*m_device, m_renderPass};
+   return {*m_device, m_modelRenderPass};
 }
 
 ResourceManager &Renderer::resource_manager() const

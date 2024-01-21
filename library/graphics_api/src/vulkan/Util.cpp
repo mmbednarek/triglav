@@ -13,6 +13,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
       case ColorFormatPart::sRGB: return VK_FORMAT_R8_SRGB;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8_UINT;
+      case ColorFormatPart::Float16: return VK_FORMAT_R16_SFLOAT;
       case ColorFormatPart::Float32: return VK_FORMAT_R32_SFLOAT;
       default: break;
       }
@@ -22,6 +23,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8A8_SRGB;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16B16A16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8G8B8A8_UINT;
+      case ColorFormatPart::Float16: return VK_FORMAT_R16G16B16A16_SFLOAT;
       case ColorFormatPart::Float32: return VK_FORMAT_R32G32B32A32_SFLOAT;
       default: break;
       }
@@ -49,6 +51,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8_SRGB;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8G8_UINT;
+      case ColorFormatPart::Float16: return VK_FORMAT_R16G16_SFLOAT;
       case ColorFormatPart::Float32: return VK_FORMAT_R32G32_SFLOAT;
       default: break;
       }
@@ -58,6 +61,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8_SRGB;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16B16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8G8B8_UINT;
+      case ColorFormatPart::Float16: return VK_FORMAT_R16G16B16_SFLOAT;
       case ColorFormatPart::Float32: return VK_FORMAT_R32G32B32_SFLOAT;
       default: break;
       }
@@ -97,6 +101,54 @@ Result<ColorSpace> to_color_space(const VkColorSpaceKHR colorSpace)
    }
 
    return std::unexpected{Status::UnsupportedColorSpace};
+}
+
+Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sampleCount)
+{
+   switch (sampleCount) {
+   case SampleCount::Single: return VK_SAMPLE_COUNT_1_BIT;
+   case SampleCount::Double: return VK_SAMPLE_COUNT_2_BIT;
+   case SampleCount::Quadruple: return VK_SAMPLE_COUNT_4_BIT;
+   case SampleCount::Octuple: return VK_SAMPLE_COUNT_8_BIT;
+   case SampleCount::Sexdecuple: return VK_SAMPLE_COUNT_16_BIT;
+   }
+
+   return std::unexpected{Status::UnsupportedFormat};
+}
+
+Result<VkImageLayout> to_vulkan_image_layout(const AttachmentType type, const AttachmentLifetime lifetime)
+{
+   switch (type) {
+   case AttachmentType::Color: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   case AttachmentType::Depth: {
+      // If we preserve the depth buffer, we need to make it optimal for reading.
+      if (lifetime == AttachmentLifetime::ClearPreserve)
+         return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+      return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+   }
+   case AttachmentType::Presentable: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+   }
+
+   return std::unexpected{Status::UnsupportedFormat};
+}
+
+std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp>
+to_vulkan_load_store_ops(const AttachmentLifetime lifetime)
+{
+   switch (lifetime) {
+   case AttachmentLifetime::ClearPreserve: return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE};
+   case AttachmentLifetime::ClearDiscard:
+      return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE};
+   case AttachmentLifetime::KeepPreserve: return {VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE};
+   case AttachmentLifetime::KeepDiscard:
+      return {VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_DONT_CARE};
+   case AttachmentLifetime::IgnorePreserve:
+      return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_STORE};
+   case AttachmentLifetime::IgnoreDiscard:
+      return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE};
+   }
+
+   return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_NONE};
 }
 
 VkShaderStageFlagBits to_vulkan_shader_stage(const ShaderStage stage)

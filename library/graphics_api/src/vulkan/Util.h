@@ -1,6 +1,7 @@
 #pragma once
 #include "GraphicsApi.hpp"
 
+#include <tuple>
 #include <vulkan/vulkan.h>
 
 namespace graphics_api::vulkan {
@@ -9,6 +10,10 @@ Result<ColorFormat> to_color_format(VkFormat format);
 
 Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace);
 Result<ColorSpace> to_color_space(VkColorSpaceKHR colorSpace);
+
+Result<VkSampleCountFlagBits> to_vulkan_sample_count(SampleCount sampleCount);
+Result<VkImageLayout> to_vulkan_image_layout(AttachmentType type, AttachmentLifetime lifetime);
+std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(AttachmentLifetime lifetime);
 
 
 VkShaderStageFlagBits to_vulkan_shader_stage(ShaderStage stage);

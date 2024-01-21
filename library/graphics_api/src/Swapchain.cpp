@@ -158,6 +158,11 @@ SampleCount Swapchain::sample_count() const
    return m_sampleCount;
 }
 
+int Swapchain::color_attachment_count() const
+{
+   return 1;
+}
+
 Result<std::vector<Framebuffer>> Swapchain::create_framebuffers(const RenderPass &renderPass)
 {
    size_t attachmentCount{2};

@@ -3,15 +3,15 @@
 #include "Camera.h"
 #include "DebugLinesRenderer.h"
 #include "Model.h"
+#include "ModelRenderer.h"
 #include "Name.hpp"
-#include "ShadowMap.h"
 
 #include <glm/gtx/quaternion.hpp>
 #include <vector>
 
 namespace renderer {
 
-class Context3D;
+class ModelRenderer;
 class Renderer;
 
 struct SceneObject
@@ -25,7 +25,7 @@ struct SceneObject
 class Scene
 {
  public:
-   Scene(Renderer &renderer, Context3D &context3D, ShadowMap &shadowMap, DebugLinesRenderer &debugLines,
+   Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap, DebugLinesRenderer &debugLines,
          ResourceManager &resourceManager);
 
    void update();
@@ -39,10 +39,11 @@ class Scene
 
    [[nodiscard]] const Camera &camera() const;
    [[nodiscard]] Camera &camera();
+   [[nodiscard]] const Camera &shadow_map_camera() const;
 
  private:
    Renderer &m_renderer;
-   Context3D &m_context3D;
+   ModelRenderer &m_context3D;
    ShadowMap &m_shadowMap;
    ResourceManager &m_resourceManager;
    DebugLinesRenderer &m_debugLinesRenderer;

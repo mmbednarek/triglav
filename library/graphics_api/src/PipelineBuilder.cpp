@@ -186,23 +186,27 @@ Result<Pipeline> PipelineBuilder::build() const
    multisamplingInfo.rasterizationSamples = static_cast<VkSampleCountFlagBits>(sampleCount);
    multisamplingInfo.minSampleShading     = 1.0f;
 
-   VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-   colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
-                                         VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-   colorBlendAttachment.blendEnable         = VK_TRUE;
-   colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-   colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-   colorBlendAttachment.colorBlendOp        = VK_BLEND_OP_ADD;
-   colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-   colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-   colorBlendAttachment.alphaBlendOp        = VK_BLEND_OP_ADD;
+   std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
+   for (int i = 0; i < m_renderPass.color_attachment_count(); ++i) {
+      VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+      colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                                            VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+      colorBlendAttachment.blendEnable         = VK_TRUE;
+      colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+      colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+      colorBlendAttachment.colorBlendOp        = VK_BLEND_OP_ADD;
+      colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+      colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+      colorBlendAttachment.alphaBlendOp        = VK_BLEND_OP_ADD;
+      colorBlendAttachments.emplace_back(colorBlendAttachment);
+   }
 
    VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
    colorBlendingInfo.sType             = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
    colorBlendingInfo.logicOpEnable     = VK_TRUE;
    colorBlendingInfo.logicOp           = VK_LOGIC_OP_COPY;
-   colorBlendingInfo.attachmentCount   = 1;
-   colorBlendingInfo.pAttachments      = &colorBlendAttachment;
+   colorBlendingInfo.attachmentCount   = colorBlendAttachments.size();
+   colorBlendingInfo.pAttachments      = colorBlendAttachments.data();
    colorBlendingInfo.blendConstants[0] = 0.0f;
    colorBlendingInfo.blendConstants[1] = 0.0f;
    colorBlendingInfo.blendConstants[2] = 0.0f;

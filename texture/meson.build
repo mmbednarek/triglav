@@ -8,6 +8,7 @@ texture_files = [
     'bark.png',
     'bark_normal.png',
     'leaves.png',
+    'noise.png',
     'pine.png',
     'pine_normal.png',
     'quartz.png',

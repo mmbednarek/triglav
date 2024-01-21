@@ -5,7 +5,6 @@
 #include "Texture.h"
 #include "vulkan/Util.h"
 
-
 #include <Device.h>
 
 namespace graphics_api {

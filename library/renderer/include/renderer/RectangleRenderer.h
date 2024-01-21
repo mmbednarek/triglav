@@ -3,6 +3,9 @@
 #include "Core.h"
 #include "ResourceManager.h"
 
+#include "graphics_api/DescriptorPool.h"
+#include "graphics_api/Pipeline.h"
+
 namespace renderer {
 
 struct Rectangle

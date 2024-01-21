@@ -3,7 +3,6 @@
 #include "Buffer.h"
 #include "DepthRenderTarget.h"
 #include "GraphicsApi.hpp"
-#include "Pipeline.h"
 #include "PlatformSurface.h"
 #include "RenderPass.h"
 #include "Sampler.h"
@@ -11,6 +10,7 @@
 #include "Swapchain.h"
 #include "Synchronization.h"
 #include "Texture.h"
+#include "TextureRenderTarget.h"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
@@ -83,7 +83,9 @@ class Device
                                                 TextureType type        = TextureType::SampledImage,
                                                 SampleCount sampleCount = SampleCount::Single) const;
    [[nodiscard]] Result<Sampler> create_sampler(bool enableAnisotropy);
-   [[nodiscard]] Result<DepthRenderTarget> create_depth_render_target(const ColorFormat &depthFormat, const Resolution &resolution) const;
+   [[nodiscard]] Result<DepthRenderTarget> create_depth_render_target(const ColorFormat &depthFormat,
+                                                                      const Resolution &resolution) const;
+   [[nodiscard]] Result<TextureRenderTarget> create_texture_render_target(const Resolution &resolution) const;
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
 

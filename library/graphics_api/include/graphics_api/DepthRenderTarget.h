@@ -18,8 +18,10 @@ class DepthRenderTarget final : public IRenderTarget
    [[nodiscard]] std::vector<VkSubpassDependency> vulkan_subpass_dependencies() override;
    [[nodiscard]] Resolution resolution() const override;
    [[nodiscard]] SampleCount sample_count() const override;
+   [[nodiscard]] int color_attachment_count() const override;
    [[nodiscard]] Result<Framebuffer> create_framebuffer(const RenderPass &renderPass,
-                                                        const Texture & texture) const;
+                                                        const Texture &texture) const;
+
 
  private:
    VkDevice m_device;

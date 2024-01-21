@@ -2,14 +2,14 @@
 
 #include <glm/gtx/quaternion.hpp>
 
-#include "Context3D.h"
+#include "ModelRenderer.h"
 #include "Renderer.h"
 
 namespace renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
-Scene::Scene(Renderer &renderer, Context3D &context3D, ShadowMap &shadowMap,
+Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap,
              DebugLinesRenderer &debugLinesRenderer, ResourceManager &resourceManager) :
     m_renderer(renderer),
     m_context3D(context3D),
@@ -30,13 +30,10 @@ void Scene::update()
 
    const auto camMat       = m_camera.matrix();
    const auto camMatShadow = m_shadowMapCamera.matrix();
-   // const auto camMat = glm::mat4(1);
-   // const auto camMatShadow = glm::mat4(1);
 
    for (const auto &obj : m_instancedObjects) {
       obj.ubo->viewProj      = camMat;
       obj.shadowMap.ubo->mvp = camMatShadow * obj.ubo->model;
-      obj.ubo->shadowMapMVP  = obj.shadowMap.ubo->mvp;
    }
 }
 
@@ -68,8 +65,6 @@ void Scene::compile_scene()
 
 void Scene::render() const
 {
-   m_context3D.set_camera_position(m_camera.position());
-
    for (const auto &obj : m_instancedObjects) {
       if (not m_camera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
          continue;
@@ -80,9 +75,6 @@ void Scene::render() const
 
 void Scene::render_shadow_map() const
 {
-   m_context3D.set_light_position(m_shadowMapCamera.position());
-   // TODO: Render only objects visiable by camera.
-
    for (const auto &obj : m_instancedObjects) {
       if (not m_shadowMapCamera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
          continue;
@@ -112,6 +104,11 @@ const Camera &Scene::camera() const
 Camera &Scene::camera()
 {
    return m_camera;
+}
+
+const Camera &Scene::shadow_map_camera() const
+{
+   return m_shadowMapCamera;
 }
 
 }// namespace renderer

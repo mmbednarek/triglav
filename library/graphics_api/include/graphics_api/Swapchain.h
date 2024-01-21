@@ -28,6 +28,7 @@ class Swapchain final : public IRenderTarget
    [[nodiscard]] Resolution resolution() const override;
    [[nodiscard]] ColorFormat color_format() const;
    [[nodiscard]] SampleCount sample_count() const override;
+   [[nodiscard]] int color_attachment_count() const override;
 
    [[nodiscard]] VkSwapchainKHR vulkan_swapchain() const;
    [[nodiscard]] uint32_t get_available_framebuffer(const Semaphore &semaphore) const;

@@ -5,17 +5,18 @@
 #include "graphics_api/PipelineBuilder.h"
 #include "graphics_api/PlatformSurface.h"
 
-#include "Context2D.h"
-#include "Context3D.h"
 #include "Core.h"
 #include "DebugLinesRenderer.h"
 #include "GlyphAtlas.h"
+#include "ModelRenderer.h"
+#include "PostProcessingRenderer.h"
 #include "RectangleRenderer.h"
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "Scene.h"
 #include "ShadowMap.h"
 #include "SkyBox.h"
+#include "SpriteRenderer.h"
 #include "TextRenderer.h"
 
 namespace renderer {
@@ -85,12 +86,20 @@ class Renderer
    graphics_api::Semaphore m_renderFinishedSemaphore;
    graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
-   Context3D m_context3D;
-   Context2D m_context2D;
+   graphics_api::TextureRenderTarget m_modelRenderTarget;
+   graphics_api::RenderPass m_modelRenderPass;
+   graphics_api::Texture m_modelColorTexture;
+   graphics_api::Texture m_modelPositionTexture;
+   graphics_api::Texture m_modelNormalTexture;
+   graphics_api::Texture m_modelDepthTexture;
+   graphics_api::Framebuffer m_modelFramebuffer;
+   ModelRenderer m_context3D;
+   SpriteRenderer m_context2D;
    ShadowMap m_shadowMap;
    DebugLinesRenderer m_debugLinesRenderer;
    RectangleRenderer m_rectangleRenderer;
    Rectangle m_rectangle;
+   PostProcessingRenderer m_postProcessingRenderer;
    Scene m_scene;
    SkyBox m_skyBox;
    GlyphAtlas m_glyphAtlasBold;
