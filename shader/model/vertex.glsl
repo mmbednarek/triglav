@@ -8,7 +8,8 @@ layout(location = 4) in vec3 inBitangent;
 
 layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
-    mat4 viewProj;
+    mat4 view;
+    mat4 proj;
     mat4 normal;
 } ubo;
 
@@ -19,13 +20,14 @@ layout(location = 3) out vec3 fragTangent;
 layout(location = 4) out vec3 fragBitangent;
 
 void main() {
-    vec4 viewSpace = ubo.model * vec4(inPosition, 1.0);
+    vec4 viewSpace = ubo.view * ubo.model * vec4(inPosition, 1.0);
 
     fragTexCoord = inTexCoord;
-    fragNormal = mat3(ubo.normal) * inNormal;
-    fragTangent = mat3(ubo.normal) * inTangent;
-    fragBitangent = mat3(ubo.normal) * inBitangent;
+    mat3 viewNormalMat = mat3(ubo.view) * mat3(ubo.normal);
+    fragNormal = viewNormalMat * inNormal;
+    fragTangent = viewNormalMat * inTangent;
+    fragBitangent = viewNormalMat * inBitangent;
     fragPosition = viewSpace.xyz;
 
-    gl_Position = ubo.viewProj * viewSpace;
+    gl_Position = ubo.proj * viewSpace;
 }

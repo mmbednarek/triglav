@@ -70,6 +70,7 @@ class Renderer
    float m_distance{12};
    float m_lightX{-40};
    bool m_showDebugLines{false};
+   bool m_ssaoEnabled{true};
    glm::vec3 m_position{};
    Moving m_moveDirection{Moving::None};
 
@@ -115,6 +116,8 @@ class Renderer
    TextObject m_orientationValue;
    TextObject m_triangleCountLabel;
    TextObject m_triangleCountValue;
+   TextObject m_aoLabel;
+   TextObject m_aoValue;
 };
 
 }// namespace renderer

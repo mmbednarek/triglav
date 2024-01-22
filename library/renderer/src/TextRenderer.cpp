@@ -78,6 +78,8 @@ void TextRenderer::update_text_object(const GlyphAtlas &atlas, TextObject &objec
       object.vertices.write(vertices.data(), vertices.size());
       object.vertexCount = vertices.size();
    }
+
+   object.text = text;
 }
 
 void TextRenderer::draw_text_object(const graphics_api::CommandList &cmdList, const TextObject &textObj,

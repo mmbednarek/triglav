@@ -17,9 +17,12 @@ class Camera
    [[nodiscard]] glm::vec3 position() const;
    [[nodiscard]] glm::quat orientation() const;
 
-   [[nodiscard]] const glm::mat4 &matrix() const;
+   [[nodiscard]] const glm::mat4 &view_proj_matrix() const;
+   [[nodiscard]] const glm::mat4 &view_matrix() const;
+   [[nodiscard]] const glm::mat4 &projection_matrix() const;
    [[nodiscard]] bool is_point_visible(glm::vec3 point) const;
-   [[nodiscard]] bool is_bouding_box_visible(const geometry::BoundingBox &boudingBox, const glm::mat4 &modelMat) const;
+   [[nodiscard]] bool is_bouding_box_visible(const geometry::BoundingBox &boudingBox,
+                                             const glm::mat4 &modelMat) const;
 
  private:
    glm::vec3 m_position{};
@@ -29,8 +32,12 @@ class Camera
    float m_viewportAspect{1.0f};
    float m_angle{0.7854f};
 
-   mutable bool m_hasCachedMatrix{false};
-   mutable glm::mat4 m_viewProjMat{};
+   mutable bool m_hasCachedViewMatrix{false};
+   mutable glm::mat4 m_viewMat{};
+   mutable bool m_hasCachedProjectionMatrix{false};
+   mutable glm::mat4 m_projectionMat{};
+   mutable bool m_hasCachedViewProjectionMatrix{false};
+   mutable glm::mat4 m_viewProjectionMat{};
 };
 
 }// namespace renderer

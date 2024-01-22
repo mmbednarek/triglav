@@ -8,17 +8,27 @@
 
 namespace renderer {
 
+constexpr size_t g_SampleCountSSAO = 64;
+
 class PostProcessingRenderer
 {
+   struct AlignedVec3
+   {
+      alignas(16) glm::vec3 value{};
+      // glm::vec3 value{};
+   };
+
    struct PushConstant
    {
       alignas(16) glm::vec3 lightPosition{};
-      alignas(16) glm::vec3 cameraPosition{};
+      int enableSSAO{1};
    };
 
    struct UniformData
    {
-      glm::mat4 shadowMapViewProj;
+      glm::mat4 shadowMapMat;
+      glm::mat4 cameraProjection;
+      AlignedVec3 samplesSSAO[g_SampleCountSSAO];
    };
 
  public:
@@ -31,7 +41,8 @@ class PostProcessingRenderer
                           const graphics_api::Texture &shadowMapTexture);
 
    void draw(graphics_api::CommandList &cmdList, const glm::vec3 &lightPosition,
-             const glm::vec3 &cameraPosition, const glm::mat4 &shadowMapViewProj) const;
+             const glm::mat4 &cameraProjection, const glm::mat4 &shadowMapMat, bool ssaoEnabled);
+   static std::vector<AlignedVec3> generate_sample_points(size_t count);
 
  private:
    graphics_api::Device &m_device;
@@ -39,6 +50,7 @@ class PostProcessingRenderer
    graphics_api::DescriptorPool m_descriptorPool;
    graphics_api::Sampler m_sampler;
    graphics_api::DescriptorArray m_descriptors;
+   std::vector<AlignedVec3> m_samplesSSAO;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
 };
 

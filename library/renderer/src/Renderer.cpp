@@ -85,17 +85,6 @@ std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &d
                                                     {false, 1.0f}
    });
 
-   std::vector<font::Rune> runes{};
-   for (font::Rune ch = 'A'; ch <= 'Z'; ++ch) {
-      runes.emplace_back(ch);
-   }
-   for (font::Rune ch = 'a'; ch <= 'z'; ++ch) {
-      runes.emplace_back(ch);
-   }
-   for (font::Rune ch = '0'; ch <= '9'; ++ch) {
-      runes.emplace_back(ch);
-   }
-
    return manager;
 }
 
@@ -181,7 +170,7 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_shadowMap(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
-    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 180.0f})),
+    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 220.0f})),
     m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_modelColorTexture,
                              m_modelPositionTexture, m_modelNormalTexture, m_modelDepthTexture,
                              m_resourceManager->texture("tex:noise"_name), m_shadowMap.depth_texture()),
@@ -201,7 +190,9 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_orientationLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Orientation")),
     m_orientationValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0")),
     m_triangleCountLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Triangle Count")),
-    m_triangleCountValue(m_textRenderer.create_text_object(m_glyphAtlas, "0"))
+    m_triangleCountValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
+    m_aoLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Ambient Occlusion")),
+    m_aoValue(m_textRenderer.create_text_object(m_glyphAtlas, "Screen-Space"))
 {
 
    m_scene.add_object(SceneObject{
@@ -277,6 +268,7 @@ void Renderer::on_render()
    m_textRenderer.update_text_object(m_glyphAtlas, m_orientationValue, orientationStr);
    const auto triangleCountStr = std::format("{}", m_commandList.triangle_count());
    m_textRenderer.update_text_object(m_glyphAtlas, m_triangleCountValue, triangleCountStr);
+   m_textRenderer.update_text_object(m_glyphAtlas, m_aoValue, m_ssaoEnabled ? "Screen-Space" : "Off");
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);
@@ -328,8 +320,13 @@ void Renderer::on_render()
       };
       m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
 
-      m_postProcessingRenderer.draw(m_commandList, m_scene.shadow_map_camera().position(),
-                                    m_scene.camera().position(), m_scene.shadow_map_camera().matrix());
+      const auto shadowMat =
+              m_scene.shadow_map_camera().view_proj_matrix() * glm::inverse(m_scene.camera().view_matrix());
+      const auto lightPosition =
+              m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
+
+      m_postProcessingRenderer.draw(m_commandList, glm::vec3(lightPosition),
+                                    m_scene.camera().projection_matrix(), shadowMat, m_ssaoEnabled);
 
       m_rectangleRenderer.begin_render(m_commandList);
       m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle);
@@ -360,6 +357,12 @@ void Renderer::on_render()
                                       {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_triangleCountValue,
                                       {16.0f + m_triangleCountLabel.metric.width + 8.0f, textY},
+                                      {1.0f, 1.0f, 0.4f});
+      textY += 12.0f + m_aoLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_aoLabel, {16.0f, textY},
+                                      {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_aoValue,
+                                      {16.0f + m_aoLabel.metric.width + 8.0f, textY},
                                       {1.0f, 1.0f, 0.4f});
 
       m_commandList.end_render_pass();
@@ -417,6 +420,9 @@ void Renderer::on_key_pressed(const uint32_t key)
    }
    if (key == 61) {
       m_showDebugLines = not m_showDebugLines;
+   }
+   if (key == 62) {
+      m_ssaoEnabled = not m_ssaoEnabled;
    }
 }
 

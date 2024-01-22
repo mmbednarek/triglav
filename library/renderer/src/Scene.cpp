@@ -28,11 +28,13 @@ void Scene::update()
    const auto [width, height] = m_renderer.screen_resolution();
    m_camera.set_viewport_size(width, height);
 
-   const auto camMat       = m_camera.matrix();
-   const auto camMatShadow = m_shadowMapCamera.matrix();
+   const auto cameraViewMat       = m_camera.view_matrix();
+   const auto cameraProjectionMat = m_camera.projection_matrix();
+   const auto camMatShadow        = m_shadowMapCamera.view_proj_matrix();
 
    for (const auto &obj : m_instancedObjects) {
-      obj.ubo->viewProj      = camMat;
+      obj.ubo->view          = cameraViewMat;
+      obj.ubo->proj          = cameraProjectionMat;
       obj.shadowMap.ubo->mvp = camMatShadow * obj.ubo->model;
    }
 }
