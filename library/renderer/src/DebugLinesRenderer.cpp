@@ -89,7 +89,7 @@ void DebugLinesRenderer::begin_render(graphics_api::CommandList &cmdList) const
 
 void DebugLinesRenderer::draw(const graphics_api::CommandList &cmdList, const DebugLines &list, const Camera& camera) const
 {
-   *list.ubo = camera.view_matrix() * list.model;
+   *list.ubo = camera.view_projection_matrix() * list.model;
 
    cmdList.bind_descriptor_set(list.descriptors[0]);
    cmdList.bind_vertex_array(list.array);

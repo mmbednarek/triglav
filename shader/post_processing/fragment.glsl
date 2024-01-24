@@ -17,8 +17,6 @@ layout(binding = 6) uniform PostProcessingUBO {
 
 layout(location = 0) out vec4 outColor;
 
-const vec2 viewportSize = vec2(1280, 720);
-
 layout(push_constant) uniform Constants
 {
     vec3 lightPosition;
@@ -39,7 +37,7 @@ float textureProj(vec4 shadowCoord, vec2 off)
     if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
     {
         float dist = texture(texShadowMap, shadowCoord.st + off).r;
-        if (shadowCoord.w > 0.0 && dist < shadowCoord.z - 0.00001)
+        if (shadowCoord.w > 0.0 && dist < shadowCoord.z - 0.001)
         {
             shadow = 0;
         }
@@ -129,7 +127,7 @@ void main() {
         ambientValue *= 1.0 - (occlusion / 64.0);
     }
 
-    vec3 lightDir = normalize(pc.lightPosition - position.xyz);
+    vec3 lightDir = normalize(pc.lightPosition);
     float diffuse = max(dot(normal, lightDir), 0);
     float specular = 0.0;
     if (diffuse > 0.0) {

@@ -40,6 +40,13 @@ class PostProcessingRenderer
                           const graphics_api::Texture &noiseTexture,
                           const graphics_api::Texture &shadowMapTexture);
 
+   void update_textures(const graphics_api::Texture &colorTexture,
+                          const graphics_api::Texture &positionTexture,
+                          const graphics_api::Texture &normalTexture,
+                          const graphics_api::Texture &depthTexture,
+                          const graphics_api::Texture &noiseTexture,
+                          const graphics_api::Texture &shadowMapTexture) const;
+
    void draw(graphics_api::CommandList &cmdList, const glm::vec3 &lightPosition,
              const glm::mat4 &cameraProjection, const glm::mat4 &shadowMapMat, bool ssaoEnabled);
    static std::vector<AlignedVec3> generate_sample_points(size_t count);

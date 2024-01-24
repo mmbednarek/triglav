@@ -60,6 +60,23 @@ PostProcessingRenderer::PostProcessingRenderer(
    writer.set_uniform_buffer(6, m_uniformBuffer);
 }
 
+void PostProcessingRenderer::update_textures(const graphics_api::Texture &colorTexture,
+                                             const graphics_api::Texture &positionTexture,
+                                             const graphics_api::Texture &normalTexture,
+                                             const graphics_api::Texture &depthTexture,
+                                             const graphics_api::Texture &noiseTexture,
+                                             const graphics_api::Texture &shadowMapTexture) const
+{
+   graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
+   writer.set_sampled_texture(0, colorTexture, m_sampler);
+   writer.set_sampled_texture(1, positionTexture, m_sampler);
+   writer.set_sampled_texture(2, normalTexture, m_sampler);
+   writer.set_sampled_texture(3, depthTexture, m_sampler);
+   writer.set_sampled_texture(4, noiseTexture, m_sampler);
+   writer.set_sampled_texture(5, shadowMapTexture, m_sampler);
+   writer.set_uniform_buffer(6, m_uniformBuffer);
+}
+
 void PostProcessingRenderer::draw(graphics_api::CommandList &cmdList, const glm::vec3 &lightPosition,
                                   const glm::mat4 &cameraProjection, const glm::mat4 &shadowMapMat,
                                   bool ssaoEnabled)

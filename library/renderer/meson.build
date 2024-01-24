@@ -1,11 +1,13 @@
 renderer_sources = files([
   'src/AssetMap.hpp',
   'src/Camera.cpp',
+  'src/CameraBase.cpp',
   'src/DebugLinesRenderer.cpp',
   'src/GlyphAtlas.cpp',
   'src/Material.cpp',
   'src/Model.cpp',
   'src/ModelRenderer.cpp',
+  'src/OrthoCamera.cpp',
   'src/PostProcessingRenderer.cpp',
   'src/RectangleRenderer.cpp',
   'src/Renderer.cpp',

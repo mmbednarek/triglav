@@ -320,8 +320,8 @@ void Renderer::on_render()
       };
       m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
 
-      const auto shadowMat =
-              m_scene.shadow_map_camera().view_proj_matrix() * glm::inverse(m_scene.camera().view_matrix());
+      const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
+                             glm::inverse(m_scene.camera().view_matrix());
       const auto lightPosition =
               m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
 
@@ -359,11 +359,9 @@ void Renderer::on_render()
                                       {16.0f + m_triangleCountLabel.metric.width + 8.0f, textY},
                                       {1.0f, 1.0f, 0.4f});
       textY += 12.0f + m_aoLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_aoLabel, {16.0f, textY},
-                                      {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_aoLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_aoValue,
-                                      {16.0f + m_aoLabel.metric.width + 8.0f, textY},
-                                      {1.0f, 1.0f, 0.4f});
+                                      {16.0f + m_aoLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
 
       m_commandList.end_render_pass();
    }
@@ -502,9 +500,34 @@ glm::vec3 Renderer::moving_direction() const
 
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
+   if (m_resolution.width == width && m_resolution.height == height)
+      return;
+
    const graphics_api::Resolution resolution{width, height};
 
    m_device->await_all();
+
+   m_modelRenderTarget = create_render_target(*m_device, resolution);
+   m_modelRenderPass   = checkResult(m_device->create_render_pass(m_modelRenderTarget));
+
+   m_modelColorTexture = checkResult(
+           m_device->create_texture(g_colorFormat, resolution, graphics_api::TextureType::ColorAttachment));
+
+   m_modelPositionTexture = checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), resolution,
+                                                                 graphics_api::TextureType::ColorAttachment));
+   m_modelNormalTexture   = checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), resolution,
+                                                                 graphics_api::TextureType::ColorAttachment));
+
+   m_modelDepthTexture = checkResult(m_device->create_texture(g_depthFormat, resolution,
+                                                              graphics_api::TextureType::SampledDepthBuffer));
+
+   m_modelFramebuffer = checkResult(m_modelRenderTarget.create_framebuffer(
+           m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
+           m_modelDepthTexture));
+
+   m_postProcessingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
+                                            m_modelDepthTexture, m_resourceManager->texture("tex:noise"_name),
+                                            m_shadowMap.depth_texture());
 
    m_framebuffers.clear();
 

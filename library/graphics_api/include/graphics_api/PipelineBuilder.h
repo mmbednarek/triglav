@@ -3,7 +3,6 @@
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
 
-#include <tuple>
 #include <vector>
 
 namespace graphics_api {

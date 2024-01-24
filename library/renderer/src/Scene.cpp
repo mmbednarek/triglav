@@ -17,10 +17,12 @@ Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap,
     m_debugLinesRenderer(debugLinesRenderer),
     m_resourceManager(resourceManager)
 {
-   m_shadowMapCamera.set_position(glm::vec3{-76.0f, 0.0f, -27.0f});
+   m_shadowMapCamera.set_position(glm::vec3{-68.0f, 0.0f, -30.0f});
    m_shadowMapCamera.set_orientation(glm::quat{
-           glm::vec3{0.18f, 0.0f, 4.71f}
+           glm::vec3{0.24f, 0.0f, 4.71f}
    });
+   m_shadowMapCamera.set_near_far_planes(-100.0f, 200.0f);
+   m_shadowMapCamera.set_viewspace_width(150.0f);
 }
 
 void Scene::update()
@@ -30,7 +32,7 @@ void Scene::update()
 
    const auto cameraViewMat       = m_camera.view_matrix();
    const auto cameraProjectionMat = m_camera.projection_matrix();
-   const auto camMatShadow        = m_shadowMapCamera.view_proj_matrix();
+   const auto camMatShadow        = m_shadowMapCamera.view_projection_matrix();
 
    for (const auto &obj : m_instancedObjects) {
       obj.ubo->view          = cameraViewMat;
@@ -108,7 +110,7 @@ Camera &Scene::camera()
    return m_camera;
 }
 
-const Camera &Scene::shadow_map_camera() const
+const OrthoCamera &Scene::shadow_map_camera() const
 {
    return m_shadowMapCamera;
 }

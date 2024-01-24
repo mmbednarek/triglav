@@ -69,6 +69,18 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
    layoutBinding.stageFlags      = vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | shaderStage);
    m_vulkanDescriptorBindings.emplace_back(layoutBinding);
 
+   /*
+   using graphics_api::DescriptorBinding;
+   using graphics_api::DescriptorType;
+   using graphics_api::ShaderStage;
+
+   std::array<DescriptorBinding, 2> bindings{
+      DescriptorBinding{0, DescriptorType::ImageSampler, ShaderStage::Fragment},
+      DescriptorBinding{1, DescriptorType::ImageSampler, ShaderStage::Fragment},
+      DescriptorBinding{2, DescriptorType::ImageSampler, ShaderStage::Fragment},
+   };
+   device.create_descriptor_set_layout(bindings);
+   */
    return *this;
 }
 

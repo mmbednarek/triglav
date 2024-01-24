@@ -5,6 +5,7 @@
 #include "Model.h"
 #include "ModelRenderer.h"
 #include "Name.hpp"
+#include "OrthoCamera.h"
 
 #include <glm/gtx/quaternion.hpp>
 #include <vector>
@@ -39,7 +40,7 @@ class Scene
 
    [[nodiscard]] const Camera &camera() const;
    [[nodiscard]] Camera &camera();
-   [[nodiscard]] const Camera &shadow_map_camera() const;
+   [[nodiscard]] const OrthoCamera &shadow_map_camera() const;
 
  private:
    Renderer &m_renderer;
@@ -48,7 +49,7 @@ class Scene
    ResourceManager &m_resourceManager;
    DebugLinesRenderer &m_debugLinesRenderer;
 
-   Camera m_shadowMapCamera{};
+   OrthoCamera m_shadowMapCamera{};
    Camera m_camera{};
 
    std::vector<SceneObject> m_objects;
