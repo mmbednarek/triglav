@@ -73,10 +73,10 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
 Result<ColorFormat> to_color_format(const VkFormat format)
 {
    switch (format) {
-   case VK_FORMAT_B8G8R8A8_SRGB: return GAPI_COLOR_FORMAT(BGRA, sRGB);
-   case VK_FORMAT_R8G8B8A8_SRGB: return GAPI_COLOR_FORMAT(RGBA, sRGB);
-   case VK_FORMAT_R32G32B32A32_SFLOAT: return GAPI_COLOR_FORMAT(RGBA, Float32);
-   case VK_FORMAT_D16_UNORM_S8_UINT: return GAPI_COLOR_FORMAT(DS, UNorm16, UInt);
+   case VK_FORMAT_B8G8R8A8_SRGB: return GAPI_FORMAT(BGRA, sRGB);
+   case VK_FORMAT_R8G8B8A8_SRGB: return GAPI_FORMAT(RGBA, sRGB);
+   case VK_FORMAT_R32G32B32A32_SFLOAT: return GAPI_FORMAT(RGBA, Float32);
+   case VK_FORMAT_D16_UNORM_S8_UINT: return GAPI_FORMAT(DS, UNorm16, UInt);
    default: break;
    }
    return std::unexpected{Status::UnsupportedFormat};

@@ -24,11 +24,11 @@ ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderP
                     .vertex_shader(resourceManager.shader("vsh:model"_name))
                     // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
@@ -40,6 +40,7 @@ ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderP
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::ShaderStage::Fragment)
                     .enable_depth_test(true)
+                    .enable_blending(false)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 100, 100))),
     m_sampler(checkResult(device.create_sampler(true)))

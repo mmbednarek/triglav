@@ -4,6 +4,7 @@ compile_vertex_cmds = [shader_compiler, '-fshader-stage=vert', '@INPUT@', '-o', 
 
 shader_targets = []
 
+subdir('ground')
 subdir('model')
 subdir('post_processing')
 subdir('shadow_map')

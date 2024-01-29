@@ -21,8 +21,8 @@ TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderPas
                     .vertex_shader(resourceManager.shader("vsh:text"_name))
                     // Vertex description
                     .begin_vertex_layout<GlyphVertex>()
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(GlyphVertex, position))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(GlyphVertex, texCoord))
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(GlyphVertex, position))
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(GlyphVertex, texCoord))
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,

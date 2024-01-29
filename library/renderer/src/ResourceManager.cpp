@@ -135,7 +135,7 @@ graphics_api::Texture ResourceManager::load_texture(const std::string_view path)
    assert(pixels != nullptr);
 
    auto texture = checkResult(
-           m_device.create_texture(GAPI_COLOR_FORMAT(RGBA, sRGB),
+           m_device.create_texture(GAPI_FORMAT(RGBA, sRGB),
                                    {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)}));
    checkStatus(texture.write(m_device, pixels));
    return texture;

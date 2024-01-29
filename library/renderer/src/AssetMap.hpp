@@ -51,6 +51,8 @@ constexpr std::array g_assetMap{
         NamePath{      "vsh:rectangle"_name,         "shader/rectangle/vertex.spv"},
         NamePath{"fsh:post_processing"_name, "shader/post_processing/fragment.spv"},
         NamePath{"vsh:post_processing"_name,   "shader/post_processing/vertex.spv"},
+        NamePath{         "fsh:ground"_name,          "shader/ground/fragment.spv"},
+        NamePath{         "vsh:ground"_name,            "shader/ground/vertex.spv"},
  // ----- Typefaces -----
         NamePath{      "tfc:cantarell"_name,                 "fonts/cantarell.ttf"},
         NamePath{ "tfc:cantarell/bold"_name,            "fonts/cantarell_bold.ttf"},

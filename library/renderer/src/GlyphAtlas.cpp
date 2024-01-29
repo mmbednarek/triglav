@@ -16,7 +16,7 @@ GlyphAtlas::GlyphAtlas(graphics_api::Device &device, const font::Typeface &typef
                        const std::span<font::Rune> atlasRunes, const int glyphSize, const uint32_t width,
                        const uint32_t height) :
     m_glyphSize(static_cast<float>(glyphSize)),
-    m_texture(checkResult(device.create_texture(GAPI_COLOR_FORMAT(R, sRGB), {width, height})))
+    m_texture(checkResult(device.create_texture(GAPI_FORMAT(R, sRGB), {width, height})))
 {
    std::vector<uint8_t> atlasData{};
    atlasData.resize(width * height);

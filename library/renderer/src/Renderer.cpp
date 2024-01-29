@@ -17,8 +17,8 @@
 
 namespace renderer {
 
-constexpr auto g_colorFormat = GAPI_COLOR_FORMAT(BGRA, sRGB);
-constexpr auto g_depthFormat = GAPI_COLOR_FORMAT(D, Float32);
+constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
+constexpr auto g_depthFormat = GAPI_FORMAT(D, Float32);
 constexpr auto g_sampleCount = graphics_api::SampleCount::Single;
 
 namespace {
@@ -57,32 +57,32 @@ std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &d
    manager->add_material("mat:bark"_name, Material{
                                                   "tex:bark"_name,
                                                   "tex:bark/normal"_name,
-                                                  {true, 1.0f}
+                                                  {true, 1.0f, 0.0f}
    });
    manager->add_material("mat:leaves"_name, Material{
                                                     "tex:leaves"_name,
                                                     "tex:grass/normal"_name,
-                                                    {false, 1.0f}
+                                                    {false, 1.0f, 0.0f}
    });
    manager->add_material("mat:gold"_name, Material{
                                                   "tex:gold"_name,
                                                   "tex:gold/normal"_name,
-                                                  {true, 1.0f}
+                                                  {true, 0.1f, 0.9f}
    });
    manager->add_material("mat:grass"_name, Material{
                                                    "tex:grass"_name,
                                                    "tex:grass/normal"_name,
-                                                   {true, 1.0f}
+                                                   {true, 1.0f, 0.0f}
    });
    manager->add_material("mat:pine"_name, Material{
                                                   "tex:pine"_name,
                                                   "tex:pine/normal"_name,
-                                                  {true, 1.0f}
+                                                  {true, 1.0f, 0.0f}
    });
    manager->add_material("mat:quartz"_name, Material{
                                                     "tex:quartz"_name,
                                                     "tex:quartz/normal"_name,
-                                                    {false, 1.0f}
+                                                    {false, 0.2f, 0.1f}
    });
 
    return manager;
@@ -120,14 +120,14 @@ graphics_api::TextureRenderTarget create_render_target(const graphics_api::Devic
 
    auto renderTarget = checkResult(device.create_texture_render_target(resolution));
    // Color
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve, g_colorFormat,
-                               SampleCount::Single);
+   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
    // Position
    renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_COLOR_FORMAT(RGBA, Float16), SampleCount::Single);
+                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
    // Normaal
    renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_COLOR_FORMAT(RGBA, Float16), SampleCount::Single);
+                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
    // Depth
    renderTarget.add_attachment(AttachmentType::Depth, AttachmentLifetime::ClearPreserve, g_depthFormat,
                                SampleCount::Single);
@@ -152,13 +152,14 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_commandList(checkResult(m_device->create_command_list())),
     m_modelRenderTarget(create_render_target(*m_device, m_renderPass.resolution())),
     m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
-    m_modelColorTexture(checkResult(m_device->create_texture(g_colorFormat, m_renderPass.resolution(),
-                                                             graphics_api::TextureType::ColorAttachment))),
+    m_modelColorTexture(
+            checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
+                                                 graphics_api::TextureType::ColorAttachment))),
     m_modelPositionTexture(
-            checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), m_renderPass.resolution(),
+            checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
                                                  graphics_api::TextureType::ColorAttachment))),
     m_modelNormalTexture(
-            checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), m_renderPass.resolution(),
+            checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
                                                  graphics_api::TextureType::ColorAttachment))),
     m_modelDepthTexture(checkResult(m_device->create_texture(g_depthFormat, m_renderPass.resolution(),
                                                              graphics_api::TextureType::SampledDepthBuffer))),
@@ -166,6 +167,7 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
             m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
             m_modelDepthTexture))),
     m_context3D(*m_device, m_modelRenderPass, *m_resourceManager),
+    m_groundRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMap(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
@@ -300,6 +302,8 @@ void Renderer::on_render()
 
       m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_resolution.width),
                          static_cast<float>(m_resolution.height));
+
+      m_groundRenderer.draw(m_commandList, m_scene.camera());
 
       m_context3D.begin_render();
       m_scene.render();
@@ -513,9 +517,9 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    m_modelColorTexture = checkResult(
            m_device->create_texture(g_colorFormat, resolution, graphics_api::TextureType::ColorAttachment));
 
-   m_modelPositionTexture = checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), resolution,
+   m_modelPositionTexture = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
                                                                  graphics_api::TextureType::ColorAttachment));
-   m_modelNormalTexture   = checkResult(m_device->create_texture(GAPI_COLOR_FORMAT(RGBA, Float16), resolution,
+   m_modelNormalTexture   = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
                                                                  graphics_api::TextureType::ColorAttachment));
 
    m_modelDepthTexture = checkResult(m_device->create_texture(g_depthFormat, resolution,

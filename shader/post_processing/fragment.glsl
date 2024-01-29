@@ -54,7 +54,7 @@ float filterPCF(vec4 sc)
 
     float shadowFactor = 0.0;
     int count = 0;
-    int range = 1;
+    int range = 2;
 
     for (int x = -range; x <= range; x++)
     {
@@ -84,6 +84,30 @@ vec4 visualizeVector(vec3 v) {
     return vec4(0.5 * v + 0.5, 1.0);
 }
 
+//const float metallic = 1.0;
+//const float roughness = 0.2;
+const float pi = 3.14159265;
+
+float distribution_ggx(float NdotH, float roughness) {
+    float alpha = roughness * roughness;
+    float alphaSq = alpha * alpha;
+    float denominator = NdotH * NdotH * (alphaSq - 1.0) + 1.0;
+    denominator = pi * denominator * denominator;
+    return alphaSq / max(denominator, 0.000001);
+}
+
+float smith_formula(float NdotV, float NdotL, float roughness) {
+    float r = roughness + 1.0;
+    float k = (r*r) / 8.0;
+    float ggx1 = NdotV / (NdotV * (1.0 - k) + k);
+    float ggx2 = NdotL / (NdotL * (1.0 - k) + k);
+    return ggx1 * ggx2;
+}
+
+vec3 fresnel_schlick(float HdotV, vec3 baseReflectivity) {
+    return baseReflectivity + (1.0 - baseReflectivity) * pow(1.0 - HdotV, 5.0);
+}
+
 void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
     if (normal == vec3(0.0, 0.0, 0.0)) {
@@ -92,8 +116,12 @@ void main() {
     }
     normal = normalize(normal);
 
-    vec4 position = texture(texPosition, fragTexCoord);
-    vec4 shadowUV = biasMat * ubo.shadowMapMat * position;
+//    outColor = visualizeVector(normal);
+//    return;
+
+    vec4 texPositionSample = texture(texPosition, fragTexCoord);
+    vec3 position = texPositionSample.xyz;
+    vec4 shadowUV = biasMat * ubo.shadowMapMat * vec4(position, 1.0);
     shadowUV /= shadowUV.w;
 
     float shadow = filterPCF(shadowUV);
@@ -110,7 +138,7 @@ void main() {
         float occlusion = 0.0;
         for (int i = 0; i < 64; ++i) {
             vec3 s = ssaoTangentSpace * (ubo.samplesSSAO[i]);
-            s = position.xyz + s * radius;
+            s = position + s * radius;
 
             vec4 offset = vec4(s, 1.0);
             offset = ubo.cameraProjection * offset;
@@ -119,7 +147,7 @@ void main() {
 
             float sampleDepth = linearize_depth(offset.z);
             vec3 occluderPos = texture(texPosition, offset.xy).xyz;
-            float rangeCheck = smoothstep(0.0, 1.0, radius / length(position.xyz - occluderPos));
+            float rangeCheck = smoothstep(0.0, 1.0, radius / length(position - occluderPos));
 
             occlusion += (occluderPos.z >= s.z + 0.025 ? rangeCheck : 0.0);
         }
@@ -127,16 +155,49 @@ void main() {
         ambientValue *= 1.0 - (occlusion / 64.0);
     }
 
-    vec3 lightDir = normalize(pc.lightPosition);
-    float diffuse = max(dot(normal, lightDir), 0);
-    float specular = 0.0;
-    if (diffuse > 0.0) {
-        vec3 viewDir = normalize(-position.xyz);
-        vec3 reflectDir = normalize(reflect(-lightDir, normal));
-        specular = pow(max(dot(viewDir, reflectDir), 0.0), shinniness);
-    }
+    vec4 texColorSample = texture(texColor, fragTexCoord);
+    vec3 albedo = texColorSample.rgb;
+    albedo = pow(albedo, vec3(1.3));
 
-    float lightValue = ambientValue + shadow * (diffuse + specular);
+    const float roughness = texColorSample.w;
+    const float metallic = texPositionSample.w;
 
-    outColor = vec4(lightValue * texture(texColor, fragTexCoord).rgb, 1.0);
+    vec3 viewDir = normalize(-position);
+    vec3 baseReflectivity = mix(vec3(0.04), albedo, metallic);
+
+    vec3 Lo = vec3(0);
+    // PER LIGHT
+    vec3 lightDir = normalize(pc.lightPosition - position);
+    vec3 halfpoint = normalize(viewDir + lightDir);
+    float attenuation = 4.0;
+    vec3 radience = vec3(1, 1, 1) * attenuation;
+
+    float NdotV = max(dot(normal, viewDir), 0.00000001);
+    float NdotL = max(dot(normal, lightDir), 0.00000001);
+    float HdotV = max(dot(halfpoint, viewDir), 0);
+    float NdotH = max(dot(normal, halfpoint), 0);
+
+    float dist = distribution_ggx(NdotH, roughness);
+    float geo = smith_formula(NdotV, NdotL, roughness);
+    vec3 fresnel = fresnel_schlick(HdotV, baseReflectivity);
+
+    vec3 specular = dist * geo * fresnel;
+    specular /= 4.0 * NdotV * NdotL;
+
+    vec3 kD = vec3(1.0) - fresnel;
+    kD *= 1.0 - metallic;
+
+    Lo += (kD * albedo / pi + specular) * radience * NdotL;
+
+    // END PER LIGHT
+
+    vec3 ambient = 0.5 * albedo * ambientValue;
+    vec3 color = ambient + shadow * Lo;
+    color = color / (color + vec3(1.0));
+    color = pow(color, vec3(1.0/1.3));
+
+    float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
+    color = mix(vec3(luminance), color, 1.2);
+
+    outColor = vec4(color, 1.0);
 }

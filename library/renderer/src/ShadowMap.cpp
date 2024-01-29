@@ -11,13 +11,13 @@
 namespace renderer {
 
 constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
-constexpr auto g_shadowMapFormat     = GAPI_COLOR_FORMAT(D, Float32);
+constexpr auto g_shadowMapFormat     = GAPI_FORMAT(D, Float32);
 
 ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceManager) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
-            checkResult(device.create_depth_render_target(GAPI_COLOR_FORMAT(D, Float32), g_shadowMapResolution))),
+            checkResult(device.create_depth_render_target(GAPI_FORMAT(D, Float32), g_shadowMapResolution))),
     m_depthTexture(checkResult(device.create_texture(g_shadowMapFormat, g_shadowMapResolution, graphics_api::TextureType::SampledDepthBuffer))),
     m_renderPass(checkResult(device.create_render_pass(m_depthRenderTarget))),
     m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(m_renderPass, m_depthTexture))),
@@ -26,7 +26,7 @@ ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceMana
                     .fragment_shader(resourceManager.shader("fsh:shadow_map"_name))
                     .vertex_shader(resourceManager.shader("vsh:shadow_map"_name))
                     .begin_vertex_layout<geometry::Vertex>()
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                     .end_vertex_layout()
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::ShaderStage::Vertex)

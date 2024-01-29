@@ -13,7 +13,7 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api:
                                    .fragment_shader(resourceManager.shader("fsh:rectangle"_name))
                                    .vertex_shader(resourceManager.shader("vsh:rectangle"_name))
                                    .begin_vertex_layout<glm::vec2>()
-                                   .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), 0)
+                                   .vertex_attribute(GAPI_FORMAT(RG, Float32), 0)
                                    .end_vertex_layout()
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                                        graphics_api::ShaderStage::Vertex)

@@ -8,6 +8,7 @@
 #include "Core.h"
 #include "DebugLinesRenderer.h"
 #include "GlyphAtlas.h"
+#include "GroundRenderer.h"
 #include "ModelRenderer.h"
 #include "PostProcessingRenderer.h"
 #include "RectangleRenderer.h"
@@ -95,6 +96,7 @@ class Renderer
    graphics_api::Texture m_modelDepthTexture;
    graphics_api::Framebuffer m_modelFramebuffer;
    ModelRenderer m_context3D;
+   GroundRenderer m_groundRenderer;
    SpriteRenderer m_context2D;
    ShadowMap m_shadowMap;
    DebugLinesRenderer m_debugLinesRenderer;

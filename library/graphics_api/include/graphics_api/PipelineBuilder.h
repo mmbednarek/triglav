@@ -23,6 +23,7 @@ class PipelineBuilder
    PipelineBuilder &descriptor_binding(DescriptorType descriptorType, ShaderStage shaderStage);
    PipelineBuilder &push_constant(ShaderStage shaderStage, size_t size, size_t offset = 0);
    PipelineBuilder &enable_depth_test(bool enabled);
+   PipelineBuilder &enable_blending(bool enabled);
    PipelineBuilder &vertex_topology(VertexTopology topology);
    PipelineBuilder &razterization_method(RasterizationMethod method);
    PipelineBuilder &culling(Culling cull);
@@ -50,6 +51,7 @@ class PipelineBuilder
    VkPrimitiveTopology m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    VkFrontFace m_frontFace                 = VK_FRONT_FACE_CLOCKWISE;
    bool m_depthTestEnabled{false};
+   bool m_blendingEnabled{true};
 
    std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageInfos;
    std::vector<VkVertexInputBindingDescription> m_bindings{};

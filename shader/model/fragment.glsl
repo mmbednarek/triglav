@@ -14,16 +14,17 @@ layout(binding = 1) uniform sampler2D texSampler;
 layout(binding = 2) uniform sampler2D normalSampler;
 layout(binding = 3) uniform MaterialProperties {
     bool hasNormalMap;
-    float diffuseAmount;
+    float roughness;
+    float metalness;
 } mp;
 
 void main() {
-    outColor = texture(texSampler, fragTexCoord);
-    outPosition = vec4(fragPosition, 1.0);
+    outColor = vec4(texture(texSampler, fragTexCoord).rgb, mp.roughness);
+    outPosition = vec4(fragPosition, mp.metalness);
 
-    vec3 normalSample = 2 * texture(normalSampler, fragTexCoord).rgb - 1.0;
     if (mp.hasNormalMap) {
         const mat3 tangentSpaceMat = mat3(fragTangent, fragBitangent, fragNormal);
+        vec3 normalSample = 2 * texture(normalSampler, fragTexCoord).rgb - 1.0;
         outNormal = vec4(normalize(tangentSpaceMat * normalSample), 1.0);
     } else {
         outNormal = vec4(normalize(fragNormal), 1.0);

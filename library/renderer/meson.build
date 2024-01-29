@@ -4,6 +4,7 @@ renderer_sources = files([
   'src/CameraBase.cpp',
   'src/DebugLinesRenderer.cpp',
   'src/GlyphAtlas.cpp',
+  'src/GroundRenderer.cpp',
   'src/Material.cpp',
   'src/Model.cpp',
   'src/ModelRenderer.cpp',

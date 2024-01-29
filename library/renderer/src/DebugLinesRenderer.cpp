@@ -13,7 +13,7 @@ DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_ap
                                    .fragment_shader(resourceManager.shader("fsh:debug_lines"_name))
                                    .vertex_shader(resourceManager.shader("vsh:debug_lines"_name))
                                    .begin_vertex_layout<glm::vec3>()
-                                   .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), 0)
+                                   .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
                                    .end_vertex_layout()
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                                        graphics_api::ShaderStage::Vertex)

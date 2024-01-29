@@ -30,9 +30,9 @@ SkyBox::SkyBox(Renderer &renderer) :
                     .vertex_shader(m_resourceManager.shader("vsh:skybox"_name))
                     // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                    .vertex_attribute(GAPI_COLOR_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,

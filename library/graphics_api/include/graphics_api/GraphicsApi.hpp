@@ -266,7 +266,7 @@ inline void check_status(const Status status, const std::string_view message)
 
 #define GAPI_PREPEND_FORMAT_PART(value) ::graphics_api::ColorFormatPart::value,
 
-#define GAPI_COLOR_FORMAT(fmt_order, ...)                          \
+#define GAPI_FORMAT(fmt_order, ...)                                \
    ::graphics_api::ColorFormat                                     \
    {                                                               \
       .order = ::graphics_api::ColorFormatOrder::fmt_order, .parts \
