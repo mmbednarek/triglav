@@ -67,7 +67,7 @@ std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &d
    manager->add_material("mat:gold"_name, Material{
                                                   "tex:gold"_name,
                                                   "tex:gold/normal"_name,
-                                                  {true, 0.1f, 0.9f}
+                                                  {true, 0.1f, 0.5f}
    });
    manager->add_material("mat:grass"_name, Material{
                                                    "tex:grass"_name,
@@ -111,8 +111,8 @@ std::vector<font::Rune> make_runes()
    return runes;
 }
 
-graphics_api::TextureRenderTarget create_render_target(const graphics_api::Device &device,
-                                                       const graphics_api::Resolution resolution)
+graphics_api::TextureRenderTarget create_model_render_target(const graphics_api::Device &device,
+                                                             const graphics_api::Resolution resolution)
 {
    using graphics_api::AttachmentLifetime;
    using graphics_api::AttachmentType;
@@ -134,6 +134,19 @@ graphics_api::TextureRenderTarget create_render_target(const graphics_api::Devic
    return renderTarget;
 }
 
+graphics_api::TextureRenderTarget create_ao_render_target(const graphics_api::Device &device,
+                                                          const graphics_api::Resolution resolution)
+{
+   using graphics_api::AttachmentLifetime;
+   using graphics_api::AttachmentType;
+   using graphics_api::SampleCount;
+
+   auto renderTarget = checkResult(device.create_texture_render_target(resolution));
+   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                               GAPI_FORMAT(R, Float16), SampleCount::Single);
+   return renderTarget;
+}
+
 auto g_runes{make_runes()};
 
 }// namespace
@@ -150,7 +163,7 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
     m_inFlightFence(checkResult(m_device->create_fence())),
     m_commandList(checkResult(m_device->create_command_list())),
-    m_modelRenderTarget(create_render_target(*m_device, m_renderPass.resolution())),
+    m_modelRenderTarget(create_model_render_target(*m_device, m_renderPass.resolution())),
     m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
     m_modelColorTexture(
             checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
@@ -166,6 +179,13 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_modelFramebuffer(checkResult(m_modelRenderTarget.create_framebuffer(
             m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
             m_modelDepthTexture))),
+    m_ambientOcclusionRenderTarget(create_ao_render_target(*m_device, m_resolution)),
+    m_ambientOcclusionRenderPass(checkResult(m_device->create_render_pass(m_ambientOcclusionRenderTarget))),
+    m_ambientOcclusionTexture(
+            checkResult(m_device->create_texture(GAPI_FORMAT(R, Float16), m_renderPass.resolution(),
+                                                 graphics_api::TextureType::ColorAttachment))),
+    m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(
+            m_ambientOcclusionRenderPass, m_ambientOcclusionTexture))),
     m_context3D(*m_device, m_modelRenderPass, *m_resourceManager),
     m_groundRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
@@ -173,9 +193,12 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
     m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 220.0f})),
+    m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderPass, *m_resourceManager,
+                               m_modelPositionTexture, m_modelNormalTexture,
+                               m_resourceManager->texture("tex:noise"_name)),
     m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_modelColorTexture,
-                             m_modelPositionTexture, m_modelNormalTexture, m_modelDepthTexture,
-                             m_resourceManager->texture("tex:noise"_name), m_shadowMap.depth_texture()),
+                             m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
+                             m_shadowMap.depth_texture()),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
@@ -317,6 +340,17 @@ void Renderer::on_render()
    }
 
    {
+      std::array<graphics_api::ClearValue, 1> clearValues{
+              graphics_api::ColorPalette::Black,
+      };
+      m_commandList.begin_render_pass(m_ambientOcclusionFramebuffer, clearValues);
+
+      m_ambientOcclusionRenderer.draw(m_commandList, m_scene.camera().projection_matrix());
+
+      m_commandList.end_render_pass();
+   }
+
+   {
       std::array<graphics_api::ClearValue, 3> clearValues{
               graphics_api::ColorPalette::Black,
               graphics_api::DepthStenctilValue{1.0f, 0.0f},
@@ -329,8 +363,7 @@ void Renderer::on_render()
       const auto lightPosition =
               m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
 
-      m_postProcessingRenderer.draw(m_commandList, glm::vec3(lightPosition),
-                                    m_scene.camera().projection_matrix(), shadowMat, m_ssaoEnabled);
+      m_postProcessingRenderer.draw(m_commandList, glm::vec3(lightPosition), shadowMat, m_ssaoEnabled);
 
       m_rectangleRenderer.begin_render(m_commandList);
       m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle);
@@ -511,7 +544,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_device->await_all();
 
-   m_modelRenderTarget = create_render_target(*m_device, resolution);
+   m_modelRenderTarget = create_model_render_target(*m_device, resolution);
    m_modelRenderPass   = checkResult(m_device->create_render_pass(m_modelRenderTarget));
 
    m_modelColorTexture = checkResult(
@@ -530,8 +563,10 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
            m_modelDepthTexture));
 
    m_postProcessingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-                                            m_modelDepthTexture, m_resourceManager->texture("tex:noise"_name),
-                                            m_shadowMap.depth_texture());
+                                            m_ambientOcclusionTexture, m_shadowMap.depth_texture());
+
+   m_ambientOcclusionRenderer.update_textures(m_modelPositionTexture, m_modelNormalTexture,
+                                              m_resourceManager->texture("tex:noise"_name));
 
    m_framebuffers.clear();
 

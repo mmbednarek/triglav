@@ -1,10 +1,6 @@
 #pragma once
 
-#include "font/FontManager.h"
-#include "graphics_api/Device.h"
-#include "graphics_api/PipelineBuilder.h"
-#include "graphics_api/PlatformSurface.h"
-
+#include "AmbientOcclusionRenderer.h"
 #include "Core.h"
 #include "DebugLinesRenderer.h"
 #include "GlyphAtlas.h"
@@ -19,6 +15,11 @@
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
 #include "TextRenderer.h"
+
+#include "font/FontManager.h"
+#include "graphics_api/Device.h"
+#include "graphics_api/PipelineBuilder.h"
+#include "graphics_api/PlatformSurface.h"
 
 namespace renderer {
 
@@ -95,6 +96,10 @@ class Renderer
    graphics_api::Texture m_modelNormalTexture;
    graphics_api::Texture m_modelDepthTexture;
    graphics_api::Framebuffer m_modelFramebuffer;
+   graphics_api::TextureRenderTarget m_ambientOcclusionRenderTarget;
+   graphics_api::RenderPass m_ambientOcclusionRenderPass;
+   graphics_api::Texture m_ambientOcclusionTexture;
+   graphics_api::Framebuffer m_ambientOcclusionFramebuffer;
    ModelRenderer m_context3D;
    GroundRenderer m_groundRenderer;
    SpriteRenderer m_context2D;
@@ -102,6 +107,7 @@ class Renderer
    DebugLinesRenderer m_debugLinesRenderer;
    RectangleRenderer m_rectangleRenderer;
    Rectangle m_rectangle;
+   AmbientOcclusionRenderer m_ambientOcclusionRenderer;
    PostProcessingRenderer m_postProcessingRenderer;
    Scene m_scene;
    SkyBox m_skyBox;

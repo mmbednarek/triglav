@@ -1,4 +1,5 @@
 renderer_sources = files([
+  'src/AmbientOcclusionRenderer.cpp',
   'src/AssetMap.hpp',
   'src/Camera.cpp',
   'src/CameraBase.cpp',

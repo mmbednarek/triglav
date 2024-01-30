@@ -5,14 +5,11 @@ layout(location = 0) in vec2 fragTexCoord;
 layout(binding = 0) uniform sampler2D texColor;
 layout(binding = 1) uniform sampler2D texPosition;
 layout(binding = 2) uniform sampler2D texNormal;
-layout(binding = 3) uniform sampler2D texDepth;
-layout(binding = 4) uniform sampler2D texNoise;
-layout(binding = 5) uniform sampler2D texShadowMap;
+layout(binding = 3) uniform sampler2D texAmbientOcclusion;
+layout(binding = 4) uniform sampler2D texShadowMap;
 
-layout(binding = 6) uniform PostProcessingUBO {
+layout(binding = 5) uniform PostProcessingUBO {
     mat4 shadowMapMat;
-    mat4 cameraProjection;
-    vec3 samplesSSAO[64];
 } ubo;
 
 layout(location = 0) out vec4 outColor;
@@ -68,24 +65,21 @@ float filterPCF(vec4 sc)
     return shadowFactor / count;
 }
 
-const float ambient = 0.3;
-const float shinniness = 50.0;
+const float ambient = 0.5;
 
 const float radius = 0.8;
 
 const mat4 biasMat = mat4(
-    0.5, 0.0, 0.0, 0.0,
-    0.0, 0.5, 0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.5, 0.5, 0.0, 1.0
+0.5, 0.0, 0.0, 0.0,
+0.0, 0.5, 0.0, 0.0,
+0.0, 0.0, 1.0, 0.0,
+0.5, 0.5, 0.0, 1.0
 );
 
 vec4 visualizeVector(vec3 v) {
     return vec4(0.5 * v + 0.5, 1.0);
 }
 
-//const float metallic = 1.0;
-//const float roughness = 0.2;
 const float pi = 3.14159265;
 
 float distribution_ggx(float NdotH, float roughness) {
@@ -108,6 +102,51 @@ vec3 fresnel_schlick(float HdotV, vec3 baseReflectivity) {
     return baseReflectivity + (1.0 - baseReflectivity) * pow(1.0 - HdotV, 5.0);
 }
 
+const float g_gaussCoefs[] = {
+    0.0005630786562624799,
+    0.011309737141018935,
+    0.030743052955080116,
+    0.011309737141018935,
+    0.0005630786562624799,
+    0.0025235434595121996,
+    0.05068672533330102,
+    0.1377808044176069,
+    0.05068672533330102,
+    0.0025235434595121996,
+    0.004160619779233951,
+    0.08356828219914844,
+    0.2271621429374827,
+    0.08356828219914844,
+    0.004160619779233951,
+    0.0025235434595121996,
+    0.05068672533330102,
+    0.1377808044176069,
+    0.05068672533330102,
+    0.0025235434595121996,
+    0.0005630786562624799,
+    0.011309737141018935,
+    0.030743052955080116,
+    0.011309737141018935,
+    0.0005630786562624799
+};
+
+float sample_ao_blurred(vec2 coord) {
+    ivec2 texSize = textureSize(texAmbientOcclusion, 0);
+    vec2 pixelOffset = vec2(1.0 / texSize.x, 1.0 / texSize.y);
+
+    float result = 0.0;
+    int coefIndex = 0;
+    for (int y = -2; y <= 2; ++y) {
+        for (int x = -2; x <= 2; ++x) {
+            float coef = g_gaussCoefs[coefIndex];
+            result += coef * texture(texAmbientOcclusion, coord + vec2(x * pixelOffset.x, y * pixelOffset.y)).r;
+            ++coefIndex;
+        }
+    }
+
+    return result;
+}
+
 void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
     if (normal == vec3(0.0, 0.0, 0.0)) {
@@ -116,44 +155,19 @@ void main() {
     }
     normal = normalize(normal);
 
-//    outColor = visualizeVector(normal);
-//    return;
-
     vec4 texPositionSample = texture(texPosition, fragTexCoord);
     vec3 position = texPositionSample.xyz;
     vec4 shadowUV = biasMat * ubo.shadowMapMat * vec4(position, 1.0);
     shadowUV /= shadowUV.w;
 
     float shadow = filterPCF(shadowUV);
+    //    float ambientValue = ambient * texture(texAmbientOcclusion, fragTexCoord).r;
     float ambientValue = ambient;
-
-    // -------------------------------
     if (pc.enableSSAO) {
-        vec4 randomPixel = texture(texNoise, fragTexCoord * vec2(1.0, 0.6));
-        vec3 randomVector = normalize(randomPixel.xyz * 2 - 1);
-        vec3 tangent = normalize(randomVector - normal * dot(randomVector, normal));
-        vec3 bitangent = cross(normal, tangent);
-        mat3 ssaoTangentSpace = mat3(tangent, bitangent, normal);
-
-        float occlusion = 0.0;
-        for (int i = 0; i < 64; ++i) {
-            vec3 s = ssaoTangentSpace * (ubo.samplesSSAO[i]);
-            s = position + s * radius;
-
-            vec4 offset = vec4(s, 1.0);
-            offset = ubo.cameraProjection * offset;
-            offset.xyz /= offset.w;
-            offset.xyz = offset.xyz * 0.5 + 0.5;
-
-            float sampleDepth = linearize_depth(offset.z);
-            vec3 occluderPos = texture(texPosition, offset.xy).xyz;
-            float rangeCheck = smoothstep(0.0, 1.0, radius / length(position - occluderPos));
-
-            occlusion += (occluderPos.z >= s.z + 0.025 ? rangeCheck : 0.0);
-        }
-
-        ambientValue *= 1.0 - (occlusion / 64.0);
+        ambientValue *= sample_ao_blurred(fragTexCoord);
     }
+//    outColor = vec4(vec3(ambientValue), 1.0);
+//    return;
 
     vec4 texColorSample = texture(texColor, fragTexCoord);
     vec3 albedo = texColorSample.rgb;
@@ -191,10 +205,10 @@ void main() {
 
     // END PER LIGHT
 
-    vec3 ambient = 0.5 * albedo * ambientValue;
+    vec3 ambient = albedo * ambientValue;
     vec3 color = ambient + shadow * Lo;
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/1.3));
+    //    color = color / (color + vec3(1.0));
+    //    color = pow(color, vec3(1.3));
 
     float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
     color = mix(vec3(luminance), color, 1.2);

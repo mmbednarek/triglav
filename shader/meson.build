@@ -4,6 +4,8 @@ compile_vertex_cmds = [shader_compiler, '-fshader-stage=vert', '@INPUT@', '-o', 
 
 shader_targets = []
 
+subdir('ambient_occlusion')
+subdir('debug_lines')
 subdir('ground')
 subdir('model')
 subdir('post_processing')
@@ -12,6 +14,5 @@ subdir('skybox')
 subdir('rectangle')
 subdir('sprite')
 subdir('text')
-subdir('debug_lines')
 
 shaders = declare_dependency(sources: [shader_targets])
