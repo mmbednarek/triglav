@@ -11,6 +11,7 @@
 #include "Renderer.h"
 #include "ResourceManager.h"
 #include "Scene.h"
+#include "ShadingRenderer.h"
 #include "ShadowMap.h"
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
@@ -73,7 +74,9 @@ class Renderer
    float m_lightX{-40};
    bool m_showDebugLines{false};
    bool m_ssaoEnabled{true};
+   bool m_fxaaEnabled{true};
    glm::vec3 m_position{};
+   glm::vec3 m_motion{};
    Moving m_moveDirection{Moving::None};
 
    graphics_api::DeviceUPtr m_device;
@@ -100,6 +103,10 @@ class Renderer
    graphics_api::RenderPass m_ambientOcclusionRenderPass;
    graphics_api::Texture m_ambientOcclusionTexture;
    graphics_api::Framebuffer m_ambientOcclusionFramebuffer;
+   graphics_api::TextureRenderTarget m_shadingRenderTarget;
+   graphics_api::RenderPass m_shadingRenderPass;
+   graphics_api::Texture m_shadingColorTexture;
+   graphics_api::Framebuffer m_shadingFramebuffer;
    ModelRenderer m_context3D;
    GroundRenderer m_groundRenderer;
    SpriteRenderer m_context2D;
@@ -108,6 +115,7 @@ class Renderer
    RectangleRenderer m_rectangleRenderer;
    Rectangle m_rectangle;
    AmbientOcclusionRenderer m_ambientOcclusionRenderer;
+   ShadingRenderer m_shadingRenderer;
    PostProcessingRenderer m_postProcessingRenderer;
    Scene m_scene;
    SkyBox m_skyBox;
@@ -126,6 +134,8 @@ class Renderer
    TextObject m_triangleCountValue;
    TextObject m_aoLabel;
    TextObject m_aoValue;
+   TextObject m_aaLabel;
+   TextObject m_aaValue;
 };
 
 }// namespace renderer

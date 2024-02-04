@@ -25,7 +25,7 @@ class Swapchain final : public IRenderTarget
    [[nodiscard]] Subpass vulkan_subpass() override;
    [[nodiscard]] std::vector<VkAttachmentDescription> vulkan_attachments() override;
    [[nodiscard]] std::vector<VkSubpassDependency> vulkan_subpass_dependencies() override;
-   [[nodiscard]] Resolution resolution() const override;
+   [[nodiscard]] Resolution resolution() const;
    [[nodiscard]] ColorFormat color_format() const;
    [[nodiscard]] SampleCount sample_count() const override;
    [[nodiscard]] int color_attachment_count() const override;

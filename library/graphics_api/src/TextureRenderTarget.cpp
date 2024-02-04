@@ -7,9 +7,8 @@
 
 namespace graphics_api {
 
-TextureRenderTarget::TextureRenderTarget(const VkDevice device, const Resolution &resolution) :
-    m_device(device),
-    m_resolution(resolution)
+TextureRenderTarget::TextureRenderTarget(const VkDevice device) :
+    m_device(device)
 {
 }
 
@@ -132,11 +131,6 @@ std::vector<VkSubpassDependency> TextureRenderTarget::vulkan_subpass_dependencie
    return dependencies;
 }
 
-Resolution TextureRenderTarget::resolution() const
-{
-   return m_resolution;
-}
-
 SampleCount TextureRenderTarget::sample_count() const
 {
    return SampleCount::Single;
@@ -160,6 +154,8 @@ TextureRenderTarget::create_framebuffer_raw(const RenderPass &renderPass,
    std::vector<VkImageView> attachmentImageViews;
    attachmentImageViews.resize(textures.size());
 
+   auto resolution = textures[0]->resolution();
+
    for (size_t i = 0; i < textures.size(); ++i) {
       attachmentImageViews[i] = textures[i]->vulkan_image_view();
    }
@@ -169,8 +165,8 @@ TextureRenderTarget::create_framebuffer_raw(const RenderPass &renderPass,
    framebufferInfo.renderPass      = renderPass.vulkan_render_pass();
    framebufferInfo.attachmentCount = attachmentImageViews.size();
    framebufferInfo.pAttachments    = attachmentImageViews.data();
-   framebufferInfo.width           = m_resolution.width;
-   framebufferInfo.height          = m_resolution.height;
+   framebufferInfo.width           = resolution.width;
+   framebufferInfo.height          = resolution.height;
    framebufferInfo.layers          = 1;
 
    vulkan::Framebuffer framebuffer(m_device);
@@ -178,7 +174,7 @@ TextureRenderTarget::create_framebuffer_raw(const RenderPass &renderPass,
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return Framebuffer(renderPass.resolution(), renderPass.vulkan_render_pass(), std::move(framebuffer));
+   return Framebuffer(resolution, renderPass.vulkan_render_pass(), std::move(framebuffer));
 }
 
 void TextureRenderTarget::add_attachment(const AttachmentType type, const AttachmentLifetime lifetime,

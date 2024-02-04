@@ -5,10 +5,9 @@
 
 namespace graphics_api {
 
-DepthRenderTarget::DepthRenderTarget(const VkDevice device, const Resolution &resolution,
-                           const ColorFormat &depthFormat) :
+DepthRenderTarget::DepthRenderTarget(const VkDevice device,
+                                     const ColorFormat &depthFormat) :
     m_device(device),
-    m_resolution(resolution),
     m_depthFormat(depthFormat)
 {
 }
@@ -69,11 +68,6 @@ std::vector<VkSubpassDependency> DepthRenderTarget::vulkan_subpass_dependencies(
    return dependencies;
 }
 
-Resolution DepthRenderTarget::resolution() const
-{
-   return m_resolution;
-}
-
 SampleCount DepthRenderTarget::sample_count() const
 {
    return SampleCount::Single;
@@ -85,7 +79,7 @@ int DepthRenderTarget::color_attachment_count() const
 }
 
 Result<Framebuffer> DepthRenderTarget::create_framebuffer(const RenderPass &renderPass,
-                                                     const Texture &texture) const
+                                                          const Texture &texture) const
 {
    assert(texture.type() == TextureType::SampledDepthBuffer);
 
@@ -96,8 +90,8 @@ Result<Framebuffer> DepthRenderTarget::create_framebuffer(const RenderPass &rend
    framebufferInfo.renderPass      = renderPass.vulkan_render_pass();
    framebufferInfo.attachmentCount = attachmentImageViews.size();
    framebufferInfo.pAttachments    = attachmentImageViews.data();
-   framebufferInfo.width           = m_resolution.width;
-   framebufferInfo.height          = m_resolution.height;
+   framebufferInfo.width           = texture.width();
+   framebufferInfo.height          = texture.height();
    framebufferInfo.layers          = 1;
 
    vulkan::Framebuffer framebuffer(m_device);
@@ -105,7 +99,7 @@ Result<Framebuffer> DepthRenderTarget::create_framebuffer(const RenderPass &rend
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return Framebuffer(renderPass.resolution(), renderPass.vulkan_render_pass(), std::move(framebuffer));
+   return Framebuffer(texture.resolution(), renderPass.vulkan_render_pass(), std::move(framebuffer));
 }
 
 }// namespace graphics_api

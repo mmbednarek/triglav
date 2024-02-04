@@ -12,6 +12,7 @@ subdir('post_processing')
 subdir('shadow_map')
 subdir('skybox')
 subdir('rectangle')
+subdir('shading')
 subdir('sprite')
 subdir('text')
 

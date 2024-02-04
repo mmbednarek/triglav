@@ -193,7 +193,7 @@ Result<std::vector<Framebuffer>> Swapchain::create_framebuffers(const RenderPass
          return std::unexpected(Status::UnsupportedDevice);
       }
 
-      result.emplace_back(renderPass.resolution(), renderPass.vulkan_render_pass(), std::move(framebuffer));
+      result.emplace_back(m_resolution, renderPass.vulkan_render_pass(), std::move(framebuffer));
    }
 
    return result;

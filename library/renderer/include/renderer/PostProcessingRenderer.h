@@ -11,30 +11,17 @@ namespace renderer {
 class PostProcessingRenderer
 {
  public:
-   struct PushConstant
+   struct PushConstants
    {
-      alignas(16) glm::vec3 lightPosition{};
-      int enableSSAO{1};
-   };
-
-   struct UniformData
-   {
-      glm::mat4 shadowMapMat;
+      int enableFXAA{};
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                          const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture,
-                          const graphics_api::Texture &positionTexture,
-                          const graphics_api::Texture &normalTexture, const graphics_api::Texture &aoTexture,
-                          const graphics_api::Texture &shadowMapTexture);
+                          const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture);
 
-   void update_textures(const graphics_api::Texture &colorTexture,
-                        const graphics_api::Texture &positionTexture,
-                        const graphics_api::Texture &normalTexture, const graphics_api::Texture &aoTexture,
-                        const graphics_api::Texture &shadowMapTexture) const;
+   void update_texture(const graphics_api::Texture &colorTexture) const;
 
-   void draw(graphics_api::CommandList &cmdList, const glm::vec3 &lightPosition,
-             const glm::mat4 &shadowMapMat, bool ssaoEnabled) const;
+   void draw(graphics_api::CommandList &cmdList, bool enableFXAA) const;
 
  private:
    graphics_api::Device &m_device;
@@ -42,7 +29,6 @@ class PostProcessingRenderer
    graphics_api::DescriptorPool m_descriptorPool;
    graphics_api::Sampler m_sampler;
    graphics_api::DescriptorArray m_descriptors;
-   graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
 };
 
 }// namespace renderer

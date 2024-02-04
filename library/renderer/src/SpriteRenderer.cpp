@@ -14,7 +14,7 @@ struct Vertex2D
 };
 
 SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                     ResourceManager &resourceManager) :
+                               ResourceManager &resourceManager) :
     m_device(device),
     m_renderPass(renderPass),
     m_resourceManager(resourceManager),
@@ -56,6 +56,11 @@ Sprite SpriteRenderer::create_sprite_from_texture(const graphics_api::Texture &t
                  std::move(descriptors)};
 }
 
+void SpriteRenderer::update_resolution(const graphics_api::Resolution &resolution)
+{
+   m_resolution = resolution;
+}
+
 void SpriteRenderer::set_active_command_list(graphics_api::CommandList *commandList)
 {
    m_commandList = commandList;
@@ -71,7 +76,7 @@ void SpriteRenderer::draw_sprite(const Sprite &sprite, const glm::vec2 position,
 {
    assert(m_commandList != nullptr);
 
-   const auto [viewportWidth, viewportHeight] = m_renderPass.resolution();
+   const auto [viewportWidth, viewportHeight] = m_resolution;
 
    const auto scaleX = 2.0f * scale.x * sprite.width / static_cast<float>(viewportWidth);
    const auto scaleY = 2.0f * scale.y * sprite.height / static_cast<float>(viewportHeight);

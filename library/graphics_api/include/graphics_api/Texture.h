@@ -19,6 +19,7 @@ class Texture
    [[nodiscard]] TextureType type() const;
    [[nodiscard]] uint32_t width() const;
    [[nodiscard]] uint32_t height() const;
+   [[nodiscard]] Resolution resolution() const;
    Status write(Device &device, const uint8_t *pixels) const;
 
  private:

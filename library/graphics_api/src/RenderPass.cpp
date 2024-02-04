@@ -2,10 +2,9 @@
 
 namespace graphics_api {
 
-RenderPass::RenderPass(vulkan::RenderPass renderPass, const Resolution &resolution,
-                       const SampleCount sampleCount, const int colorAttachmentCount) :
+RenderPass::RenderPass(vulkan::RenderPass renderPass, const SampleCount sampleCount,
+                       const int colorAttachmentCount) :
     m_renderPass(std::move(renderPass)),
-    m_resolution(resolution),
     m_sampleCount(sampleCount),
     m_colorAttachmentCount(colorAttachmentCount)
 {
@@ -14,11 +13,6 @@ RenderPass::RenderPass(vulkan::RenderPass renderPass, const Resolution &resoluti
 VkRenderPass RenderPass::vulkan_render_pass() const
 {
    return *m_renderPass;
-}
-
-Resolution RenderPass::resolution() const
-{
-   return m_resolution;
 }
 
 SampleCount RenderPass::sample_count() const

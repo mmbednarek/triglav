@@ -60,9 +60,10 @@ void RectangleRenderer::begin_render(graphics_api::CommandList &cmdList) const
 }
 
 void RectangleRenderer::draw(const graphics_api::CommandList &cmdList,
-                             const graphics_api::RenderPass &renderPass, const Rectangle &rect) const
+                             const graphics_api::RenderPass &renderPass, const Rectangle &rect,
+                             const graphics_api::Resolution &resolution) const
 {
-   rect.vertexUBO->viewportSize = {renderPass.resolution().width, renderPass.resolution().height};
+   rect.vertexUBO->viewportSize = {resolution.width, resolution.height};
    rect.vertexUBO->position     = {rect.rect.x, rect.rect.y};
    rect.fragmentUBO->rectSize   = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
 

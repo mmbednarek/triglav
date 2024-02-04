@@ -13,12 +13,11 @@ class RenderPass;
 class TextureRenderTarget final : public IRenderTarget
 {
  public:
-   TextureRenderTarget(VkDevice device, const Resolution &resolution);
+   TextureRenderTarget(VkDevice device);
 
    [[nodiscard]] Subpass vulkan_subpass() override;
    [[nodiscard]] std::vector<VkAttachmentDescription> vulkan_attachments() override;
    [[nodiscard]] std::vector<VkSubpassDependency> vulkan_subpass_dependencies() override;
-   [[nodiscard]] Resolution resolution() const override;
    [[nodiscard]] SampleCount sample_count() const override;
    [[nodiscard]] int color_attachment_count() const override;
    [[nodiscard]] Result<Framebuffer> create_framebuffer_raw(const RenderPass &renderPass,
@@ -45,7 +44,6 @@ class TextureRenderTarget final : public IRenderTarget
    };
 
    VkDevice m_device;
-   Resolution m_resolution;
    std::vector<Attachment> m_attachments;
 };
 

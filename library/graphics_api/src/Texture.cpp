@@ -38,6 +38,11 @@ uint32_t Texture::height() const
    return m_height;
 }
 
+Resolution Texture::resolution() const
+{
+   return {m_width, m_height};
+}
+
 Status Texture::write(Device &device, const uint8_t *pixels) const
 {
    const auto bufferSize = m_colorFormat.pixel_size() * m_width * m_height;

@@ -162,7 +162,7 @@ Result<Pipeline> PipelineBuilder::build() const
    inputAssemblyInfo.topology               = m_primitiveTopology;
    inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-   auto resolution = m_renderPass.resolution();
+   Resolution resolution {800, 800};
 
    VkViewport viewport{};
    viewport.x        = 0.0f;

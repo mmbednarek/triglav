@@ -39,7 +39,7 @@ class RectangleRenderer
    [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect);
    void begin_render(graphics_api::CommandList &cmdList) const;
    void draw(const graphics_api::CommandList &cmdList, const graphics_api::RenderPass &renderPass,
-             const Rectangle &rect) const;
+             const Rectangle &rect, const graphics_api::Resolution& resolution) const;
 
  private:
    graphics_api::Device &m_device;

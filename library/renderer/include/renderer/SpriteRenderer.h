@@ -18,6 +18,7 @@ class SpriteRenderer
    [[nodiscard]] Sprite create_sprite(Name textureName);
    [[nodiscard]] Sprite create_sprite_from_texture(const graphics_api::Texture &texture);
 
+   void update_resolution(const graphics_api::Resolution& resolution);
    void set_active_command_list(graphics_api::CommandList *commandList);
    void begin_render() const;
    void draw_sprite(const Sprite &sprite, glm::vec2 position, glm::vec2 scale) const;
@@ -27,6 +28,7 @@ class SpriteRenderer
    graphics_api::Device &m_device;
    graphics_api::RenderPass &m_renderPass;
    ResourceManager &m_resourceManager;
+   graphics_api::Resolution m_resolution{};
 
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descriptorPool;

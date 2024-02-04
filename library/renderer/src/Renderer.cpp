@@ -147,6 +147,19 @@ graphics_api::TextureRenderTarget create_ao_render_target(const graphics_api::De
    return renderTarget;
 }
 
+graphics_api::TextureRenderTarget create_shading_render_target(const graphics_api::Device &device,
+                                                               const graphics_api::Resolution resolution)
+{
+   using graphics_api::AttachmentLifetime;
+   using graphics_api::AttachmentType;
+   using graphics_api::SampleCount;
+
+   auto renderTarget = checkResult(device.create_texture_render_target(resolution));
+   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
+   return renderTarget;
+}
+
 auto g_runes{make_runes()};
 
 }// namespace
@@ -163,42 +176,45 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
     m_inFlightFence(checkResult(m_device->create_fence())),
     m_commandList(checkResult(m_device->create_command_list())),
-    m_modelRenderTarget(create_model_render_target(*m_device, m_renderPass.resolution())),
+    m_modelRenderTarget(create_model_render_target(*m_device, m_resolution)),
     m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
-    m_modelColorTexture(
-            checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
-                                                 graphics_api::TextureType::ColorAttachment))),
-    m_modelPositionTexture(
-            checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
-                                                 graphics_api::TextureType::ColorAttachment))),
-    m_modelNormalTexture(
-            checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_renderPass.resolution(),
-                                                 graphics_api::TextureType::ColorAttachment))),
-    m_modelDepthTexture(checkResult(m_device->create_texture(g_depthFormat, m_renderPass.resolution(),
+    m_modelColorTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
+                                                             graphics_api::TextureType::ColorAttachment))),
+    m_modelPositionTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
+                                                                graphics_api::TextureType::ColorAttachment))),
+    m_modelNormalTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
+                                                              graphics_api::TextureType::ColorAttachment))),
+    m_modelDepthTexture(checkResult(m_device->create_texture(g_depthFormat, m_resolution,
                                                              graphics_api::TextureType::SampledDepthBuffer))),
     m_modelFramebuffer(checkResult(m_modelRenderTarget.create_framebuffer(
             m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
             m_modelDepthTexture))),
     m_ambientOcclusionRenderTarget(create_ao_render_target(*m_device, m_resolution)),
     m_ambientOcclusionRenderPass(checkResult(m_device->create_render_pass(m_ambientOcclusionRenderTarget))),
-    m_ambientOcclusionTexture(
-            checkResult(m_device->create_texture(GAPI_FORMAT(R, Float16), m_renderPass.resolution(),
-                                                 graphics_api::TextureType::ColorAttachment))),
+    m_ambientOcclusionTexture(checkResult(m_device->create_texture(
+            GAPI_FORMAT(R, Float16), m_resolution, graphics_api::TextureType::ColorAttachment))),
     m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(
             m_ambientOcclusionRenderPass, m_ambientOcclusionTexture))),
+    m_shadingRenderTarget(create_shading_render_target(*m_device, m_resolution)),
+    m_shadingRenderPass(checkResult(m_device->create_render_pass(m_shadingRenderTarget))),
+    m_shadingColorTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
+                                                               graphics_api::TextureType::ColorAttachment))),
+    m_shadingFramebuffer(checkResult(
+            m_shadingRenderTarget.create_framebuffer(m_shadingRenderPass, m_shadingColorTexture))),
     m_context3D(*m_device, m_modelRenderPass, *m_resourceManager),
     m_groundRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMap(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
-    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 220.0f})),
+    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 250.0f})),
     m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderPass, *m_resourceManager,
                                m_modelPositionTexture, m_modelNormalTexture,
                                m_resourceManager->texture("tex:noise"_name)),
-    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_modelColorTexture,
-                             m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
-                             m_shadowMap.depth_texture()),
+    m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelColorTexture,
+                      m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
+                      m_shadowMap.depth_texture()),
+    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
@@ -217,7 +233,9 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_triangleCountLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Triangle Count")),
     m_triangleCountValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
     m_aoLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Ambient Occlusion")),
-    m_aoValue(m_textRenderer.create_text_object(m_glyphAtlas, "Screen-Space"))
+    m_aoValue(m_textRenderer.create_text_object(m_glyphAtlas, "Screen-Space")),
+    m_aaLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Anti-Aliasing")),
+    m_aaValue(m_textRenderer.create_text_object(m_glyphAtlas, "Off"))
 {
 
    m_scene.add_object(SceneObject{
@@ -277,6 +295,9 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
    });
 
    m_scene.compile_scene();
+
+   m_textRenderer.update_resolution(m_resolution);
+   m_context2D.update_resolution(m_resolution);
 }
 
 void Renderer::on_render()
@@ -294,6 +315,7 @@ void Renderer::on_render()
    const auto triangleCountStr = std::format("{}", m_commandList.triangle_count());
    m_textRenderer.update_text_object(m_glyphAtlas, m_triangleCountValue, triangleCountStr);
    m_textRenderer.update_text_object(m_glyphAtlas, m_aoValue, m_ssaoEnabled ? "Screen-Space" : "Off");
+   m_textRenderer.update_text_object(m_glyphAtlas, m_aaValue, m_fxaaEnabled ? "FXAA" : "Off");
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);
@@ -351,6 +373,22 @@ void Renderer::on_render()
    }
 
    {
+      std::array<graphics_api::ClearValue, 1> clearValues{
+              graphics_api::ColorPalette::Black,
+      };
+      m_commandList.begin_render_pass(m_shadingFramebuffer, clearValues);
+
+      const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
+                             glm::inverse(m_scene.camera().view_matrix());
+      const auto lightPosition =
+              m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
+
+      m_shadingRenderer.draw(m_commandList, glm::vec3(lightPosition), shadowMat, m_ssaoEnabled);
+
+      m_commandList.end_render_pass();
+   }
+
+   {
       std::array<graphics_api::ClearValue, 3> clearValues{
               graphics_api::ColorPalette::Black,
               graphics_api::DepthStenctilValue{1.0f, 0.0f},
@@ -358,15 +396,10 @@ void Renderer::on_render()
       };
       m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
 
-      const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
-                             glm::inverse(m_scene.camera().view_matrix());
-      const auto lightPosition =
-              m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
-
-      m_postProcessingRenderer.draw(m_commandList, glm::vec3(lightPosition), shadowMat, m_ssaoEnabled);
+      m_postProcessingRenderer.draw(m_commandList, m_fxaaEnabled);
 
       m_rectangleRenderer.begin_render(m_commandList);
-      m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle);
+      m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle, m_resolution);
 
       // m_context2D.begin_render();
       // m_context2D.draw_sprite(m_sprite, {0.0f, 0.0f}, {0.2f, 0.2f});
@@ -399,6 +432,10 @@ void Renderer::on_render()
       m_textRenderer.draw_text_object(m_commandList, m_aoLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
       m_textRenderer.draw_text_object(m_commandList, m_aoValue,
                                       {16.0f + m_aoLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
+      textY += 12.0f + m_aaLabel.metric.height;
+      m_textRenderer.draw_text_object(m_commandList, m_aaLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text_object(m_commandList, m_aaValue,
+                                      {16.0f + m_aaLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
 
       m_commandList.end_render_pass();
    }
@@ -458,6 +495,12 @@ void Renderer::on_key_pressed(const uint32_t key)
    }
    if (key == 62) {
       m_ssaoEnabled = not m_ssaoEnabled;
+   }
+   if (key == 63) {
+      m_fxaaEnabled = not m_fxaaEnabled;
+   }
+   if (key == 57 && m_motion.z == 0.0f) {
+      m_motion.z += -12.0f;
    }
 }
 
@@ -542,10 +585,10 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    const graphics_api::Resolution resolution{width, height};
 
-   m_device->await_all();
+   m_textRenderer.update_resolution(resolution);
+   m_context2D.update_resolution(resolution);
 
-   m_modelRenderTarget = create_model_render_target(*m_device, resolution);
-   m_modelRenderPass   = checkResult(m_device->create_render_pass(m_modelRenderTarget));
+   m_device->await_all();
 
    m_modelColorTexture = checkResult(
            m_device->create_texture(g_colorFormat, resolution, graphics_api::TextureType::ColorAttachment));
@@ -554,19 +597,36 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
                                                                  graphics_api::TextureType::ColorAttachment));
    m_modelNormalTexture   = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
                                                                  graphics_api::TextureType::ColorAttachment));
+   m_modelDepthTexture    = checkResult(m_device->create_texture(g_depthFormat, resolution,
+                                                                 graphics_api::TextureType::SampledDepthBuffer));
 
-   m_modelDepthTexture = checkResult(m_device->create_texture(g_depthFormat, resolution,
-                                                              graphics_api::TextureType::SampledDepthBuffer));
+   m_ambientOcclusionTexture = checkResult(m_device->create_texture(
+           GAPI_FORMAT(R, Float16), resolution, graphics_api::TextureType::ColorAttachment));
+
+   m_shadingColorTexture = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
+                                                                graphics_api::TextureType::ColorAttachment));
 
    m_modelFramebuffer = checkResult(m_modelRenderTarget.create_framebuffer(
            m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
            m_modelDepthTexture));
 
-   m_postProcessingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-                                            m_ambientOcclusionTexture, m_shadowMap.depth_texture());
+   m_modelFramebuffer = checkResult(m_modelRenderTarget.create_framebuffer(
+           m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
+           m_modelDepthTexture));
+
+   m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(
+           m_ambientOcclusionRenderPass, m_ambientOcclusionTexture));
+
+   m_shadingFramebuffer =
+           checkResult(m_shadingRenderTarget.create_framebuffer(m_shadingRenderPass, m_shadingColorTexture));
+
+   m_shadingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
+                                     m_ambientOcclusionTexture, m_shadowMap.depth_texture());
 
    m_ambientOcclusionRenderer.update_textures(m_modelPositionTexture, m_modelNormalTexture,
                                               m_resourceManager->texture("tex:noise"_name));
+
+   m_postProcessingRenderer.update_texture(m_shadingColorTexture);
 
    m_framebuffers.clear();
 
@@ -588,10 +648,24 @@ constexpr auto g_movingSpeed = 10.0f;
 
 void Renderer::update_uniform_data(const float deltaTime)
 {
+   m_scene.camera().set_position(m_scene.camera().position() + m_motion * deltaTime);
+
    if (m_moveDirection != Moving::None) {
-      m_scene.camera().set_position(m_scene.camera().position() +
-                                    this->moving_direction() * (g_movingSpeed * deltaTime));
+      glm::vec3 movingDir{this->moving_direction()};
+      movingDir.z = 0.0f;
+      movingDir   = glm::normalize(movingDir);
+      m_scene.camera().set_position(m_scene.camera().position() + movingDir * (g_movingSpeed * deltaTime));
    }
+
+   if (m_scene.camera().position().z >= -2.4f) {
+      m_motion = glm::vec3{0.0f};
+      glm::vec3 camPos{m_scene.camera().position()};
+      camPos.z = -2.4f;
+      m_scene.camera().set_position(camPos);
+   } else {
+      m_motion.z += 30.0f * deltaTime;
+   }
+
    m_scene.update();
 }
 
