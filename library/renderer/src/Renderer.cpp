@@ -214,7 +214,7 @@ Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, c
     m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelColorTexture,
                       m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
                       m_shadowMap.depth_texture()),
-    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture),
+    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture, m_modelDepthTexture),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
@@ -626,7 +626,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    m_ambientOcclusionRenderer.update_textures(m_modelPositionTexture, m_modelNormalTexture,
                                               m_resourceManager->texture("tex:noise"_name));
 
-   m_postProcessingRenderer.update_texture(m_shadingColorTexture);
+   m_postProcessingRenderer.update_texture(m_shadingColorTexture, m_modelDepthTexture);
 
    m_framebuffers.clear();
 
@@ -657,10 +657,10 @@ void Renderer::update_uniform_data(const float deltaTime)
       m_scene.camera().set_position(m_scene.camera().position() + movingDir * (g_movingSpeed * deltaTime));
    }
 
-   if (m_scene.camera().position().z >= -2.4f) {
+   if (m_scene.camera().position().z >= -4.0f) {
       m_motion = glm::vec3{0.0f};
       glm::vec3 camPos{m_scene.camera().position()};
-      camPos.z = -2.4f;
+      camPos.z = -4.0f;
       m_scene.camera().set_position(camPos);
    } else {
       m_motion.z += 30.0f * deltaTime;

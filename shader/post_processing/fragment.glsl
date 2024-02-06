@@ -4,6 +4,7 @@ layout(location = 0) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
 
 layout(binding = 0) uniform sampler2D texColor;
+layout(binding = 1) uniform sampler2D texDepth;
 
 const vec3 luma = vec3(0.299, 0.587, 0.114);
 
@@ -21,7 +22,15 @@ layout(push_constant) uniform Constants
     bool enableFXAA;
 } pc;
 
-vec4 calculate_fxaa()
+float linearize_depth(float depth)
+{
+    float n = 0.1;
+    float f = 200.0;
+    float z = depth;
+    return (2.0 * n) / (f + n - z * (f - n));
+}
+
+vec3 calculate_fxaa()
 {
     ivec2 texDimensions = textureSize(texColor, 0);
     vec2 pixelOffset = vec2(1.0 / float(texDimensions.x), 1.0 / float(texDimensions.y));
@@ -66,8 +75,109 @@ vec4 calculate_fxaa()
     float lumaB = dot(rgbB, luma);
 
     if((lumaB < lumaMin) || (lumaB > lumaMax))
-        return vec4(rgbA, 1.0);
-    return vec4(rgbB, 1.0);
+        return rgbA;
+    return rgbB;
+}
+
+const float g_gaussCoefs[] = {
+    7.053342846020118e-09,
+    7.73492964270981e-06,
+    0.001147965343710727,
+    0.023057500297641625,
+    0.06267678406876825,
+    0.023057500297641625,
+    0.001147965343710727,
+    7.73492964270981e-06,
+    7.053342846020118e-09,
+    7.053719545226337e-09,
+    7.735342743550106e-06,
+    0.0011480266533114628,
+    0.02305873173389095,
+    0.0626801314595477,
+    0.02305873173389095,
+    0.0011480266533114628,
+    7.735342743550106e-06,
+    7.053719545226337e-09,
+    7.053988628405276e-09,
+    7.735637829086505e-06,
+    0.0011480704478881254,
+    0.023059611371477544,
+    0.06268252256241497,
+    0.023059611371477544,
+    0.0011480704478881254,
+    7.735637829086505e-06,
+    7.053988628405276e-09,
+    7.054150083239768e-09,
+    7.7358148858116e-06,
+    0.0011480967254360367,
+    0.023060139170136367,
+    0.06268395726791832,
+    0.023060139170136367,
+    0.0011480967254360367,
+    7.7358148858116e-06,
+    7.054150083239768e-09,
+    7.054203902339138e-09,
+    7.735873905620525e-06,
+    0.0011481054847523292,
+    0.02306031510570718,
+    0.06268443551038345,
+    0.02306031510570718,
+    0.0011481054847523292,
+    7.735873905620525e-06,
+    7.054203902339138e-09,
+    7.054150083239768e-09,
+    7.7358148858116e-06,
+    0.0011480967254360367,
+    0.023060139170136367,
+    0.06268395726791832,
+    0.023060139170136367,
+    0.0011480967254360367,
+    7.7358148858116e-06,
+    7.054150083239768e-09,
+    7.053988628405276e-09,
+    7.735637829086505e-06,
+    0.0011480704478881254,
+    0.023059611371477544,
+    0.06268252256241497,
+    0.023059611371477544,
+    0.0011480704478881254,
+    7.735637829086505e-06,
+    7.053988628405276e-09,
+    7.053719545226337e-09,
+    7.735342743550106e-06,
+    0.0011480266533114628,
+    0.02305873173389095,
+    0.0626801314595477,
+    0.02305873173389095,
+    0.0011480266533114628,
+    7.735342743550106e-06,
+    7.053719545226337e-09,
+    7.053342846020118e-09,
+    7.73492964270981e-06,
+    0.001147965343710727,
+    0.023057500297641625,
+    0.06267678406876825,
+    0.023057500297641625,
+    0.001147965343710727,
+    7.73492964270981e-06,
+    7.053342846020118e-09
+};
+
+vec3 sample_blurred_color(vec2 coord) {
+    ivec2 texSize = textureSize(texColor, 0);
+    vec2 pixelOffset = vec2(1.0 / texSize.x, 1.0 / texSize.y);
+
+    vec3 result = vec3(0.0);
+    int coefIndex = 0;
+    for (int y = -4; y <= 4; ++y) {
+        for (int x = -4; x <= 4; ++x) {
+            float coef = g_gaussCoefs[coefIndex];
+            result += coef * texture(texColor, coord + vec2(x * pixelOffset.x, y * pixelOffset.y)).rgb;
+            ++coefIndex;
+        }
+    }
+
+    return result;
 }
 
 void main() {
@@ -76,5 +186,9 @@ void main() {
         return;
     }
 
-    outColor = calculate_fxaa();
+    vec3 fxaaColor = calculate_fxaa();
+//    vec3 blurredColor = sample_blurred_color(fragTexCoord);
+//    float depth = linearize_depth(texture(texDepth, fragTexCoord).r);
+
+    outColor = vec4(fxaaColor, 1.0);
 }

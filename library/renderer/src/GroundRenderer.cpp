@@ -26,7 +26,7 @@ GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::Rende
     m_descriptors(checkResult(m_descriptorPool.allocate_array(1))),
     m_uniformBuffer(m_device)
 {
-   m_uniformBuffer->model = glm::scale(glm::mat4(1), glm::vec3{100, 100, 100});
+   m_uniformBuffer->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
 
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
    writer.set_uniform_buffer(0, m_uniformBuffer);

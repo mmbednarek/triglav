@@ -17,9 +17,9 @@ class PostProcessingRenderer
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                          const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture);
+                          const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture, const graphics_api::Texture &depthTexture);
 
-   void update_texture(const graphics_api::Texture &colorTexture) const;
+   void update_texture(const graphics_api::Texture &colorTexture, const graphics_api::Texture &depthTexture) const;
 
    void draw(graphics_api::CommandList &cmdList, bool enableFXAA) const;
 
