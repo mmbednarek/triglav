@@ -11,11 +11,13 @@
 #include <vector>
 
 #include "CommandList.h"
+#include "Surface.hpp"
 #include "vulkan/Util.h"
 
 #undef max
 
 using graphics_api::BufferPurpose;
+using triglav::desktop::ISurface;
 
 namespace {
 bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
@@ -583,18 +585,6 @@ uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags pro
    return 0;
 }
 
-constexpr std::array g_vulkanInstanceExtensions{
-        VK_KHR_SURFACE_EXTENSION_NAME,
-#if GAPI_PLATFORM_WINDOWS
-        VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
-#elif GAPI_PLATFORM_WAYLAND
-        VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME,
-#endif
-#if GAPI_ENABLE_VALIDATION
-        VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-#endif
-};
-
 constexpr std::array g_vulkanDeviceExtensions{
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 };
@@ -605,7 +595,7 @@ constexpr std::array g_vulkanInstanceLayers{
 #endif
 };
 
-Result<DeviceUPtr> initialize_device(const Surface &surface)
+Result<DeviceUPtr> initialize_device(const ISurface &surface)
 {
    VkApplicationInfo appInfo{};
    appInfo.sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -614,6 +604,14 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
    appInfo.pEngineName        = "TRIGLAV Engine";
    appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
    appInfo.apiVersion         = VK_API_VERSION_1_3;
+
+   const std::array g_vulkanInstanceExtensions{
+           VK_KHR_SURFACE_EXTENSION_NAME,
+           triglav::desktop::vulkan_extension_name(),
+#if GAPI_ENABLE_VALIDATION
+           VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+#endif
+   };
 
    VkInstanceCreateInfo instanceInfo{};
    instanceInfo.sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -656,8 +654,8 @@ Result<DeviceUPtr> initialize_device(const Surface &surface)
    }
 
    vulkan::SurfaceKHR vulkan_surface(*instance);
-   if (const auto res = vulkan::to_vulkan_surface(vulkan_surface, surface); res != Status::Success)
-      return std::unexpected(res);
+   if (const auto res = vulkan_surface.construct(&surface); res != VK_SUCCESS)
+      return std::unexpected(Status::UnsupportedDevice);
 
    auto queueFamilies = vulkan::get_queue_family_properties(*pickedDevice);
 

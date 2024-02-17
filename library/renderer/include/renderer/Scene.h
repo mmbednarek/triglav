@@ -7,7 +7,7 @@
 #include "Name.hpp"
 #include "OrthoCamera.h"
 
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <vector>
 
 namespace renderer {

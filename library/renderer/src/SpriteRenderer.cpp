@@ -4,7 +4,9 @@
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_transform_2d.hpp>
+#undef GLM_ENABLE_EXPERIMENTAL
 
 namespace renderer {
 

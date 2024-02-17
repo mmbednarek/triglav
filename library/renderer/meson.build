@@ -34,6 +34,6 @@ renderer_lib = static_library('renderer',
 
 renderer = declare_dependency(
   include_directories: include_directories(['include']),
-  link_with: renderer_lib,
+  link_with: [renderer_lib],
   dependencies: renderer_deps,
 )

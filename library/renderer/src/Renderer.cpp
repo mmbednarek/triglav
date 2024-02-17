@@ -164,7 +164,7 @@ auto g_runes{make_runes()};
 
 }// namespace
 
-Renderer::Renderer(const graphics_api::Surface &surface, const uint32_t width, const uint32_t height) :
+Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
     m_resourceManager(create_resource_manager(*m_device, m_fontManger)),
     m_resolution(create_viewport_resolution(*m_device, width, height)),

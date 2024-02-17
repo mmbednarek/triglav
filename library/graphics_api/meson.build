@@ -10,7 +10,6 @@ graphics_api_sources = files([
   'src/Framebuffer.cpp',
   'src/PipelineBuilder.cpp',
   'src/Pipeline.cpp',
-  'src/PlatformSurface.cpp',
   'src/RenderPass.cpp',
   'src/Sampler.cpp',
   'src/Shader.cpp',
@@ -25,11 +24,12 @@ graphics_api_sources = files([
 
 graphics_api_lib = static_library('graphics_api',
   sources: graphics_api_sources,
-  dependencies: [vulkan, wayland_client],
+  dependencies: [vulkan, wayland_client, desktop],
   include_directories: ['include/graphics_api'],
 )
 
 graphics_api = declare_dependency(
   include_directories: ['include'],
   link_with: graphics_api_lib,
+  dependencies: [desktop],
 )

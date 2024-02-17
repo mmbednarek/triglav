@@ -20,7 +20,6 @@
 #include "font/FontManager.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
-#include "graphics_api/PlatformSurface.h"
 
 namespace renderer {
 
@@ -38,7 +37,7 @@ class Renderer
       Down
    };
 
-   Renderer(const graphics_api::Surface &surface, uint32_t width, uint32_t height);
+   Renderer(const triglav::desktop::ISurface &surface, uint32_t width, uint32_t height);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;

@@ -1,6 +1,6 @@
 #include "Scene.h"
 
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "ModelRenderer.h"
 #include "Renderer.h"

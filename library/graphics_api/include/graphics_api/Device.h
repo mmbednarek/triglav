@@ -3,7 +3,7 @@
 #include "Buffer.h"
 #include "DepthRenderTarget.h"
 #include "GraphicsApi.hpp"
-#include "PlatformSurface.h"
+#include "Surface.hpp"
 #include "RenderPass.h"
 #include "Sampler.h"
 #include "Shader.h"
@@ -24,6 +24,10 @@
 #else
 #define GAPI_ENABLE_VALIDATION 1
 #endif
+
+namespace triglav::desktop {
+class ISurface;
+}
 
 namespace graphics_api {
 
@@ -112,6 +116,6 @@ class Device
 
 using DeviceUPtr = std::unique_ptr<Device>;
 
-Result<DeviceUPtr> initialize_device(const Surface &surface);
+Result<DeviceUPtr> initialize_device(const triglav::desktop::ISurface &surface);
 
 }// namespace graphics_api

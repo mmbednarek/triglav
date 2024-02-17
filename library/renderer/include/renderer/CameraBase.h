@@ -1,7 +1,7 @@
 #pragma once
 
 #include <geometry/Geometry.h>
-#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>
 
 namespace renderer {
