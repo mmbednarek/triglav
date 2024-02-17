@@ -2,6 +2,8 @@
 
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 
+#include <memory>
+
 namespace triglav::desktop {
 
 struct Dimension
@@ -10,7 +12,7 @@ struct Dimension
    int height;
 };
 
-class ISurface {
+class ISurface : public std::enable_shared_from_this<ISurface> {
 public:
    virtual ~ISurface() = default;
 

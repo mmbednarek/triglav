@@ -10,7 +10,7 @@ endif
 
 desktop_lib = static_library('desktop',
                           sources : desktop_sources,
-                          dependencies : [wayland_client],
+                          dependencies : [wayland_client, xlib],
                           include_directories : ['include', 'include/triglav/desktop'],
 )
 

@@ -20,6 +20,7 @@
 #include "font/FontManager.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/desktop/ISurfaceEventListener.hpp"
 
 namespace renderer {
 
@@ -42,8 +43,8 @@ class Renderer
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
    void on_mouse_relative_move(float dx, float dy);
-   void on_key_pressed(uint32_t key);
-   void on_key_released(uint32_t key);
+   void on_key_pressed(triglav::desktop::Key key);
+   void on_key_released(triglav::desktop::Key key);
    void on_mouse_wheel_turn(float x);
    [[nodiscard]] graphics_api::PipelineBuilder create_pipeline();
    [[nodiscard]] ResourceManager &resource_manager() const;

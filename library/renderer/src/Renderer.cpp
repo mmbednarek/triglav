@@ -15,6 +15,8 @@
 #include "Name.hpp"
 #include "ResourceManager.h"
 
+using triglav::desktop::Key;
+
 namespace renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
@@ -472,40 +474,40 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
    });
 }
 
-static Renderer::Moving map_direction(const uint32_t key)
+static Renderer::Moving map_direction(const Key key)
 {
    switch (key) {
-   case 17: return Renderer::Moving::Foward;
-   case 31: return Renderer::Moving::Backwards;
-   case 30: return Renderer::Moving::Left;
-   case 32: return Renderer::Moving::Right;
-   case 18: return Renderer::Moving::Up;
-   case 16: return Renderer::Moving::Down;
+   case Key::W: return Renderer::Moving::Foward;
+   case Key::S: return Renderer::Moving::Backwards;
+   case Key::A: return Renderer::Moving::Left;
+   case Key::D: return Renderer::Moving::Right;
+   case Key::Q: return Renderer::Moving::Up;
+   case Key::E: return Renderer::Moving::Down;
    }
 
    return Renderer::Moving::None;
 }
 
-void Renderer::on_key_pressed(const uint32_t key)
+void Renderer::on_key_pressed(const Key key)
 {
    if (const auto dir = map_direction(key); dir != Moving::None) {
       m_moveDirection = dir;
    }
-   if (key == 61) {
+   if (key == Key::F3) {
       m_showDebugLines = not m_showDebugLines;
    }
-   if (key == 62) {
+   if (key == Key::F4) {
       m_ssaoEnabled = not m_ssaoEnabled;
    }
-   if (key == 63) {
+   if (key == Key::F5) {
       m_fxaaEnabled = not m_fxaaEnabled;
    }
-   if (key == 57 && m_motion.z == 0.0f) {
+   if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -12.0f;
    }
 }
 
-void Renderer::on_key_released(const uint32_t key)
+void Renderer::on_key_released(const triglav::desktop::Key key)
 {
    const auto dir = map_direction(key);
    if (m_moveDirection == dir) {

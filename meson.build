@@ -16,6 +16,7 @@ wayland_client = dependency('wayland-client')
 xkb_common = dependency('xkbcommon')
 freetype = dependency('freetype2')
 gtest = dependency('gtest')
+xlib = dependency('x11')
 
 subdir('fonts')
 subdir('shader')

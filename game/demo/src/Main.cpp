@@ -42,14 +42,14 @@ class EventListener final : public DefaultSurfaceEventListener
 
    void on_mouse_button_is_pressed(const MouseButton button) override
    {
-      if (not m_surface.is_cursor_locked() && button == triglav::desktop::MouseButton_Middle) {
+      if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
          m_surface.lock_cursor();
       }
    }
 
    void on_mouse_button_is_released(const MouseButton button) override
    {
-      if (m_surface.is_cursor_locked() && button == triglav::desktop::MouseButton_Middle) {
+      if (m_surface.is_cursor_locked() && button == MouseButton::Middle) {
          m_surface.unlock_cursor();
       }
    }
@@ -64,19 +64,19 @@ class EventListener final : public DefaultSurfaceEventListener
       m_isRunning = false;
    }
 
-   void on_key_is_pressed(const uint32_t key) override
+   void on_key_is_pressed(const triglav::desktop::Key key) override
    {
       // W - 17
       // A - 30
       // S - 31
       // S - 32
-      std::cout << "pressed key: " << key << '\n';
+      // std::cout << "pressed key: " << key << '\n';
       m_renderer.on_key_pressed(key);
    }
 
-   void on_key_is_released(const uint32_t key) override
+   void on_key_is_released(const triglav::desktop::Key key) override
    {
-      std::cout << "released key: " << key << '\n';
+      // std::cout << "released key: " << key << '\n';
       m_renderer.on_key_released(key);
    }
 

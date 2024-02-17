@@ -25,7 +25,7 @@ class Display final : public IDisplay
 
    void dispatch_messages() const override;
 
-   std::unique_ptr<ISurface> create_surface(int width, int height) override;
+   std::shared_ptr<ISurface> create_surface(int width, int height) override;
 
    [[nodiscard]] constexpr wl_display *display() const noexcept
    {

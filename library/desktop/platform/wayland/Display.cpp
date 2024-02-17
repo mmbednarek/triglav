@@ -14,6 +14,48 @@
 
 namespace triglav::desktop {
 
+namespace {
+
+Key map_key(const uint32_t key)
+{
+   switch (key) {
+   case 17: return Key::W;
+   case 31: return Key::S;
+   case 30: return Key::A;
+   case 32: return Key::D;
+   case 18: return Key::Q;
+   case 16: return Key::E;
+   case 57: return Key::Space;
+   case 59: return Key::F1;
+   case 60: return Key::F2;
+   case 61: return Key::F3;
+   case 62: return Key::F4;
+   case 63: return Key::F5;
+   case 64: return Key::F6;
+   case 65: return Key::F7;
+   case 66: return Key::F8;
+   case 67: return Key::F9;
+   case 68: return Key::F10;
+   case 69: return Key::F11;
+   case 70: return Key::F12;
+   }
+
+   return Key::Unknown;
+}
+
+MouseButton map_button(const uint32_t button)
+{
+   switch (button) {
+   case 272: return MouseButton::Left;
+   case 273: return MouseButton::Right;
+   case 274: return MouseButton::Middle;
+   }
+
+   return MouseButton::Unknown;
+}
+
+}// namespace
+
 Display::Display() :
     m_display(wl_display_connect(nullptr)),
     m_registry(wl_display_get_registry(m_display)),
@@ -258,9 +300,9 @@ void Display::dispatch_messages() const
    wl_display_dispatch(m_display);
 }
 
-std::unique_ptr<ISurface> Display::create_surface(int width, int height)
+std::shared_ptr<ISurface> Display::create_surface(int width, int height)
 {
-   return std::make_unique<Surface>(*this);
+   return std::make_shared<Surface>(*this);
 }
 
 void Display::register_surface(wl_surface *wayland_surface, Surface *surface)
@@ -292,9 +334,9 @@ void Display::on_pointer_button(uint32_t serial, uint32_t time, const uint32_t b
       return;
 
    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-      m_pointerSurface->event_listener().on_mouse_button_is_pressed(button);
+      m_pointerSurface->event_listener().on_mouse_button_is_pressed(map_button(button));
    } else if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
-      m_pointerSurface->event_listener().on_mouse_button_is_released(button);
+      m_pointerSurface->event_listener().on_mouse_button_is_released(map_button(button));
    }
 }
 
@@ -326,9 +368,9 @@ void Display::on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t stat
       return;
 
    if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-      m_keyboardSurface->event_listener().on_key_is_pressed(key);
+      m_keyboardSurface->event_listener().on_key_is_pressed(map_key(key));
    } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
-      m_keyboardSurface->event_listener().on_key_is_released(key);
+      m_keyboardSurface->event_listener().on_key_is_released(map_key(key));
    }
 }
 
@@ -337,4 +379,4 @@ std::unique_ptr<IDisplay> get_display()
    return std::make_unique<Display>();
 }
 
-}// namespace wayland
+}// namespace triglav::desktop
