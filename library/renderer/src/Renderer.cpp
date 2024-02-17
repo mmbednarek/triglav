@@ -317,9 +317,10 @@ void Renderer::on_render()
    m_textRenderer.update_text_object(m_glyphAtlas, m_aoValue, m_ssaoEnabled ? "Screen-Space" : "Off");
    m_textRenderer.update_text_object(m_glyphAtlas, m_aaValue, m_fxaaEnabled ? "FXAA" : "Off");
 
+   m_inFlightFence.await();
+
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);
-   m_inFlightFence.await();
 
    checkStatus(m_commandList.begin());
    m_context3D.set_active_command_list(&m_commandList);

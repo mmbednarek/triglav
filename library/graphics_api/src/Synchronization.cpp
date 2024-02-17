@@ -17,7 +17,8 @@ namespace graphics_api
         vkResetFences(m_fence.parent(), 1, &(*m_fence));
     }
 
-    Semaphore::Semaphore(vulkan::Semaphore semaphore) : m_semaphore(std::move(semaphore))
+    Semaphore::Semaphore(vulkan::Semaphore semaphore) :
+        m_semaphore(std::move(semaphore))
     {
     }
 

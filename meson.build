@@ -32,11 +32,5 @@ subdir('library/geometry')
 subdir('library/renderer')
 subdir('library/resource')
 
-if host_machine.system() == 'windows'
-  subdir('game/win32')
-else
-  subdir('game/linux_wayland')
-endif
-
 subdir('game/demo')
 
