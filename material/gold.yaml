@@ -1,0 +1,6 @@
+name: gold
+properties:
+  albedo_texture: "gold.tex"
+  normal_texture: "gold/normal.tex"
+  roughness: 0.1
+  metallic: 0.6

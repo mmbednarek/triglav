@@ -5,6 +5,9 @@
 #include "ModelRenderer.h"
 #include "Renderer.h"
 
+using triglav::resource::ResourceManager;
+using triglav::ResourceType;
+
 namespace renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
@@ -52,7 +55,7 @@ void Scene::compile_scene()
    m_debugLines.clear();
 
    for (const auto &obj : m_objects) {
-      const auto &model   = m_resourceManager.model(obj.model);
+      const auto &model   = m_resourceManager.get<ResourceType::Model>(obj.model);
       auto instance       = m_context3D.instance_model(obj.model, m_shadowMap);
       const auto modelMat = glm::scale(glm::translate(glm::mat4(1), obj.position), obj.scale) *
                             glm::mat4_cast(obj.rotation);

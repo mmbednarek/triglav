@@ -3,10 +3,19 @@
 #include "graphics_api/CommandList.h"
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/resource/ResourceManager.h"
+#include "triglav/render_core/RenderCore.hpp"
 
 #include "ModelRenderer.h"
-#include "Core.h"
-#include "ResourceManager.h"
+
+using triglav::resource::ResourceManager;
+using triglav::ResourceType;
+using triglav::render_core::InstancedModel;
+using triglav::render_core::ModelShaderMapProperties;
+using triglav::render_core::checkResult;
+using triglav::render_core::ShadowMapUBO;
+
+using namespace triglav::name_literals;
 
 namespace renderer {
 
@@ -18,13 +27,14 @@ ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceMana
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
             checkResult(device.create_depth_render_target(GAPI_FORMAT(D, Float32), g_shadowMapResolution))),
-    m_depthTexture(checkResult(device.create_texture(g_shadowMapFormat, g_shadowMapResolution, graphics_api::TextureType::SampledDepthBuffer))),
+    m_depthTexture(checkResult(device.create_texture(g_shadowMapFormat, g_shadowMapResolution,
+                                                     graphics_api::TextureType::SampledDepthBuffer))),
     m_renderPass(checkResult(device.create_render_pass(m_depthRenderTarget))),
     m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(m_renderPass, m_depthTexture))),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(device, m_renderPass)
-                    .fragment_shader(resourceManager.shader("fsh:shadow_map"_name))
-                    .vertex_shader(resourceManager.shader("vsh:shadow_map"_name))
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_name))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shadow_map.vshader"_name))
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                     .end_vertex_layout()
@@ -53,11 +63,10 @@ void ShadowMap::on_begin_render(const ModelRenderer &ctx) const
 
 void ShadowMap::draw_model(const ModelRenderer &ctx, const InstancedModel &instancedModel) const
 {
-   const auto &model = m_resourceManager.model(instancedModel.modelName);
-   const auto &mesh  = m_resourceManager.mesh(model.meshName);
+   const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
-   ctx.command_list().bind_vertex_array(mesh.vertices);
-   ctx.command_list().bind_index_array(mesh.indices);
+   ctx.command_list().bind_vertex_array(model.mesh.vertices);
+   ctx.command_list().bind_index_array(model.mesh.indices);
 
    const auto firstOffset = model.range[0].offset;
    size_t size{};

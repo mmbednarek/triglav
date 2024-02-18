@@ -27,6 +27,7 @@ subdir('fonts')
 subdir('shader')
 subdir('texture')
 subdir('model')
+subdir('material')
 
 subdir('library/external/mikktspace')
 

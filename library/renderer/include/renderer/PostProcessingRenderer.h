@@ -4,7 +4,7 @@
 #include "graphics_api/Pipeline.h"
 #include "graphics_api/Texture.h"
 
-#include "ResourceManager.h"
+#include "triglav/resource/ResourceManager.h"
 
 namespace renderer {
 
@@ -17,9 +17,12 @@ class PostProcessingRenderer
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                          const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture, const graphics_api::Texture &depthTexture);
+                          triglav::resource::ResourceManager &resourceManager,
+                          const graphics_api::Texture &colorTexture,
+                          const graphics_api::Texture &depthTexture);
 
-   void update_texture(const graphics_api::Texture &colorTexture, const graphics_api::Texture &depthTexture) const;
+   void update_texture(const graphics_api::Texture &colorTexture,
+                       const graphics_api::Texture &depthTexture) const;
 
    void draw(graphics_api::CommandList &cmdList, bool enableFXAA) const;
 

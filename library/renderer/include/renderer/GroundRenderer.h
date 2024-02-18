@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Camera.h"
-#include "ResourceManager.h"
 
 #include "graphics_api/Device.h"
 #include "graphics_api/HostVisibleBuffer.hpp"
 #include "graphics_api/Pipeline.h"
+#include "triglav/resource/ResourceManager.h"
 
 #include <glm/mat4x4.hpp>
 
@@ -22,7 +22,7 @@ class GroundRenderer
 
  public:
    GroundRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                  const ResourceManager &resourceManager);
+                  triglav::resource::ResourceManager &resourceManager);
 
    void draw(graphics_api::CommandList &cmdList, const Camera &camera) const;
 

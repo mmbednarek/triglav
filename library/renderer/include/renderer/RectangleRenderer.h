@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Core.h"
-#include "ResourceManager.h"
-
 #include "graphics_api/DescriptorPool.h"
 #include "graphics_api/Pipeline.h"
+#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/resource/ResourceManager.h"
+#include "graphics_api/HostVisibleBuffer.hpp"
 
 namespace renderer {
 
@@ -34,12 +34,12 @@ class RectangleRenderer
 {
  public:
    RectangleRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                     const ResourceManager &resourceManager);
+                     triglav::resource::ResourceManager &resourceManager);
 
    [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect);
    void begin_render(graphics_api::CommandList &cmdList) const;
    void draw(const graphics_api::CommandList &cmdList, const graphics_api::RenderPass &renderPass,
-             const Rectangle &rect, const graphics_api::Resolution& resolution) const;
+             const Rectangle &rect, const graphics_api::Resolution &resolution) const;
 
  private:
    graphics_api::Device &m_device;

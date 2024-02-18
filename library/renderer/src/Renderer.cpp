@@ -5,17 +5,21 @@
 #include <cmath>
 #include <glm/glm.hpp>
 
-#include "geometry/DebugMesh.h"
-#include "geometry/Mesh.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/Name.hpp"
+#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/resource/ResourceManager.h"
 
-#include "AssetMap.hpp"
-#include "Core.h"
 #include "GlyphAtlas.h"
-#include "Name.hpp"
-#include "ResourceManager.h"
 
+using triglav::ResourceType;
 using triglav::desktop::Key;
+using triglav::render_core::checkResult;
+using triglav::render_core::checkStatus;
+using triglav::resource::ResourceManager;
+using namespace triglav::name_literals;
+
+// using triglav::re
 
 namespace renderer {
 
@@ -38,56 +42,6 @@ graphics_api::Resolution create_viewport_resolution(const graphics_api::Device &
    resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
 
    return resolution;
-}
-
-std::unique_ptr<ResourceManager> create_resource_manager(graphics_api::Device &device,
-                                                         font::FontManger &fontManger)
-{
-   auto manager = std::make_unique<ResourceManager>(device, fontManger);
-
-   for (const auto &[name, path] : g_assetMap) {
-      manager->load_asset(name, path);
-   }
-
-   auto sphere = geometry::create_sphere(40, 20, 4.0f);
-   sphere.set_material(0, "gold");
-   sphere.triangulate();
-   sphere.recalculate_tangents();
-   auto gpuSphere = sphere.upload_to_device(device);
-
-   manager->add_mesh_and_model("mdl:sphere"_name, gpuSphere, sphere.calculate_bouding_box());
-   manager->add_material("mat:bark"_name, Material{
-                                                  "tex:bark"_name,
-                                                  "tex:bark/normal"_name,
-                                                  {true, 1.0f, 0.0f}
-   });
-   manager->add_material("mat:leaves"_name, Material{
-                                                    "tex:leaves"_name,
-                                                    "tex:grass/normal"_name,
-                                                    {false, 1.0f, 0.0f}
-   });
-   manager->add_material("mat:gold"_name, Material{
-                                                  "tex:gold"_name,
-                                                  "tex:gold/normal"_name,
-                                                  {true, 0.1f, 0.5f}
-   });
-   manager->add_material("mat:grass"_name, Material{
-                                                   "tex:grass"_name,
-                                                   "tex:grass/normal"_name,
-                                                   {true, 1.0f, 0.0f}
-   });
-   manager->add_material("mat:pine"_name, Material{
-                                                  "tex:pine"_name,
-                                                  "tex:pine/normal"_name,
-                                                  {true, 1.0f, 0.0f}
-   });
-   manager->add_material("mat:quartz"_name, Material{
-                                                    "tex:quartz"_name,
-                                                    "tex:quartz/normal"_name,
-                                                    {false, 0.2f, 0.1f}
-   });
-
-   return manager;
 }
 
 std::vector<font::Rune> make_runes()
@@ -168,8 +122,7 @@ auto g_runes{make_runes()};
 
 Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
-    m_newResourceManager(*m_device, m_fontManger),
-    m_resourceManager(create_resource_manager(*m_device, m_fontManger)),
+    m_resourceManager(std::make_unique<triglav::resource::ResourceManager>(*m_device, m_fontManger)),
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
                                                        g_depthFormat, g_sampleCount, m_resolution))),
@@ -213,16 +166,17 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
     m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 250.0f})),
     m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderPass, *m_resourceManager,
                                m_modelPositionTexture, m_modelNormalTexture,
-                               m_resourceManager->texture("tex:noise"_name)),
+                               m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
     m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelColorTexture,
                       m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
                       m_shadowMap.depth_texture()),
-    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture, m_modelDepthTexture),
+    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture,
+                             m_modelDepthTexture),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
-    m_glyphAtlasBold(*m_device, m_resourceManager->typeface("tfc:cantarell/bold"_name), g_runes, 24, 500,
+    m_glyphAtlasBold(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell/bold.typeface"_name), g_runes, 24, 500,
                      500),
-    m_glyphAtlas(*m_device, m_resourceManager->typeface("tfc:cantarell"_name), g_runes, 24, 500, 500),
+    m_glyphAtlas(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell.typeface"_name), g_runes, 24, 500, 500),
     m_sprite(m_context2D.create_sprite_from_texture(m_shadowMap.depth_texture())),
     // m_sprite(m_context2D.create_sprite_from_texture(m_glyphAtlas.texture())),
     m_textRenderer(*m_device, m_renderPass, *m_resourceManager),
@@ -242,56 +196,56 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
 {
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:hall"_name},
+           .model{"hall.model"_name},
            .position{0, 0, 0},
            .rotation{1, 0, 0, 0},
            .scale{10, 10, 10},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:teapot"_name},
+           .model{"teapot.model"_name},
            .position{12.0f, -12.0f, 0},
            .rotation{glm::vec3{0, 0, glm::radians(0.0f)}},
            .scale{1.2, 1.2, 1.2},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:pine"_name},
+           .model{"pine.model"_name},
            .position{12.0f, -20.0f, 0},
            .rotation{glm::vec3{0, 0, glm::radians(0.0f)}},
            .scale{30.0, 30.0, 30.0},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:column"_name},
+           .model{"column.model"_name},
            .position{0.0f, -32.0f, 0.0f},
            .rotation{1, 0, 0, 0},
            .scale{10, 10, 10},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:column"_name},
+           .model{"column.model"_name},
            .position{0.0f, -16.0f, 0.0f},
            .rotation{1, 0, 0, 0},
            .scale{10, 10, 10},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:column"_name},
+           .model{"column.model"_name},
            .position{0.0f, 0.0f, 0.0f},
            .rotation{1, 0, 0, 0},
            .scale{10, 10, 10},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:column"_name},
+           .model{"column.model"_name},
            .position{0.0f, 32.0f, 0.0f},
            .rotation{1, 0, 0, 0},
            .scale{10, 10, 10},
    });
 
    m_scene.add_object(SceneObject{
-           .model{"mdl:column"_name},
+           .model{"column.model"_name},
            .position{0.0f, 16.0f, 0.0f},
            .rotation{1, 0, 0, 0},
            .scale{10, 10, 10},
@@ -628,7 +582,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
                                      m_ambientOcclusionTexture, m_shadowMap.depth_texture());
 
    m_ambientOcclusionRenderer.update_textures(m_modelPositionTexture, m_modelNormalTexture,
-                                              m_resourceManager->texture("tex:noise"_name));
+                                              m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
 
    m_postProcessingRenderer.update_texture(m_shadingColorTexture, m_modelDepthTexture);
 

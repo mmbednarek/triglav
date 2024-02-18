@@ -1,15 +1,14 @@
 #pragma once
 
-#include "Core.h"
 #include "graphics_api/CommandList.h"
 #include "graphics_api/Pipeline.h"
-#include "graphics_api/Shader.h"
 #include "graphics_api/Texture.h"
+#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/resource/ResourceManager.h"
 
 namespace renderer {
 
 class Renderer;
-class ResourceManager;
 
 struct SkyBoxUBO
 {
@@ -26,8 +25,8 @@ class SkyBox
                   float height) const;
 
  private:
-   ResourceManager &m_resourceManager;
-   GpuMesh m_mesh;
+   triglav::resource::ResourceManager &m_resourceManager;
+   triglav::render_core::GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descPool;
    graphics_api::DescriptorArray m_descArray;

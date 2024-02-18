@@ -1,0 +1,6 @@
+name: quartz
+properties:
+  albedo_texture: "quartz.tex"
+  # normal_texture: "quartz/normal.tex"
+  roughness: 0.2
+  metallic: 0.1

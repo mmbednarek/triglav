@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ResourceManager.h"
-
 #include "graphics_api/Device.h"
+#include "graphics_api/HostVisibleBuffer.hpp"
 #include "graphics_api/Pipeline.h"
+#include "triglav/resource/ResourceManager.h"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>
@@ -27,7 +27,7 @@ class AmbientOcclusionRenderer
    };
 
    AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                            const ResourceManager &resourceManager,
+                            triglav::resource::ResourceManager &resourceManager,
                             const graphics_api::Texture &positionTexture,
                             const graphics_api::Texture &normalTexture,
                             const graphics_api::Texture &noiseTexture);

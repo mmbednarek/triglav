@@ -1,0 +1,6 @@
+name: leaves
+properties:
+  albedo_texture: "leaves.tex"
+  normal_texture: "leaves/normal.tex"
+  roughness: 1.0
+  metallic: 0.0

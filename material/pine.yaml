@@ -1,0 +1,6 @@
+name: pine
+properties:
+  albedo_texture: "pine.tex"
+  normal_texture: "pine/normal.tex"
+  roughness: 1.0
+  metallic: 0.0

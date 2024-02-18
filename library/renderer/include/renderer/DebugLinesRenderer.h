@@ -3,7 +3,8 @@
 #include "graphics_api/Device.h"
 #include "graphics_api/Pipeline.h"
 
-#include "ResourceManager.h"
+#include "triglav/resource/ResourceManager.h"
+#include "triglav/render_core/Model.hpp"
 #include "Camera.h"
 
 namespace renderer {
@@ -20,7 +21,7 @@ class DebugLinesRenderer
 {
  public:
    DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                      const ResourceManager &resourceManager);
+                      triglav::resource::ResourceManager &resourceManager);
 
    [[nodiscard]] DebugLines create_line_list(std::span<glm::vec3> list);
    [[nodiscard]] DebugLines create_line_list_from_bouding_box(const geometry::BoundingBox &boudingBox);

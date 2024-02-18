@@ -3,18 +3,24 @@
 #include "graphics_api/CommandList.h"
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/render_core/RenderCore.hpp"
+
+using namespace triglav::name_literals;
+using triglav::render_core::checkResult;
+using triglav::resource::ResourceManager;
+using triglav::ResourceType;
 
 namespace renderer {
 
 PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                                graphics_api::RenderPass &renderPass,
-                                               const ResourceManager &resourceManager,
+                                               ResourceManager &resourceManager,
                                                const graphics_api::Texture &colorTexture,
                                                const graphics_api::Texture &depthTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
-                                   .fragment_shader(resourceManager.shader("fsh:post_processing"_name))
-                                   .vertex_shader(resourceManager.shader("vsh:post_processing"_name))
+                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
+                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_name))
                                    // Vertex description
                                    .begin_vertex_layout<geometry::Vertex>()
                                    .end_vertex_layout()

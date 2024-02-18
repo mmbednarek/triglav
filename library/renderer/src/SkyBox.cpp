@@ -1,11 +1,16 @@
 #include "SkyBox.h"
 
 #include "geometry/DebugMesh.h"
+#include "graphics_api/DescriptorWriter.h"
 #include "Renderer.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
-#include <graphics_api/DescriptorWriter.h>
+
+using triglav::ResourceType;
+using triglav::render_core::checkResult;
+using triglav::render_core::UniformBufferObject;
+using namespace triglav::name_literals;
 
 namespace {
 
@@ -26,8 +31,9 @@ SkyBox::SkyBox(Renderer &renderer) :
     m_mesh(create_skybox_mesh(renderer.device())),
     m_pipeline(checkResult(
             renderer.create_pipeline()
-                    .fragment_shader(m_resourceManager.shader("fsh:skybox"_name))
-                    .vertex_shader(m_resourceManager.shader("vsh:skybox"_name))
+                    .fragment_shader(
+                            m_resourceManager.get<ResourceType::FragmentShader>("skybox.fshader"_name))
+                    .vertex_shader(m_resourceManager.get<ResourceType::VertexShader>("skybox.vshader"_name))
                     // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
@@ -52,7 +58,8 @@ SkyBox::SkyBox(Renderer &renderer) :
 {
    graphics_api::DescriptorWriter descWriter(renderer.device(), m_descriptorSet);
    descWriter.set_raw_uniform_buffer(0, m_uniformBuffer);
-   descWriter.set_sampled_texture(1, m_resourceManager.texture("tex:skybox"_name), m_sampler);
+   descWriter.set_sampled_texture(1, m_resourceManager.get<ResourceType::Texture>("skybox.tex"_name),
+                                  m_sampler);
 }
 
 void SkyBox::on_render(graphics_api::CommandList &commandList, float yaw, float pitch, float width,

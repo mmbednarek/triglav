@@ -2,10 +2,11 @@
 
 #include "Camera.h"
 #include "DebugLinesRenderer.h"
-#include "Model.h"
 #include "ModelRenderer.h"
-#include "Name.hpp"
 #include "OrthoCamera.h"
+
+#include "triglav/Name.hpp"
+#include "triglav/render_core/Model.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
@@ -17,7 +18,7 @@ class Renderer;
 
 struct SceneObject
 {
-   Name model;
+   triglav::Name model;
    glm::vec3 position;
    glm::quat rotation;
    glm::vec3 scale;
@@ -27,7 +28,7 @@ class Scene
 {
  public:
    Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap, DebugLinesRenderer &debugLines,
-         ResourceManager &resourceManager);
+         triglav::resource::ResourceManager &resourceManager);
 
    void update();
    void add_object(SceneObject object);
@@ -46,14 +47,14 @@ class Scene
    Renderer &m_renderer;
    ModelRenderer &m_context3D;
    ShadowMap &m_shadowMap;
-   ResourceManager &m_resourceManager;
+   triglav::resource::ResourceManager &m_resourceManager;
    DebugLinesRenderer &m_debugLinesRenderer;
 
    OrthoCamera m_shadowMapCamera{};
    Camera m_camera{};
 
    std::vector<SceneObject> m_objects;
-   std::vector<InstancedModel> m_instancedObjects;
+   std::vector<triglav::render_core::InstancedModel> m_instancedObjects;
    std::vector<DebugLines> m_debugLines;
 };
 

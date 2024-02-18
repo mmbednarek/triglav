@@ -1,7 +1,6 @@
 #pragma once
 
 #include "AmbientOcclusionRenderer.h"
-#include "Core.h"
 #include "DebugLinesRenderer.h"
 #include "GlyphAtlas.h"
 #include "GroundRenderer.h"
@@ -9,7 +8,6 @@
 #include "PostProcessingRenderer.h"
 #include "RectangleRenderer.h"
 #include "Renderer.h"
-#include "ResourceManager.h"
 #include "Scene.h"
 #include "ShadingRenderer.h"
 #include "ShadowMap.h"
@@ -21,6 +19,8 @@
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
+#include "triglav/render_core/Model.hpp"
+#include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
 namespace renderer {
@@ -48,13 +48,14 @@ class Renderer
    void on_key_released(triglav::desktop::Key key);
    void on_mouse_wheel_turn(float x);
    [[nodiscard]] graphics_api::PipelineBuilder create_pipeline();
-   [[nodiscard]] ResourceManager &resource_manager() const;
+   [[nodiscard]] triglav::resource::ResourceManager &resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
 
    template<typename TUbo>
    [[nodiscard]] graphics_api::Buffer create_ubo_buffer() const
    {
-      return checkResult(m_device->create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(TUbo)));
+      return triglav::render_core::checkResult(
+              m_device->create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(TUbo)));
    }
 
    [[nodiscard]] graphics_api::Device &device() const;
@@ -83,8 +84,7 @@ class Renderer
    graphics_api::DeviceUPtr m_device;
 
    font::FontManger m_fontManger;
-   triglav::resource::ResourceManager m_newResourceManager;
-   std::unique_ptr<ResourceManager> m_resourceManager;
+   std::unique_ptr<triglav::resource::ResourceManager> m_resourceManager;
 
    graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
@@ -123,7 +123,7 @@ class Renderer
    SkyBox m_skyBox;
    GlyphAtlas m_glyphAtlasBold;
    GlyphAtlas m_glyphAtlas;
-   Sprite m_sprite;
+   triglav::render_core::Sprite m_sprite;
    TextRenderer m_textRenderer;
    TextObject m_titleLabel;
    TextObject m_framerateLabel;

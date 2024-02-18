@@ -1,10 +1,13 @@
 #pragma once
 
 #include "graphics_api/Device.h"
+#include "graphics_api/HostVisibleBuffer.hpp"
 #include "graphics_api/Pipeline.h"
 #include "graphics_api/Texture.h"
+#include "triglav/resource/ResourceManager.h"
 
-#include "ResourceManager.h"
+#include <glm/mat4x4.hpp>
+#include <glm/vec3.hpp>
 
 namespace renderer {
 
@@ -23,10 +26,10 @@ class ShadingRenderer
    };
 
    ShadingRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                          const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture,
-                          const graphics_api::Texture &positionTexture,
-                          const graphics_api::Texture &normalTexture, const graphics_api::Texture &aoTexture,
-                          const graphics_api::Texture &shadowMapTexture);
+                   triglav::resource::ResourceManager &resourceManager,
+                   const graphics_api::Texture &colorTexture, const graphics_api::Texture &positionTexture,
+                   const graphics_api::Texture &normalTexture, const graphics_api::Texture &aoTexture,
+                   const graphics_api::Texture &shadowMapTexture);
 
    void update_textures(const graphics_api::Texture &colorTexture,
                         const graphics_api::Texture &positionTexture,

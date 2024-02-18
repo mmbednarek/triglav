@@ -6,18 +6,24 @@
 #include "graphics_api/CommandList.h"
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/render_core/RenderCore.hpp"
+
+using namespace triglav::name_literals;
+using triglav::resource::ResourceManager;
+using triglav::ResourceType;
+using triglav::render_core::checkResult;
 
 namespace renderer {
 
 ShadingRenderer::ShadingRenderer(
         graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-        const ResourceManager &resourceManager, const graphics_api::Texture &colorTexture,
+        ResourceManager &resourceManager, const graphics_api::Texture &colorTexture,
         const graphics_api::Texture &positionTexture, const graphics_api::Texture &normalTexture,
         const graphics_api::Texture &aoTexture, const graphics_api::Texture &shadowMapTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
-                                   .fragment_shader(resourceManager.shader("fsh:shading"_name))
-                                   .vertex_shader(resourceManager.shader("vsh:shading"_name))
+                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("shading.fshader"_name))
+                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shading.vshader"_name))
                                    // Vertex description
                                    .begin_vertex_layout<geometry::Vertex>()
                                    .end_vertex_layout()

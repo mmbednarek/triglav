@@ -4,11 +4,22 @@
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/render_core/Model.hpp"
+#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/resource/ResourceManager.h"
+#include "triglav/ResourceType.hpp"
 
-#include "Core.h"
-#include "Name.hpp"
-#include "ResourceManager.h"
 #include "ShadowMap.h"
+
+using triglav::Name;
+using triglav::ResourceType;
+using triglav::render_core::checkResult;
+using triglav::render_core::InstancedModel;
+using triglav::render_core::MaterialProps;
+using triglav::render_core::UniformBufferObject;
+using triglav::resource::ResourceManager;
+
+using namespace triglav::name_literals;
 
 namespace renderer {
 
@@ -20,8 +31,8 @@ ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderP
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderPass)
-                    .fragment_shader(resourceManager.shader("fsh:model"_name))
-                    .vertex_shader(resourceManager.shader("vsh:model"_name))
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("model.fshader"_name))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("model.vshader"_name))
                     // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
@@ -49,7 +60,7 @@ ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderP
 
 InstancedModel ModelRenderer::instance_model(const Name modelName, ShadowMap &shadowMap)
 {
-   const auto &model = m_resourceManager.model(modelName);
+   const auto &model = m_resourceManager.get<ResourceType::Model>(modelName);
    auto descriptors  = checkResult(m_descriptorPool.allocate_array(model.range.size()));
    size_t index{};
 
@@ -57,15 +68,15 @@ InstancedModel ModelRenderer::instance_model(const Name modelName, ShadowMap &sh
    graphics_api::UniformBuffer<MaterialProps> uboMatProps(m_device);
 
    for (const auto range : model.range) {
-      const auto &material = m_resourceManager.material(range.materialName);
-      const auto &texture  = m_resourceManager.texture(material.texture);
+      const auto &material = m_resourceManager.get<ResourceType::Material>(range.materialName);
+      const auto &texture  = m_resourceManager.get<ResourceType::Texture>(material.texture);
 
       graphics_api::DescriptorWriter descWriter(m_device, descriptors[index]);
       descWriter.set_uniform_buffer(0, ubo);
       descWriter.set_sampled_texture(1, texture, m_sampler);
 
-      if (material.normal_texture != 0) {
-         const auto &normalTexture = m_resourceManager.texture(material.normal_texture);
+      if (material.normal_texture != Name{}) {
+         const auto &normalTexture = m_resourceManager.get<ResourceType::Texture>(material.normal_texture);
          descWriter.set_sampled_texture(2, normalTexture, m_sampler);
       }
 
@@ -98,11 +109,10 @@ void ModelRenderer::draw_model(const InstancedModel &instancedModel) const
 {
    assert(m_commandList != nullptr);
 
-   const auto &model = m_resourceManager.model(instancedModel.modelName);
-   const auto &mesh  = m_resourceManager.mesh(model.meshName);
+   const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
-   m_commandList->bind_vertex_array(mesh.vertices);
-   m_commandList->bind_index_array(mesh.indices);
+   m_commandList->bind_vertex_array(model.mesh.vertices);
+   m_commandList->bind_index_array(model.mesh.indices);
 
    size_t index{};
    for (const auto &range : model.range) {

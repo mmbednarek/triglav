@@ -2,9 +2,10 @@
 
 #include "graphics_api/Device.h"
 #include "graphics_api/Pipeline.h"
+#include "triglav/render_core/Model.hpp"
+#include "triglav/resource/ResourceManager.h"
 
 #include "GlyphAtlas.h"
-#include "ResourceManager.h"
 
 namespace renderer {
 
@@ -13,7 +14,7 @@ struct TextObject
    std::string text;
    TextMetric metric;
    graphics_api::DescriptorArray descriptors;
-   graphics_api::UniformBuffer<SpriteUBO> ubo;
+   graphics_api::UniformBuffer<triglav::render_core::SpriteUBO> ubo;
    graphics_api::VertexArray<GlyphVertex> vertices;
    int vertexCount;
 };
@@ -27,7 +28,7 @@ class TextRenderer
 {
  public:
    TextRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                ResourceManager &resourceManager);
+                triglav::resource::ResourceManager &resourceManager);
 
    void begin_render(graphics_api::CommandList &cmdList) const;
    TextObject create_text_object(const GlyphAtlas &atlas, std::string_view text);
@@ -39,7 +40,7 @@ class TextRenderer
  private:
    graphics_api::Device &m_device;
    graphics_api::RenderPass &m_renderPass;
-   ResourceManager &m_resourceManager;
+   triglav::resource::ResourceManager &m_resourceManager;
    graphics_api::Resolution m_resolution;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descriptorPool;

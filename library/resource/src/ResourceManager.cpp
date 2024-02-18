@@ -57,7 +57,7 @@ ResourceManager::ResourceManager(graphics_api::Device &device, font::FontManger 
 void ResourceManager::load_asset_list(const std::string_view path)
 {
    auto list = parse_asset_list(path);
-   spdlog::info("loading {} assets", list.size());
+   spdlog::info("Loading {} assets", list.size());
 
    int loadedCount{};
    for (const auto &[nameStr, source] : list) {

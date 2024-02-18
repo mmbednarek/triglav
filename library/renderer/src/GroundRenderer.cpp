@@ -3,15 +3,21 @@
 #include "graphics_api/CommandList.h"
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/render_core/RenderCore.hpp"
+
+using namespace triglav::name_literals;
+using triglav::ResourceType;
+using triglav::render_core::checkResult;
+using triglav::resource::ResourceManager;
 
 namespace renderer {
 
 GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                               const ResourceManager &resourceManager) :
+                               ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
-                                   .fragment_shader(resourceManager.shader("fsh:ground"_name))
-                                   .vertex_shader(resourceManager.shader("vsh:ground"_name))
+                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("ground.fshader"_name))
+                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("ground.vshader"_name))
                                    // Vertex description
                                    .begin_vertex_layout<geometry::Vertex>()
                                    .end_vertex_layout()

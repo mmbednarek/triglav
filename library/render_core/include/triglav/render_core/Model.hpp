@@ -5,11 +5,11 @@
 #include "graphics_api/HostVisibleBuffer.hpp"
 #include "graphics_api/DescriptorArray.h"
 #include "triglav/Name.hpp"
+#include "geometry/Mesh.h"
 
-#include "Core.hpp"
+#include "RenderCore.hpp"
 #include "Material.hpp"
 
-#include <geometry/Mesh.h>
 
 namespace triglav::render_core {
 

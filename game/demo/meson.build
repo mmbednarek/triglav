@@ -11,6 +11,7 @@ demo_deps = [
   shaders,
   textures,
   models,
+  materials
 ]
 
 demo = executable('demo',

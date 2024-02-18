@@ -3,12 +3,13 @@
 #include <cstring>
 #include <vector>
 
-#include "Core.h"
 #include "graphics_api/Device.h"
-
+#include "triglav/render_core/RenderCore.hpp"
 
 #include <codecvt>
 #include <locale>
+
+using triglav::render_core::checkResult;
 
 namespace renderer {
 
@@ -117,7 +118,7 @@ std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const std::string_vie
    }
 
    if (outMetric != nullptr) {
-      outMetric->width = x;
+      outMetric->width  = x;
       outMetric->height = maxHeight;
    }
 

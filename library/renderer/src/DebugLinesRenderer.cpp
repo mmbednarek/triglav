@@ -4,14 +4,19 @@
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
 
+using namespace triglav::name_literals;
+using triglav::ResourceType;
+using triglav::resource::ResourceManager;
+using triglav::render_core::checkResult;
+
 namespace renderer {
 
 DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                                       const ResourceManager &resourceManager) :
+                                       ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderPass)
-                                   .fragment_shader(resourceManager.shader("fsh:debug_lines"_name))
-                                   .vertex_shader(resourceManager.shader("vsh:debug_lines"_name))
+                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("debug_lines.fshader"_name))
+                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("debug_lines.vshader"_name))
                                    .begin_vertex_layout<glm::vec3>()
                                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
                                    .end_vertex_layout()

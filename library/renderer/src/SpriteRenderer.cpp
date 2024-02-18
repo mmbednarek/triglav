@@ -8,6 +8,15 @@
 #include <glm/gtx/matrix_transform_2d.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
 
+using namespace triglav::name_literals;
+
+using triglav::Name;
+using triglav::ResourceType;
+using triglav::render_core::checkResult;
+using triglav::render_core::Sprite;
+using triglav::render_core::SpriteUBO;
+using triglav::resource::ResourceManager;
+
 namespace renderer {
 
 struct Vertex2D
@@ -20,17 +29,18 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
     m_device(device),
     m_renderPass(renderPass),
     m_resourceManager(resourceManager),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
-                                   .fragment_shader(resourceManager.shader("fsh:sprite"_name))
-                                   .vertex_shader(resourceManager.shader("vsh:sprite"_name))
-                                   // Descriptor layout
-                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::ShaderStage::Vertex)
-                                   .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
-                                   .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
-                                   .enable_depth_test(false)
-                                   .build())),
+    m_pipeline(checkResult(
+            graphics_api::PipelineBuilder(m_device, renderPass)
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("sprite.fshader"_name))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("sprite.vshader"_name))
+                    // Descriptor layout
+                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                        graphics_api::ShaderStage::Vertex)
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::ShaderStage::Fragment)
+                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
+                    .enable_depth_test(false)
+                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40))),
     m_sampler(checkResult(device.create_sampler(true)))
 {
@@ -38,7 +48,7 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
 
 Sprite SpriteRenderer::create_sprite(const Name textureName)
 {
-   const auto &texture = m_resourceManager.texture(textureName);
+   const auto &texture = m_resourceManager.get<ResourceType::Texture>(textureName);
    return this->create_sprite_from_texture(texture);
 }
 

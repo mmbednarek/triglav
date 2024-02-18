@@ -6,19 +6,27 @@
 #include "graphics_api/CommandList.h"
 #include "graphics_api/DescriptorWriter.h"
 #include "graphics_api/PipelineBuilder.h"
+#include "triglav/render_core/RenderCore.hpp"
+
+using namespace triglav::name_literals;
+using triglav::ResourceType;
+using triglav::render_core::checkResult;
+using triglav::resource::ResourceManager;
 
 namespace renderer {
 
 AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                                    graphics_api::RenderPass &renderPass,
-                                                   const ResourceManager &resourceManager,
+                                                   ResourceManager &resourceManager,
                                                    const graphics_api::Texture &positionTexture,
                                                    const graphics_api::Texture &normalTexture,
                                                    const graphics_api::Texture &noiseTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
-                                   .fragment_shader(resourceManager.shader("fsh:ambient_occlusion"_name))
-                                   .vertex_shader(resourceManager.shader("vsh:ambient_occlusion"_name))
+                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>(
+                                           "ambient_occlusion.fshader"_name))
+                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>(
+                                           "ambient_occlusion.vshader"_name))
                                    // Vertex description
                                    .begin_vertex_layout<geometry::Vertex>()
                                    .end_vertex_layout()
