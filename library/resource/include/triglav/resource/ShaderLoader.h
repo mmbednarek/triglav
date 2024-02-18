@@ -11,7 +11,7 @@
 namespace triglav::resource {
 
 template<>
-struct resource::Loader<ResourceType::FragmentShader>
+struct Loader<ResourceType::FragmentShader>
 {
    constexpr static bool is_gpu_resource{true};
 
@@ -19,7 +19,7 @@ struct resource::Loader<ResourceType::FragmentShader>
 };
 
 template<>
-struct resource::Loader<ResourceType::VertexShader>
+struct Loader<ResourceType::VertexShader>
 {
    constexpr static bool is_gpu_resource{true};
 

@@ -78,7 +78,7 @@ class Device
                                                     Swapchain *oldSwapchain = nullptr);
    [[nodiscard]] Result<RenderPass> create_render_pass(IRenderTarget &renderTarget);
    [[nodiscard]] Result<Shader> create_shader(ShaderStage stage, std::string_view entrypoint,
-                                              std::span<const uint8_t> code);
+                                              std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list() const;
    [[nodiscard]] Result<Buffer> create_buffer(BufferPurpose purpose, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;

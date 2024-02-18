@@ -29,7 +29,9 @@ class TypedName
    // ReSharper disable once CppNonExplicitConversionOperator
    [[nodiscard]] operator Name() const;// NOLINT(google-explicit-constructor)
 
-   auto operator<=>(const TypedName &other) const = default;
+   constexpr auto operator<=>(const TypedName &other) const = default;
+   constexpr bool operator==(const TypedName &other) const = default;
+   constexpr bool operator!=(const TypedName &other) const = default;
 
  private:
    NameID m_name;
@@ -38,6 +40,12 @@ class TypedName
 class Name
 {
  public:
+   constexpr Name() :
+       m_type(ResourceType::Unknown),
+       m_name(0)
+   {
+   }
+
    constexpr Name(const ResourceType type, const NameID nameID) :
        m_type(type),
        m_name(nameID)
@@ -63,6 +71,9 @@ class Name
          return m_type <=> other.m_type;
       return m_name <=> other.m_name;
    }
+
+   constexpr bool operator==(const Name &other) const = default;
+   constexpr bool operator!=(const Name &other) const = default;
 
  private:
    ResourceType m_type;

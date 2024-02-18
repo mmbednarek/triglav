@@ -272,7 +272,7 @@ Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
 }
 
 Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,
-                                     const std::span<const uint8_t> code)
+                                     const std::span<const char> code)
 {
    VkShaderModuleCreateInfo shaderModuleInfo{};
    shaderModuleInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

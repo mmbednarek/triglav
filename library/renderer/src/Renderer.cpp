@@ -168,6 +168,7 @@ auto g_runes{make_runes()};
 
 Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
+    m_newResourceManager(*m_device, m_fontManger),
     m_resourceManager(create_resource_manager(*m_device, m_fontManger)),
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,

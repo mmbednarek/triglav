@@ -4,12 +4,14 @@
 
 #include "graphics_api/HostVisibleBuffer.hpp"
 #include "graphics_api/DescriptorArray.h"
+#include "triglav/Name.hpp"
 
-#include "Core.h"
-#include "Name.hpp"
-#include "Material.h"
+#include "Core.hpp"
+#include "Material.hpp"
 
-namespace renderer {
+#include <geometry/Mesh.h>
+
+namespace triglav::render_core {
 
 struct MaterialRange
 {
@@ -18,14 +20,9 @@ struct MaterialRange
    Name materialName;
 };
 
-struct Mesh
-{
-   graphics_api::Mesh<geometry::Vertex> mesh;
-};
-
 struct Model
 {
-   Name meshName;
+   graphics_api::Mesh<geometry::Vertex> mesh;
    geometry::BoundingBox boudingBox;
    std::vector<MaterialRange> range;
 };

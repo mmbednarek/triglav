@@ -21,6 +21,7 @@
 #include "graphics_api/Device.h"
 #include "graphics_api/PipelineBuilder.h"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
+#include "triglav/resource/ResourceManager.h"
 
 namespace renderer {
 
@@ -82,6 +83,7 @@ class Renderer
    graphics_api::DeviceUPtr m_device;
 
    font::FontManger m_fontManger;
+   triglav::resource::ResourceManager m_newResourceManager;
    std::unique_ptr<ResourceManager> m_resourceManager;
 
    graphics_api::Resolution m_resolution;

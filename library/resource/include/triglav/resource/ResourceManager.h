@@ -8,6 +8,8 @@
 #include "Container.hpp"
 #include "Loader.hpp"
 
+#include <font/FontManager.h>
+
 namespace graphics_api {
 class Device;
 }
@@ -17,7 +19,9 @@ namespace triglav::resource {
 class ResourceManager
 {
  public:
-   explicit ResourceManager();
+   explicit ResourceManager(graphics_api::Device &device, font::FontManger &fontManager);
+
+   void load_asset_list(std::string_view path);
 
    void load_asset(Name assetName, std::string_view path);
    [[nodiscard]] bool is_name_registered(Name assetName) const;
@@ -33,6 +37,9 @@ class ResourceManager
    {
       if constexpr (Loader<CResourceType>::is_gpu_resource) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path));
+      } else if constexpr (Loader<CResourceType>::is_font_resource) {
+         container<CResourceType>().register_resource(name,
+                                                      Loader<CResourceType>::load_font(m_fontManager, path));
       } else {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(path));
       }
@@ -46,6 +53,9 @@ class ResourceManager
    }
 
    std::map<ResourceType, std::unique_ptr<IContainer>> m_containers;
+   std::map<Name, std::string> m_registeredNames;
    graphics_api::Device &m_device;
+   font::FontManger &m_fontManager;
 };
+
 }// namespace triglav::resource

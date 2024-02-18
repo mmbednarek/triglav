@@ -7,7 +7,7 @@
 
 namespace triglav::resource {
 
-graphics_api::Texture Loader<graphics_api::Texture>::load_gpu(graphics_api::Device &device,
+graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device &device,
                                                               const std::string_view path)
 {
    int texWidth, texHeight, texChannels;

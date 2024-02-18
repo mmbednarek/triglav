@@ -6,6 +6,6 @@ core_test_sources = files(
 core_test_deps = [core, gtest]
 
 core_test = executable('core_test',
-                           sources: core_test_sources,
-                           dependencies: core_test_deps,
+                       sources : core_test_sources,
+                       dependencies : core_test_deps,
 )

@@ -2,18 +2,16 @@
 
 #include <string_view>
 
+#include "TypeMacroList.hpp"
+
 namespace triglav {
 
 enum class ResourceType
 {
-   Texture,
-   Mesh,
-   FragmentShader,
-   VertexShader,
-   Material,
-   Model,
-   ResourceTypeFace,
-   Unknown
+#define TG_RESOURCE_TYPE(name, ext, cppType) name,
+   TG_RESOURCE_TYPE_LIST
+#undef TG_RESOURCE_TYPE
+           Unknown,
 };
 
 template<ResourceType CResourceType>
@@ -24,36 +22,26 @@ struct EnumToCppResourceType
 
 constexpr ResourceType type_by_extension(const std::string_view extension)
 {
-   if (extension == "texture")
-      return ResourceType::Texture;
-   if (extension == "mesh")
-      return ResourceType::Mesh;
-   if (extension == "fshader")
-      return ResourceType::FragmentShader;
-   if (extension == "vshader")
-      return ResourceType::VertexShader;
-   if (extension == "mat")
-      return ResourceType::Material;
-   if (extension == "model")
-      return ResourceType::Model;
-   if (extension == "typeface")
-      return ResourceType::ResourceTypeFace;
+#define TG_RESOURCE_TYPE(name, ext, cppType) \
+   if (extension == ext)                     \
+      return ResourceType::name;
+
+   TG_RESOURCE_TYPE_LIST
+
+#undef TG_RESOURCE_TYPE
 
    return ResourceType::Unknown;
 }
 
-}// namespace resource
+#define TG_RESOURCE_TYPE(name, ext, cppType)                   \
+   template<>                                                  \
+   struct EnumToCppResourceType<::triglav::ResourceType::name> \
+   {                                                           \
+      using ResourceType = cppType;                            \
+   };
 
-#define DEFINE_RESOURCE_TYPE(enum, type)      \
-   namespace triglav {                       \
-   template<>                                 \
-   struct EnumToCppResourceType<enum>                 \
-   {                                          \
-      using ResourceType = type;                      \
-   };                                         \
+TG_RESOURCE_TYPE_LIST
 
-namespace graphics_api {
-class Texture;
-}
+#undef TG_RESOURCE_TYPE
 
-DEFINE_RESOURCE_TYPE(triglav::ResourceType::Texture, graphics_api::Texture)
+}// namespace triglav

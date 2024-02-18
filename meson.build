@@ -8,15 +8,20 @@ project('vulkan_engine',
 
 fs = import('fs')
 
-vulkan = dependency('vulkan')
-fmt = dependency('fmt')
-glm = dependency('glm')
-cgal = dependency('CGAL')
-wayland_client = dependency('wayland-client')
-xkb_common = dependency('xkbcommon')
-freetype = dependency('freetype2')
-gtest = dependency('gtest')
-xlib = dependency('x11')
+vulkan = dependency('vulkan', method:'pkg-config')
+fmt = dependency('fmt', method:'pkg-config')
+glm = dependency('glm', method:'pkg-config')
+cgal = dependency('cgal', method:'pkg-config')
+freetype = dependency('freetype2', method:'pkg-config')
+gtest = dependency('gtest', method:'pkg-config')
+rapidyaml = dependency('rapidyaml', method:'pkg-config')
+spdlog = dependency('spdlog', method:'pkg-config')
+
+if build_machine.system() == 'linux'
+  xlib = dependency('x11')
+  xkb_common = dependency('xkbcommon')
+  wayland_client = dependency('wayland-client')
+endif
 
 subdir('fonts')
 subdir('shader')
@@ -26,12 +31,16 @@ subdir('model')
 subdir('library/external/mikktspace')
 
 subdir('library/core')
+subdir('library/io')
+
 subdir('library/desktop')
 subdir('library/font')
 subdir('library/graphics_api')
 subdir('library/geometry')
-subdir('library/renderer')
+subdir('library/render_core')
 subdir('library/resource')
+
+subdir('library/renderer')
 
 subdir('game/demo')
 
