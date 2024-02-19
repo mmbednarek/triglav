@@ -8,7 +8,7 @@
 using triglav::resource::ResourceManager;
 using triglav::ResourceType;
 
-namespace renderer {
+namespace triglav::renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 

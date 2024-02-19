@@ -4,7 +4,7 @@
 #include "Shader.h"
 #include "vulkan/Util.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 PipelineBuilder::PipelineBuilder(Device &device, RenderPass &renderPass) :
     m_device(device),

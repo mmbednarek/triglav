@@ -8,7 +8,7 @@
 
 #include <functional>
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 CommandList::CommandList(const VkCommandBuffer commandBuffer, const VkDevice device,
                          const VkCommandPool commandPool) :

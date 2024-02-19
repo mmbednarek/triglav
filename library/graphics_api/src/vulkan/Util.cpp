@@ -4,7 +4,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace graphics_api::vulkan {
+namespace triglav::graphics_api::vulkan {
 Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
 {
    switch (format.order) {
@@ -183,4 +183,4 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-}// namespace graphics_api::vulkan
+}// namespace triglav::graphics_api::vulkan

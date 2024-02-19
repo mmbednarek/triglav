@@ -1,6 +1,6 @@
 #include "OrthoCamera.h"
 
-namespace renderer {
+namespace triglav::renderer {
 
 void OrthoCamera::set_viewport_size(const float width, const float height)
 {

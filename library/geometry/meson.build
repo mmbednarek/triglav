@@ -13,7 +13,7 @@ geometry_priv_deps = geometry_pub_deps
 geometry_priv_deps += cgal
 geometry_priv_deps += mikktspace
 
-geometry_incl = include_directories(['include', 'include/geometry'])
+geometry_incl = include_directories(['include', 'include/triglav/geometry'])
 
 geometry_lib = static_library('geometry',
   sources: geometry_sources,

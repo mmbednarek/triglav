@@ -2,10 +2,10 @@
 
 #include <vector>
 
-#include "graphics_api/HostVisibleBuffer.hpp"
-#include "graphics_api/DescriptorArray.h"
+#include "triglav/graphics_api/HostVisibleBuffer.hpp"
+#include "triglav/graphics_api/DescriptorArray.h"
 #include "triglav/Name.hpp"
-#include "geometry/Mesh.h"
+#include "triglav/geometry/Mesh.h"
 
 #include "RenderCore.hpp"
 #include "Material.hpp"

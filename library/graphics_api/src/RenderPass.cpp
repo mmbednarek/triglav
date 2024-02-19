@@ -1,6 +1,6 @@
 #include "RenderPass.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 RenderPass::RenderPass(vulkan::RenderPass renderPass, const SampleCount sampleCount,
                        const int colorAttachmentCount) :

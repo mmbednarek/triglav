@@ -25,7 +25,7 @@ graphics_api_sources = files([
 graphics_api_lib = static_library('graphics_api',
   sources: graphics_api_sources,
   dependencies: [vulkan, wayland_client, desktop],
-  include_directories: ['include/graphics_api'],
+  include_directories: ['include/triglav/graphics_api'],
 )
 
 graphics_api = declare_dependency(

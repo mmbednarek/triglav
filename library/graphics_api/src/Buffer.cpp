@@ -5,7 +5,7 @@
 
 #include <cstring>
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 MappedMemory::MappedMemory(void *pointer, const VkDevice device, const VkDeviceMemory deviceMemory) :
     m_pointer(pointer),
     m_device(device),

@@ -2,7 +2,7 @@
 
 #include "vulkan/Util.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 DescriptorView::DescriptorView(const VkDescriptorSet descriptorSet,
                                const VkPipelineLayout pipelineLayout) :

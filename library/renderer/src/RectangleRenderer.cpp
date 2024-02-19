@@ -1,15 +1,15 @@
 #include "RectangleRenderer.h"
 
-#include "graphics_api/CommandList.h"
-#include "graphics_api/DescriptorWriter.h"
-#include "graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/DescriptorWriter.h"
+#include "triglav/graphics_api/PipelineBuilder.h"
 
 using namespace triglav::name_literals;
 using triglav::resource::ResourceManager;
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
 
-namespace renderer {
+namespace triglav::renderer {
 
 RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
                                      ResourceManager &resourceManager) :

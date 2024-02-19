@@ -4,7 +4,7 @@
 #include <tuple>
 #include <vulkan/vulkan.h>
 
-namespace graphics_api::vulkan {
+namespace triglav::graphics_api::vulkan {
 Result<VkFormat> to_vulkan_color_format(const ColorFormat &format);
 Result<ColorFormat> to_color_format(VkFormat format);
 

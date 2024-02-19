@@ -3,7 +3,7 @@
 #include "CommandList.h"
 #include "Device.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::ImageView imageView,
                  const ColorFormat &colorFormat, TextureType type, const uint32_t width,

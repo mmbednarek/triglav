@@ -1,6 +1,6 @@
 #include "Shader.h"
 
-namespace graphics_api
+namespace triglav::graphics_api
 {
     Shader::Shader(std::string name, const ShaderStage stage, vulkan::ShaderModule module) :
         m_name(std::move(name)),

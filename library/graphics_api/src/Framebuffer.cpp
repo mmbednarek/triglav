@@ -1,6 +1,6 @@
 #include "Framebuffer.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 Framebuffer::Framebuffer(const Resolution resolution, const VkRenderPass renderPass,
                          vulkan::Framebuffer framebuffer) :

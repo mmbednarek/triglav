@@ -4,7 +4,7 @@
 
 #include <utility>
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 DescriptorArray::DescriptorArray(const VkDevice device, const VkDescriptorPool descriptorPool,
                                  const VkPipelineLayout pipelineLayout,

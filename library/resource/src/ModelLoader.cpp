@@ -1,6 +1,6 @@
 #include "ModelLoader.h"
 
-#include "geometry/Mesh.h"
+#include "triglav/geometry/Mesh.h"
 
 #include <algorithm>
 #include <format>

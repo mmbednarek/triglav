@@ -1,7 +1,7 @@
 #include "SkyBox.h"
 
-#include "geometry/DebugMesh.h"
-#include "graphics_api/DescriptorWriter.h"
+#include "triglav/geometry/DebugMesh.h"
+#include "triglav/graphics_api/DescriptorWriter.h"
 #include "Renderer.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -14,9 +14,10 @@ using namespace triglav::name_literals;
 
 namespace {
 
-graphics_api::Mesh<geometry::Vertex> create_skybox_mesh(graphics_api::Device &device)
+triglav::graphics_api::Mesh<triglav::geometry::Vertex>
+create_skybox_mesh(triglav::graphics_api::Device &device)
 {
-   auto mesh = geometry::create_box({50, 50, 50});
+   auto mesh = triglav::geometry::create_box({50, 50, 50});
    mesh.reverse_orientation();
    mesh.triangulate();
    return mesh.upload_to_device(device).mesh;
@@ -24,7 +25,7 @@ graphics_api::Mesh<geometry::Vertex> create_skybox_mesh(graphics_api::Device &de
 
 }// namespace
 
-namespace renderer {
+namespace triglav::renderer {
 
 SkyBox::SkyBox(Renderer &renderer) :
     m_resourceManager(renderer.resource_manager()),
@@ -83,4 +84,4 @@ void SkyBox::on_render(graphics_api::CommandList &commandList, float yaw, float 
    commandList.draw_mesh(m_mesh);
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

@@ -7,7 +7,7 @@
 
 #include <Device.h>
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 DescriptorWriter::DescriptorWriter(const Device &device, const DescriptorView &descView) :
     m_device(device.vulkan_device()),

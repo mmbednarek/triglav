@@ -2,8 +2,8 @@
 
 #include "Loader.hpp"
 
-#include "graphics_api/Device.h"
-#include "graphics_api/Shader.h"
+#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Shader.h"
 #include "triglav/Name.hpp"
 
 #include <string_view>

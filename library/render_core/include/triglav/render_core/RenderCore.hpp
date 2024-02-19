@@ -3,8 +3,8 @@
 #include <glm/mat4x4.hpp>
 #include <stdexcept>
 
-#include "geometry/Geometry.h"
-#include "graphics_api/Array.hpp"
+#include "triglav/geometry/Geometry.h"
+#include "triglav/graphics_api/Array.hpp"
 
 namespace triglav::render_core {
 

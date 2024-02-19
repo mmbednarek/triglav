@@ -1,6 +1,6 @@
 #include "Synchronization.h"
 
-namespace graphics_api
+namespace triglav::graphics_api
 {
     Fence::Fence(vulkan::Fence fence) : m_fence(std::move(fence))
     {

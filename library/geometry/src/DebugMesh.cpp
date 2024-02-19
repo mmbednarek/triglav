@@ -2,7 +2,7 @@
 
 #include "InternalMesh.h"
 
-namespace geometry {
+namespace triglav::geometry {
 
 Mesh create_box(const Extent3D &extent)
 {

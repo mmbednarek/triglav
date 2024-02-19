@@ -3,7 +3,7 @@
 #include <freetype/freetype.h>
 #include <utility>
 
-namespace font {
+namespace triglav::font {
 
 Typeface::Typeface(const FT_Face face) :
     m_face(face)

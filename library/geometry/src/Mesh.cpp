@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include "InternalMesh.h"
 
-namespace geometry {
+namespace triglav::geometry {
 
 Mesh::Mesh() :
     m_mesh(std::make_unique<InternalMesh>())

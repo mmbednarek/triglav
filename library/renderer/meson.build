@@ -19,7 +19,7 @@ renderer_sources = files([
 ])
 
 renderer_deps = [glm, graphics_api, geometry, font, fonts, io, resource]
-renderer_incl = include_directories(['include', 'include/renderer'])
+renderer_incl = include_directories(['include', 'include/triglav/renderer'])
 
 renderer_lib = static_library('renderer',
   sources: renderer_sources,

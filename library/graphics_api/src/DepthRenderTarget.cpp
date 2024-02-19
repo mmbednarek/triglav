@@ -3,7 +3,7 @@
 #include "RenderPass.h"
 #include "vulkan/Util.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 DepthRenderTarget::DepthRenderTarget(const VkDevice device,
                                      const ColorFormat &depthFormat) :

@@ -4,7 +4,7 @@
 #include "Synchronization.h"
 #include "vulkan/Util.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 constexpr size_t g_colorAttachmentIndex   = 0;
 constexpr size_t g_depthAttachmentIndex   = 1;

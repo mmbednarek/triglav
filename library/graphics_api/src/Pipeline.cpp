@@ -2,7 +2,7 @@
 
 #include "vulkan/Util.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 Pipeline::Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline,
                    vulkan::DescriptorSetLayout descriptorSetLayout) :

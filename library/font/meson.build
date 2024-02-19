@@ -6,7 +6,7 @@ font_sources = files([
 font_lib = static_library('font',
                           sources : font_sources,
                           dependencies : [freetype],
-                          include_directories : ['include/font'],
+                          include_directories : ['include/triglav/font'],
 )
 
 font = declare_dependency(

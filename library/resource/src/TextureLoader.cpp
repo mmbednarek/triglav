@@ -1,7 +1,7 @@
 #include "TextureLoader.h"
 
-#include "graphics_api/Device.h"
-#include "graphics_api/Texture.h"
+#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Texture.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 

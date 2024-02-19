@@ -11,11 +11,11 @@
 
 namespace {
 
-geometry::IndexedVertex parse_index(const std::string &index)
+triglav::geometry::IndexedVertex parse_index(const std::string &index)
 {
-   using geometry::g_invalidIndex;
-   using geometry::Index;
-   using geometry::IndexedVertex;
+   using triglav::geometry::g_invalidIndex;
+   using triglav::geometry::Index;
+   using triglav::geometry::IndexedVertex;
 
    const auto it1       = index.find('/');
    const auto vertex_id = static_cast<Index>(std::stoi(index.substr(0, it1)));
@@ -35,14 +35,14 @@ geometry::IndexedVertex parse_index(const std::string &index)
    return {vertex_id, uv_id, normal_id};
 }
 
-glm::vec3 to_glm_vec3(const geometry::InternalMesh::Point3 &point)
+glm::vec3 to_glm_vec3(const triglav::geometry::InternalMesh::Point3 &point)
 {
    return glm::vec3{point.x(), point.y(), point.z()};
 }
 
 }// namespace
 
-namespace geometry {
+namespace triglav::geometry {
 
 InternalMesh::InternalMesh() :
     m_normals(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec3>>("h:normals", std::nullopt)

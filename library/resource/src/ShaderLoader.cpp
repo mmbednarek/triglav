@@ -1,6 +1,6 @@
 #include "ShaderLoader.h"
 
-#include "graphics_api/Device.h"
+#include "triglav/graphics_api/Device.h"
 #include "triglav/io/File.h"
 
 #include <fstream>

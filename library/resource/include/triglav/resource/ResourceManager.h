@@ -4,13 +4,12 @@
 #include <memory>
 
 #include "triglav/Name.hpp"
+#include "triglav/font/FontManager.h"
 
 #include "Container.hpp"
 #include "Loader.hpp"
 
-#include <font/FontManager.h>
-
-namespace graphics_api {
+namespace triglav::graphics_api {
 class Device;
 }
 

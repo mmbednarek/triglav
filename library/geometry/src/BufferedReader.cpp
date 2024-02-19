@@ -1,6 +1,6 @@
 #include "BufferedReader.h"
 
-namespace geometry {
+namespace triglav::geometry {
 
 BufferedReader::BufferedReader(std::istream &stream) :
    m_stream(stream)

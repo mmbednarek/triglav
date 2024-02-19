@@ -16,7 +16,7 @@
 
 #undef max
 
-using graphics_api::BufferPurpose;
+using triglav::graphics_api::BufferPurpose;
 using triglav::desktop::ISurface;
 
 namespace {
@@ -67,7 +67,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(
 
 }// namespace
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 DECLARE_VLK_ENUMERATOR(get_physical_devices, VkPhysicalDevice, vkEnumeratePhysicalDevices)
 DECLARE_VLK_ENUMERATOR(get_queue_family_properties, VkQueueFamilyProperties,
                        vkGetPhysicalDeviceQueueFamilyProperties)

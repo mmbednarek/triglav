@@ -1,8 +1,8 @@
 #include "ShadowMap.h"
 
-#include "graphics_api/CommandList.h"
-#include "graphics_api/DescriptorWriter.h"
-#include "graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/DescriptorWriter.h"
+#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/resource/ResourceManager.h"
 #include "triglav/render_core/RenderCore.hpp"
 
@@ -17,7 +17,7 @@ using triglav::render_core::ShadowMapUBO;
 
 using namespace triglav::name_literals;
 
-namespace renderer {
+namespace triglav::renderer {
 
 constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
 constexpr auto g_shadowMapFormat     = GAPI_FORMAT(D, Float32);

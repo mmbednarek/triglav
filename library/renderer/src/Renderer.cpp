@@ -1,16 +1,16 @@
 #include "Renderer.h"
 
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <glm/glm.hpp>
+#include "GlyphAtlas.h"
 
-#include "graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/Name.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
-#include "GlyphAtlas.h"
+#include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <glm/glm.hpp>
 
 using triglav::ResourceType;
 using triglav::desktop::Key;
@@ -21,7 +21,7 @@ using namespace triglav::name_literals;
 
 // using triglav::re
 
-namespace renderer {
+namespace triglav::renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_FORMAT(D, Float32);
@@ -174,9 +174,11 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
                              m_modelDepthTexture),
     m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
-    m_glyphAtlasBold(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell/bold.typeface"_name), g_runes, 24, 500,
-                     500),
-    m_glyphAtlas(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell.typeface"_name), g_runes, 24, 500, 500),
+    m_glyphAtlasBold(*m_device,
+                     m_resourceManager->get<ResourceType::Typeface>("cantarell/bold.typeface"_name), g_runes,
+                     24, 500, 500),
+    m_glyphAtlas(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell.typeface"_name),
+                 g_runes, 24, 500, 500),
     m_sprite(m_context2D.create_sprite_from_texture(m_shadowMap.depth_texture())),
     // m_sprite(m_context2D.create_sprite_from_texture(m_glyphAtlas.texture())),
     m_textRenderer(*m_device, m_renderPass, *m_resourceManager),
@@ -581,8 +583,9 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    m_shadingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
                                      m_ambientOcclusionTexture, m_shadowMap.depth_texture());
 
-   m_ambientOcclusionRenderer.update_textures(m_modelPositionTexture, m_modelNormalTexture,
-                                              m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
+   m_ambientOcclusionRenderer.update_textures(
+           m_modelPositionTexture, m_modelNormalTexture,
+           m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
 
    m_postProcessingRenderer.update_texture(m_shadingColorTexture, m_modelDepthTexture);
 
@@ -627,4 +630,4 @@ void Renderer::update_uniform_data(const float deltaTime)
    m_scene.update();
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

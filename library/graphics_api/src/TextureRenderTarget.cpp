@@ -5,7 +5,7 @@
 #include "RenderPass.h"
 #include "vulkan/Util.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 TextureRenderTarget::TextureRenderTarget(const VkDevice device) :
     m_device(device)

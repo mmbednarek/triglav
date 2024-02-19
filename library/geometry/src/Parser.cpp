@@ -9,7 +9,7 @@ bool is_white_char(const char ch)
 }
 }// namespace
 
-namespace geometry {
+namespace triglav::geometry {
 
 Parser::Parser(std::istream &stream) :
     m_reader(stream)

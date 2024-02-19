@@ -1,14 +1,14 @@
-#include "renderer/Renderer.h"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
+#include "triglav/renderer/Renderer.h"
 
 #include <iostream>
 
 using triglav::desktop::DefaultSurfaceEventListener;
-using triglav::desktop::MouseButton;
-using triglav::desktop::ISurface;
 using triglav::desktop::IDisplay;
+using triglav::desktop::ISurface;
+using triglav::desktop::MouseButton;
 
 constexpr auto g_initialWidth  = 1280;
 constexpr auto g_initialHeight = 720;
@@ -16,7 +16,7 @@ constexpr auto g_initialHeight = 720;
 class EventListener final : public DefaultSurfaceEventListener
 {
  public:
-   EventListener(ISurface &surface, renderer::Renderer &renderer) :
+   EventListener(ISurface &surface, triglav::renderer::Renderer &renderer) :
        m_surface(surface),
        m_renderer(renderer)
    {
@@ -87,7 +87,7 @@ class EventListener final : public DefaultSurfaceEventListener
 
  private:
    ISurface &m_surface;
-   renderer::Renderer &m_renderer;
+   triglav::renderer::Renderer &m_renderer;
    bool m_isRunning{true};
 };
 
@@ -96,7 +96,7 @@ int main()
    const auto display = triglav::desktop::get_display();
    const auto surface = display->create_surface(g_initialWidth, g_initialHeight);
 
-   renderer::Renderer renderer(*surface, g_initialWidth, g_initialHeight);
+   triglav::renderer::Renderer renderer(*surface, g_initialWidth, g_initialHeight);
 
    EventListener eventListener(*surface, renderer);
    surface->add_event_listener(&eventListener);

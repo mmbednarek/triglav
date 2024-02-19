@@ -1,8 +1,8 @@
 #include "PostProcessingRenderer.h"
 
-#include "graphics_api/CommandList.h"
-#include "graphics_api/DescriptorWriter.h"
-#include "graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/DescriptorWriter.h"
+#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/RenderCore.hpp"
 
 using namespace triglav::name_literals;
@@ -10,7 +10,7 @@ using triglav::render_core::checkResult;
 using triglav::resource::ResourceManager;
 using triglav::ResourceType;
 
-namespace renderer {
+namespace triglav::renderer {
 
 PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                                graphics_api::RenderPass &renderPass,

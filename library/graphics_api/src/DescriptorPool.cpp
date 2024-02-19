@@ -1,6 +1,6 @@
 #include "DescriptorPool.h"
 
-namespace graphics_api {
+namespace triglav::graphics_api {
 
 DescriptorPool::DescriptorPool(vulkan::DescriptorPool descriptorPool,
                                const VkDescriptorSetLayout descriptorSetLayout,

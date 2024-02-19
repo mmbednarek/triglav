@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-namespace renderer {
+namespace triglav::renderer {
 
 void Camera::set_viewport_size(const float width, const float height)
 {

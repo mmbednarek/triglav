@@ -1,6 +1,6 @@
 #include "CameraBase.h"
 
-namespace renderer {
+namespace triglav::renderer {
 
 void CameraBase::set_position(const glm::vec3 position)
 {

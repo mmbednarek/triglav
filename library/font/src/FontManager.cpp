@@ -2,7 +2,7 @@
 
 #include <freetype/freetype.h>
 
-namespace font {
+namespace triglav::font {
 
 struct FontMangerInternal
 {

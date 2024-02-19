@@ -6,7 +6,7 @@
 
 #include "Geometry.h"
 
-namespace geometry {
+namespace triglav::geometry {
 
 constexpr auto g_NAN = std::numeric_limits<float>::quiet_NaN();
 
