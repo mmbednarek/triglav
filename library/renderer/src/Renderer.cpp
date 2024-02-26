@@ -196,63 +196,7 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
     m_aaLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Anti-Aliasing")),
     m_aaValue(m_textRenderer.create_text_object(m_glyphAtlas, "Off"))
 {
-
-   m_scene.add_object(SceneObject{
-           .model{"hall.model"_name},
-           .position{0, 0, 0},
-           .rotation{1, 0, 0, 0},
-           .scale{10, 10, 10},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"teapot.model"_name},
-           .position{12.0f, -12.0f, 0},
-           .rotation{glm::vec3{0, 0, glm::radians(0.0f)}},
-           .scale{1.2, 1.2, 1.2},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"pine.model"_name},
-           .position{12.0f, -20.0f, 0},
-           .rotation{glm::vec3{0, 0, glm::radians(0.0f)}},
-           .scale{30.0, 30.0, 30.0},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"column.model"_name},
-           .position{0.0f, -32.0f, 0.0f},
-           .rotation{1, 0, 0, 0},
-           .scale{10, 10, 10},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"column.model"_name},
-           .position{0.0f, -16.0f, 0.0f},
-           .rotation{1, 0, 0, 0},
-           .scale{10, 10, 10},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"column.model"_name},
-           .position{0.0f, 0.0f, 0.0f},
-           .rotation{1, 0, 0, 0},
-           .scale{10, 10, 10},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"column.model"_name},
-           .position{0.0f, 32.0f, 0.0f},
-           .rotation{1, 0, 0, 0},
-           .scale{10, 10, 10},
-   });
-
-   m_scene.add_object(SceneObject{
-           .model{"column.model"_name},
-           .position{0.0f, 16.0f, 0.0f},
-           .rotation{1, 0, 0, 0},
-           .scale{10, 10, 10},
-   });
-
+   m_scene.load_level("demo.level"_name);
    m_scene.compile_scene();
 
    m_textRenderer.update_resolution(m_resolution);

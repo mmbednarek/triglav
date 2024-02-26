@@ -5,6 +5,7 @@
 #include "ShaderLoader.h"
 #include "TextureLoader.h"
 #include "TypefaceLoader.h"
+#include "LevelLoader.h"
 
 #include "triglav/io/File.h"
 #include "triglav/TypeMacroList.hpp"

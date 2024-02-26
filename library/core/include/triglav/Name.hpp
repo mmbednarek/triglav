@@ -30,8 +30,8 @@ class TypedName
    [[nodiscard]] operator Name() const;// NOLINT(google-explicit-constructor)
 
    constexpr auto operator<=>(const TypedName &other) const = default;
-   constexpr bool operator==(const TypedName &other) const = default;
-   constexpr bool operator!=(const TypedName &other) const = default;
+   constexpr bool operator==(const TypedName &other) const  = default;
+   constexpr bool operator!=(const TypedName &other) const  = default;
 
  private:
    NameID m_name;
@@ -86,6 +86,11 @@ TypedName<CResourceType>::operator Name() const
    return Name{CResourceType, m_name};
 }
 
+constexpr auto make_name_id(const std::string_view value)
+{
+   return detail::hash_string(value);
+}
+
 constexpr auto make_name(const std::string_view value)
 {
    const auto at        = value.find_last_of('.');
@@ -94,7 +99,11 @@ constexpr auto make_name(const std::string_view value)
    return Name(type_by_extension(extension), hash);
 }
 
-using TextureName = TypedName<ResourceType::Texture>;
+#define TG_RESOURCE_TYPE(name, ext, cppType) using name##Name = TypedName<ResourceType::name>;
+
+TG_RESOURCE_TYPE_LIST
+
+#undef TG_RESOURCE_TYPE
 
 namespace name_literals {
 
@@ -103,6 +112,11 @@ constexpr Name operator""_name(const char *value, const std::size_t count)
    return make_name(std::string_view(value, count));
 }
 
+constexpr NameID operator""_name_id(const char *value, const std::size_t count)
+{
+   return detail::hash_string(std::string_view(value, count));
+}
+
 }// namespace name_literals
 
-}// namespace resource
+}// namespace triglav

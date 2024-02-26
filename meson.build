@@ -28,12 +28,14 @@ subdir('shader')
 subdir('texture')
 subdir('model')
 subdir('material')
+subdir('level')
 
 subdir('library/external/mikktspace')
 
 subdir('library/core')
 subdir('library/io')
 
+subdir('library/world')
 subdir('library/desktop')
 subdir('library/font')
 subdir('library/graphics_api')

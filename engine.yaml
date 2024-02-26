@@ -104,3 +104,5 @@ resources:
     source: "material/pine.yaml"
   - name: "quartz.mat"
     source: "material/quartz.yaml"
+  - name: "demo.level"
+    source: "level/demo.yaml"

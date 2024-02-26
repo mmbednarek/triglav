@@ -37,6 +37,8 @@ class Scene
    void render_shadow_map() const;
    void render_debug_lines() const;
 
+   void load_level(LevelName name);
+
    void set_camera(glm::vec3 position, glm::quat orientation);
 
    [[nodiscard]] const Camera &camera() const;

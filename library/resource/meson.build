@@ -1,4 +1,5 @@
 resource_sources = files([
+                             'src/LevelLoader.cpp',
                              'src/MaterialLoader.cpp',
                              'src/ResourceManager.cpp',
                              'src/TextureLoader.cpp',
@@ -7,7 +8,7 @@ resource_sources = files([
                              'src/TypefaceLoader.cpp',
                          ])
 
-resource_deps = [glm, graphics_api, core, geometry, render_core, font, fonts, rapidyaml, spdlog]
+resource_deps = [glm, graphics_api, core, geometry, render_core, font, fonts, rapidyaml, world, spdlog]
 resource_incl = include_directories(['include', 'include/triglav/resource'])
 
 resource_lib = static_library('resource',

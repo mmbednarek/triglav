@@ -16,6 +16,11 @@ class Shader;
 namespace font {
 class Typeface;
 }
+
+namespace world {
+struct Level;
+}// namespace render_core
+
 }// namespace triglav
 
 #define TG_RESOURCE_TYPE_LIST                                          \
@@ -24,4 +29,5 @@ class Typeface;
    TG_RESOURCE_TYPE(VertexShader, "vshader", ::triglav::graphics_api::Shader)   \
    TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_core::Material) \
    TG_RESOURCE_TYPE(Model, "model", ::triglav::render_core::Model)     \
-   TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface)
+   TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface) \
+   TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level)

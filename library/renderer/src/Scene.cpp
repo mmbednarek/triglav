@@ -1,11 +1,12 @@
 #include "Scene.h"
 
-#include <glm/gtc/quaternion.hpp>
-
 #include "ModelRenderer.h"
 #include "Renderer.h"
 
-using triglav::resource::ResourceManager;
+#include "triglav/world/Level.h"
+
+#include <glm/gtc/quaternion.hpp>
+
 using triglav::ResourceType;
 
 namespace triglav::renderer {
@@ -13,7 +14,7 @@ namespace triglav::renderer {
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
 Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap,
-             DebugLinesRenderer &debugLinesRenderer, ResourceManager &resourceManager) :
+             DebugLinesRenderer &debugLinesRenderer, resource::ResourceManager &resourceManager) :
     m_renderer(renderer),
     m_context3D(context3D),
     m_shadowMap(shadowMap),
@@ -97,6 +98,21 @@ void Scene::render_debug_lines() const
    }
 }
 
+void Scene::load_level(const LevelName name)
+{
+   auto &level = m_resourceManager.get<ResourceType::Level>(name);
+   auto &root  = level.root();
+
+   for (const auto &mesh : root.static_meshes()) {
+      this->add_object(SceneObject{
+              .model    = mesh.meshName,
+              .position = mesh.transform.position,
+              .rotation = glm::quat(mesh.transform.rotation),
+              .scale    = mesh.transform.scale,
+      });
+   }
+}
+
 void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
 {
    m_camera.set_position(position);
@@ -118,4 +134,4 @@ const OrthoCamera &Scene::shadow_map_camera() const
    return m_shadowMapCamera;
 }
 
-}// namespace renderer
+}// namespace triglav::renderer
