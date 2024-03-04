@@ -43,9 +43,9 @@ SkyBox::SkyBox(Renderer &renderer) :
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::ShaderStage::Vertex)
+                                        graphics_api::PipelineStage::VertexShader)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::ShaderStage::Fragment)
+                                        graphics_api::PipelineStage::FragmentShader)
                     .enable_depth_test(false)
                     .build()
 
@@ -55,7 +55,7 @@ SkyBox::SkyBox(Renderer &renderer) :
     m_descriptorSet(m_descArray[0]),
     m_uniformBuffer(renderer.create_ubo_buffer<SkyBoxUBO>()),
     m_uniformBufferMapping(checkResult(m_uniformBuffer.map_memory())),
-    m_sampler(checkResult(renderer.device().create_sampler(false)))
+    m_sampler(m_resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
 {
    graphics_api::DescriptorWriter descWriter(renderer.device(), m_descriptorSet);
    descWriter.set_raw_uniform_buffer(0, m_uniformBuffer);

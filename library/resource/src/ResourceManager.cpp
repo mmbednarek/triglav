@@ -6,6 +6,7 @@
 #include "TextureLoader.h"
 #include "TypefaceLoader.h"
 #include "LevelLoader.h"
+#include "StaticResources.h"
 
 #include "triglav/io/File.h"
 #include "triglav/TypeMacroList.hpp"
@@ -53,6 +54,8 @@ ResourceManager::ResourceManager(graphics_api::Device &device, font::FontManger 
 #undef TG_RESOURCE_TYPE
 
    this->load_asset_list("../engine.yaml");
+
+   register_samplers(device, *this);
 }
 
 void ResourceManager::load_asset_list(const std::string_view path)

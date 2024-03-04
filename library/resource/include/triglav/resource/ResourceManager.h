@@ -3,8 +3,8 @@
 #include <map>
 #include <memory>
 
-#include "triglav/Name.hpp"
 #include "triglav/font/FontManager.h"
+#include "triglav/Name.hpp"
 
 #include "Container.hpp"
 #include "Loader.hpp"
@@ -34,14 +34,20 @@ class ResourceManager
    template<ResourceType CResourceType>
    void load_resource(TypedName<CResourceType> name, std::string_view path)
    {
-      if constexpr (Loader<CResourceType>::is_gpu_resource) {
+      if constexpr (Loader<CResourceType>::type == ResourceLoadType::Graphics) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path));
-      } else if constexpr (Loader<CResourceType>::is_font_resource) {
+      } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
          container<CResourceType>().register_resource(name,
                                                       Loader<CResourceType>::load_font(m_fontManager, path));
-      } else {
+      } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Static) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(path));
       }
+   }
+
+   template<ResourceType CResourceType, typename ...TArgs>
+   void emplace_resource(TypedName<CResourceType> name, TArgs&& ...args)
+   {
+      container<CResourceType>().register_emplace(name, std::forward<TArgs>(args)...);
    }
 
  private:

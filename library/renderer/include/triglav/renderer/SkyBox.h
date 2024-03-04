@@ -33,7 +33,7 @@ class SkyBox
    graphics_api::DescriptorView m_descriptorSet;
    graphics_api::Buffer m_uniformBuffer;
    graphics_api::MappedMemory m_uniformBufferMapping;
-   graphics_api::Sampler m_sampler;
+   graphics_api::Sampler& m_sampler;
 };
 
 

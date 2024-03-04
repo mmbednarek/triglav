@@ -33,7 +33,7 @@ class SpriteRenderer
 
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descriptorPool;
-   graphics_api::Sampler m_sampler;
+   graphics_api::Sampler& m_sampler;
 
    graphics_api::CommandList *m_commandList{};
 };

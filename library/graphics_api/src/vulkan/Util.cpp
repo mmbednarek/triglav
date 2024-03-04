@@ -151,24 +151,42 @@ to_vulkan_load_store_ops(const AttachmentLifetime lifetime)
    return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_NONE};
 }
 
-VkShaderStageFlagBits to_vulkan_shader_stage(const ShaderStage stage)
+VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
 {
    switch (stage) {
-   case ShaderStage::Vertex: return VK_SHADER_STAGE_VERTEX_BIT;
-   case ShaderStage::Fragment: return VK_SHADER_STAGE_FRAGMENT_BIT;
+   case PipelineStage::VertexShader: return VK_SHADER_STAGE_VERTEX_BIT;
+   case PipelineStage::FragmentShader: return VK_SHADER_STAGE_FRAGMENT_BIT;
    }
 
    return static_cast<VkShaderStageFlagBits>(0);
 }
 
-VkShaderStageFlags to_vulkan_shader_stage_flags(ShaderStageFlags flags)
+VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
 {
    VkShaderStageFlags result{};
-   if (flags & ShaderStage::Vertex) {
+   if (flags & PipelineStage::VertexShader) {
       result |= VK_SHADER_STAGE_VERTEX_BIT;
    }
-   if (flags & ShaderStage::Fragment) {
+   if (flags & PipelineStage::FragmentShader) {
       result |= VK_SHADER_STAGE_FRAGMENT_BIT;
+   }
+   return result;
+}
+
+VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags flags)
+{
+   VkPipelineStageFlags  result{};
+   if (flags & PipelineStage::Entrypoint) {
+      result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   }
+   if (flags & PipelineStage::VertexShader) {
+      result |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+   }
+   if (flags & PipelineStage::FragmentShader) {
+      result |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   }
+   if (flags & PipelineStage::Transfer) {
+      result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
    return result;
 }
@@ -181,6 +199,52 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
    case DescriptorType::ImageSampler: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    }
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+}
+
+VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
+{
+   switch (resourceState) {
+   case TextureState::Undefined: return VK_IMAGE_LAYOUT_UNDEFINED;
+   case TextureState::TransferSource: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+   case TextureState::TransferDestination: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+   case TextureState::ShaderRead: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   }
+
+   return VK_IMAGE_LAYOUT_UNDEFINED;
+}
+
+VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
+{
+   switch (resourceState) {
+   case TextureState::Undefined: return 0;
+   case TextureState::TransferSource: return VK_ACCESS_TRANSFER_READ_BIT;
+   case TextureState::TransferDestination: return VK_ACCESS_TRANSFER_WRITE_BIT;
+   case TextureState::ShaderRead: return VK_ACCESS_SHADER_READ_BIT;
+   }
+
+   return 0;
+}
+
+VkFilter to_vulkan_filter(const FilterType filterType)
+{
+   switch (filterType) {
+   case FilterType::Linear: return VK_FILTER_LINEAR;
+   case FilterType::NearestNeighbour: return VK_FILTER_NEAREST;
+   }
+   return VK_FILTER_MAX_ENUM;
+}
+
+VkSamplerAddressMode to_vulkan_sampler_address_mode(const TextureAddressMode mode)
+{
+   switch (mode) {
+   case TextureAddressMode::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   case TextureAddressMode::Mirror: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+   case TextureAddressMode::Clamp: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+   case TextureAddressMode::Border: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+   case TextureAddressMode::MirrorOnce: return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+   }
+
+   return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
 }
 
 }// namespace triglav::graphics_api::vulkan

@@ -21,7 +21,7 @@ DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_ap
                                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
                                    .end_vertex_layout()
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::ShaderStage::Vertex)
+                                                       graphics_api::PipelineStage::VertexShader)
                                    .vertex_topology(graphics_api::VertexTopology::LineList)
                                    .razterization_method(graphics_api::RasterizationMethod::Line)
                                    .build())),

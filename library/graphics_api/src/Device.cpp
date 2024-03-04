@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <format>
 #include <iostream>
 #include <ostream>
@@ -271,7 +272,7 @@ Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
                      renderTarget.color_attachment_count());
 }
 
-Result<Shader> Device::create_shader(const ShaderStage stage, const std::string_view entrypoint,
+Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint,
                                      const std::span<const char> code)
 {
    VkShaderModuleCreateInfo shaderModuleInfo{};
@@ -383,7 +384,7 @@ VkImageTiling to_vulkan_image_tiling(const TextureType type)
 VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
 {
    switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   case TextureType::SampledImage: return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
    case TextureType::SampledDepthBuffer:
       return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -409,16 +410,20 @@ VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
 }// namespace
 
 Result<Texture> Device::create_texture(const ColorFormat &format, const Resolution &imageSize,
-                                       const TextureType type, SampleCount sampleCount) const
+                                       const TextureType type, SampleCount sampleCount, int mipCount) const
 {
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
+
+   if (mipCount == 0) {
+      mipCount = static_cast<int>(std::floor(std::log2(std::max(imageSize.width, imageSize.height)))) + 1;
+   }
 
    VkImageCreateInfo imageInfo{};
    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    imageInfo.format        = vulkanColorFormat;
    imageInfo.extent        = VkExtent3D{imageSize.width, imageSize.height, 1};
    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
-   imageInfo.mipLevels     = 1;
+   imageInfo.mipLevels     = mipCount;
    imageInfo.arrayLayers   = 1;
    imageInfo.tiling        = to_vulkan_image_tiling(type);
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -456,7 +461,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    imageViewInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.subresourceRange.aspectMask     = to_vulkan_image_aspect(type);
    imageViewInfo.subresourceRange.baseMipLevel   = 0;
-   imageViewInfo.subresourceRange.levelCount     = 1;
+   imageViewInfo.subresourceRange.levelCount     = mipCount;
    imageViewInfo.subresourceRange.baseArrayLayer = 0;
    imageViewInfo.subresourceRange.layerCount     = 1;
 
@@ -465,28 +470,31 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
       return std::unexpected(Status::UnsupportedDevice);
 
    return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, type,
-                  imageSize.width, imageSize.height);
+                  imageSize.width, imageSize.height, mipCount);
 }
 
-Result<Sampler> Device::create_sampler(const bool enableAnisotropy)
+Result<Sampler> Device::create_sampler(const SamplerInfo &info)
 {
    VkPhysicalDeviceProperties properties{};
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
    VkSamplerCreateInfo samplerInfo{};
    samplerInfo.sType                   = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter               = VK_FILTER_LINEAR;
-   samplerInfo.minFilter               = VK_FILTER_LINEAR;
-   samplerInfo.addressModeU            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeV            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.addressModeW            = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   samplerInfo.anisotropyEnable        = enableAnisotropy;
+   samplerInfo.magFilter               = vulkan::to_vulkan_filter(info.magFilter);
+   samplerInfo.minFilter               = vulkan::to_vulkan_filter(info.minFilter);
+   samplerInfo.addressModeU            = vulkan::to_vulkan_sampler_address_mode(info.addressU);
+   samplerInfo.addressModeV            = vulkan::to_vulkan_sampler_address_mode(info.addressV);
+   samplerInfo.addressModeW            = vulkan::to_vulkan_sampler_address_mode(info.addressW);
+   samplerInfo.anisotropyEnable        = info.enableAnisotropy;
    samplerInfo.maxAnisotropy           = properties.limits.maxSamplerAnisotropy;
    samplerInfo.borderColor             = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
    samplerInfo.unnormalizedCoordinates = false;
    samplerInfo.compareEnable           = false;
    samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
    samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   samplerInfo.minLod = info.minLod;
+   samplerInfo.maxLod = info.maxLod;
+   samplerInfo.mipLodBias = info.mipBias;
 
    vulkan::Sampler sampler(*m_device);
    if (sampler.construct(&samplerInfo) != VK_SUCCESS) {

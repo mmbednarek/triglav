@@ -39,7 +39,7 @@ ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceMana
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                     .end_vertex_layout()
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::ShaderStage::Vertex)
+                                        graphics_api::PipelineStage::VertexShader)
                     .enable_depth_test(true)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 1, 100)))

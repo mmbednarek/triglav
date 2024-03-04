@@ -168,65 +168,88 @@ void CommandList::copy_buffer(const Buffer &source, const Buffer &dest) const
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
 }
 
-void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &destination) const
+void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &destination,
+                                         const int mipLevel) const
 {
-   VkImageMemoryBarrier writeBarrier{};
-   writeBarrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-   writeBarrier.oldLayout                       = VK_IMAGE_LAYOUT_UNDEFINED;
-   writeBarrier.newLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-   writeBarrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-   writeBarrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-   writeBarrier.image                           = destination.vulkan_image();
-   writeBarrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-   writeBarrier.subresourceRange.baseMipLevel   = 0;
-   writeBarrier.subresourceRange.levelCount     = 1;
-   writeBarrier.subresourceRange.baseArrayLayer = 0;
-   writeBarrier.subresourceRange.layerCount     = 1;
-   writeBarrier.srcAccessMask                   = 0;
-   writeBarrier.dstAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
-
-   vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
-                        0, nullptr, 0, nullptr, 1, &writeBarrier);
-
    VkBufferImageCopy region{};
    region.bufferOffset                    = 0;
    region.bufferRowLength                 = 0;
    region.bufferImageHeight               = 0;
    region.imageSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-   region.imageSubresource.mipLevel       = 0;
+   region.imageSubresource.mipLevel       = mipLevel;
    region.imageSubresource.baseArrayLayer = 0;
    region.imageSubresource.layerCount     = 1;
    region.imageOffset                     = {0, 0, 0};
    region.imageExtent                     = {destination.width(), destination.height(), 1};
    vkCmdCopyBufferToImage(m_commandBuffer, source.vulkan_buffer(), destination.vulkan_image(),
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
-
-   VkImageMemoryBarrier fragmentShaderBarrier{};
-   fragmentShaderBarrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-   fragmentShaderBarrier.oldLayout                       = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-   fragmentShaderBarrier.newLayout                       = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   fragmentShaderBarrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-   fragmentShaderBarrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
-   fragmentShaderBarrier.image                           = destination.vulkan_image();
-   fragmentShaderBarrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-   fragmentShaderBarrier.subresourceRange.baseMipLevel   = 0;
-   fragmentShaderBarrier.subresourceRange.levelCount     = 1;
-   fragmentShaderBarrier.subresourceRange.baseArrayLayer = 0;
-   fragmentShaderBarrier.subresourceRange.layerCount     = 1;
-   fragmentShaderBarrier.srcAccessMask                   = VK_ACCESS_TRANSFER_WRITE_BIT;
-   fragmentShaderBarrier.dstAccessMask                   = VK_ACCESS_SHADER_READ_BIT;
-
-   vkCmdPipelineBarrier(m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT,
-                        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1,
-                        &fragmentShaderBarrier);
 }
 
-void CommandList::push_constant_ptr(const ShaderStage stage, const void *ptr, const size_t size,
+void CommandList::push_constant_ptr(const PipelineStage stage, const void *ptr, const size_t size,
                                     const size_t offset) const
 {
    assert(m_boundPipelineLayout != nullptr);
    vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout,
-                      vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | stage), offset, size, ptr);
+                      vulkan::to_vulkan_shader_stage_flags(stage), offset, size, ptr);
+}
+
+void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
+                                  const std::span<const TextureBarrierInfo> infos) const
+{
+   std::vector<VkImageMemoryBarrier> barriers{};
+   barriers.resize(infos.size());
+
+   size_t index{};
+   for (const auto &info : infos) {
+      auto &barrier = barriers[index];
+      ++index;
+
+      assert(barrier.image == nullptr);
+
+      barrier.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+      barrier.oldLayout                       = vulkan::to_vulkan_image_layout(info.sourceState);
+      barrier.newLayout                       = vulkan::to_vulkan_image_layout(info.targetState);
+      barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+      barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
+      barrier.image                           = info.texture->vulkan_image();
+      barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+      barrier.subresourceRange.baseMipLevel   = info.baseMipLevel;
+      barrier.subresourceRange.levelCount     = info.mipLevelCount;
+      barrier.subresourceRange.baseArrayLayer = 0;
+      barrier.subresourceRange.layerCount     = 1;
+      barrier.srcAccessMask                   = vulkan::to_vulkan_access_flags(info.sourceState);
+      barrier.dstAccessMask                   = vulkan::to_vulkan_access_flags(info.targetState);
+   }
+
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
+                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, 0, nullptr,
+                        barriers.size(), barriers.data());
+}
+
+void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
+                                  const TextureBarrierInfo &info) const
+{
+   this->texture_barrier(sourceStage, targetStage, std::span(&info, &info + 1));
+}
+
+void CommandList::blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion, const Texture &targetTex, const TextureRegion &targetRegion) const
+{
+      VkImageBlit blit{};
+      blit.srcOffsets[0]                 = {static_cast<int>(sourceRegion.offsetMin.x), static_cast<int>(sourceRegion.offsetMin.y), 0};
+      blit.srcOffsets[1]                 = {static_cast<int>(sourceRegion.offsetMax.x), static_cast<int>(sourceRegion.offsetMax.y), 1};
+      blit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+      blit.srcSubresource.mipLevel       = sourceRegion.mipLevel;
+      blit.srcSubresource.baseArrayLayer = 0;
+      blit.srcSubresource.layerCount     = 1;
+      blit.dstOffsets[0]                 = {static_cast<int>(targetRegion.offsetMin.x), static_cast<int>(targetRegion.offsetMin.y), 0};
+      blit.dstOffsets[1]                 = {static_cast<int>(targetRegion.offsetMax.x), static_cast<int>(targetRegion.offsetMax.y), 1};
+      blit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+      blit.dstSubresource.mipLevel       = targetRegion.mipLevel;
+      blit.dstSubresource.baseArrayLayer = 0;
+      blit.dstSubresource.layerCount     = 1;
+
+      vkCmdBlitImage(m_commandBuffer, sourceTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                  targetTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 }
 
 uint64_t CommandList::triangle_count() const
@@ -243,4 +266,4 @@ Status CommandList::reset() const
    return Status::Success;
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

@@ -1,5 +1,7 @@
 version: 1
 resources:
+  - name: "board.tex"
+    source: "texture/board.png"
   - name: "earth.tex"
     source: "texture/earth.png"
   - name: "skybox.tex"

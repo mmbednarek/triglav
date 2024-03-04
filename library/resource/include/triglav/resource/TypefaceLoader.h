@@ -13,8 +13,7 @@ namespace triglav::resource {
 template<>
 struct Loader<ResourceType::Typeface>
 {
-   constexpr static bool is_gpu_resource{false};
-   constexpr static bool is_font_resource{true};
+   constexpr static ResourceLoadType type{ResourceLoadType::Font};
 
    static font::Typeface load_font(const font::FontManger &manager, std::string_view path);
 };

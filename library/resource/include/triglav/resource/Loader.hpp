@@ -4,10 +4,18 @@
 
 namespace triglav::resource {
 
+enum class ResourceLoadType
+{
+  None,
+  Static,
+  Font,
+  Graphics
+};
+
 template<ResourceType CResourceType>
 struct Loader
 {
-  constexpr static bool is_gpu_resource{false};
+  constexpr static ResourceLoadType type{ResourceLoadType::None};
 };
 
 }// namespace triglav::resource

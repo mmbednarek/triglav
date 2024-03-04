@@ -12,8 +12,7 @@ namespace triglav::resource {
 template<>
 struct Loader<ResourceType::Level>
 {
-   constexpr static bool is_gpu_resource{false};
-   constexpr static bool is_font_resource{false};
+  constexpr static ResourceLoadType type{ResourceLoadType::Static};
 
    static world::Level load(std::string_view path);
 };

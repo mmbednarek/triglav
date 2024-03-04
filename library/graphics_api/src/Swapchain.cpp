@@ -214,7 +214,7 @@ Status Swapchain::present(const Semaphore &semaphore, const uint32_t framebuffer
    presentInfo.pImageIndices      = imageIndices.data();
    presentInfo.pResults           = nullptr;
 
-   if (vkQueuePresentKHR(m_presentQueue, &presentInfo) != VK_SUCCESS) {
+   if (auto status = vkQueuePresentKHR(m_presentQueue, &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
       return Status::UnsupportedDevice;
    }
 

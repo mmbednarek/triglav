@@ -4,6 +4,7 @@ resource_sources = files([
                              'src/ResourceManager.cpp',
                              'src/TextureLoader.cpp',
                              'src/ShaderLoader.cpp',
+                             'src/StaticResources.cpp',
                              'src/ModelLoader.cpp',
                              'src/TypefaceLoader.cpp',
                          ])

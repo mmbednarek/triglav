@@ -44,8 +44,11 @@ class CommandList
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer &buffer) const;
    void copy_buffer(const Buffer &source, const Buffer &dest) const;
-   void copy_buffer_to_texture(const Buffer &source, const Texture &destination) const;
-   void push_constant_ptr(ShaderStage stage, const void *ptr, size_t size, size_t offset = 0) const;
+   void copy_buffer_to_texture(const Buffer &source, const Texture &destination, int mipLevel = 0) const;
+   void push_constant_ptr(PipelineStage stage, const void *ptr, size_t size, size_t offset = 0) const;
+   void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
+   void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
+   void blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion, const Texture &targetTex, const TextureRegion &targetRegion) const;
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray &array) const
@@ -60,7 +63,7 @@ class CommandList
    }
 
    template<typename TPushConstant>
-   void push_constant(const ShaderStage stage, TPushConstant &pushConstant) const
+   void push_constant(const PipelineStage stage, TPushConstant &pushConstant) const
    {
       this->push_constant_ptr(stage, &pushConstant, sizeof(TPushConstant));
    }

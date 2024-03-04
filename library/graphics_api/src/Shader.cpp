@@ -2,7 +2,7 @@
 
 namespace triglav::graphics_api
 {
-    Shader::Shader(std::string name, const ShaderStage stage, vulkan::ShaderModule module) :
+    Shader::Shader(std::string name, const PipelineStage stage, vulkan::ShaderModule module) :
         m_name(std::move(name)),
         m_stage(stage),
         m_module(std::move(module))
@@ -19,7 +19,7 @@ namespace triglav::graphics_api
         return m_name;
     }
 
-    ShaderStage Shader::stage() const
+    PipelineStage Shader::stage() const
     {
         return m_stage;
     }

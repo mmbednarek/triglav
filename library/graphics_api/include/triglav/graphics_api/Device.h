@@ -62,6 +62,8 @@ struct RenderPassCreateInfo
    std::vector<ColorFormat> color_image_formats;
 };
 
+constexpr auto g_maxMipMaps = 0;
+
 class Device
 {
  public:
@@ -77,7 +79,7 @@ class Device
                                                     const Resolution &resolution,
                                                     Swapchain *oldSwapchain = nullptr);
    [[nodiscard]] Result<RenderPass> create_render_pass(IRenderTarget &renderTarget);
-   [[nodiscard]] Result<Shader> create_shader(ShaderStage stage, std::string_view entrypoint,
+   [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint,
                                               std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list() const;
    [[nodiscard]] Result<Buffer> create_buffer(BufferPurpose purpose, uint64_t size);
@@ -85,8 +87,9 @@ class Device
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
                                                 TextureType type        = TextureType::SampledImage,
-                                                SampleCount sampleCount = SampleCount::Single) const;
-   [[nodiscard]] Result<Sampler> create_sampler(bool enableAnisotropy);
+                                                SampleCount sampleCount = SampleCount::Single,
+                                                int mipCount = 1) const;
+   [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo& info);
    [[nodiscard]] Result<DepthRenderTarget> create_depth_render_target(const ColorFormat &depthFormat,
                                                                       const Resolution &resolution) const;
    [[nodiscard]] Result<TextureRenderTarget> create_texture_render_target(const Resolution &resolution) const;

@@ -43,18 +43,18 @@ ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderP
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::ShaderStage::Vertex)
+                                        graphics_api::PipelineStage::VertexShader)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::ShaderStage::Fragment)
+                                        graphics_api::PipelineStage::FragmentShader)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::ShaderStage::Fragment)
+                                        graphics_api::PipelineStage::FragmentShader)
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::ShaderStage::Fragment)
+                                        graphics_api::PipelineStage::FragmentShader)
                     .enable_depth_test(true)
                     .enable_blending(false)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 100, 100))),
-    m_sampler(checkResult(device.create_sampler(true)))
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod8_aniso.sampler"_name))
 {
 }
 

@@ -4,7 +4,10 @@
 #include <cstdint>
 #include <expected>
 #include <string>
+#include <utility>
 #include <variant>
+
+#include <glm/vec2.hpp>
 
 namespace triglav::graphics_api {
 
@@ -70,28 +73,50 @@ enum class ColorSpace
    HDR
 };
 
-enum class ShaderStage : uint32_t
+enum class PipelineStage : uint32_t
 {
-   None     = 0,
-   Vertex   = (1 << 0),
-   Fragment = (1 << 1),
+   None           = 0,
+   Entrypoint  = (1 << 0),
+   VertexShader   = (1 << 1),
+   FragmentShader = (1 << 2),
+   Transfer       = (1 << 3),
 };
 
-using ShaderStageFlags = std::underlying_type_t<ShaderStage>;
-
-constexpr ShaderStageFlags operator|(ShaderStage lhs, ShaderStage rhs)
+struct PipelineStageFlags
 {
-   return static_cast<ShaderStageFlags>(lhs) | static_cast<ShaderStageFlags>(rhs);
-}
+   using UnderlayingType = std::underlying_type_t<PipelineStage>;
 
-constexpr ShaderStageFlags operator|(const ShaderStageFlags lhs, ShaderStage rhs)
-{
-   return lhs | static_cast<ShaderStageFlags>(rhs);
-}
+   UnderlayingType value;
 
-constexpr bool operator&(const ShaderStageFlags lhs, ShaderStage rhs)
+   constexpr PipelineStageFlags(const UnderlayingType value) :
+       value(value)
+   {
+   }
+
+   constexpr PipelineStageFlags(const PipelineStage value) :
+       value(static_cast<UnderlayingType>(value))
+   {
+   }
+
+   constexpr bool operator&(PipelineStage rhs) const
+   {
+      return (this->value & static_cast<UnderlayingType>(rhs)) != 0;
+   }
+
+   constexpr PipelineStageFlags operator|(PipelineStage rhs) const
+   {
+      return PipelineStageFlags{this->value | static_cast<UnderlayingType>(rhs)};
+   }
+
+   constexpr PipelineStageFlags operator|(const PipelineStageFlags rhs) const
+   {
+      return PipelineStageFlags{this->value | rhs.value};
+   }
+};
+
+constexpr PipelineStageFlags operator|(const PipelineStage lhs, const PipelineStage rhs)
 {
-   return (lhs & static_cast<ShaderStageFlags>(rhs)) != 0;
+   return PipelineStageFlags{std::to_underlying(lhs) | std::to_underlying(rhs)};
 }
 
 struct ColorFormat
@@ -159,6 +184,32 @@ enum class TextureType
    ColorAttachment,
 };
 
+enum class TextureState
+{
+   Undefined,
+   TransferSource,
+   TransferDestination,
+   ShaderRead,
+};
+
+class Texture;
+
+struct TextureBarrierInfo
+{
+   const Texture *texture{};
+   TextureState sourceState;
+   TextureState targetState;
+   int baseMipLevel{};
+   int mipLevelCount{};
+};
+
+struct TextureRegion
+{
+   glm::vec2 offsetMin{};
+   glm::vec2 offsetMax{};
+   int mipLevel{};
+};
+
 enum class SampleCount : uint32_t
 {
    Single     = (1 << 0),
@@ -213,6 +264,34 @@ enum class AttachmentLifetime
    IgnoreDiscard,
 };
 
+enum class FilterType
+{
+   Linear,
+   NearestNeighbour,
+};
+
+enum class TextureAddressMode
+{
+   Repeat,
+   Mirror,
+   Clamp,
+   Border,
+   MirrorOnce,
+};
+
+struct SamplerInfo
+{
+   FilterType minFilter{};
+   FilterType magFilter{};
+   TextureAddressMode addressU{};
+   TextureAddressMode addressV{};
+   TextureAddressMode addressW{};
+   bool enableAnisotropy{};
+   float mipBias{};
+   float minLod{};
+   float maxLod{};
+};
+
 template<typename T>
 using Result = std::expected<T, Status>;
 
@@ -250,7 +329,7 @@ inline void check_status(const Status status, const std::string_view message)
    }
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api
 
 #define GAPI_PARENS ()
 
@@ -267,13 +346,13 @@ inline void check_status(const Status status, const std::string_view message)
 
 #define GAPI_PREPEND_FORMAT_PART(value) ::triglav::graphics_api::ColorFormatPart::value,
 
-#define GAPI_FORMAT(fmt_order, ...)                                \
+#define GAPI_FORMAT(fmt_order, ...)                                         \
    ::triglav::graphics_api::ColorFormat                                     \
-   {                                                               \
+   {                                                                        \
       .order = ::triglav::graphics_api::ColorFormatOrder::fmt_order, .parts \
-      {                                                            \
-         GAPI_FOR_EACH(GAPI_PREPEND_FORMAT_PART, __VA_ARGS__)      \
-      }                                                            \
+      {                                                                     \
+         GAPI_FOR_EACH(GAPI_PREPEND_FORMAT_PART, __VA_ARGS__)               \
+      }                                                                     \
    }
 
 #define GAPI_CHECK(stmt)        ::triglav::graphics_api::check_result(stmt, #stmt)

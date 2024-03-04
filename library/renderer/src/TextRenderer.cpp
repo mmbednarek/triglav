@@ -34,15 +34,15 @@ TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderPas
                     .end_vertex_layout()
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::ShaderStage::Vertex)
+                                        graphics_api::PipelineStage::VertexShader)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::ShaderStage::Fragment)
-                    .push_constant(graphics_api::ShaderStage::Fragment, sizeof(TextColorConstant))
+                                        graphics_api::PipelineStage::FragmentShader)
+                    .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(TextColorConstant))
                     .enable_depth_test(false)
                     .vertex_topology(graphics_api::VertexTopology::TriangleList)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 20, 20))),
-    m_sampler(checkResult(m_device.create_sampler(false)))
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
 {
 }
 
@@ -101,7 +101,7 @@ void TextRenderer::draw_text_object(const graphics_api::CommandList &cmdList, co
    const auto [viewportWidth, viewportHeight] = m_resolution;
 
    TextColorConstant constant{color};
-   cmdList.push_constant(graphics_api::ShaderStage::Fragment, constant);
+   cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, constant);
 
    // const auto transX =
    //         (position.x / static_cast<float>(viewportWidth) - 0.5f * static_cast<float>(viewportWidth));

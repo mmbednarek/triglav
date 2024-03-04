@@ -26,15 +26,15 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                    .end_vertex_layout()
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .enable_depth_test(false)
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
-                                   .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstants))
+                                   .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstants))
                                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 2, 1))),
-    m_sampler(checkResult(device.create_sampler(false))),
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
     m_descriptors(checkResult(m_descriptorPool.allocate_array(1)))
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
@@ -57,7 +57,7 @@ void PostProcessingRenderer::draw(graphics_api::CommandList &cmdList, const bool
    PushConstants constants{
            .enableFXAA = enableFXAA,
    };
-   cmdList.push_constant(graphics_api::ShaderStage::Fragment, constants);
+   cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, constants);
    cmdList.draw_primitives(4, 0);
 }
 

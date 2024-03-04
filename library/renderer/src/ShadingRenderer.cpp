@@ -29,23 +29,23 @@ ShadingRenderer::ShadingRenderer(
                                    .end_vertex_layout()
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::ShaderStage::Fragment)
-                                   .push_constant(graphics_api::ShaderStage::Fragment, sizeof(PushConstant))
+                                                       graphics_api::PipelineStage::FragmentShader)
+                                   .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstant))
                                    .enable_depth_test(false)
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 5, 1))),
-    m_sampler(checkResult(device.create_sampler(false))),
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
     m_descriptors(checkResult(m_descriptorPool.allocate_array(1))),
     m_uniformBuffer(m_device)
 {
@@ -85,7 +85,7 @@ void ShadingRenderer::draw(graphics_api::CommandList &cmdList, const glm::vec3 &
            .lightPosition = lightPosition,
            .enableSSAO    = ssaoEnabled,
    };
-   cmdList.push_constant(graphics_api::ShaderStage::Fragment, pushConstant);
+   cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstant);
 
    cmdList.draw_primitives(4, 0);
 }

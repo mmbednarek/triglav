@@ -43,7 +43,7 @@ class ShadingRenderer
    graphics_api::Device &m_device;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descriptorPool;
-   graphics_api::Sampler m_sampler;
+   graphics_api::Sampler& m_sampler;
    graphics_api::DescriptorArray m_descriptors;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
 };

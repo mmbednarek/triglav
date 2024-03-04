@@ -21,9 +21,9 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api:
                                    .vertex_attribute(GAPI_FORMAT(RG, Float32), 0)
                                    .end_vertex_layout()
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::ShaderStage::Vertex)
+                                                       graphics_api::PipelineStage::VertexShader)
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::ShaderStage::Fragment)
+                                                       graphics_api::PipelineStage::FragmentShader)
                                    .enable_depth_test(false)
                                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 1, 20)))

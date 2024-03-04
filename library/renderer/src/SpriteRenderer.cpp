@@ -35,14 +35,14 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
                     .vertex_shader(resourceManager.get<ResourceType::VertexShader>("sprite.vshader"_name))
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::ShaderStage::Vertex)
+                                        graphics_api::PipelineStage::VertexShader)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::ShaderStage::Fragment)
+                                        graphics_api::PipelineStage::FragmentShader)
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                     .enable_depth_test(false)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40))),
-    m_sampler(checkResult(device.create_sampler(true)))
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
 {
 }
 

@@ -16,7 +16,12 @@ Result<VkImageLayout> to_vulkan_image_layout(AttachmentType type, AttachmentLife
 std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(AttachmentLifetime lifetime);
 
 
-VkShaderStageFlagBits to_vulkan_shader_stage(ShaderStage stage);
-VkShaderStageFlags to_vulkan_shader_stage_flags(ShaderStageFlags flags);
+VkShaderStageFlagBits to_vulkan_shader_stage(PipelineStage stage);
+VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags);
+VkPipelineStageFlags to_vulkan_pipeline_stage_flags(PipelineStageFlags flags);
 VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType);
+VkImageLayout to_vulkan_image_layout(TextureState resourceState);
+VkAccessFlags to_vulkan_access_flags(TextureState resourceState);
+VkFilter to_vulkan_filter(FilterType filterType);
+VkSamplerAddressMode to_vulkan_sampler_address_mode(TextureAddressMode mode);
 }// namespace graphics_api::vulkan

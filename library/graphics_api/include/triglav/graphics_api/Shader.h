@@ -11,15 +11,15 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(ShaderModule, Device)
 class Shader
 {
  public:
-   Shader(std::string name, ShaderStage stage, vulkan::ShaderModule module);
+   Shader(std::string name, PipelineStage stage, vulkan::ShaderModule module);
 
    [[nodiscard]] const vulkan::ShaderModule &vulkan_module() const;
    [[nodiscard]] std::string_view name() const;
-   [[nodiscard]] ShaderStage stage() const;
+   [[nodiscard]] PipelineStage stage() const;
 
  private:
    std::string m_name;
-   ShaderStage m_stage;
+   PipelineStage m_stage;
    vulkan::ShaderModule m_module;
 };
 

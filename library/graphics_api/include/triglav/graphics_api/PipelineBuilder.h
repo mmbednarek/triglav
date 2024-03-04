@@ -20,8 +20,8 @@ class PipelineBuilder
    PipelineBuilder &vertex_shader(const Shader &shader);
    PipelineBuilder &vertex_attribute(const ColorFormat &format, size_t offset);
    PipelineBuilder &end_vertex_layout();
-   PipelineBuilder &descriptor_binding(DescriptorType descriptorType, ShaderStage shaderStage);
-   PipelineBuilder &push_constant(ShaderStage shaderStage, size_t size, size_t offset = 0);
+   PipelineBuilder &descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
+   PipelineBuilder &push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
    PipelineBuilder &enable_depth_test(bool enabled);
    PipelineBuilder &enable_blending(bool enabled);
    PipelineBuilder &vertex_topology(VertexTopology topology);

@@ -14,7 +14,7 @@ PipelineBuilder::PipelineBuilder(Device &device, RenderPass &renderPass) :
 
 PipelineBuilder &PipelineBuilder::fragment_shader(const Shader &shader)
 {
-   assert(shader.stage() == ShaderStage::Fragment);
+   assert(shader.stage() == PipelineStage::FragmentShader);
 
    VkPipelineShaderStageCreateInfo info{};
    info.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -27,7 +27,7 @@ PipelineBuilder &PipelineBuilder::fragment_shader(const Shader &shader)
 
 PipelineBuilder &PipelineBuilder::vertex_shader(const Shader &shader)
 {
-   assert(shader.stage() == ShaderStage::Vertex);
+   assert(shader.stage() == PipelineStage::VertexShader);
 
    VkPipelineShaderStageCreateInfo info{};
    info.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -60,13 +60,13 @@ PipelineBuilder &PipelineBuilder::end_vertex_layout()
 }
 
 PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descriptorType,
-                                                     const ShaderStage shaderStage)
+                                                     const PipelineStage shaderStage)
 {
    VkDescriptorSetLayoutBinding layoutBinding{};
    layoutBinding.descriptorCount = 1;
    layoutBinding.binding         = m_vulkanDescriptorBindings.size();
    layoutBinding.descriptorType  = vulkan::to_vulkan_descriptor_type(descriptorType);
-   layoutBinding.stageFlags      = vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | shaderStage);
+   layoutBinding.stageFlags      = vulkan::to_vulkan_shader_stage_flags(PipelineStage::None | shaderStage);
    m_vulkanDescriptorBindings.emplace_back(layoutBinding);
 
    /*
@@ -84,12 +84,12 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::push_constant(const ShaderStage shaderStage, size_t size, size_t offset)
+PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, size_t size, size_t offset)
 {
    VkPushConstantRange range;
    range.offset     = offset;
    range.size       = size;
-   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(ShaderStage::None | shaderStage);
+   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(PipelineStage::None | shaderStage);
    m_pushConstantRanges.emplace_back(range);
 
    return *this;
