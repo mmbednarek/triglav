@@ -11,6 +11,7 @@
 #include "Synchronization.h"
 #include "Texture.h"
 #include "TextureRenderTarget.h"
+#include "QueueManager.h"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
@@ -49,7 +50,9 @@ using PhysicalDevice = VkPhysicalDevice;
 struct QueueFamilyIndices
 {
    uint32_t graphicsQueue;
+   uint32_t graphicsQueueCount;
    uint32_t presentQueue;
+   uint32_t presentQueueCount;
 };
 }// namespace vulkan
 
@@ -72,7 +75,7 @@ class Device
           vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
           vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
-          const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool);
+          std::vector<QueueFamilyInfo>&& queueFamilyInfos);
 
    [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
                                                     ColorFormat depthFormat, SampleCount sampleCount,
@@ -81,7 +84,7 @@ class Device
    [[nodiscard]] Result<RenderPass> create_render_pass(IRenderTarget &renderTarget);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint,
                                               std::span<const char> code);
-   [[nodiscard]] Result<CommandList> create_command_list() const;
+   [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
    [[nodiscard]] Result<Buffer> create_buffer(BufferPurpose purpose, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
@@ -112,9 +115,8 @@ class Device
    vulkan::SurfaceKHR m_surface;
    vulkan::Device m_device;
    vulkan::PhysicalDevice m_physicalDevice;
-   vulkan::QueueFamilyIndices m_queueFamilies;
-   vulkan::CommandPool m_commandPool;
-   VkQueue m_graphicsQueue;
+   std::vector<QueueFamilyInfo> m_queueFamilyInfos;
+   QueueManager m_queueManager;
 };
 
 using DeviceUPtr = std::unique_ptr<Device>;

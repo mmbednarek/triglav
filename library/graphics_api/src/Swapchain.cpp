@@ -4,16 +4,19 @@
 #include "Synchronization.h"
 #include "vulkan/Util.h"
 
+#include <QueueManager.h>
+
 namespace triglav::graphics_api {
 
 constexpr size_t g_colorAttachmentIndex   = 0;
 constexpr size_t g_depthAttachmentIndex   = 1;
 constexpr size_t g_resolveAttachmentIndex = 2;
 
-Swapchain::Swapchain(const ColorFormat &colorFormat, const ColorFormat &depthFormat,
+Swapchain::Swapchain(QueueManager &queueManager, const ColorFormat &colorFormat, const ColorFormat &depthFormat,
                      const SampleCount sampleCount, const Resolution &resolution, Texture depthAttachment,
                      std::optional<Texture> colorAttachment, std::vector<vulkan::ImageView> imageViews,
-                     VkQueue presentQueue, vulkan::SwapchainKHR swapchain) :
+                     vulkan::SwapchainKHR swapchain) :
+    m_queueManager(queueManager),
     m_colorFormat(colorFormat),
     m_depthFormat(depthFormat),
     m_sampleCount(sampleCount),
@@ -21,7 +24,6 @@ Swapchain::Swapchain(const ColorFormat &colorFormat, const ColorFormat &depthFor
     m_depthAttachment(std::move(depthAttachment)),
     m_colorAttachment(std::move(colorAttachment)),
     m_imageViews(std::move(imageViews)),
-    m_presentQueue(presentQueue),
     m_swapchain(std::move(swapchain))
 {
 }
@@ -214,7 +216,7 @@ Status Swapchain::present(const Semaphore &semaphore, const uint32_t framebuffer
    presentInfo.pImageIndices      = imageIndices.data();
    presentInfo.pResults           = nullptr;
 
-   if (auto status = vkQueuePresentKHR(m_presentQueue, &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
+   if (auto status = vkQueuePresentKHR(m_queueManager.get().next_queue(WorkType::Presentation), &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
       return Status::UnsupportedDevice;
    }
 

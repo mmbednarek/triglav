@@ -59,14 +59,14 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
       mappedMemory->write(pixels, bufferSize);
    }
 
-   auto oneTimeCommands = device.create_command_list();
+   auto oneTimeCommands = device.create_command_list(WorkType::Graphics);
    if (not oneTimeCommands.has_value())
       return oneTimeCommands.error();
 
    if (const auto res = oneTimeCommands->begin(SubmitType::OneTime); res != Status::Success)
       return res;
 
-   TextureBarrierInfo transferBarrier{
+   const TextureBarrierInfo transferBarrier{
            .texture       = this,
            .sourceState   = TextureState::Undefined,
            .targetState   = TextureState::TransferDestination,
@@ -78,7 +78,7 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
    oneTimeCommands->copy_buffer_to_texture(*transferBuffer, *this, 0);
 
    if (m_mipCount == 1) {
-      TextureBarrierInfo fragmentShaderBarrier{
+      const TextureBarrierInfo fragmentShaderBarrier{
               .texture       = this,
               .sourceState   = TextureState::TransferDestination,
               .targetState   = TextureState::ShaderRead,

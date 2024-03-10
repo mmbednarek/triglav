@@ -17,8 +17,8 @@
 
 #undef max
 
-using triglav::graphics_api::BufferPurpose;
 using triglav::desktop::ISurface;
+using triglav::graphics_api::BufferPurpose;
 
 namespace {
 bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
@@ -111,7 +111,7 @@ Device::Device(vulkan::Instance instance,
                vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
                vulkan::SurfaceKHR surface, vulkan::Device device, const VkPhysicalDevice physicalDevice,
-               const vulkan::QueueFamilyIndices &queueFamilies, vulkan::CommandPool commandPool) :
+               std::vector<QueueFamilyInfo> &&queueFamilyInfos) :
     m_instance(std::move(instance)),
 #if GAPI_ENABLE_VALIDATION
     m_debugMessenger(std::move(debugMessenger)),
@@ -119,10 +119,9 @@ Device::Device(vulkan::Instance instance,
     m_surface(std::move(surface)),
     m_device(std::move(device)),
     m_physicalDevice(physicalDevice),
-    m_queueFamilies(queueFamilies),
-    m_commandPool(std::move(commandPool))
+    m_queueFamilyInfos{std::move(queueFamilyInfos)},
+    m_queueManager(*this, m_queueFamilyInfos)
 {
-   vkGetDeviceQueue(*m_device, m_queueFamilies.graphicsQueue, 0, &m_graphicsQueue);
 }
 
 namespace {
@@ -178,8 +177,11 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
    swapchainInfo.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    swapchainInfo.clipped          = true;
 
-   const std::array queueFamilyIndices{m_queueFamilies.graphicsQueue, m_queueFamilies.presentQueue};
-   if (m_queueFamilies.graphicsQueue != m_queueFamilies.presentQueue) {
+   const std::array queueFamilyIndices{
+           m_queueManager.queue_index(WorkType::Graphics),
+           m_queueManager.queue_index(WorkType::Presentation),
+   };
+   if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
       swapchainInfo.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
       swapchainInfo.queueFamilyIndexCount = queueFamilyIndices.size();
       swapchainInfo.pQueueFamilyIndices   = queueFamilyIndices.data();
@@ -237,11 +239,8 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
       swapchainImageViews.emplace_back(std::move(imageView));
    }
 
-   VkQueue presentQueue;
-   vkGetDeviceQueue(*m_device, m_queueFamilies.presentQueue, 0, &presentQueue);
-
-   return Swapchain(colorFormat, depthFormat, sampleCount, resolution, std::move(*depthAttachment),
-                    std::move(colorAttachment), std::move(swapchainImageViews), presentQueue,
+   return Swapchain(m_queueManager, colorFormat, depthFormat, sampleCount, resolution, std::move(*depthAttachment),
+                    std::move(colorAttachment), std::move(swapchainImageViews),
                     std::move(swapchain));
 }
 
@@ -288,20 +287,9 @@ Result<Shader> Device::create_shader(const PipelineStage stage, const std::strin
    return Shader(std::string{entrypoint}, stage, std::move(shaderModule));
 }
 
-Result<CommandList> Device::create_command_list() const
+Result<CommandList> Device::create_command_list(const WorkTypeFlags flags) const
 {
-   VkCommandBufferAllocateInfo allocateInfo{};
-   allocateInfo.sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocateInfo.commandPool        = *m_commandPool;
-   allocateInfo.level              = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocateInfo.commandBufferCount = 1;
-
-   VkCommandBuffer commandBuffer;
-   if (vkAllocateCommandBuffers(*m_device, &allocateInfo, &commandBuffer) != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
-   return CommandList(commandBuffer, *m_device, *m_commandPool);
+   return m_queueManager.create_command_list(flags);
 }
 
 Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t size)
@@ -384,7 +372,8 @@ VkImageTiling to_vulkan_image_tiling(const TextureType type)
 VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
 {
    switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   case TextureType::SampledImage:
+      return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
    case TextureType::SampledDepthBuffer:
       return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -492,9 +481,9 @@ Result<Sampler> Device::create_sampler(const SamplerInfo &info)
    samplerInfo.compareEnable           = false;
    samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
    samplerInfo.mipmapMode              = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-   samplerInfo.minLod = info.minLod;
-   samplerInfo.maxLod = info.maxLod;
-   samplerInfo.mipLodBias = info.mipBias;
+   samplerInfo.minLod                  = info.minLod;
+   samplerInfo.maxLod                  = info.maxLod;
+   samplerInfo.mipLodBias              = info.mipBias;
 
    vulkan::Sampler sampler(*m_device);
    if (sampler.construct(&samplerInfo) != VK_SUCCESS) {
@@ -546,7 +535,8 @@ Status Device::submit_command_list(const CommandList &commandList, const Semapho
    submitInfo.signalSemaphoreCount = signalSemaphores.size();
    submitInfo.pSignalSemaphores    = signalSemaphores.data();
 
-   if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, fence.vulkan_fence()) != VK_SUCCESS) {
+   if (vkQueueSubmit(m_queueManager.next_queue(commandList.work_types()), 1, &submitInfo, fence.vulkan_fence()) !=
+       VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
@@ -562,8 +552,9 @@ Status Device::submit_command_list_one_time(const CommandList &commandList) cons
    submitInfo.commandBufferCount = 1;
    submitInfo.pCommandBuffers    = &vulkanCommandList;
 
-   vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, nullptr);
-   vkQueueWaitIdle(m_graphicsQueue);
+   const auto queue = m_queueManager.next_queue(commandList.work_types());
+   vkQueueSubmit(queue, 1, &submitInfo, nullptr);
+   vkQueueWaitIdle(queue);
 
    return Status::Success;
 }
@@ -667,38 +658,33 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
 
    auto queueFamilies = vulkan::get_queue_family_properties(*pickedDevice);
 
-   auto graphicsQueue = std::find_if(queueFamilies.begin(), queueFamilies.end(), graphics_family_predicate);
-   if (graphicsQueue == queueFamilies.end()) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
+   std::vector<QueueFamilyInfo> queueFamilyInfos{};
+   queueFamilyInfos.reserve(queueFamilies.size());
 
-   vulkan::QueueFamilyIndices queueFamilyIndices{
-           .graphicsQueue = static_cast<uint32_t>(graphicsQueue - queueFamilies.begin()),
-   };
-
-   for (uint32_t i{0}; i < queueFamilies.size(); ++i) {
-      VkBool32 supported;
-      if (vkGetPhysicalDeviceSurfaceSupportKHR(*pickedDevice, i, *vulkan_surface, &supported) != VK_SUCCESS)
+   u32 queueIndex{};
+   for (const auto &family : queueFamilies) {
+      VkBool32 canPresent{};
+      if (vkGetPhysicalDeviceSurfaceSupportKHR(*pickedDevice, queueIndex, *vulkan_surface, &canPresent) != VK_SUCCESS)
          return std::unexpected(Status::UnsupportedDevice);
 
-      if (supported) {
-         queueFamilyIndices.presentQueue = i;
-         if (i != queueFamilyIndices.graphicsQueue) {
-            break;
-         }
+      QueueFamilyInfo info{};
+      info.index      = queueIndex;
+      info.queueCount = family.queueCount;
+      info.flags      = vulkan::vulkan_queue_flags_to_work_type_flags(family.queueFlags, canPresent);
+
+      if (info.flags != WorkType::None) {
+         queueFamilyInfos.emplace_back(info);
       }
+
+      ++queueIndex;
    }
 
-   std::set<uint32_t> uniqueFamilies;
-   uniqueFamilies.emplace(queueFamilyIndices.graphicsQueue);
-   uniqueFamilies.emplace(queueFamilyIndices.presentQueue);
-
    std::vector<VkDeviceQueueCreateInfo> deviceQueueCreateInfos;
-   deviceQueueCreateInfos.resize(uniqueFamilies.size());
+   deviceQueueCreateInfos.resize(queueFamilyInfos.size());
 
-   uint32_t maxQueues = 0;
-   for (const auto index : uniqueFamilies) {
-      const auto queueCount = queueFamilies[index].queueCount;
+   u32 maxQueues = 0;
+   for (const auto &info : queueFamilyInfos) {
+      const auto queueCount = info.queueCount;
       if (queueCount > maxQueues) {
          maxQueues = queueCount;
       }
@@ -708,15 +694,14 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
    queuePriorities.resize(maxQueues);
    std::ranges::fill(queuePriorities, 1.0f);
 
-   std::transform(uniqueFamilies.begin(), uniqueFamilies.end(), deviceQueueCreateInfos.begin(),
-                  [&queuePriorities, &queueFamilies](uint32_t index) {
-                     VkDeviceQueueCreateInfo info{};
-                     info.sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-                     info.queueCount       = queueFamilies[index].queueCount;
-                     info.queueFamilyIndex = index;
-                     info.pQueuePriorities = queuePriorities.data();
-                     return info;
-                  });
+   auto deviceQueueCreateInfoIt = deviceQueueCreateInfos.begin();
+   for (const auto &info : queueFamilyInfos) {
+      deviceQueueCreateInfoIt->sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+      deviceQueueCreateInfoIt->queueCount       = info.queueCount;
+      deviceQueueCreateInfoIt->queueFamilyIndex = info.index;
+      deviceQueueCreateInfoIt->pQueuePriorities = queuePriorities.data();
+      ++deviceQueueCreateInfoIt;
+   }
 
    VkPhysicalDeviceFeatures deviceFeatures{
            .sampleRateShading = true,
@@ -739,22 +724,12 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   VkCommandPoolCreateInfo commandPoolInfo{};
-   commandPoolInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-   commandPoolInfo.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-   commandPoolInfo.queueFamilyIndex = queueFamilyIndices.graphicsQueue;
-
-   vulkan::CommandPool commandPool(*device);
-   if (commandPool.construct(&commandPoolInfo) != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
    return std::make_unique<Device>(std::move(instance),
 #if GAPI_ENABLE_VALIDATION
                                    std::move(debugMessenger),
 #endif
                                    std::move(vulkan_surface), std::move(device), *pickedDevice,
-                                   queueFamilyIndices, std::move(commandPool));
+                                   std::move(queueFamilyInfos));
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

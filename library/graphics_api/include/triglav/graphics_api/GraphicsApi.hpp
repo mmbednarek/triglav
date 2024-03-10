@@ -3,11 +3,13 @@
 #include <array>
 #include <cstdint>
 #include <expected>
+#include <glm/vec2.hpp>
 #include <string>
 #include <utility>
 #include <variant>
 
-#include <glm/vec2.hpp>
+#include "triglav/EnumFlags.hpp"
+#include "triglav/Int.hpp"
 
 namespace triglav::graphics_api {
 
@@ -76,48 +78,13 @@ enum class ColorSpace
 enum class PipelineStage : uint32_t
 {
    None           = 0,
-   Entrypoint  = (1 << 0),
+   Entrypoint     = (1 << 0),
    VertexShader   = (1 << 1),
    FragmentShader = (1 << 2),
    Transfer       = (1 << 3),
 };
 
-struct PipelineStageFlags
-{
-   using UnderlayingType = std::underlying_type_t<PipelineStage>;
-
-   UnderlayingType value;
-
-   constexpr PipelineStageFlags(const UnderlayingType value) :
-       value(value)
-   {
-   }
-
-   constexpr PipelineStageFlags(const PipelineStage value) :
-       value(static_cast<UnderlayingType>(value))
-   {
-   }
-
-   constexpr bool operator&(PipelineStage rhs) const
-   {
-      return (this->value & static_cast<UnderlayingType>(rhs)) != 0;
-   }
-
-   constexpr PipelineStageFlags operator|(PipelineStage rhs) const
-   {
-      return PipelineStageFlags{this->value | static_cast<UnderlayingType>(rhs)};
-   }
-
-   constexpr PipelineStageFlags operator|(const PipelineStageFlags rhs) const
-   {
-      return PipelineStageFlags{this->value | rhs.value};
-   }
-};
-
-constexpr PipelineStageFlags operator|(const PipelineStage lhs, const PipelineStage rhs)
-{
-   return PipelineStageFlags{std::to_underlying(lhs) | std::to_underlying(rhs)};
-}
+TRIGLAV_DECL_FLAGS(PipelineStage)
 
 struct ColorFormat
 {
@@ -291,6 +258,17 @@ struct SamplerInfo
    float minLod{};
    float maxLod{};
 };
+
+enum class WorkType : u32
+{
+   None         = 0,
+   Graphics     = (1 << 0),
+   Transfer     = (1 << 1),
+   Compute      = (1 << 2),
+   Presentation = (1 << 3),
+};
+
+TRIGLAV_DECL_FLAGS(WorkType)
 
 template<typename T>
 using Result = std::expected<T, Status>;

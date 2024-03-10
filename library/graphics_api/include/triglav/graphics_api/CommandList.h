@@ -21,7 +21,7 @@ enum class SubmitType
 class CommandList
 {
  public:
-   CommandList(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool);
+   CommandList(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, WorkTypeFlags workTypes);
    ~CommandList();
 
    CommandList(const CommandList &other)            = delete;
@@ -76,6 +76,7 @@ class CommandList
       this->draw_indexed_primitives(mesh.indices.count(), 0, 0);
    }
 
+   [[nodiscard]] WorkTypeFlags work_types() const;
    [[nodiscard]] uint64_t triangle_count() const;
 
  private:
@@ -83,6 +84,7 @@ class CommandList
    VkDevice m_device;
    VkCommandPool m_commandPool;
    VkPipelineLayout m_boundPipelineLayout{};
+   WorkTypeFlags m_workTypes;
    mutable uint64_t m_triangleCount{};
 };
 }// namespace graphics_api

@@ -103,6 +103,25 @@ Result<ColorSpace> to_color_space(const VkColorSpaceKHR colorSpace)
    return std::unexpected{Status::UnsupportedColorSpace};
 }
 
+WorkTypeFlags vulkan_queue_flags_to_work_type_flags(const VkQueueFlags flags, const bool canPresent)
+{
+   WorkTypeFlags result{WorkType::None};
+   if (flags & VK_QUEUE_GRAPHICS_BIT) {
+      result |= WorkType::Graphics;
+   }
+   if (flags & VK_QUEUE_TRANSFER_BIT) {
+      result |= WorkType::Transfer;
+   }
+   if (flags & VK_QUEUE_COMPUTE_BIT) {
+      result |= WorkType::Compute;
+   }
+   if (canPresent) {
+      result |= WorkType::Presentation;
+   }
+
+   return result;
+}
+
 Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sampleCount)
 {
    switch (sampleCount) {

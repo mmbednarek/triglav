@@ -11,10 +11,11 @@
 namespace triglav::graphics_api {
 
 CommandList::CommandList(const VkCommandBuffer commandBuffer, const VkDevice device,
-                         const VkCommandPool commandPool) :
+                         const VkCommandPool commandPool, const WorkTypeFlags workTypes) :
     m_commandBuffer(commandBuffer),
     m_device(device),
-    m_commandPool(commandPool)
+    m_commandPool(commandPool),
+    m_workTypes(workTypes)
 {
 }
 
@@ -28,7 +29,8 @@ CommandList::~CommandList()
 CommandList::CommandList(CommandList &&other) noexcept :
     m_commandBuffer(std::exchange(other.m_commandBuffer, nullptr)),
     m_device(std::exchange(other.m_device, nullptr)),
-    m_commandPool(std::exchange(other.m_commandPool, nullptr))
+    m_commandPool(std::exchange(other.m_commandPool, nullptr)),
+    m_workTypes(std::exchange(other.m_workTypes, WorkType::None))
 {
 }
 
@@ -39,6 +41,7 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
    m_commandBuffer = std::exchange(other.m_commandBuffer, nullptr);
    m_device        = std::exchange(other.m_device, nullptr);
    m_commandPool   = std::exchange(other.m_commandPool, nullptr);
+   m_workTypes     = std::exchange(other.m_workTypes, WorkType::None);
    return *this;
 }
 
@@ -189,8 +192,8 @@ void CommandList::push_constant_ptr(const PipelineStage stage, const void *ptr, 
                                     const size_t offset) const
 {
    assert(m_boundPipelineLayout != nullptr);
-   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout,
-                      vulkan::to_vulkan_shader_stage_flags(stage), offset, size, ptr);
+   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout, vulkan::to_vulkan_shader_stage_flags(stage),
+                      offset, size, ptr);
 }
 
 void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
@@ -232,24 +235,34 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
    this->texture_barrier(sourceStage, targetStage, std::span(&info, &info + 1));
 }
 
-void CommandList::blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion, const Texture &targetTex, const TextureRegion &targetRegion) const
+void CommandList::blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion,
+                               const Texture &targetTex, const TextureRegion &targetRegion) const
 {
-      VkImageBlit blit{};
-      blit.srcOffsets[0]                 = {static_cast<int>(sourceRegion.offsetMin.x), static_cast<int>(sourceRegion.offsetMin.y), 0};
-      blit.srcOffsets[1]                 = {static_cast<int>(sourceRegion.offsetMax.x), static_cast<int>(sourceRegion.offsetMax.y), 1};
-      blit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-      blit.srcSubresource.mipLevel       = sourceRegion.mipLevel;
-      blit.srcSubresource.baseArrayLayer = 0;
-      blit.srcSubresource.layerCount     = 1;
-      blit.dstOffsets[0]                 = {static_cast<int>(targetRegion.offsetMin.x), static_cast<int>(targetRegion.offsetMin.y), 0};
-      blit.dstOffsets[1]                 = {static_cast<int>(targetRegion.offsetMax.x), static_cast<int>(targetRegion.offsetMax.y), 1};
-      blit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
-      blit.dstSubresource.mipLevel       = targetRegion.mipLevel;
-      blit.dstSubresource.baseArrayLayer = 0;
-      blit.dstSubresource.layerCount     = 1;
+   VkImageBlit blit{};
+   blit.srcOffsets[0]                 = {static_cast<int>(sourceRegion.offsetMin.x),
+                                         static_cast<int>(sourceRegion.offsetMin.y), 0};
+   blit.srcOffsets[1]                 = {static_cast<int>(sourceRegion.offsetMax.x),
+                                         static_cast<int>(sourceRegion.offsetMax.y), 1};
+   blit.srcSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+   blit.srcSubresource.mipLevel       = sourceRegion.mipLevel;
+   blit.srcSubresource.baseArrayLayer = 0;
+   blit.srcSubresource.layerCount     = 1;
+   blit.dstOffsets[0]                 = {static_cast<int>(targetRegion.offsetMin.x),
+                                         static_cast<int>(targetRegion.offsetMin.y), 0};
+   blit.dstOffsets[1]                 = {static_cast<int>(targetRegion.offsetMax.x),
+                                         static_cast<int>(targetRegion.offsetMax.y), 1};
+   blit.dstSubresource.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+   blit.dstSubresource.mipLevel       = targetRegion.mipLevel;
+   blit.dstSubresource.baseArrayLayer = 0;
+   blit.dstSubresource.layerCount     = 1;
 
-      vkCmdBlitImage(m_commandBuffer, sourceTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+   vkCmdBlitImage(m_commandBuffer, sourceTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                   targetTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+}
+
+WorkTypeFlags CommandList::work_types() const
+{
+   return m_workTypes;
 }
 
 uint64_t CommandList::triangle_count() const

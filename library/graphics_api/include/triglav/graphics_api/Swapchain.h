@@ -11,15 +11,16 @@ namespace triglav::graphics_api {
 
 class RenderPass;
 class Semaphore;
+class QueueManager;
 
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(SwapchainKHR, Device)
 
 class Swapchain final : public IRenderTarget
 {
  public:
-   Swapchain(const ColorFormat &colorFormat, const ColorFormat &depthFormat, SampleCount sampleCount,
+   Swapchain(QueueManager &queueManager, const ColorFormat &colorFormat, const ColorFormat &depthFormat, SampleCount sampleCount,
              const Resolution &resolution, Texture depthAttachment, std::optional<Texture> colorAttachment,
-             std::vector<vulkan::ImageView> imageViews, VkQueue presentQueue, vulkan::SwapchainKHR swapchain);
+             std::vector<vulkan::ImageView> imageViews, vulkan::SwapchainKHR swapchain);
 
    [[nodiscard]] Subpass vulkan_subpass() override;
    [[nodiscard]] std::vector<VkAttachmentDescription> vulkan_attachments() override;
@@ -36,6 +37,7 @@ class Swapchain final : public IRenderTarget
    [[nodiscard]] Status present(const Semaphore &semaphore, uint32_t framebufferIndex);
 
  private:
+   std::reference_wrapper<QueueManager> m_queueManager;
    ColorFormat m_colorFormat;
    ColorFormat m_depthFormat;
    SampleCount m_sampleCount;
@@ -43,9 +45,8 @@ class Swapchain final : public IRenderTarget
    Texture m_depthAttachment;
    std::optional<Texture> m_colorAttachment;// std::nullopt if multisampling is disabled
    std::vector<vulkan::ImageView> m_imageViews;
-   VkQueue m_presentQueue;
 
    vulkan::SwapchainKHR m_swapchain;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

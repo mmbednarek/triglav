@@ -31,4 +31,16 @@ class Semaphore
    vulkan::Semaphore m_semaphore;
 };
 
+class SemaphoreArray
+{
+ public:
+   explicit SemaphoreArray();
+
+   [[nodiscard]] const VkSemaphore* vulkan_semaphores() const;
+   [[nodiscard]] size_t semaphore_count() const;
+
+ private:
+   std::vector<VkSemaphore> m_semaphores;
+};
+
 }// namespace triglav::graphics_api

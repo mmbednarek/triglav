@@ -1,6 +1,7 @@
 core_test_sources = files(
     'Main.cpp',
     'NameTest.cpp',
+    'PoolTest.cpp',
 )
 
 core_test_deps = [core, gtest]
