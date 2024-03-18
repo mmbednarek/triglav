@@ -27,15 +27,15 @@ struct SceneObject
 class Scene
 {
  public:
-   Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap, DebugLinesRenderer &debugLines,
+   Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &shadowMap, DebugLinesRenderer &debugLines,
          triglav::resource::ResourceManager &resourceManager);
 
    void update();
    void add_object(SceneObject object);
    void compile_scene();
-   void render() const;
-   void render_shadow_map() const;
-   void render_debug_lines() const;
+   void render(graphics_api::CommandList& cmdList) const;
+   void render_shadow_map(graphics_api::CommandList& cmdList) const;
+   void render_debug_lines(graphics_api::CommandList& cmdList) const;
 
    void load_level(LevelName name);
 
@@ -48,7 +48,7 @@ class Scene
  private:
    Renderer &m_renderer;
    ModelRenderer &m_context3D;
-   ShadowMap &m_shadowMap;
+   ShadowMapRenderer &m_shadowMap;
    triglav::resource::ResourceManager &m_resourceManager;
    DebugLinesRenderer &m_debugLinesRenderer;
 

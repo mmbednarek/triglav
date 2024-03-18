@@ -59,6 +59,26 @@ u32 QueueManager::queue_index(const WorkTypeFlags flags) const
    return this->queue_group(flags).index();
 }
 
+Semaphore *QueueManager::aquire_semaphore()
+{
+   return m_semaphorePool.aquire_object();
+}
+
+void QueueManager::release_semaphore(const Semaphore *semaphore)
+{
+   m_semaphorePool.release_object(semaphore);
+}
+
+Fence *QueueManager::aquire_fence()
+{
+   return m_fencePool.aquire_object();
+}
+
+void QueueManager::release_fence(const Fence *fence)
+{
+   m_fencePool.release_object(fence);
+}
+
 QueueManager::QueueGroup::QueueGroup(const Device &device, const QueueFamilyInfo &info) :
    m_vulkanDevice(device.vulkan_device()),
    m_flags(info.flags),

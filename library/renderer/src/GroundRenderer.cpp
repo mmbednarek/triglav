@@ -18,9 +18,6 @@ GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::Rende
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("ground.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("ground.vshader"_name))
-                                   // Vertex description
-                                   .begin_vertex_layout<geometry::Vertex>()
-                                   .end_vertex_layout()
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                                        graphics_api::PipelineStage::VertexShader)

@@ -1,6 +1,11 @@
 #include "Renderer.h"
 
 #include "GlyphAtlas.h"
+#include "node/ShadowMap.h"
+#include "node/Shading.h"
+#include "node/Geometry.h"
+#include "node/PostProcessing.h"
+#include "node/AmbientOcclusion.h"
 
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/Name.hpp"
@@ -129,8 +134,8 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
     m_renderPass(checkResult(m_device->create_render_pass(m_swapchain))),
     m_framebuffers(checkResult(m_swapchain.create_framebuffers(m_renderPass))),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
-    m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
-    m_inFlightFence(checkResult(m_device->create_fence())),
+    // m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
+    // m_inFlightFence(checkResult(m_device->create_fence())),
     m_commandList(checkResult(m_device->create_command_list())),
     m_modelRenderTarget(create_model_render_target(*m_device, m_resolution)),
     m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
@@ -157,10 +162,10 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
                                                                graphics_api::TextureType::ColorAttachment))),
     m_shadingFramebuffer(checkResult(
             m_shadingRenderTarget.create_framebuffer(m_shadingRenderPass, m_shadingColorTexture))),
-    m_context3D(*m_device, m_modelRenderPass, *m_resourceManager),
+    m_modelRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_groundRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
-    m_shadowMap(*m_device, *m_resourceManager),
+    m_shadowMapRenderer(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
     m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 250.0f})),
@@ -169,17 +174,17 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
                                m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
     m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelColorTexture,
                       m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
-                      m_shadowMap.depth_texture()),
+                      m_shadowMapRenderer.depth_texture()),
     m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture,
                              m_modelDepthTexture),
-    m_scene(*this, m_context3D, m_shadowMap, m_debugLinesRenderer, *m_resourceManager),
+    m_scene(*this, m_modelRenderer, m_shadowMapRenderer, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_glyphAtlasBold(*m_device,
                      m_resourceManager->get<ResourceType::Typeface>("cantarell/bold.typeface"_name), g_runes,
                      24, 500, 500),
     m_glyphAtlas(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell.typeface"_name),
                  g_runes, 24, 500, 500),
-    m_sprite(m_context2D.create_sprite_from_texture(m_shadowMap.depth_texture())),
+    m_sprite(m_context2D.create_sprite_from_texture(m_shadowMapRenderer.depth_texture())),
     // m_sprite(m_context2D.create_sprite_from_texture(m_glyphAtlas.texture())),
     m_textRenderer(*m_device, m_renderPass, *m_resourceManager),
     m_titleLabel(m_textRenderer.create_text_object(m_glyphAtlas, "Triglav Engine Demo")),
@@ -194,13 +199,32 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
     m_aoLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Ambient Occlusion")),
     m_aoValue(m_textRenderer.create_text_object(m_glyphAtlas, "Screen-Space")),
     m_aaLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Anti-Aliasing")),
-    m_aaValue(m_textRenderer.create_text_object(m_glyphAtlas, "Off"))
+    m_aaValue(m_textRenderer.create_text_object(m_glyphAtlas, "Off")),
+    m_renderGraph(*m_device)
 {
    m_scene.load_level("demo.level"_name);
    m_scene.compile_scene();
 
    m_textRenderer.update_resolution(m_resolution);
    m_context2D.update_resolution(m_resolution);
+
+   m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
+   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id , m_scene, m_shadowMapRenderer);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id , m_scene, m_modelFramebuffer, m_groundRenderer, m_modelRenderer);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id , m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
+   m_renderGraph.emplace_node<node::Shading>("shading"_name_id , m_shadingFramebuffer, m_shadingRenderer, m_scene);
+   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id , m_postProcessingRenderer, m_framebuffers);
+
+   // m_renderGraph.add_dependency("shadow_map"_name_id, "frame_is_ready"_name_id);
+   // m_renderGraph.add_dependency("geometry"_name_id, "frame_is_ready"_name_id);
+   m_renderGraph.add_dependency("ambient_occlusion"_name_id, "geometry"_name_id);
+   m_renderGraph.add_dependency("shading"_name_id, "shadow_map"_name_id);
+   m_renderGraph.add_dependency("shading"_name_id, "ambient_occlusion"_name_id);
+   // m_renderGraph.add_dependency("shading"_name_id, "geometry"_name_id);
+   m_renderGraph.add_dependency("post_processing"_name_id, "frame_is_ready"_name_id);
+   m_renderGraph.add_dependency("post_processing"_name_id, "shading"_name_id);
+
+   m_renderGraph.bake("post_processing"_name_id);
 }
 
 void Renderer::on_render()
@@ -220,22 +244,29 @@ void Renderer::on_render()
    m_textRenderer.update_text_object(m_glyphAtlas, m_aoValue, m_ssaoEnabled ? "Screen-Space" : "Off");
    m_textRenderer.update_text_object(m_glyphAtlas, m_aaValue, m_fxaaEnabled ? "FXAA" : "Off");
 
-   m_inFlightFence.await();
+   m_renderGraph.await();
+   // m_inFlightFence.await();
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);
 
+   m_renderGraph.node<node::PostProcessing>("post_processing"_name_id).set_index(framebufferIndex);
+   m_renderGraph.record_command_lists();
+
+   GAPI_CHECK_STATUS(m_renderGraph.execute());
+
+   /*
    checkStatus(m_commandList.begin());
-   m_context3D.set_active_command_list(&m_commandList);
+   m_modelRenderer.set_active_command_list(&m_commandList);
    m_context2D.set_active_command_list(&m_commandList);
 
    {
       std::array<graphics_api::ClearValue, 1> clearValues{
               graphics_api::DepthStenctilValue{1.0f, 0.0f}
       };
-      m_commandList.begin_render_pass(m_shadowMap.framebuffer(), clearValues);
+      m_commandList.begin_render_pass(m_shadowMapRenderer.framebuffer(), clearValues);
 
-      m_shadowMap.on_begin_render(m_context3D);
+      m_shadowMapRenderer.on_begin_render(m_modelRenderer);
       m_scene.render_shadow_map();
 
       m_commandList.end_render_pass();
@@ -254,7 +285,7 @@ void Renderer::on_render()
 
       m_groundRenderer.draw(m_commandList, m_scene.camera());
 
-      m_context3D.begin_render();
+      m_modelRenderer.begin_render();
       m_scene.render();
 
       if (m_showDebugLines) {
@@ -345,15 +376,15 @@ void Renderer::on_render()
    }
 
    checkStatus(m_commandList.finish());
-
    checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
                                              m_renderFinishedSemaphore, m_inFlightFence));
-   checkStatus(m_swapchain.present(m_renderFinishedSemaphore, framebufferIndex));
+   */
+   checkStatus(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));
 }
 
 void Renderer::on_close() const
 {
-   m_inFlightFence.await();
+   m_renderGraph.await();
 }
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
@@ -525,7 +556,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
            checkResult(m_shadingRenderTarget.create_framebuffer(m_shadingRenderPass, m_shadingColorTexture));
 
    m_shadingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-                                     m_ambientOcclusionTexture, m_shadowMap.depth_texture());
+                                     m_ambientOcclusionTexture, m_shadowMapRenderer.depth_texture());
 
    m_ambientOcclusionRenderer.update_textures(
            m_modelPositionTexture, m_modelNormalTexture,

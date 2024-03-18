@@ -162,7 +162,7 @@ Result<Pipeline> PipelineBuilder::build() const
    inputAssemblyInfo.topology               = m_primitiveTopology;
    inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-   Resolution resolution {800, 800};
+   Resolution resolution{800, 800};
 
    VkViewport viewport{};
    viewport.x        = 0.0f;
@@ -285,4 +285,4 @@ Result<Pipeline> PipelineBuilder::build() const
    return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout)};
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

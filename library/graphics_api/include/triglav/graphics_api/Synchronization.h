@@ -34,10 +34,10 @@ class Semaphore
 class SemaphoreArray
 {
  public:
-   explicit SemaphoreArray();
-
-   [[nodiscard]] const VkSemaphore* vulkan_semaphores() const;
+   [[nodiscard]] const VkSemaphore *vulkan_semaphores() const;
    [[nodiscard]] size_t semaphore_count() const;
+
+   void add_semaphore(const Semaphore &semaphore);
 
  private:
    std::vector<VkSemaphore> m_semaphores;

@@ -9,7 +9,7 @@
 #include "triglav/resource/ResourceManager.h"
 #include "triglav/ResourceType.hpp"
 
-#include "ShadowMap.h"
+#include "ShadowMapRenderer.h"
 
 using triglav::Name;
 using triglav::ResourceType;
@@ -58,7 +58,7 @@ ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderP
 {
 }
 
-InstancedModel ModelRenderer::instance_model(const Name modelName, ShadowMap &shadowMap)
+InstancedModel ModelRenderer::instance_model(const Name modelName, ShadowMapRenderer &shadowMap)
 {
    const auto &model = m_resourceManager.get<ResourceType::Model>(modelName);
    auto descriptors  = checkResult(m_descriptorPool.allocate_array(model.range.size()));
@@ -95,38 +95,26 @@ InstancedModel ModelRenderer::instance_model(const Name modelName, ShadowMap &sh
                          shadowMap.create_model_properties()};
 }
 
-void ModelRenderer::set_active_command_list(graphics_api::CommandList *commandList)
+void ModelRenderer::begin_render(graphics_api::CommandList& cmdList) const
 {
-   m_commandList = commandList;
+   cmdList.bind_pipeline(m_pipeline);
 }
 
-void ModelRenderer::begin_render()
+void ModelRenderer::draw_model(const graphics_api::CommandList& cmdList, const InstancedModel &instancedModel) const
 {
-   m_commandList->bind_pipeline(m_pipeline);
-}
-
-void ModelRenderer::draw_model(const InstancedModel &instancedModel) const
-{
-   assert(m_commandList != nullptr);
-
    const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
-   m_commandList->bind_vertex_array(model.mesh.vertices);
-   m_commandList->bind_index_array(model.mesh.indices);
+   cmdList.bind_vertex_array(model.mesh.vertices);
+   cmdList.bind_index_array(model.mesh.indices);
 
    size_t index{};
    for (const auto &range : model.range) {
       const auto descriptorSet = instancedModel.descriptors[index];
 
-      m_commandList->bind_descriptor_set(descriptorSet);
-      m_commandList->draw_indexed_primitives(static_cast<int>(range.size), static_cast<int>(range.offset), 0);
+      cmdList.bind_descriptor_set(descriptorSet);
+      cmdList.draw_indexed_primitives(static_cast<int>(range.size), static_cast<int>(range.offset), 0);
       ++index;
    }
-}
-
-graphics_api::CommandList &ModelRenderer::command_list() const
-{
-   return *m_commandList;
 }
 
 }// namespace renderer

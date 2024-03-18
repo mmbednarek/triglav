@@ -27,9 +27,6 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                            "ambient_occlusion.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>(
                                            "ambient_occlusion.vshader"_name))
-                                   // Vertex description
-                                   .begin_vertex_layout<geometry::Vertex>()
-                                   .end_vertex_layout()
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                                        graphics_api::PipelineStage::FragmentShader)

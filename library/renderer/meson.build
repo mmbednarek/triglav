@@ -1,4 +1,10 @@
 renderer_sources = files([
+  'src/node/AmbientOcclusion.cpp',
+  'src/node/ShadowMap.cpp',
+  'src/node/Geometry.cpp',
+  'src/node/PostProcessing.cpp',
+  'src/node/Shading.cpp',
+  'src/node/ShadowMap.cpp',
   'src/AmbientOcclusionRenderer.cpp',
   'src/Camera.cpp',
   'src/CameraBase.cpp',
@@ -12,13 +18,13 @@ renderer_sources = files([
   'src/Renderer.cpp',
   'src/Scene.cpp',
   'src/ShadingRenderer.cpp',
-  'src/ShadowMap.cpp',
+  'src/ShadowMapRenderer.cpp',
   'src/SkyBox.cpp',
   'src/SpriteRenderer.cpp',
   'src/TextRenderer.cpp',
 ])
 
-renderer_deps = [glm, graphics_api, geometry, font, fonts, io, resource]
+renderer_deps = [glm, graphics_api, geometry, font, fonts, io, resource, render_core]
 renderer_incl = include_directories(['include', 'include/triglav/renderer'])
 
 renderer_lib = static_library('renderer',

@@ -30,6 +30,10 @@ class QueueManager
    [[nodiscard]] VkQueue next_queue(WorkTypeFlags flags) const;
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags) const;
    [[nodiscard]] u32 queue_index(WorkTypeFlags flags) const;
+   [[nodiscard]] Semaphore* aquire_semaphore();
+   void release_semaphore(const Semaphore *semaphore);
+   [[nodiscard]] Fence* aquire_fence();
+   void release_fence(const Fence *fence);
 
  private:
    class QueueGroup

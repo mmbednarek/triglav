@@ -239,8 +239,8 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
       swapchainImageViews.emplace_back(std::move(imageView));
    }
 
-   return Swapchain(m_queueManager, colorFormat, depthFormat, sampleCount, resolution, std::move(*depthAttachment),
-                    std::move(colorAttachment), std::move(swapchainImageViews),
+   return Swapchain(m_queueManager, colorFormat, depthFormat, sampleCount, resolution,
+                    std::move(*depthAttachment), std::move(colorAttachment), std::move(swapchainImageViews),
                     std::move(swapchain));
 }
 
@@ -515,32 +515,44 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
    };
 }
 
-Status Device::submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
-                                   const Semaphore &signalSemaphore, const Fence &fence) const
+Status Device::submit_command_list(const CommandList &commandList, const SemaphoreArray &waitSemaphores,
+                                   const Semaphore &signalSemaphore, const Fence *fence) const
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-   const std::array waitSemaphores{waitSemaphore.vulkan_semaphore()};
    const std::array signalSemaphores{signalSemaphore.vulkan_semaphore()};
-   static constexpr std::array<VkPipelineStageFlags, 1> waitStages{
-           VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+   std::vector<VkPipelineStageFlags> waitStages{};
+   waitStages.resize(waitSemaphores.semaphore_count());
+   std::ranges::fill(waitStages, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
    const std::array commandBuffers{commandList.vulkan_command_buffer()};
 
-   submitInfo.waitSemaphoreCount   = waitSemaphores.size();
-   submitInfo.pWaitSemaphores      = waitSemaphores.data();
+   submitInfo.waitSemaphoreCount   = waitSemaphores.semaphore_count();
+   submitInfo.pWaitSemaphores      = waitSemaphores.vulkan_semaphores();
    submitInfo.pWaitDstStageMask    = waitStages.data();
    submitInfo.commandBufferCount   = commandBuffers.size();
    submitInfo.pCommandBuffers      = commandBuffers.data();
    submitInfo.signalSemaphoreCount = signalSemaphores.size();
    submitInfo.pSignalSemaphores    = signalSemaphores.data();
 
-   if (vkQueueSubmit(m_queueManager.next_queue(commandList.work_types()), 1, &submitInfo, fence.vulkan_fence()) !=
-       VK_SUCCESS) {
+   VkFence vulkanFence{};
+   if (fence != nullptr) {
+      vulkanFence = fence->vulkan_fence();
+   }
+
+   if (vkQueueSubmit(m_queueManager.next_queue(commandList.work_types()), 1, &submitInfo, vulkanFence) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
    return Status::Success;
+}
+
+Status Device::submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
+                                   const Semaphore &signalSemaphore, const Fence &fence) const
+{
+   SemaphoreArray waitSemaphores;
+   waitSemaphores.add_semaphore(waitSemaphore);
+   return this->submit_command_list(commandList, waitSemaphores, signalSemaphore, &fence);
 }
 
 Status Device::submit_command_list_one_time(const CommandList &commandList) const
@@ -562,6 +574,11 @@ Status Device::submit_command_list_one_time(const CommandList &commandList) cons
 VkDevice Device::vulkan_device() const
 {
    return *m_device;
+}
+
+QueueManager &Device::queue_manager()
+{
+   return m_queueManager;
 }
 
 void Device::await_all() const
@@ -664,7 +681,8 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
    u32 queueIndex{};
    for (const auto &family : queueFamilies) {
       VkBool32 canPresent{};
-      if (vkGetPhysicalDeviceSurfaceSupportKHR(*pickedDevice, queueIndex, *vulkan_surface, &canPresent) != VK_SUCCESS)
+      if (vkGetPhysicalDeviceSurfaceSupportKHR(*pickedDevice, queueIndex, *vulkan_surface, &canPresent) !=
+          VK_SUCCESS)
          return std::unexpected(Status::UnsupportedDevice);
 
       QueueFamilyInfo info{};

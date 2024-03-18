@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Array.hpp"
 #include "Int.hpp"
 
 #include <algorithm>
@@ -9,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <optional>
 
 namespace triglav {
 
@@ -18,10 +20,10 @@ class PoolBucket
  public:
    static constexpr auto aquiredIndex = std::numeric_limits<u32>::max();
 
-   explicit PoolBucket(TFactory& factory)
+   explicit PoolBucket(TFactory& factory) :
+      m_objects(initialize_array<TObject, CBucketSize>(factory))
    {
       std::iota(m_path.begin(), m_path.end(), 1);
-      std::generate(m_objects.begin(), m_objects.end(), factory);
    }
 
    PoolBucket(const PoolBucket &other)                = delete;

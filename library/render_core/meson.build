@@ -1,5 +1,6 @@
 render_core_sources = files([
   'src/RenderCore.cpp',
+  'src/RenderGraph.cpp',
 ])
 
 render_core_deps = [glm, graphics_api, core, geometry, font, fonts, io]

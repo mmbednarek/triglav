@@ -32,4 +32,14 @@ const VkSemaphore *SemaphoreArray::vulkan_semaphores() const
    return m_semaphores.data();
 }
 
+size_t SemaphoreArray::semaphore_count() const
+{
+   return m_semaphores.size();
+}
+
+void SemaphoreArray::add_semaphore(const Semaphore &semaphore)
+{
+   m_semaphores.emplace_back(semaphore.vulkan_semaphore());
+}
+
 }// namespace triglav::graphics_api

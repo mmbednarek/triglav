@@ -13,7 +13,7 @@ namespace triglav::renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
-Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMap &shadowMap,
+Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &shadowMap,
              DebugLinesRenderer &debugLinesRenderer, resource::ResourceManager &resourceManager) :
     m_renderer(renderer),
     m_context3D(context3D),
@@ -71,30 +71,30 @@ void Scene::compile_scene()
    }
 }
 
-void Scene::render() const
+void Scene::render(graphics_api::CommandList& cmdList) const
 {
    for (const auto &obj : m_instancedObjects) {
       if (not m_camera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
          continue;
 
-      m_context3D.draw_model(obj);
+      m_context3D.draw_model(cmdList, obj);
    }
 }
 
-void Scene::render_shadow_map() const
+void Scene::render_shadow_map(graphics_api::CommandList& cmdList) const
 {
    for (const auto &obj : m_instancedObjects) {
       if (not m_shadowMapCamera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
          continue;
 
-      m_shadowMap.draw_model(m_context3D, obj);
+      m_shadowMap.draw_model(cmdList, obj);
    }
 }
 
-void Scene::render_debug_lines() const
+void Scene::render_debug_lines(graphics_api::CommandList& cmdList) const
 {
    for (const auto &obj : m_debugLines) {
-      m_debugLinesRenderer.draw(m_context3D.command_list(), obj, m_camera);
+      m_debugLinesRenderer.draw(cmdList, obj, m_camera);
    }
 }
 

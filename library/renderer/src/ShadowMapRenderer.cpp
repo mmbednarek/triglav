@@ -1,4 +1,4 @@
-#include "ShadowMap.h"
+#include "ShadowMapRenderer.h"
 
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
@@ -22,7 +22,7 @@ namespace triglav::renderer {
 constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
 constexpr auto g_shadowMapFormat     = GAPI_FORMAT(D, Float32);
 
-ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceManager) :
+ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManager &resourceManager) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
@@ -46,27 +46,27 @@ ShadowMap::ShadowMap(graphics_api::Device &device, ResourceManager &resourceMana
 {
 }
 
-const graphics_api::Texture &ShadowMap::depth_texture() const
+const graphics_api::Texture &ShadowMapRenderer::depth_texture() const
 {
    return m_depthTexture;
 }
 
-const graphics_api::Framebuffer &ShadowMap::framebuffer() const
+const graphics_api::Framebuffer &ShadowMapRenderer::framebuffer() const
 {
    return m_framebuffer;
 }
 
-void ShadowMap::on_begin_render(const ModelRenderer &ctx) const
+void ShadowMapRenderer::on_begin_render(graphics_api::CommandList &cmdList) const
 {
-   ctx.command_list().bind_pipeline(m_pipeline);
+   cmdList.bind_pipeline(m_pipeline);
 }
 
-void ShadowMap::draw_model(const ModelRenderer &ctx, const InstancedModel &instancedModel) const
+void ShadowMapRenderer::draw_model(graphics_api::CommandList &cmdList, const InstancedModel &instancedModel) const
 {
    const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
-   ctx.command_list().bind_vertex_array(model.mesh.vertices);
-   ctx.command_list().bind_index_array(model.mesh.indices);
+   cmdList.bind_vertex_array(model.mesh.vertices);
+   cmdList.bind_index_array(model.mesh.indices);
 
    const auto firstOffset = model.range[0].offset;
    size_t size{};
@@ -75,11 +75,11 @@ void ShadowMap::draw_model(const ModelRenderer &ctx, const InstancedModel &insta
    }
 
    const auto descriptorSet = instancedModel.shadowMap.descriptors[0];
-   ctx.command_list().bind_descriptor_set(descriptorSet);
-   ctx.command_list().draw_indexed_primitives(size, firstOffset, 0);
+   cmdList.bind_descriptor_set(descriptorSet);
+   cmdList.draw_indexed_primitives(size, firstOffset, 0);
 }
 
-ModelShaderMapProperties ShadowMap::create_model_properties()
+ModelShaderMapProperties ShadowMapRenderer::create_model_properties()
 {
    auto shadowMapDescriptors = checkResult(m_descriptorPool.allocate_array(1));
 

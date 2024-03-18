@@ -10,17 +10,18 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "ShadingRenderer.h"
-#include "ShadowMap.h"
+#include "ShadowMapRenderer.h"
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
 #include "TextRenderer.h"
 
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/font/FontManager.h"
+#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_core/RenderGraph.h"
 #include "triglav/resource/ResourceManager.h"
 
 namespace triglav::renderer {
@@ -39,7 +40,7 @@ class Renderer
       Down
    };
 
-   Renderer(const triglav::desktop::ISurface &surface, uint32_t width, uint32_t height);
+   Renderer(const desktop::ISurface &surface, uint32_t width, uint32_t height);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
@@ -91,8 +92,8 @@ class Renderer
    graphics_api::RenderPass m_renderPass;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
-   graphics_api::Semaphore m_renderFinishedSemaphore;
-   graphics_api::Fence m_inFlightFence;
+   // graphics_api::Semaphore m_renderFinishedSemaphore;
+   // graphics_api::Fence m_inFlightFence;
    graphics_api::CommandList m_commandList;
    graphics_api::TextureRenderTarget m_modelRenderTarget;
    graphics_api::RenderPass m_modelRenderPass;
@@ -109,10 +110,10 @@ class Renderer
    graphics_api::RenderPass m_shadingRenderPass;
    graphics_api::Texture m_shadingColorTexture;
    graphics_api::Framebuffer m_shadingFramebuffer;
-   ModelRenderer m_context3D;
+   ModelRenderer m_modelRenderer;
    GroundRenderer m_groundRenderer;
    SpriteRenderer m_context2D;
-   ShadowMap m_shadowMap;
+   ShadowMapRenderer m_shadowMapRenderer;
    DebugLinesRenderer m_debugLinesRenderer;
    RectangleRenderer m_rectangleRenderer;
    Rectangle m_rectangle;
@@ -123,7 +124,7 @@ class Renderer
    SkyBox m_skyBox;
    GlyphAtlas m_glyphAtlasBold;
    GlyphAtlas m_glyphAtlas;
-   triglav::render_core::Sprite m_sprite;
+   render_core::Sprite m_sprite;
    TextRenderer m_textRenderer;
    TextObject m_titleLabel;
    TextObject m_framerateLabel;
@@ -138,6 +139,7 @@ class Renderer
    TextObject m_aoValue;
    TextObject m_aaLabel;
    TextObject m_aaValue;
+   render_core::RenderGraph m_renderGraph;
 };
 
 }// namespace triglav::renderer

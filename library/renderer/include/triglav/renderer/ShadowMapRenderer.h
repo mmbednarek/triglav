@@ -13,22 +13,22 @@ namespace triglav::renderer {
 
 class ModelRenderer;
 
-class ShadowMap
+class ShadowMapRenderer
 {
  public:
-   ShadowMap(graphics_api::Device &device, triglav::resource::ResourceManager &resourceManager);
+   ShadowMapRenderer(graphics_api::Device &device, resource::ResourceManager &resourceManager);
 
    [[nodiscard]] const graphics_api::Texture &depth_texture() const;
    [[nodiscard]] const graphics_api::Framebuffer &framebuffer() const;
 
-   void on_begin_render(const ModelRenderer &ctx) const;
-   void draw_model(const ModelRenderer &ctx,
-                   const triglav::render_core::InstancedModel &instancedModel) const;
-   triglav::render_core::ModelShaderMapProperties create_model_properties();
+   void on_begin_render(graphics_api::CommandList &cmdList) const;
+   void draw_model(graphics_api::CommandList &cmdList,
+                   const render_core::InstancedModel &instancedModel) const;
+   render_core::ModelShaderMapProperties create_model_properties();
 
  private:
    graphics_api::Device &m_device;
-   triglav::resource::ResourceManager &m_resourceManager;
+   resource::ResourceManager &m_resourceManager;
 
    graphics_api::DepthRenderTarget m_depthRenderTarget;
    graphics_api::Texture m_depthTexture;

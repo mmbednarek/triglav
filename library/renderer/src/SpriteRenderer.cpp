@@ -73,21 +73,13 @@ void SpriteRenderer::update_resolution(const graphics_api::Resolution &resolutio
    m_resolution = resolution;
 }
 
-void SpriteRenderer::set_active_command_list(graphics_api::CommandList *commandList)
+void SpriteRenderer::begin_render(graphics_api::CommandList& cmdList) const
 {
-   m_commandList = commandList;
+   cmdList.bind_pipeline(m_pipeline);
 }
 
-void SpriteRenderer::begin_render() const
+void SpriteRenderer::draw_sprite(graphics_api::CommandList& cmdList, const Sprite &sprite, const glm::vec2 position, const glm::vec2 scale) const
 {
-   assert(m_commandList);
-   m_commandList->bind_pipeline(m_pipeline);
-}
-
-void SpriteRenderer::draw_sprite(const Sprite &sprite, const glm::vec2 position, const glm::vec2 scale) const
-{
-   assert(m_commandList != nullptr);
-
    const auto [viewportWidth, viewportHeight] = m_resolution;
 
    const auto scaleX = 2.0f * scale.x * sprite.width / static_cast<float>(viewportWidth);
@@ -98,8 +90,8 @@ void SpriteRenderer::draw_sprite(const Sprite &sprite, const glm::vec2 position,
    const auto scaleMat   = glm::scale(glm::mat3(1), glm::vec2(scaleX, scaleY));
    sprite.ubo->transform = glm::translate(scaleMat, glm::vec2(transX, transY));
 
-   m_commandList->bind_descriptor_set(sprite.descriptors[0]);
-   m_commandList->draw_primitives(4, 0);
+   cmdList.bind_descriptor_set(sprite.descriptors[0]);
+   cmdList.draw_primitives(4, 0);
 }
 
 }// namespace renderer
