@@ -1,17 +1,15 @@
 #include "GlyphAtlas.h"
 
-#include <cstring>
-#include <vector>
+#include "RenderCore.hpp"
 
 #include "triglav/graphics_api/Device.h"
-#include "triglav/render_core/RenderCore.hpp"
 
+#include <cstring>
+#include <vector>
 #include <codecvt>
 #include <locale>
 
-using triglav::render_core::checkResult;
-
-namespace triglav::renderer {
+namespace triglav::render_core {
 
 GlyphAtlas::GlyphAtlas(graphics_api::Device &device, const font::Typeface &typeface,
                        const std::span<font::Rune> atlasRunes, const int glyphSize, const uint32_t width,

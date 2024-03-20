@@ -9,7 +9,8 @@ enum class ResourceLoadType
   None,
   Static,
   Font,
-  Graphics
+  Graphics,
+  GraphicsDependent,
 };
 
 template<ResourceType CResourceType>

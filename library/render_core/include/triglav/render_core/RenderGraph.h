@@ -18,8 +18,9 @@ class RenderGraph
    {
       NameID name;
       graphics_api::SemaphoreArray waitSemaphores;
-      graphics_api::Semaphore *singalSemaphore;
+      graphics_api::SemaphoreArray signalSemaphores;
       graphics_api::CommandList commandList;
+      std::vector<graphics_api::Semaphore*> signalSemaphorePtrs;
    };
 
    explicit RenderGraph(graphics_api::Device &device);
@@ -42,7 +43,8 @@ class RenderGraph
    void record_command_lists();
    [[nodiscard]] graphics_api::Status execute();
    void await() const;
-   graphics_api::Semaphore *target_semaphore() const;
+   [[nodiscard]] graphics_api::Semaphore *target_semaphore() const;
+   [[nodiscard]] u32 triangle_count(NameID node) const;
 
    void clean();
 

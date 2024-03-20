@@ -1,4 +1,5 @@
 render_core_sources = files([
+  'src/GlyphAtlas.cpp',
   'src/RenderCore.cpp',
   'src/RenderGraph.cpp',
 ])

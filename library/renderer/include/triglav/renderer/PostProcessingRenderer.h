@@ -19,10 +19,10 @@ class PostProcessingRenderer
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
                           triglav::resource::ResourceManager &resourceManager,
                           const graphics_api::Texture &colorTexture,
-                          const graphics_api::Texture &depthTexture);
+                          const graphics_api::Texture &overlayTexture);
 
    void update_texture(const graphics_api::Texture &colorTexture,
-                       const graphics_api::Texture &depthTexture) const;
+                       const graphics_api::Texture &overlayTexture) const;
 
    void draw(graphics_api::CommandList &cmdList, bool enableFXAA) const;
 

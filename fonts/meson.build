@@ -1,6 +1,8 @@
 font_files = [
     'cantarell.ttf',
+    'cantarell_24.yaml',
     'cantarell_bold.ttf',
+    'cantarell_bold_24.yaml',
 ]
 
 font_targets = []

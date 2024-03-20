@@ -72,15 +72,17 @@ bool RenderGraph::bake(NameID targetNode)
 
       nodes.pop();
 
-      auto *semaphore = m_device.queue_manager().aquire_semaphore();
-
       graphics_api::SemaphoreArray semaphores{};
       auto [it, end] = m_dependencies.equal_range(currentNode);
       while (it != end) {
          if (m_semaphoreNodes.contains(it->second)) {
             semaphores.add_semaphore(*m_semaphoreNodes[it->second]);
          } else {
-            semaphores.add_semaphore(*m_bakedNodes[m_nodeIndicies.at(it->second)].singalSemaphore);
+            auto *semaphore = m_device.queue_manager().aquire_semaphore();
+            auto &bakedNode = m_bakedNodes[m_nodeIndicies.at(it->second)];
+            bakedNode.signalSemaphorePtrs.emplace_back(semaphore);
+            bakedNode.signalSemaphores.add_semaphore(*semaphore);
+            semaphores.add_semaphore(*semaphore);
          }
 
          ++it;
@@ -90,8 +92,13 @@ bool RenderGraph::bake(NameID targetNode)
       auto commandList = GAPI_CHECK(m_device.queue_manager().create_command_list(node->work_types()));
 
       m_nodeIndicies.emplace(currentNode, m_bakedNodes.size());
-      m_bakedNodes.emplace_back(currentNode, std::move(semaphores), semaphore, std::move(commandList));
+      m_bakedNodes.emplace_back(
+              BakedNode{currentNode, std::move(semaphores), {}, std::move(commandList), {}});
    }
+
+   auto *semaphore = m_device.queue_manager().aquire_semaphore();
+   m_bakedNodes.back().signalSemaphorePtrs.emplace_back(semaphore);
+   m_bakedNodes.back().signalSemaphores.add_semaphore(*semaphore);
 
    return true;
 }
@@ -110,13 +117,13 @@ void RenderGraph::record_command_lists()
 graphics_api::Status RenderGraph::execute()
 {
    for (const auto &bakedNode : m_bakedNodes) {
-      const graphics_api::Fence* fence{};
+      const graphics_api::Fence *fence{};
       if (bakedNode.name == m_bakedNodes.back().name) {
          fence = &m_targetFence;
       }
 
       const auto status = m_device.submit_command_list(bakedNode.commandList, bakedNode.waitSemaphores,
-                                                       *bakedNode.singalSemaphore, fence);
+                                                       bakedNode.signalSemaphores, fence);
       if (status != graphics_api::Status::Success) {
          return status;
       }
@@ -131,13 +138,20 @@ void RenderGraph::await() const
 
 graphics_api::Semaphore *RenderGraph::target_semaphore() const
 {
-   return m_bakedNodes.back().singalSemaphore;
+   return m_bakedNodes.back().signalSemaphorePtrs[0];
+}
+
+u32 RenderGraph::triangle_count(const NameID node) const
+{
+    return m_bakedNodes[m_nodeIndicies.at(node)].commandList.triangle_count();
 }
 
 void RenderGraph::clean()
 {
    for (const auto &node : m_bakedNodes) {
-      m_device.queue_manager().release_semaphore(node.singalSemaphore);
+      for (const auto *semaphorePtr : node.signalSemaphorePtrs) {
+         m_device.queue_manager().release_semaphore(semaphorePtr);
+      }
    }
    m_bakedNodes.clear();
    m_nodeIndicies.clear();

@@ -1,4 +1,5 @@
 resource_sources = files([
+                             'src/GlyphAtlasLoader.cpp',
                              'src/LevelLoader.cpp',
                              'src/MaterialLoader.cpp',
                              'src/ResourceManager.cpp',

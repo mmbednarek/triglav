@@ -2,9 +2,10 @@
 
 namespace triglav::renderer::node {
 
-Geometry::Geometry(Scene &scene, graphics_api::Framebuffer &modelFramebuffer, GroundRenderer &groundRenderer,
+Geometry::Geometry(Scene &scene, SkyBox& skybox, graphics_api::Framebuffer &modelFramebuffer, GroundRenderer &groundRenderer,
                    ModelRenderer &modelRenderer) :
     m_scene(scene),
+    m_skybox(skybox),
     m_modelFramebuffer(modelFramebuffer),
     m_groundRenderer(groundRenderer),
     m_modelRenderer(modelRenderer)
@@ -26,8 +27,8 @@ void Geometry::record_commands(graphics_api::CommandList &cmdList)
       };
       cmdList.begin_render_pass(m_modelFramebuffer, clearValues);
 
-      // m_skybox.on_render(cmdList, m_yaw, m_pitch, static_cast<float>(m_resolution.width),
-      //                    static_cast<float>(m_resolution.height));
+      m_skybox.on_render(cmdList, m_scene.yaw(), m_scene.pitch(), static_cast<float>(m_modelFramebuffer.resolution().width),
+                         static_cast<float>(m_modelFramebuffer.resolution().height));
 
       m_groundRenderer.draw(cmdList, m_scene.camera());
 

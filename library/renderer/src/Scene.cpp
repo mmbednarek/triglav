@@ -134,4 +134,33 @@ const OrthoCamera &Scene::shadow_map_camera() const
    return m_shadowMapCamera;
 }
 
+float Scene::yaw() const
+{
+   return m_yaw;
+}
+
+float Scene::pitch() const
+{
+   return m_pitch;
+}
+
+void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
+{
+   m_yaw += delta_yaw;
+   while (m_yaw < 0) {
+      m_yaw += 2 * M_PI;
+   }
+   while (m_yaw >= 2 * M_PI) {
+      m_yaw -= 2 * M_PI;
+   }
+
+   m_pitch += delta_pitch;
+   m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f,
+                        static_cast<float>(M_PI) / 2.0f - 0.01f);
+
+   this->camera().set_orientation(glm::quat{
+           glm::vec3{m_pitch, 0.0f, m_yaw}
+   });
+}
+
 }// namespace triglav::renderer

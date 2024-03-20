@@ -516,12 +516,11 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
 }
 
 Status Device::submit_command_list(const CommandList &commandList, const SemaphoreArray &waitSemaphores,
-                                   const Semaphore &signalSemaphore, const Fence *fence) const
+                                   const SemaphoreArray &signalSemaphores, const Fence *fence) const
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-   const std::array signalSemaphores{signalSemaphore.vulkan_semaphore()};
    std::vector<VkPipelineStageFlags> waitStages{};
    waitStages.resize(waitSemaphores.semaphore_count());
    std::ranges::fill(waitStages, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
@@ -532,8 +531,8 @@ Status Device::submit_command_list(const CommandList &commandList, const Semapho
    submitInfo.pWaitDstStageMask    = waitStages.data();
    submitInfo.commandBufferCount   = commandBuffers.size();
    submitInfo.pCommandBuffers      = commandBuffers.data();
-   submitInfo.signalSemaphoreCount = signalSemaphores.size();
-   submitInfo.pSignalSemaphores    = signalSemaphores.data();
+   submitInfo.signalSemaphoreCount = signalSemaphores.semaphore_count();
+   submitInfo.pSignalSemaphores    = signalSemaphores.vulkan_semaphores();
 
    VkFence vulkanFence{};
    if (fence != nullptr) {
@@ -552,7 +551,10 @@ Status Device::submit_command_list(const CommandList &commandList, const Semapho
 {
    SemaphoreArray waitSemaphores;
    waitSemaphores.add_semaphore(waitSemaphore);
-   return this->submit_command_list(commandList, waitSemaphores, signalSemaphore, &fence);
+   SemaphoreArray signalSemaphores;
+   signalSemaphores.add_semaphore(signalSemaphore);
+
+   return this->submit_command_list(commandList, waitSemaphores, signalSemaphores, &fence);
 }
 
 Status Device::submit_command_list_one_time(const CommandList &commandList) const

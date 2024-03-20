@@ -3,8 +3,7 @@
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
-
-#include "GlyphAtlas.h"
+#include "triglav/render_core/GlyphAtlas.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_transform_2d.hpp>
@@ -13,6 +12,9 @@
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
 using triglav::render_core::SpriteUBO;
+using triglav::render_core::GlyphAtlas;
+using triglav::render_core::GlyphVertex;
+using triglav::render_core::TextMetric;
 using triglav::resource::ResourceManager;
 using namespace triglav::name_literals;
 
@@ -39,6 +41,7 @@ TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderPas
                                         graphics_api::PipelineStage::FragmentShader)
                     .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(TextColorConstant))
                     .enable_depth_test(false)
+                    .enable_blending(true)
                     .vertex_topology(graphics_api::VertexTopology::TriangleList)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 20, 20))),

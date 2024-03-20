@@ -1,14 +1,15 @@
 #include "Renderer.h"
 
-#include "GlyphAtlas.h"
-#include "node/ShadowMap.h"
-#include "node/Shading.h"
+#include "node/AmbientOcclusion.h"
 #include "node/Geometry.h"
 #include "node/PostProcessing.h"
-#include "node/AmbientOcclusion.h"
+#include "node/Shading.h"
+#include "node/ShadowMap.h"
+#include "node/UserInterface.h"
 
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/Name.hpp"
+#include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
@@ -86,7 +87,7 @@ graphics_api::TextureRenderTarget create_model_render_target(const graphics_api:
    // Position
    renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
                                GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
-   // Normaal
+   // Normal
    renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
                                GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
    // Depth
@@ -134,9 +135,6 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
     m_renderPass(checkResult(m_device->create_render_pass(m_swapchain))),
     m_framebuffers(checkResult(m_swapchain.create_framebuffers(m_renderPass))),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
-    // m_renderFinishedSemaphore(checkResult(m_device->create_semaphore())),
-    // m_inFlightFence(checkResult(m_device->create_fence())),
-    m_commandList(checkResult(m_device->create_command_list())),
     m_modelRenderTarget(create_model_render_target(*m_device, m_resolution)),
     m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
     m_modelColorTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
@@ -167,8 +165,6 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMapRenderer(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
-    m_rectangleRenderer(*m_device, m_renderPass, *m_resourceManager),
-    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 250.0f})),
     m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderPass, *m_resourceManager,
                                m_modelPositionTexture, m_modelNormalTexture,
                                m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
@@ -179,52 +175,69 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
                              m_modelDepthTexture),
     m_scene(*this, m_modelRenderer, m_shadowMapRenderer, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
-    m_glyphAtlasBold(*m_device,
-                     m_resourceManager->get<ResourceType::Typeface>("cantarell/bold.typeface"_name), g_runes,
-                     24, 500, 500),
-    m_glyphAtlas(*m_device, m_resourceManager->get<ResourceType::Typeface>("cantarell.typeface"_name),
-                 g_runes, 24, 500, 500),
     m_sprite(m_context2D.create_sprite_from_texture(m_shadowMapRenderer.depth_texture())),
-    // m_sprite(m_context2D.create_sprite_from_texture(m_glyphAtlas.texture())),
-    m_textRenderer(*m_device, m_renderPass, *m_resourceManager),
-    m_titleLabel(m_textRenderer.create_text_object(m_glyphAtlas, "Triglav Engine Demo")),
-    m_framerateLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Framerate")),
-    m_framerateValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
-    m_positionLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Position")),
-    m_positionValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0, 0")),
-    m_orientationLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Orientation")),
-    m_orientationValue(m_textRenderer.create_text_object(m_glyphAtlas, "0, 0")),
-    m_triangleCountLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Triangle Count")),
-    m_triangleCountValue(m_textRenderer.create_text_object(m_glyphAtlas, "0")),
-    m_aoLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Ambient Occlusion")),
-    m_aoValue(m_textRenderer.create_text_object(m_glyphAtlas, "Screen-Space")),
-    m_aaLabel(m_textRenderer.create_text_object(m_glyphAtlasBold, "Anti-Aliasing")),
-    m_aaValue(m_textRenderer.create_text_object(m_glyphAtlas, "Off")),
     m_renderGraph(*m_device)
 {
    m_scene.load_level("demo.level"_name);
    m_scene.compile_scene();
 
-   m_textRenderer.update_resolution(m_resolution);
+   // m_textRenderer.update_resolution(m_resolution);
    m_context2D.update_resolution(m_resolution);
 
    m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
-   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id , m_scene, m_shadowMapRenderer);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id , m_scene, m_modelFramebuffer, m_groundRenderer, m_modelRenderer);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id , m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
-   m_renderGraph.emplace_node<node::Shading>("shading"_name_id , m_shadingFramebuffer, m_shadingRenderer, m_scene);
-   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id , m_postProcessingRenderer, m_framebuffers);
+   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, m_scene, m_shadowMapRenderer);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, m_scene, m_skyBox, m_modelFramebuffer,
+                                              m_groundRenderer, m_modelRenderer);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>(
+           "ambient_occlusion"_name_id, m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
+   m_renderGraph.emplace_node<node::Shading>("shading"_name_id, m_shadingFramebuffer, m_shadingRenderer,
+                                             m_scene);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, m_resolution,
+                                                   *m_resourceManager);
+   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id, m_postProcessingRenderer,
+                                                    m_framebuffers);
 
-   // m_renderGraph.add_dependency("shadow_map"_name_id, "frame_is_ready"_name_id);
-   // m_renderGraph.add_dependency("geometry"_name_id, "frame_is_ready"_name_id);
    m_renderGraph.add_dependency("ambient_occlusion"_name_id, "geometry"_name_id);
    m_renderGraph.add_dependency("shading"_name_id, "shadow_map"_name_id);
    m_renderGraph.add_dependency("shading"_name_id, "ambient_occlusion"_name_id);
-   // m_renderGraph.add_dependency("shading"_name_id, "geometry"_name_id);
    m_renderGraph.add_dependency("post_processing"_name_id, "frame_is_ready"_name_id);
    m_renderGraph.add_dependency("post_processing"_name_id, "shading"_name_id);
+   m_renderGraph.add_dependency("post_processing"_name_id, "user_interface"_name_id);
 
    m_renderGraph.bake("post_processing"_name_id);
+
+   m_postProcessingRenderer.update_texture(
+           m_shadingColorTexture,
+           m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
+
+   auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
+   ui.add_label("fps"_name_id, "Framerate");
+   ui.add_label("pos"_name_id, "Position");
+   ui.add_label("orien"_name_id, "Orientation");
+   ui.add_label("triangles"_name_id, "GBuffer Triangles");
+   ui.add_label("ao"_name_id, "Ambient Occlusion");
+   ui.add_label("aa"_name_id, "Anti-Aliasing");
+}
+
+void Renderer::update_debug_info(const float framerate)
+{
+   auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
+
+   const auto framerateStr = std::format("{}", framerate);
+   ui.set_value("fps"_name_id, framerateStr);
+
+   const auto camPos      = m_scene.camera().position();
+   const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
+   ui.set_value("pos"_name_id, positionStr);
+
+   const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
+   ui.set_value("orien"_name_id, orientationStr);
+
+   const auto triangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name_id));
+   ui.set_value("triangles"_name_id, triangleCountStr);
+
+   ui.set_value("ao"_name_id, m_ssaoEnabled ? "Screen-Space" : "Off");
+   ui.set_value("aa"_name_id, m_fxaaEnabled ? "FXAA" : "Off");
 }
 
 void Renderer::on_render()
@@ -232,20 +245,9 @@ void Renderer::on_render()
    const auto deltaTime = calculate_frame_duration();
    const auto framerate = calculate_framerate(deltaTime);
 
-   const auto framerateStr = std::format("{}", framerate);
-   m_textRenderer.update_text_object(m_glyphAtlas, m_framerateValue, framerateStr);
-   const auto camPos      = m_scene.camera().position();
-   const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
-   m_textRenderer.update_text_object(m_glyphAtlas, m_positionValue, positionStr);
-   const auto orientationStr = std::format("{:.2f}, {:.2f}", m_pitch, m_yaw);
-   m_textRenderer.update_text_object(m_glyphAtlas, m_orientationValue, orientationStr);
-   const auto triangleCountStr = std::format("{}", m_commandList.triangle_count());
-   m_textRenderer.update_text_object(m_glyphAtlas, m_triangleCountValue, triangleCountStr);
-   m_textRenderer.update_text_object(m_glyphAtlas, m_aoValue, m_ssaoEnabled ? "Screen-Space" : "Off");
-   m_textRenderer.update_text_object(m_glyphAtlas, m_aaValue, m_fxaaEnabled ? "FXAA" : "Off");
+   this->update_debug_info(framerate);
 
    m_renderGraph.await();
-   // m_inFlightFence.await();
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);
@@ -254,131 +256,6 @@ void Renderer::on_render()
    m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
-
-   /*
-   checkStatus(m_commandList.begin());
-   m_modelRenderer.set_active_command_list(&m_commandList);
-   m_context2D.set_active_command_list(&m_commandList);
-
-   {
-      std::array<graphics_api::ClearValue, 1> clearValues{
-              graphics_api::DepthStenctilValue{1.0f, 0.0f}
-      };
-      m_commandList.begin_render_pass(m_shadowMapRenderer.framebuffer(), clearValues);
-
-      m_shadowMapRenderer.on_begin_render(m_modelRenderer);
-      m_scene.render_shadow_map();
-
-      m_commandList.end_render_pass();
-   }
-   {
-      std::array<graphics_api::ClearValue, 4> clearValues{
-              graphics_api::ColorPalette::Black,
-              graphics_api::ColorPalette::Black,
-              graphics_api::ColorPalette::Black,
-              graphics_api::DepthStenctilValue{1.0f, 0.0f},
-      };
-      m_commandList.begin_render_pass(m_modelFramebuffer, clearValues);
-
-      m_skyBox.on_render(m_commandList, m_yaw, m_pitch, static_cast<float>(m_resolution.width),
-                         static_cast<float>(m_resolution.height));
-
-      m_groundRenderer.draw(m_commandList, m_scene.camera());
-
-      m_modelRenderer.begin_render();
-      m_scene.render();
-
-      if (m_showDebugLines) {
-         m_debugLinesRenderer.begin_render(m_commandList);
-         m_scene.render_debug_lines();
-      }
-
-      m_commandList.end_render_pass();
-   }
-
-   {
-      std::array<graphics_api::ClearValue, 1> clearValues{
-              graphics_api::ColorPalette::Black,
-      };
-      m_commandList.begin_render_pass(m_ambientOcclusionFramebuffer, clearValues);
-
-      m_ambientOcclusionRenderer.draw(m_commandList, m_scene.camera().projection_matrix());
-
-      m_commandList.end_render_pass();
-   }
-
-   {
-      std::array<graphics_api::ClearValue, 1> clearValues{
-              graphics_api::ColorPalette::Black,
-      };
-      m_commandList.begin_render_pass(m_shadingFramebuffer, clearValues);
-
-      const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
-                             glm::inverse(m_scene.camera().view_matrix());
-      const auto lightPosition =
-              m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
-
-      m_shadingRenderer.draw(m_commandList, glm::vec3(lightPosition), shadowMat, m_ssaoEnabled);
-
-      m_commandList.end_render_pass();
-   }
-
-   {
-      std::array<graphics_api::ClearValue, 3> clearValues{
-              graphics_api::ColorPalette::Black,
-              graphics_api::DepthStenctilValue{1.0f, 0.0f},
-              graphics_api::ColorPalette::Black,
-      };
-      m_commandList.begin_render_pass(m_framebuffers[framebufferIndex], clearValues);
-
-      m_postProcessingRenderer.draw(m_commandList, m_fxaaEnabled);
-
-      m_rectangleRenderer.begin_render(m_commandList);
-      m_rectangleRenderer.draw(m_commandList, m_renderPass, m_rectangle, m_resolution);
-
-      // m_context2D.begin_render();
-      // m_context2D.draw_sprite(m_sprite, {0.0f, 0.0f}, {0.2f, 0.2f});
-
-      m_textRenderer.begin_render(m_commandList);
-      auto textY = 16.0f + m_titleLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_titleLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      textY += 24.0f + m_framerateLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_framerateLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_framerateValue,
-                                      {16.0f + m_framerateLabel.metric.width + 8.0f, textY},
-                                      {1.0f, 1.0f, 0.4f});
-      textY += 12.0f + m_positionLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_positionLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_positionValue,
-                                      {16.0f + m_positionLabel.metric.width + 8.0f, textY},
-                                      {1.0f, 1.0f, 0.4f});
-      textY += 12.0f + m_orientationLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_orientationLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_orientationValue,
-                                      {16.0f + m_orientationLabel.metric.width + 8.0f, textY},
-                                      {1.0f, 1.0f, 0.4f});
-      textY += 12.0f + m_triangleCountLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_triangleCountLabel, {16.0f, textY},
-                                      {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_triangleCountValue,
-                                      {16.0f + m_triangleCountLabel.metric.width + 8.0f, textY},
-                                      {1.0f, 1.0f, 0.4f});
-      textY += 12.0f + m_aoLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_aoLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_aoValue,
-                                      {16.0f + m_aoLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
-      textY += 12.0f + m_aaLabel.metric.height;
-      m_textRenderer.draw_text_object(m_commandList, m_aaLabel, {16.0f, textY}, {1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text_object(m_commandList, m_aaValue,
-                                      {16.0f + m_aaLabel.metric.width + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
-
-      m_commandList.end_render_pass();
-   }
-
-   checkStatus(m_commandList.finish());
-   checkStatus(m_device->submit_command_list(m_commandList, m_framebufferReadySemaphore,
-                                             m_renderFinishedSemaphore, m_inFlightFence));
-   */
    checkStatus(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));
 }
 
@@ -389,21 +266,7 @@ void Renderer::on_close() const
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
 {
-   m_yaw -= dx * 0.01f;
-   while (m_yaw < 0) {
-      m_yaw += 2 * M_PI;
-   }
-   while (m_yaw >= 2 * M_PI) {
-      m_yaw -= 2 * M_PI;
-   }
-
-   m_pitch += dy * 0.01f;
-   m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f,
-                        static_cast<float>(M_PI) / 2.0f - 0.01f);
-
-   m_scene.camera().set_orientation(glm::quat{
-           glm::vec3{m_pitch, 0.0f, m_yaw}
-   });
+   m_scene.update_orientation(-dx * 0.01f, dy * 0.01f);
 }
 
 static Renderer::Moving map_direction(const Key key)
@@ -520,7 +383,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    const graphics_api::Resolution resolution{width, height};
 
-   m_textRenderer.update_resolution(resolution);
+   // m_textRenderer.update_resolution(resolution);
    m_context2D.update_resolution(resolution);
 
    m_device->await_all();
@@ -562,7 +425,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
            m_modelPositionTexture, m_modelNormalTexture,
            m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
 
-   m_postProcessingRenderer.update_texture(m_shadingColorTexture, m_modelDepthTexture);
+   m_postProcessingRenderer.update_texture(m_shadingColorTexture, m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    m_framebuffers.clear();
 

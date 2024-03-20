@@ -25,6 +25,7 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api:
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                                        graphics_api::PipelineStage::FragmentShader)
                                    .enable_depth_test(false)
+                                   .enable_blending(true)
                                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 1, 20)))
 {
@@ -65,7 +66,7 @@ void RectangleRenderer::begin_render(graphics_api::CommandList &cmdList) const
 }
 
 void RectangleRenderer::draw(const graphics_api::CommandList &cmdList,
-                             const graphics_api::RenderPass &renderPass, const Rectangle &rect,
+                             const Rectangle &rect,
                              const graphics_api::Resolution &resolution) const
 {
    rect.vertexUBO->viewportSize = {resolution.width, resolution.height};

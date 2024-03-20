@@ -16,7 +16,7 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                                graphics_api::RenderPass &renderPass,
                                                ResourceManager &resourceManager,
                                                const graphics_api::Texture &colorTexture,
-                                               const graphics_api::Texture &depthTexture) :
+                                               const graphics_api::Texture &overlayTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
@@ -36,15 +36,15 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
    writer.set_sampled_texture(0, colorTexture, m_sampler);
-   writer.set_sampled_texture(1, depthTexture, m_sampler);
+   writer.set_sampled_texture(1, overlayTexture, m_sampler);
 }
 
 void PostProcessingRenderer::update_texture(const graphics_api::Texture &colorTexture,
-                                            const graphics_api::Texture &depthTexture) const
+                                            const graphics_api::Texture &overlayTexture) const
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
    writer.set_sampled_texture(0, colorTexture, m_sampler);
-   writer.set_sampled_texture(1, depthTexture, m_sampler);
+   writer.set_sampled_texture(1, overlayTexture, m_sampler);
 }
 
 void PostProcessingRenderer::draw(graphics_api::CommandList &cmdList, const bool enableFXAA) const

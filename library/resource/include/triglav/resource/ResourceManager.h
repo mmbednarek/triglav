@@ -36,6 +36,8 @@ class ResourceManager
    {
       if constexpr (Loader<CResourceType>::type == ResourceLoadType::Graphics) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path));
+      } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::GraphicsDependent) {
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(*this, m_device, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
          container<CResourceType>().register_resource(name,
                                                       Loader<CResourceType>::load_font(m_fontManager, path));

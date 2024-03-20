@@ -4,7 +4,7 @@ layout(location = 0) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
 
 layout(binding = 0) uniform sampler2D texColor;
-layout(binding = 1) uniform sampler2D texDepth;
+layout(binding = 1) uniform sampler2D texOverlay;
 
 const vec3 luma = vec3(0.299, 0.587, 0.114);
 
@@ -189,6 +189,6 @@ void main() {
     vec3 fxaaColor = calculate_fxaa();
 //    vec3 blurredColor = sample_blurred_color(fragTexCoord);
 //    float depth = linearize_depth(texture(texDepth, fragTexCoord).r);
-
-    outColor = vec4(fxaaColor, 1.0);
+    vec4 overlayColor = texture(texOverlay, fragTexCoord);
+    outColor = vec4(overlayColor.rgb * overlayColor.a + fxaaColor * (1 - overlayColor.a), 1.0);
 }
