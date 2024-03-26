@@ -17,7 +17,7 @@
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
-#include "triglav/graphics_api/TextureRenderTarget.h"
+#include "triglav/graphics_api/RenderTarget.h"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/RenderGraph.h"
@@ -88,14 +88,14 @@ class Renderer
 
    graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
-   graphics_api::RenderTarget m_renderPass;
+   graphics_api::RenderTarget m_renderTarget;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
-   graphics_api::RenderTarget m_modelRenderPass;
-   graphics_api::Framebuffer m_modelFramebuffer;
-   graphics_api::RenderTarget m_ambientOcclusionRenderPass;
+   graphics_api::RenderTarget m_geometryRenderTarget;
+   graphics_api::Framebuffer m_geometryBuffer;
+   graphics_api::RenderTarget m_ambientOcclusionRenderTarget;
    graphics_api::Framebuffer m_ambientOcclusionFramebuffer;
-   graphics_api::RenderTarget m_shadingRenderPass;
+   graphics_api::RenderTarget m_shadingRenderTarget;
    graphics_api::Framebuffer m_shadingFramebuffer;
    ModelRenderer m_modelRenderer;
    GroundRenderer m_groundRenderer;

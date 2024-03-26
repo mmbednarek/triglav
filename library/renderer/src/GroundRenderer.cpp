@@ -12,10 +12,10 @@ using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
-GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
+    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("ground.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("ground.vshader"_name))
                                    // Descriptor layout

@@ -16,7 +16,7 @@ class PostProcessingRenderer
       int enableFXAA{};
    };
 
-   PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                           triglav::resource::ResourceManager &resourceManager,
                           const graphics_api::Texture &colorTexture,
                           const graphics_api::Texture &overlayTexture);

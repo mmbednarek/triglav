@@ -13,12 +13,12 @@ using triglav::ResourceType;
 namespace triglav::renderer {
 
 PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
-                                               graphics_api::RenderTarget &renderPass,
+                                               graphics_api::RenderTarget &renderTarget,
                                                ResourceManager &resourceManager,
                                                const graphics_api::Texture &colorTexture,
                                                const graphics_api::Texture &overlayTexture) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
+    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_name))
                                    // Descriptor layout

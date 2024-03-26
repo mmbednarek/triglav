@@ -25,7 +25,7 @@ class ShadingRenderer
       glm::mat4 shadowMapMat;
    };
 
-   ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                    resource::ResourceManager &resourceManager,
                    graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &aoTexture,
                    const graphics_api::Texture &shadowMapTexture);

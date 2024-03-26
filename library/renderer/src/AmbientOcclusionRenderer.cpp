@@ -5,6 +5,7 @@
 
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
+#include "triglav/graphics_api/Framebuffer.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/RenderCore.hpp"
 
@@ -16,12 +17,12 @@ using triglav::resource::ResourceManager;
 namespace triglav::renderer {
 
 AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
-                                                   graphics_api::RenderTarget &renderPass,
+                                                   graphics_api::RenderTarget &renderTarget,
                                                    ResourceManager &resourceManager,
                                                    graphics_api::Framebuffer &geometryBuffer,
                                                    const graphics_api::Texture &noiseTexture) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
+    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>(
                                            "ambient_occlusion.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>(
@@ -57,7 +58,8 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
    writer.set_uniform_buffer(3, m_uniformBuffer);
 }
 
-void AmbientOcclusionRenderer::update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &noiseTexture) const
+void AmbientOcclusionRenderer::update_textures(graphics_api::Framebuffer &geometryBuffer,
+                                               const graphics_api::Texture &noiseTexture) const
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
    writer.set_sampled_texture(0, geometryBuffer.texture(1), m_sampler);
@@ -105,4 +107,4 @@ AmbientOcclusionRenderer::generate_sample_points(const size_t count)
    return result;
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

@@ -5,7 +5,7 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/graphics_api/Texture.h"
-#include "triglav/graphics_api/TextureRenderTarget.h"
+#include "triglav/graphics_api/RenderTarget.h"
 
 #include <map>
 #include <string_view>

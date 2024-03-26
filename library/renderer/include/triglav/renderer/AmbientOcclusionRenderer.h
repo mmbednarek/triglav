@@ -26,7 +26,7 @@ class AmbientOcclusionRenderer
       AlignedVec3 samplesSSAO[g_SampleCountSSAO];
    };
 
-   AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                             resource::ResourceManager &resourceManager,
                             graphics_api::Framebuffer &geometryBuffer,
                             const graphics_api::Texture &noiseTexture);

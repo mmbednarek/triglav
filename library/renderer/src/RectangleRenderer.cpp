@@ -11,10 +11,10 @@ using triglav::render_core::checkResult;
 
 namespace triglav::renderer {
 
-RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                      ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderPass)
+    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderTarget)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("rectangle.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("rectangle.vshader"_name))
                                    .begin_vertex_layout<glm::vec2>()

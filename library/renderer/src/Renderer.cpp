@@ -137,7 +137,7 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(
             m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
-    m_renderPass(checkResult(graphics_api::RenderTargetBuilder(*m_device)
+    m_renderTarget(checkResult(graphics_api::RenderTargetBuilder(*m_device)
                                      .attachment(graphics_api::AttachmentType::Color |
                                                          graphics_api::AttachmentType::Presentable,
                                                  graphics_api::AttachmentLifetime::ClearPreserve,
@@ -146,26 +146,26 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
                                                  graphics_api::AttachmentLifetime::ClearDiscard,
                                                  g_depthFormat, graphics_api::SampleCount::Single)
                                      .build())),
-    m_framebuffers(create_framebuffers(m_swapchain, m_renderPass)),
+    m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
-    m_modelRenderPass(create_model_render_target(*m_device)),
-    m_modelFramebuffer(checkResult(m_modelRenderPass.create_framebuffer(m_resolution))),
-    m_ambientOcclusionRenderPass(create_ao_render_target(*m_device)),
-    m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderPass.create_framebuffer(m_resolution))),
-    m_shadingRenderPass(create_shading_render_target(*m_device)),
-    m_shadingFramebuffer(checkResult(m_shadingRenderPass.create_framebuffer(m_resolution))),
-    m_modelRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
-    m_groundRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
-    m_context2D(*m_device, m_renderPass, *m_resourceManager),
+    m_geometryRenderTarget(create_model_render_target(*m_device)),
+    m_geometryBuffer(checkResult(m_geometryRenderTarget.create_framebuffer(m_resolution))),
+    m_ambientOcclusionRenderTarget(create_ao_render_target(*m_device)),
+    m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(m_resolution))),
+    m_shadingRenderTarget(create_shading_render_target(*m_device)),
+    m_shadingFramebuffer(checkResult(m_shadingRenderTarget.create_framebuffer(m_resolution))),
+    m_modelRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
+    m_groundRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
+    m_context2D(*m_device, m_renderTarget, *m_resourceManager),
     m_shadowMapRenderer(*m_device, *m_resourceManager),
-    m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
-    m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderPass, *m_resourceManager,
-                               m_modelFramebuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
-    m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelFramebuffer,
+    m_debugLinesRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
+    m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderTarget, *m_resourceManager,
+                               m_geometryBuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
+    m_shadingRenderer(*m_device, m_shadingRenderTarget, *m_resourceManager, m_geometryBuffer,
                       m_ambientOcclusionFramebuffer.texture(0),
                       m_shadowMapRenderer.depth_texture()),
-    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingFramebuffer.texture(0),
-                             m_modelFramebuffer.texture(1)),
+    m_postProcessingRenderer(*m_device, m_renderTarget, *m_resourceManager, m_shadingFramebuffer.texture(0),
+                             m_geometryBuffer.texture(1)),
     m_scene(*this, m_modelRenderer, m_shadowMapRenderer, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_sprite(m_context2D.create_sprite_from_texture(m_shadowMapRenderer.depth_texture())),
@@ -179,7 +179,7 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 
    m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, m_scene, m_shadowMapRenderer);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, m_scene, m_skyBox, m_modelFramebuffer,
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, m_scene, m_skyBox, m_geometryBuffer,
                                               m_groundRenderer, m_modelRenderer);
    m_renderGraph.emplace_node<node::AmbientOcclusion>(
            "ambient_occlusion"_name_id, m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
@@ -309,7 +309,7 @@ void Renderer::on_mouse_wheel_turn(const float x)
 
 graphics_api::PipelineBuilder Renderer::create_pipeline()
 {
-   return {*m_device, m_modelRenderPass};
+   return {*m_device, m_geometryRenderTarget};
 }
 
 ResourceManager &Renderer::resource_manager() const
@@ -379,17 +379,17 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_device->await_all();
 
-   m_modelFramebuffer = checkResult(m_modelRenderPass.create_framebuffer(resolution));
-   m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderPass.create_framebuffer(resolution));
-   m_shadingFramebuffer = checkResult(m_shadingRenderPass.create_framebuffer(resolution));
-   m_shadingRenderer.update_textures(m_modelFramebuffer, m_ambientOcclusionFramebuffer.texture(0), m_shadowMapRenderer.depth_texture());
-   m_ambientOcclusionRenderer.update_textures(m_modelFramebuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
+   m_geometryBuffer = checkResult(m_geometryRenderTarget.create_framebuffer(resolution));
+   m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(resolution));
+   m_shadingFramebuffer = checkResult(m_shadingRenderTarget.create_framebuffer(resolution));
+   m_shadingRenderer.update_textures(m_geometryBuffer, m_ambientOcclusionFramebuffer.texture(0), m_shadowMapRenderer.depth_texture());
+   m_ambientOcclusionRenderer.update_textures(m_geometryBuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
    m_postProcessingRenderer.update_texture(m_shadingFramebuffer.texture(0), m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    m_framebuffers.clear();
 
    m_swapchain = checkResult(m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
-   m_framebuffers = create_framebuffers(m_swapchain, m_renderPass);
+   m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};
 }

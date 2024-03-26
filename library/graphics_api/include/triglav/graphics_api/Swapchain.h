@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Framebuffer.h"
-#include "IRenderTarget.hpp"
 #include "Texture.h"
 #include "vulkan/ObjectWrapper.hpp"
 

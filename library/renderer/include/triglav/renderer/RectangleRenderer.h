@@ -33,7 +33,7 @@ struct Rectangle
 class RectangleRenderer
 {
  public:
-   RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                      triglav::resource::ResourceManager &resourceManager);
 
    [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect);

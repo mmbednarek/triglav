@@ -1,5 +1,7 @@
 #include "Geometry.h"
 
+#include "triglav/graphics_api/Framebuffer.h"
+
 namespace triglav::renderer::node {
 
 Geometry::Geometry(Scene &scene, SkyBox& skybox, graphics_api::Framebuffer &modelFramebuffer, GroundRenderer &groundRenderer,

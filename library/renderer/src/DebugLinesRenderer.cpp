@@ -11,10 +11,10 @@ using triglav::render_core::checkResult;
 
 namespace triglav::renderer {
 
-DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                        ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderPass)
+    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderTarget)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("debug_lines.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("debug_lines.vshader"_name))
                                    .begin_vertex_layout<glm::vec3>()

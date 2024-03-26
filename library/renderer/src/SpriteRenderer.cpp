@@ -24,13 +24,13 @@ struct Vertex2D
    glm::vec3 location;
 };
 
-SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                ResourceManager &resourceManager) :
     m_device(device),
-    m_renderPass(renderPass),
+    m_renderTarget(renderTarget),
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(m_device, renderPass)
+            graphics_api::PipelineBuilder(m_device, renderTarget)
                     .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("sprite.fshader"_name))
                     .vertex_shader(resourceManager.get<ResourceType::VertexShader>("sprite.vshader"_name))
                     // Descriptor layout

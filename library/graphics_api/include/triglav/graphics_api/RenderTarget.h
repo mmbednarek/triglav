@@ -3,7 +3,6 @@
 #include <span>
 
 #include "Framebuffer.h"
-#include "IRenderTarget.hpp"
 #include "Texture.h"
 #include "Swapchain.h"
 
@@ -21,6 +20,12 @@ struct AttachmentInfo
    AttachmentLifetime lifetime;
    ColorFormat format;
    SampleCount sampleCount;
+};
+
+struct Subpass
+{
+   std::vector<VkAttachmentReference> references{};
+   VkSubpassDescription description{};
 };
 
 class RenderTarget

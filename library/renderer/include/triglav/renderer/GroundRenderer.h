@@ -21,7 +21,7 @@ class GroundRenderer
    };
 
  public:
-   GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                   resource::ResourceManager &resourceManager);
 
    void draw(graphics_api::CommandList &cmdList, const Camera &camera) const;

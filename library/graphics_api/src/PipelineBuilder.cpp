@@ -2,7 +2,7 @@
 
 #include "Device.h"
 #include "Shader.h"
-#include "TextureRenderTarget.h"
+#include "RenderTarget.h"
 #include "vulkan/Util.h"
 
 namespace triglav::graphics_api {

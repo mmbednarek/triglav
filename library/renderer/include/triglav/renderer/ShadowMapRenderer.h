@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/graphics_api/TextureRenderTarget.h"
+#include "triglav/graphics_api/RenderTarget.h"
 #include "triglav/graphics_api/Pipeline.h"
 #include "triglav/render_core/Model.hpp"
 

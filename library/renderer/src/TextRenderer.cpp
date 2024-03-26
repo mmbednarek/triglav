@@ -20,13 +20,13 @@ using namespace triglav::name_literals;
 
 namespace triglav::renderer {
 
-TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                            ResourceManager &resourceManager) :
     m_device(device),
-    m_renderPass(renderPass),
+    m_renderTarget(renderTarget),
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(m_device, renderPass)
+            graphics_api::PipelineBuilder(m_device, renderTarget)
                     .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("text.fshader"_name))
                     .vertex_shader(resourceManager.get<ResourceType::VertexShader>("text.vshader"_name))
                     // Vertex description

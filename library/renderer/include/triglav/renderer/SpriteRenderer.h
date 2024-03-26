@@ -12,7 +12,7 @@ namespace triglav::renderer {
 class SpriteRenderer
 {
  public:
-   SpriteRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   SpriteRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                   resource::ResourceManager &resourceManager);
 
    [[nodiscard]] render_core::Sprite create_sprite(triglav::Name textureName);
@@ -25,7 +25,7 @@ class SpriteRenderer
 
  private:
    graphics_api::Device &m_device;
-   graphics_api::RenderTarget &m_renderPass;
+   graphics_api::RenderTarget &m_renderTarget;
    resource::ResourceManager &m_resourceManager;
    graphics_api::Resolution m_resolution{};
 

@@ -20,7 +20,7 @@ struct DebugLines
 class DebugLinesRenderer
 {
  public:
-   DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+   DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                       resource::ResourceManager &resourceManager);
 
    [[nodiscard]] DebugLines create_line_list(std::span<glm::vec3> list);
