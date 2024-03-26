@@ -1,16 +1,13 @@
 #pragma once
 
 #include "Buffer.h"
-#include "DepthRenderTarget.h"
 #include "GraphicsApi.hpp"
 #include "Surface.hpp"
-#include "RenderPass.h"
 #include "Sampler.h"
 #include "Shader.h"
 #include "Swapchain.h"
 #include "Synchronization.h"
 #include "Texture.h"
-#include "TextureRenderTarget.h"
 #include "QueueManager.h"
 #include "vulkan/ObjectWrapper.hpp"
 
@@ -77,11 +74,7 @@ class Device
           vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
           std::vector<QueueFamilyInfo>&& queueFamilyInfos);
 
-   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
-                                                    ColorFormat depthFormat, SampleCount sampleCount,
-                                                    const Resolution &resolution,
-                                                    Swapchain *oldSwapchain = nullptr);
-   [[nodiscard]] Result<RenderPass> create_render_pass(IRenderTarget &renderTarget);
+   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace, const Resolution &resolution, Swapchain *oldSwapchain = nullptr);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint,
                                               std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
@@ -93,9 +86,6 @@ class Device
                                                 SampleCount sampleCount = SampleCount::Single,
                                                 int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo& info);
-   [[nodiscard]] Result<DepthRenderTarget> create_depth_render_target(const ColorFormat &depthFormat,
-                                                                      const Resolution &resolution) const;
-   [[nodiscard]] Result<TextureRenderTarget> create_texture_render_target(const Resolution &resolution) const;
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
 

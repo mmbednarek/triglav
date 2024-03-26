@@ -135,17 +135,18 @@ Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sampleCou
    return std::unexpected{Status::UnsupportedFormat};
 }
 
-Result<VkImageLayout> to_vulkan_image_layout(const AttachmentType type, const AttachmentLifetime lifetime)
+Result<VkImageLayout> to_vulkan_image_layout(const AttachmentTypeFlags type, const AttachmentLifetime lifetime)
 {
-   switch (type) {
-   case AttachmentType::Color: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   case AttachmentType::Depth: {
-      // If we preserve the depth buffer, we need to make it optimal for reading.
+   if (type & AttachmentType::Presentable) {
+      return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+   }
+   if (type & AttachmentType::Depth) {
       if (lifetime == AttachmentLifetime::ClearPreserve)
          return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
       return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
    }
-   case AttachmentType::Presentable: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+   if (type & AttachmentType::Color) {
+      return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    }
 
    return std::unexpected{Status::UnsupportedFormat};

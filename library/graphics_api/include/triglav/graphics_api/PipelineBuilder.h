@@ -8,13 +8,13 @@
 namespace triglav::graphics_api {
 
 class Device;
-class RenderPass;
+class RenderTarget;
 class Shader;
 
 class PipelineBuilder
 {
  public:
-   PipelineBuilder(Device &device, RenderPass &renderPass);
+   PipelineBuilder(Device &device, RenderTarget &renderPass);
 
    PipelineBuilder &fragment_shader(const Shader &shader);
    PipelineBuilder &vertex_shader(const Shader &shader);
@@ -43,7 +43,7 @@ class PipelineBuilder
 
  private:
    Device &m_device;
-   RenderPass &m_renderPass;
+   RenderTarget &m_renderTarget;
 
    uint32_t m_vertexLocation{0};
    uint32_t m_vertexBinding{0};

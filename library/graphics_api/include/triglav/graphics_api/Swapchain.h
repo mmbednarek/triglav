@@ -9,44 +9,33 @@
 
 namespace triglav::graphics_api {
 
-class RenderPass;
+class RenderTarget;
 class Semaphore;
 class QueueManager;
 
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(SwapchainKHR, Device)
 
-class Swapchain final : public IRenderTarget
+class Swapchain
 {
  public:
-   Swapchain(QueueManager &queueManager, const ColorFormat &colorFormat, const ColorFormat &depthFormat, SampleCount sampleCount,
-             const Resolution &resolution, Texture depthAttachment, std::optional<Texture> colorAttachment,
-             std::vector<vulkan::ImageView> imageViews, vulkan::SwapchainKHR swapchain);
+   Swapchain(QueueManager &queueManager, const Resolution &resolution, std::vector<vulkan::ImageView> imageViews, vulkan::SwapchainKHR swapchain,
+             const ColorFormat &colorFormat);
 
-   [[nodiscard]] Subpass vulkan_subpass() override;
-   [[nodiscard]] std::vector<VkAttachmentDescription> vulkan_attachments() override;
-   [[nodiscard]] std::vector<VkSubpassDependency> vulkan_subpass_dependencies() override;
    [[nodiscard]] Resolution resolution() const;
-   [[nodiscard]] ColorFormat color_format() const;
-   [[nodiscard]] SampleCount sample_count() const override;
-   [[nodiscard]] int color_attachment_count() const override;
 
    [[nodiscard]] VkSwapchainKHR vulkan_swapchain() const;
-   [[nodiscard]] uint32_t get_available_framebuffer(const Semaphore &semaphore) const;
-
-   [[nodiscard]] Result<std::vector<Framebuffer>> create_framebuffers(const RenderPass &renderPass);
+   [[nodiscard]] u32 get_available_framebuffer(const Semaphore &semaphore) const;
    [[nodiscard]] Status present(const Semaphore &semaphore, uint32_t framebufferIndex);
+   [[nodiscard]] VkImageView vulkan_image_view(u32 frameIndex) const;
+   [[nodiscard]] u32 frame_count() const;
+   [[nodiscard]] ColorFormat color_format() const;
 
  private:
    std::reference_wrapper<QueueManager> m_queueManager;
-   ColorFormat m_colorFormat;
-   ColorFormat m_depthFormat;
-   SampleCount m_sampleCount;
    Resolution m_resolution;
-   Texture m_depthAttachment;
-   std::optional<Texture> m_colorAttachment;// std::nullopt if multisampling is disabled
    std::vector<vulkan::ImageView> m_imageViews;
-
    vulkan::SwapchainKHR m_swapchain;
+   ColorFormat m_colorFormat;
 };
 
 }// namespace triglav::graphics_api

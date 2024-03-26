@@ -22,19 +22,16 @@ class AmbientOcclusionRenderer
 
    struct UniformData
    {
-      glm::mat4 cameraProjection;
+      glm::mat4 cameraProjection{};
       AlignedVec3 samplesSSAO[g_SampleCountSSAO];
    };
 
-   AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                            triglav::resource::ResourceManager &resourceManager,
-                            const graphics_api::Texture &positionTexture,
-                            const graphics_api::Texture &normalTexture,
+   AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+                            resource::ResourceManager &resourceManager,
+                            graphics_api::Framebuffer &geometryBuffer,
                             const graphics_api::Texture &noiseTexture);
 
-   void update_textures(const graphics_api::Texture &positionTexture,
-                        const graphics_api::Texture &normalTexture,
-                        const graphics_api::Texture &noiseTexture) const;
+   void update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &noiseTexture) const;
 
    void draw(graphics_api::CommandList &cmdList, const glm::mat4 &cameraProjection) const;
    static std::vector<AlignedVec3> generate_sample_points(size_t count);

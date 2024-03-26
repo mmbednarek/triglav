@@ -2,13 +2,14 @@
 
 #include "Device.h"
 #include "Shader.h"
+#include "TextureRenderTarget.h"
 #include "vulkan/Util.h"
 
 namespace triglav::graphics_api {
 
-PipelineBuilder::PipelineBuilder(Device &device, RenderPass &renderPass) :
+PipelineBuilder::PipelineBuilder(Device &device, RenderTarget &renderPass) :
     m_device(device),
-    m_renderPass(renderPass)
+    m_renderTarget(renderPass)
 {
 }
 
@@ -84,7 +85,7 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, size_t size, size_t offset)
+PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size, const size_t offset)
 {
    VkPushConstantRange range;
    range.offset     = offset;
@@ -196,7 +197,7 @@ Result<Pipeline> PipelineBuilder::build() const
    rasterizationStateInfo.depthBiasClamp          = 0.0f;
    rasterizationStateInfo.depthBiasSlopeFactor    = 0.0f;
 
-   const auto sampleCount = m_renderPass.sample_count();
+   const auto sampleCount = m_renderTarget.sample_count();
 
    VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
    multisamplingInfo.sType                = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -205,7 +206,7 @@ Result<Pipeline> PipelineBuilder::build() const
    multisamplingInfo.minSampleShading     = 1.0f;
 
    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
-   for (int i = 0; i < m_renderPass.color_attachment_count(); ++i) {
+   for (int i = 0; i < m_renderTarget.color_attachment_count(); ++i) {
       VkPipelineColorBlendAttachmentState colorBlendAttachment{};
       colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
                                             VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -272,7 +273,7 @@ Result<Pipeline> PipelineBuilder::build() const
    pipelineInfo.pVertexInputState   = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
    pipelineInfo.pDepthStencilState  = &depthStencilStateInfo;
-   pipelineInfo.renderPass          = m_renderPass.vulkan_render_pass();
+   pipelineInfo.renderPass          = m_renderTarget.vulkan_render_pass();
    pipelineInfo.subpass             = 0;
    pipelineInfo.basePipelineHandle  = nullptr;
    pipelineInfo.basePipelineIndex   = -1;

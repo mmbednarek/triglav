@@ -24,7 +24,7 @@ struct Vertex2D
    glm::vec3 location;
 };
 
-SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
                                ResourceManager &resourceManager) :
     m_device(device),
     m_renderPass(renderPass),

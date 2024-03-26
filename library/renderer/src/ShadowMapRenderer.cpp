@@ -26,13 +26,11 @@ ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManag
     m_device(device),
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
-            checkResult(device.create_depth_render_target(GAPI_FORMAT(D, Float32), g_shadowMapResolution))),
-    m_depthTexture(checkResult(device.create_texture(g_shadowMapFormat, g_shadowMapResolution,
-                                                     graphics_api::TextureType::SampledDepthBuffer))),
-    m_renderPass(checkResult(device.create_render_pass(m_depthRenderTarget))),
-    m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(m_renderPass, m_depthTexture))),
+            checkResult(graphics_api::RenderTargetBuilder(device)
+               .attachment(graphics_api::AttachmentType::Depth, graphics_api::AttachmentLifetime::ClearPreserve, GAPI_FORMAT(D, Float32), graphics_api::SampleCount::Single).build())),
+    m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(g_shadowMapResolution))),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(device, m_renderPass)
+            graphics_api::PipelineBuilder(device, m_depthRenderTarget)
                     .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_name))
                     .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shadow_map.vshader"_name))
                     .begin_vertex_layout<geometry::Vertex>()
@@ -46,9 +44,9 @@ ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManag
 {
 }
 
-const graphics_api::Texture &ShadowMapRenderer::depth_texture() const
+const graphics_api::Texture &ShadowMapRenderer::depth_texture()
 {
-   return m_depthTexture;
+   return m_framebuffer.texture(0);
 }
 
 const graphics_api::Framebuffer &ShadowMapRenderer::framebuffer() const

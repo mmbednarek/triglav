@@ -20,7 +20,7 @@ using namespace triglav::name_literals;
 
 namespace triglav::renderer {
 
-TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+TextRenderer::TextRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
                            ResourceManager &resourceManager) :
     m_device(device),
     m_renderPass(renderPass),

@@ -25,12 +25,12 @@ namespace triglav::renderer {
 
 constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
 
-ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+ModelRenderer::ModelRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                              ResourceManager &resourceManager) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(m_device, renderPass)
+            graphics_api::PipelineBuilder(m_device, renderTarget)
                     .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("model.fshader"_name))
                     .vertex_shader(resourceManager.get<ResourceType::VertexShader>("model.vshader"_name))
                     // Vertex description

@@ -13,7 +13,7 @@ using triglav::ResourceType;
 namespace triglav::renderer {
 
 PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
-                                               graphics_api::RenderPass &renderPass,
+                                               graphics_api::RenderTarget &renderPass,
                                                ResourceManager &resourceManager,
                                                const graphics_api::Texture &colorTexture,
                                                const graphics_api::Texture &overlayTexture) :

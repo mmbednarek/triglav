@@ -6,33 +6,15 @@ namespace triglav::renderer::node {
 
 using namespace name_literals;
 
-namespace {
-
-graphics_api::TextureRenderTarget create_render_target(const graphics_api::Device &device,
-                                                       const graphics_api::Resolution resolution)
-{
-   using graphics_api::AttachmentLifetime;
-   using graphics_api::AttachmentType;
-   using graphics_api::SampleCount;
-
-   auto renderTarget = GAPI_CHECK(device.create_texture_render_target(resolution));
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
-   return renderTarget;
-}
-
-}// namespace
-
 UserInterface::UserInterface(graphics_api::Device &device, const graphics_api::Resolution resolution,
                              resource::ResourceManager &resourceManager) :
     m_resourceManager(resourceManager),
-    m_textureRenderTarget(create_render_target(device, resolution)),
-    m_texture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
-                                               graphics_api::TextureType::ColorAttachment))),
-    m_renderPass(GAPI_CHECK(device.create_render_pass(m_textureRenderTarget))),
-    m_framebuffer(GAPI_CHECK(m_textureRenderTarget.create_framebuffer(m_renderPass, m_texture))),
-    m_rectangleRenderer(device, m_renderPass, m_resourceManager),
-    m_textRenderer(device, m_renderPass, m_resourceManager),
+    m_textureRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device).attachment(
+            graphics_api::AttachmentType::Color, graphics_api::AttachmentLifetime::ClearPreserve,
+            GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single).build())),
+    m_framebuffer(GAPI_CHECK(m_textureRenderTarget.create_framebuffer(resolution))),
+    m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager),
+    m_textRenderer(device, m_textureRenderTarget, m_resourceManager),
     m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 480.0f, 250.0f})),
     m_titleLabel(m_textRenderer.create_text_object(
             m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell/bold.glyphs"_name),
@@ -76,10 +58,13 @@ void UserInterface::record_commands(graphics_api::CommandList &cmdList)
 void UserInterface::add_label(const NameID id, const std::string_view name)
 {
    m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell.glyphs"_name);
-   m_properties.emplace(id, TextProperty{m_textRenderer.create_text_object(
-                             m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell.glyphs"_name), name),
-                     m_textRenderer.create_text_object(
-                             m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell.glyphs"_name), "none")});
+   m_properties.emplace(
+           id, TextProperty{m_textRenderer.create_text_object(
+                                    m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell.glyphs"_name),
+                                    name),
+                            m_textRenderer.create_text_object(
+                                    m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell.glyphs"_name),
+                                    "none")});
 }
 
 void UserInterface::set_value(const NameID id, const std::string_view value)
@@ -90,7 +75,7 @@ void UserInterface::set_value(const NameID id, const std::string_view value)
 
 graphics_api::Texture &UserInterface::texture()
 {
-   return m_texture;
+   return m_framebuffer.texture(0);
 }
 
 }// namespace triglav::renderer::node

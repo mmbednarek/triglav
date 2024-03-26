@@ -137,19 +137,13 @@ uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 
 }// namespace
 
-Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
-                                           ColorFormat depthFormat, SampleCount sampleCount,
-                                           const Resolution &resolution, Swapchain *oldSwapchain)
+Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace, const Resolution &resolution, Swapchain *oldSwapchain)
 {
    if (not is_surface_format_supported(m_physicalDevice, m_surface, colorFormat, colorSpace))
       return std::unexpected(Status::UnsupportedFormat);
 
    const auto vulkanColorFormat = vulkan::to_vulkan_color_format(colorFormat);
    if (not vulkanColorFormat.has_value())
-      return std::unexpected(Status::UnsupportedFormat);
-
-   const auto vulkanDepthFormat = vulkan::to_vulkan_color_format(depthFormat);
-   if (not vulkanDepthFormat.has_value())
       return std::unexpected(Status::UnsupportedFormat);
 
    const auto vulkanColorSpace = vulkan::to_vulkan_color_space(colorSpace);
@@ -194,24 +188,6 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
       return std::unexpected(Status::UnsupportedFormat);
    }
 
-   auto depthAttachment =
-           this->create_texture(depthFormat, resolution, TextureType::DepthBuffer, sampleCount);
-   if (not depthAttachment.has_value()) {
-      return std::unexpected(depthAttachment.error());
-   }
-
-   std::optional<Texture> colorAttachment{};
-
-   if (sampleCount != SampleCount::Single) {
-      auto texture =
-              this->create_texture(colorFormat, resolution, TextureType::MultisampleImage, sampleCount);
-      if (not texture.has_value()) {
-         return std::unexpected(texture.error());
-      }
-
-      colorAttachment = std::move(*texture);
-   }
-
    std::vector<vulkan::ImageView> swapchainImageViews;
 
    const auto images = vulkan::get_swapchain_images(*m_device, *swapchain);
@@ -239,36 +215,7 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
       swapchainImageViews.emplace_back(std::move(imageView));
    }
 
-   return Swapchain(m_queueManager, colorFormat, depthFormat, sampleCount, resolution,
-                    std::move(*depthAttachment), std::move(colorAttachment), std::move(swapchainImageViews),
-                    std::move(swapchain));
-}
-
-Result<RenderPass> Device::create_render_pass(IRenderTarget &renderTarget)
-{
-   const auto attachments  = renderTarget.vulkan_attachments();
-   const auto subpass      = renderTarget.vulkan_subpass();
-   const auto dependencies = renderTarget.vulkan_subpass_dependencies();
-
-   VkRenderPassCreateInfo renderPassInfo{};
-   renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-   renderPassInfo.attachmentCount = attachments.size();
-   renderPassInfo.pAttachments    = attachments.data();
-   renderPassInfo.subpassCount    = 1;
-   renderPassInfo.pSubpasses      = &subpass.description;
-   renderPassInfo.dependencyCount = dependencies.size();
-   renderPassInfo.pDependencies   = dependencies.data();
-
-   vulkan::RenderPass renderPass(*m_device);
-   if (const auto res = renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
-   VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
-
-   return RenderPass(std::move(renderPass), renderTarget.sample_count(),
-                     renderTarget.color_attachment_count());
+   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchain), colorFormat);
 }
 
 Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint,
@@ -491,17 +438,6 @@ Result<Sampler> Device::create_sampler(const SamplerInfo &info)
    }
 
    return Sampler(std::move(sampler));
-}
-
-Result<DepthRenderTarget> Device::create_depth_render_target(const ColorFormat &depthFormat,
-                                                             const Resolution &resolution) const
-{
-   return DepthRenderTarget(*m_device, depthFormat);
-}
-
-Result<TextureRenderTarget> Device::create_texture_render_target(const Resolution &resolution) const
-{
-   return TextureRenderTarget(*m_device);
 }
 
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const

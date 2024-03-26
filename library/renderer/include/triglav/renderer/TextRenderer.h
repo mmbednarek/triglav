@@ -27,7 +27,7 @@ struct TextColorConstant
 class TextRenderer
 {
  public:
-   TextRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+   TextRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
                 triglav::resource::ResourceManager &resourceManager);
 
    void begin_render(graphics_api::CommandList &cmdList) const;
@@ -39,7 +39,7 @@ class TextRenderer
 
  private:
    graphics_api::Device &m_device;
-   graphics_api::RenderPass &m_renderPass;
+   graphics_api::RenderTarget &m_renderPass;
    triglav::resource::ResourceManager &m_resourceManager;
    graphics_api::Resolution m_resolution;
    graphics_api::Pipeline m_pipeline;

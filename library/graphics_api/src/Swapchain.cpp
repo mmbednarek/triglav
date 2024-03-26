@@ -1,6 +1,5 @@
 #include "Swapchain.h"
 
-#include "RenderPass.h"
 #include "Synchronization.h"
 #include "vulkan/Util.h"
 
@@ -8,128 +7,15 @@
 
 namespace triglav::graphics_api {
 
-constexpr size_t g_colorAttachmentIndex   = 0;
-constexpr size_t g_depthAttachmentIndex   = 1;
-constexpr size_t g_resolveAttachmentIndex = 2;
-
-Swapchain::Swapchain(QueueManager &queueManager, const ColorFormat &colorFormat, const ColorFormat &depthFormat,
-                     const SampleCount sampleCount, const Resolution &resolution, Texture depthAttachment,
-                     std::optional<Texture> colorAttachment, std::vector<vulkan::ImageView> imageViews,
-                     vulkan::SwapchainKHR swapchain) :
+Swapchain::Swapchain(QueueManager &queueManager, const Resolution &resolution,
+                     std::vector<vulkan::ImageView> imageViews, vulkan::SwapchainKHR swapchain,
+                     const ColorFormat &colorFormat) :
     m_queueManager(queueManager),
-    m_colorFormat(colorFormat),
-    m_depthFormat(depthFormat),
-    m_sampleCount(sampleCount),
     m_resolution(resolution),
-    m_depthAttachment(std::move(depthAttachment)),
-    m_colorAttachment(std::move(colorAttachment)),
     m_imageViews(std::move(imageViews)),
-    m_swapchain(std::move(swapchain))
+    m_swapchain(std::move(swapchain)),
+    m_colorFormat(colorFormat)
 {
-}
-
-Subpass Swapchain::vulkan_subpass()
-{
-   Subpass result{};
-   result.references.resize(3);
-
-   result.description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-
-   result.references[g_colorAttachmentIndex] =
-           VkAttachmentReference{g_colorAttachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-   result.description.colorAttachmentCount = 1;
-   result.description.pColorAttachments    = &result.references[g_colorAttachmentIndex];
-
-   result.references[g_depthAttachmentIndex] =
-           VkAttachmentReference{g_depthAttachmentIndex, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
-   result.description.pDepthStencilAttachment = &result.references[g_depthAttachmentIndex];
-
-   if (m_colorAttachment.has_value()) {
-      result.references[g_resolveAttachmentIndex] =
-              VkAttachmentReference{g_resolveAttachmentIndex, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
-      result.description.pResolveAttachments = &result.references[g_resolveAttachmentIndex];
-   }
-
-   return result;
-}
-
-std::vector<VkAttachmentDescription> Swapchain::vulkan_attachments()
-{
-   std::vector<VkAttachmentDescription> result{};
-
-   if (m_colorAttachment.has_value()) {
-      result.resize(3);
-
-      auto &colorAttachment          = result[g_colorAttachmentIndex];
-      colorAttachment.format         = GAPI_CHECK(vulkan::to_vulkan_color_format(m_colorFormat));
-      colorAttachment.samples        = static_cast<VkSampleCountFlagBits>(m_sampleCount);
-      colorAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-      colorAttachment.finalLayout    = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-      auto &resolveAttachment          = result[g_resolveAttachmentIndex];
-      resolveAttachment.format         = GAPI_CHECK(vulkan::to_vulkan_color_format(m_colorFormat));
-      resolveAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
-      resolveAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      resolveAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-      resolveAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      resolveAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      resolveAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-      resolveAttachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-   } else {
-      result.resize(2);
-      auto &colorAttachment          = result[g_colorAttachmentIndex];
-      colorAttachment.format         = GAPI_CHECK(vulkan::to_vulkan_color_format(m_colorFormat));
-      colorAttachment.samples        = VK_SAMPLE_COUNT_1_BIT;
-      colorAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-      colorAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_STORE;
-      colorAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-      colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      colorAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-      colorAttachment.finalLayout    = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-   }
-
-   auto &depthAttachment          = result[g_depthAttachmentIndex];
-   depthAttachment.format         = GAPI_CHECK(vulkan::to_vulkan_color_format(m_depthFormat));
-   depthAttachment.samples        = static_cast<VkSampleCountFlagBits>(m_sampleCount);
-   depthAttachment.loadOp         = VK_ATTACHMENT_LOAD_OP_CLEAR;
-   depthAttachment.storeOp        = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   depthAttachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-   depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-   depthAttachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-   depthAttachment.finalLayout    = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-   return result;
-}
-
-std::vector<VkSubpassDependency> Swapchain::vulkan_subpass_dependencies()
-{
-   std::vector<VkSubpassDependency> dependencies{};
-   dependencies.resize(2);
-
-   dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-   dependencies[0].dstSubpass = 0;
-   dependencies[0].srcStageMask =
-           VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-   dependencies[0].dstStageMask =
-           VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-   dependencies[0].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-   dependencies[0].dstAccessMask =
-           VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-   dependencies[0].dependencyFlags = 0;
-
-   dependencies[1].srcSubpass    = VK_SUBPASS_EXTERNAL;
-   dependencies[1].dstSubpass    = 0;
-   dependencies[1].srcStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-   dependencies[1].dstStageMask  = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-   dependencies[1].srcAccessMask = 0;
-   dependencies[1].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
-   dependencies[1].dependencyFlags = 0;
-
-   return dependencies;
 }
 
 VkSwapchainKHR Swapchain::vulkan_swapchain() const
@@ -137,9 +23,9 @@ VkSwapchainKHR Swapchain::vulkan_swapchain() const
    return *m_swapchain;
 }
 
-uint32_t Swapchain::get_available_framebuffer(const Semaphore &semaphore) const
+u32 Swapchain::get_available_framebuffer(const Semaphore &semaphore) const
 {
-   uint32_t imageIndex;
+   u32 imageIndex;
    vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(),
                          VK_NULL_HANDLE, &imageIndex);
    return imageIndex;
@@ -148,57 +34,6 @@ uint32_t Swapchain::get_available_framebuffer(const Semaphore &semaphore) const
 Resolution Swapchain::resolution() const
 {
    return m_resolution;
-}
-
-ColorFormat Swapchain::color_format() const
-{
-   return m_colorFormat;
-}
-
-SampleCount Swapchain::sample_count() const
-{
-   return m_sampleCount;
-}
-
-int Swapchain::color_attachment_count() const
-{
-   return 1;
-}
-
-Result<std::vector<Framebuffer>> Swapchain::create_framebuffers(const RenderPass &renderPass)
-{
-   size_t attachmentCount{2};
-   size_t swapchainImageIndex{0};
-
-   std::array<VkImageView, 3> attachmentImageViews{nullptr, m_depthAttachment.vulkan_image_view()};
-   if (m_colorAttachment.has_value()) {
-      attachmentImageViews[0] = m_colorAttachment->vulkan_image_view();
-      attachmentCount         = 3;
-      swapchainImageIndex     = 2;
-   }
-
-   std::vector<Framebuffer> result{};
-   for (const auto &imageView : m_imageViews) {
-      attachmentImageViews[swapchainImageIndex] = *imageView;
-
-      VkFramebufferCreateInfo framebufferInfo{};
-      framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-      framebufferInfo.renderPass      = renderPass.vulkan_render_pass();
-      framebufferInfo.attachmentCount = attachmentCount;
-      framebufferInfo.pAttachments    = attachmentImageViews.data();
-      framebufferInfo.width           = m_resolution.width;
-      framebufferInfo.height          = m_resolution.height;
-      framebufferInfo.layers          = 1;
-
-      vulkan::Framebuffer framebuffer(m_swapchain.parent());
-      if (framebuffer.construct(&framebufferInfo) != VK_SUCCESS) {
-         return std::unexpected(Status::UnsupportedDevice);
-      }
-
-      result.emplace_back(m_resolution, renderPass.vulkan_render_pass(), std::move(framebuffer));
-   }
-
-   return result;
 }
 
 Status Swapchain::present(const Semaphore &semaphore, const uint32_t framebufferIndex)
@@ -216,11 +51,27 @@ Status Swapchain::present(const Semaphore &semaphore, const uint32_t framebuffer
    presentInfo.pImageIndices      = imageIndices.data();
    presentInfo.pResults           = nullptr;
 
-   if (auto status = vkQueuePresentKHR(m_queueManager.get().next_queue(WorkType::Presentation), &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
+   if (auto status = vkQueuePresentKHR(m_queueManager.get().next_queue(WorkType::Presentation), &presentInfo);
+       status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
       return Status::UnsupportedDevice;
    }
 
    return Status::Success;
 }
 
-}// namespace graphics_api
+VkImageView Swapchain::vulkan_image_view(const u32 frameIndex) const
+{
+   return *m_imageViews[frameIndex];
+}
+
+u32 Swapchain::frame_count() const
+{
+   return m_imageViews.size();
+}
+
+ColorFormat Swapchain::color_format() const
+{
+   return m_colorFormat;
+}
+
+}// namespace triglav::graphics_api

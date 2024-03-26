@@ -17,6 +17,7 @@
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/TextureRenderTarget.h"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/RenderGraph.h"
@@ -87,23 +88,14 @@ class Renderer
 
    graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
-   graphics_api::RenderPass m_renderPass;
+   graphics_api::RenderTarget m_renderPass;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
-   graphics_api::TextureRenderTarget m_modelRenderTarget;
-   graphics_api::RenderPass m_modelRenderPass;
-   graphics_api::Texture m_modelColorTexture;
-   graphics_api::Texture m_modelPositionTexture;
-   graphics_api::Texture m_modelNormalTexture;
-   graphics_api::Texture m_modelDepthTexture;
+   graphics_api::RenderTarget m_modelRenderPass;
    graphics_api::Framebuffer m_modelFramebuffer;
-   graphics_api::TextureRenderTarget m_ambientOcclusionRenderTarget;
-   graphics_api::RenderPass m_ambientOcclusionRenderPass;
-   graphics_api::Texture m_ambientOcclusionTexture;
+   graphics_api::RenderTarget m_ambientOcclusionRenderPass;
    graphics_api::Framebuffer m_ambientOcclusionFramebuffer;
-   graphics_api::TextureRenderTarget m_shadingRenderTarget;
-   graphics_api::RenderPass m_shadingRenderPass;
-   graphics_api::Texture m_shadingColorTexture;
+   graphics_api::RenderTarget m_shadingRenderPass;
    graphics_api::Framebuffer m_shadingFramebuffer;
    ModelRenderer m_modelRenderer;
    GroundRenderer m_groundRenderer;

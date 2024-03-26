@@ -73,106 +73,99 @@ std::vector<font::Rune> make_runes()
    return runes;
 }
 
-graphics_api::TextureRenderTarget create_model_render_target(const graphics_api::Device &device,
-                                                             const graphics_api::Resolution resolution)
+graphics_api::RenderTarget create_model_render_target(graphics_api::Device &device)
 {
    using graphics_api::AttachmentLifetime;
    using graphics_api::AttachmentType;
    using graphics_api::SampleCount;
 
-   auto renderTarget = checkResult(device.create_texture_render_target(resolution));
-   // Color
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
-   // Position
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
-   // Normal
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
-   // Depth
-   renderTarget.add_attachment(AttachmentType::Depth, AttachmentLifetime::ClearPreserve, g_depthFormat,
-                               SampleCount::Single);
-   return renderTarget;
+   return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+                             // Color
+                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             // Position
+                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             // Normal
+                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             // Depth
+                             .attachment(AttachmentType::Depth, AttachmentLifetime::ClearPreserve,
+                                         g_depthFormat, SampleCount::Single)
+                             .build());
 }
 
-graphics_api::TextureRenderTarget create_ao_render_target(const graphics_api::Device &device,
-                                                          const graphics_api::Resolution resolution)
+graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
 {
    using graphics_api::AttachmentLifetime;
    using graphics_api::AttachmentType;
    using graphics_api::SampleCount;
 
-   auto renderTarget = checkResult(device.create_texture_render_target(resolution));
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_FORMAT(R, Float16), SampleCount::Single);
-   return renderTarget;
+   return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                                         GAPI_FORMAT(R, Float16), SampleCount::Single)
+                             .build());
 }
 
-graphics_api::TextureRenderTarget create_shading_render_target(const graphics_api::Device &device,
-                                                               const graphics_api::Resolution resolution)
+graphics_api::RenderTarget create_shading_render_target(graphics_api::Device &device)
 {
    using graphics_api::AttachmentLifetime;
    using graphics_api::AttachmentType;
    using graphics_api::SampleCount;
 
-   auto renderTarget = checkResult(device.create_texture_render_target(resolution));
-   renderTarget.add_attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                               GAPI_FORMAT(RGBA, Float16), SampleCount::Single);
-   return renderTarget;
+   return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             .build());
 }
 
-auto g_runes{make_runes()};
+std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain& swapchain, const graphics_api::RenderTarget& renderTarget)
+{
+   std::vector<graphics_api::Framebuffer> result{};
+   const auto frameCount = swapchain.frame_count();
+   for (u32 i = 0; i < frameCount; ++i) {
+      result.emplace_back(GAPI_CHECK(renderTarget.create_swapchain_framebuffer(swapchain, i)));
+   }
+   return result;
+}
 
 }// namespace
 
-Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t width, const uint32_t height) :
+Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
-    m_resourceManager(std::make_unique<triglav::resource::ResourceManager>(*m_device, m_fontManger)),
+    m_resourceManager(std::make_unique<ResourceManager>(*m_device, m_fontManger)),
     m_resolution(create_viewport_resolution(*m_device, width, height)),
-    m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB,
-                                                       g_depthFormat, g_sampleCount, m_resolution))),
-    m_renderPass(checkResult(m_device->create_render_pass(m_swapchain))),
-    m_framebuffers(checkResult(m_swapchain.create_framebuffers(m_renderPass))),
+    m_swapchain(checkResult(
+            m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
+    m_renderPass(checkResult(graphics_api::RenderTargetBuilder(*m_device)
+                                     .attachment(graphics_api::AttachmentType::Color |
+                                                         graphics_api::AttachmentType::Presentable,
+                                                 graphics_api::AttachmentLifetime::ClearPreserve,
+                                                 g_colorFormat, graphics_api::SampleCount::Single)
+                                     .attachment(graphics_api::AttachmentType::Depth,
+                                                 graphics_api::AttachmentLifetime::ClearDiscard,
+                                                 g_depthFormat, graphics_api::SampleCount::Single)
+                                     .build())),
+    m_framebuffers(create_framebuffers(m_swapchain, m_renderPass)),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
-    m_modelRenderTarget(create_model_render_target(*m_device, m_resolution)),
-    m_modelRenderPass(checkResult(m_device->create_render_pass(m_modelRenderTarget))),
-    m_modelColorTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
-                                                             graphics_api::TextureType::ColorAttachment))),
-    m_modelPositionTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
-                                                                graphics_api::TextureType::ColorAttachment))),
-    m_modelNormalTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
-                                                              graphics_api::TextureType::ColorAttachment))),
-    m_modelDepthTexture(checkResult(m_device->create_texture(g_depthFormat, m_resolution,
-                                                             graphics_api::TextureType::SampledDepthBuffer))),
-    m_modelFramebuffer(checkResult(m_modelRenderTarget.create_framebuffer(
-            m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-            m_modelDepthTexture))),
-    m_ambientOcclusionRenderTarget(create_ao_render_target(*m_device, m_resolution)),
-    m_ambientOcclusionRenderPass(checkResult(m_device->create_render_pass(m_ambientOcclusionRenderTarget))),
-    m_ambientOcclusionTexture(checkResult(m_device->create_texture(
-            GAPI_FORMAT(R, Float16), m_resolution, graphics_api::TextureType::ColorAttachment))),
-    m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(
-            m_ambientOcclusionRenderPass, m_ambientOcclusionTexture))),
-    m_shadingRenderTarget(create_shading_render_target(*m_device, m_resolution)),
-    m_shadingRenderPass(checkResult(m_device->create_render_pass(m_shadingRenderTarget))),
-    m_shadingColorTexture(checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), m_resolution,
-                                                               graphics_api::TextureType::ColorAttachment))),
-    m_shadingFramebuffer(checkResult(
-            m_shadingRenderTarget.create_framebuffer(m_shadingRenderPass, m_shadingColorTexture))),
+    m_modelRenderPass(create_model_render_target(*m_device)),
+    m_modelFramebuffer(checkResult(m_modelRenderPass.create_framebuffer(m_resolution))),
+    m_ambientOcclusionRenderPass(create_ao_render_target(*m_device)),
+    m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderPass.create_framebuffer(m_resolution))),
+    m_shadingRenderPass(create_shading_render_target(*m_device)),
+    m_shadingFramebuffer(checkResult(m_shadingRenderPass.create_framebuffer(m_resolution))),
     m_modelRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_groundRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_context2D(*m_device, m_renderPass, *m_resourceManager),
     m_shadowMapRenderer(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_modelRenderPass, *m_resourceManager),
     m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderPass, *m_resourceManager,
-                               m_modelPositionTexture, m_modelNormalTexture,
-                               m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
-    m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelColorTexture,
-                      m_modelPositionTexture, m_modelNormalTexture, m_ambientOcclusionTexture,
+                               m_modelFramebuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
+    m_shadingRenderer(*m_device, m_shadingRenderPass, *m_resourceManager, m_modelFramebuffer,
+                      m_ambientOcclusionFramebuffer.texture(0),
                       m_shadowMapRenderer.depth_texture()),
-    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingColorTexture,
-                             m_modelDepthTexture),
+    m_postProcessingRenderer(*m_device, m_renderPass, *m_resourceManager, m_shadingFramebuffer.texture(0),
+                             m_modelFramebuffer.texture(1)),
     m_scene(*this, m_modelRenderer, m_shadowMapRenderer, m_debugLinesRenderer, *m_resourceManager),
     m_skyBox(*this),
     m_sprite(m_context2D.create_sprite_from_texture(m_shadowMapRenderer.depth_texture())),
@@ -206,9 +199,7 @@ Renderer::Renderer(const triglav::desktop::ISurface &surface, const uint32_t wid
 
    m_renderGraph.bake("post_processing"_name_id);
 
-   m_postProcessingRenderer.update_texture(
-           m_shadingColorTexture,
-           m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
+   m_postProcessingRenderer.update_texture(m_shadingFramebuffer.texture(0), m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
    ui.add_label("fps"_name_id, "Framerate");
@@ -388,52 +379,17 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_device->await_all();
 
-   m_modelColorTexture = checkResult(
-           m_device->create_texture(g_colorFormat, resolution, graphics_api::TextureType::ColorAttachment));
-
-   m_modelPositionTexture = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
-                                                                 graphics_api::TextureType::ColorAttachment));
-   m_modelNormalTexture   = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
-                                                                 graphics_api::TextureType::ColorAttachment));
-   m_modelDepthTexture    = checkResult(m_device->create_texture(g_depthFormat, resolution,
-                                                                 graphics_api::TextureType::SampledDepthBuffer));
-
-   m_ambientOcclusionTexture = checkResult(m_device->create_texture(
-           GAPI_FORMAT(R, Float16), resolution, graphics_api::TextureType::ColorAttachment));
-
-   m_shadingColorTexture = checkResult(m_device->create_texture(GAPI_FORMAT(RGBA, Float16), resolution,
-                                                                graphics_api::TextureType::ColorAttachment));
-
-   m_modelFramebuffer = checkResult(m_modelRenderTarget.create_framebuffer(
-           m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-           m_modelDepthTexture));
-
-   m_modelFramebuffer = checkResult(m_modelRenderTarget.create_framebuffer(
-           m_modelRenderPass, m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-           m_modelDepthTexture));
-
-   m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(
-           m_ambientOcclusionRenderPass, m_ambientOcclusionTexture));
-
-   m_shadingFramebuffer =
-           checkResult(m_shadingRenderTarget.create_framebuffer(m_shadingRenderPass, m_shadingColorTexture));
-
-   m_shadingRenderer.update_textures(m_modelColorTexture, m_modelPositionTexture, m_modelNormalTexture,
-                                     m_ambientOcclusionTexture, m_shadowMapRenderer.depth_texture());
-
-   m_ambientOcclusionRenderer.update_textures(
-           m_modelPositionTexture, m_modelNormalTexture,
-           m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
-
-   m_postProcessingRenderer.update_texture(m_shadingColorTexture, m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
+   m_modelFramebuffer = checkResult(m_modelRenderPass.create_framebuffer(resolution));
+   m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderPass.create_framebuffer(resolution));
+   m_shadingFramebuffer = checkResult(m_shadingRenderPass.create_framebuffer(resolution));
+   m_shadingRenderer.update_textures(m_modelFramebuffer, m_ambientOcclusionFramebuffer.texture(0), m_shadowMapRenderer.depth_texture());
+   m_ambientOcclusionRenderer.update_textures(m_modelFramebuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
+   m_postProcessingRenderer.update_texture(m_shadingFramebuffer.texture(0), m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    m_framebuffers.clear();
 
-   m_swapchain = checkResult(
-           m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB,
-                                      g_depthFormat, m_swapchain.sample_count(), resolution, &m_swapchain));
-   m_renderPass   = checkResult(m_device->create_render_pass(m_swapchain));
-   m_framebuffers = checkResult(m_swapchain.create_framebuffers(m_renderPass));
+   m_swapchain = checkResult(m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
+   m_framebuffers = create_framebuffers(m_swapchain, m_renderPass);
 
    m_resolution = {width, height};
 }

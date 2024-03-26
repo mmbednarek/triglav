@@ -16,18 +16,13 @@ using triglav::render_core::checkResult;
 namespace triglav::renderer {
 
 ShadingRenderer::ShadingRenderer(
-        graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-        ResourceManager &resourceManager, const graphics_api::Texture &colorTexture,
-        const graphics_api::Texture &positionTexture, const graphics_api::Texture &normalTexture,
+        graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+        ResourceManager &resourceManager, graphics_api::Framebuffer &geometryBuffer,
         const graphics_api::Texture &aoTexture, const graphics_api::Texture &shadowMapTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("shading.fshader"_name))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shading.vshader"_name))
-                                   // Vertex description
-                                   // .begin_vertex_layout<geometry::Vertex>()
-                                   // .end_vertex_layout()
-                                   // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                                        graphics_api::PipelineStage::FragmentShader)
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
@@ -50,24 +45,22 @@ ShadingRenderer::ShadingRenderer(
     m_uniformBuffer(m_device)
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, colorTexture, m_sampler);
-   writer.set_sampled_texture(1, positionTexture, m_sampler);
-   writer.set_sampled_texture(2, normalTexture, m_sampler);
+   writer.set_sampled_texture(0, geometryBuffer.texture(0), m_sampler);
+   writer.set_sampled_texture(1, geometryBuffer.texture(1), m_sampler);
+   writer.set_sampled_texture(2, geometryBuffer.texture(2), m_sampler);
    writer.set_sampled_texture(3, aoTexture, m_sampler);
    writer.set_sampled_texture(4, shadowMapTexture, m_sampler);
    writer.set_uniform_buffer(5, m_uniformBuffer);
 }
 
-void ShadingRenderer::update_textures(const graphics_api::Texture &colorTexture,
-                                             const graphics_api::Texture &positionTexture,
-                                             const graphics_api::Texture &normalTexture,
+void ShadingRenderer::update_textures(graphics_api::Framebuffer &geometryBuffer,
                                              const graphics_api::Texture &aoTexture,
                                              const graphics_api::Texture &shadowMapTexture) const
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, colorTexture, m_sampler);
-   writer.set_sampled_texture(1, positionTexture, m_sampler);
-   writer.set_sampled_texture(2, normalTexture, m_sampler);
+   writer.set_sampled_texture(0, geometryBuffer.texture(0), m_sampler);
+   writer.set_sampled_texture(1, geometryBuffer.texture(1), m_sampler);
+   writer.set_sampled_texture(2, geometryBuffer.texture(2), m_sampler);
    writer.set_sampled_texture(3, aoTexture, m_sampler);
    writer.set_sampled_texture(4, shadowMapTexture, m_sampler);
    writer.set_uniform_buffer(5, m_uniformBuffer);

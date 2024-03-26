@@ -25,15 +25,12 @@ class ShadingRenderer
       glm::mat4 shadowMapMat;
    };
 
-   ShadingRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
-                   triglav::resource::ResourceManager &resourceManager,
-                   const graphics_api::Texture &colorTexture, const graphics_api::Texture &positionTexture,
-                   const graphics_api::Texture &normalTexture, const graphics_api::Texture &aoTexture,
+   ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
+                   resource::ResourceManager &resourceManager,
+                   graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &aoTexture,
                    const graphics_api::Texture &shadowMapTexture);
 
-   void update_textures(const graphics_api::Texture &colorTexture,
-                        const graphics_api::Texture &positionTexture,
-                        const graphics_api::Texture &normalTexture, const graphics_api::Texture &aoTexture,
+   void update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &aoTexture,
                         const graphics_api::Texture &shadowMapTexture) const;
 
    void draw(graphics_api::CommandList &cmdList, const glm::vec3 &lightPosition,

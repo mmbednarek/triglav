@@ -210,10 +210,14 @@ enum class Culling
 
 enum class AttachmentType
 {
-   Color,
-   Depth,
-   Presentable,
+   None = 0,
+   Color = (1 << 0),
+   Depth = (1 << 1),
+   Resolve = (1 << 2),
+   Presentable = (1 << 3),
 };
+
+TRIGLAV_DECL_FLAGS(AttachmentType)
 
 enum class AttachmentLifetime
 {

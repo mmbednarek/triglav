@@ -12,7 +12,7 @@ using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
-GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
                                ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)

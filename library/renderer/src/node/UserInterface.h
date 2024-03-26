@@ -5,6 +5,7 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/graphics_api/Texture.h"
+#include "triglav/graphics_api/TextureRenderTarget.h"
 
 #include <map>
 #include <string_view>
@@ -36,9 +37,7 @@ public:
 
 private:
   resource::ResourceManager& m_resourceManager;
-  graphics_api::TextureRenderTarget m_textureRenderTarget;
-  graphics_api::Texture m_texture;
-  graphics_api::RenderPass m_renderPass;
+  graphics_api::RenderTarget m_textureRenderTarget;
   graphics_api::Framebuffer m_framebuffer;
   RectangleRenderer m_rectangleRenderer;
   TextRenderer m_textRenderer;

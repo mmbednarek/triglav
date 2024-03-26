@@ -1,12 +1,15 @@
 #include "Framebuffer.h"
 
+#include "Texture.h"
+
 namespace triglav::graphics_api {
 
 Framebuffer::Framebuffer(const Resolution resolution, const VkRenderPass renderPass,
-                         vulkan::Framebuffer framebuffer) :
+                         vulkan::Framebuffer framebuffer, std::vector<Texture> textures) :
     m_resolution(resolution),
     m_renderPass(renderPass),
-    m_framebuffer(std::move(framebuffer))
+    m_framebuffer(std::move(framebuffer)),
+    m_textures(std::move(textures))
 {
 }
 
@@ -25,4 +28,9 @@ VkRenderPass Framebuffer::vulkan_render_pass() const
    return m_renderPass;
 }
 
-}// namespace graphics_api
+Texture &Framebuffer::texture(const u32 index)
+{
+   return m_textures.at(index);
+}
+
+}// namespace triglav::graphics_api

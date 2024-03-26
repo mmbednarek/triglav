@@ -11,7 +11,7 @@ using triglav::render_core::checkResult;
 
 namespace triglav::renderer {
 
-DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderPass,
                                        ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderPass)

@@ -16,10 +16,9 @@ using triglav::resource::ResourceManager;
 namespace triglav::renderer {
 
 AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
-                                                   graphics_api::RenderPass &renderPass,
+                                                   graphics_api::RenderTarget &renderPass,
                                                    ResourceManager &resourceManager,
-                                                   const graphics_api::Texture &positionTexture,
-                                                   const graphics_api::Texture &normalTexture,
+                                                   graphics_api::Framebuffer &geometryBuffer,
                                                    const graphics_api::Texture &noiseTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderPass)
@@ -49,19 +48,20 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                m_samplesSSAO.size() * sizeof(AlignedVec3));
 
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, positionTexture, m_sampler);
-   writer.set_sampled_texture(1, normalTexture, m_sampler);
+   // Position
+   writer.set_sampled_texture(0, geometryBuffer.texture(1), m_sampler);
+   // Normal
+   writer.set_sampled_texture(1, geometryBuffer.texture(2), m_sampler);
+   // Noise
    writer.set_sampled_texture(2, noiseTexture, m_sampler);
    writer.set_uniform_buffer(3, m_uniformBuffer);
 }
 
-void AmbientOcclusionRenderer::update_textures(const graphics_api::Texture &positionTexture,
-                                               const graphics_api::Texture &normalTexture,
-                                               const graphics_api::Texture &noiseTexture) const
+void AmbientOcclusionRenderer::update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &noiseTexture) const
 {
    graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, positionTexture, m_sampler);
-   writer.set_sampled_texture(1, normalTexture, m_sampler);
+   writer.set_sampled_texture(0, geometryBuffer.texture(1), m_sampler);
+   writer.set_sampled_texture(1, geometryBuffer.texture(2), m_sampler);
    writer.set_sampled_texture(2, noiseTexture, m_sampler);
    writer.set_uniform_buffer(3, m_uniformBuffer);
 }

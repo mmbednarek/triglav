@@ -10,7 +10,7 @@ namespace triglav::graphics_api {
 
 class Pipeline;
 class Framebuffer;
-class RenderPass;
+class RenderTarget;
 
 enum class SubmitType
 {

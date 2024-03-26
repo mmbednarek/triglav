@@ -10,16 +10,20 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(Framebuffer, Device)
 class Framebuffer
 {
  public:
-   Framebuffer(Resolution resolution, VkRenderPass renderPass, vulkan::Framebuffer framebuffer);
+   Framebuffer(Resolution resolution, VkRenderPass renderPass, vulkan::Framebuffer framebuffer,
+               std::vector<Texture> textures);
 
    [[nodiscard]] Resolution resolution() const;
    [[nodiscard]] VkFramebuffer vulkan_framebuffer() const;
    [[nodiscard]] VkRenderPass vulkan_render_pass() const;
 
+   [[nodiscard]] Texture& texture(u32 index);
+
  private:
    Resolution m_resolution;
    VkRenderPass m_renderPass;
    vulkan::Framebuffer m_framebuffer;
+   std::vector<Texture> m_textures;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

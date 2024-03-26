@@ -1,13 +1,13 @@
 #pragma once
 
-#include "triglav/graphics_api/Pipeline.h"
 #include "triglav/graphics_api/DescriptorPool.h"
+#include "triglav/graphics_api/Pipeline.h"
 #include "triglav/Name.hpp"
 #include "triglav/render_core/Model.hpp"
 
 namespace triglav::graphics_api {
 class Device;
-class RenderPass;
+class RenderTarget;
 class Pipeline;
 }// namespace graphics_api
 
@@ -22,7 +22,7 @@ class ShadowMapRenderer;
 class ModelRenderer
 {
  public:
-   ModelRenderer(graphics_api::Device &device, graphics_api::RenderPass &renderPass,
+   ModelRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                  resource::ResourceManager &resourceManager);
 
    render_core::InstancedModel instance_model(Name modelName, ShadowMapRenderer &shadowMap);

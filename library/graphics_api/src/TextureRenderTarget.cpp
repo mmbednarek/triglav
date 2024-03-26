@@ -1,18 +1,180 @@
 #include "TextureRenderTarget.h"
 
 #include <optional>
+#include <stdexcept>
 
-#include "RenderPass.h"
+#include "Device.h"
 #include "vulkan/Util.h"
 
 namespace triglav::graphics_api {
 
-TextureRenderTarget::TextureRenderTarget(const VkDevice device) :
+RenderTarget::RenderTarget(Device &device, vulkan::RenderPass renderPass, SampleCount sampleCount,
+                           std::vector<AttachmentInfo> attachments) :
+    m_device(device),
+    m_renderPass(std::move(renderPass)),
+    m_sampleCount(sampleCount),
+    m_attachments(std::move(attachments))
+{
+}
+
+SampleCount RenderTarget::sample_count() const
+{
+   return m_sampleCount;
+}
+
+int RenderTarget::color_attachment_count() const
+{
+   int count = 0;
+   for (const auto &attachment : m_attachments) {
+      if (attachment.type & AttachmentType::Color) {
+         ++count;
+      }
+   }
+   return count;
+}
+
+VkRenderPass RenderTarget::vulkan_render_pass() const
+{
+   return *m_renderPass;
+}
+
+Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolution) const
+{
+   std::vector<Texture> textures;
+   for (const auto &attachment : m_attachments) {
+      TextureType textureType{};
+      if (attachment.type & AttachmentType::Color || attachment.type & AttachmentType::Resolve) {
+         textureType = TextureType::ColorAttachment;
+      } else if (attachment.type & AttachmentType::Depth) {
+         if (attachment.lifetime == AttachmentLifetime::ClearPreserve) {
+            textureType = TextureType::SampledDepthBuffer;
+         } else {
+            textureType = TextureType::DepthBuffer;
+         }
+      }
+
+      auto texture =
+              m_device.create_texture(attachment.format, resolution, textureType, attachment.sampleCount);
+      if (not texture.has_value()) {
+         return std::unexpected{texture.error()};
+      }
+      textures.emplace_back(std::move(*texture));
+   }
+
+   std::vector<VkImageView> attachmentImageViews;
+   attachmentImageViews.resize(textures.size());
+
+   for (size_t i = 0; i < textures.size(); ++i) {
+      attachmentImageViews[i] = textures[i].vulkan_image_view();
+   }
+
+   VkFramebufferCreateInfo framebufferInfo{};
+   framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+   framebufferInfo.renderPass      = *m_renderPass;
+   framebufferInfo.attachmentCount = attachmentImageViews.size();
+   framebufferInfo.pAttachments    = attachmentImageViews.data();
+   framebufferInfo.width           = resolution.width;
+   framebufferInfo.height          = resolution.height;
+   framebufferInfo.layers          = 1;
+
+   vulkan::Framebuffer framebuffer(m_device.vulkan_device());
+   if (framebuffer.construct(&framebufferInfo) != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return Framebuffer(resolution, *m_renderPass, std::move(framebuffer), std::move(textures));
+}
+
+Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &swapchain,
+                                                               const u32 frameIndex) const
+{
+   u32 swapchainAttachment{};
+   u32 index{};
+   for (const auto &attachment : m_attachments) {
+      if (attachment.type & AttachmentType::Presentable) {
+         swapchainAttachment = index;
+         break;
+      }
+
+      ++index;
+   }
+
+   index = 0;
+   std::vector<Texture> textures;
+   for (const auto &attachment : m_attachments) {
+      if (index == swapchainAttachment) {
+         ++index;
+         continue;
+      }
+
+      TextureType textureType{};
+      if (attachment.type & AttachmentType::Color || attachment.type & AttachmentType::Resolve) {
+         textureType = TextureType::ColorAttachment;
+      } else if (attachment.type & AttachmentType::Depth) {
+         textureType = TextureType::DepthBuffer;
+      }
+
+      auto texture = m_device.create_texture(attachment.format, swapchain.resolution(), textureType,
+                                             attachment.sampleCount);
+      if (not texture.has_value()) {
+         return std::unexpected{texture.error()};
+      }
+      textures.emplace_back(std::move(*texture));
+   }
+
+   std::vector<VkImageView> attachmentImageViews;
+   attachmentImageViews.resize(textures.size() + 1);
+
+   index = 0;
+   for (size_t i = 0; i < textures.size(); ++i) {
+      if (index == swapchainAttachment) {
+         attachmentImageViews[index] = swapchain.vulkan_image_view(frameIndex);
+         ++index;
+      }
+      attachmentImageViews[index] = textures[i].vulkan_image_view();
+      ++index;
+   }
+
+   VkFramebufferCreateInfo framebufferInfo{};
+   framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+   framebufferInfo.renderPass      = *m_renderPass;
+   framebufferInfo.attachmentCount = attachmentImageViews.size();
+   framebufferInfo.pAttachments    = attachmentImageViews.data();
+   framebufferInfo.width           = swapchain.resolution().width;
+   framebufferInfo.height          = swapchain.resolution().height;
+   framebufferInfo.layers          = 1;
+
+   vulkan::Framebuffer framebuffer(m_device.vulkan_device());
+   if (framebuffer.construct(&framebufferInfo) != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return Framebuffer(swapchain.resolution(), *m_renderPass, std::move(framebuffer), std::move(textures));
+}
+
+RenderTargetBuilder::RenderTargetBuilder(Device &device) :
     m_device(device)
 {
 }
 
-Subpass TextureRenderTarget::vulkan_subpass()
+RenderTargetBuilder &RenderTargetBuilder::attachment(const AttachmentTypeFlags type,
+                                                     const AttachmentLifetime lifetime,
+                                                     const ColorFormat &format, const SampleCount sampleCount)
+{
+   assert(!(type & AttachmentType::Depth) || !(type & AttachmentType::Color));
+   assert(!(type & AttachmentType::Color) || !(type & AttachmentType::Resolve));
+   if (sampleCount != SampleCount::Single) {
+      if (m_sampleCount != SampleCount::Single) {
+         assert(sampleCount == m_sampleCount);
+      } else {
+         m_sampleCount = sampleCount;
+      }
+   }
+   m_attachments.emplace_back(type, lifetime, format, sampleCount);
+   return *this;
+}
+
+Subpass RenderTargetBuilder::vulkan_subpass() const
 {
    Subpass result{};
    result.description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
@@ -22,17 +184,18 @@ Subpass TextureRenderTarget::vulkan_subpass()
    std::optional<uint32_t> depthAttachmentIndex;
    for (uint32_t i = 0; i < m_attachments.size(); ++i) {
       const auto type = m_attachments[i].type;
-      if (type == AttachmentType::Color || type == AttachmentType::Presentable) {
-         result.references[referenceIndex] =
-                 VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+      if (type & AttachmentType::Color) {
+         result.references[referenceIndex] = VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
          ++referenceIndex;
-      } else if (type == AttachmentType::Depth) {
+      } else if (type & AttachmentType::Depth) {
          depthAttachmentIndex.emplace(i);
       }
    }
 
    result.description.colorAttachmentCount = referenceIndex;
-   result.description.pColorAttachments    = &result.references[0];
+   if (referenceIndex != 0) {
+      result.description.pColorAttachments    = &result.references[0];
+   }
 
    if (depthAttachmentIndex.has_value()) {
       result.references[referenceIndex] =
@@ -44,7 +207,7 @@ Subpass TextureRenderTarget::vulkan_subpass()
    return result;
 }
 
-std::vector<VkAttachmentDescription> TextureRenderTarget::vulkan_attachments()
+std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
 {
    std::vector<VkAttachmentDescription> result{};
    result.resize(m_attachments.size());
@@ -67,18 +230,18 @@ std::vector<VkAttachmentDescription> TextureRenderTarget::vulkan_attachments()
    return result;
 }
 
-std::vector<VkSubpassDependency> TextureRenderTarget::vulkan_subpass_dependencies()
+std::vector<VkSubpassDependency> RenderTargetBuilder::vulkan_subpass_dependencies() const
 {
    bool hasDepthSrcExternalDependency = false;
    bool hasDepthDstExternalDependency = false;
    bool hasColorSrcExternalDependency = false;
 
    for (const auto &attachment : m_attachments) {
-      if (attachment.type == AttachmentType::Color &&
+      if (attachment.type & AttachmentType::Color &&
           attachment.lifetime == AttachmentLifetime::ClearPreserve) {
          hasColorSrcExternalDependency = true;
       }
-      if (attachment.type == AttachmentType::Depth) {
+      if (attachment.type & AttachmentType::Depth) {
          if (attachment.lifetime == AttachmentLifetime::ClearPreserve) {
             hasDepthSrcExternalDependency = true;
             hasDepthDstExternalDependency = true;
@@ -131,56 +294,27 @@ std::vector<VkSubpassDependency> TextureRenderTarget::vulkan_subpass_dependencie
    return dependencies;
 }
 
-SampleCount TextureRenderTarget::sample_count() const
+Result<RenderTarget> RenderTargetBuilder::build()
 {
-   return SampleCount::Single;
-}
+   const auto attachments  = this->vulkan_attachments();
+   const auto subpass      = this->vulkan_subpass();
+   const auto dependencies = this->vulkan_subpass_dependencies();
 
-int TextureRenderTarget::color_attachment_count() const
-{
-   int count = 0;
-   for (const auto &attachment : m_attachments) {
-      if (attachment.type == AttachmentType::Color || attachment.type == AttachmentType::Presentable) {
-         ++count;
-      }
-   }
-   return count;
-}
+   VkRenderPassCreateInfo renderPassInfo{};
+   renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+   renderPassInfo.attachmentCount = attachments.size();
+   renderPassInfo.pAttachments    = attachments.data();
+   renderPassInfo.subpassCount    = 1;
+   renderPassInfo.pSubpasses      = &subpass.description;
+   renderPassInfo.dependencyCount = dependencies.size();
+   renderPassInfo.pDependencies   = dependencies.data();
 
-Result<Framebuffer>
-TextureRenderTarget::create_framebuffer_raw(const RenderPass &renderPass,
-                                            const std::span<const Texture *> &textures) const
-{
-   std::vector<VkImageView> attachmentImageViews;
-   attachmentImageViews.resize(textures.size());
-
-   auto resolution = textures[0]->resolution();
-
-   for (size_t i = 0; i < textures.size(); ++i) {
-      attachmentImageViews[i] = textures[i]->vulkan_image_view();
+   vulkan::RenderPass renderPass(m_device.vulkan_device());
+   if (const auto res = renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {
+      return std::unexpected{Status::UnsupportedDevice};
    }
 
-   VkFramebufferCreateInfo framebufferInfo{};
-   framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-   framebufferInfo.renderPass      = renderPass.vulkan_render_pass();
-   framebufferInfo.attachmentCount = attachmentImageViews.size();
-   framebufferInfo.pAttachments    = attachmentImageViews.data();
-   framebufferInfo.width           = resolution.width;
-   framebufferInfo.height          = resolution.height;
-   framebufferInfo.layers          = 1;
-
-   vulkan::Framebuffer framebuffer(m_device);
-   if (framebuffer.construct(&framebufferInfo) != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
-   }
-
-   return Framebuffer(resolution, renderPass.vulkan_render_pass(), std::move(framebuffer));
+   return RenderTarget(m_device, std::move(renderPass), m_sampleCount, std::move(m_attachments));
 }
 
-void TextureRenderTarget::add_attachment(const AttachmentType type, const AttachmentLifetime lifetime,
-                                         const ColorFormat &format, const SampleCount sampleCount)
-{
-   m_attachments.emplace_back(type, lifetime, format, sampleCount);
-}
-
-}// namespace graphics_api
+}// namespace triglav::graphics_api
