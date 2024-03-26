@@ -135,17 +135,17 @@ Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sampleCou
    return std::unexpected{Status::UnsupportedFormat};
 }
 
-Result<VkImageLayout> to_vulkan_image_layout(const AttachmentTypeFlags type, const AttachmentLifetime lifetime)
+Result<VkImageLayout> to_vulkan_image_layout(const AttachmentAttributeFlags type)
 {
-   if (type & AttachmentType::Presentable) {
+   if (type & AttachmentAttribute::Presentable) {
       return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
    }
-   if (type & AttachmentType::Depth) {
-      if (lifetime == AttachmentLifetime::ClearPreserve)
+   if (type & AttachmentAttribute::Depth) {
+      if (type & AttachmentAttribute::StoreImage)
          return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
       return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
    }
-   if (type & AttachmentType::Color) {
+   if (type & AttachmentAttribute::Color) {
       return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    }
 
@@ -153,22 +153,23 @@ Result<VkImageLayout> to_vulkan_image_layout(const AttachmentTypeFlags type, con
 }
 
 std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp>
-to_vulkan_load_store_ops(const AttachmentLifetime lifetime)
+to_vulkan_load_store_ops(const AttachmentAttributeFlags flags)
 {
-   switch (lifetime) {
-   case AttachmentLifetime::ClearPreserve: return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_STORE};
-   case AttachmentLifetime::ClearDiscard:
-      return {VK_ATTACHMENT_LOAD_OP_CLEAR, VK_ATTACHMENT_STORE_OP_DONT_CARE};
-   case AttachmentLifetime::KeepPreserve: return {VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE};
-   case AttachmentLifetime::KeepDiscard:
-      return {VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_DONT_CARE};
-   case AttachmentLifetime::IgnorePreserve:
-      return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_STORE};
-   case AttachmentLifetime::IgnoreDiscard:
-      return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_DONT_CARE};
-   }
+   VkAttachmentLoadOp loadOp{};
+   if (flags & AttachmentAttribute::ClearImage)
+      loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+   else if (flags & AttachmentAttribute::LoadImage)
+      loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+   else
+      loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
-   return {VK_ATTACHMENT_LOAD_OP_DONT_CARE, VK_ATTACHMENT_STORE_OP_NONE};
+   VkAttachmentStoreOp storeOp;
+   if (flags & AttachmentAttribute::StoreImage)
+      storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+   else
+      storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+   return {loadOp, storeOp};
 }
 
 VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)

@@ -208,32 +208,19 @@ enum class Culling
    CounterClockwise,
 };
 
-enum class AttachmentType
+enum class AttachmentAttribute
 {
    None = 0,
    Color = (1 << 0),
    Depth = (1 << 1),
    Resolve = (1 << 2),
    Presentable = (1 << 3),
+   LoadImage = (1 << 4),
+   ClearImage = (1 << 5),
+   StoreImage = (1 << 6),
 };
 
-TRIGLAV_DECL_FLAGS(AttachmentType)
-
-enum class AttachmentLifetime
-{
-   // Clear before rendering, preserve after rendering
-   ClearPreserve,
-   // Clear before rendering, discard output
-   ClearDiscard,
-   // Keep data before rendering, preserve after redering
-   KeepPreserve,
-   // Keep data before rendering, discard output
-   KeepDiscard,
-   // Ignore image data, preserve output
-   IgnorePreserve,
-   // Ignore image data, discard output
-   IgnoreDiscard,
-};
+TRIGLAV_DECL_FLAGS(AttachmentAttribute)
 
 enum class FilterType
 {

@@ -14,8 +14,8 @@ Result<ColorSpace> to_color_space(VkColorSpaceKHR colorSpace);
 WorkTypeFlags vulkan_queue_flags_to_work_type_flags(VkQueueFlags flags, bool canPresent);
 
 Result<VkSampleCountFlagBits> to_vulkan_sample_count(SampleCount sampleCount);
-Result<VkImageLayout> to_vulkan_image_layout(AttachmentTypeFlags type, AttachmentLifetime lifetime);
-std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(AttachmentLifetime lifetime);
+Result<VkImageLayout> to_vulkan_image_layout(AttachmentAttributeFlags type);
+std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(AttachmentAttributeFlags flags);
 
 
 VkShaderStageFlagBits to_vulkan_shader_stage(PipelineStage stage);

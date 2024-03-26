@@ -2,6 +2,8 @@
 
 #include <ranges>
 
+using triglav::graphics_api::AttachmentAttribute;
+
 namespace triglav::renderer::node {
 
 using namespace name_literals;
@@ -10,7 +12,7 @@ UserInterface::UserInterface(graphics_api::Device &device, const graphics_api::R
                              resource::ResourceManager &resourceManager) :
     m_resourceManager(resourceManager),
     m_textureRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device).attachment(
-            graphics_api::AttachmentType::Color, graphics_api::AttachmentLifetime::ClearPreserve,
+            AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
             GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single).build())),
     m_framebuffer(GAPI_CHECK(m_textureRenderTarget.create_framebuffer(resolution))),
     m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager),

@@ -14,6 +14,7 @@ using triglav::render_core::InstancedModel;
 using triglav::render_core::ModelShaderMapProperties;
 using triglav::render_core::checkResult;
 using triglav::render_core::ShadowMapUBO;
+using triglav::graphics_api::AttachmentAttribute;
 
 using namespace triglav::name_literals;
 
@@ -27,7 +28,7 @@ ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManag
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
             checkResult(graphics_api::RenderTargetBuilder(device)
-               .attachment(graphics_api::AttachmentType::Depth, graphics_api::AttachmentLifetime::ClearPreserve, GAPI_FORMAT(D, Float32), graphics_api::SampleCount::Single).build())),
+               .attachment(AttachmentAttribute::Depth | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage, GAPI_FORMAT(D, Float32)).build())),
     m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(g_shadowMapResolution))),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(device, m_depthRenderTarget)

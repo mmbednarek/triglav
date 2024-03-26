@@ -20,6 +20,8 @@
 
 using triglav::ResourceType;
 using triglav::desktop::Key;
+using triglav::graphics_api::AttachmentAttribute;
+using triglav::graphics_api::SampleCount;
 using triglav::render_core::checkResult;
 using triglav::render_core::checkStatus;
 using triglav::resource::ResourceManager;
@@ -75,51 +77,46 @@ std::vector<font::Rune> make_runes()
 
 graphics_api::RenderTarget create_model_render_target(graphics_api::Device &device)
 {
-   using graphics_api::AttachmentLifetime;
-   using graphics_api::AttachmentType;
-   using graphics_api::SampleCount;
-
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
                              // Color
-                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                 AttachmentAttribute::StoreImage,
+                                         GAPI_FORMAT(RGBA, Float16))
                              // Position
-                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                 AttachmentAttribute::StoreImage,
+                                         GAPI_FORMAT(RGBA, Float16))
                              // Normal
-                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
-                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                 AttachmentAttribute::StoreImage,
+                                         GAPI_FORMAT(RGBA, Float16))
                              // Depth
-                             .attachment(AttachmentType::Depth, AttachmentLifetime::ClearPreserve,
-                                         g_depthFormat, SampleCount::Single)
+                             .attachment(AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
+                                                 AttachmentAttribute::StoreImage,
+                                         g_depthFormat)
                              .build());
 }
 
 graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
 {
-   using graphics_api::AttachmentLifetime;
-   using graphics_api::AttachmentType;
-   using graphics_api::SampleCount;
-
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                 AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(R, Float16), SampleCount::Single)
                              .build());
 }
 
 graphics_api::RenderTarget create_shading_render_target(graphics_api::Device &device)
 {
-   using graphics_api::AttachmentLifetime;
-   using graphics_api::AttachmentType;
-   using graphics_api::SampleCount;
-
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment(AttachmentType::Color, AttachmentLifetime::ClearPreserve,
+                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                 AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
                              .build());
 }
 
-std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain& swapchain, const graphics_api::RenderTarget& renderTarget)
+std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain &swapchain,
+                                                           const graphics_api::RenderTarget &renderTarget)
 {
    std::vector<graphics_api::Framebuffer> result{};
    const auto frameCount = swapchain.frame_count();
@@ -137,21 +134,20 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(
             m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
-    m_renderTarget(checkResult(graphics_api::RenderTargetBuilder(*m_device)
-                                     .attachment(graphics_api::AttachmentType::Color |
-                                                         graphics_api::AttachmentType::Presentable,
-                                                 graphics_api::AttachmentLifetime::ClearPreserve,
-                                                 g_colorFormat, graphics_api::SampleCount::Single)
-                                     .attachment(graphics_api::AttachmentType::Depth,
-                                                 graphics_api::AttachmentLifetime::ClearDiscard,
-                                                 g_depthFormat, graphics_api::SampleCount::Single)
-                                     .build())),
+    m_renderTarget(
+            checkResult(graphics_api::RenderTargetBuilder(*m_device)
+                                .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                    AttachmentAttribute::StoreImage | AttachmentAttribute::Presentable,
+                                            g_colorFormat)
+                                .attachment(AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
+                                .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
     m_geometryRenderTarget(create_model_render_target(*m_device)),
     m_geometryBuffer(checkResult(m_geometryRenderTarget.create_framebuffer(m_resolution))),
     m_ambientOcclusionRenderTarget(create_ao_render_target(*m_device)),
-    m_ambientOcclusionFramebuffer(checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(m_resolution))),
+    m_ambientOcclusionFramebuffer(
+            checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(m_resolution))),
     m_shadingRenderTarget(create_shading_render_target(*m_device)),
     m_shadingFramebuffer(checkResult(m_shadingRenderTarget.create_framebuffer(m_resolution))),
     m_modelRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
@@ -160,10 +156,10 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_shadowMapRenderer(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
     m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderTarget, *m_resourceManager,
-                               m_geometryBuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
+                               m_geometryBuffer,
+                               m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
     m_shadingRenderer(*m_device, m_shadingRenderTarget, *m_resourceManager, m_geometryBuffer,
-                      m_ambientOcclusionFramebuffer.texture(0),
-                      m_shadowMapRenderer.depth_texture()),
+                      m_ambientOcclusionFramebuffer.texture(0), m_shadowMapRenderer.depth_texture()),
     m_postProcessingRenderer(*m_device, m_renderTarget, *m_resourceManager, m_shadingFramebuffer.texture(0),
                              m_geometryBuffer.texture(1)),
     m_scene(*this, m_modelRenderer, m_shadowMapRenderer, m_debugLinesRenderer, *m_resourceManager),
@@ -199,7 +195,9 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 
    m_renderGraph.bake("post_processing"_name_id);
 
-   m_postProcessingRenderer.update_texture(m_shadingFramebuffer.texture(0), m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
+   m_postProcessingRenderer.update_texture(
+           m_shadingFramebuffer.texture(0),
+           m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
    ui.add_label("fps"_name_id, "Framerate");
@@ -379,16 +377,21 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_device->await_all();
 
-   m_geometryBuffer = checkResult(m_geometryRenderTarget.create_framebuffer(resolution));
+   m_geometryBuffer              = checkResult(m_geometryRenderTarget.create_framebuffer(resolution));
    m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(resolution));
-   m_shadingFramebuffer = checkResult(m_shadingRenderTarget.create_framebuffer(resolution));
-   m_shadingRenderer.update_textures(m_geometryBuffer, m_ambientOcclusionFramebuffer.texture(0), m_shadowMapRenderer.depth_texture());
-   m_ambientOcclusionRenderer.update_textures(m_geometryBuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
-   m_postProcessingRenderer.update_texture(m_shadingFramebuffer.texture(0), m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
+   m_shadingFramebuffer          = checkResult(m_shadingRenderTarget.create_framebuffer(resolution));
+   m_shadingRenderer.update_textures(m_geometryBuffer, m_ambientOcclusionFramebuffer.texture(0),
+                                     m_shadowMapRenderer.depth_texture());
+   m_ambientOcclusionRenderer.update_textures(
+           m_geometryBuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
+   m_postProcessingRenderer.update_texture(
+           m_shadingFramebuffer.texture(0),
+           m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    m_framebuffers.clear();
 
-   m_swapchain = checkResult(m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
+   m_swapchain    = checkResult(m_device->create_swapchain(
+           m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};

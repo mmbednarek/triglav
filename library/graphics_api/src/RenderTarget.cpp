@@ -26,7 +26,7 @@ int RenderTarget::color_attachment_count() const
 {
    int count = 0;
    for (const auto &attachment : m_attachments) {
-      if (attachment.type & AttachmentType::Color) {
+      if (attachment.flags & AttachmentAttribute::Color) {
          ++count;
       }
    }
@@ -43,10 +43,10 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolutio
    std::vector<Texture> textures;
    for (const auto &attachment : m_attachments) {
       TextureType textureType{};
-      if (attachment.type & AttachmentType::Color || attachment.type & AttachmentType::Resolve) {
+      if (attachment.flags & AttachmentAttribute::Color || attachment.flags & AttachmentAttribute::Resolve) {
          textureType = TextureType::ColorAttachment;
-      } else if (attachment.type & AttachmentType::Depth) {
-         if (attachment.lifetime == AttachmentLifetime::ClearPreserve) {
+      } else if (attachment.flags & AttachmentAttribute::Depth) {
+         if (attachment.flags & AttachmentAttribute::StoreImage) {
             textureType = TextureType::SampledDepthBuffer;
          } else {
             textureType = TextureType::DepthBuffer;
@@ -91,7 +91,7 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
    u32 swapchainAttachment{};
    u32 index{};
    for (const auto &attachment : m_attachments) {
-      if (attachment.type & AttachmentType::Presentable) {
+      if (attachment.flags & AttachmentAttribute::Presentable) {
          swapchainAttachment = index;
          break;
       }
@@ -108,9 +108,9 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
       }
 
       TextureType textureType{};
-      if (attachment.type & AttachmentType::Color || attachment.type & AttachmentType::Resolve) {
+      if (attachment.flags & AttachmentAttribute::Color || attachment.flags & AttachmentAttribute::Resolve) {
          textureType = TextureType::ColorAttachment;
-      } else if (attachment.type & AttachmentType::Depth) {
+      } else if (attachment.flags & AttachmentAttribute::Depth) {
          textureType = TextureType::DepthBuffer;
       }
 
@@ -157,12 +157,13 @@ RenderTargetBuilder::RenderTargetBuilder(Device &device) :
 {
 }
 
-RenderTargetBuilder &RenderTargetBuilder::attachment(const AttachmentTypeFlags type,
-                                                     const AttachmentLifetime lifetime,
+RenderTargetBuilder &RenderTargetBuilder::attachment(const AttachmentAttributeFlags flags,
                                                      const ColorFormat &format, const SampleCount sampleCount)
 {
-   assert(!(type & AttachmentType::Depth) || !(type & AttachmentType::Color));
-   assert(!(type & AttachmentType::Color) || !(type & AttachmentType::Resolve));
+   assert(!(flags & AttachmentAttribute::Depth) || !(flags & AttachmentAttribute::Color));
+   assert(!(flags & AttachmentAttribute::Color) || !(flags & AttachmentAttribute::Resolve));
+   assert(!(flags & AttachmentAttribute::LoadImage) || !(flags & AttachmentAttribute::ClearImage));
+
    if (sampleCount != SampleCount::Single) {
       if (m_sampleCount != SampleCount::Single) {
          assert(sampleCount == m_sampleCount);
@@ -170,7 +171,7 @@ RenderTargetBuilder &RenderTargetBuilder::attachment(const AttachmentTypeFlags t
          m_sampleCount = sampleCount;
       }
    }
-   m_attachments.emplace_back(type, lifetime, format, sampleCount);
+   m_attachments.emplace_back(flags, format, sampleCount);
    return *this;
 }
 
@@ -183,11 +184,11 @@ Subpass RenderTargetBuilder::vulkan_subpass() const
    uint32_t referenceIndex = 0;
    std::optional<uint32_t> depthAttachmentIndex;
    for (uint32_t i = 0; i < m_attachments.size(); ++i) {
-      const auto type = m_attachments[i].type;
-      if (type & AttachmentType::Color) {
+      const auto type = m_attachments[i].flags;
+      if (type & AttachmentAttribute::Color) {
          result.references[referenceIndex] = VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
          ++referenceIndex;
-      } else if (type & AttachmentType::Depth) {
+      } else if (type & AttachmentAttribute::Depth) {
          depthAttachmentIndex.emplace(i);
       }
    }
@@ -213,8 +214,8 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
    result.resize(m_attachments.size());
 
    for (size_t i = 0; i < m_attachments.size(); ++i) {
-      const auto [attachmentType, attachmentLifetime, attachmentFormat, sampleCount] = m_attachments[i];
-      const auto [vulkanLoadOp, vulkanStoreOp] = vulkan::to_vulkan_load_store_ops(attachmentLifetime);
+      const auto [attachmentFlags, attachmentFormat, sampleCount] = m_attachments[i];
+      const auto [vulkanLoadOp, vulkanStoreOp] = vulkan::to_vulkan_load_store_ops(attachmentFlags);
 
       auto &attachment          = result[i];
       attachment.format         = GAPI_CHECK(vulkan::to_vulkan_color_format(attachmentFormat));
@@ -224,7 +225,7 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
       attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
       attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-      attachment.finalLayout = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentType, attachmentLifetime));
+      attachment.finalLayout = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentFlags));
    }
 
    return result;
@@ -237,16 +238,16 @@ std::vector<VkSubpassDependency> RenderTargetBuilder::vulkan_subpass_dependencie
    bool hasColorSrcExternalDependency = false;
 
    for (const auto &attachment : m_attachments) {
-      if (attachment.type & AttachmentType::Color &&
-          attachment.lifetime == AttachmentLifetime::ClearPreserve) {
+      if (attachment.flags & AttachmentAttribute::Color &&
+          attachment.flags & AttachmentAttribute::ClearImage) {
          hasColorSrcExternalDependency = true;
       }
-      if (attachment.type & AttachmentType::Depth) {
-         if (attachment.lifetime == AttachmentLifetime::ClearPreserve) {
+      if (attachment.flags & AttachmentAttribute::Depth) {
+         if (attachment.flags & AttachmentAttribute::ClearImage) {
             hasDepthSrcExternalDependency = true;
+         }
+         if (attachment.flags & AttachmentAttribute::StoreImage) {
             hasDepthDstExternalDependency = true;
-         } else if (attachment.lifetime == AttachmentLifetime::ClearDiscard) {
-            hasDepthSrcExternalDependency = true;
          }
       }
    }
