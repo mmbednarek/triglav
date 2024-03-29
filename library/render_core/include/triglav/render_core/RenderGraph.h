@@ -11,6 +11,8 @@
 
 namespace triglav::render_core {
 
+class FrameResources;
+
 class RenderGraph
 {
  public:
@@ -40,7 +42,8 @@ class RenderGraph
    void add_semaphore_node(NameID node, graphics_api::Semaphore *semaphore);
    void add_dependency(NameID target, NameID dependency);
    bool bake(NameID targetNode);
-   void record_command_lists();
+   void initialize_nodes(FrameResources& frameResources);
+   void record_command_lists(FrameResources& frameResources);
    [[nodiscard]] graphics_api::Status execute();
    void await() const;
    [[nodiscard]] graphics_api::Semaphore *target_semaphore() const;

@@ -1,4 +1,5 @@
 name: bark
+shader: nm_rc_mc.shader
 properties:
   albedo_texture: "bark.tex"
   normal_texture: "bark/normal.tex"

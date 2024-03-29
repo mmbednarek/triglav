@@ -38,6 +38,11 @@ VkRenderPass RenderTarget::vulkan_render_pass() const
    return *m_renderPass;
 }
 
+const std::vector<AttachmentInfo> &RenderTarget::attachments() const
+{
+   return m_attachments;
+}
+
 Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolution) const
 {
    std::vector<Texture> textures;
@@ -157,7 +162,8 @@ RenderTargetBuilder::RenderTargetBuilder(Device &device) :
 {
 }
 
-RenderTargetBuilder &RenderTargetBuilder::attachment(const AttachmentAttributeFlags flags,
+RenderTargetBuilder &RenderTargetBuilder::attachment(const NameID identifier,
+                                                     const AttachmentAttributeFlags flags,
                                                      const ColorFormat &format, const SampleCount sampleCount)
 {
    assert(!(flags & AttachmentAttribute::Depth) || !(flags & AttachmentAttribute::Color));
@@ -171,7 +177,7 @@ RenderTargetBuilder &RenderTargetBuilder::attachment(const AttachmentAttributeFl
          m_sampleCount = sampleCount;
       }
    }
-   m_attachments.emplace_back(flags, format, sampleCount);
+   m_attachments.emplace_back(identifier, flags, format, sampleCount);
    return *this;
 }
 
@@ -186,7 +192,8 @@ Subpass RenderTargetBuilder::vulkan_subpass() const
    for (uint32_t i = 0; i < m_attachments.size(); ++i) {
       const auto type = m_attachments[i].flags;
       if (type & AttachmentAttribute::Color) {
-         result.references[referenceIndex] = VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+         result.references[referenceIndex] =
+                 VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
          ++referenceIndex;
       } else if (type & AttachmentAttribute::Depth) {
          depthAttachmentIndex.emplace(i);
@@ -195,7 +202,7 @@ Subpass RenderTargetBuilder::vulkan_subpass() const
 
    result.description.colorAttachmentCount = referenceIndex;
    if (referenceIndex != 0) {
-      result.description.pColorAttachments    = &result.references[0];
+      result.description.pColorAttachments = &result.references[0];
    }
 
    if (depthAttachmentIndex.has_value()) {
@@ -214,7 +221,7 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
    result.resize(m_attachments.size());
 
    for (size_t i = 0; i < m_attachments.size(); ++i) {
-      const auto [attachmentFlags, attachmentFormat, sampleCount] = m_attachments[i];
+      const auto [name, attachmentFlags, attachmentFormat, sampleCount] = m_attachments[i];
       const auto [vulkanLoadOp, vulkanStoreOp] = vulkan::to_vulkan_load_store_ops(attachmentFlags);
 
       auto &attachment          = result[i];
@@ -225,7 +232,7 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
       attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
       attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
-      attachment.finalLayout = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentFlags));
+      attachment.finalLayout    = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentFlags));
    }
 
    return result;

@@ -16,7 +16,7 @@ graphics_api::WorkTypeFlags PostProcessing::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void PostProcessing::record_commands(graphics_api::CommandList &cmdList)
+void PostProcessing::record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList)
 {
    std::array<graphics_api::ClearValue, 3> clearValues{
            graphics_api::ColorPalette::Black,

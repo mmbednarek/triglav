@@ -24,14 +24,21 @@ struct TextProperty
   }
 };
 
+struct LabelGroup
+{
+  TextObject m_groupTitle;
+  std::vector<NameID> m_labels;
+};
+
 class UserInterface : public render_core::IRenderNode
 {
 public:
    UserInterface(graphics_api::Device &device, graphics_api::Resolution resolution, resource::ResourceManager& resourceManager);
 
   [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
-   void record_commands(graphics_api::CommandList &cmdList) override;
-   void add_label(NameID id, std::string_view name);
+   void record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList) override;
+   void add_label_group(NameID id, std::string_view name);
+   void add_label(NameID group, NameID id, std::string_view name);
    void set_value(NameID id, std::string_view value);
    [[nodiscard]] graphics_api::Texture& texture();
 
@@ -44,6 +51,7 @@ private:
   Rectangle m_rectangle;
   TextObject m_titleLabel;
   std::map<NameID, TextProperty> m_properties;
+  std::map<NameID, LabelGroup> m_labelGroups;
 };
 
 }

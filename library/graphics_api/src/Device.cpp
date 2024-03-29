@@ -137,7 +137,8 @@ uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 
 }// namespace
 
-Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace, const Resolution &resolution, Swapchain *oldSwapchain)
+Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
+                                           const Resolution &resolution, Swapchain *oldSwapchain)
 {
    if (not is_surface_format_supported(m_physicalDevice, m_surface, colorFormat, colorSpace))
       return std::unexpected(Status::UnsupportedFormat);
@@ -215,7 +216,8 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
       swapchainImageViews.emplace_back(std::move(imageView));
    }
 
-   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchain), colorFormat);
+   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchain),
+                    colorFormat);
 }
 
 Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint,
@@ -440,6 +442,23 @@ Result<Sampler> Device::create_sampler(const SamplerInfo &info)
    return Sampler(std::move(sampler));
 }
 
+Result<TimestampArray> Device::create_timestamp_array(const u32 timestampCount)
+{
+   VkQueryPoolCreateInfo queryPoolInfo{VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO};
+   queryPoolInfo.queryType  = VK_QUERY_TYPE_TIMESTAMP;
+   queryPoolInfo.queryCount = timestampCount;
+
+   VkPhysicalDeviceProperties properties;
+   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+
+   vulkan::QueryPool queryPool(*m_device);
+   if (const auto res = queryPool.construct(&queryPoolInfo); res != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return TimestampArray(std::move(queryPool), properties.limits.timestampPeriod);
+}
+
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
 {
    VkSurfaceCapabilitiesKHR capabilities;
@@ -475,7 +494,8 @@ Status Device::submit_command_list(const CommandList &commandList, const Semapho
       vulkanFence = fence->vulkan_fence();
    }
 
-   if (vkQueueSubmit(m_queueManager.next_queue(commandList.work_types()), 1, &submitInfo, vulkanFence) != VK_SUCCESS) {
+   if (vkQueueSubmit(m_queueManager.next_queue(commandList.work_types()), 1, &submitInfo, vulkanFence) !=
+       VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
@@ -659,19 +679,22 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
       ++deviceQueueCreateInfoIt;
    }
 
-   VkPhysicalDeviceFeatures deviceFeatures{
-           .sampleRateShading = true,
-           .logicOp           = true,
-           .fillModeNonSolid  = true,
-           .wideLines         = true,
-           .samplerAnisotropy = true,
-   };
+   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
+   hostQueryResetFeatures.hostQueryReset = true;
+
+   VkPhysicalDeviceFeatures2 deviceFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+   deviceFeatures.pNext = &hostQueryResetFeatures;
+   deviceFeatures.features.sampleRateShading = true;
+   deviceFeatures.features.logicOp           = true;
+   deviceFeatures.features.fillModeNonSolid  = true;
+   deviceFeatures.features.wideLines         = true;
+   deviceFeatures.features.samplerAnisotropy = true;
 
    VkDeviceCreateInfo deviceInfo{};
-   deviceInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+   deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+   deviceInfo.pNext = &deviceFeatures;
    deviceInfo.queueCreateInfoCount    = static_cast<uint32_t>(deviceQueueCreateInfos.size());
    deviceInfo.pQueueCreateInfos       = deviceQueueCreateInfos.data();
-   deviceInfo.pEnabledFeatures        = &deviceFeatures;
    deviceInfo.enabledExtensionCount   = g_vulkanDeviceExtensions.size();
    deviceInfo.ppEnabledExtensionNames = g_vulkanDeviceExtensions.data();
 

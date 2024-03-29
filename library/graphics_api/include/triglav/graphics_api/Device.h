@@ -2,13 +2,14 @@
 
 #include "Buffer.h"
 #include "GraphicsApi.hpp"
-#include "Surface.hpp"
+#include "QueueManager.h"
 #include "Sampler.h"
 #include "Shader.h"
+#include "Surface.hpp"
 #include "Swapchain.h"
 #include "Synchronization.h"
 #include "Texture.h"
-#include "QueueManager.h"
+#include "TimestampArray.h"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
@@ -72,9 +73,11 @@ class Device
           vulkan::DebugUtilsMessengerEXT debugMessenger,
 #endif
           vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
-          std::vector<QueueFamilyInfo>&& queueFamilyInfos);
+          std::vector<QueueFamilyInfo> &&queueFamilyInfos);
 
-   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace, const Resolution &resolution, Swapchain *oldSwapchain = nullptr);
+   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace,
+                                                    const Resolution &resolution,
+                                                    Swapchain *oldSwapchain = nullptr);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint,
                                               std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
@@ -84,18 +87,20 @@ class Device
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
                                                 TextureType type        = TextureType::SampledImage,
                                                 SampleCount sampleCount = SampleCount::Single,
-                                                int mipCount = 1) const;
-   [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo& info);
+                                                int mipCount            = 1) const;
+   [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo &info);
+   [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
 
-   [[nodiscard]] Status submit_command_list(const CommandList &commandList, const SemaphoreArray &waitSemaphores,
+   [[nodiscard]] Status submit_command_list(const CommandList &commandList,
+                                            const SemaphoreArray &waitSemaphores,
                                             const SemaphoreArray &signalSemaphores, const Fence *fence) const;
    [[nodiscard]] Status submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
                                             const Semaphore &signalSemaphore, const Fence &fence) const;
    [[nodiscard]] Status submit_command_list_one_time(const CommandList &commandList) const;
    [[nodiscard]] VkDevice vulkan_device() const;
-   [[nodiscard]] QueueManager& queue_manager();
+   [[nodiscard]] QueueManager &queue_manager();
    void await_all() const;
 
  private:
@@ -116,4 +121,4 @@ using DeviceUPtr = std::unique_ptr<Device>;
 
 Result<DeviceUPtr> initialize_device(const triglav::desktop::ISurface &surface);
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

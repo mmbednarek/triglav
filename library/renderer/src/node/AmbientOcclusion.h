@@ -15,7 +15,8 @@ public:
                    Scene &scene);
 
   [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
-   void record_commands(graphics_api::CommandList &cmdList) override;
+   void record_commands(render_core::FrameResources &frameResources,
+                       graphics_api::CommandList &cmdList) override;
 
 private:
    graphics_api::Framebuffer& m_ambientOcclusionFramebuffer;

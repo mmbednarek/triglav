@@ -13,7 +13,7 @@ graphics_api::WorkTypeFlags ShadowMap::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void ShadowMap::record_commands(graphics_api::CommandList &cmdList)
+void ShadowMap::record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList)
 {
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::DepthStenctilValue{1.0f, 0.0f}

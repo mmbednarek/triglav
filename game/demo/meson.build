@@ -6,6 +6,7 @@ demo_deps = [
   renderer,
   geometry,
   desktop,
+  desktop_main,
   fmt,
   xkb_common,
   shaders,

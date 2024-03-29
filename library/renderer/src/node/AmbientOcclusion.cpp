@@ -1,5 +1,7 @@
 #include "AmbientOcclusion.h"
 
+#include <triglav/render_core/FrameResources.h>
+
 namespace triglav::renderer::node {
 
 AmbientOcclusion::AmbientOcclusion(graphics_api::Framebuffer &ambientOcclusionFramebuffer,
@@ -15,7 +17,7 @@ graphics_api::WorkTypeFlags AmbientOcclusion::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void AmbientOcclusion::record_commands(graphics_api::CommandList &cmdList)
+void AmbientOcclusion::record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList)
 {
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::ColorPalette::Black,

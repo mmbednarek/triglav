@@ -20,6 +20,7 @@ std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(Att
 
 VkShaderStageFlagBits to_vulkan_shader_stage(PipelineStage stage);
 VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags);
+VkPipelineStageFlagBits to_vulkan_pipeline_stage(PipelineStage stage);
 VkPipelineStageFlags to_vulkan_pipeline_stage_flags(PipelineStageFlags flags);
 VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType);
 VkImageLayout to_vulkan_image_layout(TextureState resourceState);

@@ -12,7 +12,7 @@ public:
    PostProcessing(PostProcessingRenderer &renderer, std::vector<graphics_api::Framebuffer> &framebuffers);
 
   [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
-   void record_commands(graphics_api::CommandList &cmdList) override;
+   void record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList) override;
 
   void set_index(u32 index);
 

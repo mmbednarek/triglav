@@ -19,7 +19,7 @@ struct Rectangle
    struct FragmentUBO
    {
       glm::vec4 borderRadius{10.0f, 10.0f, 10.0f, 10.0f};
-      glm::vec4 backgroundColor{0.0f, 0.0f, 0.0f, 0.6f};
+      glm::vec4 backgroundColor{0.0f, 0.0f, 0.0f, 0.8f};
       glm::vec2 rectSize{100, 100};
    };
 

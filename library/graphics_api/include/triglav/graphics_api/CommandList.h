@@ -11,6 +11,7 @@ namespace triglav::graphics_api {
 class Pipeline;
 class Framebuffer;
 class RenderTarget;
+class TimestampArray;
 
 enum class SubmitType
 {
@@ -49,6 +50,8 @@ class CommandList
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
    void blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion, const Texture &targetTex, const TextureRegion &targetRegion) const;
+   void reset_timestamp_array(const TimestampArray & timestampArray, u32 first, u32 count) const;
+   void write_timestamp(PipelineStage stage, const TimestampArray & timestampArray, u32 timestampIndex) const;
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray &array) const

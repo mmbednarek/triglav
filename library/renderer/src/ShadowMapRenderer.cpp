@@ -3,18 +3,18 @@
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
-#include "triglav/resource/ResourceManager.h"
 #include "triglav/render_core/RenderCore.hpp"
+#include "triglav/resource/ResourceManager.h"
 
 #include "ModelRenderer.h"
 
-using triglav::resource::ResourceManager;
 using triglav::ResourceType;
+using triglav::graphics_api::AttachmentAttribute;
+using triglav::render_core::checkResult;
 using triglav::render_core::InstancedModel;
 using triglav::render_core::ModelShaderMapProperties;
-using triglav::render_core::checkResult;
 using triglav::render_core::ShadowMapUBO;
-using triglav::graphics_api::AttachmentAttribute;
+using triglav::resource::ResourceManager;
 
 using namespace triglav::name_literals;
 
@@ -28,11 +28,16 @@ ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManag
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
             checkResult(graphics_api::RenderTargetBuilder(device)
-               .attachment(AttachmentAttribute::Depth | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage, GAPI_FORMAT(D, Float32)).build())),
+                                .attachment("shadow_map_0"_name_id,
+                                            AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
+                                                    AttachmentAttribute::StoreImage,
+                                            GAPI_FORMAT(D, Float32))
+                                .build())),
     m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(g_shadowMapResolution))),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(device, m_depthRenderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_name))
+                    .fragment_shader(
+                            resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_name))
                     .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shadow_map.vshader"_name))
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
@@ -60,7 +65,8 @@ void ShadowMapRenderer::on_begin_render(graphics_api::CommandList &cmdList) cons
    cmdList.bind_pipeline(m_pipeline);
 }
 
-void ShadowMapRenderer::draw_model(graphics_api::CommandList &cmdList, const InstancedModel &instancedModel) const
+void ShadowMapRenderer::draw_model(graphics_api::CommandList &cmdList,
+                                   const InstancedModel &instancedModel) const
 {
    const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -90,4 +96,4 @@ ModelShaderMapProperties ShadowMapRenderer::create_model_properties()
    return ModelShaderMapProperties{std::move(shadowMapUbo), std::move(shadowMapDescriptors)};
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

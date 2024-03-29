@@ -2,9 +2,12 @@
 
 #include <span>
 
+#include "triglav/Name.hpp"
+
 #include "Framebuffer.h"
 #include "Texture.h"
 #include "Swapchain.h"
+
 
 namespace triglav::graphics_api {
 
@@ -16,6 +19,7 @@ class Swapchain;
 
 struct AttachmentInfo
 {
+   NameID identifier;
    AttachmentAttributeFlags flags;
    ColorFormat format;
    SampleCount sampleCount;
@@ -36,6 +40,7 @@ class RenderTarget
    [[nodiscard]] SampleCount sample_count() const;
    [[nodiscard]] int color_attachment_count() const;
    [[nodiscard]] VkRenderPass vulkan_render_pass() const;
+   [[nodiscard]] const std::vector<AttachmentInfo> &attachments() const;
 
    [[nodiscard]] Result<Framebuffer> create_framebuffer(const Resolution& resolution) const;
    [[nodiscard]] Result<Framebuffer> create_swapchain_framebuffer(const Swapchain& swapchain, u32 frameIndex) const;
@@ -52,7 +57,7 @@ class RenderTargetBuilder
  public:
    explicit RenderTargetBuilder(Device &device);
 
-   RenderTargetBuilder &attachment(AttachmentAttributeFlags flags, const ColorFormat &format, SampleCount sampleCount = SampleCount::Single);
+   RenderTargetBuilder &attachment(NameID identifier, AttachmentAttributeFlags flags, const ColorFormat &format, SampleCount sampleCount = SampleCount::Single);
 
    Result<RenderTarget> build();
 

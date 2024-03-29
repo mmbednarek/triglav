@@ -37,6 +37,7 @@ subdir('library/io')
 
 subdir('library/world')
 subdir('library/desktop')
+subdir('library/desktop_main')
 subdir('library/font')
 subdir('library/graphics_api')
 subdir('library/geometry')

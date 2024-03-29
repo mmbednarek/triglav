@@ -78,20 +78,20 @@ std::vector<font::Rune> make_runes()
 graphics_api::RenderTarget create_model_render_target(graphics_api::Device &device)
 {
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             // Color
-                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("gbuffer/color"_name_id,
+                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(RGBA, Float16))
-                             // Position
-                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("gbuffer/position"_name_id,
+                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(RGBA, Float16))
-                             // Normal
-                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("gbuffer/normal"_name_id,
+                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(RGBA, Float16))
-                             // Depth
-                             .attachment(AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
+                             .attachment("gbuffer/depth"_name_id,
+                                         AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          g_depthFormat)
                              .build());
@@ -100,7 +100,7 @@ graphics_api::RenderTarget create_model_render_target(graphics_api::Device &devi
 graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
 {
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("ao"_name_id, AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(R, Float16), SampleCount::Single)
                              .build());
@@ -109,7 +109,7 @@ graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
 graphics_api::RenderTarget create_shading_render_target(graphics_api::Device &device)
 {
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("shading"_name_id, AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
                              .build());
@@ -134,13 +134,15 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_resolution(create_viewport_resolution(*m_device, width, height)),
     m_swapchain(checkResult(
             m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
-    m_renderTarget(
-            checkResult(graphics_api::RenderTargetBuilder(*m_device)
-                                .attachment(AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                    AttachmentAttribute::StoreImage | AttachmentAttribute::Presentable,
-                                            g_colorFormat)
-                                .attachment(AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
-                                .build())),
+    m_renderTarget(checkResult(
+            graphics_api::RenderTargetBuilder(*m_device)
+                    .attachment("output"_name_id,
+                                AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                        AttachmentAttribute::StoreImage | AttachmentAttribute::Presentable,
+                                g_colorFormat)
+                    .attachment("output/zbuffer"_name_id,
+                                AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
+                    .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
     m_geometryRenderTarget(create_model_render_target(*m_device)),
@@ -175,7 +177,7 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 
    m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, m_scene, m_shadowMapRenderer);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, m_scene, m_skyBox, m_geometryBuffer,
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, m_scene, m_skyBox, m_geometryBuffer,
                                               m_groundRenderer, m_modelRenderer);
    m_renderGraph.emplace_node<node::AmbientOcclusion>(
            "ambient_occlusion"_name_id, m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
@@ -194,18 +196,26 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_renderGraph.add_dependency("post_processing"_name_id, "user_interface"_name_id);
 
    m_renderGraph.bake("post_processing"_name_id);
+   m_renderGraph.initialize_nodes(m_frameResources);
 
    m_postProcessingRenderer.update_texture(
            m_shadingFramebuffer.texture(0),
            m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());
 
    auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
-   ui.add_label("fps"_name_id, "Framerate");
-   ui.add_label("pos"_name_id, "Position");
-   ui.add_label("orien"_name_id, "Orientation");
-   ui.add_label("triangles"_name_id, "GBuffer Triangles");
-   ui.add_label("ao"_name_id, "Ambient Occlusion");
-   ui.add_label("aa"_name_id, "Anti-Aliasing");
+   ui.add_label_group("metrics"_name_id, "Metrics");
+   ui.add_label_group("features"_name_id, "Features");
+   ui.add_label_group("location"_name_id, "Location");
+
+   ui.add_label("metrics"_name_id,"fps"_name_id, "Framerate");
+   ui.add_label("metrics"_name_id,"triangles"_name_id, "GBuffer Triangles");
+   ui.add_label("metrics"_name_id,"gpu_time"_name_id, "GBuffer Render Time");
+
+   ui.add_label("location"_name_id, "pos"_name_id, "Position");
+   ui.add_label("location"_name_id, "orien"_name_id, "Orientation");
+
+   ui.add_label("features"_name_id, "ao"_name_id, "Ambient Occlusion");
+   ui.add_label("features"_name_id, "aa"_name_id, "Anti-Aliasing");
 }
 
 void Renderer::update_debug_info(const float framerate)
@@ -214,6 +224,9 @@ void Renderer::update_debug_info(const float framerate)
 
    const auto framerateStr = std::format("{}", framerate);
    ui.set_value("fps"_name_id, framerateStr);
+
+   const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
+   ui.set_value("gpu_time"_name_id, gpuTimeStr);
 
    const auto camPos      = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
@@ -242,7 +255,7 @@ void Renderer::on_render()
    this->update_uniform_data(deltaTime);
 
    m_renderGraph.node<node::PostProcessing>("post_processing"_name_id).set_index(framebufferIndex);
-   m_renderGraph.record_command_lists();
+   m_renderGraph.record_command_lists(m_frameResources);
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
    checkStatus(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));

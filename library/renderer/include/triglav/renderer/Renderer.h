@@ -18,10 +18,11 @@
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/graphics_api/RenderTarget.h"
+#include "triglav/render_core/FrameResources.h"
+#include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/RenderGraph.h"
-#include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/resource/ResourceManager.h"
 
 namespace triglav::renderer {
@@ -109,6 +110,7 @@ class Renderer
    SkyBox m_skyBox;
    render_core::Sprite m_sprite;
    render_core::RenderGraph m_renderGraph;
+   render_core::FrameResources m_frameResources;
 };
 
 }// namespace triglav::renderer

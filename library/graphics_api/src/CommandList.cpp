@@ -7,6 +7,7 @@
 
 
 #include <functional>
+#include <TimestampArray.h>
 
 namespace triglav::graphics_api {
 
@@ -258,6 +259,16 @@ void CommandList::blit_texture(const Texture &sourceTex, const TextureRegion &so
 
    vkCmdBlitImage(m_commandBuffer, sourceTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
                   targetTex.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
+}
+
+void CommandList::reset_timestamp_array(const TimestampArray &timestampArray, u32 first, u32 count) const
+{
+   vkCmdResetQueryPool(m_commandBuffer, timestampArray.vulkan_query_pool(), first, count);
+}
+
+void CommandList::write_timestamp(const PipelineStage stage, const TimestampArray &timestampArray, const u32 timestampIndex) const
+{
+   vkCmdWriteTimestamp(m_commandBuffer, vulkan::to_vulkan_pipeline_stage(stage), timestampArray.vulkan_query_pool(), timestampIndex);
 }
 
 WorkTypeFlags CommandList::work_types() const

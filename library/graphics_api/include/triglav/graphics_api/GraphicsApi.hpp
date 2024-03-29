@@ -82,6 +82,7 @@ enum class PipelineStage : uint32_t
    VertexShader   = (1 << 1),
    FragmentShader = (1 << 2),
    Transfer       = (1 << 3),
+   End            = (1 << 4),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -210,14 +211,14 @@ enum class Culling
 
 enum class AttachmentAttribute
 {
-   None = 0,
-   Color = (1 << 0),
-   Depth = (1 << 1),
-   Resolve = (1 << 2),
+   None        = 0,
+   Color       = (1 << 0),
+   Depth       = (1 << 1),
+   Resolve     = (1 << 2),
    Presentable = (1 << 3),
-   LoadImage = (1 << 4),
-   ClearImage = (1 << 5),
-   StoreImage = (1 << 6),
+   LoadImage   = (1 << 4),
+   ClearImage  = (1 << 5),
+   StoreImage  = (1 << 6),
 };
 
 TRIGLAV_DECL_FLAGS(AttachmentAttribute)

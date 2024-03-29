@@ -103,13 +103,20 @@ bool RenderGraph::bake(NameID targetNode)
    return true;
 }
 
-void RenderGraph::record_command_lists()
+void RenderGraph::initialize_nodes(FrameResources &frameResources)
+{
+   for (const auto &node : m_nodes | std::views::values) {
+      node->initialize_resources(frameResources);
+   }
+}
+
+void RenderGraph::record_command_lists(FrameResources &frameResources)
 {
    for (auto &bakedNode : m_bakedNodes) {
       const auto &node = m_nodes[bakedNode.name];
       GAPI_CHECK_STATUS(bakedNode.commandList.reset());
       GAPI_CHECK_STATUS(bakedNode.commandList.begin());
-      node->record_commands(bakedNode.commandList);
+      node->record_commands(frameResources, bakedNode.commandList);
       GAPI_CHECK_STATUS(bakedNode.commandList.finish());
    }
 }
@@ -143,7 +150,7 @@ graphics_api::Semaphore *RenderGraph::target_semaphore() const
 
 u32 RenderGraph::triangle_count(const NameID node) const
 {
-    return m_bakedNodes[m_nodeIndicies.at(node)].commandList.triangle_count();
+   return m_bakedNodes[m_nodeIndicies.at(node)].commandList.triangle_count();
 }
 
 void RenderGraph::clean()
