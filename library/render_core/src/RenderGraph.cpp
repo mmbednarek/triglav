@@ -121,6 +121,13 @@ void RenderGraph::record_command_lists(FrameResources &frameResources)
    }
 }
 
+void RenderGraph::reset_command_lists() const
+{
+   for (auto &bakedNode : m_bakedNodes) {
+      GAPI_CHECK_STATUS(bakedNode.commandList.reset());
+   }
+}
+
 graphics_api::Status RenderGraph::execute()
 {
    for (const auto &bakedNode : m_bakedNodes) {

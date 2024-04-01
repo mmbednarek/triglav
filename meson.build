@@ -6,6 +6,11 @@ project('vulkan_engine',
   default_options: ['cpp_std=c++23'],
 )
 
+if build_machine.system() == 'windows'
+  add_project_arguments('/std:c++latest', language : 'cpp')
+  add_project_arguments('/Zc:preprocessor', language : 'cpp')
+endif
+
 fs = import('fs')
 
 vulkan = dependency('vulkan', method:'pkg-config')

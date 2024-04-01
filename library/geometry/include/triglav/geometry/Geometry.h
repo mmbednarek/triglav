@@ -2,6 +2,7 @@
 
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <cmath>
 
 #include "triglav/graphics_api/Array.hpp"
 
@@ -68,6 +69,8 @@ struct BoundingBox
    glm::vec3 min;
    glm::vec3 max;
 };
+
+constexpr double g_pi = 3.1415926535897932;
 
 }// namespace geometry
 

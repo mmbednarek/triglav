@@ -17,8 +17,7 @@ graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Devi
    const stbi_uc *pixels = stbi_load(path.data(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
    assert(pixels != nullptr);
 
-   auto texture = GAPI_CHECK(device.create_texture(
-           GAPI_FORMAT(RGBA, sRGB), {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)}, TextureType::SampledImage, SampleCount::Single, graphics_api::g_maxMipMaps));
+   auto texture = GAPI_CHECK(device.create_texture(GAPI_FORMAT(RGBA, sRGB), {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)}, TextureType::SampledImage, SampleCount::Single, graphics_api::g_maxMipMaps));
    GAPI_CHECK_STATUS(texture.write(device, pixels));
    return texture;
 }

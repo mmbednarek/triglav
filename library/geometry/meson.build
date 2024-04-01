@@ -1,5 +1,4 @@
 geometry_sources = files([
-  'src/BufferedReader.cpp',
   'src/DebugMesh.cpp',
   'src/InternalMesh.cpp',
   'src/InternalMesh.h',
@@ -7,7 +6,7 @@ geometry_sources = files([
   'src/Parser.cpp',
 ])
 
-geometry_pub_deps = [glm, graphics_api]
+geometry_pub_deps = [glm, graphics_api, io]
 
 geometry_priv_deps = geometry_pub_deps
 geometry_priv_deps += cgal

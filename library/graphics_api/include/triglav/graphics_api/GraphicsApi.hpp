@@ -50,6 +50,7 @@ enum class ColorFormatPart
 {
    Unknown,
    sRGB,
+   UNorm8,
    UNorm16,
    UInt,
    Float32,
@@ -61,6 +62,7 @@ constexpr size_t color_format_part_size(const ColorFormatPart part)
    switch (part) {
    case ColorFormatPart::Unknown: return 0;
    case ColorFormatPart::sRGB: return 1;
+   case ColorFormatPart::UNorm8: return 1;
    case ColorFormatPart::UNorm16: return 2;
    case ColorFormatPart::UInt: return 1;
    case ColorFormatPart::Float16: return 2;

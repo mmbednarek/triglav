@@ -3,6 +3,7 @@
 #include "triglav/io/File.h"
 
 #include <ryml.hpp>
+#include <string>
 
 namespace triglav::resource {
 

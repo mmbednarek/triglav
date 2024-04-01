@@ -222,7 +222,7 @@ Result<Pipeline> PipelineBuilder::build() const
 
    VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
    colorBlendingInfo.sType             = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-   colorBlendingInfo.logicOpEnable     = VK_TRUE;
+   colorBlendingInfo.logicOpEnable     = not m_blendingEnabled;
    colorBlendingInfo.logicOp           = VK_LOGIC_OP_COPY;
    colorBlendingInfo.attachmentCount   = colorBlendAttachments.size();
    colorBlendingInfo.pAttachments      = colorBlendAttachments.data();

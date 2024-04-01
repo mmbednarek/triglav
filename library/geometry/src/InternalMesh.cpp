@@ -2,6 +2,8 @@
 
 #include "Parser.h"
 
+#include "triglav/io/File.h"
+
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/Polygon_mesh_processing/orientation.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
@@ -275,7 +277,7 @@ BoundingBox InternalMesh::calculate_bouding_box() const
    return result;
 }
 
-InternalMesh InternalMesh::from_obj_file(std::istream &stream)
+InternalMesh InternalMesh::from_obj_file(io::IReader &stream)
 {
    InternalMesh result;
 
@@ -345,9 +347,11 @@ InternalMesh InternalMesh::from_obj_file(std::istream &stream)
 
 InternalMesh InternalMesh::from_obj_file(const std::string_view path)
 {
-   std::ifstream stream(std::string(path), std::ios::binary);
-   assert(stream.is_open());
-   return InternalMesh::from_obj_file(stream);
+   const auto file = io::open_file(path, io::FileOpenMode::Read);
+   if (not file.has_value()) {
+      throw std::runtime_error("failed to open object file");
+   }
+   return InternalMesh::from_obj_file(**file);
 }
 
 DeviceMesh InternalMesh::upload_to_device(graphics_api::Device &device)

@@ -46,6 +46,7 @@ class EventListener final : public DefaultSurfaceEventListener
    {
       if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
          m_surface.lock_cursor();
+         m_surface.hide_cursor();
       }
    }
 
@@ -102,9 +103,10 @@ int triglav_main(InputArgs& /*args*/, IDisplay& display)
    EventListener eventListener(*surface, renderer);
    surface->add_event_listener(&eventListener);
 
+   display.dispatch_messages();
    while (eventListener.is_running()) {
-      display.dispatch_messages();
       renderer.on_render();
+      display.dispatch_messages();
    }
 
    renderer.on_close();

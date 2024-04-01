@@ -10,6 +10,7 @@
 #include <set>
 #include <shared_mutex>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 #include "CommandList.h"
 #include "Surface.hpp"
@@ -37,11 +38,11 @@ VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose
 {
    switch (purpose) {
    case BufferPurpose::TransferBuffer: return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-   case BufferPurpose::VertexBuffer:
-      return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+   case BufferPurpose::VertexBuffer: return VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                                            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
    case BufferPurpose::UniformBuffer: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-   case BufferPurpose::IndexBuffer:
-      return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+   case BufferPurpose::IndexBuffer: return VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+                                           VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
    }
    return 0;
 }
@@ -50,8 +51,8 @@ VkMemoryPropertyFlags map_buffer_purpose_to_memory_properties(const BufferPurpos
 {
    switch (purpose) {
    case BufferPurpose::TransferBuffer://fallthrough
-   case BufferPurpose::UniformBuffer:
-      return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+   case BufferPurpose::UniformBuffer: return
+         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
    case BufferPurpose::VertexBuffer://fallthrough
    case BufferPurpose::IndexBuffer: return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
    }
@@ -59,10 +60,24 @@ VkMemoryPropertyFlags map_buffer_purpose_to_memory_properties(const BufferPurpos
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
+   VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
+   const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
 {
-   std::cerr << "[VALIDATION] " << pCallbackData->pMessage << '\n';
+   spdlog::level::level_enum logLevel{spdlog::level::off};
+
+   switch (messageSeverity) {
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: logLevel = spdlog::level::trace;
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: logLevel = spdlog::level::info;
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: logLevel = spdlog::level::warn;
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: logLevel = spdlog::level::err;
+      break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT: break;
+   }
+
+   spdlog::log(logLevel, "vk-validation: {}", pCallbackData->pMessage);
    return VK_FALSE;
 }
 
@@ -70,10 +85,16 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(
 
 namespace triglav::graphics_api {
 DECLARE_VLK_ENUMERATOR(get_physical_devices, VkPhysicalDevice, vkEnumeratePhysicalDevices)
+
 DECLARE_VLK_ENUMERATOR(get_queue_family_properties, VkQueueFamilyProperties,
                        vkGetPhysicalDeviceQueueFamilyProperties)
+
 DECLARE_VLK_ENUMERATOR(get_surface_formats, VkSurfaceFormatKHR, vkGetPhysicalDeviceSurfaceFormatsKHR)
+
 DECLARE_VLK_ENUMERATOR(get_swapchain_images, VkImage, vkGetSwapchainImagesKHR)
+
+DECLARE_VLK_ENUMERATOR(get_device_extension_properties, VkExtensionProperties,
+                       vkEnumerateDeviceExtensionProperties)
 
 namespace {
 
@@ -112,17 +133,15 @@ Device::Device(vulkan::Instance instance,
 #endif
                vulkan::SurfaceKHR surface, vulkan::Device device, const VkPhysicalDevice physicalDevice,
                std::vector<QueueFamilyInfo> &&queueFamilyInfos) :
-    m_instance(std::move(instance)),
+   m_instance(std::move(instance)),
 #if GAPI_ENABLE_VALIDATION
-    m_debugMessenger(std::move(debugMessenger)),
+   m_debugMessenger(std::move(debugMessenger)),
 #endif
-    m_surface(std::move(surface)),
-    m_device(std::move(device)),
-    m_physicalDevice(physicalDevice),
-    m_queueFamilyInfos{std::move(queueFamilyInfos)},
-    m_queueManager(*this, m_queueFamilyInfos)
-{
-}
+   m_surface(std::move(surface)),
+   m_device(std::move(device)),
+   m_physicalDevice(physicalDevice),
+   m_queueFamilyInfos{std::move(queueFamilyInfos)},
+   m_queueManager(*this, m_queueFamilyInfos) {}
 
 namespace {
 
@@ -165,7 +184,7 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
       swapchainInfo.oldSwapchain = oldSwapchain->vulkan_swapchain();
    }
    swapchainInfo.minImageCount =
-           swapchain_image_count(capabilities.minImageCount, capabilities.maxImageCount);
+      swapchain_image_count(capabilities.minImageCount, capabilities.maxImageCount);
    swapchainInfo.imageColorSpace  = *vulkanColorSpace;
    swapchainInfo.imageArrayLayers = 1;
    swapchainInfo.preTransform     = capabilities.currentTransform;
@@ -173,8 +192,8 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
    swapchainInfo.clipped          = true;
 
    const std::array queueFamilyIndices{
-           m_queueManager.queue_index(WorkType::Graphics),
-           m_queueManager.queue_index(WorkType::Presentation),
+      m_queueManager.queue_index(WorkType::Graphics),
+      m_queueManager.queue_index(WorkType::Presentation),
    };
    if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
       swapchainInfo.imageSharingMode      = VK_SHARING_MODE_CONCURRENT;
@@ -243,6 +262,8 @@ Result<CommandList> Device::create_command_list(const WorkTypeFlags flags) const
 
 Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t size)
 {
+   assert(size != 0);
+
    VkBufferCreateInfo bufferInfo{};
    bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
    bufferInfo.size        = size;
@@ -311,9 +332,8 @@ VkImageTiling to_vulkan_image_tiling(const TextureType type)
    case TextureType::DepthBuffer:       // fallthrough
    case TextureType::SampledDepthBuffer:// fallthrough
    case TextureType::MultisampleImage: return VK_IMAGE_TILING_OPTIMAL;
-   case TextureType::ColorAttachment:
-      return VK_IMAGE_TILING_OPTIMAL;
-      // case TextureType::ColorAttachment: return VK_IMAGE_TILING_LINEAR;
+   case TextureType::ColorAttachment: return VK_IMAGE_TILING_OPTIMAL;
+   // case TextureType::ColorAttachment: return VK_IMAGE_TILING_LINEAR;
    }
    return {};
 }
@@ -321,13 +341,13 @@ VkImageTiling to_vulkan_image_tiling(const TextureType type)
 VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
 {
    switch (type) {
-   case TextureType::SampledImage:
-      return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   case TextureType::SampledImage: return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                                          VK_IMAGE_USAGE_SAMPLED_BIT;
    case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-   case TextureType::SampledDepthBuffer:
-      return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   case TextureType::MultisampleImage:
-      return VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+   case TextureType::SampledDepthBuffer: return
+         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+   case TextureType::MultisampleImage: return
+         VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
    case TextureType::ColorAttachment: return VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
    }
    return {};
@@ -356,6 +376,19 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
       mipCount = static_cast<int>(std::floor(std::log2(std::max(imageSize.width, imageSize.height)))) + 1;
    }
 
+   VkImageFormatProperties formatProperties;
+   if (const auto res = vkGetPhysicalDeviceImageFormatProperties(m_physicalDevice, vulkanColorFormat,
+                                                                 VK_IMAGE_TYPE_2D,
+                                                                 to_vulkan_image_tiling(type),
+                                                                 to_vulkan_image_usage(type), 0,
+                                                                 &formatProperties); res != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   if (mipCount > formatProperties.maxMipLevels) {
+      mipCount = formatProperties.maxMipLevels;
+   }
+
    VkImageCreateInfo imageInfo{};
    imageInfo.sType         = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
    imageInfo.format        = vulkanColorFormat;
@@ -377,10 +410,10 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    vkGetImageMemoryRequirements(*m_device, *image, &memRequirements);
 
    VkMemoryAllocateInfo allocInfo{};
-   allocInfo.sType          = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-   allocInfo.allocationSize = memRequirements.size;
+   allocInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   allocInfo.allocationSize  = memRequirements.size;
    allocInfo.memoryTypeIndex =
-           find_memory_type(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      find_memory_type(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
    vulkan::DeviceMemory imageMemory(*m_device);
    if (imageMemory.construct(&allocInfo) != VK_SUCCESS)
@@ -465,8 +498,8 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, *m_surface, &capabilities);
 
    return {
-           Resolution{capabilities.minImageExtent.width, capabilities.minImageExtent.height},
-           Resolution{capabilities.maxImageExtent.width, capabilities.maxImageExtent.height}
+      Resolution{capabilities.minImageExtent.width, capabilities.minImageExtent.height},
+      Resolution{capabilities.maxImageExtent.width, capabilities.maxImageExtent.height}
    };
 }
 
@@ -559,15 +592,13 @@ uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags pro
    return 0;
 }
 
-constexpr std::array g_vulkanDeviceExtensions{
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-};
-
-constexpr std::array g_vulkanInstanceLayers{
 #if GAPI_ENABLE_VALIDATION
-        "VK_LAYER_KHRONOS_validation",
-#endif
+constexpr std::array g_vulkanInstanceLayers{
+   "VK_LAYER_KHRONOS_validation",
 };
+#else
+constexpr std::array<const char*, 0> g_vulkanInstanceLayers{};
+#endif
 
 Result<DeviceUPtr> initialize_device(const ISurface &surface)
 {
@@ -580,10 +611,10 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
    appInfo.apiVersion         = VK_API_VERSION_1_3;
 
    const std::array g_vulkanInstanceExtensions{
-           VK_KHR_SURFACE_EXTENSION_NAME,
-           triglav::desktop::vulkan_extension_name(),
+      VK_KHR_SURFACE_EXTENSION_NAME,
+      triglav::desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
-           VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+      VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
    };
 
@@ -621,8 +652,8 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
 #endif
 
    auto physicalDevices = vulkan::get_physical_devices(*instance);
-   auto pickedDevice =
-           std::find_if(physicalDevices.begin(), physicalDevices.end(), physical_device_pick_predicate);
+   auto pickedDevice    =
+      std::find_if(physicalDevices.begin(), physicalDevices.end(), physical_device_pick_predicate);
    if (pickedDevice == physicalDevices.end()) {
       pickedDevice = physicalDevices.begin();
    }
@@ -679,11 +710,25 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
       ++deviceQueueCreateInfoIt;
    }
 
-   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
+   std::vector<const char *> vulkanDeviceExtensions{
+      VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+   };
+
+   const auto extensionProperties = vulkan::get_device_extension_properties(*pickedDevice, nullptr);
+   for (const auto &property : extensionProperties) {
+      const std::string extensionName{property.extensionName};
+      if (extensionName == "VK_KHR_portability_subset") {
+         vulkanDeviceExtensions.emplace_back("VK_KHR_portability_subset");
+         break;
+      }
+   }
+
+   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
    hostQueryResetFeatures.hostQueryReset = true;
 
    VkPhysicalDeviceFeatures2 deviceFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
-   deviceFeatures.pNext = &hostQueryResetFeatures;
+   deviceFeatures.pNext                      = &hostQueryResetFeatures;
    deviceFeatures.features.sampleRateShading = true;
    deviceFeatures.features.logicOp           = true;
    deviceFeatures.features.fillModeNonSolid  = true;
@@ -691,12 +736,12 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
    deviceFeatures.features.samplerAnisotropy = true;
 
    VkDeviceCreateInfo deviceInfo{};
-   deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-   deviceInfo.pNext = &deviceFeatures;
+   deviceInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+   deviceInfo.pNext                   = &deviceFeatures;
    deviceInfo.queueCreateInfoCount    = static_cast<uint32_t>(deviceQueueCreateInfos.size());
    deviceInfo.pQueueCreateInfos       = deviceQueueCreateInfos.data();
-   deviceInfo.enabledExtensionCount   = g_vulkanDeviceExtensions.size();
-   deviceInfo.ppEnabledExtensionNames = g_vulkanDeviceExtensions.data();
+   deviceInfo.enabledExtensionCount   = vulkanDeviceExtensions.size();
+   deviceInfo.ppEnabledExtensionNames = vulkanDeviceExtensions.data();
 
    vulkan::Device device;
    if (const auto res = device.construct(*pickedDevice, &deviceInfo); res != VK_SUCCESS) {

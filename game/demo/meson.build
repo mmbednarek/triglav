@@ -8,7 +8,6 @@ demo_deps = [
   desktop,
   desktop_main,
   fmt,
-  xkb_common,
   shaders,
   textures,
   models,
@@ -16,9 +15,16 @@ demo_deps = [
   levels
 ]
 
+demo_link_args = ''
+
+if host_machine.system() == 'windows'
+  demo_link_args = '/SUBSYSTEM:WINDOWS'
+endif
+
 demo = executable('demo',
   sources: demo_sources,
   dependencies: demo_deps,
   install: true,
-  install_dir: 'bin'
+  install_dir: 'bin',
+  link_args: demo_link_args,
 )

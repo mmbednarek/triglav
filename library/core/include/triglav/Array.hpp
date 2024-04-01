@@ -1,5 +1,8 @@
 #pragma once
 
+#include <array>
+#include <cstdint>
+
 namespace triglav {
 
 template<typename T, uint32_t CCount, typename TFactory>

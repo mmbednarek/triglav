@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "BufferedReader.h"
+#include "triglav/io/BufferedReader.h"
 
 namespace triglav::geometry {
 
@@ -24,7 +24,7 @@ struct Command
 class Parser
 {
 public:
-   explicit Parser(std::istream& stream);
+   explicit Parser(io::IReader& stream);
 
    void parse();
    void process_token();
@@ -33,7 +33,7 @@ public:
    [[nodiscard]] const std::vector<Command>& commands() const;
 
 private:
-   BufferedReader m_reader;
+   io::BufferedReader m_reader;
    std::vector<Command> m_commands;
    State m_state{State::LineStart};
    std::string m_currentToken{};

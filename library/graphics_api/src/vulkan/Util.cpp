@@ -11,6 +11,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
    case ColorFormatOrder::R:
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB: return VK_FORMAT_R8_SRGB;
+      case ColorFormatPart::UNorm8: return VK_FORMAT_R8_UNORM;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8_UINT;
       case ColorFormatPart::Float16: return VK_FORMAT_R16_SFLOAT;
@@ -21,6 +22,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
    case ColorFormatOrder::RGBA:
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8A8_SRGB;
+      case ColorFormatPart::UNorm8: return VK_FORMAT_R8G8B8A8_UNORM;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16B16A16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8G8B8A8_UINT;
       case ColorFormatPart::Float16: return VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -49,6 +51,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
    case ColorFormatOrder::RG:
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8_SRGB;
+      case ColorFormatPart::UNorm8: return VK_FORMAT_R8G8_UNORM;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8G8_UINT;
       case ColorFormatPart::Float16: return VK_FORMAT_R16G16_SFLOAT;
@@ -59,6 +62,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
    case ColorFormatOrder::RGB:
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8_SRGB;
+      case ColorFormatPart::UNorm8: return VK_FORMAT_R8G8B8_UNORM;
       case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16B16_UNORM;
       case ColorFormatPart::UInt: return VK_FORMAT_R8G8B8_UINT;
       case ColorFormatPart::Float16: return VK_FORMAT_R16G16B16_SFLOAT;
@@ -79,7 +83,7 @@ Result<ColorFormat> to_color_format(const VkFormat format)
    case VK_FORMAT_D16_UNORM_S8_UINT: return GAPI_FORMAT(DS, UNorm16, UInt);
    default: break;
    }
-   return std::unexpected{Status::UnsupportedFormat};
+   return std::unexpected(Status::UnsupportedFormat);
 }
 
 Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace)

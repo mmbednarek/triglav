@@ -1,6 +1,13 @@
 io_sources = files([
   'src/File.cpp',
+  'src/BufferedReader.cpp',
 ])
+
+if host_machine.system() == 'linux'
+    subdir('platform/linux')
+elif host_machine.system() == 'windows'
+    subdir('platform/windows')
+endif
 
 io_deps = [core]
 io_incl = include_directories(['include', 'include/triglav/io'])

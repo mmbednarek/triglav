@@ -220,13 +220,17 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 
 void Renderer::update_debug_info(const float framerate)
 {
+   static bool isFirstFrame = true;
+   
    auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
 
    const auto framerateStr = std::format("{}", framerate);
    ui.set_value("fps"_name_id, framerateStr);
 
-   const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
-   ui.set_value("gpu_time"_name_id, gpuTimeStr);
+   if (not isFirstFrame) {
+      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
+      ui.set_value("gpu_time"_name_id, gpuTimeStr);
+   }
 
    const auto camPos      = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
@@ -240,6 +244,8 @@ void Renderer::update_debug_info(const float framerate)
 
    ui.set_value("ao"_name_id, m_ssaoEnabled ? "Screen-Space" : "Off");
    ui.set_value("aa"_name_id, m_fxaaEnabled ? "FXAA" : "Off");
+
+   isFirstFrame = false;
 }
 
 void Renderer::on_render()
@@ -247,9 +253,9 @@ void Renderer::on_render()
    const auto deltaTime = calculate_frame_duration();
    const auto framerate = calculate_framerate(deltaTime);
 
-   this->update_debug_info(framerate);
-
    m_renderGraph.await();
+   
+   this->update_debug_info(framerate);
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
    this->update_uniform_data(deltaTime);

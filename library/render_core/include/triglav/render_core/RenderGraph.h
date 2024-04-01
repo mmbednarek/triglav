@@ -44,6 +44,7 @@ class RenderGraph
    bool bake(NameID targetNode);
    void initialize_nodes(FrameResources& frameResources);
    void record_command_lists(FrameResources& frameResources);
+   void reset_command_lists() const;
    [[nodiscard]] graphics_api::Status execute();
    void await() const;
    [[nodiscard]] graphics_api::Semaphore *target_semaphore() const;

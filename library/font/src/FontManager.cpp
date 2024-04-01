@@ -1,6 +1,7 @@
 #include "FontManager.h"
 
 #include <freetype/freetype.h>
+#include <stdexcept>
 
 namespace triglav::font {
 

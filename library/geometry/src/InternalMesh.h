@@ -4,6 +4,8 @@
 #include <CGAL/Surface_mesh.h>
 #include <optional>
 
+#include "triglav/io/Stream.h"
+
 #include "Geometry.h"
 
 namespace triglav::geometry {
@@ -63,7 +65,7 @@ class InternalMesh
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device);
    void reverse_orientation();
 
-   static InternalMesh from_obj_file(std::istream &stream);
+   static InternalMesh from_obj_file(io::IReader &stream);
    static InternalMesh from_obj_file(std::string_view path);
 
  private:

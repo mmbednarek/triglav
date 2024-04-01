@@ -2,6 +2,8 @@
 
 #include "Device.h"
 
+#include <stdexcept>
+
 namespace triglav::graphics_api {
 
 namespace {

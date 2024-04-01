@@ -4,6 +4,7 @@
 #include "triglav/render_core/Material.hpp"
 
 #include <ryml.hpp>
+#include <string>
 
 namespace triglav::resource {
 
