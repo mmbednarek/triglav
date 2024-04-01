@@ -1,8 +1,8 @@
 #include "PipelineBuilder.h"
 
 #include "Device.h"
-#include "Shader.h"
 #include "RenderTarget.h"
+#include "Shader.h"
 #include "vulkan/Util.h"
 
 namespace triglav::graphics_api {
@@ -85,7 +85,8 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size, const size_t offset)
+PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size,
+                                                const size_t offset)
 {
    VkPushConstantRange range;
    range.offset     = offset;

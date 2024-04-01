@@ -21,7 +21,7 @@ render_core::Material Loader<ResourceType::Material>::load(std::string_view path
    bool hasNormal{false};
    c4::csubstr normalTexture{};
    if (properties.has_child("normal_texture")) {
-      hasNormal = true;
+      hasNormal     = true;
       normalTexture = properties["normal_texture"].val();
    } else {
       normalTexture = "quartz/normal.tex";

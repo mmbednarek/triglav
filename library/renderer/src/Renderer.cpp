@@ -100,7 +100,8 @@ graphics_api::RenderTarget create_model_render_target(graphics_api::Device &devi
 graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
 {
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment("ao"_name_id, AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("ao"_name_id,
+                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(R, Float16), SampleCount::Single)
                              .build());
@@ -109,7 +110,8 @@ graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
 graphics_api::RenderTarget create_shading_render_target(graphics_api::Device &device)
 {
    return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment("shading"_name_id, AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                             .attachment("shading"_name_id,
+                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                  AttachmentAttribute::StoreImage,
                                          GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
                              .build());
@@ -177,8 +179,8 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 
    m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, m_scene, m_shadowMapRenderer);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, m_scene, m_skyBox, m_geometryBuffer,
-                                              m_groundRenderer, m_modelRenderer);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, m_scene, m_skyBox,
+                                              m_geometryBuffer, m_groundRenderer, m_modelRenderer);
    m_renderGraph.emplace_node<node::AmbientOcclusion>(
            "ambient_occlusion"_name_id, m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name_id, m_shadingFramebuffer, m_shadingRenderer,
@@ -207,9 +209,9 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    ui.add_label_group("features"_name_id, "Features");
    ui.add_label_group("location"_name_id, "Location");
 
-   ui.add_label("metrics"_name_id,"fps"_name_id, "Framerate");
-   ui.add_label("metrics"_name_id,"triangles"_name_id, "GBuffer Triangles");
-   ui.add_label("metrics"_name_id,"gpu_time"_name_id, "GBuffer Render Time");
+   ui.add_label("metrics"_name_id, "fps"_name_id, "Framerate");
+   ui.add_label("metrics"_name_id, "triangles"_name_id, "GBuffer Triangles");
+   ui.add_label("metrics"_name_id, "gpu_time"_name_id, "GBuffer Render Time");
 
    ui.add_label("location"_name_id, "pos"_name_id, "Position");
    ui.add_label("location"_name_id, "orien"_name_id, "Orientation");
@@ -221,14 +223,15 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 void Renderer::update_debug_info(const float framerate)
 {
    static bool isFirstFrame = true;
-   
+
    auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
 
    const auto framerateStr = std::format("{}", framerate);
    ui.set_value("fps"_name_id, framerateStr);
 
    if (not isFirstFrame) {
-      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
+      const auto gpuTimeStr =
+              std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
       ui.set_value("gpu_time"_name_id, gpuTimeStr);
    }
 
@@ -254,7 +257,7 @@ void Renderer::on_render()
    const auto framerate = calculate_framerate(deltaTime);
 
    m_renderGraph.await();
-   
+
    this->update_debug_info(framerate);
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);

@@ -508,4 +508,4 @@ void InternalMesh::recalculate_tangents()
    genTangSpaceDefault(&context);
 }
 
-}// namespace geometry
+}// namespace triglav::geometry

@@ -4,10 +4,10 @@
 
 #include "triglav/graphics_api/Device.h"
 
-#include <cstring>
-#include <vector>
 #include <codecvt>
+#include <cstring>
 #include <locale>
+#include <vector>
 
 namespace triglav::render_core {
 
@@ -153,4 +153,4 @@ TextMetric GlyphAtlas::measure_text(const std::string_view text) const
    return TextMetric{.width = width, .height = height};
 }
 
-}// namespace renderer
+}// namespace triglav::render_core

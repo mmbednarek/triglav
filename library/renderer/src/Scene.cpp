@@ -5,11 +5,11 @@
 
 #include "triglav/world/Level.h"
 
-#include <glm/gtc/quaternion.hpp>
 #include <cmath>
+#include <glm/gtc/quaternion.hpp>
 
 #ifndef M_PI
-#define M_PI	3.1415926535897932384626433832795
+#define M_PI 3.1415926535897932384626433832795
 #endif
 
 using triglav::ResourceType;
@@ -76,7 +76,7 @@ void Scene::compile_scene()
    }
 }
 
-void Scene::render(graphics_api::CommandList& cmdList) const
+void Scene::render(graphics_api::CommandList &cmdList) const
 {
    for (const auto &obj : m_instancedObjects) {
       if (not m_camera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
@@ -86,7 +86,7 @@ void Scene::render(graphics_api::CommandList& cmdList) const
    }
 }
 
-void Scene::render_shadow_map(graphics_api::CommandList& cmdList) const
+void Scene::render_shadow_map(graphics_api::CommandList &cmdList) const
 {
    for (const auto &obj : m_instancedObjects) {
       if (not m_shadowMapCamera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
@@ -96,7 +96,7 @@ void Scene::render_shadow_map(graphics_api::CommandList& cmdList) const
    }
 }
 
-void Scene::render_debug_lines(graphics_api::CommandList& cmdList) const
+void Scene::render_debug_lines(graphics_api::CommandList &cmdList) const
 {
    for (const auto &obj : m_debugLines) {
       m_debugLinesRenderer.draw(cmdList, obj, m_camera);

@@ -2,8 +2,8 @@
 
 namespace triglav::io {
 
-BufferedReader::BufferedReader(IReader& stream) :
-   m_stream(stream)
+BufferedReader::BufferedReader(IReader &stream) :
+    m_stream(stream)
 {
 }
 
@@ -45,11 +45,11 @@ void BufferedReader::read_next_chunk()
    const auto res = m_stream.read(m_buffer);
    if (not res.has_value()) {
       m_bytesRead = 0;
-      m_position = 0;
+      m_position  = 0;
       return;
    }
    m_bytesRead = *res;
-   m_position = 0;
+   m_position  = 0;
 }
 
-}// namespace object_reader
+}// namespace triglav::io

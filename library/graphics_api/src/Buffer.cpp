@@ -109,4 +109,4 @@ Status write_to_buffer(Device &device, const Buffer &buffer, const void *data, c
    return Status::Success;
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

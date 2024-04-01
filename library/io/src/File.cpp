@@ -11,7 +11,7 @@ std::vector<char> read_whole_file(const std::string_view name)
       return {};
    }
 
-   auto& file = **fileRes;
+   auto &file          = **fileRes;
    const auto fileSize = file.file_size();
    if (not fileSize.has_value()) {
       return {};
@@ -20,11 +20,11 @@ std::vector<char> read_whole_file(const std::string_view name)
    std::vector<char> result{};
    result.resize(*fileSize);
 
-   const auto fileReadRes = file.read(std::span{reinterpret_cast<u8*>(result.data()), result.size()});
+   const auto fileReadRes = file.read(std::span{reinterpret_cast<u8 *>(result.data()), result.size()});
    if (not fileReadRes.has_value()) {
       return {};
    }
-   
+
    return result;
 }
 

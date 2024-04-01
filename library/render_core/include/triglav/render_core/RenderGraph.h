@@ -22,7 +22,7 @@ class RenderGraph
       graphics_api::SemaphoreArray waitSemaphores;
       graphics_api::SemaphoreArray signalSemaphores;
       graphics_api::CommandList commandList;
-      std::vector<graphics_api::Semaphore*> signalSemaphorePtrs;
+      std::vector<graphics_api::Semaphore *> signalSemaphorePtrs;
    };
 
    explicit RenderGraph(graphics_api::Device &device);
@@ -42,8 +42,8 @@ class RenderGraph
    void add_semaphore_node(NameID node, graphics_api::Semaphore *semaphore);
    void add_dependency(NameID target, NameID dependency);
    bool bake(NameID targetNode);
-   void initialize_nodes(FrameResources& frameResources);
-   void record_command_lists(FrameResources& frameResources);
+   void initialize_nodes(FrameResources &frameResources);
+   void record_command_lists(FrameResources &frameResources);
    void reset_command_lists() const;
    [[nodiscard]] graphics_api::Status execute();
    void await() const;

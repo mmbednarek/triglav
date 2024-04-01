@@ -23,16 +23,16 @@ struct Command
 
 class Parser
 {
-public:
-   explicit Parser(io::IReader& stream);
+ public:
+   explicit Parser(io::IReader &stream);
 
    void parse();
    void process_token();
    void process_line_end();
 
-   [[nodiscard]] const std::vector<Command>& commands() const;
+   [[nodiscard]] const std::vector<Command> &commands() const;
 
-private:
+ private:
    io::BufferedReader m_reader;
    std::vector<Command> m_commands;
    State m_state{State::LineStart};
@@ -40,4 +40,4 @@ private:
    Command m_currentCommand;
 };
 
-}
+}// namespace triglav::geometry

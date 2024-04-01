@@ -18,11 +18,13 @@ class TypedName
 {
    friend Name;
 
-public:
+ public:
    static constexpr auto resource_type = CResourceType;
 
    constexpr explicit TypedName(const NameID name) :
-      m_name(name) {}
+       m_name(name)
+   {
+   }
 
    // ReSharper disable once CppNonExplicitConversionOperator
    [[nodiscard]] operator Name() const;// NOLINT(google-explicit-constructor)
@@ -31,20 +33,24 @@ public:
    constexpr bool operator==(const TypedName &other) const  = default;
    constexpr bool operator!=(const TypedName &other) const  = default;
 
-private:
+ private:
    NameID m_name;
 };
 
 class Name
 {
-public:
+ public:
    constexpr Name() :
-      m_type(ResourceType::Unknown),
-      m_name(0) {}
+       m_type(ResourceType::Unknown),
+       m_name(0)
+   {
+   }
 
    constexpr Name(const ResourceType type, const NameID nameID) :
-      m_type(type),
-      m_name(nameID) {}
+       m_type(type),
+       m_name(nameID)
+   {
+   }
 
    // ReSharper disable once CppNonExplicitConversionOperator
    template<ResourceType CResourceType>
@@ -75,7 +81,7 @@ public:
       return (*this) == static_cast<Name>(other);
    }
 
-private:
+ private:
    ResourceType m_type;
    NameID m_name;
 };

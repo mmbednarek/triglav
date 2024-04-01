@@ -201,16 +201,11 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
 VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
 {
    switch (stage) {
-   case PipelineStage::Entrypoint:
-      return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-   case PipelineStage::VertexShader:
-      return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
-   case PipelineStage::FragmentShader:
-      return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-   case PipelineStage::Transfer:
-      return VK_PIPELINE_STAGE_TRANSFER_BIT;
-   case PipelineStage::End:
-      return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   case PipelineStage::Entrypoint: return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   case PipelineStage::VertexShader: return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+   case PipelineStage::FragmentShader: return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   case PipelineStage::Transfer: return VK_PIPELINE_STAGE_TRANSFER_BIT;
+   case PipelineStage::End: return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
    default: break;
    }
    return VK_PIPELINE_STAGE_NONE;
@@ -218,7 +213,7 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
 
 VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags flags)
 {
-   VkPipelineStageFlags  result{};
+   VkPipelineStageFlags result{};
    if (flags & PipelineStage::Entrypoint) {
       result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
    }

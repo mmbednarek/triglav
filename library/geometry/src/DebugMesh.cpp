@@ -216,4 +216,4 @@ Mesh create_cilinder(const int segment_count, const int ring_count, const float 
 }
 */
 
-}// namespace geometry
+}// namespace triglav::geometry

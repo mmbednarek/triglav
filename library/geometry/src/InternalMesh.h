@@ -78,4 +78,4 @@ class InternalMesh
    bool m_isTriangulated{false};
 };
 
-}// namespace geometry
+}// namespace triglav::geometry

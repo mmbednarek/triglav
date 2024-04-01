@@ -11,8 +11,8 @@ int triglav_main(InputArgs &args, IDisplay &display);
 int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*lpCmdLine*/, int /*nCmdShow*/)
 {
    InputArgs inputArgs{
-      .args = nullptr,
-      .arg_count = 0,
+           .args      = nullptr,
+           .arg_count = 0,
    };
 
    auto display = triglav::desktop::get_display();

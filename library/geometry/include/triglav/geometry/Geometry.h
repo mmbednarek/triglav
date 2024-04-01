@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cmath>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-#include <cmath>
 
 #include "triglav/graphics_api/Array.hpp"
 
@@ -72,7 +72,7 @@ struct BoundingBox
 
 constexpr double g_pi = 3.1415926535897932;
 
-}// namespace geometry
+}// namespace triglav::geometry
 
 namespace std {
 

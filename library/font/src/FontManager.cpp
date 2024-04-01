@@ -34,4 +34,4 @@ Typeface FontManger::create_typeface(const std::string_view path, const int vari
    return Typeface(face);
 }
 
-}// namespace font
+}// namespace triglav::font
