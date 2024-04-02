@@ -134,7 +134,7 @@ struct ClearValue
 };
 
 namespace ColorPalette {
-constexpr Color Black{0.0f, 0.0f, 0.0f, 1.0f};
+constexpr Color Black{0.0f, 0.0f, 0.0f, 0.0f};
 constexpr Color Red{1.0f, 0.0f, 0.0f, 1.0f};
 }// namespace ColorPalette
 

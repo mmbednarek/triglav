@@ -16,12 +16,12 @@ graphics_api::WorkTypeFlags PostProcessing::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void PostProcessing::record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList)
+void PostProcessing::record_commands(render_core::FrameResources &frameResources,
+                                     graphics_api::CommandList &cmdList)
 {
-   std::array<graphics_api::ClearValue, 3> clearValues{
+   std::array<graphics_api::ClearValue, 2> clearValues{
            graphics_api::ColorPalette::Black,
            graphics_api::DepthStenctilValue{1.0f, 0.0f},
-           graphics_api::ColorPalette::Black,
    };
    cmdList.begin_render_pass(m_framebuffers[m_frameIndex], clearValues);
 

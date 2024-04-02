@@ -27,6 +27,7 @@ bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
    VkPhysicalDeviceProperties props{};
    vkGetPhysicalDeviceProperties(physicalDevice, &props);
    return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+   // return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
 }
 
 bool graphics_family_predicate(const VkQueueFamilyProperties &properties)
@@ -146,10 +147,10 @@ namespace {
 uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 {
    if (max == 0) {
-      return std::max(2u, min);
+      return std::max(2u, min + 1);
    }
 
-   return std::min(std::max(2u, min), max);
+   return std::min(std::max(2u, min + 1), max);
 }
 
 }// namespace
@@ -326,7 +327,7 @@ namespace {
 VkImageTiling to_vulkan_image_tiling(const TextureType type)
 {
    switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_TILING_LINEAR;
+   case TextureType::SampledImage: return VK_IMAGE_TILING_OPTIMAL;
    case TextureType::DepthBuffer:       // fallthrough
    case TextureType::SampledDepthBuffer:// fallthrough
    case TextureType::MultisampleImage: return VK_IMAGE_TILING_OPTIMAL;

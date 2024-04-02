@@ -32,7 +32,7 @@ using namespace triglav::name_literals;
 namespace triglav::renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
-constexpr auto g_depthFormat = GAPI_FORMAT(D, Float32);
+constexpr auto g_depthFormat = GAPI_FORMAT(D, UNorm16);
 constexpr auto g_sampleCount = graphics_api::SampleCount::Single;
 
 namespace {
