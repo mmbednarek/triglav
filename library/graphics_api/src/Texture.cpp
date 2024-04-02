@@ -6,12 +6,12 @@
 namespace triglav::graphics_api {
 
 Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::ImageView imageView,
-                 const ColorFormat &colorFormat, TextureType type, const uint32_t width,
+                 const ColorFormat &colorFormat, const TextureUsageFlags usageFlags, const uint32_t width,
                  const uint32_t height, const int mipCount) :
     m_width{width},
     m_height{height},
     m_colorFormat(colorFormat),
-    m_type(type),
+    m_usageFlags(usageFlags),
     m_image(std::move(image)),
     m_memory(std::move(memory)),
     m_imageView(std::move(imageView)),
@@ -24,9 +24,9 @@ VkImage Texture::vulkan_image() const
    return *m_image;
 }
 
-TextureType Texture::type() const
+TextureUsageFlags Texture::usage_flags() const
 {
-   return m_type;
+   return m_usageFlags;
 }
 
 uint32_t Texture::width() const
@@ -46,6 +46,10 @@ Resolution Texture::resolution() const
 
 Status Texture::write(Device &device, const uint8_t *pixels) const
 {
+   if (!(this->usage_flags() & TextureUsage::TransferDestination)) {
+      return Status::InvalidTransferDestination;
+   }
+
    const auto bufferSize = m_colorFormat.pixel_size() * m_width * m_height;
    auto transferBuffer   = device.create_buffer(BufferPurpose::TransferBuffer, bufferSize);
    if (not transferBuffer.has_value())

@@ -2,75 +2,24 @@
 
 #include "Surface.h"
 
-#include <Windowsx.h>
-
 namespace triglav::desktop {
 namespace {
 
 LRESULT CALLBACK process_messages(const HWND windowHandle, const UINT msg, const WPARAM wParam,
                                   const LPARAM lParam)
 {
-   switch (msg) {
-   case WM_CREATE: {
+   if (msg == WM_CREATE) {
       const auto *createStruct = reinterpret_cast<CREATESTRUCT *>(lParam);
       SetWindowLongPtrA(windowHandle, GWLP_USERDATA,
                         reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
-      break;
+      return 0;
    }
-   case WM_CLOSE: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_close();
-      break;
+
+   auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
+   if (surface != nullptr) {
+      return surface->handle_window_event(msg, wParam, lParam);
    }
-   case WM_DESTROY: PostQuitMessage(0); break;
-   case WM_KEYDOWN: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_key_down(wParam);
-      break;
-   }
-   case WM_KEYUP: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_key_up(wParam);
-      break;
-   }
-   case WM_LBUTTONDOWN: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_button_down(MouseButton::Left);
-      break;
-   }
-   case WM_MBUTTONDOWN: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_button_down(MouseButton::Middle);
-      break;
-   }
-   case WM_RBUTTONDOWN: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_button_down(MouseButton::Right);
-      break;
-   }
-   case WM_LBUTTONUP: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_button_up(MouseButton::Left);
-      break;
-   }
-   case WM_MBUTTONUP: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_button_up(MouseButton::Middle);
-      break;
-   }
-   case WM_RBUTTONUP: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_button_up(MouseButton::Right);
-      break;
-   }
-   case WM_MOUSEMOVE: {
-      auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
-      surface->on_mouse_move(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-      break;
-   }
-   default: return DefWindowProcA(windowHandle, msg, wParam, lParam);
-   }
-   return 0;
+   return DefWindowProcA(windowHandle, msg, wParam, lParam);
 }
 
 }// namespace

@@ -286,4 +286,37 @@ VkSamplerAddressMode to_vulkan_sampler_address_mode(const TextureAddressMode mod
    return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
 }
 
+VkImageUsageFlags to_vulkan_image_usage_flags(const TextureUsageFlags usage)
+{
+   VkImageUsageFlags result{};
+   if (usage & TextureUsage::Sampled) {
+      result |= VK_IMAGE_USAGE_SAMPLED_BIT;
+   }
+   if (usage & TextureUsage::TransferSource) {
+      result |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+   }
+   if (usage & TextureUsage::TransferDestination) {
+      result |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+   }
+   if (usage & TextureUsage::ColorAttachment) {
+      result |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+   }
+   if (usage & TextureUsage::DepthStencilAttachment) {
+      result |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+   }
+   if (usage & TextureUsage::Transient) {
+      result |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+   }
+
+   return result;
+}
+
+VkImageAspectFlags to_vulkan_image_aspect_flags(const TextureUsageFlags usage)
+{
+   if (usage & TextureUsage::DepthStencilAttachment) {
+      return VK_IMAGE_ASPECT_DEPTH_BIT;
+   }
+   return VK_IMAGE_ASPECT_COLOR_BIT;
+}
+
 }// namespace triglav::graphics_api::vulkan

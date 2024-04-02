@@ -8,6 +8,28 @@
 
 namespace triglav::graphics_api {
 
+namespace {
+
+TextureUsageFlags to_texture_usage_flags(const AttachmentAttributeFlags attributeFlags)
+{
+   TextureUsageFlags textureUsageFlags{};
+   if (attributeFlags & AttachmentAttribute::Color || attributeFlags & AttachmentAttribute::Resolve) {
+      textureUsageFlags |= TextureUsage::ColorAttachment;
+   } else if (attributeFlags & AttachmentAttribute::Depth) {
+      textureUsageFlags |= TextureUsage::DepthStencilAttachment;
+   }
+
+   if (attributeFlags & AttachmentAttribute::StoreImage) {
+      textureUsageFlags |= TextureUsage::Sampled;
+   } else if (!(attributeFlags & AttachmentAttribute::LoadImage)) {
+      textureUsageFlags |= TextureUsage::Transient;
+   }
+
+   return textureUsageFlags;
+}
+
+}// namespace
+
 RenderTarget::RenderTarget(Device &device, vulkan::RenderPass renderPass, SampleCount sampleCount,
                            std::vector<AttachmentInfo> attachments) :
     m_device(device),
@@ -47,19 +69,9 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolutio
 {
    std::vector<Texture> textures;
    for (const auto &attachment : m_attachments) {
-      TextureType textureType{};
-      if (attachment.flags & AttachmentAttribute::Color || attachment.flags & AttachmentAttribute::Resolve) {
-         textureType = TextureType::ColorAttachment;
-      } else if (attachment.flags & AttachmentAttribute::Depth) {
-         if (attachment.flags & AttachmentAttribute::StoreImage) {
-            textureType = TextureType::SampledDepthBuffer;
-         } else {
-            textureType = TextureType::DepthBuffer;
-         }
-      }
-
       auto texture =
-              m_device.create_texture(attachment.format, resolution, textureType, attachment.sampleCount);
+              m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags),
+                                      attachment.sampleCount);
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
@@ -112,15 +124,9 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
          continue;
       }
 
-      TextureType textureType{};
-      if (attachment.flags & AttachmentAttribute::Color || attachment.flags & AttachmentAttribute::Resolve) {
-         textureType = TextureType::ColorAttachment;
-      } else if (attachment.flags & AttachmentAttribute::Depth) {
-         textureType = TextureType::DepthBuffer;
-      }
-
-      auto texture = m_device.create_texture(attachment.format, swapchain.resolution(), textureType,
-                                             attachment.sampleCount);
+      auto texture =
+              m_device.create_texture(attachment.format, swapchain.resolution(),
+                                      to_texture_usage_flags(attachment.flags), attachment.sampleCount);
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }

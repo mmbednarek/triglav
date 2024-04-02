@@ -19,6 +19,7 @@ enum class Status
    UnsupportedDevice,
    UnsupportedFormat,
    UnsupportedColorSpace,
+   InvalidTransferDestination
 };
 
 enum class ColorFormatOrder
@@ -125,7 +126,7 @@ struct Color
 struct DepthStenctilValue
 {
    float depthValue{};
-   float stencilValue{};
+   u32 stencilValue{};
 };
 
 struct ClearValue
@@ -145,14 +146,18 @@ enum class DescriptorType
    ImageSampler,
 };
 
-enum class TextureType
+enum class TextureUsage
 {
-   SampledImage,
-   DepthBuffer,
-   SampledDepthBuffer,
-   MultisampleImage,
-   ColorAttachment,
+   None                   = 0,
+   TransferSource         = (1 << 0),
+   TransferDestination    = (1 << 1),
+   Sampled                = (1 << 2),
+   ColorAttachment        = (1 << 3),
+   DepthStencilAttachment = (1 << 4),
+   Transient              = (1 << 5),
 };
+
+TRIGLAV_DECL_FLAGS(TextureUsage)
 
 enum class TextureState
 {

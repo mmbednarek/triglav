@@ -322,53 +322,9 @@ Result<Semaphore> Device::create_semaphore() const
    return Semaphore(std::move(semaphore));
 }
 
-namespace {
-
-VkImageTiling to_vulkan_image_tiling(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_TILING_OPTIMAL;
-   case TextureType::DepthBuffer:       // fallthrough
-   case TextureType::SampledDepthBuffer:// fallthrough
-   case TextureType::MultisampleImage: return VK_IMAGE_TILING_OPTIMAL;
-   case TextureType::ColorAttachment:
-      return VK_IMAGE_TILING_OPTIMAL;
-      // case TextureType::ColorAttachment: return VK_IMAGE_TILING_LINEAR;
-   }
-   return {};
-}
-
-VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage:
-      return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-   case TextureType::SampledDepthBuffer:
-      return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   case TextureType::MultisampleImage:
-      return VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-   case TextureType::ColorAttachment: return VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   }
-   return {};
-}
-
-VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_ASPECT_COLOR_BIT;
-   case TextureType::DepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
-   case TextureType::SampledDepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
-   case TextureType::MultisampleImage: return VK_IMAGE_ASPECT_COLOR_BIT;
-   case TextureType::ColorAttachment: return VK_IMAGE_ASPECT_COLOR_BIT;
-   }
-   return {};
-}
-
-}// namespace
-
 Result<Texture> Device::create_texture(const ColorFormat &format, const Resolution &imageSize,
-                                       const TextureType type, SampleCount sampleCount, int mipCount) const
+                                       const TextureUsageFlags usageFlags, SampleCount sampleCount,
+                                       int mipCount) const
 {
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
@@ -378,8 +334,8 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
 
    VkImageFormatProperties formatProperties;
    if (const auto res = vkGetPhysicalDeviceImageFormatProperties(
-               m_physicalDevice, vulkanColorFormat, VK_IMAGE_TYPE_2D, to_vulkan_image_tiling(type),
-               to_vulkan_image_usage(type), 0, &formatProperties);
+               m_physicalDevice, vulkanColorFormat, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL,
+               vulkan::to_vulkan_image_usage_flags(usageFlags), 0, &formatProperties);
        res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
@@ -395,11 +351,11 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
    imageInfo.mipLevels     = mipCount;
    imageInfo.arrayLayers   = 1;
-   imageInfo.tiling        = to_vulkan_image_tiling(type);
+   imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    imageInfo.samples       = static_cast<VkSampleCountFlagBits>(sampleCount);
    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-   imageInfo.usage         = to_vulkan_image_usage(type);
+   imageInfo.usage         = vulkan::to_vulkan_image_usage_flags(usageFlags);
 
    vulkan::Image image(*m_device);
    if (image.construct(&imageInfo) != VK_SUCCESS)
@@ -429,7 +385,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    imageViewInfo.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.subresourceRange.aspectMask     = to_vulkan_image_aspect(type);
+   imageViewInfo.subresourceRange.aspectMask     = vulkan::to_vulkan_image_aspect_flags(usageFlags);
    imageViewInfo.subresourceRange.baseMipLevel   = 0;
    imageViewInfo.subresourceRange.levelCount     = mipCount;
    imageViewInfo.subresourceRange.baseArrayLayer = 0;
@@ -439,7 +395,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, type,
+   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, usageFlags,
                   imageSize.width, imageSize.height, mipCount);
 }
 

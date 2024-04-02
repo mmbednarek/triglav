@@ -84,10 +84,11 @@ class Device
    [[nodiscard]] Result<Buffer> create_buffer(BufferPurpose purpose, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
-   [[nodiscard]] Result<Texture> create_texture(const ColorFormat &format, const Resolution &imageSize,
-                                                TextureType type        = TextureType::SampledImage,
-                                                SampleCount sampleCount = SampleCount::Single,
-                                                int mipCount            = 1) const;
+   [[nodiscard]] Result<Texture>
+   create_texture(const ColorFormat &format, const Resolution &imageSize,
+                  TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSource |
+                                                 TextureUsage::TransferDestination,
+                  SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo &info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
 

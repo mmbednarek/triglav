@@ -27,4 +27,6 @@ VkImageLayout to_vulkan_image_layout(TextureState resourceState);
 VkAccessFlags to_vulkan_access_flags(TextureState resourceState);
 VkFilter to_vulkan_filter(FilterType filterType);
 VkSamplerAddressMode to_vulkan_sampler_address_mode(TextureAddressMode mode);
-}// namespace graphics_api::vulkan
+VkImageUsageFlags to_vulkan_image_usage_flags(TextureUsageFlags usage);
+VkImageAspectFlags to_vulkan_image_aspect_flags(TextureUsageFlags usage);
+}// namespace triglav::graphics_api::vulkan

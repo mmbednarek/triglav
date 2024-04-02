@@ -2,13 +2,18 @@
 
 namespace triglav {
 
-template <typename TEnum>
+template<typename TEnum>
 struct EnumFlags
 {
    using UnderlayingType = std::underlying_type_t<TEnum>;
-   using EnumType = TEnum;
+   using EnumType        = TEnum;
 
    UnderlayingType value;
+
+   constexpr EnumFlags() :
+       value{0}
+   {
+   }
 
    constexpr EnumFlags(const UnderlayingType value) :
        value(value)
@@ -40,7 +45,7 @@ struct EnumFlags
       return EnumFlags{this->value | rhs.value};
    }
 
-   constexpr EnumFlags& operator|=(TEnum rhs)
+   constexpr EnumFlags &operator|=(TEnum rhs)
    {
       this->value |= static_cast<UnderlayingType>(rhs);
       return *this;
@@ -52,10 +57,11 @@ struct EnumFlags
    }
 };
 
-}
+}// namespace triglav
 
-#define TRIGLAV_DECL_FLAGS(enum_name) using enum_name##Flags = ::triglav::EnumFlags<enum_name>; \
+#define TRIGLAV_DECL_FLAGS(enum_name)                                             \
+   using enum_name##Flags = ::triglav::EnumFlags<enum_name>;                      \
    constexpr enum_name##Flags operator|(const enum_name lhs, const enum_name rhs) \
-   { \
+   {                                                                              \
       return enum_name##Flags{std::to_underlying(lhs) | std::to_underlying(rhs)}; \
    }

@@ -1,12 +1,13 @@
 #include "Surface.h"
 
 #include <spdlog/spdlog.h>
+#include <Windowsx.h>
 
 namespace triglav::desktop {
 
 namespace {
 
-Key translate_key(WPARAM keyCode)
+Key translate_key(const WPARAM keyCode)
 {
    switch (keyCode) {
    case 'W': return Key::W;
@@ -20,6 +21,7 @@ Key translate_key(WPARAM keyCode)
    case VK_F4: return Key::F4;
    case VK_F5: return Key::F5;
    case VK_F6: return Key::F6;
+   default: break;
    }
 
    return Key::Unknown;
@@ -147,6 +149,67 @@ void Surface::on_close() const
    if (m_eventListener != nullptr) {
       m_eventListener->on_close();
    }
+}
+
+void Surface::on_resize(const short x, const short y) const
+{
+   if (m_eventListener != nullptr) {
+      m_eventListener->on_resize(x, y);
+   }
+}
+
+LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const LPARAM lParam)
+{
+   switch (msg) {
+   case WM_CLOSE: {
+      this->on_close();
+      break;
+   }
+   case WM_DESTROY: PostQuitMessage(0); break;
+   case WM_KEYDOWN: {
+      this->on_key_down(wParam);
+      break;
+   }
+   case WM_KEYUP: {
+      this->on_key_up(wParam);
+      break;
+   }
+   case WM_LBUTTONDOWN: {
+      this->on_button_down(MouseButton::Left);
+      break;
+   }
+   case WM_MBUTTONDOWN: {
+      this->on_button_down(MouseButton::Middle);
+      break;
+   }
+   case WM_RBUTTONDOWN: {
+      this->on_button_down(MouseButton::Right);
+      break;
+   }
+   case WM_LBUTTONUP: {
+      this->on_button_up(MouseButton::Left);
+      break;
+   }
+   case WM_MBUTTONUP: {
+      this->on_button_up(MouseButton::Middle);
+      break;
+   }
+   case WM_RBUTTONUP: {
+      this->on_button_up(MouseButton::Right);
+      break;
+   }
+   case WM_MOUSEMOVE: {
+      this->on_mouse_move(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+      break;
+   }
+   case WM_SIZE: {
+      this->on_resize(LOWORD(lParam), HIWORD(lParam));
+      break;
+   }
+   default: return DefWindowProcA(m_windowHandle, msg, wParam, lParam);
+   }
+
+   return 0;
 }
 
 }// namespace triglav::desktop
