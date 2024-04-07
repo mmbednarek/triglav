@@ -1,8 +1,8 @@
 #include "SkyBox.h"
 
+#include "Renderer.h"
 #include "triglav/geometry/DebugMesh.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
-#include "Renderer.h"
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -27,11 +27,12 @@ create_skybox_mesh(triglav::graphics_api::Device &device)
 
 namespace triglav::renderer {
 
-SkyBox::SkyBox(Renderer &renderer) :
-    m_resourceManager(renderer.resource_manager()),
-    m_mesh(create_skybox_mesh(renderer.device())),
+SkyBox::SkyBox(graphics_api::Device &device, resource::ResourceManager &resourceManager,
+               graphics_api::RenderTarget &renderTarget) :
+    m_resourceManager(resourceManager),
+    m_mesh(create_skybox_mesh(device)),
     m_pipeline(checkResult(
-            renderer.create_pipeline()
+            graphics_api::PipelineBuilder(device, renderTarget)
                     .fragment_shader(
                             m_resourceManager.get<ResourceType::FragmentShader>("skybox.fshader"_name))
                     .vertex_shader(m_resourceManager.get<ResourceType::VertexShader>("skybox.vshader"_name))
@@ -47,18 +48,15 @@ SkyBox::SkyBox(Renderer &renderer) :
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::PipelineStage::FragmentShader)
                     .enable_depth_test(false)
-                    .build()
-
-                    )),
+                    .build())),
     m_descPool(checkResult(m_pipeline.create_descriptor_pool(3, 3, 3))),
     m_descArray(checkResult(m_descPool.allocate_array(1))),
     m_descriptorSet(m_descArray[0]),
-    m_uniformBuffer(renderer.create_ubo_buffer<SkyBoxUBO>()),
-    m_uniformBufferMapping(checkResult(m_uniformBuffer.map_memory())),
+    m_uniformBuffer(device),
     m_sampler(m_resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
 {
-   graphics_api::DescriptorWriter descWriter(renderer.device(), m_descriptorSet);
-   descWriter.set_raw_uniform_buffer(0, m_uniformBuffer);
+   graphics_api::DescriptorWriter descWriter(device, m_descriptorSet);
+   descWriter.set_uniform_buffer(0, m_uniformBuffer);
    descWriter.set_sampled_texture(1, m_resourceManager.get<ResourceType::Texture>("skybox.tex"_name),
                                   m_sampler);
 }
@@ -74,10 +72,8 @@ void SkyBox::on_render(graphics_api::CommandList &commandList, float yaw, float 
    const auto view       = glm::lookAt(glm::vec3{0, 0, 0}, forwardVector, glm::vec3{0.0f, 0.0f, 1.0f});
    const auto projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 100.0f);
 
-   SkyBoxUBO object1{};
-   object1.view = view;
-   object1.proj = projection;
-   m_uniformBufferMapping.write(&object1, sizeof(UniformBufferObject));
+   m_uniformBuffer->view = view;
+   m_uniformBuffer->proj = projection;
 
    commandList.bind_pipeline(m_pipeline);
    commandList.bind_descriptor_set(m_descriptorSet);

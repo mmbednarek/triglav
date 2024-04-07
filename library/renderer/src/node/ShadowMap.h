@@ -9,15 +9,17 @@ namespace triglav::renderer::node {
 
 class ShadowMap : public render_core::IRenderNode
 {
-public:
+ public:
    ShadowMap(Scene &scene, ShadowMapRenderer &renderer);
 
-  [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
-   void record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList) override;
+   [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
+   void record_commands(render_core::FrameResources &frameResources,
+                        render_core::NodeFrameResources &resources,
+                        graphics_api::CommandList &cmdList) override;
 
-private:
-   Scene& m_scene;
-   ShadowMapRenderer& m_renderer;
+ private:
+   Scene &m_scene;
+   ShadowMapRenderer &m_renderer;
 };
 
-}
+}// namespace triglav::renderer::node

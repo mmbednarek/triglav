@@ -17,8 +17,7 @@ using triglav::resource::ResourceManager;
 namespace triglav::renderer {
 
 ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                                 ResourceManager &resourceManager, graphics_api::Framebuffer &geometryBuffer,
-                                 const graphics_api::Texture &aoTexture,
+                                 ResourceManager &resourceManager,
                                  const graphics_api::Texture &shadowMapTexture) :
     m_device(device),
     m_pipeline(checkResult(
@@ -39,43 +38,37 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::Ren
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::PipelineStage::FragmentShader)
                     .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstant))
+                    .use_push_descriptors(true)
                     .enable_depth_test(false)
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                     .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 5, 1))),
     m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
-    m_descriptors(checkResult(m_descriptorPool.allocate_array(1))),
-    m_uniformBuffer(m_device)
+    m_uniformBuffer(m_device),
+    m_shadowMapTexture(shadowMapTexture)
 {
-   graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, geometryBuffer.texture(0), m_sampler);
-   writer.set_sampled_texture(1, geometryBuffer.texture(1), m_sampler);
-   writer.set_sampled_texture(2, geometryBuffer.texture(2), m_sampler);
-   writer.set_sampled_texture(3, aoTexture, m_sampler);
-   writer.set_sampled_texture(4, shadowMapTexture, m_sampler);
-   writer.set_uniform_buffer(5, m_uniformBuffer);
 }
 
-void ShadingRenderer::update_textures(graphics_api::Framebuffer &geometryBuffer,
-                                      const graphics_api::Texture &aoTexture,
-                                      const graphics_api::Texture &shadowMapTexture) const
-{
-   graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, geometryBuffer.texture(0), m_sampler);
-   writer.set_sampled_texture(1, geometryBuffer.texture(1), m_sampler);
-   writer.set_sampled_texture(2, geometryBuffer.texture(2), m_sampler);
-   writer.set_sampled_texture(3, aoTexture, m_sampler);
-   writer.set_sampled_texture(4, shadowMapTexture, m_sampler);
-   writer.set_uniform_buffer(5, m_uniformBuffer);
-}
-
-void ShadingRenderer::draw(graphics_api::CommandList &cmdList, const glm::vec3 &lightPosition,
-                           const glm::mat4 &shadowMapMat, const bool ssaoEnabled) const
+void ShadingRenderer::draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
+                           const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat,
+                           const bool ssaoEnabled) const
 {
    m_uniformBuffer->shadowMapMat = shadowMapMat;
 
    cmdList.bind_pipeline(m_pipeline);
-   cmdList.bind_descriptor_set(m_descriptors[0]);
+
+   auto &gbuffer =
+           resources.node<render_core::NodeFrameResources>("geometry"_name_id).framebuffer("gbuffer"_name_id);
+   auto &aoBuffer = resources.node<render_core::NodeFrameResources>("ambient_occlusion"_name_id)
+                            .framebuffer("ao"_name_id);
+
+   graphics_api::DescriptorWriter writer(m_device);
+   writer.set_sampled_texture(0, gbuffer.texture(0), m_sampler);
+   writer.set_sampled_texture(1, gbuffer.texture(1), m_sampler);
+   writer.set_sampled_texture(2, gbuffer.texture(2), m_sampler);
+   writer.set_sampled_texture(3, aoBuffer.texture(0), m_sampler);
+   writer.set_sampled_texture(4, m_shadowMapTexture, m_sampler);
+   writer.set_uniform_buffer(5, m_uniformBuffer);
+   cmdList.push_descriptors(0, writer);
 
    PushConstant pushConstant{
            .lightPosition = lightPosition,

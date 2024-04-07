@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 
@@ -69,7 +70,9 @@ struct BoundingBox
    glm::vec3 max;
 };
 
-}// namespace geometry
+constexpr double g_pi = 3.1415926535897932;
+
+}// namespace triglav::geometry
 
 namespace std {
 

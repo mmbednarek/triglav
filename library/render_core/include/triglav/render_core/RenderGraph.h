@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FrameResources.h"
 #include "IRenderNode.hpp"
 
 #include "triglav/graphics_api/QueueManager.h"
@@ -16,15 +17,6 @@ class FrameResources;
 class RenderGraph
 {
  public:
-   struct BakedNode
-   {
-      NameID name;
-      graphics_api::SemaphoreArray waitSemaphores;
-      graphics_api::SemaphoreArray signalSemaphores;
-      graphics_api::CommandList commandList;
-      std::vector<graphics_api::Semaphore*> signalSemaphorePtrs;
-   };
-
    explicit RenderGraph(graphics_api::Device &device);
 
    template<typename TNode, typename... TArgs>
@@ -42,12 +34,14 @@ class RenderGraph
    void add_semaphore_node(NameID node, graphics_api::Semaphore *semaphore);
    void add_dependency(NameID target, NameID dependency);
    bool bake(NameID targetNode);
-   void initialize_nodes(FrameResources& frameResources);
-   void record_command_lists(FrameResources& frameResources);
+   void initialize_nodes();
+   void record_command_lists();
+   void reset_command_lists();
+   void update_resolution(const graphics_api::Resolution &resolution);
    [[nodiscard]] graphics_api::Status execute();
    void await() const;
    [[nodiscard]] graphics_api::Semaphore *target_semaphore() const;
-   [[nodiscard]] u32 triangle_count(NameID node) const;
+   [[nodiscard]] u32 triangle_count(NameID node);
 
    void clean();
 
@@ -56,10 +50,12 @@ class RenderGraph
    std::map<NameID, graphics_api::Semaphore *> m_semaphoreNodes;
    std::map<NameID, std::unique_ptr<IRenderNode>> m_nodes;
    std::multimap<NameID, NameID> m_dependencies;
-   std::vector<BakedNode> m_bakedNodes;
-   std::map<NameID, u32> m_nodeIndicies;
+   std::vector<NameID> m_nodeOrder;
+   FrameResources m_frameResources;
    graphics_api::Fence m_targetFence;
+   NameID m_targetNode;
    graphics_api::Device &m_device;
+   graphics_api::Semaphore *m_targetSemaphore{};
 };
 
 }// namespace triglav::render_core

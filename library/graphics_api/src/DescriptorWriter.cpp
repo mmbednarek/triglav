@@ -15,8 +15,16 @@ DescriptorWriter::DescriptorWriter(const Device &device, const DescriptorView &d
 {
 }
 
+DescriptorWriter::DescriptorWriter(const Device &device) :
+    m_device(device.vulkan_device())
+{
+}
+
 DescriptorWriter::~DescriptorWriter()
 {
+   if (m_descriptorSet == nullptr)
+      return;
+
    this->update();
 }
 
@@ -41,9 +49,9 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
 
 namespace {
 
-VkImageLayout texture_type_to_vulkan_image_layout(TextureType type)
+VkImageLayout texture_usage_flags_to_vulkan_image_layout(const TextureUsageFlags usageFlags)
 {
-   if (type == TextureType::SampledDepthBuffer) {
+   if (usageFlags & TextureUsage::DepthStencilAttachment) {
       return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
    }
    return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -63,7 +71,7 @@ void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture
    writeDescriptorSet.descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 
    auto imageInfo                = std::make_unique<VkDescriptorImageInfo>();
-   imageInfo->imageLayout        = texture_type_to_vulkan_image_layout(texture.type());
+   imageInfo->imageLayout        = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
    imageInfo->imageView          = texture.vulkan_image_view();
    imageInfo->sampler            = sampler.vulkan_sampler();
    writeDescriptorSet.pImageInfo = m_descriptorImageInfos.emplace_back(std::move(imageInfo)).get();
@@ -76,9 +84,15 @@ VkDescriptorSet DescriptorWriter::vulkan_descriptor_set() const
    return m_descriptorSet;
 }
 
+std::span<VkWriteDescriptorSet> DescriptorWriter::vulkan_descriptor_writes()
+{
+   return m_descriptorWrites;
+}
+
 void DescriptorWriter::update()
 {
+   assert(m_descriptorSet != nullptr);
    vkUpdateDescriptorSets(m_device, m_descriptorWrites.size(), m_descriptorWrites.data(), 0, nullptr);
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

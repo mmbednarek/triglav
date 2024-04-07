@@ -6,51 +6,51 @@
 #include "triglav/render_core/RenderCore.hpp"
 
 using namespace triglav::name_literals;
+using triglav::ResourceType;
 using triglav::render_core::checkResult;
 using triglav::resource::ResourceManager;
-using triglav::ResourceType;
 
 namespace triglav::renderer {
 
 PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                                graphics_api::RenderTarget &renderTarget,
                                                ResourceManager &resourceManager,
-                                               const graphics_api::Texture &colorTexture,
-                                               const graphics_api::Texture &overlayTexture) :
+                                               graphics_api::Texture &shadedBuffer) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
-                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
-                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_name))
-                                   // Descriptor layout
-                                   .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::PipelineStage::FragmentShader)
-                                   .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::PipelineStage::FragmentShader)
-                                   .enable_depth_test(false)
-                                   .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
-                                   .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstants))
-                                   .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 2, 1))),
+    m_pipeline(checkResult(
+            graphics_api::PipelineBuilder(m_device, renderTarget)
+                    .fragment_shader(
+                            resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
+                    .vertex_shader(
+                            resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_name))
+                    // Descriptor layout
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::PipelineStage::FragmentShader)
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::PipelineStage::FragmentShader)
+                    .enable_depth_test(false)
+                    .use_push_descriptors(true)
+                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
+                    .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstants))
+                    .build())),
     m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
-    m_descriptors(checkResult(m_descriptorPool.allocate_array(1)))
+    m_shadedBuffer(shadedBuffer)
 {
-   graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, colorTexture, m_sampler);
-   writer.set_sampled_texture(1, overlayTexture, m_sampler);
 }
 
-void PostProcessingRenderer::update_texture(const graphics_api::Texture &colorTexture,
-                                            const graphics_api::Texture &overlayTexture) const
-{
-   graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_sampled_texture(0, colorTexture, m_sampler);
-   writer.set_sampled_texture(1, overlayTexture, m_sampler);
-}
-
-void PostProcessingRenderer::draw(graphics_api::CommandList &cmdList, const bool enableFXAA) const
+void PostProcessingRenderer::draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
+                                  const bool enableFXAA) const
 {
    cmdList.bind_pipeline(m_pipeline);
-   cmdList.bind_descriptor_set(m_descriptors[0]);
+
+   auto &ui = resources.node<render_core::NodeFrameResources>("user_interface"_name_id)
+                      .framebuffer("ui"_name_id);
+
+   graphics_api::DescriptorWriter writer(m_device);
+   writer.set_sampled_texture(0, m_shadedBuffer, m_sampler);
+   writer.set_sampled_texture(1, ui.texture(0), m_sampler);
+   cmdList.push_descriptors(0, writer);
+
    PushConstants constants{
            .enableFXAA = enableFXAA,
    };
@@ -58,4 +58,4 @@ void PostProcessingRenderer::draw(graphics_api::CommandList &cmdList, const bool
    cmdList.draw_primitives(4, 0);
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

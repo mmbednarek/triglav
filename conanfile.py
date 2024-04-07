@@ -19,7 +19,12 @@ class TriglavEngine(ConanFile):
     def generate(self):
         pc = PkgConfigDeps(self)
         pc.generate()
-        tc = MesonToolchain(self)
+
+        backend = 'ninja'
+        if self.settings.os == "Windows":
+            backend = 'vs2022'
+
+        tc = MesonToolchain(self, backend=backend)
         tc.generate()
 
     def build(self):

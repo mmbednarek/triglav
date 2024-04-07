@@ -2,6 +2,8 @@
 
 #include "Device.h"
 
+#include <stdexcept>
+
 namespace triglav::graphics_api {
 
 namespace {
@@ -9,14 +11,18 @@ namespace {
 u32 work_type_flag_count(const WorkTypeFlags flags)
 {
    u32 result{};
-   if (flags & WorkType::Graphics) ++result;
-   if (flags & WorkType::Compute) ++result;
-   if (flags & WorkType::Transfer) ++result;
-   if (flags & WorkType::Presentation) ++result;
+   if (flags & WorkType::Graphics)
+      ++result;
+   if (flags & WorkType::Compute)
+      ++result;
+   if (flags & WorkType::Transfer)
+      ++result;
+   if (flags & WorkType::Presentation)
+      ++result;
    return result;
 }
 
-}
+}// namespace
 
 QueueManager::QueueManager(Device &device, std::span<QueueFamilyInfo> infos) :
     m_semaphoreFactory(device),
@@ -30,13 +36,13 @@ QueueManager::QueueManager(Device &device, std::span<QueueFamilyInfo> infos) :
    queueCounts.fill(std::numeric_limits<u32>::max());
 
    u32 index{};
-   for (const auto& info : infos) {
+   for (const auto &info : infos) {
       m_queueGroups.emplace_back(device, info);
       for (u32 flagsInt = 1; flagsInt < 16; ++flagsInt) {
          const WorkTypeFlags flags{flagsInt};
          const auto flagCount = work_type_flag_count(flags);
          if (info.flags & flags && queueCounts[flagsInt] >= flagCount) {
-            queueCounts[flagsInt] = flagCount;
+            queueCounts[flagsInt]    = flagCount;
             m_queueIndices[flagsInt] = index;
          }
       }
@@ -80,10 +86,10 @@ void QueueManager::release_fence(const Fence *fence)
 }
 
 QueueManager::QueueGroup::QueueGroup(const Device &device, const QueueFamilyInfo &info) :
-   m_vulkanDevice(device.vulkan_device()),
-   m_flags(info.flags),
-   m_commandPool(device.vulkan_device()),
-   m_queueFamilyIndex(info.index)
+    m_vulkanDevice(device.vulkan_device()),
+    m_flags(info.flags),
+    m_commandPool(device.vulkan_device()),
+    m_queueFamilyIndex(info.index)
 {
    m_queues.resize(info.queueCount);
    for (u32 i = 0; i < info.queueCount; ++i) {
@@ -92,8 +98,8 @@ QueueManager::QueueGroup::QueueGroup(const Device &device, const QueueFamilyInfo
    }
 
    VkCommandPoolCreateInfo commandPoolInfo{};
-   commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-   commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+   commandPoolInfo.sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+   commandPoolInfo.flags            = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
    commandPoolInfo.queueFamilyIndex = info.index;
    if (const auto res = m_commandPool.construct(&commandPoolInfo); res != VK_SUCCESS) {
       throw std::runtime_error("failed to create command pool");

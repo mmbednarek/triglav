@@ -2,6 +2,7 @@ core_sources = files([
                     'include/triglav/Name.hpp',
                     'include/triglav/ResourceType.hpp',
                     'include/triglav/detail/Crc.hpp',
+                    'src/Core.cpp'
 ])
 
 core_deps = [glm]

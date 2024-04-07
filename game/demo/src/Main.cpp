@@ -1,16 +1,16 @@
+#include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
-#include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/renderer/Renderer.h"
 
 #include <iostream>
 
 using triglav::desktop::DefaultSurfaceEventListener;
 using triglav::desktop::IDisplay;
+using triglav::desktop::InputArgs;
 using triglav::desktop::ISurface;
 using triglav::desktop::MouseButton;
-using triglav::desktop::InputArgs;
 
 constexpr auto g_initialWidth  = 1280;
 constexpr auto g_initialHeight = 720;
@@ -46,6 +46,7 @@ class EventListener final : public DefaultSurfaceEventListener
    {
       if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
          m_surface.lock_cursor();
+         m_surface.hide_cursor();
       }
    }
 
@@ -93,7 +94,7 @@ class EventListener final : public DefaultSurfaceEventListener
    bool m_isRunning{true};
 };
 
-int triglav_main(InputArgs& /*args*/, IDisplay& display)
+int triglav_main(InputArgs & /*args*/, IDisplay &display)
 {
    const auto surface = display.create_surface(g_initialWidth, g_initialHeight);
 
@@ -102,9 +103,10 @@ int triglav_main(InputArgs& /*args*/, IDisplay& display)
    EventListener eventListener(*surface, renderer);
    surface->add_event_listener(&eventListener);
 
+   display.dispatch_messages();
    while (eventListener.is_running()) {
-      display.dispatch_messages();
       renderer.on_render();
+      display.dispatch_messages();
    }
 
    renderer.on_close();

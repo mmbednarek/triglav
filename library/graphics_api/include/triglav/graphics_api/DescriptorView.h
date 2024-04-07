@@ -7,14 +7,12 @@ namespace triglav::graphics_api {
 class DescriptorView
 {
  public:
-   DescriptorView(VkDescriptorSet descriptorSet, VkPipelineLayout pipelineLayout);
+   DescriptorView(VkDescriptorSet descriptorSet);
 
    [[nodiscard]] VkDescriptorSet vulkan_descriptor_set() const;
-   [[nodiscard]] VkPipelineLayout vulkan_pipeline_layout() const;
 
  private:
    VkDescriptorSet m_descriptorSet{};
-   VkPipelineLayout m_pipelineLayout{};
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

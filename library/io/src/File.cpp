@@ -6,19 +6,25 @@ namespace triglav::io {
 
 std::vector<char> read_whole_file(const std::string_view name)
 {
-   std::ifstream file(std::string{name}, std::ios::ate | std::ios::binary);
-   if (not file.is_open()) {
+   auto fileRes = open_file(name, FileOpenMode::Read);
+   if (not fileRes.has_value()) {
       return {};
    }
 
-   file.seekg(0, std::ios::end);
-   const auto fileSize = file.tellg();
-   file.seekg(0, std::ios::beg);
+   auto &file          = **fileRes;
+   const auto fileSize = file.file_size();
+   if (not fileSize.has_value()) {
+      return {};
+   }
 
    std::vector<char> result{};
-   result.resize(fileSize);
+   result.resize(*fileSize);
 
-   file.read(result.data(), fileSize);
+   const auto fileReadRes = file.read(std::span{reinterpret_cast<u8 *>(result.data()), result.size()});
+   if (not fileReadRes.has_value()) {
+      return {};
+   }
+
    return result;
 }
 

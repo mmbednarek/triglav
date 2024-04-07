@@ -11,9 +11,9 @@
 
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
-using triglav::render_core::SpriteUBO;
 using triglav::render_core::GlyphAtlas;
 using triglav::render_core::GlyphVertex;
+using triglav::render_core::SpriteUBO;
 using triglav::render_core::TextMetric;
 using triglav::resource::ResourceManager;
 using namespace triglav::name_literals;
@@ -93,15 +93,11 @@ void TextRenderer::update_text_object(const GlyphAtlas &atlas, TextObject &objec
    object.text = text;
 }
 
-void TextRenderer::update_resolution(const graphics_api::Resolution &resolution)
-{
-   m_resolution = resolution;
-}
-
-void TextRenderer::draw_text_object(const graphics_api::CommandList &cmdList, const TextObject &textObj,
+void TextRenderer::draw_text_object(const graphics_api::CommandList &cmdList,
+                                    const graphics_api::Resolution &resolution, const TextObject &textObj,
                                     const glm::vec2 position, const glm::vec3 color) const
 {
-   const auto [viewportWidth, viewportHeight] = m_resolution;
+   const auto [viewportWidth, viewportHeight] = resolution;
 
    TextColorConstant constant{color};
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, constant);
@@ -124,4 +120,4 @@ void TextRenderer::draw_text_object(const graphics_api::CommandList &cmdList, co
    cmdList.draw_primitives(textObj.vertexCount, 0);
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

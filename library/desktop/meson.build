@@ -1,16 +1,24 @@
 desktop_sources = files([])
 
+desktop_deps = [vulkan, spdlog]
+
 if host_machine.system() == 'linux'
     if get_option('wayland').enabled()
+        desktop_deps += wayland_client
+        desktop_deps += xkb_common
         subdir('platform/wayland')
     else
+        desktop_deps += xlib
+        desktop_deps += xkb_common
         subdir('platform/x11')
     endif
+elif host_machine.system() == 'windows'
+    subdir('platform/windows')
 endif
 
 desktop_lib = static_library('desktop',
                           sources : desktop_sources,
-                          dependencies : [wayland_client, xlib],
+                          dependencies : desktop_deps,
                           include_directories : ['include', 'include/triglav/desktop'],
 )
 

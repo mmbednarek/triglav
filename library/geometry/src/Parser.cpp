@@ -11,7 +11,7 @@ bool is_white_char(const char ch)
 
 namespace triglav::geometry {
 
-Parser::Parser(std::istream &stream) :
+Parser::Parser(io::IReader &stream) :
     m_reader(stream)
 {
 }
@@ -90,9 +90,9 @@ void Parser::process_line_end()
    m_currentCommand.name.clear();
 }
 
-const std::vector<Command>& Parser::commands() const
+const std::vector<Command> &Parser::commands() const
 {
    return m_commands;
 }
 
-}// namespace object_reader
+}// namespace triglav::geometry

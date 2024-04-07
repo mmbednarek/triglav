@@ -75,6 +75,12 @@ class Name
    constexpr bool operator==(const Name &other) const = default;
    constexpr bool operator!=(const Name &other) const = default;
 
+   template<ResourceType CResourceType>
+   constexpr bool operator==(const TypedName<CResourceType> &other) const
+   {
+      return (*this) == static_cast<Name>(other);
+   }
+
  private:
    ResourceType m_type;
    NameID m_name;

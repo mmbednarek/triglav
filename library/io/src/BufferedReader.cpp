@@ -1,9 +1,9 @@
 #include "BufferedReader.h"
 
-namespace triglav::geometry {
+namespace triglav::io {
 
-BufferedReader::BufferedReader(std::istream &stream) :
-   m_stream(stream)
+BufferedReader::BufferedReader(IReader &stream) :
+    m_stream(stream)
 {
 }
 
@@ -19,7 +19,7 @@ bool BufferedReader::has_next()
    return m_position < m_bytesRead;
 }
 
-char BufferedReader::next()
+u8 BufferedReader::next()
 {
    if (m_position >= m_bytesRead) {
       read_next_chunk();
@@ -28,7 +28,7 @@ char BufferedReader::next()
       return EOF;
    }
 
-   const char result = m_buffer[m_position];
+   const auto result = m_buffer[m_position];
    if (result == '\n') {
       m_column = 1;
       ++m_line;
@@ -42,8 +42,14 @@ char BufferedReader::next()
 
 void BufferedReader::read_next_chunk()
 {
-   m_bytesRead = m_stream.readsome(m_buffer.data(), static_cast<std::streamsize>(m_buffer.size()));
-   m_position = 0;
+   const auto res = m_stream.read(m_buffer);
+   if (not res.has_value()) {
+      m_bytesRead = 0;
+      m_position  = 0;
+      return;
+   }
+   m_bytesRead = *res;
+   m_position  = 0;
 }
 
-}// namespace object_reader
+}// namespace triglav::io

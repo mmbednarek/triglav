@@ -1,8 +1,8 @@
 #include "PipelineBuilder.h"
 
 #include "Device.h"
-#include "Shader.h"
 #include "RenderTarget.h"
+#include "Shader.h"
 #include "vulkan/Util.h"
 
 namespace triglav::graphics_api {
@@ -85,7 +85,8 @@ PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descri
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size, const size_t offset)
+PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size,
+                                                const size_t offset)
 {
    VkPushConstantRange range;
    range.offset     = offset;
@@ -105,6 +106,12 @@ PipelineBuilder &PipelineBuilder::enable_depth_test(const bool enabled)
 PipelineBuilder &PipelineBuilder::enable_blending(const bool enabled)
 {
    m_blendingEnabled = enabled;
+   return *this;
+}
+
+PipelineBuilder &PipelineBuilder::use_push_descriptors(bool enabled)
+{
+   m_usePushDescriptors = enabled;
    return *this;
 }
 
@@ -222,7 +229,7 @@ Result<Pipeline> PipelineBuilder::build() const
 
    VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
    colorBlendingInfo.sType             = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-   colorBlendingInfo.logicOpEnable     = VK_TRUE;
+   colorBlendingInfo.logicOpEnable     = not m_blendingEnabled;
    colorBlendingInfo.logicOp           = VK_LOGIC_OP_COPY;
    colorBlendingInfo.attachmentCount   = colorBlendAttachments.size();
    colorBlendingInfo.pAttachments      = colorBlendAttachments.data();
@@ -235,6 +242,9 @@ Result<Pipeline> PipelineBuilder::build() const
    descriptorSetLayoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
    descriptorSetLayoutInfo.bindingCount = m_vulkanDescriptorBindings.size();
    descriptorSetLayoutInfo.pBindings    = m_vulkanDescriptorBindings.data();
+   if (m_usePushDescriptors) {
+      descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+   }
 
    vulkan::DescriptorSetLayout descriptorSetLayout(m_device.vulkan_device());
    if (descriptorSetLayout.construct(&descriptorSetLayoutInfo) != VK_SUCCESS)

@@ -5,7 +5,12 @@
 
 #include "triglav/world/Level.h"
 
+#include <cmath>
 #include <glm/gtc/quaternion.hpp>
+
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
 
 using triglav::ResourceType;
 
@@ -13,9 +18,8 @@ namespace triglav::renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
-Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &shadowMap,
-             DebugLinesRenderer &debugLinesRenderer, resource::ResourceManager &resourceManager) :
-    m_renderer(renderer),
+Scene::Scene(ModelRenderer &context3D, ShadowMapRenderer &shadowMap, DebugLinesRenderer &debugLinesRenderer,
+             resource::ResourceManager &resourceManager) :
     m_context3D(context3D),
     m_shadowMap(shadowMap),
     m_debugLinesRenderer(debugLinesRenderer),
@@ -29,9 +33,9 @@ Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &sh
    m_shadowMapCamera.set_viewspace_width(150.0f);
 }
 
-void Scene::update()
+void Scene::update(graphics_api::Resolution &resolution)
 {
-   const auto [width, height] = m_renderer.screen_resolution();
+   const auto [width, height] = resolution;
    m_camera.set_viewport_size(width, height);
 
    const auto cameraViewMat       = m_camera.view_matrix();
@@ -71,7 +75,7 @@ void Scene::compile_scene()
    }
 }
 
-void Scene::render(graphics_api::CommandList& cmdList) const
+void Scene::render(graphics_api::CommandList &cmdList) const
 {
    for (const auto &obj : m_instancedObjects) {
       if (not m_camera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
@@ -81,7 +85,7 @@ void Scene::render(graphics_api::CommandList& cmdList) const
    }
 }
 
-void Scene::render_shadow_map(graphics_api::CommandList& cmdList) const
+void Scene::render_shadow_map(graphics_api::CommandList &cmdList) const
 {
    for (const auto &obj : m_instancedObjects) {
       if (not m_shadowMapCamera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
@@ -91,7 +95,7 @@ void Scene::render_shadow_map(graphics_api::CommandList& cmdList) const
    }
 }
 
-void Scene::render_debug_lines(graphics_api::CommandList& cmdList) const
+void Scene::render_debug_lines(graphics_api::CommandList &cmdList) const
 {
    for (const auto &obj : m_debugLines) {
       m_debugLinesRenderer.draw(cmdList, obj, m_camera);

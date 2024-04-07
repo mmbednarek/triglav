@@ -4,10 +4,10 @@
 
 #include "triglav/graphics_api/Device.h"
 
-#include <cstring>
-#include <vector>
 #include <codecvt>
+#include <cstring>
 #include <locale>
+#include <vector>
 
 namespace triglav::render_core {
 
@@ -15,7 +15,7 @@ GlyphAtlas::GlyphAtlas(graphics_api::Device &device, const font::Typeface &typef
                        const std::span<font::Rune> atlasRunes, const int glyphSize, const uint32_t width,
                        const uint32_t height) :
     m_glyphSize(static_cast<float>(glyphSize)),
-    m_texture(checkResult(device.create_texture(GAPI_FORMAT(R, sRGB), {width, height})))
+    m_texture(checkResult(device.create_texture(GAPI_FORMAT(R, UNorm8), {width, height})))
 {
    std::vector<uint8_t> atlasData{};
    atlasData.resize(width * height);
@@ -153,4 +153,4 @@ TextMetric GlyphAtlas::measure_text(const std::string_view text) const
    return TextMetric{.width = width, .height = height};
 }
 
-}// namespace renderer
+}// namespace triglav::render_core

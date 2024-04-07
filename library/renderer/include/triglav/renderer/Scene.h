@@ -27,10 +27,10 @@ struct SceneObject
 class Scene
 {
  public:
-   Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &shadowMap,
-         DebugLinesRenderer &debugLines, triglav::resource::ResourceManager &resourceManager);
+   Scene(ModelRenderer &context3D, ShadowMapRenderer &shadowMap, DebugLinesRenderer &debugLines,
+         triglav::resource::ResourceManager &resourceManager);
 
-   void update();
+   void update(graphics_api::Resolution &resolution);
    void add_object(SceneObject object);
    void compile_scene();
    void render(graphics_api::CommandList &cmdList) const;
@@ -45,13 +45,12 @@ class Scene
    [[nodiscard]] Camera &camera();
    [[nodiscard]] const OrthoCamera &shadow_map_camera() const;
 
-  [[nodiscard]] float yaw() const;
-  [[nodiscard]] float pitch() const;
+   [[nodiscard]] float yaw() const;
+   [[nodiscard]] float pitch() const;
 
-  [[nodiscard]] void update_orientation(float delta_yaw, float delta_pitch);
+   [[nodiscard]] void update_orientation(float delta_yaw, float delta_pitch);
 
  private:
-   Renderer &m_renderer;
    ModelRenderer &m_context3D;
    ShadowMapRenderer &m_shadowMap;
    resource::ResourceManager &m_resourceManager;

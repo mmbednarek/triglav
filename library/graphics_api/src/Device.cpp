@@ -9,6 +9,7 @@
 #include <ostream>
 #include <set>
 #include <shared_mutex>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 #include "CommandList.h"
@@ -26,6 +27,7 @@ bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
    VkPhysicalDeviceProperties props{};
    vkGetPhysicalDeviceProperties(physicalDevice, &props);
    return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+   // return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
 }
 
 bool graphics_family_predicate(const VkQueueFamilyProperties &properties)
@@ -62,7 +64,17 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *pUserData)
 {
-   std::cerr << "[VALIDATION] " << pCallbackData->pMessage << '\n';
+   spdlog::level::level_enum logLevel{spdlog::level::off};
+
+   switch (messageSeverity) {
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: logLevel = spdlog::level::trace; break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: logLevel = spdlog::level::info; break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: logLevel = spdlog::level::warn; break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: logLevel = spdlog::level::err; break;
+   case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT: break;
+   }
+
+   spdlog::log(logLevel, "vk-validation: {}", pCallbackData->pMessage);
    return VK_FALSE;
 }
 
@@ -70,10 +82,16 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(
 
 namespace triglav::graphics_api {
 DECLARE_VLK_ENUMERATOR(get_physical_devices, VkPhysicalDevice, vkEnumeratePhysicalDevices)
+
 DECLARE_VLK_ENUMERATOR(get_queue_family_properties, VkQueueFamilyProperties,
                        vkGetPhysicalDeviceQueueFamilyProperties)
+
 DECLARE_VLK_ENUMERATOR(get_surface_formats, VkSurfaceFormatKHR, vkGetPhysicalDeviceSurfaceFormatsKHR)
+
 DECLARE_VLK_ENUMERATOR(get_swapchain_images, VkImage, vkGetSwapchainImagesKHR)
+
+DECLARE_VLK_ENUMERATOR(get_device_extension_properties, VkExtensionProperties,
+                       vkEnumerateDeviceExtensionProperties)
 
 namespace {
 
@@ -129,10 +147,10 @@ namespace {
 uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 {
    if (max == 0) {
-      return std::max(2u, min);
+      return std::max(2u, min + 1);
    }
 
-   return std::min(std::max(2u, min), max);
+   return std::min(std::max(2u, min + 1), max);
 }
 
 }// namespace
@@ -155,9 +173,10 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, *m_surface, &capabilities);
 
    VkSwapchainCreateInfoKHR swapchainInfo{};
-   swapchainInfo.sType       = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-   swapchainInfo.surface     = *m_surface;
-   swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+   swapchainInfo.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+   swapchainInfo.surface = *m_surface;
+   // swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+   swapchainInfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
    swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
    swapchainInfo.imageFormat = *vulkanColorFormat;
    swapchainInfo.imageUsage  = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -243,6 +262,8 @@ Result<CommandList> Device::create_command_list(const WorkTypeFlags flags) const
 
 Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t size)
 {
+   assert(size != 0);
+
    VkBufferCreateInfo bufferInfo{};
    bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
    bufferInfo.size        = size;
@@ -302,58 +323,26 @@ Result<Semaphore> Device::create_semaphore() const
    return Semaphore(std::move(semaphore));
 }
 
-namespace {
-
-VkImageTiling to_vulkan_image_tiling(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_TILING_LINEAR;
-   case TextureType::DepthBuffer:       // fallthrough
-   case TextureType::SampledDepthBuffer:// fallthrough
-   case TextureType::MultisampleImage: return VK_IMAGE_TILING_OPTIMAL;
-   case TextureType::ColorAttachment:
-      return VK_IMAGE_TILING_OPTIMAL;
-      // case TextureType::ColorAttachment: return VK_IMAGE_TILING_LINEAR;
-   }
-   return {};
-}
-
-VkImageUsageFlags to_vulkan_image_usage(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage:
-      return VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   case TextureType::DepthBuffer: return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-   case TextureType::SampledDepthBuffer:
-      return VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   case TextureType::MultisampleImage:
-      return VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-   case TextureType::ColorAttachment: return VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-   }
-   return {};
-}
-
-VkImageAspectFlags to_vulkan_image_aspect(const TextureType type)
-{
-   switch (type) {
-   case TextureType::SampledImage: return VK_IMAGE_ASPECT_COLOR_BIT;
-   case TextureType::DepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
-   case TextureType::SampledDepthBuffer: return VK_IMAGE_ASPECT_DEPTH_BIT;
-   case TextureType::MultisampleImage: return VK_IMAGE_ASPECT_COLOR_BIT;
-   case TextureType::ColorAttachment: return VK_IMAGE_ASPECT_COLOR_BIT;
-   }
-   return {};
-}
-
-}// namespace
-
 Result<Texture> Device::create_texture(const ColorFormat &format, const Resolution &imageSize,
-                                       const TextureType type, SampleCount sampleCount, int mipCount) const
+                                       const TextureUsageFlags usageFlags, SampleCount sampleCount,
+                                       int mipCount) const
 {
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
    if (mipCount == 0) {
       mipCount = static_cast<int>(std::floor(std::log2(std::max(imageSize.width, imageSize.height)))) + 1;
+   }
+
+   VkImageFormatProperties formatProperties;
+   if (const auto res = vkGetPhysicalDeviceImageFormatProperties(
+               m_physicalDevice, vulkanColorFormat, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL,
+               vulkan::to_vulkan_image_usage_flags(usageFlags), 0, &formatProperties);
+       res != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   if (mipCount > formatProperties.maxMipLevels) {
+      mipCount = formatProperties.maxMipLevels;
    }
 
    VkImageCreateInfo imageInfo{};
@@ -363,11 +352,11 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    imageInfo.imageType     = VK_IMAGE_TYPE_2D;
    imageInfo.mipLevels     = mipCount;
    imageInfo.arrayLayers   = 1;
-   imageInfo.tiling        = to_vulkan_image_tiling(type);
+   imageInfo.tiling        = VK_IMAGE_TILING_OPTIMAL;
    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    imageInfo.samples       = static_cast<VkSampleCountFlagBits>(sampleCount);
    imageInfo.sharingMode   = VK_SHARING_MODE_EXCLUSIVE;
-   imageInfo.usage         = to_vulkan_image_usage(type);
+   imageInfo.usage         = vulkan::to_vulkan_image_usage_flags(usageFlags);
 
    vulkan::Image image(*m_device);
    if (image.construct(&imageInfo) != VK_SUCCESS)
@@ -397,7 +386,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    imageViewInfo.components.g                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.components.b                    = VK_COMPONENT_SWIZZLE_IDENTITY;
    imageViewInfo.components.a                    = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.subresourceRange.aspectMask     = to_vulkan_image_aspect(type);
+   imageViewInfo.subresourceRange.aspectMask     = vulkan::to_vulkan_image_aspect_flags(usageFlags);
    imageViewInfo.subresourceRange.baseMipLevel   = 0;
    imageViewInfo.subresourceRange.levelCount     = mipCount;
    imageViewInfo.subresourceRange.baseArrayLayer = 0;
@@ -407,7 +396,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
    if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, type,
+   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, usageFlags,
                   imageSize.width, imageSize.height, mipCount);
 }
 
@@ -559,15 +548,13 @@ uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags pro
    return 0;
 }
 
-constexpr std::array g_vulkanDeviceExtensions{
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-};
-
-constexpr std::array g_vulkanInstanceLayers{
 #if GAPI_ENABLE_VALIDATION
+constexpr std::array g_vulkanInstanceLayers{
         "VK_LAYER_KHRONOS_validation",
-#endif
 };
+#else
+constexpr std::array<const char *, 0> g_vulkanInstanceLayers{};
+#endif
 
 Result<DeviceUPtr> initialize_device(const ISurface &surface)
 {
@@ -579,11 +566,11 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
    appInfo.engineVersion      = VK_MAKE_VERSION(1, 0, 0);
    appInfo.apiVersion         = VK_API_VERSION_1_3;
 
-   const std::array g_vulkanInstanceExtensions{
-           VK_KHR_SURFACE_EXTENSION_NAME,
-           triglav::desktop::vulkan_extension_name(),
+   const std::array g_vulkanInstanceExtensions
+   {
+      VK_KHR_SURFACE_EXTENSION_NAME, triglav::desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
-           VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+              VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
    };
 
@@ -679,11 +666,26 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
       ++deviceQueueCreateInfoIt;
    }
 
-   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
+   std::vector<const char *> vulkanDeviceExtensions{
+           VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+           VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+   };
+
+   const auto extensionProperties = vulkan::get_device_extension_properties(*pickedDevice, nullptr);
+   for (const auto &property : extensionProperties) {
+      const std::string extensionName{property.extensionName};
+      if (extensionName == "VK_KHR_portability_subset") {
+         vulkanDeviceExtensions.emplace_back("VK_KHR_portability_subset");
+         break;
+      }
+   }
+
+   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{
+           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
    hostQueryResetFeatures.hostQueryReset = true;
 
    VkPhysicalDeviceFeatures2 deviceFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
-   deviceFeatures.pNext = &hostQueryResetFeatures;
+   deviceFeatures.pNext                      = &hostQueryResetFeatures;
    deviceFeatures.features.sampleRateShading = true;
    deviceFeatures.features.logicOp           = true;
    deviceFeatures.features.fillModeNonSolid  = true;
@@ -691,12 +693,12 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
    deviceFeatures.features.samplerAnisotropy = true;
 
    VkDeviceCreateInfo deviceInfo{};
-   deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-   deviceInfo.pNext = &deviceFeatures;
+   deviceInfo.sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+   deviceInfo.pNext                   = &deviceFeatures;
    deviceInfo.queueCreateInfoCount    = static_cast<uint32_t>(deviceQueueCreateInfos.size());
    deviceInfo.pQueueCreateInfos       = deviceQueueCreateInfos.data();
-   deviceInfo.enabledExtensionCount   = g_vulkanDeviceExtensions.size();
-   deviceInfo.ppEnabledExtensionNames = g_vulkanDeviceExtensions.data();
+   deviceInfo.enabledExtensionCount   = vulkanDeviceExtensions.size();
+   deviceInfo.ppEnabledExtensionNames = vulkanDeviceExtensions.data();
 
    vulkan::Device device;
    if (const auto res = device.construct(*pickedDevice, &deviceInfo); res != VK_SUCCESS) {

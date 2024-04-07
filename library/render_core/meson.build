@@ -1,4 +1,11 @@
 render_core_sources = files([
+  'include/triglav/render_core/FrameResources.h',
+  'include/triglav/render_core/GlyphAtlas.h',
+  'include/triglav/render_core/IRenderNode.hpp',
+  'include/triglav/render_core/Material.hpp',
+  'include/triglav/render_core/Model.hpp',
+  'include/triglav/render_core/RenderCore.hpp',
+  'include/triglav/render_core/RenderGraph.h',
   'src/FrameResources.cpp',
   'src/GlyphAtlas.cpp',
   'src/RenderCore.cpp',

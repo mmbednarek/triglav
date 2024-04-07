@@ -6,6 +6,7 @@
 #include <cstring>
 
 namespace triglav::graphics_api {
+
 MappedMemory::MappedMemory(void *pointer, const VkDevice device, const VkDeviceMemory deviceMemory) :
     m_pointer(pointer),
     m_device(device),
@@ -108,4 +109,4 @@ Status write_to_buffer(Device &device, const Buffer &buffer, const void *data, c
    return Status::Success;
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

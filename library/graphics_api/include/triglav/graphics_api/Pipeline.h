@@ -7,7 +7,6 @@
 namespace triglav::graphics_api {
 
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(PipelineLayout, Device)
-DECLARE_VLK_WRAPPED_CHILD_OBJECT(DescriptorSetLayout, Device)
 
 class Buffer;
 class Texture;
@@ -34,4 +33,4 @@ class Pipeline
    vulkan::DescriptorSetLayout m_descriptorSetLayout;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

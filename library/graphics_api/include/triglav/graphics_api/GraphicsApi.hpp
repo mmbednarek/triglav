@@ -19,6 +19,7 @@ enum class Status
    UnsupportedDevice,
    UnsupportedFormat,
    UnsupportedColorSpace,
+   InvalidTransferDestination
 };
 
 enum class ColorFormatOrder
@@ -50,6 +51,7 @@ enum class ColorFormatPart
 {
    Unknown,
    sRGB,
+   UNorm8,
    UNorm16,
    UInt,
    Float32,
@@ -61,6 +63,7 @@ constexpr size_t color_format_part_size(const ColorFormatPart part)
    switch (part) {
    case ColorFormatPart::Unknown: return 0;
    case ColorFormatPart::sRGB: return 1;
+   case ColorFormatPart::UNorm8: return 1;
    case ColorFormatPart::UNorm16: return 2;
    case ColorFormatPart::UInt: return 1;
    case ColorFormatPart::Float16: return 2;
@@ -123,7 +126,7 @@ struct Color
 struct DepthStenctilValue
 {
    float depthValue{};
-   float stencilValue{};
+   u32 stencilValue{};
 };
 
 struct ClearValue
@@ -132,7 +135,7 @@ struct ClearValue
 };
 
 namespace ColorPalette {
-constexpr Color Black{0.0f, 0.0f, 0.0f, 1.0f};
+constexpr Color Black{0.0f, 0.0f, 0.0f, 0.0f};
 constexpr Color Red{1.0f, 0.0f, 0.0f, 1.0f};
 }// namespace ColorPalette
 
@@ -143,14 +146,26 @@ enum class DescriptorType
    ImageSampler,
 };
 
-enum class TextureType
+struct DescriptorBinding
 {
-   SampledImage,
-   DepthBuffer,
-   SampledDepthBuffer,
-   MultisampleImage,
-   ColorAttachment,
+   u32 binding;
+   DescriptorType type;
+   u32 count;
+   PipelineStage stage;
 };
+
+enum class TextureUsage
+{
+   None                   = 0,
+   TransferSource         = (1 << 0),
+   TransferDestination    = (1 << 1),
+   Sampled                = (1 << 2),
+   ColorAttachment        = (1 << 3),
+   DepthStencilAttachment = (1 << 4),
+   Transient              = (1 << 5),
+};
+
+TRIGLAV_DECL_FLAGS(TextureUsage)
 
 enum class TextureState
 {

@@ -4,10 +4,8 @@
 
 namespace triglav::graphics_api {
 
-DescriptorView::DescriptorView(const VkDescriptorSet descriptorSet,
-                               const VkPipelineLayout pipelineLayout) :
-    m_descriptorSet(descriptorSet),
-    m_pipelineLayout(pipelineLayout)
+DescriptorView::DescriptorView(const VkDescriptorSet descriptorSet) :
+    m_descriptorSet(descriptorSet)
 {
 }
 
@@ -16,10 +14,4 @@ VkDescriptorSet DescriptorView::vulkan_descriptor_set() const
    return m_descriptorSet;
 }
 
-VkPipelineLayout DescriptorView::vulkan_pipeline_layout() const
-{
-   return m_pipelineLayout;
-}
-
-
-}// namespace graphics_api
+}// namespace triglav::graphics_api

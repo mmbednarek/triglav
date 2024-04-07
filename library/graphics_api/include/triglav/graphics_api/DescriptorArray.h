@@ -10,7 +10,8 @@ namespace triglav::graphics_api {
 class DescriptorArray
 {
  public:
-   DescriptorArray(VkDevice device, VkDescriptorPool descriptorPool, VkPipelineLayout pipelineLayout, std::vector<VkDescriptorSet> descriptorSets);
+   DescriptorArray(VkDevice device, VkDescriptorPool descriptorPool,
+                   std::vector<VkDescriptorSet> descriptorSets);
    ~DescriptorArray();
 
    DescriptorArray(const DescriptorArray &other)            = delete;
@@ -19,15 +20,13 @@ class DescriptorArray
    DescriptorArray &operator=(DescriptorArray &&other) noexcept;
 
    [[nodiscard]] size_t count() const;
-   [[nodiscard]] VkPipelineLayout pipeline_layout() const;
    [[nodiscard]] DescriptorView at(size_t index) const;
    [[nodiscard]] DescriptorView operator[](size_t index) const;
 
  private:
    VkDevice m_device;
    VkDescriptorPool m_descriptorPool;
-   VkPipelineLayout m_pipelineLayout;
    std::vector<VkDescriptorSet> m_descriptorSets;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

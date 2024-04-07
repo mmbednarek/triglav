@@ -3,6 +3,7 @@
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/Pipeline.h"
 #include "triglav/graphics_api/Texture.h"
+#include "triglav/render_core/FrameResources.h"
 
 #include "triglav/resource/ResourceManager.h"
 
@@ -17,21 +18,16 @@ class PostProcessingRenderer
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                          triglav::resource::ResourceManager &resourceManager,
-                          const graphics_api::Texture &colorTexture,
-                          const graphics_api::Texture &overlayTexture);
+                          resource::ResourceManager &resourceManager, graphics_api::Texture &shadedBuffer);
 
-   void update_texture(const graphics_api::Texture &colorTexture,
-                       const graphics_api::Texture &overlayTexture) const;
-
-   void draw(graphics_api::CommandList &cmdList, bool enableFXAA) const;
+   void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
+             bool enableFXAA) const;
 
  private:
    graphics_api::Device &m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::DescriptorPool m_descriptorPool;
-   graphics_api::Sampler& m_sampler;
-   graphics_api::DescriptorArray m_descriptors;
+   graphics_api::Sampler &m_sampler;
+   graphics_api::Texture &m_shadedBuffer;
 };
 
-}// namespace renderer
+}// namespace triglav::renderer

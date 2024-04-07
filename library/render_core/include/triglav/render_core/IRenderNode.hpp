@@ -1,10 +1,12 @@
 #pragma once
 
+#include "FrameResources.h"
+
 #include "triglav/graphics_api/CommandList.h"
 
-namespace triglav::render_core {
+#include <memory>
 
-class FrameResources;
+namespace triglav::render_core {
 
 class IRenderNode
 {
@@ -12,8 +14,13 @@ class IRenderNode
    virtual ~IRenderNode() = default;
 
    [[nodiscard]] virtual graphics_api::WorkTypeFlags work_types() const = 0;
-   virtual void initialize_resources(FrameResources& frameResources) {};
-   virtual void record_commands(FrameResources& frameResources, graphics_api::CommandList &cmdList) = 0;
+   virtual void record_commands(FrameResources &frameResources, NodeFrameResources &nodeResources,
+                                graphics_api::CommandList &cmdList)     = 0;
+
+   virtual std::unique_ptr<NodeFrameResources> create_node_resources()
+   {
+      return std::make_unique<NodeFrameResources>();
+   }
 };
 
 }// namespace triglav::render_core

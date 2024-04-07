@@ -33,14 +33,14 @@ void register_samplers(graphics_api::Device &device, ResourceManager &manager)
                                                    GAPI_CHECK(device.create_sampler(info)));
 
    info.enableAnisotropy = true;
-   info.maxLod = 8.0f;
+   info.maxLod           = 8.0f;
    manager.emplace_resource<ResourceType::Sampler>("linear_repeat_mlod8_aniso.sampler"_name,
                                                    GAPI_CHECK(device.create_sampler(info)));
 
    info.enableAnisotropy = true;
-   info.mipBias = 1.0f;
-   info.minLod = 0.0f;
-   info.maxLod = 8.0f;
+   info.mipBias          = 0.0f;
+   info.minLod           = 0.0f;
+   info.maxLod           = 8.0f;
    manager.emplace_resource<ResourceType::Sampler>("ground_sampler.sampler"_name,
                                                    GAPI_CHECK(device.create_sampler(info)));
 }

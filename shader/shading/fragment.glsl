@@ -171,6 +171,24 @@ float sample_ao_blurred(vec2 coord) {
     return result;
 }
 
+vec3 linear_to_srgb(vec3 linearRGB)
+{
+    bvec3 cutoff = lessThan(linearRGB.rgb, vec3(0.0031308));
+    vec3 higher = vec3(1.055)*pow(linearRGB.rgb, vec3(1.0/2.4)) - vec3(0.055);
+    vec3 lower = linearRGB.rgb * vec3(12.92);
+
+    return mix(higher, lower, cutoff);
+}
+
+vec3 srgb_to_linear(vec3 sRGB)
+{
+    bvec3 cutoff = lessThan(sRGB.rgb, vec3(0.04045));
+    vec3 higher = pow((sRGB.rgb + vec3(0.055))/vec3(1.055), vec3(2.4));
+    vec3 lower = sRGB.rgb/vec3(12.92);
+
+    return mix(higher, lower, cutoff);
+}
+
 void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
     if (normal == vec3(0.0, 0.0, 0.0)) {
@@ -235,9 +253,12 @@ void main() {
     vec3 color = ambient + shadow * Lo;
     //    color = color / (color + vec3(1.0));
     //    color = pow(color, vec3(1.3));
+    // color = srgb_to_linear(color);
 
     float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
     color = mix(vec3(luminance), color, 1.2);
+    // color = color / (color + vec3(1.0));
+    // color = pow(color, vec3(1.0/2.2));
 
     outColor = vec4(color, 1.0);
 }

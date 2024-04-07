@@ -14,7 +14,8 @@ graphics_api::WorkTypeFlags Shading::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void Shading::record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList)
+void Shading::record_commands(render_core::FrameResources &frameResources,
+                              render_core::NodeFrameResources &resources, graphics_api::CommandList &cmdList)
 {
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::ColorPalette::Black,
@@ -26,7 +27,7 @@ void Shading::record_commands(render_core::FrameResources& frameResources, graph
    const auto lightPosition =
            m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
 
-   m_shadingRenderer.draw(cmdList, glm::vec3(lightPosition), shadowMat, true);
+   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat, true);
 
    cmdList.end_render_pass();
 }
