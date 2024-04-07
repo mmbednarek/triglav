@@ -8,14 +8,13 @@ namespace triglav::render_core {
 
 void NodeFrameResources::add_render_target(const NameID identifier, graphics_api::RenderTarget &renderTarget)
 {
-   m_renderTargets.emplace_back(identifier, &renderTarget, nullptr);
+   m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt);
 }
 
 void NodeFrameResources::update_resolution(const graphics_api::Resolution &resolution)
 {
    for (auto &target : m_renderTargets) {
-      target.framebuffer = std::make_unique<graphics_api::Framebuffer>(
-              GAPI_CHECK(target.renderTarget->create_framebuffer(resolution)));
+      target.framebuffer.emplace(GAPI_CHECK(target.renderTarget->create_framebuffer(resolution)));
    }
 }
 

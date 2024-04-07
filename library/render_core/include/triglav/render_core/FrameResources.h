@@ -33,7 +33,7 @@ class NodeFrameResources
    {
       NameID name{};
       graphics_api::RenderTarget *renderTarget{};
-      std::unique_ptr<graphics_api::Framebuffer> framebuffer{};
+      std::optional<graphics_api::Framebuffer> framebuffer{};
    };
 
    std::vector<RenderTargetResource> m_renderTargets{};

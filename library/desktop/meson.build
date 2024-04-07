@@ -5,9 +5,11 @@ desktop_deps = [vulkan, spdlog]
 if host_machine.system() == 'linux'
     if get_option('wayland').enabled()
         desktop_deps += wayland_client
+        desktop_deps += xkb_common
         subdir('platform/wayland')
     else
         desktop_deps += xlib
+        desktop_deps += xkb_common
         subdir('platform/x11')
     endif
 elif host_machine.system() == 'windows'
