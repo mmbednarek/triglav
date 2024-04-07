@@ -17,7 +17,7 @@ using triglav::resource::ResourceManager;
 namespace triglav::renderer {
 
 ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                                 ResourceManager &resourceManager, graphics_api::Framebuffer &geometryBuffer,
+                                 ResourceManager &resourceManager,
                                  const graphics_api::Texture &shadowMapTexture) :
     m_device(device),
     m_pipeline(checkResult(
@@ -42,11 +42,8 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::Ren
                     .enable_depth_test(false)
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                     .build())),
-    // m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 5, 1))),
     m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
-    // m_descriptors(checkResult(m_descriptorPool.allocate_array(1))),
     m_uniformBuffer(m_device),
-    m_geometryBuffer(geometryBuffer),
     m_shadowMapTexture(shadowMapTexture)
 {
 }
@@ -59,13 +56,16 @@ void ShadingRenderer::draw(render_core::FrameResources &resources, graphics_api:
 
    cmdList.bind_pipeline(m_pipeline);
 
-   auto &aoNode = resources.node<render_core::NodeFrameResources>("ambient_occlusion"_name_id);
+   auto &gbuffer =
+           resources.node<render_core::NodeFrameResources>("geometry"_name_id).framebuffer("gbuffer"_name_id);
+   auto &aoBuffer = resources.node<render_core::NodeFrameResources>("ambient_occlusion"_name_id)
+                            .framebuffer("ao"_name_id);
 
    graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, m_geometryBuffer.texture(0), m_sampler);
-   writer.set_sampled_texture(1, m_geometryBuffer.texture(1), m_sampler);
-   writer.set_sampled_texture(2, m_geometryBuffer.texture(2), m_sampler);
-   writer.set_sampled_texture(3, aoNode.framebuffer("ao"_name_id).texture(0), m_sampler);
+   writer.set_sampled_texture(0, gbuffer.texture(0), m_sampler);
+   writer.set_sampled_texture(1, gbuffer.texture(1), m_sampler);
+   writer.set_sampled_texture(2, gbuffer.texture(2), m_sampler);
+   writer.set_sampled_texture(3, aoBuffer.texture(0), m_sampler);
    writer.set_sampled_texture(4, m_shadowMapTexture, m_sampler);
    writer.set_uniform_buffer(5, m_uniformBuffer);
    cmdList.push_descriptors(0, writer);

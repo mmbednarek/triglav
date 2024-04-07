@@ -3,6 +3,7 @@
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.h"
+#include "triglav/render_core/FrameResources.h"
 #include "triglav/resource/ResourceManager.h"
 
 #include <glm/mat4x4.hpp>
@@ -28,23 +29,18 @@ class AmbientOcclusionRenderer
 
    AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                             resource::ResourceManager &resourceManager,
-                            graphics_api::Framebuffer &geometryBuffer,
                             const graphics_api::Texture &noiseTexture);
 
-   void update_textures(graphics_api::Framebuffer &geometryBuffer,
-                        const graphics_api::Texture &noiseTexture) const;
-
-   void draw(graphics_api::CommandList &cmdList, const glm::mat4 &cameraProjection) const;
+   void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
+             const glm::mat4 &cameraProjection) const;
    static std::vector<AlignedVec3> generate_sample_points(size_t count);
 
  private:
    graphics_api::Device &m_device;
    graphics_api::Pipeline m_pipeline;
-   // graphics_api::DescriptorPool m_descriptorPool;
    graphics_api::Sampler &m_sampler;
    std::vector<AlignedVec3> m_samplesSSAO;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
-   graphics_api::Framebuffer &m_framebuffer;
    const graphics_api::Texture &m_noiseTexture;
 };
 

@@ -9,7 +9,7 @@ using graphics_api::AttachmentAttribute;
 using graphics_api::SampleCount;
 
 AmbientOcclusion::AmbientOcclusion(graphics_api::Device &device, resource::ResourceManager &resourceManager,
-                                   graphics_api::Framebuffer &geometryBuffer, Scene &scene) :
+                                   Scene &scene) :
     m_renderTarget(
             GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
                                .attachment("ao"_name_id,
@@ -17,7 +17,7 @@ AmbientOcclusion::AmbientOcclusion(graphics_api::Device &device, resource::Resou
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(R, Float16), SampleCount::Single)
                                .build())),
-    m_renderer(device, m_renderTarget, resourceManager, geometryBuffer,
+    m_renderer(device, m_renderTarget, resourceManager,
                resourceManager.get<ResourceType::Texture>("noise.tex"_name)),
     m_scene(scene)
 {
@@ -45,7 +45,7 @@ void AmbientOcclusion::record_commands(render_core::FrameResources &frameResourc
 
    cmdList.begin_render_pass(resources.framebuffer("ao"_name_id), clearValues);
 
-   m_renderer.draw(cmdList, m_scene.camera().projection_matrix());
+   m_renderer.draw(frameResources, cmdList, m_scene.camera().projection_matrix());
 
    cmdList.end_render_pass();
 }

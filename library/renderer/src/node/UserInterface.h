@@ -37,18 +37,17 @@ class UserInterface : public render_core::IRenderNode
                  resource::ResourceManager &resourceManager);
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
+   std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
    void record_commands(render_core::FrameResources &frameResources,
                         render_core::NodeFrameResources &resources,
                         graphics_api::CommandList &cmdList) override;
    void add_label_group(NameID id, std::string_view name);
    void add_label(NameID group, NameID id, std::string_view name);
    void set_value(NameID id, std::string_view value);
-   [[nodiscard]] graphics_api::Texture &texture();
 
  private:
    resource::ResourceManager &m_resourceManager;
    graphics_api::RenderTarget m_textureRenderTarget;
-   graphics_api::Framebuffer m_framebuffer;
    RectangleRenderer m_rectangleRenderer;
    TextRenderer m_textRenderer;
    Rectangle m_rectangle;

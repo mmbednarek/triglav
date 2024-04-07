@@ -14,8 +14,7 @@ namespace triglav::renderer::node {
 class AmbientOcclusion : public render_core::IRenderNode
 {
  public:
-   AmbientOcclusion(graphics_api::Device &device, resource::ResourceManager &resourceManager,
-                    graphics_api::Framebuffer &geometryBuffer, Scene &scene);
+   AmbientOcclusion(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene &scene);
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    void record_commands(render_core::FrameResources &frameResources,

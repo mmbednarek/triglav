@@ -47,17 +47,16 @@ class Renderer
    void on_resize(uint32_t width, uint32_t height);
    void on_close() const;
    void on_mouse_relative_move(float dx, float dy);
-   void on_key_pressed(triglav::desktop::Key key);
-   void on_key_released(triglav::desktop::Key key);
+   void on_key_pressed(desktop::Key key);
+   void on_key_released(desktop::Key key);
    void on_mouse_wheel_turn(float x);
-   [[nodiscard]] graphics_api::PipelineBuilder create_pipeline();
-   [[nodiscard]] triglav::resource::ResourceManager &resource_manager() const;
+   [[nodiscard]] resource::ResourceManager &resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
 
    template<typename TUbo>
    [[nodiscard]] graphics_api::Buffer create_ubo_buffer() const
    {
-      return triglav::render_core::checkResult(
+      return render_core::checkResult(
               m_device->create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(TUbo)));
    }
 
@@ -67,7 +66,7 @@ class Renderer
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    static float calculate_framerate(float frameDuration);
-   glm::vec3 moving_direction() const;
+   glm::vec3 moving_direction();
 
    bool m_receivedMouseInput{false};
    float m_lastMouseX{};
@@ -92,19 +91,12 @@ class Renderer
    graphics_api::RenderTarget m_renderTarget;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
-   graphics_api::RenderTarget m_geometryRenderTarget;
-   graphics_api::Framebuffer m_geometryBuffer;
    graphics_api::RenderTarget m_shadingRenderTarget;
    graphics_api::Framebuffer m_shadingFramebuffer;
-   ModelRenderer m_modelRenderer;
-   GroundRenderer m_groundRenderer;
    SpriteRenderer m_context2D;
    ShadowMapRenderer m_shadowMapRenderer;
-   DebugLinesRenderer m_debugLinesRenderer;
    ShadingRenderer m_shadingRenderer;
    PostProcessingRenderer m_postProcessingRenderer;
-   Scene m_scene;
-   SkyBox m_skyBox;
    render_core::Sprite m_sprite;
    render_core::RenderGraph m_renderGraph;
 };

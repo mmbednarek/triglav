@@ -18,9 +18,8 @@ namespace triglav::renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
-Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &shadowMap,
-             DebugLinesRenderer &debugLinesRenderer, resource::ResourceManager &resourceManager) :
-    m_renderer(renderer),
+Scene::Scene(ModelRenderer &context3D, ShadowMapRenderer &shadowMap, DebugLinesRenderer &debugLinesRenderer,
+             resource::ResourceManager &resourceManager) :
     m_context3D(context3D),
     m_shadowMap(shadowMap),
     m_debugLinesRenderer(debugLinesRenderer),
@@ -34,9 +33,9 @@ Scene::Scene(Renderer &renderer, ModelRenderer &context3D, ShadowMapRenderer &sh
    m_shadowMapCamera.set_viewspace_width(150.0f);
 }
 
-void Scene::update()
+void Scene::update(graphics_api::Resolution &resolution)
 {
-   const auto [width, height] = m_renderer.screen_resolution();
+   const auto [width, height] = resolution;
    m_camera.set_viewport_size(width, height);
 
    const auto cameraViewMat       = m_camera.view_matrix();

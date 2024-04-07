@@ -19,7 +19,6 @@ namespace triglav::renderer {
 AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                                    graphics_api::RenderTarget &renderTarget,
                                                    ResourceManager &resourceManager,
-                                                   graphics_api::Framebuffer &geometryBuffer,
                                                    const graphics_api::Texture &noiseTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
@@ -44,19 +43,14 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
     m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
     m_samplesSSAO(generate_sample_points(g_SampleCountSSAO)),
     m_uniformBuffer(m_device),
-    m_framebuffer(geometryBuffer),
     m_noiseTexture(noiseTexture)
 {
    std::memcpy(&m_uniformBuffer->samplesSSAO, m_samplesSSAO.data(),
                m_samplesSSAO.size() * sizeof(AlignedVec3));
 }
 
-void AmbientOcclusionRenderer::update_textures(graphics_api::Framebuffer &geometryBuffer,
-                                               const graphics_api::Texture &noiseTexture) const
-{
-}
-
-void AmbientOcclusionRenderer::draw(graphics_api::CommandList &cmdList,
+void AmbientOcclusionRenderer::draw(render_core::FrameResources &resources,
+                                    graphics_api::CommandList &cmdList,
                                     const glm::mat4 &cameraProjection) const
 {
    // m_samplesSSAO = generate_sample_points(g_SampleCountSSAO);
@@ -75,9 +69,13 @@ void AmbientOcclusionRenderer::draw(graphics_api::CommandList &cmdList,
     desc.ubo(3, m_uniformBuffer);
     cmdList.push_descriptors(desc);
     */
+
+   auto &gbuffer =
+           resources.node<render_core::NodeFrameResources>("geometry"_name_id).framebuffer("gbuffer"_name_id);
+
    graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, m_framebuffer.texture(1), m_sampler);
-   writer.set_sampled_texture(1, m_framebuffer.texture(2), m_sampler);
+   writer.set_sampled_texture(0, gbuffer.texture(1), m_sampler);
+   writer.set_sampled_texture(1, gbuffer.texture(2), m_sampler);
    writer.set_sampled_texture(2, m_noiseTexture, m_sampler);
    writer.set_uniform_buffer(3, m_uniformBuffer);
    cmdList.push_descriptors(0, writer);

@@ -27,8 +27,7 @@ class ShadingRenderer
    };
 
    ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                   resource::ResourceManager &resourceManager, graphics_api::Framebuffer &geometryBuffer,
-                   const graphics_api::Texture &shadowMapTexture);
+                   resource::ResourceManager &resourceManager, const graphics_api::Texture &shadowMapTexture);
 
    void update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &aoTexture,
                         const graphics_api::Texture &shadowMapTexture) const;
@@ -39,11 +38,8 @@ class ShadingRenderer
  private:
    graphics_api::Device &m_device;
    graphics_api::Pipeline m_pipeline;
-   // graphics_api::DescriptorPool m_descriptorPool;
    graphics_api::Sampler &m_sampler;
-   // graphics_api::DescriptorArray m_descriptors;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
-   graphics_api::Framebuffer &m_geometryBuffer;
    const graphics_api::Texture &m_shadowMapTexture;
 };
 

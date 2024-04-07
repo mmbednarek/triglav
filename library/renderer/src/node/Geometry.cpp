@@ -4,14 +4,35 @@
 
 namespace triglav::renderer::node {
 
-Geometry::Geometry(graphics_api::Device &device, Scene &scene, SkyBox &skybox,
-                   graphics_api::Framebuffer &modelFramebuffer, GroundRenderer &groundRenderer,
-                   ModelRenderer &modelRenderer) :
-    m_scene(scene),
-    m_skybox(skybox),
-    m_modelFramebuffer(modelFramebuffer),
-    m_groundRenderer(groundRenderer),
-    m_modelRenderer(modelRenderer),
+using namespace name_literals;
+using graphics_api::AttachmentAttribute;
+
+Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager,
+                   ShadowMapRenderer &shadowMap) :
+    m_renderTarget(
+            GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+                               .attachment("gbuffer/color"_name_id,
+                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                   AttachmentAttribute::StoreImage,
+                                           GAPI_FORMAT(RGBA, Float16))
+                               .attachment("gbuffer/position"_name_id,
+                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                   AttachmentAttribute::StoreImage,
+                                           GAPI_FORMAT(RGBA, Float16))
+                               .attachment("gbuffer/normal"_name_id,
+                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                   AttachmentAttribute::StoreImage,
+                                           GAPI_FORMAT(RGBA, Float16))
+                               .attachment("gbuffer/depth"_name_id,
+                                           AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
+                                                   AttachmentAttribute::StoreImage,
+                                           GAPI_FORMAT(D, UNorm16))
+                               .build())),
+    m_skybox(device, resourceManager, m_renderTarget),
+    m_groundRenderer(device, m_renderTarget, resourceManager),
+    m_modelRenderer(device, m_renderTarget, resourceManager),
+    m_debugLinesRenderer(device, m_renderTarget, resourceManager),
+    m_scene(m_modelRenderer, shadowMap, m_debugLinesRenderer, resourceManager),
     m_timestampArray(GAPI_CHECK(device.create_timestamp_array(2)))
 {
 }
@@ -33,12 +54,14 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
            graphics_api::ColorPalette::Black,
            graphics_api::DepthStenctilValue{1.0f, 0},
    };
-   cmdList.begin_render_pass(m_modelFramebuffer, clearValues);
+
+   auto &framebuffer = resources.framebuffer("gbuffer"_name_id);
+   cmdList.begin_render_pass(framebuffer, clearValues);
 
 
    m_skybox.on_render(cmdList, m_scene.yaw(), m_scene.pitch(),
-                      static_cast<float>(m_modelFramebuffer.resolution().width),
-                      static_cast<float>(m_modelFramebuffer.resolution().height));
+                      static_cast<float>(framebuffer.resolution().width),
+                      static_cast<float>(framebuffer.resolution().height));
 
    m_groundRenderer.draw(cmdList, m_scene.camera());
 
@@ -55,9 +78,21 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
    cmdList.write_timestamp(graphics_api::PipelineStage::End, m_timestampArray, 1);
 }
 
+std::unique_ptr<render_core::NodeFrameResources> Geometry::create_node_resources()
+{
+   auto result = IRenderNode::create_node_resources();
+   result->add_render_target("gbuffer"_name_id, m_renderTarget);
+   return result;
+}
+
 float Geometry::gpu_time() const
 {
    return m_timestampArray.get_difference(0, 1);
+}
+
+Scene &Geometry::scene()
+{
+   return m_scene;
 }
 
 }// namespace triglav::renderer::node
