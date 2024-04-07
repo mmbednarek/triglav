@@ -8,18 +8,20 @@ namespace triglav::renderer::node {
 
 class PostProcessing : public render_core::IRenderNode
 {
-public:
+ public:
    PostProcessing(PostProcessingRenderer &renderer, std::vector<graphics_api::Framebuffer> &framebuffers);
 
-  [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
-   void record_commands(render_core::FrameResources& frameResources, graphics_api::CommandList &cmdList) override;
+   [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
+   void record_commands(render_core::FrameResources &frameResources,
+                        render_core::NodeFrameResources &resources,
+                        graphics_api::CommandList &cmdList) override;
 
-  void set_index(u32 index);
+   void set_index(u32 index);
 
-private:
+ private:
    PostProcessingRenderer &m_renderer;
    std::vector<graphics_api::Framebuffer> &m_framebuffers;
    u32 m_frameIndex{};
 };
 
-}
+}// namespace triglav::renderer::node

@@ -31,7 +31,8 @@ class AmbientOcclusionRenderer
                             graphics_api::Framebuffer &geometryBuffer,
                             const graphics_api::Texture &noiseTexture);
 
-   void update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &noiseTexture) const;
+   void update_textures(graphics_api::Framebuffer &geometryBuffer,
+                        const graphics_api::Texture &noiseTexture) const;
 
    void draw(graphics_api::CommandList &cmdList, const glm::mat4 &cameraProjection) const;
    static std::vector<AlignedVec3> generate_sample_points(size_t count);
@@ -39,11 +40,12 @@ class AmbientOcclusionRenderer
  private:
    graphics_api::Device &m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::DescriptorPool m_descriptorPool;
-   graphics_api::Sampler& m_sampler;
-   graphics_api::DescriptorArray m_descriptors;
+   // graphics_api::DescriptorPool m_descriptorPool;
+   graphics_api::Sampler &m_sampler;
    std::vector<AlignedVec3> m_samplesSSAO;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
+   graphics_api::Framebuffer &m_framebuffer;
+   const graphics_api::Texture &m_noiseTexture;
 };
 
-}// namespace renderer
+}// namespace triglav::renderer

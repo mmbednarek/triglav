@@ -146,6 +146,14 @@ enum class DescriptorType
    ImageSampler,
 };
 
+struct DescriptorBinding
+{
+   u32 binding;
+   DescriptorType type;
+   u32 count;
+   PipelineStage stage;
+};
+
 enum class TextureUsage
 {
    None                   = 0,

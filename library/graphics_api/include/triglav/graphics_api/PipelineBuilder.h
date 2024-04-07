@@ -24,6 +24,7 @@ class PipelineBuilder
    PipelineBuilder &push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
    PipelineBuilder &enable_depth_test(bool enabled);
    PipelineBuilder &enable_blending(bool enabled);
+   PipelineBuilder &use_push_descriptors(bool enabled);
    PipelineBuilder &vertex_topology(VertexTopology topology);
    PipelineBuilder &razterization_method(RasterizationMethod method);
    PipelineBuilder &culling(Culling cull);
@@ -52,6 +53,7 @@ class PipelineBuilder
    VkFrontFace m_frontFace                 = VK_FRONT_FACE_CLOCKWISE;
    bool m_depthTestEnabled{false};
    bool m_blendingEnabled{true};
+   bool m_usePushDescriptors{false};
 
    std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageInfos;
    std::vector<VkVertexInputBindingDescription> m_bindings{};
@@ -60,4 +62,4 @@ class PipelineBuilder
    std::vector<VkPushConstantRange> m_pushConstantRanges{};
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

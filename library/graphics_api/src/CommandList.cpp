@@ -1,13 +1,13 @@
 #include "CommandList.h"
 
+#include "DescriptorWriter.h"
 #include "Framebuffer.h"
 #include "Pipeline.h"
 #include "Texture.h"
+#include "TimestampArray.h"
 #include "vulkan/Util.h"
 
-
 #include <functional>
-#include <TimestampArray.h>
 
 namespace triglav::graphics_api {
 
@@ -16,7 +16,9 @@ CommandList::CommandList(const VkCommandBuffer commandBuffer, const VkDevice dev
     m_commandBuffer(commandBuffer),
     m_device(device),
     m_commandPool(commandPool),
-    m_workTypes(workTypes)
+    m_workTypes(workTypes),
+    m_cmdPushDescriptorSet(reinterpret_cast<PFN_vkCmdPushDescriptorSetKHR>(
+            vkGetDeviceProcAddr(device, "vkCmdPushDescriptorSetKHR")))
 {
 }
 
@@ -31,7 +33,8 @@ CommandList::CommandList(CommandList &&other) noexcept :
     m_commandBuffer(std::exchange(other.m_commandBuffer, nullptr)),
     m_device(std::exchange(other.m_device, nullptr)),
     m_commandPool(std::exchange(other.m_commandPool, nullptr)),
-    m_workTypes(std::exchange(other.m_workTypes, WorkType::None))
+    m_workTypes(std::exchange(other.m_workTypes, WorkType::None)),
+    m_cmdPushDescriptorSet(other.m_cmdPushDescriptorSet)
 {
 }
 
@@ -39,10 +42,11 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
 {
    if (this == &other)
       return *this;
-   m_commandBuffer = std::exchange(other.m_commandBuffer, nullptr);
-   m_device        = std::exchange(other.m_device, nullptr);
-   m_commandPool   = std::exchange(other.m_commandPool, nullptr);
-   m_workTypes     = std::exchange(other.m_workTypes, WorkType::None);
+   m_commandBuffer        = std::exchange(other.m_commandBuffer, nullptr);
+   m_device               = std::exchange(other.m_device, nullptr);
+   m_commandPool          = std::exchange(other.m_commandPool, nullptr);
+   m_workTypes            = std::exchange(other.m_workTypes, WorkType::None);
+   m_cmdPushDescriptorSet = other.m_cmdPushDescriptorSet;
    return *this;
 }
 
@@ -136,8 +140,8 @@ void CommandList::bind_pipeline(const Pipeline &pipeline)
 void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
 {
    const auto vulkanDescriptorSet = descriptorSet.vulkan_descriptor_set();
-   vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                           descriptorSet.vulkan_pipeline_layout(), 0, 1, &vulkanDescriptorSet, 0, nullptr);
+   vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundPipelineLayout, 0, 1,
+                           &vulkanDescriptorSet, 0, nullptr);
 }
 
 void CommandList::draw_primitives(const int vertexCount, const int vertexOffset) const
@@ -266,9 +270,19 @@ void CommandList::reset_timestamp_array(const TimestampArray &timestampArray, u3
    vkCmdResetQueryPool(m_commandBuffer, timestampArray.vulkan_query_pool(), first, count);
 }
 
-void CommandList::write_timestamp(const PipelineStage stage, const TimestampArray &timestampArray, const u32 timestampIndex) const
+void CommandList::write_timestamp(const PipelineStage stage, const TimestampArray &timestampArray,
+                                  const u32 timestampIndex) const
 {
-   vkCmdWriteTimestamp(m_commandBuffer, vulkan::to_vulkan_pipeline_stage(stage), timestampArray.vulkan_query_pool(), timestampIndex);
+   vkCmdWriteTimestamp(m_commandBuffer, vulkan::to_vulkan_pipeline_stage(stage),
+                       timestampArray.vulkan_query_pool(), timestampIndex);
+}
+
+void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter &writer) const
+{
+   const auto writes = writer.vulkan_descriptor_writes();
+   assert(m_cmdPushDescriptorSet);
+   m_cmdPushDescriptorSet(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundPipelineLayout, setIndex,
+                          static_cast<u32>(writes.size()), writes.data());
 }
 
 WorkTypeFlags CommandList::work_types() const

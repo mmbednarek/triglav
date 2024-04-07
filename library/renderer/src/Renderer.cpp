@@ -33,7 +33,7 @@ namespace triglav::renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_FORMAT(D, UNorm16);
-constexpr auto g_sampleCount = graphics_api::SampleCount::Single;
+constexpr auto g_sampleCount = SampleCount::Single;
 
 namespace {
 
@@ -149,9 +149,6 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
     m_geometryRenderTarget(create_model_render_target(*m_device)),
     m_geometryBuffer(checkResult(m_geometryRenderTarget.create_framebuffer(m_resolution))),
-    m_ambientOcclusionRenderTarget(create_ao_render_target(*m_device)),
-    m_ambientOcclusionFramebuffer(
-            checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(m_resolution))),
     m_shadingRenderTarget(create_shading_render_target(*m_device)),
     m_shadingFramebuffer(checkResult(m_shadingRenderTarget.create_framebuffer(m_resolution))),
     m_modelRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
@@ -159,11 +156,8 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_context2D(*m_device, m_renderTarget, *m_resourceManager),
     m_shadowMapRenderer(*m_device, *m_resourceManager),
     m_debugLinesRenderer(*m_device, m_geometryRenderTarget, *m_resourceManager),
-    m_ambientOcclusionRenderer(*m_device, m_ambientOcclusionRenderTarget, *m_resourceManager,
-                               m_geometryBuffer,
-                               m_resourceManager->get<ResourceType::Texture>("noise.tex"_name)),
     m_shadingRenderer(*m_device, m_shadingRenderTarget, *m_resourceManager, m_geometryBuffer,
-                      m_ambientOcclusionFramebuffer.texture(0), m_shadowMapRenderer.depth_texture()),
+                      m_shadowMapRenderer.depth_texture()),
     m_postProcessingRenderer(*m_device, m_renderTarget, *m_resourceManager, m_shadingFramebuffer.texture(0),
                              m_geometryBuffer.texture(1)),
     m_scene(*this, m_modelRenderer, m_shadowMapRenderer, m_debugLinesRenderer, *m_resourceManager),
@@ -181,8 +175,8 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, m_scene, m_shadowMapRenderer);
    m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, m_scene, m_skyBox,
                                               m_geometryBuffer, m_groundRenderer, m_modelRenderer);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>(
-           "ambient_occlusion"_name_id, m_ambientOcclusionFramebuffer, m_ambientOcclusionRenderer, m_scene);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id, *m_device,
+                                                      *m_resourceManager, m_geometryBuffer, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name_id, m_shadingFramebuffer, m_shadingRenderer,
                                              m_scene);
    m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, m_resolution,
@@ -198,7 +192,7 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_renderGraph.add_dependency("post_processing"_name_id, "user_interface"_name_id);
 
    m_renderGraph.bake("post_processing"_name_id);
-   m_renderGraph.initialize_nodes(m_frameResources);
+   m_renderGraph.update_resolution(m_resolution);
 
    m_postProcessingRenderer.update_texture(
            m_shadingFramebuffer.texture(0),
@@ -264,7 +258,7 @@ void Renderer::on_render()
    this->update_uniform_data(deltaTime);
 
    m_renderGraph.node<node::PostProcessing>("post_processing"_name_id).set_index(framebufferIndex);
-   m_renderGraph.record_command_lists(m_frameResources);
+   m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
    checkStatus(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));
@@ -273,6 +267,7 @@ void Renderer::on_render()
 void Renderer::on_close() const
 {
    m_renderGraph.await();
+   m_device->await_all();
 }
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
@@ -396,16 +391,12 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    // m_textRenderer.update_resolution(resolution);
    m_context2D.update_resolution(resolution);
+   m_renderGraph.update_resolution(resolution);
 
    m_device->await_all();
 
-   m_geometryBuffer              = checkResult(m_geometryRenderTarget.create_framebuffer(resolution));
-   m_ambientOcclusionFramebuffer = checkResult(m_ambientOcclusionRenderTarget.create_framebuffer(resolution));
-   m_shadingFramebuffer          = checkResult(m_shadingRenderTarget.create_framebuffer(resolution));
-   m_shadingRenderer.update_textures(m_geometryBuffer, m_ambientOcclusionFramebuffer.texture(0),
-                                     m_shadowMapRenderer.depth_texture());
-   m_ambientOcclusionRenderer.update_textures(
-           m_geometryBuffer, m_resourceManager->get<ResourceType::Texture>("noise.tex"_name));
+   m_geometryBuffer     = checkResult(m_geometryRenderTarget.create_framebuffer(resolution));
+   m_shadingFramebuffer = checkResult(m_shadingRenderTarget.create_framebuffer(resolution));
    m_postProcessingRenderer.update_texture(
            m_shadingFramebuffer.texture(0),
            m_renderGraph.node<node::UserInterface>("user_interface"_name_id).texture());

@@ -1,11 +1,12 @@
 #pragma once
 
-#include <vector>
-#include <vulkan/vulkan.h>
-#include <memory>
-
 #include "DescriptorView.h"
 #include "GraphicsApi.hpp"
+
+#include <memory>
+#include <span>
+#include <vector>
+#include <vulkan/vulkan.h>
 
 namespace triglav::graphics_api {
 
@@ -19,6 +20,7 @@ class DescriptorWriter
 {
  public:
    DescriptorWriter(const Device &device, const DescriptorView &descView);
+   DescriptorWriter(const Device &device);
    ~DescriptorWriter();
 
    DescriptorWriter(const DescriptorWriter &other)                = delete;
@@ -37,6 +39,7 @@ class DescriptorWriter
    void set_sampled_texture(uint32_t binding, const Texture &texture, const Sampler &sampler);
 
    [[nodiscard]] VkDescriptorSet vulkan_descriptor_set() const;
+   [[nodiscard]] std::span<VkWriteDescriptorSet> vulkan_descriptor_writes();
 
  private:
    void update();
@@ -49,4 +52,4 @@ class DescriptorWriter
    std::vector<VkWriteDescriptorSet> m_descriptorWrites{};
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

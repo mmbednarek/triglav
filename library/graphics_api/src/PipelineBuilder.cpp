@@ -109,6 +109,12 @@ PipelineBuilder &PipelineBuilder::enable_blending(const bool enabled)
    return *this;
 }
 
+PipelineBuilder &PipelineBuilder::use_push_descriptors(bool enabled)
+{
+   m_usePushDescriptors = enabled;
+   return *this;
+}
+
 PipelineBuilder &PipelineBuilder::vertex_topology(const VertexTopology topology)
 {
    switch (topology) {
@@ -236,6 +242,9 @@ Result<Pipeline> PipelineBuilder::build() const
    descriptorSetLayoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
    descriptorSetLayoutInfo.bindingCount = m_vulkanDescriptorBindings.size();
    descriptorSetLayoutInfo.pBindings    = m_vulkanDescriptorBindings.data();
+   if (m_usePushDescriptors) {
+      descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+   }
 
    vulkan::DescriptorSetLayout descriptorSetLayout(m_device.vulkan_device());
    if (descriptorSetLayout.construct(&descriptorSetLayoutInfo) != VK_SUCCESS)

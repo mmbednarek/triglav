@@ -15,8 +15,16 @@ DescriptorWriter::DescriptorWriter(const Device &device, const DescriptorView &d
 {
 }
 
+DescriptorWriter::DescriptorWriter(const Device &device) :
+    m_device(device.vulkan_device())
+{
+}
+
 DescriptorWriter::~DescriptorWriter()
 {
+   if (m_descriptorSet == nullptr)
+      return;
+
    this->update();
 }
 
@@ -76,8 +84,14 @@ VkDescriptorSet DescriptorWriter::vulkan_descriptor_set() const
    return m_descriptorSet;
 }
 
+std::span<VkWriteDescriptorSet> DescriptorWriter::vulkan_descriptor_writes()
+{
+   return m_descriptorWrites;
+}
+
 void DescriptorWriter::update()
 {
+   assert(m_descriptorSet != nullptr);
    vkUpdateDescriptorSets(m_device, m_descriptorWrites.size(), m_descriptorWrites.data(), 0, nullptr);
 }
 

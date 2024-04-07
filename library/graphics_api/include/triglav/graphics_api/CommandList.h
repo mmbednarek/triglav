@@ -12,6 +12,7 @@ class Pipeline;
 class Framebuffer;
 class RenderTarget;
 class TimestampArray;
+class DescriptorWriter;
 
 enum class SubmitType
 {
@@ -22,7 +23,8 @@ enum class SubmitType
 class CommandList
 {
  public:
-   CommandList(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool, WorkTypeFlags workTypes);
+   CommandList(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool,
+               WorkTypeFlags workTypes);
    ~CommandList();
 
    CommandList(const CommandList &other)            = delete;
@@ -47,11 +49,15 @@ class CommandList
    void copy_buffer(const Buffer &source, const Buffer &dest) const;
    void copy_buffer_to_texture(const Buffer &source, const Texture &destination, int mipLevel = 0) const;
    void push_constant_ptr(PipelineStage stage, const void *ptr, size_t size, size_t offset = 0) const;
-   void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
-   void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
-   void blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion, const Texture &targetTex, const TextureRegion &targetRegion) const;
-   void reset_timestamp_array(const TimestampArray & timestampArray, u32 first, u32 count) const;
-   void write_timestamp(PipelineStage stage, const TimestampArray & timestampArray, u32 timestampIndex) const;
+   void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage,
+                        std::span<const TextureBarrierInfo> infos) const;
+   void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage,
+                        const TextureBarrierInfo &info) const;
+   void blit_texture(const Texture &sourceTex, const TextureRegion &sourceRegion, const Texture &targetTex,
+                     const TextureRegion &targetRegion) const;
+   void reset_timestamp_array(const TimestampArray &timestampArray, u32 first, u32 count) const;
+   void write_timestamp(PipelineStage stage, const TimestampArray &timestampArray, u32 timestampIndex) const;
+   void push_descriptors(u32 setIndex, DescriptorWriter &writer) const;
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray &array) const
@@ -89,5 +95,7 @@ class CommandList
    VkPipelineLayout m_boundPipelineLayout{};
    WorkTypeFlags m_workTypes;
    mutable uint64_t m_triangleCount{};
+
+   PFN_vkCmdPushDescriptorSetKHR m_cmdPushDescriptorSet{};
 };
-}// namespace graphics_api
+}// namespace triglav::graphics_api

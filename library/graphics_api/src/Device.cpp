@@ -173,9 +173,10 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, *m_surface, &capabilities);
 
    VkSwapchainCreateInfoKHR swapchainInfo{};
-   swapchainInfo.sType       = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-   swapchainInfo.surface     = *m_surface;
-   swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+   swapchainInfo.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+   swapchainInfo.surface = *m_surface;
+   // swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+   swapchainInfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
    swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
    swapchainInfo.imageFormat = *vulkanColorFormat;
    swapchainInfo.imageUsage  = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -667,6 +668,7 @@ Result<DeviceUPtr> initialize_device(const ISurface &surface)
 
    std::vector<const char *> vulkanDeviceExtensions{
            VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+           VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
    };
 
    const auto extensionProperties = vulkan::get_device_extension_properties(*pickedDevice, nullptr);

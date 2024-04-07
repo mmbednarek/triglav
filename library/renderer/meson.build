@@ -1,4 +1,20 @@
 renderer_sources = files([
+  'include/triglav/renderer/AmbientOcclusionRenderer.h',
+  'include/triglav/renderer/Camera.h',
+  'include/triglav/renderer/CameraBase.h',
+  'include/triglav/renderer/DebugLinesRenderer.h',
+  'include/triglav/renderer/GroundRenderer.h',
+  'include/triglav/renderer/ModelRenderer.h',
+  'include/triglav/renderer/OrthoCamera.h',
+  'include/triglav/renderer/PostProcessingRenderer.h',
+  'include/triglav/renderer/RectangleRenderer.h',
+  'include/triglav/renderer/Renderer.h',
+  'include/triglav/renderer/Scene.h',
+  'include/triglav/renderer/ShadingRenderer.h',
+  'include/triglav/renderer/ShadowMapRenderer.h',
+  'include/triglav/renderer/SkyBox.h',
+  'include/triglav/renderer/SpriteRenderer.h',
+  'include/triglav/renderer/TextRenderer.h',
   'src/node/AmbientOcclusion.cpp',
   'src/node/ShadowMap.cpp',
   'src/node/Geometry.cpp',
@@ -23,6 +39,9 @@ renderer_sources = files([
   'src/SpriteRenderer.cpp',
   'src/TextRenderer.cpp',
 ])
+
+
+
 
 renderer_deps = [glm, graphics_api, geometry, font, fonts, io, resource, render_core]
 renderer_incl = include_directories(['include', 'include/triglav/renderer'])

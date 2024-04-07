@@ -48,7 +48,7 @@ Result<DescriptorPool> Pipeline::create_descriptor_pool(const uint32_t uniformBu
    if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return DescriptorPool(std::move(descriptorPool), *m_descriptorSetLayout, *m_layout);
+   return DescriptorPool(std::move(descriptorPool), *m_descriptorSetLayout);
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

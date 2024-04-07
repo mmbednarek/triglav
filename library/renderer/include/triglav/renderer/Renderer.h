@@ -94,8 +94,6 @@ class Renderer
    graphics_api::Semaphore m_framebufferReadySemaphore;
    graphics_api::RenderTarget m_geometryRenderTarget;
    graphics_api::Framebuffer m_geometryBuffer;
-   graphics_api::RenderTarget m_ambientOcclusionRenderTarget;
-   graphics_api::Framebuffer m_ambientOcclusionFramebuffer;
    graphics_api::RenderTarget m_shadingRenderTarget;
    graphics_api::Framebuffer m_shadingFramebuffer;
    ModelRenderer m_modelRenderer;
@@ -103,14 +101,12 @@ class Renderer
    SpriteRenderer m_context2D;
    ShadowMapRenderer m_shadowMapRenderer;
    DebugLinesRenderer m_debugLinesRenderer;
-   AmbientOcclusionRenderer m_ambientOcclusionRenderer;
    ShadingRenderer m_shadingRenderer;
    PostProcessingRenderer m_postProcessingRenderer;
    Scene m_scene;
    SkyBox m_skyBox;
    render_core::Sprite m_sprite;
    render_core::RenderGraph m_renderGraph;
-   render_core::FrameResources m_frameResources;
 };
 
 }// namespace triglav::renderer

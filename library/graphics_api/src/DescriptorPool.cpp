@@ -3,12 +3,38 @@
 namespace triglav::graphics_api {
 
 DescriptorPool::DescriptorPool(vulkan::DescriptorPool descriptorPool,
-                               const VkDescriptorSetLayout descriptorSetLayout,
-                               const VkPipelineLayout pipelineLayout) :
+                               const VkDescriptorSetLayout descriptorSetLayout) :
     m_descriptorPool(std::move(descriptorPool)),
-    m_descriptorSetLayout(descriptorSetLayout),
-    m_pipelineLayout(pipelineLayout)
+    m_descriptorSetLayout(descriptorSetLayout)
 {
+}
+
+Status DescriptorPool::allocate_descriptors(const std::span<VkDescriptorSetLayout> inLayouts,
+                                            std::span<VkDescriptorSet> outSets)
+{
+   VkDescriptorSetAllocateInfo descriptorSetsInfo{};
+   descriptorSetsInfo.sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+   descriptorSetsInfo.descriptorPool     = *m_descriptorPool;
+   descriptorSetsInfo.descriptorSetCount = static_cast<u32>(inLayouts.size());
+   descriptorSetsInfo.pSetLayouts        = inLayouts.data();
+
+   if (const auto res =
+               vkAllocateDescriptorSets(m_descriptorPool.parent(), &descriptorSetsInfo, outSets.data());
+       res != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+
+   return Status::Success;
+}
+
+Status DescriptorPool::free_descriptors(const std::span<VkDescriptorSet> sets)
+{
+   const auto res =
+           vkFreeDescriptorSets(m_descriptorPool.parent(), *m_descriptorPool, sets.size(), sets.data());
+   if (res != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+   return Status::Success;
 }
 
 Result<DescriptorArray> DescriptorPool::allocate_array(const size_t descriptorCount)
@@ -30,7 +56,7 @@ Result<DescriptorArray> DescriptorPool::allocate_array(const size_t descriptorCo
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return DescriptorArray(m_descriptorPool.parent(), *m_descriptorPool, m_pipelineLayout, std::move(descriptorSets));
+   return DescriptorArray(m_descriptorPool.parent(), *m_descriptorPool, std::move(descriptorSets));
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api
