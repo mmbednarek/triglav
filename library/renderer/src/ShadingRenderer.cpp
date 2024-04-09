@@ -49,8 +49,7 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::Ren
 }
 
 void ShadingRenderer::draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
-                           const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat,
-                           const bool ssaoEnabled) const
+                           const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat) const
 {
    m_uniformBuffer->shadowMapMat = shadowMapMat;
 
@@ -72,7 +71,7 @@ void ShadingRenderer::draw(render_core::FrameResources &resources, graphics_api:
 
    PushConstant pushConstant{
            .lightPosition = lightPosition,
-           .enableSSAO    = ssaoEnabled,
+           .enableSSAO    = resources.has_flag("ssao"_name_id),
    };
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstant);
 

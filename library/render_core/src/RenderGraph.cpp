@@ -173,4 +173,9 @@ void RenderGraph::clean()
    m_frameResources.clean(m_device);
 }
 
+void RenderGraph::set_flag(NameID flag, const bool isEnabled)
+{
+   m_frameResources.set_flag(flag, isEnabled);
+}
+
 }// namespace triglav::render_core

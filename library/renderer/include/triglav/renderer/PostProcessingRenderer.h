@@ -15,13 +15,13 @@ class PostProcessingRenderer
    struct PushConstants
    {
       int enableFXAA{};
+      int hideUI{};
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                           resource::ResourceManager &resourceManager, graphics_api::Texture &shadedBuffer);
 
-   void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
-             bool enableFXAA) const;
+   void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList) const;
 
  private:
    graphics_api::Device &m_device;

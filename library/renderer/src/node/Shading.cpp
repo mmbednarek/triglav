@@ -27,7 +27,7 @@ void Shading::record_commands(render_core::FrameResources &frameResources,
    const auto lightPosition =
            m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
 
-   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat, true);
+   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat);
 
    cmdList.end_render_pass();
 }

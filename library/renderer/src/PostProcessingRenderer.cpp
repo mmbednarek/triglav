@@ -38,8 +38,8 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
 {
 }
 
-void PostProcessingRenderer::draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
-                                  const bool enableFXAA) const
+void PostProcessingRenderer::draw(render_core::FrameResources &resources,
+                                  graphics_api::CommandList &cmdList) const
 {
    cmdList.bind_pipeline(m_pipeline);
 
@@ -52,7 +52,8 @@ void PostProcessingRenderer::draw(render_core::FrameResources &resources, graphi
    cmdList.push_descriptors(0, writer);
 
    PushConstants constants{
-           .enableFXAA = enableFXAA,
+           .enableFXAA = resources.has_flag("fxaa"_name_id),
+           .hideUI     = resources.has_flag("hide_ui"_name_id),
    };
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, constants);
    cmdList.draw_primitives(4, 0);

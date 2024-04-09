@@ -68,10 +68,10 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
    m_modelRenderer.begin_render(cmdList);
    m_scene.render(cmdList);
 
-   // if (m_showDebugLines) {
-   //    m_debugLinesRenderer.begin_render(m_commandList);
-   //    m_scene.render_debug_lines();
-   // }
+   if (frameResources.has_flag("debug_lines"_name_id)) {
+      m_debugLinesRenderer.begin_render(cmdList);
+      m_scene.render_debug_lines(cmdList);
+   }
 
    cmdList.end_render_pass();
 

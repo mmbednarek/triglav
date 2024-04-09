@@ -92,4 +92,20 @@ void FrameResources::clean(graphics_api::Device &device)
    m_nodes.clear();
 }
 
+bool FrameResources::has_flag(NameID flagName) const
+{
+   return m_renderFlags.contains(flagName);
+}
+
+void FrameResources::set_flag(NameID flagName, bool isEnabled)
+{
+   if (m_renderFlags.contains(flagName)) {
+      if (not isEnabled) {
+         m_renderFlags.erase(flagName);
+      }
+   } else if (isEnabled) {
+      m_renderFlags.insert(flagName);
+   }
+}
+
 }// namespace triglav::render_core

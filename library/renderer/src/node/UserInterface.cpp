@@ -20,7 +20,7 @@ UserInterface::UserInterface(graphics_api::Device &device, const graphics_api::R
                                .build())),
     m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager),
     m_textRenderer(device, m_textureRenderTarget, m_resourceManager),
-    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 380.0f, 350.0f})),
+    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 380.0f, 380.0f})),
     m_titleLabel(m_textRenderer.create_text_object(
             m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell/bold.glyphs"_name),
             "Triglav Render Demo"))

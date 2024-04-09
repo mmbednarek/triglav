@@ -26,7 +26,7 @@ void PostProcessing::record_commands(render_core::FrameResources &frameResources
    };
    cmdList.begin_render_pass(m_framebuffers[m_frameIndex], clearValues);
 
-   m_renderer.draw(frameResources, cmdList, true);
+   m_renderer.draw(frameResources, cmdList);
 
    cmdList.end_render_pass();
 }

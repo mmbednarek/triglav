@@ -20,6 +20,7 @@ const float g_fxaaSubpixelShift = 1.0/4.0;
 layout(push_constant) uniform Constants
 {
     bool enableFXAA;
+    bool hideUI;
 } pc;
 
 float linearize_depth(float depth)
@@ -181,14 +182,18 @@ vec3 sample_blurred_color(vec2 coord) {
 }
 
 void main() {
-    if (! pc.enableFXAA) {
-        outColor = texture(texColor, fragTexCoord);
-        return;
+
+    vec3 backColor;
+    if (pc.enableFXAA) {
+        backColor  = calculate_fxaa();
+    } else {
+        backColor = texture(texColor, fragTexCoord).rgb;
     }
 
-    vec3 fxaaColor = calculate_fxaa();
-//    vec3 blurredColor = sample_blurred_color(fragTexCoord);
-//    float depth = linearize_depth(texture(texDepth, fragTexCoord).r);
-    vec4 overlayColor = texture(texOverlay, fragTexCoord);
-    outColor = vec4(overlayColor.rgb * overlayColor.a + fxaaColor * (1 - overlayColor.a), 1.0);
+    if (pc.hideUI) {
+        outColor = vec4(backColor, 1.0);
+    } else {
+        vec4 overlayColor = texture(texOverlay, fragTexCoord);
+        outColor = vec4(overlayColor.rgb * overlayColor.a + backColor * (1 - overlayColor.a), 1.0);
+    }
 }

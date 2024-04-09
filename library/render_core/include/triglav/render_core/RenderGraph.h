@@ -37,6 +37,7 @@ class RenderGraph
    void initialize_nodes();
    void record_command_lists();
    void reset_command_lists();
+   void set_flag(NameID flag, bool isEnabled);
    void update_resolution(const graphics_api::Resolution &resolution);
    [[nodiscard]] graphics_api::Status execute();
    void await() const;

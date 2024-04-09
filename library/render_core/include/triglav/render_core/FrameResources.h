@@ -7,6 +7,7 @@
 
 #include <map>
 #include <memory>
+#include <set>
 #include <stack>
 #include <utility>
 #include <vector>
@@ -69,6 +70,9 @@ class FrameResources
       return *dynamic_cast<TNode *>(m_nodes.at(idenfitier).get());
    }
 
+   [[nodiscard]] bool has_flag(NameID flagName) const;
+   [[nodiscard]] void set_flag(NameID flagName, bool isEnabled);
+
    void update_resolution(const graphics_api::Resolution &resolution);
    void add_signal_semaphore(NameID nodeName, graphics_api::Semaphore *semaphore);
    void initialize_command_list(NameID nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
@@ -77,6 +81,7 @@ class FrameResources
 
  private:
    std::map<NameID, std::unique_ptr<NodeFrameResources>> m_nodes;
+   std::set<NameID> m_renderFlags;
 };
 
 }// namespace triglav::render_core

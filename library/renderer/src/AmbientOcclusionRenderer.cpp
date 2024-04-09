@@ -53,10 +53,6 @@ void AmbientOcclusionRenderer::draw(render_core::FrameResources &resources,
                                     graphics_api::CommandList &cmdList,
                                     const glm::mat4 &cameraProjection) const
 {
-   // m_samplesSSAO = generate_sample_points(g_SampleCountSSAO);
-   // std::memcpy(&m_uniformBuffer->samplesSSAO, m_samplesSSAO.data(),
-   //             m_samplesSSAO.size() * sizeof(AlignedVec3));
-
    m_uniformBuffer->cameraProjection = cameraProjection;
 
    cmdList.bind_pipeline(m_pipeline);

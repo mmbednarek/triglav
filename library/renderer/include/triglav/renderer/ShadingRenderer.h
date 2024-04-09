@@ -29,11 +29,8 @@ class ShadingRenderer
    ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                    resource::ResourceManager &resourceManager, const graphics_api::Texture &shadowMapTexture);
 
-   void update_textures(graphics_api::Framebuffer &geometryBuffer, const graphics_api::Texture &aoTexture,
-                        const graphics_api::Texture &shadowMapTexture) const;
-
    void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
-             const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat, bool ssaoEnabled) const;
+             const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat) const;
 
  private:
    graphics_api::Device &m_device;

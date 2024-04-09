@@ -202,6 +202,7 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 
    ui.add_label("features"_name_id, "ao"_name_id, "Ambient Occlusion");
    ui.add_label("features"_name_id, "aa"_name_id, "Anti-Aliasing");
+   ui.add_label("features"_name_id, "debug_lines"_name_id, "Bounding Boxes");
 }
 
 void Renderer::update_debug_info(const float framerate)
@@ -233,6 +234,7 @@ void Renderer::update_debug_info(const float framerate)
 
    ui.set_value("ao"_name_id, m_ssaoEnabled ? "Screen-Space" : "Off");
    ui.set_value("aa"_name_id, m_fxaaEnabled ? "FXAA" : "Off");
+   ui.set_value("debug_lines"_name_id, m_showDebugLines ? "On" : "Off");
 
    isFirstFrame = false;
 }
@@ -244,6 +246,10 @@ void Renderer::on_render()
 
    m_renderGraph.await();
 
+   m_renderGraph.set_flag("debug_lines"_name_id, m_showDebugLines);
+   m_renderGraph.set_flag("ssao"_name_id, m_ssaoEnabled);
+   m_renderGraph.set_flag("fxaa"_name_id, m_fxaaEnabled);
+   m_renderGraph.set_flag("hide_ui"_name_id, m_hideUI);
    this->update_debug_info(framerate);
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
@@ -295,6 +301,9 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::F5) {
       m_fxaaEnabled = not m_fxaaEnabled;
+   }
+   if (key == Key::F6) {
+      m_hideUI = not m_hideUI;
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -12.0f;
