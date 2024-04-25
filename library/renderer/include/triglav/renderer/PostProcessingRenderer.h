@@ -19,7 +19,7 @@ class PostProcessingRenderer
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                          resource::ResourceManager &resourceManager, graphics_api::Texture &shadedBuffer);
+                          resource::ResourceManager &resourceManager);
 
    void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList) const;
 
@@ -27,7 +27,6 @@ class PostProcessingRenderer
    graphics_api::Device &m_device;
    graphics_api::Pipeline m_pipeline;
    graphics_api::Sampler &m_sampler;
-   graphics_api::Texture &m_shadedBuffer;
 };
 
 }// namespace triglav::renderer

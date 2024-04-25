@@ -17,7 +17,8 @@ namespace triglav::render_core {
 class NodeFrameResources
 {
  public:
-   void add_render_target(NameID idenfitier, graphics_api::RenderTarget &renderTarget);
+   void add_render_target(NameID identifier, graphics_api::RenderTarget &renderTarget);
+   void add_render_target_with_resolution(NameID identifier, graphics_api::RenderTarget &renderTarget, const graphics_api::Resolution &resolution);
    void update_resolution(const graphics_api::Resolution &resolution);
 
    [[nodiscard]] graphics_api::Framebuffer &framebuffer(NameID identifier);
@@ -35,6 +36,7 @@ class NodeFrameResources
       NameID name{};
       graphics_api::RenderTarget *renderTarget{};
       std::optional<graphics_api::Framebuffer> framebuffer{};
+      std::optional<graphics_api::Resolution> resolution{};
    };
 
    std::vector<RenderTargetResource> m_renderTargets{};
@@ -64,14 +66,14 @@ class FrameResources
       return *it->second;
    }
 
-   template<typename TNode>
-   TNode &node(NameID idenfitier)
+   template<typename TNode = NodeFrameResources>
+   TNode &node(const NameID idenfitier)
    {
       return *dynamic_cast<TNode *>(m_nodes.at(idenfitier).get());
    }
 
    [[nodiscard]] bool has_flag(NameID flagName) const;
-   [[nodiscard]] void set_flag(NameID flagName, bool isEnabled);
+   void set_flag(NameID flagName, bool isEnabled);
 
    void update_resolution(const graphics_api::Resolution &resolution);
    void add_signal_semaphore(NameID nodeName, graphics_api::Semaphore *semaphore);

@@ -12,8 +12,7 @@ namespace triglav::renderer::node {
 class Geometry : public render_core::IRenderNode
 {
  public:
-   Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager,
-            ShadowMapRenderer &shadowMap);
+   Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager);
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    void record_commands(render_core::FrameResources &frameResources,

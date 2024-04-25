@@ -17,8 +17,7 @@ using triglav::resource::ResourceManager;
 namespace triglav::renderer {
 
 ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                                 ResourceManager &resourceManager,
-                                 const graphics_api::Texture &shadowMapTexture) :
+                                 ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderTarget)
@@ -43,8 +42,7 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::Ren
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                     .build())),
     m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
-    m_uniformBuffer(m_device),
-    m_shadowMapTexture(shadowMapTexture)
+    m_uniformBuffer(m_device)
 {
 }
 
@@ -55,17 +53,24 @@ void ShadingRenderer::draw(render_core::FrameResources &resources, graphics_api:
 
    cmdList.bind_pipeline(m_pipeline);
 
-   auto &gbuffer =
-           resources.node<render_core::NodeFrameResources>("geometry"_name_id).framebuffer("gbuffer"_name_id);
-   auto &aoBuffer = resources.node<render_core::NodeFrameResources>("ambient_occlusion"_name_id)
-                            .framebuffer("ao"_name_id);
+   auto &gbuffer = resources.node("geometry"_name_id).framebuffer("gbuffer"_name_id);
+   auto &aoBuffer= resources.node("ambient_occlusion"_name_id).framebuffer("ao"_name_id);
+   auto &smBuffer= resources.node("shadow_map"_name_id).framebuffer("sm"_name_id);
+
+   /*
+   graphics_api::Descriptors<4> writer(m_device);
+   writer[0] = TextureSamplerPair{gbuffer.texture("albedo"_name_id), m_sampler};
+   writer[3] = gbuffer.texture("albedo"_name_id);
+    *
+    *
+    */
 
    graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, gbuffer.texture(0), m_sampler);
-   writer.set_sampled_texture(1, gbuffer.texture(1), m_sampler);
-   writer.set_sampled_texture(2, gbuffer.texture(2), m_sampler);
-   writer.set_sampled_texture(3, aoBuffer.texture(0), m_sampler);
-   writer.set_sampled_texture(4, m_shadowMapTexture, m_sampler);
+   writer.set_sampled_texture(0, gbuffer.texture("albedo"_name_id), m_sampler);
+   writer.set_sampled_texture(1, gbuffer.texture("position"_name_id), m_sampler);
+   writer.set_sampled_texture(2, gbuffer.texture("normal"_name_id), m_sampler);
+   writer.set_sampled_texture(3, aoBuffer.texture("ao"_name_id), m_sampler);
+   writer.set_sampled_texture(4, smBuffer.texture("sm"_name_id), m_sampler);
    writer.set_uniform_buffer(5, m_uniformBuffer);
    cmdList.push_descriptors(0, writer);
 

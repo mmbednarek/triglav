@@ -67,7 +67,7 @@ const std::vector<AttachmentInfo> &RenderTarget::attachments() const
 
 Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolution) const
 {
-   std::vector<Texture> textures;
+   Heap<NameID, Texture> textures;
    for (const auto &attachment : m_attachments) {
       auto texture =
               m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags),
@@ -75,14 +75,16 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolutio
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
-      textures.emplace_back(std::move(*texture));
+      textures.emplace(attachment.identifier, std::move(*texture));
    }
+
+   textures.make_heap();
 
    std::vector<VkImageView> attachmentImageViews;
    attachmentImageViews.resize(textures.size());
 
    for (size_t i = 0; i < textures.size(); ++i) {
-      attachmentImageViews[i] = textures[i].vulkan_image_view();
+      attachmentImageViews[i] = textures[m_attachments[i].identifier].vulkan_image_view();
    }
 
    VkFramebufferCreateInfo framebufferInfo{};
@@ -117,7 +119,7 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
    }
 
    index = 0;
-   std::vector<Texture> textures;
+   Heap<NameID, Texture> textures;
    for (const auto &attachment : m_attachments) {
       if (index == swapchainAttachment) {
          ++index;
@@ -130,8 +132,10 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
-      textures.emplace_back(std::move(*texture));
+      textures.emplace(attachment.identifier, std::move(*texture));
    }
+
+   textures.make_heap();
 
    std::vector<VkImageView> attachmentImageViews;
    attachmentImageViews.resize(textures.size() + 1);
@@ -142,7 +146,7 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
          attachmentImageViews[index] = swapchain.vulkan_image_view(frameIndex);
          ++index;
       }
-      attachmentImageViews[index] = textures[i].vulkan_image_view();
+      attachmentImageViews[index] = textures[m_attachments[index].identifier].vulkan_image_view();
       ++index;
    }
 

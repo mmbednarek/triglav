@@ -2,11 +2,28 @@
 
 namespace triglav::renderer::node {
 
-Shading::Shading(graphics_api::Framebuffer &framebuffer, ShadingRenderer &shadingRenderer, Scene &scene) :
-    m_framebuffer(framebuffer),
-    m_shadingRenderer(shadingRenderer),
-    m_scene(scene)
+using graphics_api::AttachmentAttribute;
+using graphics_api::SampleCount;
+
+using namespace name_literals;
+
+Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene &scene) :
+    m_shadingRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+                               .attachment("shading"_name_id,
+                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                                   AttachmentAttribute::StoreImage,
+                                           GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                               .build())),
+   m_shadingRenderer(device, m_shadingRenderTarget, resourceManager),
+   m_scene(scene)
 {
+}
+
+std::unique_ptr<render_core::NodeFrameResources> Shading::create_node_resources()
+{
+   auto result = IRenderNode::create_node_resources();
+   result->add_render_target("shading"_name_id, m_shadingRenderTarget);
+   return result;
 }
 
 graphics_api::WorkTypeFlags Shading::work_types() const
@@ -20,7 +37,7 @@ void Shading::record_commands(render_core::FrameResources &frameResources,
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::ColorPalette::Black,
    };
-   cmdList.begin_render_pass(m_framebuffer, clearValues);
+   cmdList.begin_render_pass(resources.framebuffer("shading"_name_id), clearValues);
 
    const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
                           glm::inverse(m_scene.camera().view_matrix());

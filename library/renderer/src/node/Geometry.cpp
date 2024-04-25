@@ -7,23 +7,22 @@ namespace triglav::renderer::node {
 using namespace name_literals;
 using graphics_api::AttachmentAttribute;
 
-Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager,
-                   ShadowMapRenderer &shadowMap) :
+Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager) :
     m_renderTarget(
             GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("gbuffer/color"_name_id,
+                               .attachment("albedo"_name_id,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16))
-                               .attachment("gbuffer/position"_name_id,
+                               .attachment("position"_name_id,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16))
-                               .attachment("gbuffer/normal"_name_id,
+                               .attachment("normal"_name_id,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16))
-                               .attachment("gbuffer/depth"_name_id,
+                               .attachment("depth"_name_id,
                                            AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(D, UNorm16))
@@ -32,7 +31,7 @@ Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &reso
     m_groundRenderer(device, m_renderTarget, resourceManager),
     m_modelRenderer(device, m_renderTarget, resourceManager),
     m_debugLinesRenderer(device, m_renderTarget, resourceManager),
-    m_scene(m_modelRenderer, shadowMap, m_debugLinesRenderer, resourceManager),
+    m_scene(m_modelRenderer, m_debugLinesRenderer, resourceManager),
     m_timestampArray(GAPI_CHECK(device.create_timestamp_array(2)))
 {
 }
@@ -57,7 +56,6 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
 
    auto &framebuffer = resources.framebuffer("gbuffer"_name_id);
    cmdList.begin_render_pass(framebuffer, clearValues);
-
 
    m_skybox.on_render(cmdList, m_scene.yaw(), m_scene.pitch(),
                       static_cast<float>(framebuffer.resolution().width),

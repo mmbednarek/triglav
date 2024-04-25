@@ -92,13 +92,8 @@ class Renderer
    graphics_api::RenderTarget m_renderTarget;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
-   graphics_api::RenderTarget m_shadingRenderTarget;
-   graphics_api::Framebuffer m_shadingFramebuffer;
    SpriteRenderer m_context2D;
-   ShadowMapRenderer m_shadowMapRenderer;
-   ShadingRenderer m_shadingRenderer;
    PostProcessingRenderer m_postProcessingRenderer;
-   render_core::Sprite m_sprite;
    render_core::RenderGraph m_renderGraph;
 };
 

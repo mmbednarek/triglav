@@ -8,12 +8,24 @@ namespace triglav::render_core {
 
 void NodeFrameResources::add_render_target(const NameID identifier, graphics_api::RenderTarget &renderTarget)
 {
-   m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt);
+   m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt, std::nullopt);
+}
+
+void NodeFrameResources::add_render_target_with_resolution(const NameID identifier,
+                                                           graphics_api::RenderTarget &renderTarget,
+                                                           const graphics_api::Resolution &resolution)
+{
+   m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt, resolution);
 }
 
 void NodeFrameResources::update_resolution(const graphics_api::Resolution &resolution)
 {
    for (auto &target : m_renderTargets) {
+      if (target.resolution.has_value()) {
+         target.framebuffer.emplace(GAPI_CHECK(target.renderTarget->create_framebuffer(*target.resolution)));
+         continue;
+      }
+
       target.framebuffer.emplace(GAPI_CHECK(target.renderTarget->create_framebuffer(resolution)));
    }
 }

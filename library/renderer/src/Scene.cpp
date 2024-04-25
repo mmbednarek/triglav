@@ -18,10 +18,9 @@ namespace triglav::renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
-Scene::Scene(ModelRenderer &context3D, ShadowMapRenderer &shadowMap, DebugLinesRenderer &debugLinesRenderer,
+Scene::Scene(ModelRenderer &context3D, DebugLinesRenderer &debugLinesRenderer,
              resource::ResourceManager &resourceManager) :
     m_context3D(context3D),
-    m_shadowMap(shadowMap),
     m_debugLinesRenderer(debugLinesRenderer),
     m_resourceManager(resourceManager)
 {
@@ -56,12 +55,14 @@ void Scene::add_object(SceneObject object)
 
 void Scene::compile_scene()
 {
+   assert(m_shadowMapRenderer);
+
    m_instancedObjects.clear();
    m_debugLines.clear();
 
    for (const auto &obj : m_objects) {
       const auto &model   = m_resourceManager.get<ResourceType::Model>(obj.model);
-      auto instance       = m_context3D.instance_model(obj.model, m_shadowMap);
+      auto instance       = m_context3D.instance_model(obj.model, *m_shadowMapRenderer);
       const auto modelMat = glm::scale(glm::translate(glm::mat4(1), obj.position), obj.scale) *
                             glm::mat4_cast(obj.rotation);
       instance.position    = obj.position;
@@ -87,11 +88,13 @@ void Scene::render(graphics_api::CommandList &cmdList) const
 
 void Scene::render_shadow_map(graphics_api::CommandList &cmdList) const
 {
+   assert(m_shadowMapRenderer);
+
    for (const auto &obj : m_instancedObjects) {
       if (not m_shadowMapCamera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
          continue;
 
-      m_shadowMap.draw_model(cmdList, obj);
+      m_shadowMapRenderer->draw_model(cmdList, obj);
    }
 }
 
@@ -165,6 +168,11 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
    this->camera().set_orientation(glm::quat{
            glm::vec3{m_pitch, 0.0f, m_yaw}
    });
+}
+
+void Scene::set_shadow_map_renderer(ShadowMapRenderer *shadowMapRenderer)
+{
+   m_shadowMapRenderer = shadowMapRenderer;
 }
 
 }// namespace triglav::renderer

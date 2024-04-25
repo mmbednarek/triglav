@@ -14,15 +14,12 @@ namespace triglav::renderer {
 
 PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                                graphics_api::RenderTarget &renderTarget,
-                                               ResourceManager &resourceManager,
-                                               graphics_api::Texture &shadedBuffer) :
+                                               ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderTarget)
-                    .fragment_shader(
-                            resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
-                    .vertex_shader(
-                            resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_name))
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_name))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_name))
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::PipelineStage::FragmentShader)
@@ -33,8 +30,7 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                     .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstants))
                     .build())),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
-    m_shadedBuffer(shadedBuffer)
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
 {
 }
 
@@ -43,12 +39,12 @@ void PostProcessingRenderer::draw(render_core::FrameResources &resources,
 {
    cmdList.bind_pipeline(m_pipeline);
 
-   auto &ui = resources.node<render_core::NodeFrameResources>("user_interface"_name_id)
-                      .framebuffer("ui"_name_id);
+   auto &shading = resources.node("shading"_name_id).framebuffer("shading"_name_id);
+   auto &ui = resources.node("user_interface"_name_id).framebuffer("ui"_name_id);
 
    graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, m_shadedBuffer, m_sampler);
-   writer.set_sampled_texture(1, ui.texture(0), m_sampler);
+   writer.set_sampled_texture(0, shading.texture("shading"_name_id), m_sampler);
+   writer.set_sampled_texture(1, ui.texture("user_interface"_name_id), m_sampler);
    cmdList.push_descriptors(0, writer);
 
    PushConstants constants{

@@ -30,7 +30,6 @@ struct Model
 struct ModelShaderMapProperties
 {
    graphics_api::UniformBuffer<ShadowMapUBO> ubo;
-   graphics_api::DescriptorArray descriptors;
 };
 
 struct InstancedModel

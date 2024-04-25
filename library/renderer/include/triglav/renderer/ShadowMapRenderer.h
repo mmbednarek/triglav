@@ -15,10 +15,7 @@ class ModelRenderer;
 class ShadowMapRenderer
 {
  public:
-   ShadowMapRenderer(graphics_api::Device &device, resource::ResourceManager &resourceManager);
-
-   [[nodiscard]] const graphics_api::Texture &depth_texture();
-   [[nodiscard]] const graphics_api::Framebuffer &framebuffer() const;
+   ShadowMapRenderer(graphics_api::Device &device, resource::ResourceManager &resourceManager, graphics_api::RenderTarget &depthRenderTarget);
 
    void on_begin_render(graphics_api::CommandList &cmdList) const;
    void draw_model(graphics_api::CommandList &cmdList,
@@ -28,11 +25,8 @@ class ShadowMapRenderer
  private:
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
-
-   graphics_api::RenderTarget m_depthRenderTarget;
-   graphics_api::Framebuffer m_framebuffer;
+   graphics_api::RenderTarget &m_depthRenderTarget;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::DescriptorPool m_descriptorPool;
 };
 
 }// namespace renderer

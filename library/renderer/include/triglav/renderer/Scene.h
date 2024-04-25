@@ -27,7 +27,7 @@ struct SceneObject
 class Scene
 {
  public:
-   Scene(ModelRenderer &context3D, ShadowMapRenderer &shadowMap, DebugLinesRenderer &debugLines,
+   Scene(ModelRenderer &context3D, DebugLinesRenderer &debugLines,
          triglav::resource::ResourceManager &resourceManager);
 
    void update(graphics_api::Resolution &resolution);
@@ -36,6 +36,7 @@ class Scene
    void render(graphics_api::CommandList &cmdList) const;
    void render_shadow_map(graphics_api::CommandList &cmdList) const;
    void render_debug_lines(graphics_api::CommandList &cmdList) const;
+   void set_shadow_map_renderer(ShadowMapRenderer* shadowMapRenderer);
 
    void load_level(LevelName name);
 
@@ -52,7 +53,7 @@ class Scene
 
  private:
    ModelRenderer &m_context3D;
-   ShadowMapRenderer &m_shadowMap;
+   ShadowMapRenderer* m_shadowMapRenderer{};
    resource::ResourceManager &m_resourceManager;
    DebugLinesRenderer &m_debugLinesRenderer;
    float m_yaw{};

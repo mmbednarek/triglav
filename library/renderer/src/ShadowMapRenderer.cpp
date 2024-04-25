@@ -20,20 +20,10 @@ using namespace triglav::name_literals;
 
 namespace triglav::renderer {
 
-constexpr auto g_shadowMapResolution = graphics_api::Resolution{4096, 4096};
-constexpr auto g_shadowMapFormat     = GAPI_FORMAT(D, Float32);
-
-ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManager &resourceManager) :
+ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManager &resourceManager, graphics_api::RenderTarget &depthRenderTarget) :
     m_device(device),
     m_resourceManager(resourceManager),
-    m_depthRenderTarget(
-            checkResult(graphics_api::RenderTargetBuilder(device)
-                                .attachment("shadow_map_0"_name_id,
-                                            AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
-                                                    AttachmentAttribute::StoreImage,
-                                            GAPI_FORMAT(D, Float32))
-                                .build())),
-    m_framebuffer(checkResult(m_depthRenderTarget.create_framebuffer(g_shadowMapResolution))),
+    m_depthRenderTarget(depthRenderTarget),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(device, m_depthRenderTarget)
                     .fragment_shader(
@@ -45,19 +35,9 @@ ShadowMapRenderer::ShadowMapRenderer(graphics_api::Device &device, ResourceManag
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::PipelineStage::VertexShader)
                     .enable_depth_test(true)
-                    .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(100, 1, 100)))
+                    .use_push_descriptors(true)
+                    .build()))
 {
-}
-
-const graphics_api::Texture &ShadowMapRenderer::depth_texture()
-{
-   return m_framebuffer.texture(0);
-}
-
-const graphics_api::Framebuffer &ShadowMapRenderer::framebuffer() const
-{
-   return m_framebuffer;
 }
 
 void ShadowMapRenderer::on_begin_render(graphics_api::CommandList &cmdList) const
@@ -79,21 +59,17 @@ void ShadowMapRenderer::draw_model(graphics_api::CommandList &cmdList,
       size += range.size;
    }
 
-   const auto descriptorSet = instancedModel.shadowMap.descriptors[0];
-   cmdList.bind_descriptor_set(descriptorSet);
+   graphics_api::DescriptorWriter smDescWriter(m_device);
+   smDescWriter.set_uniform_buffer(0, instancedModel.shadowMap.ubo);
+   cmdList.push_descriptors(0, smDescWriter);
+
    cmdList.draw_indexed_primitives(size, firstOffset, 0);
 }
 
 ModelShaderMapProperties ShadowMapRenderer::create_model_properties()
 {
-   auto shadowMapDescriptors = checkResult(m_descriptorPool.allocate_array(1));
-
    graphics_api::UniformBuffer<ShadowMapUBO> shadowMapUbo(m_device);
-
-   graphics_api::DescriptorWriter smDescWriter(m_device, shadowMapDescriptors[0]);
-   smDescWriter.set_uniform_buffer(0, shadowMapUbo);
-
-   return ModelShaderMapProperties{std::move(shadowMapUbo), std::move(shadowMapDescriptors)};
+   return ModelShaderMapProperties{std::move(shadowMapUbo)};
 }
 
 }// namespace triglav::renderer

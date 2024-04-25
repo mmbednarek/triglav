@@ -1,7 +1,13 @@
 core_sources = files([
-                    'include/triglav/Name.hpp',
-                    'include/triglav/ResourceType.hpp',
                     'include/triglav/detail/Crc.hpp',
+                    'include/triglav/Array.hpp',
+                    'include/triglav/EnumFlags.hpp',
+                    'include/triglav/Heap.hpp',
+                    'include/triglav/Int.hpp',
+                    'include/triglav/Name.hpp',
+                    'include/triglav/ObjectPool.hpp',
+                    'include/triglav/ResourceType.hpp',
+                    'include/triglav/TypeMacroList.hpp',
                     'src/Core.cpp'
 ])
 

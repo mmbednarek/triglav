@@ -1,4 +1,5 @@
 core_test_sources = files(
+    'HeapTest.cpp',
     'Main.cpp',
     'NameTest.cpp',
     'PoolTest.cpp',

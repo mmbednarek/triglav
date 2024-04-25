@@ -27,7 +27,7 @@ class ShadingRenderer
    };
 
    ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                   resource::ResourceManager &resourceManager, const graphics_api::Texture &shadowMapTexture);
+                   resource::ResourceManager &resourceManager);
 
    void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
              const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat) const;
@@ -37,7 +37,6 @@ class ShadingRenderer
    graphics_api::Pipeline m_pipeline;
    graphics_api::Sampler &m_sampler;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
-   const graphics_api::Texture &m_shadowMapTexture;
 };
 
 }// namespace triglav::renderer

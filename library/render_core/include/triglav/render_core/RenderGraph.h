@@ -52,6 +52,7 @@ class RenderGraph
    std::map<NameID, std::unique_ptr<IRenderNode>> m_nodes;
    std::multimap<NameID, NameID> m_dependencies;
    std::vector<NameID> m_nodeOrder;
+   std::vector<graphics_api::Framebuffer> m_framebuffers;
    FrameResources m_frameResources;
    graphics_api::Fence m_targetFence;
    NameID m_targetNode;

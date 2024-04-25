@@ -52,71 +52,6 @@ graphics_api::Resolution create_viewport_resolution(const graphics_api::Device &
    return resolution;
 }
 
-std::vector<font::Rune> make_runes()
-{
-   std::vector<font::Rune> runes{};
-   for (font::Rune ch = 'A'; ch <= 'Z'; ++ch) {
-      runes.emplace_back(ch);
-   }
-   for (font::Rune ch = 'a'; ch <= 'z'; ++ch) {
-      runes.emplace_back(ch);
-   }
-   for (font::Rune ch = '0'; ch <= '9'; ++ch) {
-      runes.emplace_back(ch);
-   }
-   runes.emplace_back('.');
-   runes.emplace_back(':');
-   runes.emplace_back('-');
-   runes.emplace_back(',');
-   runes.emplace_back('(');
-   runes.emplace_back(')');
-   runes.emplace_back(' ');
-   runes.emplace_back(281);
-   return runes;
-}
-
-graphics_api::RenderTarget create_model_render_target(graphics_api::Device &device)
-{
-   return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment("gbuffer/color"_name_id,
-                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                 AttachmentAttribute::StoreImage,
-                                         GAPI_FORMAT(RGBA, Float16))
-                             .attachment("gbuffer/position"_name_id,
-                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                 AttachmentAttribute::StoreImage,
-                                         GAPI_FORMAT(RGBA, Float16))
-                             .attachment("gbuffer/normal"_name_id,
-                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                 AttachmentAttribute::StoreImage,
-                                         GAPI_FORMAT(RGBA, Float16))
-                             .attachment("gbuffer/depth"_name_id,
-                                         AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
-                                                 AttachmentAttribute::StoreImage,
-                                         g_depthFormat)
-                             .build());
-}
-
-graphics_api::RenderTarget create_ao_render_target(graphics_api::Device &device)
-{
-   return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment("ao"_name_id,
-                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                 AttachmentAttribute::StoreImage,
-                                         GAPI_FORMAT(R, Float16), SampleCount::Single)
-                             .build());
-}
-
-graphics_api::RenderTarget create_shading_render_target(graphics_api::Device &device)
-{
-   return GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                             .attachment("shading"_name_id,
-                                         AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                 AttachmentAttribute::StoreImage,
-                                         GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
-                             .build());
-}
-
 std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain &swapchain,
                                                            const graphics_api::RenderTarget &renderTarget)
 {
@@ -147,14 +82,8 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
                     .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
-    m_shadingRenderTarget(create_shading_render_target(*m_device)),
-    m_shadingFramebuffer(checkResult(m_shadingRenderTarget.create_framebuffer(m_resolution))),
     m_context2D(*m_device, m_renderTarget, *m_resourceManager),
-    m_shadowMapRenderer(*m_device, *m_resourceManager),
-    m_shadingRenderer(*m_device, m_shadingRenderTarget, *m_resourceManager,
-                      m_shadowMapRenderer.depth_texture()),
-    m_postProcessingRenderer(*m_device, m_renderTarget, *m_resourceManager, m_shadingFramebuffer.texture(0)),
-    m_sprite(m_context2D.create_sprite_from_texture(m_shadowMapRenderer.depth_texture())),
+    m_postProcessingRenderer(*m_device, m_renderTarget, *m_resourceManager),
     m_renderGraph(*m_device)
 {
 
@@ -162,18 +91,13 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_context2D.update_resolution(m_resolution);
 
    m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, *m_resourceManager,
-                                              m_shadowMapRenderer);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, *m_resourceManager);
    auto &scene = m_renderGraph.node<node::Geometry>("geometry"_name_id).scene();
-   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, scene, m_shadowMapRenderer);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id, *m_device,
-                                                      *m_resourceManager, scene);
-   m_renderGraph.emplace_node<node::Shading>("shading"_name_id, m_shadingFramebuffer, m_shadingRenderer,
-                                             scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, m_resolution,
-                                                   *m_resourceManager);
-   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id, m_postProcessingRenderer,
-                                                    m_framebuffers);
+   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, *m_device, *m_resourceManager, scene);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id, *m_device, *m_resourceManager, scene);
+   m_renderGraph.emplace_node<node::Shading>("shading"_name_id, *m_device, *m_resourceManager, scene);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, m_resolution, *m_resourceManager);
+   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id, *m_device, *m_resourceManager, m_renderTarget, m_framebuffers);
 
    m_renderGraph.add_dependency("ambient_occlusion"_name_id, "geometry"_name_id);
    m_renderGraph.add_dependency("shading"_name_id, "shadow_map"_name_id);
@@ -390,11 +314,10 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    // m_textRenderer.update_resolution(resolution);
    m_context2D.update_resolution(resolution);
-   m_renderGraph.update_resolution(resolution);
 
    m_device->await_all();
 
-   m_shadingFramebuffer = checkResult(m_shadingRenderTarget.create_framebuffer(resolution));
+   m_renderGraph.update_resolution(resolution);
 
    m_framebuffers.clear();
 

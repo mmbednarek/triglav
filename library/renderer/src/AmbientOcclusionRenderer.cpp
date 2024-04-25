@@ -70,8 +70,8 @@ void AmbientOcclusionRenderer::draw(render_core::FrameResources &resources,
            resources.node<render_core::NodeFrameResources>("geometry"_name_id).framebuffer("gbuffer"_name_id);
 
    graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, gbuffer.texture(1), m_sampler);
-   writer.set_sampled_texture(1, gbuffer.texture(2), m_sampler);
+   writer.set_sampled_texture(0, gbuffer.texture("position"_name_id), m_sampler);
+   writer.set_sampled_texture(1, gbuffer.texture("normal"_name_id), m_sampler);
    writer.set_sampled_texture(2, m_noiseTexture, m_sampler);
    writer.set_uniform_buffer(3, m_uniformBuffer);
    cmdList.push_descriptors(0, writer);

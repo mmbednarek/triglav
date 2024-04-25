@@ -9,7 +9,7 @@ namespace triglav::renderer::node {
 class PostProcessing : public render_core::IRenderNode
 {
  public:
-   PostProcessing(PostProcessingRenderer &renderer, std::vector<graphics_api::Framebuffer> &framebuffers);
+   PostProcessing(graphics_api::Device& device, resource::ResourceManager &resourceManager, graphics_api::RenderTarget &renderTarget, std::vector<graphics_api::Framebuffer> &framebuffers);
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    void record_commands(render_core::FrameResources &frameResources,
@@ -19,7 +19,7 @@ class PostProcessing : public render_core::IRenderNode
    void set_index(u32 index);
 
  private:
-   PostProcessingRenderer &m_renderer;
+   PostProcessingRenderer m_renderer;
    std::vector<graphics_api::Framebuffer> &m_framebuffers;
    u32 m_frameIndex{};
 };
