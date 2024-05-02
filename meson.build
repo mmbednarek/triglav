@@ -21,6 +21,7 @@ freetype = dependency('freetype2', method:'pkg-config')
 gtest = dependency('gtest', method:'pkg-config')
 rapidyaml = dependency('rapidyaml', method:'pkg-config')
 spdlog = dependency('spdlog', method:'pkg-config')
+entt = dependency('entt', method:'pkg-config')
 
 if build_machine.system() == 'linux'
   xlib = dependency('x11')

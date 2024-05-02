@@ -1,6 +1,8 @@
 core_sources = files([
                     'include/triglav/detail/Crc.hpp',
                     'include/triglav/Array.hpp',
+                    'include/triglav/Delegate.hpp',
+                    'include/triglav/Entt.hpp',
                     'include/triglav/EnumFlags.hpp',
                     'include/triglav/Heap.hpp',
                     'include/triglav/Int.hpp',
@@ -11,7 +13,7 @@ core_sources = files([
                     'src/Core.cpp'
 ])
 
-core_deps = [glm]
+core_deps = [glm, entt]
 core_incl = include_directories(['include', 'include/triglav'])
 
 core_lib = static_library('triglav_core',

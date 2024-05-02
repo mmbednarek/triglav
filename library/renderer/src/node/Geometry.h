@@ -12,7 +12,7 @@ namespace triglav::renderer::node {
 class Geometry : public render_core::IRenderNode
 {
  public:
-   Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager);
+   Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene& scene);
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    void record_commands(render_core::FrameResources &frameResources,
@@ -21,15 +21,16 @@ class Geometry : public render_core::IRenderNode
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
 
    [[nodiscard]] float gpu_time() const;
-   Scene &scene();
 
  private:
+   graphics_api::Device &m_device;
+   resource::ResourceManager &m_resourceManager;
+   Scene& m_scene;
    graphics_api::RenderTarget m_renderTarget;
+   graphics_api::Pipeline m_pipeline;
    SkyBox m_skybox;
    GroundRenderer m_groundRenderer;
-   ModelRenderer m_modelRenderer;
    DebugLinesRenderer m_debugLinesRenderer;
-   Scene m_scene;
    graphics_api::TimestampArray m_timestampArray;
 };
 

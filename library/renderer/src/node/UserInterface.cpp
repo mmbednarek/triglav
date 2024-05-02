@@ -8,6 +8,13 @@ namespace triglav::renderer::node {
 
 using namespace name_literals;
 
+/*
+ UserInterface: pipeline
+
+ */
+
+
+
 UserInterface::UserInterface(graphics_api::Device &device, const graphics_api::Resolution resolution,
                              resource::ResourceManager &resourceManager) :
     m_resourceManager(resourceManager),

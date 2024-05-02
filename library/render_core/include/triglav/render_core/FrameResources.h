@@ -17,6 +17,8 @@ namespace triglav::render_core {
 class NodeFrameResources
 {
  public:
+   virtual ~NodeFrameResources() = default;
+
    void add_render_target(NameID identifier, graphics_api::RenderTarget &renderTarget);
    void add_render_target_with_resolution(NameID identifier, graphics_api::RenderTarget &renderTarget, const graphics_api::Resolution &resolution);
    void update_resolution(const graphics_api::Resolution &resolution);

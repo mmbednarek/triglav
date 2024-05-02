@@ -3,7 +3,6 @@
 #include "triglav/render_core/IRenderNode.hpp"
 
 #include "Scene.h"
-#include "ShadowMapRenderer.h"
 
 namespace triglav::renderer::node {
 
@@ -19,8 +18,10 @@ class ShadowMap : public render_core::IRenderNode
                         graphics_api::CommandList &cmdList) override;
 
  private:
+   graphics_api::Device &m_device;
+   resource::ResourceManager &m_resourceManager;
    graphics_api::RenderTarget m_depthRenderTarget;
-   ShadowMapRenderer m_renderer;
+   graphics_api::Pipeline m_pipeline;
    Scene &m_scene;
 };
 

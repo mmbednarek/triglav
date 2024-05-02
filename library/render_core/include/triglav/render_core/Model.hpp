@@ -23,24 +23,25 @@ struct MaterialRange
 struct Model
 {
    graphics_api::Mesh<geometry::Vertex> mesh;
-   geometry::BoundingBox boudingBox;
+   geometry::BoundingBox boundingBox;
    std::vector<MaterialRange> range;
 };
 
 struct ModelShaderMapProperties
 {
+   Name modelName;
+   geometry::BoundingBox boundingBox;
+   glm::mat4 modelMat;
    graphics_api::UniformBuffer<ShadowMapUBO> ubo;
 };
 
 struct InstancedModel
 {
    Name modelName;
-   geometry::BoundingBox boudingBox;
+   geometry::BoundingBox boundingBox;
    glm::vec3 position{};
    graphics_api::UniformBuffer<UniformBufferObject> ubo;
    graphics_api::UniformBuffer<MaterialProps> uboMatProps;
-   graphics_api::DescriptorArray descriptors;
-   ModelShaderMapProperties shadowMap;
 };
 
 struct Sprite

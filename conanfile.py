@@ -7,6 +7,7 @@ class TriglavEngine(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     requires = (
         "cgal/5.6",
+        "entt/3.13.0",
         "freetype/2.13.2",
         "fmt/10.2.1",
         "gtest/1.14.0",

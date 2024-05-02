@@ -3,13 +3,11 @@
 #include "AmbientOcclusionRenderer.h"
 #include "DebugLinesRenderer.h"
 #include "GroundRenderer.h"
-#include "ModelRenderer.h"
 #include "PostProcessingRenderer.h"
 #include "RectangleRenderer.h"
 #include "Renderer.h"
 #include "Scene.h"
 #include "ShadingRenderer.h"
-#include "ShadowMapRenderer.h"
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
 
@@ -86,6 +84,7 @@ class Renderer
 
    font::FontManger m_fontManger;
    std::unique_ptr<resource::ResourceManager> m_resourceManager;
+   Scene m_scene;
 
    graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
@@ -93,7 +92,6 @@ class Renderer
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    graphics_api::Semaphore m_framebufferReadySemaphore;
    SpriteRenderer m_context2D;
-   PostProcessingRenderer m_postProcessingRenderer;
    render_core::RenderGraph m_renderGraph;
 };
 

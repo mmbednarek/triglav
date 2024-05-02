@@ -1,6 +1,5 @@
 #include "Scene.h"
 
-#include "ModelRenderer.h"
 #include "Renderer.h"
 
 #include "triglav/world/Level.h"
@@ -18,10 +17,12 @@ namespace triglav::renderer {
 
 constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
 
-Scene::Scene(ModelRenderer &context3D, DebugLinesRenderer &debugLinesRenderer,
-             resource::ResourceManager &resourceManager) :
-    m_context3D(context3D),
-    m_debugLinesRenderer(debugLinesRenderer),
+glm::mat4 SceneObject::model_matrix() const
+{
+   return glm::scale(glm::translate(glm::mat4(1), this->position), this->scale) * glm::mat4_cast(this->rotation);
+}
+
+Scene::Scene(resource::ResourceManager &resourceManager) :
     m_resourceManager(resourceManager)
 {
    m_shadowMapCamera.set_position(glm::vec3{-68.0f, 0.0f, -30.0f});
@@ -37,72 +38,13 @@ void Scene::update(graphics_api::Resolution &resolution)
    const auto [width, height] = resolution;
    m_camera.set_viewport_size(width, height);
 
-   const auto cameraViewMat       = m_camera.view_matrix();
-   const auto cameraProjectionMat = m_camera.projection_matrix();
-   const auto camMatShadow        = m_shadowMapCamera.view_projection_matrix();
-
-   for (const auto &obj : m_instancedObjects) {
-      obj.ubo->view          = cameraViewMat;
-      obj.ubo->proj          = cameraProjectionMat;
-      obj.shadowMap.ubo->mvp = camMatShadow * obj.ubo->model;
-   }
+   this->OnViewportChange.publish(resolution);
 }
 
 void Scene::add_object(SceneObject object)
 {
-   m_objects.emplace_back(std::move(object));
-}
-
-void Scene::compile_scene()
-{
-   assert(m_shadowMapRenderer);
-
-   m_instancedObjects.clear();
-   m_debugLines.clear();
-
-   for (const auto &obj : m_objects) {
-      const auto &model   = m_resourceManager.get<ResourceType::Model>(obj.model);
-      auto instance       = m_context3D.instance_model(obj.model, *m_shadowMapRenderer);
-      const auto modelMat = glm::scale(glm::translate(glm::mat4(1), obj.position), obj.scale) *
-                            glm::mat4_cast(obj.rotation);
-      instance.position    = obj.position;
-      instance.ubo->model  = modelMat;
-      instance.ubo->normal = glm::transpose(glm::inverse(glm::mat3(modelMat)));
-      m_instancedObjects.push_back(std::move(instance));
-
-      auto &debugBoudingBox = m_debugLines.emplace_back(
-              m_debugLinesRenderer.create_line_list_from_bouding_box(model.boudingBox));
-      debugBoudingBox.model = modelMat;
-   }
-}
-
-void Scene::render(graphics_api::CommandList &cmdList) const
-{
-   for (const auto &obj : m_instancedObjects) {
-      if (not m_camera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
-         continue;
-
-      m_context3D.draw_model(cmdList, obj);
-   }
-}
-
-void Scene::render_shadow_map(graphics_api::CommandList &cmdList) const
-{
-   assert(m_shadowMapRenderer);
-
-   for (const auto &obj : m_instancedObjects) {
-      if (not m_shadowMapCamera.is_bouding_box_visible(obj.boudingBox, obj.ubo->model))
-         continue;
-
-      m_shadowMapRenderer->draw_model(cmdList, obj);
-   }
-}
-
-void Scene::render_debug_lines(graphics_api::CommandList &cmdList) const
-{
-   for (const auto &obj : m_debugLines) {
-      m_debugLinesRenderer.draw(cmdList, obj, m_camera);
-   }
+   auto &emplacedObj = m_objects.emplace_back(std::move(object));
+   this->OnObjectAddedToScene.publish(emplacedObj);
 }
 
 void Scene::load_level(const LevelName name)
@@ -168,11 +110,6 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
    this->camera().set_orientation(glm::quat{
            glm::vec3{m_pitch, 0.0f, m_yaw}
    });
-}
-
-void Scene::set_shadow_map_renderer(ShadowMapRenderer *shadowMapRenderer)
-{
-   m_shadowMapRenderer = shadowMapRenderer;
 }
 
 }// namespace triglav::renderer

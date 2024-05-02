@@ -25,7 +25,6 @@ public:
 
    const std::vector<StaticMesh>& static_meshes();
 
-
 private:
   std::vector<StaticMesh> m_staticMeshes;
   std::vector<NameID> m_children;
