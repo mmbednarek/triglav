@@ -84,10 +84,9 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
     m_context2D(*m_device, m_renderTarget, *m_resourceManager),
-    m_renderGraph(*m_device)
+    m_renderGraph(*m_device),
+    m_infoDialog(m_uiViewport, *m_resourceManager)
 {
-
-   // m_textRenderer.update_resolution(m_resolution);
    m_context2D.update_resolution(m_resolution);
 
    m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
@@ -95,7 +94,7 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, *m_device, *m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id, *m_device, *m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name_id, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, m_resolution, *m_resourceManager);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, *m_resourceManager, m_uiViewport);
    m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id, *m_device, *m_resourceManager, m_renderTarget, m_framebuffers);
 
    m_renderGraph.add_dependency("ambient_occlusion"_name_id, "geometry"_name_id);
@@ -108,23 +107,8 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_renderGraph.bake("post_processing"_name_id);
    m_renderGraph.update_resolution(m_resolution);
 
+   m_infoDialog.initialize();
    m_scene.load_level("demo.level"_name);
-
-   auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
-   ui.add_label_group("metrics"_name_id, "Metrics");
-   ui.add_label_group("features"_name_id, "Features");
-   ui.add_label_group("location"_name_id, "Location");
-
-   ui.add_label("metrics"_name_id, "fps"_name_id, "Framerate");
-   ui.add_label("metrics"_name_id, "triangles"_name_id, "GBuffer Triangles");
-   ui.add_label("metrics"_name_id, "gpu_time"_name_id, "GBuffer Render Time");
-
-   ui.add_label("location"_name_id, "pos"_name_id, "Position");
-   ui.add_label("location"_name_id, "orien"_name_id, "Orientation");
-
-   ui.add_label("features"_name_id, "ao"_name_id, "Ambient Occlusion");
-   ui.add_label("features"_name_id, "aa"_name_id, "Anti-Aliasing");
-   ui.add_label("features"_name_id, "debug_lines"_name_id, "Bounding Boxes");
 }
 
 void Renderer::update_debug_info(const float framerate)
@@ -134,27 +118,26 @@ void Renderer::update_debug_info(const float framerate)
    auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
 
    const auto framerateStr = std::format("{}", framerate);
-   ui.set_value("fps"_name_id, framerateStr);
+   m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name_id, framerateStr);
+
+   const auto triangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name_id));
+   m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name_id, triangleCountStr);
 
    if (not isFirstFrame) {
-      const auto gpuTimeStr =
-              std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
-      ui.set_value("gpu_time"_name_id, gpuTimeStr);
+      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
+      m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name_id, gpuTimeStr);
    }
 
    const auto camPos      = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
-   ui.set_value("pos"_name_id, positionStr);
+   m_uiViewport.set_text_content("info_dialog/location/position/value"_name_id, positionStr);
 
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
-   ui.set_value("orien"_name_id, orientationStr);
+   m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name_id, orientationStr);
 
-   const auto triangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name_id));
-   ui.set_value("triangles"_name_id, triangleCountStr);
-
-   ui.set_value("ao"_name_id, m_ssaoEnabled ? "Screen-Space" : "Off");
-   ui.set_value("aa"_name_id, m_fxaaEnabled ? "FXAA" : "Off");
-   ui.set_value("debug_lines"_name_id, m_showDebugLines ? "On" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name_id, m_ssaoEnabled ? "Screen-Space" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/aa/value"_name_id, m_fxaaEnabled ? "FXAA" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name_id, m_showDebugLines ? "On" : "Off");
 
    isFirstFrame = false;
 }

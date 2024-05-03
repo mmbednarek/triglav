@@ -1,6 +1,14 @@
 #include "UserInterface.h"
 
+#include "triglav/graphics_api/DescriptorWriter.h"
+#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/render_core/GlyphAtlas.h"
+#include "triglav/ui_core/Viewport.h"
+
 #include <ranges>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_transform_2d.hpp>
+#undef GLM_ENABLE_EXPERIMENTAL
 
 using triglav::graphics_api::AttachmentAttribute;
 
@@ -8,29 +16,185 @@ namespace triglav::renderer::node {
 
 using namespace name_literals;
 
-/*
- UserInterface: pipeline
+struct TextColorConstant
+{
+   glm::vec3 color;
+};
 
- */
+class UserInterfaceResources : public render_core::NodeFrameResources
+{
+ public:
+   struct TextObject
+   {
+      render_core::TextMetric metric;
+      graphics_api::UniformBuffer<triglav::render_core::SpriteUBO> ubo;
+      graphics_api::VertexArray<render_core::GlyphVertex> vertices;
+      u32 vertexCount;
+   };
+
+   UserInterfaceResources(graphics_api::Device &device, resource::ResourceManager &resourceManager,
+                          ui_core::Viewport &viewport, RectangleRenderer &rectangleRenderer, graphics_api::Pipeline &textPipeline) :
+       m_device(device),
+       m_resourceManager(resourceManager),
+       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
+       m_viewport(viewport),
+       m_rectangleRenderer(rectangleRenderer),
+       m_textPipeline(textPipeline),
+       m_onAddedTextSink(viewport.OnAddedText.connect<&UserInterfaceResources::on_added_text>(this)),
+       m_onTextChangeContentSink(
+               viewport.OnTextChangeContent.connect<&UserInterfaceResources::on_text_content_change>(this)),
+       m_onAddedRectangleSink(
+               viewport.OnAddedRectangle.connect<&UserInterfaceResources::on_added_rectangle>(this))
+   {
+   }
+
+   void on_added_text(NameID id, const ui_core::Text &textObj)
+   {
+      graphics_api::UniformBuffer<render_core::SpriteUBO> ubo(m_device);
+
+      auto &atlas = m_resourceManager.get<ResourceType::GlyphAtlas>(textObj.glyphAtlas);
+
+      render_core::TextMetric metric{};
+      const auto vertices = atlas.create_glyph_vertices(textObj.content, &metric);
+      graphics_api::VertexArray<render_core::GlyphVertex> gpuVertices(m_device, vertices.size());
+      gpuVertices.write(vertices.data(), vertices.size());
+
+      m_textResources.emplace(id,
+                              TextObject(metric, std::move(ubo), std::move(gpuVertices), vertices.size()));
+   }
+
+   void on_text_content_change(NameID id, const ui_core::Text & /*content*/)
+   {
+      m_textChanges.emplace_back(id);
+   }
+
+   void on_added_rectangle(NameID id, const ui_core::Rectangle &rectObj)
+   {
+      m_rectangleResources.emplace(id, m_rectangleRenderer.create_rectangle(rectObj.rect));
+   }
+
+   void update_text(const NameID name)
+   {
+      auto &textObj = m_viewport.text(name);
+
+      auto &atlas = m_resourceManager.get<ResourceType::GlyphAtlas>(textObj.glyphAtlas);
+
+      auto &textRes       = m_textResources.at(name);
+      const auto vertices = atlas.create_glyph_vertices(textObj.content, &textRes.metric);
+      if (vertices.size() > textRes.vertices.count()) {
+         graphics_api::VertexArray<render_core::GlyphVertex> gpuVertices(m_device, vertices.size());
+         gpuVertices.write(vertices.data(), vertices.size());
+         textRes.vertexCount = vertices.size();
+         textRes.vertices    = std::move(gpuVertices);
+      } else {
+         textRes.vertices.write(vertices.data(), vertices.size());
+         textRes.vertexCount = vertices.size();
+      }
+   }
+
+   void process_pending_updates()
+   {
+      for (const NameID name : m_textChanges) {
+         this->update_text(name);
+      }
+
+      m_textChanges.clear();
+   }
+
+   void draw_text(const graphics_api::CommandList &cmdList, const NameID name, const TextObject &textRes)
+   {
+      const auto [viewportWidth, viewportHeight] = this->framebuffer("ui"_name_id).resolution();
+
+      auto &textObj = m_viewport.text(name);
+
+      TextColorConstant constant{textObj.color};
+      cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, constant);
+
+      const auto sc = glm::scale(glm::mat3(1), glm::vec2(2.0f / static_cast<float>(viewportWidth),
+                                                         2.0f / static_cast<float>(viewportHeight)));
+      textRes.ubo->transform =
+              glm::translate(sc, glm::vec2(textObj.position.x - static_cast<float>(viewportWidth) / 2.0f,
+                                           textObj.position.y - static_cast<float>(viewportHeight) / 2.0f));
 
 
+      cmdList.bind_vertex_array(textRes.vertices);
 
-UserInterface::UserInterface(graphics_api::Device &device, const graphics_api::Resolution resolution,
-                             resource::ResourceManager &resourceManager) :
+      auto &atlas = m_resourceManager.get<ResourceType::GlyphAtlas>(textObj.glyphAtlas);
+
+      graphics_api::DescriptorWriter descWriter(m_device);
+      descWriter.set_uniform_buffer(0, textRes.ubo);
+      descWriter.set_sampled_texture(1, atlas.texture(), m_sampler);
+      cmdList.push_descriptors(0, descWriter);
+
+      cmdList.draw_primitives(static_cast<int>(textRes.vertexCount), 0);
+   }
+
+   void draw_ui(graphics_api::CommandList &cmdList)
+   {
+      this->process_pending_updates();
+
+      const auto resolution = this->framebuffer("ui"_name_id).resolution();
+      m_rectangleRenderer.begin_render(cmdList);
+      for (const auto &rect : m_rectangleResources | std::views::values) {
+         m_rectangleRenderer.draw(cmdList, rect, resolution);
+      }
+
+      cmdList.bind_pipeline(m_textPipeline);
+
+      for (const auto &[name, textRes] : m_textResources) {
+         this->draw_text(cmdList, name, textRes);
+      }
+
+   }
+
+ private:
+   graphics_api::Device &m_device;
+   resource::ResourceManager &m_resourceManager;
+   graphics_api::Sampler &m_sampler;
+   ui_core::Viewport &m_viewport;
+   RectangleRenderer &m_rectangleRenderer;
+   graphics_api::Pipeline &m_textPipeline;
+   std::map<NameID, TextObject> m_textResources;
+   std::vector<NameID> m_textChanges{};
+   std::map<NameID, Rectangle> m_rectangleResources;
+
+   ui_core::Viewport::OnAddedTextDel::Sink<UserInterfaceResources> m_onAddedTextSink;
+   ui_core::Viewport::OnTextChangeContentDel::Sink<UserInterfaceResources> m_onTextChangeContentSink;
+   ui_core::Viewport::OnAddedRectangleDel::Sink<UserInterfaceResources> m_onAddedRectangleSink;
+};
+
+UserInterface::UserInterface(graphics_api::Device &device, resource::ResourceManager &resourceManager, ui_core::Viewport &viewport) :
+    m_device(device),
     m_resourceManager(resourceManager),
+    m_viewport(viewport),
     m_textureRenderTarget(
-            GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+            GAPI_CHECK(graphics_api::RenderTargetBuilder(m_device)
                                .attachment("user_interface"_name_id,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single)
                                .build())),
-    m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager),
-    m_textRenderer(device, m_textureRenderTarget, m_resourceManager),
-    m_rectangle(m_rectangleRenderer.create_rectangle(glm::vec4{5.0f, 5.0f, 380.0f, 380.0f})),
-    m_titleLabel(m_textRenderer.create_text_object(
-            m_resourceManager.get<ResourceType::GlyphAtlas>("cantarell/bold.glyphs"_name),
-            "Triglav Render Demo"))
+    m_textPipeline(GAPI_CHECK(
+            graphics_api::PipelineBuilder(device, m_textureRenderTarget)
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("text.fshader"_name))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("text.vshader"_name))
+                    // Vertex description
+                    .begin_vertex_layout<render_core::GlyphVertex>()
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(render_core::GlyphVertex, position))
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(render_core::GlyphVertex, texCoord))
+                    .end_vertex_layout()
+                    // Descriptor layout
+                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                        graphics_api::PipelineStage::VertexShader)
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::PipelineStage::FragmentShader)
+                    .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(TextColorConstant))
+                    .enable_depth_test(false)
+                    .enable_blending(true)
+                    .use_push_descriptors(true)
+                    .vertex_topology(graphics_api::VertexTopology::TriangleList)
+                    .build())),
+    m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager)
 {
 }
 
@@ -41,7 +205,7 @@ graphics_api::WorkTypeFlags UserInterface::work_types() const
 
 std::unique_ptr<render_core::NodeFrameResources> UserInterface::create_node_resources()
 {
-   auto result = IRenderNode::create_node_resources();
+   auto result = std::make_unique<UserInterfaceResources>(m_device, m_resourceManager, m_viewport, m_rectangleRenderer, m_textPipeline);
    result->add_render_target("ui"_name_id, m_textureRenderTarget);
    return result;
 }
@@ -53,68 +217,15 @@ void UserInterface::record_commands(render_core::FrameResources &frameResources,
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::Color{0, 0, 0, 0},
    };
+
+   auto &uiResources = dynamic_cast<UserInterfaceResources &>(resources);
+
    auto &framebuffer = resources.framebuffer("ui"_name_id);
    cmdList.begin_render_pass(framebuffer, clearValues);
 
-   m_rectangleRenderer.begin_render(cmdList);
-   m_rectangleRenderer.draw(cmdList, m_rectangle, framebuffer.resolution());
-
-   m_textRenderer.begin_render(cmdList);
-
-   auto textY = 24.0f + m_titleLabel.metric.height;
-   m_textRenderer.draw_text_object(cmdList, framebuffer.resolution(), m_titleLabel, {16.0f, textY},
-                                   {1.0f, 1.0f, 1.0f});
-   textY += 12.0f;
-
-   float maxWidth = 0.0f;
-   for (const auto &property : m_properties | std::views::values) {
-      if (property.label.metric.width > maxWidth)
-         maxWidth = property.label.metric.width;
-   }
-
-   for (const auto &group : m_labelGroups | std::views::values) {
-      textY += 16.0f + group.m_groupTitle.metric.height;
-      m_textRenderer.draw_text_object(cmdList, framebuffer.resolution(), group.m_groupTitle, {16.0f, textY},
-                                      {1.0f, 1.0f, 0.4f});
-      textY += 4.0f;
-
-      for (const auto label : group.m_labels) {
-         auto &property = m_properties.at(label);
-         textY += 12.0f + property.label.metric.height;
-         m_textRenderer.draw_text_object(cmdList, framebuffer.resolution(), property.label, {16.0f, textY},
-                                         {1.0f, 1.0f, 1.0f});
-         m_textRenderer.draw_text_object(cmdList, framebuffer.resolution(), property.value,
-                                         {16.0f + maxWidth + 8.0f, textY}, {1.0f, 1.0f, 0.4f});
-      }
-   }
+   uiResources.draw_ui(cmdList);
 
    cmdList.end_render_pass();
-}
-
-void UserInterface::add_label_group(NameID id, const std::string_view name)
-{
-   LabelGroup labelGroup{
-           .m_groupTitle = m_textRenderer.create_text_object(
-                   m_resourceManager.get<ResourceType::GlyphAtlas>("segoeui/bold/20.glyphs"_name), name)};
-   m_labelGroups.emplace(id, std::move(labelGroup));
-}
-
-void UserInterface::add_label(NameID group, const NameID id, const std::string_view name)
-{
-   m_properties.emplace(
-           id, TextProperty{m_textRenderer.create_text_object(m_resourceManager.get<ResourceType::GlyphAtlas>(
-                                                                      "segoeui/regular/18.glyphs"_name),
-                                                              name),
-                            m_textRenderer.create_text_object(m_resourceManager.get<ResourceType::GlyphAtlas>(
-                                                                      "segoeui/regular/18.glyphs"_name),
-                                                              "none")});
-   m_labelGroups.at(group).m_labels.emplace_back(id);
-}
-
-void UserInterface::set_value(const NameID id, const std::string_view value)
-{
-   const auto &atlas = m_resourceManager.get<ResourceType::GlyphAtlas>("segoeui/regular/18.glyphs"_name);
-   m_textRenderer.update_text_object(atlas, m_properties.at(id).value, value);
 }
 
 }// namespace triglav::renderer::node

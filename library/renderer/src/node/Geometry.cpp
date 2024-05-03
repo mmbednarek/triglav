@@ -54,6 +54,11 @@ class GeometryResources : public render_core::NodeFrameResources {
 
    void on_viewport_change(const graphics_api::Resolution& /*resolution*/)
    {
+      m_needsUpdate = true;
+   }
+
+   void update_uniforms()
+   {
       const auto cameraViewMat       = m_scene.camera().view_matrix();
       const auto cameraProjectionMat = m_scene.camera().projection_matrix();
       for (const auto &obj : m_models) {
@@ -91,6 +96,11 @@ class GeometryResources : public render_core::NodeFrameResources {
 
    void draw_scene_models(graphics_api::CommandList &cmdList)
    {
+      if (m_needsUpdate) {
+         m_needsUpdate = false;
+         this->update_uniforms();
+      }
+
       cmdList.bind_pipeline(m_pipeline);
 
       for (const auto &obj : m_models) {
@@ -118,6 +128,7 @@ class GeometryResources : public render_core::NodeFrameResources {
    DebugLinesRenderer &m_debugLinesRenderer;
    std::vector<render_core::InstancedModel> m_models{};
    std::vector<DebugLines> m_debugLines{};
+   bool m_needsUpdate{false};
    Scene::OnObjectAddedToSceneDel::Sink<GeometryResources> m_onAddedObjectSink;
    Scene::OnViewportChangeDel::Sink<GeometryResources> m_onViewportChangeSink;
 };

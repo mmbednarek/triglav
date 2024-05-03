@@ -17,12 +17,13 @@ class ShadowMapResources : public render_core::NodeFrameResources
 {
  public:
    ShadowMapResources(graphics_api::Device &device, resource::ResourceManager &resourceManager,
-                     graphics_api::Pipeline &pipeline, Scene &scene) :
+                      graphics_api::Pipeline &pipeline, Scene &scene) :
        m_device(device),
        m_resourceManager(resourceManager),
        m_pipeline(pipeline),
        m_scene(scene),
-       m_onAddedObjectSink(scene.OnObjectAddedToScene.connect<&ShadowMapResources::on_object_added_to_scene>(this)),
+       m_onAddedObjectSink(
+               scene.OnObjectAddedToScene.connect<&ShadowMapResources::on_object_added_to_scene>(this)),
        m_onViewportChangeSink(scene.OnViewportChange.connect<&ShadowMapResources::on_viewport_change>(this))
    {
    }
@@ -33,22 +34,19 @@ class ShadowMapResources : public render_core::NodeFrameResources
 
       graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo(m_device);
       m_models.emplace_back(render_core::ModelShaderMapProperties{
-              object.model,
-              model.boundingBox,
-              object.model_matrix(),
-              std::move(shadowMapUbo)
-      });
+              object.model, model.boundingBox, object.model_matrix(), std::move(shadowMapUbo)});
    }
 
-   void on_viewport_change(const graphics_api::Resolution& /*resolution*/)
+   void on_viewport_change(const graphics_api::Resolution & /*resolution*/)
    {
-      const auto camMatShadow        = m_scene.shadow_map_camera().view_projection_matrix();
+      const auto camMatShadow = m_scene.shadow_map_camera().view_projection_matrix();
       for (const auto &obj : m_models) {
          obj.ubo->mvp = camMatShadow * obj.modelMat;
       }
    }
 
-   void draw_model(graphics_api::CommandList &cmdList, const render_core::ModelShaderMapProperties& instancedModel)
+   void draw_model(graphics_api::CommandList &cmdList,
+                   const render_core::ModelShaderMapProperties &instancedModel)
    {
       const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -83,8 +81,8 @@ class ShadowMapResources : public render_core::NodeFrameResources
  private:
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
-   graphics_api::Pipeline& m_pipeline;
-   Scene& m_scene;
+   graphics_api::Pipeline &m_pipeline;
+   Scene &m_scene;
    std::vector<render_core::ModelShaderMapProperties> m_models;
    Scene::OnObjectAddedToSceneDel::Sink<ShadowMapResources> m_onAddedObjectSink;
    Scene::OnViewportChangeDel::Sink<ShadowMapResources> m_onViewportChangeSink;
@@ -139,7 +137,7 @@ void ShadowMap::record_commands(render_core::FrameResources &frameResources,
 
    cmdList.begin_render_pass(resources.framebuffer("sm"_name_id), clearValues);
 
-   auto& smResources = dynamic_cast<ShadowMapResources&>(resources);
+   auto &smResources = dynamic_cast<ShadowMapResources &>(resources);
    smResources.draw_scene_models(cmdList);
 
    cmdList.end_render_pass();

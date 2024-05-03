@@ -44,11 +44,12 @@ subdir('library/io')
 subdir('library/world')
 subdir('library/desktop')
 subdir('library/desktop_main')
-subdir('library/font')
 subdir('library/graphics_api')
+subdir('library/font')
 subdir('library/geometry')
 subdir('library/render_core')
 subdir('library/resource')
+subdir('library/ui_core')
 
 subdir('library/renderer')
 

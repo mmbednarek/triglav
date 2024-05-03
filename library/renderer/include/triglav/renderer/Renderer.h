@@ -11,6 +11,7 @@
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
 
+#include "InfoDialog.h"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
@@ -22,6 +23,7 @@
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/RenderGraph.h"
 #include "triglav/resource/ResourceManager.h"
+#include "triglav/ui_core/Viewport.h"
 
 namespace triglav::renderer {
 
@@ -93,6 +95,8 @@ class Renderer
    graphics_api::Semaphore m_framebufferReadySemaphore;
    SpriteRenderer m_context2D;
    render_core::RenderGraph m_renderGraph;
+   ui_core::Viewport m_uiViewport;
+   InfoDialog m_infoDialog;
 };
 
 }// namespace triglav::renderer
