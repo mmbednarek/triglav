@@ -31,33 +31,34 @@ class RenderGraph
       return dynamic_cast<TNode &>(*m_nodes.at(name));
    }
 
-   void add_semaphore_node(NameID node, graphics_api::Semaphore *semaphore);
+   void add_external_node(NameID node);
    void add_dependency(NameID target, NameID dependency);
    bool bake(NameID targetNode);
    void initialize_nodes();
    void record_command_lists();
-   void reset_command_lists();
    void set_flag(NameID flag, bool isEnabled);
    void update_resolution(const graphics_api::Resolution &resolution);
    [[nodiscard]] graphics_api::Status execute();
-   void await() const;
-   [[nodiscard]] graphics_api::Semaphore *target_semaphore() const;
+   void await();
+   [[nodiscard]] graphics_api::Semaphore *target_semaphore();
+   [[nodiscard]] graphics_api::Semaphore *semaphore(NameID parent, NameID child);
    [[nodiscard]] u32 triangle_count(NameID node);
+   FrameResources& active_frame_resources();
+   void swap_frames();
 
    void clean();
 
 
  private:
-   std::map<NameID, graphics_api::Semaphore *> m_semaphoreNodes;
+   graphics_api::Device &m_device;
+   std::set<NameID> m_externalNodes;
    std::map<NameID, std::unique_ptr<IRenderNode>> m_nodes;
    std::multimap<NameID, NameID> m_dependencies;
    std::vector<NameID> m_nodeOrder;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
-   FrameResources m_frameResources;
-   graphics_api::Fence m_targetFence;
-   NameID m_targetNode;
-   graphics_api::Device &m_device;
-   graphics_api::Semaphore *m_targetSemaphore{};
+   std::array<FrameResources, 2> m_frameResources;
+   NameID m_targetNode{};
+   u32 m_activeFrame{0};
 };
 
 }// namespace triglav::render_core

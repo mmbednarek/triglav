@@ -8,15 +8,17 @@
 
 namespace triglav::render_core {
 
+using namespace name_literals;
+
 RenderGraph::RenderGraph(graphics_api::Device &device) :
-    m_targetFence(GAPI_CHECK(device.create_fence())),
-    m_device(device)
+    m_device(device),
+    m_frameResources{FrameResources{device}, FrameResources{device}}
 {
 }
 
-void RenderGraph::add_semaphore_node(NameID node, graphics_api::Semaphore *semaphore)
+void RenderGraph::add_external_node(NameID node)
 {
-   m_semaphoreNodes.emplace(node, semaphore);
+   m_externalNodes.emplace(node);
 }
 
 void RenderGraph::add_dependency(NameID target, NameID dependency)
@@ -47,7 +49,7 @@ bool RenderGraph::bake(NameID targetNode)
    while (not nodes.empty()) {
       auto currentNode = nodes.top();
 
-      if (m_semaphoreNodes.contains(currentNode)) {
+      if (m_externalNodes.contains(currentNode)) {
          nodes.pop();
          continue;
       }
@@ -75,72 +77,77 @@ bool RenderGraph::bake(NameID targetNode)
 
       nodes.pop();
 
-      graphics_api::SemaphoreArray semaphores{};
-      auto [it, end] = m_dependencies.equal_range(currentNode);
-      while (it != end) {
-         if (m_semaphoreNodes.contains(it->second)) {
-            semaphores.add_semaphore(*m_semaphoreNodes[it->second]);
-         } else {
+      for (auto& frameRes : m_frameResources) {
+         graphics_api::SemaphoreArray semaphores{};
+         auto [it, end] = m_dependencies.equal_range(currentNode);
+         while (it != end) {
             auto *semaphore = m_device.queue_manager().aquire_semaphore();
-            m_frameResources.add_signal_semaphore(it->second, semaphore);
+            frameRes.add_signal_semaphore(it->second, currentNode, semaphore);
             semaphores.add_semaphore(*semaphore);
+
+            ++it;
          }
 
-         ++it;
+         auto &node       = m_nodes[currentNode];
+         auto commandList = GAPI_CHECK(m_device.queue_manager().create_command_list(node->work_types()));
+
+         frameRes.initialize_command_list(currentNode, std::move(semaphores), std::move(commandList));
       }
 
-      auto &node       = m_nodes[currentNode];
-      auto commandList = GAPI_CHECK(m_device.queue_manager().create_command_list(node->work_types()));
-
-      m_frameResources.initialize_command_list(currentNode, std::move(semaphores), std::move(commandList));
       m_nodeOrder.emplace_back(currentNode);
    }
 
-   m_targetSemaphore = m_device.queue_manager().aquire_semaphore();
-   m_frameResources.add_signal_semaphore(targetNode, m_targetSemaphore);
+   for (auto& frameRes : m_frameResources) {
+      auto targetSem = m_device.queue_manager().aquire_semaphore();
+      frameRes.set_target_semaphore(targetSem);
+      frameRes.add_signal_semaphore(targetNode, "__TARGET__"_name_id, targetSem);
+   }
+
    return true;
 }
 
 void RenderGraph::initialize_nodes()
 {
+   for (const auto name : m_externalNodes) {
+      for (auto& frameRes : m_frameResources) {
+         frameRes.add_external_node(name);
+      }
+   }
+
    for (const auto &[name, node] : m_nodes) {
-      m_frameResources.add_node_resources(name, node->create_node_resources());
+      for (auto& frameRes : m_frameResources) {
+         frameRes.add_node_resources(name, node->create_node_resources());
+      }
    }
 }
 
 void RenderGraph::record_command_lists()
 {
    for (const auto &[name, node] : m_nodes) {
-      auto &resources = m_frameResources.node<NodeFrameResources>(name);
+      auto &resources = this->active_frame_resources().node<NodeFrameResources>(name);
       auto &cmdList   = resources.command_list();
       GAPI_CHECK_STATUS(cmdList.reset());
       GAPI_CHECK_STATUS(cmdList.begin());
-      node->record_commands(m_frameResources, resources, cmdList);
+      node->record_commands(this->active_frame_resources(), resources, cmdList);
       GAPI_CHECK_STATUS(cmdList.finish());
-   }
-}
-
-void RenderGraph::reset_command_lists()
-{
-   for (const auto &name : m_nodes | std::views::keys) {
-      auto &resources = m_frameResources.node<NodeFrameResources>(name);
-      GAPI_CHECK_STATUS(resources.command_list().reset());
    }
 }
 
 void RenderGraph::update_resolution(const graphics_api::Resolution &resolution)
 {
-   m_frameResources.update_resolution(resolution);
+   for (auto& frameRes : m_frameResources) {
+      frameRes.update_resolution(resolution);
+   }
 }
 
 graphics_api::Status RenderGraph::execute()
 {
    for (const auto &name : m_nodeOrder) {
-      auto &resources = m_frameResources.node<NodeFrameResources>(name);
+      auto &resources = this->active_frame_resources().node<NodeFrameResources>(name);
 
       const graphics_api::Fence *fence{};
       if (name == m_targetNode) {
-         fence = &m_targetFence;
+         fence = &this->active_frame_resources().target_fence();
       }
 
       const auto status = m_device.submit_command_list(resources.command_list(), resources.wait_semaphores(),
@@ -152,30 +159,51 @@ graphics_api::Status RenderGraph::execute()
    return graphics_api::Status::Success;
 }
 
-void RenderGraph::await() const
+void RenderGraph::await()
 {
-   m_targetFence.await();
+   this->active_frame_resources().target_fence().await();
 }
 
-graphics_api::Semaphore *RenderGraph::target_semaphore() const
+graphics_api::Semaphore *RenderGraph::target_semaphore()
 {
-   return m_targetSemaphore;
+   return this->active_frame_resources().target_semaphore();
 }
 
 u32 RenderGraph::triangle_count(const NameID node)
 {
-   auto &resources = m_frameResources.node<NodeFrameResources>(node);
-   return static_cast<u32>(resources.command_list().triangle_count());
+//   auto &resources = m_frameResources.tar;
+//   return static_cast<u32>(resources.command_list().triangle_count());
+   // TODO: FIX
+   return 0;
 }
 
 void RenderGraph::clean()
 {
-   m_frameResources.clean(m_device);
+   for (auto& frameRes : m_frameResources) {
+      frameRes.clean(m_device);
+   }
 }
 
 void RenderGraph::set_flag(NameID flag, const bool isEnabled)
 {
-   m_frameResources.set_flag(flag, isEnabled);
+   for (auto& frameRes : m_frameResources) {
+      frameRes.set_flag(flag, isEnabled);
+   }
+}
+
+FrameResources &RenderGraph::active_frame_resources()
+{
+   return m_frameResources[m_activeFrame];
+}
+
+void RenderGraph::swap_frames()
+{
+   m_activeFrame = (m_activeFrame + 1) % m_frameResources.size();
+}
+
+graphics_api::Semaphore *RenderGraph::semaphore(NameID parent, NameID child)
+{
+   return this->active_frame_resources().semaphore(parent, child);
 }
 
 }// namespace triglav::render_core

@@ -45,7 +45,7 @@ class Renderer
    void update_debug_info(float framerate);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
-   void on_close() const;
+   void on_close();
    void on_mouse_relative_move(float dx, float dy);
    void on_key_pressed(desktop::Key key);
    void on_key_released(desktop::Key key);
@@ -92,7 +92,6 @@ class Renderer
    graphics_api::Swapchain m_swapchain;
    graphics_api::RenderTarget m_renderTarget;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
-   graphics_api::Semaphore m_framebufferReadySemaphore;
    SpriteRenderer m_context2D;
    render_core::RenderGraph m_renderGraph;
    ui_core::Viewport m_uiViewport;

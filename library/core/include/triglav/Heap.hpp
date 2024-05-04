@@ -46,6 +46,11 @@ class Heap {
    }
 
    void make_heap() {
+      if (m_staging.empty()) {
+         m_built = true;
+         return;
+      }
+
       std::sort(m_staging.begin(), m_staging.end(), [](const Pair& left, const Pair& right) {
          return left.first < right.first;
       });
@@ -67,6 +72,21 @@ class Heap {
 
    [[nodiscard]] u32 size() const {
       return m_size;
+   }
+
+   [[nodiscard]] auto begin() {
+      return m_heap.begin();
+   }
+
+   [[nodiscard]] auto end() {
+      return m_heap.end();
+   }
+
+   void clear() {
+      m_built = false;
+      m_size = 0;
+      m_staging.clear();
+      m_heap.clear();
    }
 
  private:

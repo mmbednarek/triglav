@@ -82,14 +82,13 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
                                 AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
                     .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
-    m_framebufferReadySemaphore(checkResult(m_device->create_semaphore())),
     m_context2D(*m_device, m_renderTarget, *m_resourceManager),
     m_renderGraph(*m_device),
     m_infoDialog(m_uiViewport, *m_resourceManager)
 {
    m_context2D.update_resolution(m_resolution);
 
-   m_renderGraph.add_semaphore_node("frame_is_ready"_name_id, &m_framebufferReadySemaphore);
+   m_renderGraph.add_external_node("frame_is_ready"_name_id);
    m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, *m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, *m_device, *m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id, *m_device, *m_resourceManager, m_scene);
@@ -147,6 +146,7 @@ void Renderer::on_render()
    const auto deltaTime = calculate_frame_duration();
    const auto framerate = calculate_framerate(deltaTime);
 
+   m_renderGraph.swap_frames();
    m_renderGraph.await();
 
    m_renderGraph.set_flag("debug_lines"_name_id, m_showDebugLines);
@@ -155,17 +155,18 @@ void Renderer::on_render()
    m_renderGraph.set_flag("hide_ui"_name_id, m_hideUI);
    this->update_debug_info(framerate);
 
-   const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_framebufferReadySemaphore);
+   auto frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name_id, "post_processing"_name_id);
+   const auto framebufferIndex = m_swapchain.get_available_framebuffer(*frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
    m_renderGraph.node<node::PostProcessing>("post_processing"_name_id).set_index(framebufferIndex);
    m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
-   checkStatus(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));
+   GAPI_CHECK_STATUS(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));
 }
 
-void Renderer::on_close() const
+void Renderer::on_close()
 {
    m_renderGraph.await();
    m_device->await_all();

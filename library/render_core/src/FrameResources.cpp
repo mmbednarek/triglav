@@ -6,6 +6,34 @@
 
 namespace triglav::render_core {
 
+void NodeResourcesBase::add_signal_semaphore(NameID child, graphics_api::Semaphore *semaphore)
+{
+   m_signalSemaphorePtrs.emplace(child, semaphore);
+}
+
+void NodeResourcesBase::clean(graphics_api::Device &device)
+{
+   for (const auto& sem : m_signalSemaphorePtrs) {
+      if (not sem.has_value()) {
+         continue;
+      }
+
+      device.queue_manager().release_semaphore(sem->second);
+   }
+
+   m_signalSemaphorePtrs.clear();
+}
+
+graphics_api::Semaphore *NodeResourcesBase::semaphore(NameID child)
+{
+   return m_signalSemaphorePtrs[child];
+}
+
+void NodeResourcesBase::post_bake()
+{
+   m_signalSemaphorePtrs.make_heap();
+}
+
 void NodeFrameResources::add_render_target(const NameID identifier, graphics_api::RenderTarget &renderTarget)
 {
    m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt, std::nullopt);
@@ -20,6 +48,7 @@ void NodeFrameResources::add_render_target_with_resolution(const NameID identifi
 
 void NodeFrameResources::update_resolution(const graphics_api::Resolution &resolution)
 {
+   // TODO: Change framebuffer when not used.
    for (auto &target : m_renderTargets) {
       if (target.resolution.has_value()) {
          target.framebuffer.emplace(GAPI_CHECK(target.renderTarget->create_framebuffer(*target.resolution)));
@@ -45,9 +74,9 @@ graphics_api::CommandList &NodeFrameResources::command_list()
    return *m_commandList;
 }
 
-void NodeFrameResources::add_signal_semaphore(graphics_api::Semaphore *semaphore)
+void NodeFrameResources::add_signal_semaphore(NameID child, graphics_api::Semaphore *semaphore)
 {
-   m_signalSemaphorePtrs.emplace_back(semaphore);
+   NodeResourcesBase::add_signal_semaphore(child, semaphore);
    m_signalSemaphores.add_semaphore(*semaphore);
 }
 
@@ -69,31 +98,30 @@ graphics_api::SemaphoreArray &NodeFrameResources::signal_semaphores()
    return m_signalSemaphores;
 }
 
-void NodeFrameResources::clean(graphics_api::Device &device)
-{
-   for (const auto *semaphorePtr : m_signalSemaphorePtrs) {
-      device.queue_manager().release_semaphore(semaphorePtr);
-   }
-}
-
 void FrameResources::update_resolution(const graphics_api::Resolution &resolution)
 {
-   for (auto &node : std::views::values(m_nodes)) {
-      node->update_resolution(resolution);
+   for (auto &node : m_nodes | std::views::values) {
+      auto* frameNode = dynamic_cast<NodeFrameResources*>(node.get());
+      if (frameNode != nullptr) {
+         frameNode->update_resolution(resolution);
+      }
    }
 }
 
-void FrameResources::add_signal_semaphore(NameID nodeName, graphics_api::Semaphore *semaphore)
+void FrameResources::add_signal_semaphore(NameID parent, NameID child, graphics_api::Semaphore *semaphore)
 {
-   auto &node = m_nodes.at(nodeName);
-   node->add_signal_semaphore(semaphore);
+   auto &node = m_nodes.at(parent);
+   node->add_signal_semaphore(child, semaphore);
 }
 
 void FrameResources::initialize_command_list(NameID nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
                                              graphics_api::CommandList &&commandList)
 {
    auto &node = m_nodes.at(nodeName);
-   node->initialize_command_list(std::move(waitSemaphores), std::move(commandList));
+   auto* frameNode = dynamic_cast<NodeFrameResources*>(node.get());
+   if (frameNode != nullptr) {
+      frameNode->initialize_command_list(std::move(waitSemaphores), std::move(commandList));
+   }
 }
 
 void FrameResources::clean(graphics_api::Device &device)
@@ -102,6 +130,7 @@ void FrameResources::clean(graphics_api::Device &device)
       node->clean(device);
    }
    m_nodes.clear();
+   device.queue_manager().release_semaphore(m_targetSemaphore);
 }
 
 bool FrameResources::has_flag(NameID flagName) const
@@ -118,6 +147,40 @@ void FrameResources::set_flag(NameID flagName, bool isEnabled)
    } else if (isEnabled) {
       m_renderFlags.insert(flagName);
    }
+}
+
+void FrameResources::set_target_semaphore(graphics_api::Semaphore *semaphore)
+{
+   m_targetSemaphore = semaphore;
+
+   for (auto& node : m_nodes | std::views::values) {
+      node->post_bake();
+   }
+}
+
+graphics_api::Semaphore *FrameResources::target_semaphore() const
+{
+   return m_targetSemaphore;
+}
+
+FrameResources::FrameResources(graphics_api::Device &device) :
+    m_targetFence(GAPI_CHECK(device.create_fence()))
+{
+}
+
+graphics_api::Fence &FrameResources::target_fence()
+{
+   return m_targetFence;
+}
+
+void FrameResources::add_external_node(NameID node)
+{
+   m_nodes.emplace(node, std::make_unique<NodeResourcesBase>());
+}
+
+graphics_api::Semaphore *FrameResources::semaphore(NameID parent, NameID child)
+{
+   return m_nodes[parent]->semaphore(child);
 }
 
 }// namespace triglav::render_core
