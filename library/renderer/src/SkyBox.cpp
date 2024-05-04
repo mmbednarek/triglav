@@ -29,6 +29,7 @@ namespace triglav::renderer {
 
 SkyBox::SkyBox(graphics_api::Device &device, resource::ResourceManager &resourceManager,
                graphics_api::RenderTarget &renderTarget) :
+    m_device(device),
     m_resourceManager(resourceManager),
     m_mesh(create_skybox_mesh(device)),
     m_pipeline(checkResult(
@@ -48,20 +49,14 @@ SkyBox::SkyBox(graphics_api::Device &device, resource::ResourceManager &resource
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::PipelineStage::FragmentShader)
                     .enable_depth_test(false)
+                    .use_push_descriptors(true)
                     .build())),
-    m_descPool(checkResult(m_pipeline.create_descriptor_pool(3, 3, 3))),
-    m_descArray(checkResult(m_descPool.allocate_array(1))),
-    m_descriptorSet(m_descArray[0]),
-    m_uniformBuffer(device),
-    m_sampler(m_resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
+    m_sampler(m_resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
+    m_texture(m_resourceManager.get<ResourceType::Texture>("skybox.tex"_name))
 {
-   graphics_api::DescriptorWriter descWriter(device, m_descriptorSet);
-   descWriter.set_uniform_buffer(0, m_uniformBuffer);
-   descWriter.set_sampled_texture(1, m_resourceManager.get<ResourceType::Texture>("skybox.tex"_name),
-                                  m_sampler);
 }
 
-void SkyBox::on_render(graphics_api::CommandList &commandList, float yaw, float pitch, float width,
+void SkyBox::on_render(graphics_api::CommandList &commandList, UniformBuffer& ubo, float yaw, float pitch, float width,
                        float height) const
 {
    static constexpr auto yVector = glm::vec4{0.0f, 1.0f, 0, 1.0f};
@@ -72,11 +67,16 @@ void SkyBox::on_render(graphics_api::CommandList &commandList, float yaw, float 
    const auto view       = glm::lookAt(glm::vec3{0, 0, 0}, forwardVector, glm::vec3{0.0f, 0.0f, 1.0f});
    const auto projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 100.0f);
 
-   m_uniformBuffer->view = view;
-   m_uniformBuffer->proj = projection;
+   ubo->view = view;
+   ubo->proj = projection;
 
    commandList.bind_pipeline(m_pipeline);
-   commandList.bind_descriptor_set(m_descriptorSet);
+
+   graphics_api::DescriptorWriter descWriter(m_device);
+   descWriter.set_uniform_buffer(0, ubo);
+   descWriter.set_sampled_texture(1, m_texture, m_sampler);
+   commandList.push_descriptors(0, descWriter);
+
    commandList.draw_mesh(m_mesh);
 }
 

@@ -11,30 +11,29 @@ namespace triglav::renderer {
 
 class Renderer;
 
-struct SkyBoxUBO
-{
-   alignas(16) glm::mat4 view;
-   alignas(16) glm::mat4 proj;
-};
-
 class SkyBox
 {
  public:
+   struct UniformData
+   {
+      alignas(16) glm::mat4 view;
+      alignas(16) glm::mat4 proj;
+   };
+   using UniformBuffer = graphics_api::UniformBuffer<UniformData>;
+
    explicit SkyBox(graphics_api::Device &device, resource::ResourceManager &resourceManager,
                    graphics_api::RenderTarget &renderTarget);
 
-   void on_render(graphics_api::CommandList &commandList, float yaw, float pitch, float width,
+   void on_render(graphics_api::CommandList &commandList, UniformBuffer& ubo, float yaw, float pitch, float width,
                   float height) const;
 
  private:
-   triglav::resource::ResourceManager &m_resourceManager;
-   triglav::render_core::GpuMesh m_mesh;
+   graphics_api::Device &m_device;
+   resource::ResourceManager &m_resourceManager;
+   render_core::GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::DescriptorPool m_descPool;
-   graphics_api::DescriptorArray m_descArray;
-   graphics_api::DescriptorView m_descriptorSet;
-   graphics_api::UniformBuffer<SkyBoxUBO> m_uniformBuffer;
    graphics_api::Sampler &m_sampler;
+   graphics_api::Texture &m_texture;
 };
 
 

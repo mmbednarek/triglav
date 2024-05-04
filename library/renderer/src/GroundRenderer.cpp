@@ -25,27 +25,26 @@ GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::Rende
                                                        graphics_api::PipelineStage::FragmentShader)
                                    .enable_depth_test(true)
                                    .enable_blending(false)
+                                   .use_push_descriptors(true)
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                                    .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 1, 1))),
-    m_descriptors(checkResult(m_descriptorPool.allocate_array(1))),
-    m_uniformBuffer(m_device),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("ground_sampler.sampler"_name))
+    m_sampler(resourceManager.get<ResourceType::Sampler>("ground_sampler.sampler"_name)),
+    m_texture(resourceManager.get<ResourceType::Texture>("board.tex"_name))
 {
-   m_uniformBuffer->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
-
-   graphics_api::DescriptorWriter writer(m_device, m_descriptors[0]);
-   writer.set_uniform_buffer(0, m_uniformBuffer);
-   writer.set_sampled_texture(1, resourceManager.get<ResourceType::Texture>("board.tex"_name), m_sampler);
 }
 
-void GroundRenderer::draw(graphics_api::CommandList &cmdList, const Camera &camera) const
+void GroundRenderer::draw(graphics_api::CommandList &cmdList, UniformBuffer& ubo, const Camera &camera) const
 {
-   m_uniformBuffer->view = camera.view_matrix();
-   m_uniformBuffer->proj = camera.projection_matrix();
+   ubo->view = camera.view_matrix();
+   ubo->proj = camera.projection_matrix();
 
    cmdList.bind_pipeline(m_pipeline);
-   cmdList.bind_descriptor_set(m_descriptors[0]);
+
+   graphics_api::DescriptorWriter writer(m_device);
+   writer.set_uniform_buffer(0, ubo);
+   writer.set_sampled_texture(1, m_texture, m_sampler);
+   cmdList.push_descriptors(0, writer);
+
    cmdList.draw_primitives(4, 0);
 }
 

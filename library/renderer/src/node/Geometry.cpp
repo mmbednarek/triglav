@@ -20,9 +20,12 @@ class GeometryResources : public render_core::NodeFrameResources {
        m_pipeline(pipeline),
        m_scene(scene),
        m_debugLinesRenderer(debugLinesRenderer),
+       m_groundUniformBuffer(m_device),
+       m_skyboxUniformBuffer(m_device),
        m_onAddedObjectSink(scene.OnObjectAddedToScene.connect<&GeometryResources::on_object_added_to_scene>(this)),
        m_onViewportChangeSink(scene.OnViewportChange.connect<&GeometryResources::on_viewport_change>(this))
    {
+      m_groundUniformBuffer->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
    }
 
    void on_object_added_to_scene(const SceneObject& object)
@@ -119,6 +122,16 @@ class GeometryResources : public render_core::NodeFrameResources {
       }
    }
 
+   SkyBox::UniformBuffer &skybox_ubo()
+   {
+      return m_skyboxUniformBuffer;
+   }
+
+   GroundRenderer::UniformBuffer &ground_ubo()
+   {
+      return m_groundUniformBuffer;
+   }
+
  private:
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
@@ -129,6 +142,9 @@ class GeometryResources : public render_core::NodeFrameResources {
    std::vector<render_core::InstancedModel> m_models{};
    std::vector<DebugLines> m_debugLines{};
    bool m_needsUpdate{false};
+   GroundRenderer::UniformBuffer m_groundUniformBuffer;
+   SkyBox::UniformBuffer m_skyboxUniformBuffer;
+
    Scene::OnObjectAddedToSceneDel::Sink<GeometryResources> m_onAddedObjectSink;
    Scene::OnViewportChangeDel::Sink<GeometryResources> m_onViewportChangeSink;
 };
@@ -211,11 +227,11 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
    auto &framebuffer = resources.framebuffer("gbuffer"_name_id);
    cmdList.begin_render_pass(framebuffer, clearValues);
 
-   m_skybox.on_render(cmdList, m_scene.yaw(), m_scene.pitch(),
+   m_skybox.on_render(cmdList, geoResources.skybox_ubo(), m_scene.yaw(), m_scene.pitch(),
                       static_cast<float>(framebuffer.resolution().width),
                       static_cast<float>(framebuffer.resolution().height));
 
-   m_groundRenderer.draw(cmdList, m_scene.camera());
+   m_groundRenderer.draw(cmdList, geoResources.ground_ubo(), m_scene.camera());
 
    geoResources.draw_scene_models(cmdList);
 
