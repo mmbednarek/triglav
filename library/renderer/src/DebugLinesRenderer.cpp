@@ -25,7 +25,7 @@ DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_ap
                                    .vertex_topology(graphics_api::VertexTopology::LineList)
                                    .razterization_method(graphics_api::RasterizationMethod::Line)
                                    .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 1, 20)))
+    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(60, 3, 60)))
 {
 }
 

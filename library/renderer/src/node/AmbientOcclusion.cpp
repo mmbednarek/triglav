@@ -39,6 +39,9 @@ void AmbientOcclusion::record_commands(render_core::FrameResources &frameResourc
                                        render_core::NodeFrameResources &resources,
                                        graphics_api::CommandList &cmdList)
 {
+   if (not frameResources.has_flag("ssao"_name_id))
+      return;
+
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::ColorPalette::Black,
    };

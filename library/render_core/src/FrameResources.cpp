@@ -6,32 +6,26 @@
 
 namespace triglav::render_core {
 
-void NodeResourcesBase::add_signal_semaphore(NameID child, graphics_api::Semaphore *semaphore)
+using namespace name_literals;
+
+void NodeResourcesBase::add_signal_semaphore(NameID child, graphics_api::Semaphore&& semaphore)
 {
-   m_signalSemaphorePtrs.emplace(child, semaphore);
+   m_ownedSemaphores.emplace(child, std::move(semaphore));
 }
 
 void NodeResourcesBase::clean(graphics_api::Device &device)
 {
-   for (const auto& sem : m_signalSemaphorePtrs) {
-      if (not sem.has_value()) {
-         continue;
-      }
-
-      device.queue_manager().release_semaphore(sem->second);
-   }
-
-   m_signalSemaphorePtrs.clear();
+   m_ownedSemaphores.clear();
 }
 
-graphics_api::Semaphore *NodeResourcesBase::semaphore(NameID child)
+graphics_api::Semaphore& NodeResourcesBase::semaphore(NameID child)
 {
-   return m_signalSemaphorePtrs[child];
+   return m_ownedSemaphores[child];
 }
 
-void NodeResourcesBase::post_bake()
+void NodeResourcesBase::finalize()
 {
-   m_signalSemaphorePtrs.make_heap();
+   m_ownedSemaphores.make_heap();
 }
 
 void NodeFrameResources::add_render_target(const NameID identifier, graphics_api::RenderTarget &renderTarget)
@@ -74,10 +68,10 @@ graphics_api::CommandList &NodeFrameResources::command_list()
    return *m_commandList;
 }
 
-void NodeFrameResources::add_signal_semaphore(NameID child, graphics_api::Semaphore *semaphore)
+void NodeFrameResources::add_signal_semaphore(NameID child, graphics_api::Semaphore&& semaphore)
 {
-   NodeResourcesBase::add_signal_semaphore(child, semaphore);
-   m_signalSemaphores.add_semaphore(*semaphore);
+   m_signalSemaphores.add_semaphore(semaphore);
+   NodeResourcesBase::add_signal_semaphore(child, std::move(semaphore));
 }
 
 void NodeFrameResources::initialize_command_list(graphics_api::SemaphoreArray &&waitSemaphores,
@@ -108,10 +102,10 @@ void FrameResources::update_resolution(const graphics_api::Resolution &resolutio
    }
 }
 
-void FrameResources::add_signal_semaphore(NameID parent, NameID child, graphics_api::Semaphore *semaphore)
+void FrameResources::add_signal_semaphore(NameID parent, NameID child, graphics_api::Semaphore&& semaphore)
 {
    auto &node = m_nodes.at(parent);
-   node->add_signal_semaphore(child, semaphore);
+   node->add_signal_semaphore(child, std::move(semaphore));
 }
 
 void FrameResources::initialize_command_list(NameID nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
@@ -130,7 +124,6 @@ void FrameResources::clean(graphics_api::Device &device)
       node->clean(device);
    }
    m_nodes.clear();
-   device.queue_manager().release_semaphore(m_targetSemaphore);
 }
 
 bool FrameResources::has_flag(NameID flagName) const
@@ -149,18 +142,16 @@ void FrameResources::set_flag(NameID flagName, bool isEnabled)
    }
 }
 
-void FrameResources::set_target_semaphore(graphics_api::Semaphore *semaphore)
+void FrameResources::finalize()
 {
-   m_targetSemaphore = semaphore;
-
    for (auto& node : m_nodes | std::views::values) {
-      node->post_bake();
+      node->finalize();
    }
 }
 
-graphics_api::Semaphore *FrameResources::target_semaphore() const
+graphics_api::Semaphore& FrameResources::target_semaphore(NameID targetNode)
 {
-   return m_targetSemaphore;
+   return this->semaphore(targetNode, "__TARGET__"_name_id);
 }
 
 FrameResources::FrameResources(graphics_api::Device &device) :
@@ -178,7 +169,7 @@ void FrameResources::add_external_node(NameID node)
    m_nodes.emplace(node, std::make_unique<NodeResourcesBase>());
 }
 
-graphics_api::Semaphore *FrameResources::semaphore(NameID parent, NameID child)
+graphics_api::Semaphore& FrameResources::semaphore(NameID parent, NameID child)
 {
    return m_nodes[parent]->semaphore(child);
 }

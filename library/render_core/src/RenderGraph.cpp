@@ -12,7 +12,7 @@ using namespace name_literals;
 
 RenderGraph::RenderGraph(graphics_api::Device &device) :
     m_device(device),
-    m_frameResources{FrameResources{device}, FrameResources{device}}
+    m_frameResources{FrameResources{device}, FrameResources{device}, FrameResources{device}}
 {
 }
 
@@ -81,9 +81,9 @@ bool RenderGraph::bake(NameID targetNode)
          graphics_api::SemaphoreArray semaphores{};
          auto [it, end] = m_dependencies.equal_range(currentNode);
          while (it != end) {
-            auto *semaphore = m_device.queue_manager().aquire_semaphore();
-            frameRes.add_signal_semaphore(it->second, currentNode, semaphore);
-            semaphores.add_semaphore(*semaphore);
+            auto semaphore = GAPI_CHECK(m_device.create_semaphore());
+            semaphores.add_semaphore(semaphore);
+            frameRes.add_signal_semaphore(it->second, currentNode, std::move(semaphore));
 
             ++it;
          }
@@ -98,9 +98,8 @@ bool RenderGraph::bake(NameID targetNode)
    }
 
    for (auto& frameRes : m_frameResources) {
-      auto targetSem = m_device.queue_manager().aquire_semaphore();
-      frameRes.set_target_semaphore(targetSem);
-      frameRes.add_signal_semaphore(targetNode, "__TARGET__"_name_id, targetSem);
+      frameRes.add_signal_semaphore(targetNode, "__TARGET__"_name_id, GAPI_CHECK(m_device.create_semaphore()));
+      frameRes.finalize();
    }
 
    return true;
@@ -164,17 +163,15 @@ void RenderGraph::await()
    this->active_frame_resources().target_fence().await();
 }
 
-graphics_api::Semaphore *RenderGraph::target_semaphore()
+graphics_api::Semaphore& RenderGraph::target_semaphore()
 {
-   return this->active_frame_resources().target_semaphore();
+   return this->active_frame_resources().target_semaphore(m_targetNode);
 }
 
 u32 RenderGraph::triangle_count(const NameID node)
 {
-//   auto &resources = m_frameResources.tar;
-//   return static_cast<u32>(resources.command_list().triangle_count());
-   // TODO: FIX
-   return 0;
+   auto &resources = this->active_frame_resources().node(node);
+   return static_cast<u32>(resources.command_list().triangle_count());
 }
 
 void RenderGraph::clean()
@@ -201,7 +198,7 @@ void RenderGraph::swap_frames()
    m_activeFrame = (m_activeFrame + 1) % m_frameResources.size();
 }
 
-graphics_api::Semaphore *RenderGraph::semaphore(NameID parent, NameID child)
+graphics_api::Semaphore& RenderGraph::semaphore(NameID parent, NameID child)
 {
    return this->active_frame_resources().semaphore(parent, child);
 }

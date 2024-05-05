@@ -40,8 +40,8 @@ class RenderGraph
    void update_resolution(const graphics_api::Resolution &resolution);
    [[nodiscard]] graphics_api::Status execute();
    void await();
-   [[nodiscard]] graphics_api::Semaphore *target_semaphore();
-   [[nodiscard]] graphics_api::Semaphore *semaphore(NameID parent, NameID child);
+   [[nodiscard]] graphics_api::Semaphore& target_semaphore();
+   [[nodiscard]] graphics_api::Semaphore& semaphore(NameID parent, NameID child);
    [[nodiscard]] u32 triangle_count(NameID node);
    FrameResources& active_frame_resources();
    void swap_frames();

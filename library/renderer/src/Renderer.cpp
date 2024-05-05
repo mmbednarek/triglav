@@ -155,15 +155,15 @@ void Renderer::on_render()
    m_renderGraph.set_flag("hide_ui"_name_id, m_hideUI);
    this->update_debug_info(framerate);
 
-   auto frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name_id, "post_processing"_name_id);
-   const auto framebufferIndex = m_swapchain.get_available_framebuffer(*frameReadySemaphore);
+   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name_id, "post_processing"_name_id);
+   const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
    m_renderGraph.node<node::PostProcessing>("post_processing"_name_id).set_index(framebufferIndex);
    m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
-   GAPI_CHECK_STATUS(m_swapchain.present(*m_renderGraph.target_semaphore(), framebufferIndex));
+   GAPI_CHECK_STATUS(m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex));
 }
 
 void Renderer::on_close()
