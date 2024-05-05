@@ -74,11 +74,11 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
             m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
     m_renderTarget(checkResult(
             graphics_api::RenderTargetBuilder(*m_device)
-                    .attachment("output"_name_id,
+                    .attachment("output"_name,
                                 AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                         AttachmentAttribute::StoreImage | AttachmentAttribute::Presentable,
                                 g_colorFormat)
-                    .attachment("output/zbuffer"_name_id,
+                    .attachment("output/zbuffer"_name,
                                 AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
                     .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
@@ -88,55 +88,60 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
 {
    m_context2D.update_resolution(m_resolution);
 
-   m_renderGraph.add_external_node("frame_is_ready"_name_id);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name_id, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name_id, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name_id, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::Shading>("shading"_name_id, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name_id, *m_device, *m_resourceManager, m_uiViewport);
-   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name_id, *m_device, *m_resourceManager, m_renderTarget, m_framebuffers);
+   m_renderGraph.add_external_node("frame_is_ready"_name);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name, *m_device, *m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, *m_device, *m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, *m_device, *m_resourceManager,
+                                                      m_scene);
+   m_renderGraph.emplace_node<node::Shading>("shading"_name, *m_device, *m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, *m_device, *m_resourceManager,
+                                                   m_uiViewport);
+   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, *m_device, *m_resourceManager,
+                                                    m_renderTarget, m_framebuffers);
 
-   m_renderGraph.add_dependency("ambient_occlusion"_name_id, "geometry"_name_id);
-   m_renderGraph.add_dependency("shading"_name_id, "shadow_map"_name_id);
-   m_renderGraph.add_dependency("shading"_name_id, "ambient_occlusion"_name_id);
-   m_renderGraph.add_dependency("post_processing"_name_id, "frame_is_ready"_name_id);
-   m_renderGraph.add_dependency("post_processing"_name_id, "shading"_name_id);
-   m_renderGraph.add_dependency("post_processing"_name_id, "user_interface"_name_id);
+   m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
+   m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
+   m_renderGraph.add_dependency("shading"_name, "ambient_occlusion"_name);
+   m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
+   m_renderGraph.add_dependency("post_processing"_name, "shading"_name);
+   m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
 
-   m_renderGraph.bake("post_processing"_name_id);
+   m_renderGraph.bake("post_processing"_name);
    m_renderGraph.update_resolution(m_resolution);
 
    m_infoDialog.initialize();
-   m_scene.load_level("demo.level"_name);
+   m_scene.load_level("demo.level"_rc);
 }
 
 void Renderer::update_debug_info(const float framerate)
 {
    static bool isFirstFrame = true;
 
-   auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name_id);
+   auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name);
 
    const auto framerateStr = std::format("{}", framerate);
-   m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name_id, framerateStr);
+   m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name, framerateStr);
 
-   const auto triangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name_id));
-   m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name_id, triangleCountStr);
+   const auto triangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
+   m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name, triangleCountStr);
 
    if (not isFirstFrame) {
-      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name_id).gpu_time());
-      m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name_id, gpuTimeStr);
+      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
+      m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name, gpuTimeStr);
    }
 
    const auto camPos      = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
-   m_uiViewport.set_text_content("info_dialog/location/position/value"_name_id, positionStr);
+   m_uiViewport.set_text_content("info_dialog/location/position/value"_name, positionStr);
 
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
-   m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name_id, orientationStr);
+   m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
 
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name_id, m_ssaoEnabled ? "Screen-Space" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/aa/value"_name_id, m_fxaaEnabled ? "FXAA" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name_id, m_showDebugLines ? "On" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name,
+                                 m_ssaoEnabled ? "Screen-Space" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name,
+                                 m_showDebugLines ? "On" : "Off");
 
    isFirstFrame = false;
 }
@@ -149,17 +154,17 @@ void Renderer::on_render()
    m_renderGraph.swap_frames();
    m_renderGraph.await();
 
-   m_renderGraph.set_flag("debug_lines"_name_id, m_showDebugLines);
-   m_renderGraph.set_flag("ssao"_name_id, m_ssaoEnabled);
-   m_renderGraph.set_flag("fxaa"_name_id, m_fxaaEnabled);
-   m_renderGraph.set_flag("hide_ui"_name_id, m_hideUI);
+   m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
+   m_renderGraph.set_flag("ssao"_name, m_ssaoEnabled);
+   m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
+   m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
    this->update_debug_info(framerate);
 
-   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name_id, "post_processing"_name_id);
+   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
-   m_renderGraph.node<node::PostProcessing>("post_processing"_name_id).set_index(framebufferIndex);
+   m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(framebufferIndex);
    m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());

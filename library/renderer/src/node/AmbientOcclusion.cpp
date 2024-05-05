@@ -12,13 +12,13 @@ AmbientOcclusion::AmbientOcclusion(graphics_api::Device &device, resource::Resou
                                    Scene &scene) :
     m_renderTarget(
             GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("ao"_name_id,
+                               .attachment("ao"_name,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(R, Float16), SampleCount::Single)
                                .build())),
     m_renderer(device, m_renderTarget, resourceManager,
-               resourceManager.get<ResourceType::Texture>("noise.tex"_name)),
+               resourceManager.get<ResourceType::Texture>("noise.tex"_rc)),
     m_scene(scene)
 {
 }
@@ -26,7 +26,7 @@ AmbientOcclusion::AmbientOcclusion(graphics_api::Device &device, resource::Resou
 std::unique_ptr<render_core::NodeFrameResources> AmbientOcclusion::create_node_resources()
 {
    auto result = std::make_unique<render_core::NodeFrameResources>();
-   result->add_render_target("ao"_name_id, m_renderTarget);
+   result->add_render_target("ao"_name, m_renderTarget);
    return result;
 }
 
@@ -39,14 +39,14 @@ void AmbientOcclusion::record_commands(render_core::FrameResources &frameResourc
                                        render_core::NodeFrameResources &resources,
                                        graphics_api::CommandList &cmdList)
 {
-   if (not frameResources.has_flag("ssao"_name_id))
+   if (not frameResources.has_flag("ssao"_name))
       return;
 
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::ColorPalette::Black,
    };
 
-   cmdList.begin_render_pass(resources.framebuffer("ao"_name_id), clearValues);
+   cmdList.begin_render_pass(resources.framebuffer("ao"_name), clearValues);
 
    m_renderer.draw(frameResources, cmdList, m_scene.camera().projection_matrix());
 

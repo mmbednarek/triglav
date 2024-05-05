@@ -23,9 +23,9 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
                                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>(
-                                           "ambient_occlusion.fshader"_name))
+                                           "ambient_occlusion.fshader"_rc))
                                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>(
-                                           "ambient_occlusion.vshader"_name))
+                                           "ambient_occlusion.vshader"_rc))
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                                        graphics_api::PipelineStage::FragmentShader)
@@ -40,7 +40,7 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                                    .build())),
     // m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 3, 1))),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc)),
     m_samplesSSAO(generate_sample_points(g_SampleCountSSAO)),
     m_uniformBuffer(m_device),
     m_noiseTexture(noiseTexture)
@@ -67,11 +67,11 @@ void AmbientOcclusionRenderer::draw(render_core::FrameResources &resources,
     */
 
    auto &gbuffer =
-           resources.node<render_core::NodeFrameResources>("geometry"_name_id).framebuffer("gbuffer"_name_id);
+           resources.node<render_core::NodeFrameResources>("geometry"_name).framebuffer("gbuffer"_name);
 
    graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, gbuffer.texture("position"_name_id), m_sampler);
-   writer.set_sampled_texture(1, gbuffer.texture("normal"_name_id), m_sampler);
+   writer.set_sampled_texture(0, gbuffer.texture("position"_name), m_sampler);
+   writer.set_sampled_texture(1, gbuffer.texture("normal"_name), m_sampler);
    writer.set_sampled_texture(2, m_noiseTexture, m_sampler);
    writer.set_uniform_buffer(3, m_uniformBuffer);
    cmdList.push_descriptors(0, writer);

@@ -19,25 +19,25 @@ class NodeResourcesBase
  public:
    virtual ~NodeResourcesBase() = default;
 
-   virtual void add_signal_semaphore(NameID child, graphics_api::Semaphore&& semaphore);
+   virtual void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore);
    virtual void clean(graphics_api::Device &device);
    virtual void finalize();
-   [[nodiscard]] virtual graphics_api::Semaphore& semaphore(NameID child);
+   [[nodiscard]] virtual graphics_api::Semaphore& semaphore(Name child);
 
  private:
-   Heap<NameID, graphics_api::Semaphore> m_ownedSemaphores{};
+   Heap<Name, graphics_api::Semaphore> m_ownedSemaphores{};
 };
 
 class NodeFrameResources : public NodeResourcesBase
 {
  public:
-   void add_render_target(NameID identifier, graphics_api::RenderTarget &renderTarget);
-   void add_render_target_with_resolution(NameID identifier, graphics_api::RenderTarget &renderTarget, const graphics_api::Resolution &resolution);
+   void add_render_target(Name identifier, graphics_api::RenderTarget &renderTarget);
+   void add_render_target_with_resolution(Name identifier, graphics_api::RenderTarget &renderTarget, const graphics_api::Resolution &resolution);
    void update_resolution(const graphics_api::Resolution &resolution);
 
-   [[nodiscard]] graphics_api::Framebuffer &framebuffer(NameID identifier);
+   [[nodiscard]] graphics_api::Framebuffer &framebuffer(Name identifier);
    [[nodiscard]] graphics_api::CommandList &command_list();
-   void add_signal_semaphore(NameID child, graphics_api::Semaphore&& semaphore) override;
+   void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore) override;
    void initialize_command_list(graphics_api::SemaphoreArray &&waitSemaphores,
                                 graphics_api::CommandList &&commands);
    graphics_api::SemaphoreArray &wait_semaphores();
@@ -46,7 +46,7 @@ class NodeFrameResources : public NodeResourcesBase
  private:
    struct RenderTargetResource
    {
-      NameID name{};
+      Name name{};
       graphics_api::RenderTarget *renderTarget{};
       std::optional<graphics_api::Framebuffer> framebuffer{};
       std::optional<graphics_api::Resolution> resolution{};
@@ -64,7 +64,7 @@ class FrameResources
    explicit FrameResources(graphics_api::Device& device);
 
    template<typename TNode>
-   auto &add_node_resources(const NameID identifier, TNode &&node)
+   auto &add_node_resources(const Name identifier, TNode &&node)
    {
       auto [it, ok] = m_nodes.emplace(identifier, std::forward<TNode>(node));
       assert(ok);
@@ -72,30 +72,30 @@ class FrameResources
    }
 
    template<typename TNode = NodeFrameResources>
-   TNode &node(const NameID identifier)
+   TNode &node(const Name identifier)
    {
       return *dynamic_cast<TNode *>(m_nodes.at(identifier).get());
    }
 
-   void add_external_node(NameID node);
+   void add_external_node(Name node);
 
-   [[nodiscard]] graphics_api::Semaphore& target_semaphore(NameID targetNode);
+   [[nodiscard]] graphics_api::Semaphore& target_semaphore(Name targetNode);
    [[nodiscard]] graphics_api::Fence& target_fence();
-   [[nodiscard]] graphics_api::Semaphore& semaphore(NameID parent, NameID child);
+   [[nodiscard]] graphics_api::Semaphore& semaphore(Name parent, Name child);
 
-   [[nodiscard]] bool has_flag(NameID flagName) const;
-   void set_flag(NameID flagName, bool isEnabled);
+   [[nodiscard]] bool has_flag(Name flagName) const;
+   void set_flag(Name flagName, bool isEnabled);
 
    void update_resolution(const graphics_api::Resolution &resolution);
-   void add_signal_semaphore(NameID parent, NameID child, graphics_api::Semaphore&& semaphore);
-   void initialize_command_list(NameID nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
+   void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore);
+   void initialize_command_list(Name nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
                                 graphics_api::CommandList &&commandList);
    void clean(graphics_api::Device &device);
    void finalize();
 
  private:
-   std::map<NameID, std::unique_ptr<NodeResourcesBase>> m_nodes;
-   std::set<NameID> m_renderFlags;
+   std::map<Name, std::unique_ptr<NodeResourcesBase>> m_nodes;
+   std::set<Name> m_renderFlags;
    graphics_api::Fence m_targetFence;
 };
 

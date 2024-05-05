@@ -13,8 +13,8 @@ struct MaterialProps
 
 struct Material
 {
-   Name texture{};
-   Name normal_texture{};
+   ResourceName texture{};
+   ResourceName normal_texture{};
    MaterialProps props{};
 };
 

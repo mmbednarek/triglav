@@ -33,8 +33,8 @@ render_core::Material Loader<ResourceType::Material>::load(std::string_view path
 
    // clang-format off
    return render_core::Material{
-           .texture = make_name(std::string_view{albedoTexture.data(),albedoTexture.size()}),
-           .normal_texture = make_name(std::string_view{normalTexture.data(),normalTexture.size()}),
+           .texture = make_rc_name(std::string_view{albedoTexture.data(),albedoTexture.size()}),
+           .normal_texture = make_rc_name(std::string_view{normalTexture.data(),normalTexture.size()}),
            .props = render_core::MaterialProps{
               hasNormal,
               roughness,

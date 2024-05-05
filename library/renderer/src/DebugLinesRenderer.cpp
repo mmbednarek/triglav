@@ -6,25 +6,27 @@
 
 using namespace triglav::name_literals;
 using triglav::ResourceType;
-using triglav::resource::ResourceManager;
 using triglav::render_core::checkResult;
+using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
 DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                        ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderTarget)
-                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("debug_lines.fshader"_name))
-                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("debug_lines.vshader"_name))
-                                   .begin_vertex_layout<glm::vec3>()
-                                   .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
-                                   .end_vertex_layout()
-                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::PipelineStage::VertexShader)
-                                   .vertex_topology(graphics_api::VertexTopology::LineList)
-                                   .razterization_method(graphics_api::RasterizationMethod::Line)
-                                   .build())),
+    m_pipeline(checkResult(
+            graphics_api::PipelineBuilder(device, renderTarget)
+                    .fragment_shader(
+                            resourceManager.get<ResourceType::FragmentShader>("debug_lines.fshader"_rc))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("debug_lines.vshader"_rc))
+                    .begin_vertex_layout<glm::vec3>()
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
+                    .end_vertex_layout()
+                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                        graphics_api::PipelineStage::VertexShader)
+                    .vertex_topology(graphics_api::VertexTopology::LineList)
+                    .razterization_method(graphics_api::RasterizationMethod::Line)
+                    .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(60, 3, 60)))
 {
 }
@@ -92,7 +94,8 @@ void DebugLinesRenderer::begin_render(graphics_api::CommandList &cmdList) const
    cmdList.bind_pipeline(m_pipeline);
 }
 
-void DebugLinesRenderer::draw(const graphics_api::CommandList &cmdList, const DebugLines &list, const Camera& camera) const
+void DebugLinesRenderer::draw(const graphics_api::CommandList &cmdList, const DebugLines &list,
+                              const Camera &camera) const
 {
    *list.ubo = camera.view_projection_matrix() * list.model;
 
@@ -101,4 +104,4 @@ void DebugLinesRenderer::draw(const graphics_api::CommandList &cmdList, const De
    cmdList.draw_primitives(static_cast<int>(list.array.count()), 0);
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

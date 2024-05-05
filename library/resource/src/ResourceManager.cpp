@@ -66,7 +66,7 @@ void ResourceManager::load_asset_list(const std::string_view path)
 
    int loadedCount{};
    for (const auto &[nameStr, source] : list) {
-      auto name = make_name(nameStr);
+      auto name = make_rc_name(nameStr);
       m_registeredNames.emplace(name, nameStr);
       spdlog::info("[{}/{}] {}", loadedCount, list.size(), nameStr);
       this->load_asset(name, source);
@@ -76,7 +76,7 @@ void ResourceManager::load_asset_list(const std::string_view path)
    spdlog::info("[{}/{}] DONE", loadedCount, list.size());
 }
 
-void ResourceManager::load_asset(const Name assetName, const std::string_view path)
+void ResourceManager::load_asset(const ResourceName assetName, const std::string_view path)
 {
    switch (assetName.type()) {
 #define TG_RESOURCE_TYPE(name, extension, cppType) \
@@ -87,7 +87,7 @@ void ResourceManager::load_asset(const Name assetName, const std::string_view pa
    }
 }
 
-bool ResourceManager::is_name_registered(const Name assetName) const
+bool ResourceManager::is_name_registered(const ResourceName assetName) const
 {
    if (not m_containers.contains(assetName.type()))
       return false;

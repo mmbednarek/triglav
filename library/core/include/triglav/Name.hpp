@@ -9,44 +9,44 @@
 
 namespace triglav {
 
-using NameID = std::uint64_t;
+using Name = std::uint64_t;
 
-class Name;
+class ResourceName;
 
 template<ResourceType CResourceType>
 class TypedName
 {
-   friend Name;
+   friend ResourceName;
 
  public:
    static constexpr auto resource_type = CResourceType;
 
-   constexpr explicit TypedName(const NameID name) :
+   constexpr explicit TypedName(const Name name) :
        m_name(name)
    {
    }
 
    // ReSharper disable once CppNonExplicitConversionOperator
-   [[nodiscard]] operator Name() const;// NOLINT(google-explicit-constructor)
+   [[nodiscard]] operator ResourceName() const;// NOLINT(google-explicit-constructor)
 
    constexpr auto operator<=>(const TypedName &other) const = default;
    constexpr bool operator==(const TypedName &other) const  = default;
    constexpr bool operator!=(const TypedName &other) const  = default;
 
  private:
-   NameID m_name;
+   Name m_name;
 };
 
-class Name
+class ResourceName
 {
  public:
-   constexpr Name() :
+   constexpr ResourceName() :
        m_type(ResourceType::Unknown),
        m_name(0)
    {
    }
 
-   constexpr Name(const ResourceType type, const NameID nameID) :
+   constexpr ResourceName(const ResourceType type, const Name nameID) :
        m_type(type),
        m_name(nameID)
    {
@@ -65,31 +65,31 @@ class Name
       return m_type;
    }
 
-   constexpr auto operator<=>(const Name &other) const
+   constexpr auto operator<=>(const ResourceName &other) const
    {
       if (m_name == other.m_name && m_type != other.m_type)
          return m_type <=> other.m_type;
       return m_name <=> other.m_name;
    }
 
-   constexpr bool operator==(const Name &other) const = default;
-   constexpr bool operator!=(const Name &other) const = default;
+   constexpr bool operator==(const ResourceName &other) const = default;
+   constexpr bool operator!=(const ResourceName &other) const = default;
 
    template<ResourceType CResourceType>
    constexpr bool operator==(const TypedName<CResourceType> &other) const
    {
-      return (*this) == static_cast<Name>(other);
+      return (*this) == static_cast<ResourceName>(other);
    }
 
  private:
    ResourceType m_type;
-   NameID m_name;
+   Name m_name;
 };
 
 template<ResourceType CResourceType>
-TypedName<CResourceType>::operator Name() const
+TypedName<CResourceType>::operator ResourceName() const
 {
-   return Name{CResourceType, m_name};
+   return ResourceName{CResourceType, m_name};
 }
 
 constexpr auto make_name_id(const std::string_view value)
@@ -97,12 +97,12 @@ constexpr auto make_name_id(const std::string_view value)
    return detail::hash_string(value);
 }
 
-constexpr auto make_name(const std::string_view value)
+constexpr auto make_rc_name(const std::string_view value)
 {
    const auto at        = value.find_last_of('.');
    const auto extension = value.substr(at + 1);
    const auto hash      = detail::hash_string(value.substr(0, at));
-   return Name(type_by_extension(extension), hash);
+   return ResourceName(type_by_extension(extension), hash);
 }
 
 #define TG_RESOURCE_TYPE(name, ext, cppType) using name##Name = TypedName<ResourceType::name>;
@@ -113,12 +113,12 @@ TG_RESOURCE_TYPE_LIST
 
 namespace name_literals {
 
-constexpr Name operator""_name(const char *value, const std::size_t count)
+constexpr ResourceName operator""_rc(const char *value, const std::size_t count)
 {
-   return make_name(std::string_view(value, count));
+   return make_rc_name(std::string_view(value, count));
 }
 
-constexpr NameID operator""_name_id(const char *value, const std::size_t count)
+constexpr Name operator""_name(const char *value, const std::size_t count)
 {
    return detail::hash_string(std::string_view(value, count));
 }

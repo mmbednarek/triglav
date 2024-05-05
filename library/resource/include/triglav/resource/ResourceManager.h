@@ -22,8 +22,8 @@ class ResourceManager
 
    void load_asset_list(std::string_view path);
 
-   void load_asset(Name assetName, std::string_view path);
-   [[nodiscard]] bool is_name_registered(Name assetName) const;
+   void load_asset(ResourceName assetName, std::string_view path);
+   [[nodiscard]] bool is_name_registered(ResourceName assetName) const;
 
    template<ResourceType CResourceType>
    auto &get(const TypedName<CResourceType> name)
@@ -60,7 +60,7 @@ class ResourceManager
    }
 
    std::map<ResourceType, std::unique_ptr<IContainer>> m_containers;
-   std::map<Name, std::string> m_registeredNames;
+   std::map<ResourceName, std::string> m_registeredNames;
    graphics_api::Device &m_device;
    font::FontManger &m_fontManager;
 };

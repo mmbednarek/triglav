@@ -52,7 +52,7 @@ world::StaticMesh parse_static_mesh(const ryml::ConstNodeRef node)
 {
    auto meshName = node["mesh"].val();
    return world::StaticMesh{
-           .meshName  = make_name(std::string_view{meshName.data(), meshName.size()}),
+           .meshName  = make_rc_name(std::string_view{meshName.data(), meshName.size()}),
            .transform = parse_transformation(node["transform"]),
    };
 }

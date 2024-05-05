@@ -6,7 +6,7 @@
 
 namespace triglav::ui_core {
 
-void Viewport::add_text(const NameID name, Text &&text)
+void Viewport::add_text(const Name name, Text &&text)
 {
    auto [it, added] = m_texts.emplace(name, std::move(text));
    assert(added);
@@ -14,7 +14,7 @@ void Viewport::add_text(const NameID name, Text &&text)
    this->OnAddedText.publish(name, it->second);
 }
 
-void Viewport::set_text_content(const NameID name, const std::string_view content)
+void Viewport::set_text_content(const Name name, const std::string_view content)
 {
    auto& textPrim = m_texts.at(name);
 
@@ -25,7 +25,7 @@ void Viewport::set_text_content(const NameID name, const std::string_view conten
    this->OnTextChangeContent.publish(name, textPrim);
 }
 
-void Viewport::add_rectangle(NameID name, Rectangle &&rect)
+void Viewport::add_rectangle(Name name, Rectangle &&rect)
 {
    auto [it, added] = m_rectangles.emplace(name, std::move(rect));
    assert(added);
@@ -33,7 +33,7 @@ void Viewport::add_rectangle(NameID name, Rectangle &&rect)
    this->OnAddedRectangle.publish(name, it->second);
 }
 
-const Text& Viewport::text(const NameID name) const
+const Text& Viewport::text(const Name name) const
 {
    return m_texts.at(name);
 }

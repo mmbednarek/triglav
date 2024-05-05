@@ -17,7 +17,7 @@ struct MaterialRange
 {
    size_t offset;
    size_t size;
-   Name materialName;
+   ResourceName materialName;
 };
 
 struct Model
@@ -29,7 +29,7 @@ struct Model
 
 struct ModelShaderMapProperties
 {
-   Name modelName;
+   ResourceName modelName;
    geometry::BoundingBox boundingBox;
    glm::mat4 modelMat;
    graphics_api::UniformBuffer<ShadowMapUBO> ubo;
@@ -37,7 +37,7 @@ struct ModelShaderMapProperties
 
 struct InstancedModel
 {
-   Name modelName;
+   ResourceName modelName;
    geometry::BoundingBox boundingBox;
    glm::vec3 position{};
    graphics_api::UniformBuffer<UniformBufferObject> ubo;

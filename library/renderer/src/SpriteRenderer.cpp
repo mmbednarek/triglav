@@ -10,7 +10,7 @@
 
 using namespace triglav::name_literals;
 
-using triglav::Name;
+using triglav::ResourceName;
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
 using triglav::render_core::Sprite;
@@ -31,8 +31,8 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("sprite.fshader"_name))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("sprite.vshader"_name))
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("sprite.fshader"_rc))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("sprite.vshader"_rc))
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::PipelineStage::VertexShader)
@@ -42,11 +42,11 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
                     .enable_depth_test(false)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40))),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name))
+    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc))
 {
 }
 
-Sprite SpriteRenderer::create_sprite(const Name textureName)
+Sprite SpriteRenderer::create_sprite(const ResourceName textureName)
 {
    const auto &texture = m_resourceManager.get<ResourceType::Texture>(textureName);
    return this->create_sprite_from_texture(texture);

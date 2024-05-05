@@ -19,7 +19,7 @@ render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device &d
    std::transform(deviceMesh.ranges.begin(), deviceMesh.ranges.end(), ranges.begin(),
                   [](const geometry::MaterialRange &range) {
                      return render_core::MaterialRange{range.offset, range.size,
-                                                       make_name(std::format("{}.mat", range.materialName))};
+                             make_rc_name(std::format("{}.mat", range.materialName))};
                   });
 
    return render_core::Model{std::move(deviceMesh.mesh), objMesh.calculate_bouding_box(), std::move(ranges)};

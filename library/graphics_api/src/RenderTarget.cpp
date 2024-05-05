@@ -67,7 +67,7 @@ const std::vector<AttachmentInfo> &RenderTarget::attachments() const
 
 Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolution) const
 {
-   Heap<NameID, Texture> textures;
+   Heap<Name, Texture> textures;
    for (const auto &attachment : m_attachments) {
       auto texture =
               m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags),
@@ -119,7 +119,7 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
    }
 
    index = 0;
-   Heap<NameID, Texture> textures;
+   Heap<Name, Texture> textures;
    for (const auto &attachment : m_attachments) {
       if (index == swapchainAttachment) {
          ++index;
@@ -172,7 +172,7 @@ RenderTargetBuilder::RenderTargetBuilder(Device &device) :
 {
 }
 
-RenderTargetBuilder &RenderTargetBuilder::attachment(const NameID identifier,
+RenderTargetBuilder &RenderTargetBuilder::attachment(const Name identifier,
                                                      const AttachmentAttributeFlags flags,
                                                      const ColorFormat &format, const SampleCount sampleCount)
 {

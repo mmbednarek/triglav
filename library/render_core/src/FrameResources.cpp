@@ -8,7 +8,7 @@ namespace triglav::render_core {
 
 using namespace name_literals;
 
-void NodeResourcesBase::add_signal_semaphore(NameID child, graphics_api::Semaphore&& semaphore)
+void NodeResourcesBase::add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore)
 {
    m_ownedSemaphores.emplace(child, std::move(semaphore));
 }
@@ -18,7 +18,7 @@ void NodeResourcesBase::clean(graphics_api::Device &device)
    m_ownedSemaphores.clear();
 }
 
-graphics_api::Semaphore& NodeResourcesBase::semaphore(NameID child)
+graphics_api::Semaphore& NodeResourcesBase::semaphore(Name child)
 {
    return m_ownedSemaphores[child];
 }
@@ -28,12 +28,12 @@ void NodeResourcesBase::finalize()
    m_ownedSemaphores.make_heap();
 }
 
-void NodeFrameResources::add_render_target(const NameID identifier, graphics_api::RenderTarget &renderTarget)
+void NodeFrameResources::add_render_target(const Name identifier, graphics_api::RenderTarget &renderTarget)
 {
    m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt, std::nullopt);
 }
 
-void NodeFrameResources::add_render_target_with_resolution(const NameID identifier,
+void NodeFrameResources::add_render_target_with_resolution(const Name identifier,
                                                            graphics_api::RenderTarget &renderTarget,
                                                            const graphics_api::Resolution &resolution)
 {
@@ -53,7 +53,7 @@ void NodeFrameResources::update_resolution(const graphics_api::Resolution &resol
    }
 }
 
-graphics_api::Framebuffer &NodeFrameResources::framebuffer(const NameID identifier)
+graphics_api::Framebuffer &NodeFrameResources::framebuffer(const Name identifier)
 {
    auto it = std::ranges::find_if(
            m_renderTargets, [identifier](const RenderTargetResource &res) { return res.name == identifier; });
@@ -68,7 +68,7 @@ graphics_api::CommandList &NodeFrameResources::command_list()
    return *m_commandList;
 }
 
-void NodeFrameResources::add_signal_semaphore(NameID child, graphics_api::Semaphore&& semaphore)
+void NodeFrameResources::add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore)
 {
    m_signalSemaphores.add_semaphore(semaphore);
    NodeResourcesBase::add_signal_semaphore(child, std::move(semaphore));
@@ -102,13 +102,13 @@ void FrameResources::update_resolution(const graphics_api::Resolution &resolutio
    }
 }
 
-void FrameResources::add_signal_semaphore(NameID parent, NameID child, graphics_api::Semaphore&& semaphore)
+void FrameResources::add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore)
 {
    auto &node = m_nodes.at(parent);
    node->add_signal_semaphore(child, std::move(semaphore));
 }
 
-void FrameResources::initialize_command_list(NameID nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
+void FrameResources::initialize_command_list(Name nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
                                              graphics_api::CommandList &&commandList)
 {
    auto &node = m_nodes.at(nodeName);
@@ -126,12 +126,12 @@ void FrameResources::clean(graphics_api::Device &device)
    m_nodes.clear();
 }
 
-bool FrameResources::has_flag(NameID flagName) const
+bool FrameResources::has_flag(Name flagName) const
 {
    return m_renderFlags.contains(flagName);
 }
 
-void FrameResources::set_flag(NameID flagName, bool isEnabled)
+void FrameResources::set_flag(Name flagName, bool isEnabled)
 {
    if (m_renderFlags.contains(flagName)) {
       if (not isEnabled) {
@@ -149,9 +149,9 @@ void FrameResources::finalize()
    }
 }
 
-graphics_api::Semaphore& FrameResources::target_semaphore(NameID targetNode)
+graphics_api::Semaphore& FrameResources::target_semaphore(Name targetNode)
 {
-   return this->semaphore(targetNode, "__TARGET__"_name_id);
+   return this->semaphore(targetNode, "__TARGET__"_name);
 }
 
 FrameResources::FrameResources(graphics_api::Device &device) :
@@ -164,12 +164,12 @@ graphics_api::Fence &FrameResources::target_fence()
    return m_targetFence;
 }
 
-void FrameResources::add_external_node(NameID node)
+void FrameResources::add_external_node(Name node)
 {
    m_nodes.emplace(node, std::make_unique<NodeResourcesBase>());
 }
 
-graphics_api::Semaphore& FrameResources::semaphore(NameID parent, NameID child)
+graphics_api::Semaphore& FrameResources::semaphore(Name parent, Name child)
 {
    return m_nodes[parent]->semaphore(child);
 }

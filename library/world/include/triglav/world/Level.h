@@ -8,13 +8,13 @@ namespace triglav::world {
 
 class Level {
 public:
-  void add_node(NameID id, LevelNode&& node);
+  void add_node(Name id, LevelNode&& node);
 
-  LevelNode& at(NameID id);
+  LevelNode& at(Name id);
   LevelNode& root();
 
 private:
-  std::map<NameID, LevelNode> m_nodes;
+  std::map<Name, LevelNode> m_nodes;
 };
 
 }

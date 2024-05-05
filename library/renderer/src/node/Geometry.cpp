@@ -16,7 +16,7 @@ class GeometryResources : public render_core::NodeFrameResources {
    GeometryResources(graphics_api::Device &device, resource::ResourceManager &resourceManager, graphics_api::Pipeline& pipeline, Scene& scene, DebugLinesRenderer &debugLinesRenderer) :
        m_device(device),
        m_resourceManager(resourceManager),
-       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod8_aniso.sampler"_name)),
+       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod8_aniso.sampler"_rc)),
        m_pipeline(pipeline),
        m_scene(scene),
        m_debugLinesRenderer(debugLinesRenderer),
@@ -84,7 +84,7 @@ class GeometryResources : public render_core::NodeFrameResources {
          graphics_api::DescriptorWriter descWriter(m_device);
          descWriter.set_uniform_buffer(0, instancedModel.ubo);
          descWriter.set_sampled_texture(1, texture, m_sampler);
-         if (material.normal_texture != Name{}) {
+         if (material.normal_texture != ResourceName{}) {
             const auto &normalTexture = m_resourceManager.get<ResourceType::Texture>(material.normal_texture);
             descWriter.set_sampled_texture(2, normalTexture, m_sampler);
          }
@@ -155,27 +155,27 @@ Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &reso
     m_scene(scene),
     m_renderTarget(
             GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("albedo"_name_id,
+                               .attachment("albedo"_name,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16))
-                               .attachment("position"_name_id,
+                               .attachment("position"_name,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16))
-                               .attachment("normal"_name_id,
+                               .attachment("normal"_name,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16))
-                               .attachment("depth"_name_id,
+                               .attachment("depth"_name,
                                            AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(D, UNorm16))
                                .build())),
     m_pipeline(GAPI_CHECK(
             graphics_api::PipelineBuilder(device, m_renderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("model.fshader"_name))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("model.vshader"_name))
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("model.fshader"_rc))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("model.vshader"_rc))
                             // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
@@ -224,7 +224,7 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
            graphics_api::DepthStenctilValue{1.0f, 0},
    };
 
-   auto &framebuffer = resources.framebuffer("gbuffer"_name_id);
+   auto &framebuffer = resources.framebuffer("gbuffer"_name);
    cmdList.begin_render_pass(framebuffer, clearValues);
 
    m_skybox.on_render(cmdList, geoResources.skybox_ubo(), m_scene.yaw(), m_scene.pitch(),
@@ -235,7 +235,7 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
 
    geoResources.draw_scene_models(cmdList);
 
-   if (frameResources.has_flag("debug_lines"_name_id)) {
+   if (frameResources.has_flag("debug_lines"_name)) {
       geoResources.draw_debug_lines(cmdList);
    }
 
@@ -247,7 +247,7 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
 std::unique_ptr<render_core::NodeFrameResources> Geometry::create_node_resources()
 {
    auto result = std::make_unique<GeometryResources>(m_device, m_resourceManager, m_pipeline, m_scene, m_debugLinesRenderer);
-   result->add_render_target("gbuffer"_name_id, m_renderTarget);
+   result->add_render_target("gbuffer"_name, m_renderTarget);
    return result;
 }
 

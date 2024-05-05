@@ -9,7 +9,7 @@ using namespace name_literals;
 
 Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene &scene) :
     m_shadingRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("shading"_name_id,
+                               .attachment("shading"_name,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
@@ -22,7 +22,7 @@ Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resour
 std::unique_ptr<render_core::NodeFrameResources> Shading::create_node_resources()
 {
    auto result = IRenderNode::create_node_resources();
-   result->add_render_target("shading"_name_id, m_shadingRenderTarget);
+   result->add_render_target("shading"_name, m_shadingRenderTarget);
    return result;
 }
 
@@ -37,7 +37,7 @@ void Shading::record_commands(render_core::FrameResources &frameResources,
    std::array<graphics_api::ClearValue, 1> clearValues{
            graphics_api::ColorPalette::Black,
    };
-   cmdList.begin_render_pass(resources.framebuffer("shading"_name_id), clearValues);
+   cmdList.begin_render_pass(resources.framebuffer("shading"_name), clearValues);
 
    const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
                           glm::inverse(m_scene.camera().view_matrix());

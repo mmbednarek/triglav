@@ -19,7 +19,7 @@ class Swapchain;
 
 struct AttachmentInfo
 {
-   NameID identifier;
+   Name identifier;
    AttachmentAttributeFlags flags;
    ColorFormat format;
    SampleCount sampleCount;
@@ -57,7 +57,7 @@ class RenderTargetBuilder
  public:
    explicit RenderTargetBuilder(Device &device);
 
-   RenderTargetBuilder &attachment(NameID identifier, AttachmentAttributeFlags flags, const ColorFormat &format, SampleCount sampleCount = SampleCount::Single);
+   RenderTargetBuilder &attachment(Name identifier, AttachmentAttributeFlags flags, const ColorFormat &format, SampleCount sampleCount = SampleCount::Single);
 
    Result<RenderTarget> build();
 

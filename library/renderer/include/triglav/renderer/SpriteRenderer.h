@@ -15,7 +15,7 @@ class SpriteRenderer
    SpriteRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                   resource::ResourceManager &resourceManager);
 
-   [[nodiscard]] render_core::Sprite create_sprite(triglav::Name textureName);
+   [[nodiscard]] render_core::Sprite create_sprite(triglav::ResourceName textureName);
    [[nodiscard]] render_core::Sprite
    create_sprite_from_texture(const graphics_api::Texture &texture);
 

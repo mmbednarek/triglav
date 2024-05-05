@@ -93,7 +93,7 @@ ShadowMap::ShadowMap(graphics_api::Device &device, resource::ResourceManager &re
     m_resourceManager(resourceManager),
     m_depthRenderTarget(
             GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("sm"_name_id,
+                               .attachment("sm"_name,
                                            AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            g_shadowMapFormat)
@@ -101,8 +101,8 @@ ShadowMap::ShadowMap(graphics_api::Device &device, resource::ResourceManager &re
     m_pipeline(GAPI_CHECK(
             graphics_api::PipelineBuilder(device, m_depthRenderTarget)
                     .fragment_shader(
-                            resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_name))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shadow_map.vshader"_name))
+                            resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_rc))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shadow_map.vshader"_rc))
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                     .end_vertex_layout()
@@ -118,7 +118,7 @@ ShadowMap::ShadowMap(graphics_api::Device &device, resource::ResourceManager &re
 std::unique_ptr<render_core::NodeFrameResources> ShadowMap::create_node_resources()
 {
    auto result = std::make_unique<ShadowMapResources>(m_device, m_resourceManager, m_pipeline, m_scene);
-   result->add_render_target_with_resolution("sm"_name_id, m_depthRenderTarget, g_shadowMapResolution);
+   result->add_render_target_with_resolution("sm"_name, m_depthRenderTarget, g_shadowMapResolution);
    return result;
 }
 
@@ -135,7 +135,7 @@ void ShadowMap::record_commands(render_core::FrameResources &frameResources,
            graphics_api::ClearValue{graphics_api::DepthStenctilValue{1.0f, 0}},
    };
 
-   cmdList.begin_render_pass(resources.framebuffer("sm"_name_id), clearValues);
+   cmdList.begin_render_pass(resources.framebuffer("sm"_name), clearValues);
 
    auto &smResources = dynamic_cast<ShadowMapResources &>(resources);
    smResources.draw_scene_models(cmdList);

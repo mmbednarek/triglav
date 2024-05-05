@@ -14,7 +14,7 @@ class IContainer
  public:
    virtual ~IContainer() = default;
 
-   [[nodiscard]] virtual bool is_name_registered(Name name) const = 0;
+   [[nodiscard]] virtual bool is_name_registered(ResourceName name) const = 0;
 };
 
 template<ResourceType CResourceType>
@@ -43,7 +43,7 @@ class Container final : public IContainer
       m_map.emplace(name, std::move(resource));
    }
 
-   [[nodiscard]] bool is_name_registered(const Name name) const override
+   [[nodiscard]] bool is_name_registered(const ResourceName name) const override
    {
       if (name.type() != CResourceType)
          return false;

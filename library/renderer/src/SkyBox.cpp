@@ -34,9 +34,8 @@ SkyBox::SkyBox(graphics_api::Device &device, resource::ResourceManager &resource
     m_mesh(create_skybox_mesh(device)),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(device, renderTarget)
-                    .fragment_shader(
-                            m_resourceManager.get<ResourceType::FragmentShader>("skybox.fshader"_name))
-                    .vertex_shader(m_resourceManager.get<ResourceType::VertexShader>("skybox.vshader"_name))
+                    .fragment_shader(m_resourceManager.get<ResourceType::FragmentShader>("skybox.fshader"_rc))
+                    .vertex_shader(m_resourceManager.get<ResourceType::VertexShader>("skybox.vshader"_rc))
                     // Vertex description
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
@@ -51,8 +50,8 @@ SkyBox::SkyBox(graphics_api::Device &device, resource::ResourceManager &resource
                     .enable_depth_test(false)
                     .use_push_descriptors(true)
                     .build())),
-    m_sampler(m_resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
-    m_texture(m_resourceManager.get<ResourceType::Texture>("skybox.tex"_name))
+    m_sampler(m_resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc)),
+    m_texture(m_resourceManager.get<ResourceType::Texture>("skybox.tex"_rc))
 {
 }
 

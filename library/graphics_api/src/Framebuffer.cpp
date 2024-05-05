@@ -5,7 +5,7 @@
 namespace triglav::graphics_api {
 
 Framebuffer::Framebuffer(const Resolution resolution, const VkRenderPass renderPass,
-                         vulkan::Framebuffer framebuffer, Heap<NameID, Texture> textures) :
+                         vulkan::Framebuffer framebuffer, Heap<Name, Texture> textures) :
     m_resolution(resolution),
     m_renderPass(renderPass),
     m_framebuffer(std::move(framebuffer)),
@@ -28,7 +28,7 @@ VkRenderPass Framebuffer::vulkan_render_pass() const
    return m_renderPass;
 }
 
-Texture &Framebuffer::texture(const NameID index)
+Texture &Framebuffer::texture(const Name index)
 {
    return m_textures[index];
 }

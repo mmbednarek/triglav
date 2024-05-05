@@ -16,8 +16,8 @@ GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::Rende
                                ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
-                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("ground.fshader"_name))
-                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("ground.vshader"_name))
+                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("ground.fshader"_rc))
+                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("ground.vshader"_rc))
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                                        graphics_api::PipelineStage::VertexShader)
@@ -28,8 +28,8 @@ GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::Rende
                                    .use_push_descriptors(true)
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                                    .build())),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("ground_sampler.sampler"_name)),
-    m_texture(resourceManager.get<ResourceType::Texture>("board.tex"_name))
+    m_sampler(resourceManager.get<ResourceType::Sampler>("ground_sampler.sampler"_rc)),
+    m_texture(resourceManager.get<ResourceType::Texture>("board.tex"_rc))
 {
 }
 

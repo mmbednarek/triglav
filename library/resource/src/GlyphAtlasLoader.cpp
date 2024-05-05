@@ -48,7 +48,7 @@ render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManag
                                     c4::substr{file.data(), file.size()});
 
    auto typeface = tree["typeface"].val();
-   auto typefaceName = make_name(std::string_view{typeface.str, typeface.len});
+   auto typefaceName = make_rc_name(std::string_view{typeface.str, typeface.len});
    auto sizeStr = tree["size"].val();
    auto size = std::stoi(sizeStr.str);
 

@@ -36,7 +36,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
                           ui_core::Viewport &viewport, RectangleRenderer &rectangleRenderer, graphics_api::Pipeline &textPipeline) :
        m_device(device),
        m_resourceManager(resourceManager),
-       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_name)),
+       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc)),
        m_viewport(viewport),
        m_rectangleRenderer(rectangleRenderer),
        m_textPipeline(textPipeline),
@@ -48,7 +48,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    {
    }
 
-   void on_added_text(NameID id, const ui_core::Text &textObj)
+   void on_added_text(Name id, const ui_core::Text &textObj)
    {
       graphics_api::UniformBuffer<render_core::SpriteUBO> ubo(m_device);
 
@@ -63,17 +63,17 @@ class UserInterfaceResources : public render_core::NodeFrameResources
                               TextObject(metric, std::move(ubo), std::move(gpuVertices), vertices.size()));
    }
 
-   void on_text_content_change(NameID id, const ui_core::Text & /*content*/)
+   void on_text_content_change(Name id, const ui_core::Text & /*content*/)
    {
       m_textChanges.emplace_back(id);
    }
 
-   void on_added_rectangle(NameID id, const ui_core::Rectangle &rectObj)
+   void on_added_rectangle(Name id, const ui_core::Rectangle &rectObj)
    {
       m_rectangleResources.emplace(id, m_rectangleRenderer.create_rectangle(rectObj.rect));
    }
 
-   void update_text(const NameID name)
+   void update_text(const Name name)
    {
       auto &textObj = m_viewport.text(name);
 
@@ -94,16 +94,16 @@ class UserInterfaceResources : public render_core::NodeFrameResources
 
    void process_pending_updates()
    {
-      for (const NameID name : m_textChanges) {
+      for (const Name name : m_textChanges) {
          this->update_text(name);
       }
 
       m_textChanges.clear();
    }
 
-   void draw_text(const graphics_api::CommandList &cmdList, const NameID name, const TextObject &textRes)
+   void draw_text(const graphics_api::CommandList &cmdList, const Name name, const TextObject &textRes)
    {
-      const auto [viewportWidth, viewportHeight] = this->framebuffer("ui"_name_id).resolution();
+      const auto [viewportWidth, viewportHeight] = this->framebuffer("ui"_name).resolution();
 
       auto &textObj = m_viewport.text(name);
 
@@ -133,7 +133,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    {
       this->process_pending_updates();
 
-      const auto resolution = this->framebuffer("ui"_name_id).resolution();
+      const auto resolution = this->framebuffer("ui"_name).resolution();
       m_rectangleRenderer.begin_render(cmdList);
       for (const auto &rect : m_rectangleResources | std::views::values) {
          m_rectangleRenderer.draw(cmdList, rect, resolution);
@@ -154,9 +154,9 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    ui_core::Viewport &m_viewport;
    RectangleRenderer &m_rectangleRenderer;
    graphics_api::Pipeline &m_textPipeline;
-   std::map<NameID, TextObject> m_textResources;
-   std::vector<NameID> m_textChanges{};
-   std::map<NameID, Rectangle> m_rectangleResources;
+   std::map<Name, TextObject> m_textResources;
+   std::vector<Name> m_textChanges{};
+   std::map<Name, Rectangle> m_rectangleResources;
 
    ui_core::Viewport::OnAddedTextDel::Sink<UserInterfaceResources> m_onAddedTextSink;
    ui_core::Viewport::OnTextChangeContentDel::Sink<UserInterfaceResources> m_onTextChangeContentSink;
@@ -169,15 +169,15 @@ UserInterface::UserInterface(graphics_api::Device &device, resource::ResourceMan
     m_viewport(viewport),
     m_textureRenderTarget(
             GAPI_CHECK(graphics_api::RenderTargetBuilder(m_device)
-                               .attachment("user_interface"_name_id,
+                               .attachment("user_interface"_name,
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single)
                                .build())),
     m_textPipeline(GAPI_CHECK(
             graphics_api::PipelineBuilder(device, m_textureRenderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("text.fshader"_name))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("text.vshader"_name))
+                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("text.fshader"_rc))
+                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("text.vshader"_rc))
                     // Vertex description
                     .begin_vertex_layout<render_core::GlyphVertex>()
                     .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(render_core::GlyphVertex, position))
@@ -206,7 +206,7 @@ graphics_api::WorkTypeFlags UserInterface::work_types() const
 std::unique_ptr<render_core::NodeFrameResources> UserInterface::create_node_resources()
 {
    auto result = std::make_unique<UserInterfaceResources>(m_device, m_resourceManager, m_viewport, m_rectangleRenderer, m_textPipeline);
-   result->add_render_target("ui"_name_id, m_textureRenderTarget);
+   result->add_render_target("ui"_name, m_textureRenderTarget);
    return result;
 }
 
@@ -220,7 +220,7 @@ void UserInterface::record_commands(render_core::FrameResources &frameResources,
 
    auto &uiResources = dynamic_cast<UserInterfaceResources &>(resources);
 
-   auto &framebuffer = resources.framebuffer("ui"_name_id);
+   auto &framebuffer = resources.framebuffer("ui"_name);
    cmdList.begin_render_pass(framebuffer, clearValues);
 
    uiResources.draw_ui(cmdList);

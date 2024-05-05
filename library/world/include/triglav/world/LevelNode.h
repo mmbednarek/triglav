@@ -27,7 +27,7 @@ public:
 
 private:
   std::vector<StaticMesh> m_staticMeshes;
-  std::vector<NameID> m_children;
+  std::vector<Name> m_children;
 };
 
 }

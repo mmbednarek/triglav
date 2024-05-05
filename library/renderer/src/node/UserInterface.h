@@ -16,8 +16,8 @@ namespace triglav::renderer::node {
 class UserInterface : public render_core::IRenderNode
 {
  public:
-   using OnAddedLabelGroupDel = Delegate<NameID, std::string_view>;
-   using OnAddedLabelDel = Delegate<NameID, NameID, std::string_view>;
+   using OnAddedLabelGroupDel = Delegate<Name, std::string_view>;
+   using OnAddedLabelDel = Delegate<Name, Name, std::string_view>;
 
    OnAddedLabelGroupDel OnAddedLabelGroup;
    OnAddedLabelDel OnAddedLabel;
