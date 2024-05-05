@@ -30,36 +30,37 @@ void NodeResourcesBase::finalize()
 
 void NodeFrameResources::add_render_target(const Name identifier, graphics_api::RenderTarget &renderTarget)
 {
-   m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt, std::nullopt);
+   m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, std::nullopt);
 }
 
 void NodeFrameResources::add_render_target_with_resolution(const Name identifier,
                                                            graphics_api::RenderTarget &renderTarget,
                                                            const graphics_api::Resolution &resolution)
 {
-   m_renderTargets.emplace_back(identifier, &renderTarget, std::nullopt, resolution);
+   m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, resolution);
 }
 
 void NodeFrameResources::update_resolution(const graphics_api::Resolution &resolution)
 {
    // TODO: Change framebuffer when not used.
    for (auto &target : m_renderTargets) {
-      if (target.resolution.has_value()) {
-         target.framebuffer.emplace(GAPI_CHECK(target.renderTarget->create_framebuffer(*target.resolution)));
+      if (not target.has_value())
+         continue;
+
+      if (target->second.resolution.has_value()) {
+         target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(*target->second.resolution)));
          continue;
       }
 
-      target.framebuffer.emplace(GAPI_CHECK(target.renderTarget->create_framebuffer(resolution)));
+      target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution)));
    }
 }
 
 graphics_api::Framebuffer &NodeFrameResources::framebuffer(const Name identifier)
 {
-   auto it = std::ranges::find_if(
-           m_renderTargets, [identifier](const RenderTargetResource &res) { return res.name == identifier; });
-   assert(it != m_renderTargets.end());
-   assert(it->framebuffer.has_value());
-   return *it->framebuffer;
+   auto& fb = m_renderTargets[identifier].framebuffer;
+   assert(fb.has_value());
+   return *fb;
 }
 
 graphics_api::CommandList &NodeFrameResources::command_list()
@@ -90,6 +91,12 @@ graphics_api::SemaphoreArray &NodeFrameResources::wait_semaphores()
 graphics_api::SemaphoreArray &NodeFrameResources::signal_semaphores()
 {
    return m_signalSemaphores;
+}
+
+void NodeFrameResources::finalize()
+{
+   NodeResourcesBase::finalize();
+   m_renderTargets.make_heap();
 }
 
 void FrameResources::update_resolution(const graphics_api::Resolution &resolution)

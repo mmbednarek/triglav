@@ -42,17 +42,17 @@ class NodeFrameResources : public NodeResourcesBase
                                 graphics_api::CommandList &&commands);
    graphics_api::SemaphoreArray &wait_semaphores();
    graphics_api::SemaphoreArray &signal_semaphores();
+   void finalize() override;
 
  private:
    struct RenderTargetResource
    {
-      Name name{};
       graphics_api::RenderTarget *renderTarget{};
       std::optional<graphics_api::Framebuffer> framebuffer{};
       std::optional<graphics_api::Resolution> resolution{};
    };
 
-   std::vector<RenderTargetResource> m_renderTargets{};
+   Heap<Name, RenderTargetResource> m_renderTargets{};
    graphics_api::SemaphoreArray m_signalSemaphores;
    std::optional<graphics_api::SemaphoreArray> m_waitSemaphores{};
    std::optional<graphics_api::CommandList> m_commandList{};
