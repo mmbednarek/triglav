@@ -1,39 +1,40 @@
 #include "CommandList.h"
 
 #include "DescriptorWriter.h"
+#include "Device.h"
 #include "Framebuffer.h"
 #include "Pipeline.h"
 #include "Texture.h"
 #include "TimestampArray.h"
 #include "vulkan/Util.h"
 
-#include <functional>
-
 namespace triglav::graphics_api {
 
-CommandList::CommandList(const VkCommandBuffer commandBuffer, const VkDevice device,
-                         const VkCommandPool commandPool, const WorkTypeFlags workTypes) :
-    m_commandBuffer(commandBuffer),
+CommandList::CommandList(Device &device, const VkCommandBuffer commandBuffer, const VkCommandPool commandPool,
+                         const WorkTypeFlags workTypes) :
     m_device(device),
+    m_commandBuffer(commandBuffer),
     m_commandPool(commandPool),
     m_workTypes(workTypes),
+    m_descriptorWriter(device),
     m_cmdPushDescriptorSet(reinterpret_cast<PFN_vkCmdPushDescriptorSetKHR>(
-            vkGetDeviceProcAddr(device, "vkCmdPushDescriptorSetKHR")))
+            vkGetDeviceProcAddr(device.vulkan_device(), "vkCmdPushDescriptorSetKHR")))
 {
 }
 
 CommandList::~CommandList()
 {
    if (m_commandBuffer != nullptr) {
-      vkFreeCommandBuffers(m_device, m_commandPool, 1, &m_commandBuffer);
+      vkFreeCommandBuffers(m_device.vulkan_device(), m_commandPool, 1, &m_commandBuffer);
    }
 }
 
 CommandList::CommandList(CommandList &&other) noexcept :
+    m_device(other.m_device),
     m_commandBuffer(std::exchange(other.m_commandBuffer, nullptr)),
-    m_device(std::exchange(other.m_device, nullptr)),
     m_commandPool(std::exchange(other.m_commandPool, nullptr)),
     m_workTypes(std::exchange(other.m_workTypes, WorkType::None)),
+    m_descriptorWriter(std::move(other.m_descriptorWriter)),
     m_cmdPushDescriptorSet(other.m_cmdPushDescriptorSet)
 {
 }
@@ -43,9 +44,9 @@ CommandList &CommandList::operator=(CommandList &&other) noexcept
    if (this == &other)
       return *this;
    m_commandBuffer        = std::exchange(other.m_commandBuffer, nullptr);
-   m_device               = std::exchange(other.m_device, nullptr);
    m_commandPool          = std::exchange(other.m_commandPool, nullptr);
    m_workTypes            = std::exchange(other.m_workTypes, WorkType::None);
+   m_descriptorWriter     = std::move(other.m_descriptorWriter);
    m_cmdPushDescriptorSet = other.m_cmdPushDescriptorSet;
    return *this;
 }
@@ -144,15 +145,27 @@ void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
                            &vulkanDescriptorSet, 0, nullptr);
 }
 
-void CommandList::draw_primitives(const int vertexCount, const int vertexOffset) const
+void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
 {
+   if (m_hasPendingDescriptors) {
+      m_hasPendingDescriptors = false;
+      this->push_descriptors(0, m_descriptorWriter);
+      m_descriptorWriter.reset_count();
+   }
+
    m_triangleCount += vertexCount / 3;
    vkCmdDraw(m_commandBuffer, vertexCount, 1, vertexOffset, 0);
 }
 
 void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset,
-                                          const int vertexOffset) const
+                                          const int vertexOffset)
 {
+   if (m_hasPendingDescriptors) {
+      m_hasPendingDescriptors = false;
+      this->push_descriptors(0, m_descriptorWriter);
+      m_descriptorWriter.reset_count();
+   }
+
    m_triangleCount += indexCount / 3;
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
@@ -302,6 +315,12 @@ Status CommandList::reset() const
       return Status::UnsupportedDevice;
    }
    return Status::Success;
+}
+
+void CommandList::bind_texture(u32 binding, const Texture &texture, const Sampler &sampler)
+{
+   m_descriptorWriter.set_sampled_texture(binding, texture, sampler);
+   m_hasPendingDescriptors = true;
 }
 
 }// namespace triglav::graphics_api

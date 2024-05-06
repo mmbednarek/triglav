@@ -66,7 +66,7 @@ void RectangleRenderer::begin_render(graphics_api::CommandList &cmdList) const
    cmdList.bind_pipeline(m_pipeline);
 }
 
-void RectangleRenderer::draw(const graphics_api::CommandList &cmdList,
+void RectangleRenderer::draw(graphics_api::CommandList &cmdList,
                              const Rectangle &rect,
                              const graphics_api::Resolution &resolution) const
 {

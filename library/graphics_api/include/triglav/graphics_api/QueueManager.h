@@ -39,14 +39,14 @@ class QueueManager
    class QueueGroup
    {
     public:
-      QueueGroup(const Device &device, const QueueFamilyInfo &info);
+      QueueGroup(Device &device, const QueueFamilyInfo &info);
       VkQueue next_queue() const;
       [[nodiscard]] WorkTypeFlags flags() const;
       [[nodiscard]] Result<CommandList> create_command_list() const;
       [[nodiscard]] u32 index() const;
 
     private:
-      VkDevice m_vulkanDevice;
+      Device &m_device;
       std::vector<VkQueue> m_queues;
       WorkTypeFlags m_flags;
       vulkan::CommandPool m_commandPool;
@@ -79,6 +79,7 @@ class QueueManager
    QueueGroup &queue_group(WorkTypeFlags type);
    const QueueGroup &queue_group(WorkTypeFlags type) const;
 
+   Device &m_device;
    SemaphoreFactory m_semaphoreFactory;
    ObjectPool<Semaphore, SemaphoreFactory, 8> m_semaphorePool;
    FenceFactory m_fenceFactory;

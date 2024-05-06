@@ -25,6 +25,7 @@ u32 work_type_flag_count(const WorkTypeFlags flags)
 }// namespace
 
 QueueManager::QueueManager(Device &device, std::span<QueueFamilyInfo> infos) :
+    m_device(device),
     m_semaphoreFactory(device),
     m_semaphorePool(m_semaphoreFactory),
     m_fenceFactory(device),
@@ -85,8 +86,8 @@ void QueueManager::release_fence(const Fence *fence)
    m_fencePool.release_object(fence);
 }
 
-QueueManager::QueueGroup::QueueGroup(const Device &device, const QueueFamilyInfo &info) :
-    m_vulkanDevice(device.vulkan_device()),
+QueueManager::QueueGroup::QueueGroup(Device &device, const QueueFamilyInfo &info) :
+    m_device(device),
     m_flags(info.flags),
     m_commandPool(device.vulkan_device()),
     m_queueFamilyIndex(info.index)
@@ -127,11 +128,11 @@ Result<CommandList> QueueManager::QueueGroup::create_command_list() const
    allocateInfo.commandBufferCount = 1;
 
    VkCommandBuffer commandBuffer;
-   if (vkAllocateCommandBuffers(m_vulkanDevice, &allocateInfo, &commandBuffer) != VK_SUCCESS) {
+   if (vkAllocateCommandBuffers(m_device.vulkan_device(), &allocateInfo, &commandBuffer) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return CommandList(commandBuffer, m_vulkanDevice, *m_commandPool, m_flags);
+   return CommandList(m_device, commandBuffer, *m_commandPool, m_flags);
 }
 
 u32 QueueManager::QueueGroup::index() const

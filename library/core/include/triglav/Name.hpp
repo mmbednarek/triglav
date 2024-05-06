@@ -86,6 +86,8 @@ class ResourceName
    Name m_name;
 };
 
+constexpr auto g_emptyResource = ResourceName{};
+
 template<ResourceType CResourceType>
 TypedName<CResourceType>::operator ResourceName() const
 {

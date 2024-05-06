@@ -1,6 +1,5 @@
 #include "UserInterface.h"
 
-#include "triglav/graphics_api/DescriptorWriter.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/ui_core/Viewport.h"
@@ -101,7 +100,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
       m_textChanges.clear();
    }
 
-   void draw_text(const graphics_api::CommandList &cmdList, const Name name, const TextObject &textRes)
+   void draw_text(graphics_api::CommandList &cmdList, const Name name, const TextObject &textRes)
    {
       const auto [viewportWidth, viewportHeight] = this->framebuffer("ui"_name).resolution();
 
@@ -121,10 +120,8 @@ class UserInterfaceResources : public render_core::NodeFrameResources
 
       auto &atlas = m_resourceManager.get<ResourceType::GlyphAtlas>(textObj.glyphAtlas);
 
-      graphics_api::DescriptorWriter descWriter(m_device);
-      descWriter.set_uniform_buffer(0, textRes.ubo);
-      descWriter.set_sampled_texture(1, atlas.texture(), m_sampler);
-      cmdList.push_descriptors(0, descWriter);
+      cmdList.bind_uniform_buffer(0, textRes.ubo);
+      cmdList.bind_texture(1, atlas.texture(), m_sampler);
 
       cmdList.draw_primitives(static_cast<int>(textRes.vertexCount), 0);
    }

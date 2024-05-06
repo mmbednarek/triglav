@@ -1,6 +1,5 @@
 #include "ShadowMap.h"
 
-#include "triglav/graphics_api/DescriptorWriter.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
 
 #include <memory>
@@ -59,10 +58,7 @@ class ShadowMapResources : public render_core::NodeFrameResources
          size += range.size;
       }
 
-      graphics_api::DescriptorWriter smDescWriter(m_device);
-      smDescWriter.set_uniform_buffer(0, instancedModel.ubo);
-      cmdList.push_descriptors(0, smDescWriter);
-
+      cmdList.bind_uniform_buffer(0, instancedModel.ubo);
       cmdList.draw_indexed_primitives(size, firstOffset, 0);
    }
 

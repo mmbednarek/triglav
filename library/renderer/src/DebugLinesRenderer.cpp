@@ -94,7 +94,7 @@ void DebugLinesRenderer::begin_render(graphics_api::CommandList &cmdList) const
    cmdList.bind_pipeline(m_pipeline);
 }
 
-void DebugLinesRenderer::draw(const graphics_api::CommandList &cmdList, const DebugLines &list,
+void DebugLinesRenderer::draw(graphics_api::CommandList &cmdList, const DebugLines &list,
                               const Camera &camera) const
 {
    *list.ubo = camera.view_projection_matrix() * list.model;

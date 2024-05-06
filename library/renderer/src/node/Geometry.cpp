@@ -1,6 +1,5 @@
 #include "Geometry.h"
 
-#include "triglav/graphics_api/DescriptorWriter.h"
 #include "triglav/graphics_api/Framebuffer.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
 
@@ -81,17 +80,14 @@ class GeometryResources : public render_core::NodeFrameResources {
          const auto &material = m_resourceManager.get<ResourceType::Material>(range.materialName);
          const auto &texture  = m_resourceManager.get<ResourceType::Texture>(material.texture);
 
-         graphics_api::DescriptorWriter descWriter(m_device);
-         descWriter.set_uniform_buffer(0, instancedModel.ubo);
-         descWriter.set_sampled_texture(1, texture, m_sampler);
-         if (material.normal_texture != ResourceName{}) {
+         cmdList.bind_uniform_buffer(0, instancedModel.ubo);
+         cmdList.bind_texture(1, texture, m_sampler);
+         if (material.normal_texture != g_emptyResource) {
             const auto &normalTexture = m_resourceManager.get<ResourceType::Texture>(material.normal_texture);
-            descWriter.set_sampled_texture(2, normalTexture, m_sampler);
+            cmdList.bind_texture(2, normalTexture, m_sampler);
          }
 
-         descWriter.set_uniform_buffer(3, instancedModel.uboMatProps);
-
-         cmdList.push_descriptors(0, descWriter);
+         cmdList.bind_uniform_buffer(3, instancedModel.uboMatProps);
 
          cmdList.draw_indexed_primitives(static_cast<int>(range.size), static_cast<int>(range.offset), 0);
       }

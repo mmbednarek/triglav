@@ -3,6 +3,7 @@
 #include "Buffer.h"
 #include "GraphicsApi.hpp"
 #include "Pipeline.h"
+#include "DescriptorWriter.h"
 
 #include <span>
 
@@ -23,7 +24,7 @@ enum class SubmitType
 class CommandList
 {
  public:
-   CommandList(VkCommandBuffer commandBuffer, VkDevice device, VkCommandPool commandPool,
+   CommandList(Device& device, VkCommandBuffer commandBuffer, VkCommandPool commandPool,
                WorkTypeFlags workTypes);
    ~CommandList();
 
@@ -42,8 +43,8 @@ class CommandList
    void end_render_pass() const;
    void bind_pipeline(const Pipeline &pipeline);
    void bind_descriptor_set(const DescriptorView &descriptorSet) const;
-   void draw_primitives(int vertexCount, int vertexOffset) const;
-   void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset) const;
+   void draw_primitives(int vertexCount, int vertexOffset);
+   void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset);
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer &buffer) const;
    void copy_buffer(const Buffer &source, const Buffer &dest) const;
@@ -58,6 +59,15 @@ class CommandList
    void reset_timestamp_array(const TimestampArray &timestampArray, u32 first, u32 count) const;
    void write_timestamp(PipelineStage stage, const TimestampArray &timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter &writer) const;
+
+   template<typename TValue>
+   void bind_uniform_buffer(const uint32_t binding, const TValue &buffer)
+   {
+      m_descriptorWriter.set_uniform_buffer(binding, buffer);
+      m_hasPendingDescriptors = true;
+   }
+
+   void bind_texture(u32 binding, const Texture &texture, const Sampler &sampler);
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray &array) const
@@ -78,7 +88,7 @@ class CommandList
    }
 
    template<typename TMesh>
-   void draw_mesh(const TMesh &mesh) const
+   void draw_mesh(const TMesh &mesh)
    {
       this->bind_vertex_array(mesh.vertices, 0);
       this->bind_index_array(mesh.indices);
@@ -89,12 +99,15 @@ class CommandList
    [[nodiscard]] uint64_t triangle_count() const;
 
  private:
+   Device& m_device;
+
    VkCommandBuffer m_commandBuffer;
-   VkDevice m_device;
    VkCommandPool m_commandPool;
    VkPipelineLayout m_boundPipelineLayout{};
    WorkTypeFlags m_workTypes;
    mutable uint64_t m_triangleCount{};
+   DescriptorWriter m_descriptorWriter;
+   bool m_hasPendingDescriptors{false};
 
    PFN_vkCmdPushDescriptorSetKHR m_cmdPushDescriptorSet{};
 };

@@ -26,7 +26,7 @@ class DebugLinesRenderer
    [[nodiscard]] DebugLines create_line_list(std::span<glm::vec3> list);
    [[nodiscard]] DebugLines create_line_list_from_bouding_box(const geometry::BoundingBox &boudingBox);
    void begin_render(graphics_api::CommandList &cmdList) const;
-   void draw(const graphics_api::CommandList &cmdList, const DebugLines &list, const Camera &camera) const;
+   void draw(graphics_api::CommandList &cmdList, const DebugLines &list, const Camera &camera) const;
 
  private:
    graphics_api::Device &m_device;
