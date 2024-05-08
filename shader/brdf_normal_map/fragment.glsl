@@ -12,21 +12,17 @@ layout(location = 2) out vec4 outNormal;
 
 layout(binding = 1) uniform sampler2D texSampler;
 layout(binding = 2) uniform sampler2D normalSampler;
+
 layout(binding = 3) uniform MaterialProperties {
-    bool hasNormalMap;
     float roughness;
-    float metalness;
+    float metallic;
 } mp;
 
 void main() {
     outColor = vec4(texture(texSampler, fragTexCoord).rgb, mp.roughness);
-    outPosition = vec4(fragPosition, mp.metalness);
+    outPosition = vec4(fragPosition, mp.metallic);
 
-    if (mp.hasNormalMap) {
-        const mat3 tangentSpaceMat = mat3(fragTangent, fragBitangent, fragNormal);
-        vec3 normalSample = 2 * texture(normalSampler, fragTexCoord).rgb - 1.0;
-        outNormal = vec4(normalize(tangentSpaceMat * normalSample), 1.0);
-    } else {
-        outNormal = vec4(normalize(fragNormal), 1.0);
-    }
+    const mat3 tangentSpaceMat = mat3(fragTangent, fragBitangent, fragNormal);
+    vec3 normalSample = 2 * texture(normalSampler, fragTexCoord).rgb - 1.0;
+    outNormal = vec4(normalize(tangentSpaceMat * normalSample), 1.0);
 }

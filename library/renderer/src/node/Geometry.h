@@ -4,6 +4,7 @@
 
 #include "Scene.h"
 #include "SkyBox.h"
+#include "MaterialManager.h"
 
 #include <GroundRenderer.h>
 
@@ -27,7 +28,7 @@ class Geometry : public render_core::IRenderNode
    resource::ResourceManager &m_resourceManager;
    Scene& m_scene;
    graphics_api::RenderTarget m_renderTarget;
-   graphics_api::Pipeline m_pipeline;
+   MaterialManager m_materialManager;
    SkyBox m_skybox;
    GroundRenderer m_groundRenderer;
    DebugLinesRenderer m_debugLinesRenderer;

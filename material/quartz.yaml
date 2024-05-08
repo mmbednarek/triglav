@@ -1,6 +1,6 @@
 name: quartz
+template: brdf/simple.mt
 properties:
-  albedo_texture: "quartz.tex"
-  # normal_texture: "quartz/normal.tex"
+  albedo: "quartz.tex"
   roughness: 0.2
   metallic: 0.1

@@ -14,6 +14,7 @@ enum class Status
    BrokenPipe,
    StreamIsClosed,
    InvalidFile,
+   BufferTooSmall,
 };
 
 template<typename T>

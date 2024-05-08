@@ -1,0 +1,10 @@
+fragment_shader: brdf/simple.fshader
+vertex_shader: brdf/simple.vshader
+properties:
+  - name: albedo
+    type: texture2D
+  - name: roughness
+    type: float32
+  - name: metallic
+    type: float32
+      

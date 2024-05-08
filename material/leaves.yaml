@@ -1,6 +1,7 @@
 name: leaves
+template: brdf/normal_map.mt
 properties:
-  albedo_texture: "leaves.tex"
-  normal_texture: "leaves/normal.tex"
+  albedo: "leaves.tex"
+  normal: "leaves/normal.tex"
   roughness: 1.0
   metallic: 0.0

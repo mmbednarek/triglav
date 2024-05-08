@@ -1,6 +1,14 @@
 io_sources = files([
-  'src/File.cpp',
+  'include/triglav/io/BufferedReader.h',
+  'include/triglav/io/BufferWriter.h',
+  'include/triglav/io/File.h',
+  'include/triglav/io/Result.h',
+  'include/triglav/io/Serializer.h',
+  'include/triglav/io/Stream.h',
+  'src/BufferWriter.cpp',
   'src/BufferedReader.cpp',
+  'src/File.cpp',
+  'src/Serializer.cpp',
 ])
 
 if host_machine.system() == 'linux'
@@ -9,7 +17,7 @@ elif host_machine.system() == 'windows'
     subdir('platform/windows')
 endif
 
-io_deps = [core]
+io_deps = [core, glm]
 io_incl = include_directories(['include', 'include/triglav/io'])
 
 io_lib = static_library('io',

@@ -1,0 +1,12 @@
+fragment_shader: brdf/normal_map.fshader
+vertex_shader: brdf/normal_map.vshader
+properties:
+  - name: albedo
+    type: texture2D
+  - name: normal
+    type: texture2D
+  - name: roughness
+    type: float32
+  - name: metallic
+    type: float32
+      

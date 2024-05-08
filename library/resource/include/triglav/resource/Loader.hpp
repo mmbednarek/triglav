@@ -8,6 +8,7 @@ enum class ResourceLoadType
 {
   None,
   Static,
+  StaticDependent,
   Font,
   Graphics,
   GraphicsDependent,

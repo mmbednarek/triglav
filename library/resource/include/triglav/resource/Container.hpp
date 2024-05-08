@@ -6,6 +6,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <utility>
+#include <ranges>
 
 namespace triglav::resource {
 
@@ -50,6 +51,13 @@ class Container final : public IContainer
 
       std::shared_lock lk{m_mutex};
       return m_map.contains(ResName{name});
+   }
+
+   template<typename TFunc>
+   void iterate_resources(TFunc func) {
+      for (const auto& [name, value] : m_map) {
+         func(name, value);
+      }
    }
 
  private:

@@ -1,7 +1,7 @@
 name: bark
-shader: nm_rc_mc.shader
+template: brdf/normal_map.mt
 properties:
-  albedo_texture: "bark.tex"
-  normal_texture: "bark/normal.tex"
+  albedo: "bark.tex"
+  normal: "bark/normal.tex"
   roughness: 1.0
   metallic: 0.0

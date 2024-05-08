@@ -41,6 +41,8 @@ class ResourceManager
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
          container<CResourceType>().register_resource(name,
                                                       Loader<CResourceType>::load_font(m_fontManager, path));
+      } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::StaticDependent) {
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load(*this, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Static) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(path));
       }
@@ -50,6 +52,12 @@ class ResourceManager
    void emplace_resource(TypedName<CResourceType> name, TArgs&& ...args)
    {
       container<CResourceType>().register_emplace(name, std::forward<TArgs>(args)...);
+   }
+
+   template<ResourceType CResourceType, typename TFunc>
+   void iterate_resources(TFunc func)
+   {
+      container<CResourceType>().iterate_resources(func);
    }
 
  private:

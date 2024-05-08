@@ -60,6 +60,8 @@ class CommandList
    void write_timestamp(PipelineStage stage, const TimestampArray &timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter &writer) const;
 
+   void bind_raw_uniform_buffer(u32 binding, const Buffer &buffer);
+
    template<typename TValue>
    void bind_uniform_buffer(const uint32_t binding, const TValue &buffer)
    {

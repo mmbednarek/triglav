@@ -1,6 +1,7 @@
 name: grass
+template: brdf/normal_map.mt
 properties:
-  albedo_texture: "grass.tex"
-  normal_texture: "grass/normal.tex"
+  albedo: "grass.tex"
+  normal: "grass/normal.tex"
   roughness: 1.0
   metallic: 0.0

@@ -1,6 +1,7 @@
 name: gold
+template: brdf/normal_map.mt
 properties:
-  albedo_texture: "gold.tex"
-  normal_texture: "gold/normal.tex"
+  albedo: "gold.tex"
+  normal: "gold/normal.tex"
   roughness: 0.1
   metallic: 0.6

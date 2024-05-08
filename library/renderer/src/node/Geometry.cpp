@@ -12,11 +12,11 @@ using graphics_api::AttachmentAttribute;
 
 class GeometryResources : public render_core::NodeFrameResources {
  public:
-   GeometryResources(graphics_api::Device &device, resource::ResourceManager &resourceManager, graphics_api::Pipeline& pipeline, Scene& scene, DebugLinesRenderer &debugLinesRenderer) :
+   GeometryResources(graphics_api::Device &device, resource::ResourceManager &resourceManager, MaterialManager& materialManager, Scene& scene, DebugLinesRenderer &debugLinesRenderer) :
        m_device(device),
        m_resourceManager(resourceManager),
        m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod8_aniso.sampler"_rc)),
-       m_pipeline(pipeline),
+       m_materialManager(materialManager),
        m_scene(scene),
        m_debugLinesRenderer(debugLinesRenderer),
        m_groundUniformBuffer(m_device),
@@ -31,7 +31,6 @@ class GeometryResources : public render_core::NodeFrameResources {
    {
       const auto &model = m_resourceManager.get<ResourceType::Model>(object.model);
       graphics_api::UniformBuffer<render_core::UniformBufferObject> ubo(m_device);
-      graphics_api::UniformBuffer<render_core::MaterialProps> uboMatProps(m_device);
 
       const auto modelMat = object.model_matrix();
       ubo->model  = modelMat;
@@ -39,14 +38,12 @@ class GeometryResources : public render_core::NodeFrameResources {
 
       for (const auto range : model.range) {
          const auto &material = m_resourceManager.get<ResourceType::Material>(range.materialName);
-         *uboMatProps = material.props;
       }
 
       m_models.emplace_back(render_core::InstancedModel{object.model,
                             model.boundingBox,
                             object.position,
                             std::move(ubo),
-                            std::move(uboMatProps),
       });
 
       auto &debugBoundingBox = m_debugLines.emplace_back(
@@ -77,17 +74,31 @@ class GeometryResources : public render_core::NodeFrameResources {
       cmdList.bind_index_array(model.mesh.indices);
 
       for (const auto &range : model.range) {
-         const auto &material = m_resourceManager.get<ResourceType::Material>(range.materialName);
-         const auto &texture  = m_resourceManager.get<ResourceType::Texture>(material.texture);
-
          cmdList.bind_uniform_buffer(0, instancedModel.ubo);
-         cmdList.bind_texture(1, texture, m_sampler);
-         if (material.normal_texture != g_emptyResource) {
-            const auto &normalTexture = m_resourceManager.get<ResourceType::Texture>(material.normal_texture);
-            cmdList.bind_texture(2, normalTexture, m_sampler);
-         }
 
-         cmdList.bind_uniform_buffer(3, instancedModel.uboMatProps);
+         if (not m_lastMaterial.has_value() || *m_lastMaterial != range.materialName) {
+            const auto& matResources = m_materialManager.material_resources(range.materialName);
+
+            if (not m_lastMaterialTemplate.has_value() || *m_lastMaterialTemplate != matResources.materialTemplate) {
+               const auto& matTemplateResources = m_materialManager.material_template_resources(matResources.materialTemplate);
+               cmdList.bind_pipeline(matTemplateResources.pipeline);
+               m_lastMaterialTemplate = matResources.materialTemplate;
+            }
+
+            u32 binding = 1;
+
+            for (const auto textureName : matResources.textures) {
+               const auto &texture  = m_resourceManager.get(textureName);
+               cmdList.bind_texture(binding, texture, m_sampler);
+               ++binding;
+            }
+
+            if (matResources.uniformBuffer.has_value()) {
+               cmdList.bind_raw_uniform_buffer(binding, *matResources.uniformBuffer);
+            }
+
+            m_lastMaterial = range.materialName;
+         }
 
          cmdList.draw_indexed_primitives(static_cast<int>(range.size), static_cast<int>(range.offset), 0);
       }
@@ -100,7 +111,8 @@ class GeometryResources : public render_core::NodeFrameResources {
          this->update_uniforms();
       }
 
-      cmdList.bind_pipeline(m_pipeline);
+      m_lastMaterial.reset();
+      m_lastMaterialTemplate.reset();
 
       for (const auto &obj : m_models) {
          if (not m_scene.camera().is_bouding_box_visible(obj.boundingBox, obj.ubo->model))
@@ -132,7 +144,7 @@ class GeometryResources : public render_core::NodeFrameResources {
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
    graphics_api::Sampler& m_sampler;
-   graphics_api::Pipeline& m_pipeline;
+   MaterialManager& m_materialManager;
    Scene& m_scene;
    DebugLinesRenderer &m_debugLinesRenderer;
    std::vector<render_core::InstancedModel> m_models{};
@@ -140,6 +152,8 @@ class GeometryResources : public render_core::NodeFrameResources {
    bool m_needsUpdate{false};
    GroundRenderer::UniformBuffer m_groundUniformBuffer;
    SkyBox::UniformBuffer m_skyboxUniformBuffer;
+   std::optional<MaterialName> m_lastMaterial;
+   std::optional<MaterialTemplateName> m_lastMaterialTemplate;
 
    Scene::OnObjectAddedToSceneDel::Sink<GeometryResources> m_onAddedObjectSink;
    Scene::OnViewportChangeDel::Sink<GeometryResources> m_onViewportChangeSink;
@@ -168,31 +182,7 @@ Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &reso
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(D, UNorm16))
                                .build())),
-    m_pipeline(GAPI_CHECK(
-            graphics_api::PipelineBuilder(device, m_renderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("model.fshader"_rc))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("model.vshader"_rc))
-                            // Vertex description
-                    .begin_vertex_layout<geometry::Vertex>()
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
-                    .end_vertex_layout()
-                            // Descriptor layout
-                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::PipelineStage::VertexShader)
-                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::PipelineStage::FragmentShader)
-                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                        graphics_api::PipelineStage::FragmentShader)
-                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::PipelineStage::FragmentShader)
-                    .enable_depth_test(true)
-                    .enable_blending(false)
-                    .use_push_descriptors(true)
-                    .build())),
+    m_materialManager(device, m_resourceManager, m_renderTarget),
     m_skybox(device, resourceManager, m_renderTarget),
     m_groundRenderer(device, m_renderTarget, resourceManager),
     m_debugLinesRenderer(device, m_renderTarget, resourceManager),
@@ -242,7 +232,7 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
 
 std::unique_ptr<render_core::NodeFrameResources> Geometry::create_node_resources()
 {
-   auto result = std::make_unique<GeometryResources>(m_device, m_resourceManager, m_pipeline, m_scene, m_debugLinesRenderer);
+   auto result = std::make_unique<GeometryResources>(m_device, m_resourceManager, m_materialManager, m_scene, m_debugLinesRenderer);
    result->add_render_target("gbuffer"_name, m_renderTarget);
    return result;
 }

@@ -317,6 +317,12 @@ Status CommandList::reset() const
    return Status::Success;
 }
 
+void CommandList::bind_raw_uniform_buffer(u32 binding, const Buffer &buffer)
+{
+   m_descriptorWriter.set_raw_uniform_buffer(binding, buffer);
+   m_hasPendingDescriptors = true;
+}
+
 void CommandList::bind_texture(u32 binding, const Texture &texture, const Sampler &sampler)
 {
    m_descriptorWriter.set_sampled_texture(binding, texture, sampler);

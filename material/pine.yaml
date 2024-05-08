@@ -1,6 +1,7 @@
 name: pine
+template: brdf/normal_map.mt
 properties:
-  albedo_texture: "pine.tex"
-  normal_texture: "pine/normal.tex"
+  albedo: "pine.tex"
+  normal: "pine/normal.tex"
   roughness: 1.0
   metallic: 0.0

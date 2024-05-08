@@ -41,7 +41,6 @@ struct InstancedModel
    geometry::BoundingBox boundingBox;
    glm::vec3 position{};
    graphics_api::UniformBuffer<UniformBufferObject> ubo;
-   graphics_api::UniformBuffer<MaterialProps> uboMatProps;
 };
 
 struct Sprite
