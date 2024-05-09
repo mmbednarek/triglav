@@ -22,10 +22,8 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                                    const graphics_api::Texture &noiseTexture) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
-                                   .fragment_shader(resourceManager.get<ResourceType::FragmentShader>(
-                                           "ambient_occlusion.fshader"_rc))
-                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>(
-                                           "ambient_occlusion.vshader"_rc))
+                                   .fragment_shader(resourceManager.get("ambient_occlusion.fshader"_rc))
+                                   .vertex_shader(resourceManager.get("ambient_occlusion.vshader"_rc))
                                    // Descriptor layout
                                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                                        graphics_api::PipelineStage::FragmentShader)
@@ -39,8 +37,7 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                    .use_push_descriptors(true)
                                    .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                                    .build())),
-    // m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(1, 3, 1))),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc)),
+    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc)),
     m_samplesSSAO(generate_sample_points(g_SampleCountSSAO)),
     m_uniformBuffer(m_device),
     m_noiseTexture(noiseTexture)

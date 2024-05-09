@@ -31,8 +31,8 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("sprite.fshader"_rc))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("sprite.vshader"_rc))
+                    .fragment_shader(resourceManager.get("sprite.fshader"_rc))
+                    .vertex_shader(resourceManager.get("sprite.vshader"_rc))
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                         graphics_api::PipelineStage::VertexShader)
@@ -42,7 +42,7 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
                     .enable_depth_test(false)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40))),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc))
+    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc))
 {
 }
 

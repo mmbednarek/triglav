@@ -18,10 +18,8 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
     m_device(device),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(m_device, renderTarget)
-                    .fragment_shader(
-                            resourceManager.get<ResourceType::FragmentShader>("post_processing.fshader"_rc))
-                    .vertex_shader(
-                            resourceManager.get<ResourceType::VertexShader>("post_processing.vshader"_rc))
+                    .fragment_shader(resourceManager.get("post_processing.fshader"_rc))
+                    .vertex_shader(resourceManager.get("post_processing.vshader"_rc))
                     // Descriptor layout
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::PipelineStage::FragmentShader)
@@ -32,7 +30,7 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                     .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstants))
                     .build())),
-    m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc))
+    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc))
 {
 }
 

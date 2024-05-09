@@ -96,9 +96,8 @@ ShadowMap::ShadowMap(graphics_api::Device &device, resource::ResourceManager &re
                                .build())),
     m_pipeline(GAPI_CHECK(
             graphics_api::PipelineBuilder(device, m_depthRenderTarget)
-                    .fragment_shader(
-                            resourceManager.get<ResourceType::FragmentShader>("shadow_map.fshader"_rc))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("shadow_map.vshader"_rc))
+                    .fragment_shader(resourceManager.get("shadow_map.fshader"_rc))
+                    .vertex_shader(resourceManager.get("shadow_map.vshader"_rc))
                     .begin_vertex_layout<geometry::Vertex>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                     .end_vertex_layout()

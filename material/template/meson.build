@@ -1,6 +1,6 @@
 material_tem_files = [
-    'brdf_normal_map.yaml',
-    'brdf_simple.yaml',
+    'pbr_normal_map.yaml',
+    'pbr_simple.yaml',
 ]
 
 foreach file : material_tem_files

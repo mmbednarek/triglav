@@ -18,7 +18,7 @@ AmbientOcclusion::AmbientOcclusion(graphics_api::Device &device, resource::Resou
                                            GAPI_FORMAT(R, Float16), SampleCount::Single)
                                .build())),
     m_renderer(device, m_renderTarget, resourceManager,
-               resourceManager.get<ResourceType::Texture>("noise.tex"_rc)),
+               resourceManager.get("noise.tex"_rc)),
     m_scene(scene)
 {
 }

@@ -15,7 +15,7 @@ class GeometryResources : public render_core::NodeFrameResources {
    GeometryResources(graphics_api::Device &device, resource::ResourceManager &resourceManager, MaterialManager& materialManager, Scene& scene, DebugLinesRenderer &debugLinesRenderer) :
        m_device(device),
        m_resourceManager(resourceManager),
-       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod8_aniso.sampler"_rc)),
+       m_sampler(resourceManager.get("linear_repeat_mlod8_aniso.sampler"_rc)),
        m_materialManager(materialManager),
        m_scene(scene),
        m_debugLinesRenderer(debugLinesRenderer),

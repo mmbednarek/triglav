@@ -2,6 +2,7 @@
 
 #include "detail/Crc.hpp"
 #include "ResourceType.hpp"
+#include "CompTimeString.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -99,6 +100,22 @@ constexpr auto make_name_id(const std::string_view value)
    return detail::hash_string(value);
 }
 
+template<size_t CSize>
+constexpr auto comptime_str(const char (&value)[CSize])
+{
+   return std::string_view{value, CSize};
+}
+
+template<CompTimeString TValue>
+constexpr auto make_resource_path_comptime()
+{
+   constexpr auto value = TValue.to_string_view();
+   constexpr auto at = value.find_last_of('.');
+   constexpr auto extension = value.substr(at + 1);
+   constexpr auto hash = detail::hash_string(value.substr(0, at));
+   return TypedName<type_by_extension(extension)>(hash);
+}
+
 constexpr auto make_rc_name(const std::string_view value)
 {
    const auto at        = value.find_last_of('.');
@@ -115,9 +132,10 @@ TG_RESOURCE_TYPE_LIST
 
 namespace name_literals {
 
-constexpr ResourceName operator""_rc(const char *value, const std::size_t count)
+template<CompTimeString TValue>
+constexpr auto operator""_rc()
 {
-   return make_rc_name(std::string_view(value, count));
+   return make_resource_path_comptime<TValue>();
 }
 
 constexpr Name operator""_name(const char *value, const std::size_t count)

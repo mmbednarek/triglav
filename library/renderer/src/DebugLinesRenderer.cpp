@@ -16,9 +16,8 @@ DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_ap
     m_device(device),
     m_pipeline(checkResult(
             graphics_api::PipelineBuilder(device, renderTarget)
-                    .fragment_shader(
-                            resourceManager.get<ResourceType::FragmentShader>("debug_lines.fshader"_rc))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("debug_lines.vshader"_rc))
+                    .fragment_shader(resourceManager.get("debug_lines.fshader"_rc))
+                    .vertex_shader(resourceManager.get("debug_lines.vshader"_rc))
                     .begin_vertex_layout<glm::vec3>()
                     .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
                     .end_vertex_layout()

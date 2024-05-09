@@ -1,5 +1,5 @@
 name: pine
-template: brdf/normal_map.mt
+template: pbr/normal_map.mt
 properties:
   albedo: "pine.tex"
   normal: "pine/normal.tex"

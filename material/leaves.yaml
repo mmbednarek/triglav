@@ -1,5 +1,5 @@
 name: leaves
-template: brdf/normal_map.mt
+template: pbr/normal_map.mt
 properties:
   albedo: "leaves.tex"
   normal: "leaves/normal.tex"

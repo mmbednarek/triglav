@@ -15,9 +15,8 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api:
                                      ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderTarget)
-                                   .fragment_shader(
-                            resourceManager.get<ResourceType::FragmentShader>("rectangle.fshader"_rc))
-                                   .vertex_shader(resourceManager.get<ResourceType::VertexShader>("rectangle.vshader"_rc))
+                                   .fragment_shader(resourceManager.get("rectangle.fshader"_rc))
+                                   .vertex_shader(resourceManager.get("rectangle.vshader"_rc))
                                    .begin_vertex_layout<glm::vec2>()
                                    .vertex_attribute(GAPI_FORMAT(RG, Float32), 0)
                                    .end_vertex_layout()

@@ -1,5 +1,5 @@
 name: quartz
-template: brdf/simple.mt
+template: pbr/simple.mt
 properties:
   albedo: "quartz.tex"
   roughness: 0.2

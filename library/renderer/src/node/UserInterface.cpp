@@ -35,7 +35,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
                           ui_core::Viewport &viewport, RectangleRenderer &rectangleRenderer, graphics_api::Pipeline &textPipeline) :
        m_device(device),
        m_resourceManager(resourceManager),
-       m_sampler(resourceManager.get<ResourceType::Sampler>("linear_repeat_mlod0.sampler"_rc)),
+       m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc)),
        m_viewport(viewport),
        m_rectangleRenderer(rectangleRenderer),
        m_textPipeline(textPipeline),
@@ -173,8 +173,8 @@ UserInterface::UserInterface(graphics_api::Device &device, resource::ResourceMan
                                .build())),
     m_textPipeline(GAPI_CHECK(
             graphics_api::PipelineBuilder(device, m_textureRenderTarget)
-                    .fragment_shader(resourceManager.get<ResourceType::FragmentShader>("text.fshader"_rc))
-                    .vertex_shader(resourceManager.get<ResourceType::VertexShader>("text.vshader"_rc))
+                    .fragment_shader(resourceManager.get("text.fshader"_rc))
+                    .vertex_shader(resourceManager.get("text.vshader"_rc))
                     // Vertex description
                     .begin_vertex_layout<render_core::GlyphVertex>()
                     .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(render_core::GlyphVertex, position))

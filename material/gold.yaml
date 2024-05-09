@@ -1,5 +1,5 @@
 name: gold
-template: brdf/normal_map.mt
+template: pbr/normal_map.mt
 properties:
   albedo: "gold.tex"
   normal: "gold/normal.tex"
