@@ -1,0 +1,6 @@
+template: pbr/full.mt
+properties:
+  albedo: "metal/albedo.tex"
+  normal: "metal/normal.tex"
+  roughness: "metal/roughness.tex"
+  metallic: "metal/metallic.tex"

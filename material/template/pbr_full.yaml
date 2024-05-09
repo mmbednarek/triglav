@@ -1,0 +1,12 @@
+fragment_shader: pbr/full.fshader
+vertex_shader: pbr/full.vshader
+properties:
+  - name: albedo
+    type: texture2D
+  - name: normal
+    type: texture2D
+  - name: roughness
+    type: texture2D
+  - name: metallic
+    type: texture2D
+

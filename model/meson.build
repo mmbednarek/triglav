@@ -1,4 +1,5 @@
 model_files = [
+    'ball.obj',
     'cage.obj',
     'column.obj',
     'tree.obj',

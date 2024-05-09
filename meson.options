@@ -1,1 +1,1 @@
-option('wayland', type : 'feature', value : 'disabled')
+option('wayland', type : 'feature', value : 'enabled')

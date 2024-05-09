@@ -57,3 +57,10 @@ nodes:
           position: {x: 0.0, y: 32.0, z: 0.0}
           rotation: {yaw: 0, pitch: 0, roll: 0}
           scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "sphere"
+        mesh: "ball.model"
+        transform:
+          position: {x: 0.0, y: 24.0, z: -2.5}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 3, y: 3, z: 3}

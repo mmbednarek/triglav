@@ -175,8 +175,8 @@ Result<Swapchain> Device::create_swapchain(ColorFormat colorFormat, ColorSpace c
    VkSwapchainCreateInfoKHR swapchainInfo{};
    swapchainInfo.sType   = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
    swapchainInfo.surface = *m_surface;
-   // swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-   swapchainInfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+    swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+//   swapchainInfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
    swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
    swapchainInfo.imageFormat = *vulkanColorFormat;
    swapchainInfo.imageUsage  = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;

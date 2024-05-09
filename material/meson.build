@@ -3,6 +3,7 @@ material_files = [
     'gold.yaml',
     'grass.yaml',
     'leaves.yaml',
+    'metal.yaml',
     'pine.yaml',
     'quartz.yaml',
 ]

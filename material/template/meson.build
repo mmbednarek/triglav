@@ -1,4 +1,5 @@
 material_tem_files = [
+    'pbr_full.yaml',
     'pbr_normal_map.yaml',
     'pbr_simple.yaml',
 ]
