@@ -214,7 +214,7 @@ void Renderer::on_key_pressed(const Key key)
       m_hideUI = not m_hideUI;
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
-      m_motion.z += -12.0f;
+      m_motion.z += -32.0f;
    }
 }
 
@@ -328,10 +328,10 @@ void Renderer::update_uniform_data(const float deltaTime)
       m_scene.camera().set_position(m_scene.camera().position() + movingDir * (g_movingSpeed * deltaTime));
    }
 
-   if (m_scene.camera().position().z >= -4.0f) {
+   if (m_scene.camera().position().z >= -5.0f) {
       m_motion = glm::vec3{0.0f};
       glm::vec3 camPos{m_scene.camera().position()};
-      camPos.z = -4.0f;
+      camPos.z = -5.0f;
       m_scene.camera().set_position(camPos);
    } else {
       m_motion.z += 30.0f * deltaTime;

@@ -215,7 +215,7 @@ void main() {
 
     vec4 texColorSample = texture(texColor, fragTexCoord);
     vec3 albedo = texColorSample.rgb;
-    albedo = pow(albedo, vec3(1.3));
+//    albedo = pow(albedo, vec3(1.3));
 
     const float roughness = texColorSample.w;
     const float metallic = texPositionSample.w;
@@ -250,15 +250,10 @@ void main() {
     // END PER LIGHT
 
     vec3 ambient = albedo * ambientValue;
-    vec3 color = ambient + shadow * Lo;
-    //    color = color / (color + vec3(1.0));
-    //    color = pow(color, vec3(1.3));
-    // color = srgb_to_linear(color);
+    vec3 color = 0.5 * ambient + 1.2 * shadow * Lo;
 
     float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
-    color = mix(vec3(luminance), color, 1.2);
-    // color = color / (color + vec3(1.0));
-    // color = pow(color, vec3(1.0/2.2));
+    color = mix(vec3(luminance), color, 1.25);
 
     outColor = vec4(color, 1.0);
 }

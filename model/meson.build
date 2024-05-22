@@ -8,6 +8,8 @@ model_files = [
     'bunny.obj',
     'pine.obj',
     'hall.obj',
+    'wall.obj',
+    'stairs.obj',
 ]
 
 model_targets = []

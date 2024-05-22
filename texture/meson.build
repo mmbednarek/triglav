@@ -1,5 +1,8 @@
 texture_files = [
     'board.png',
+    'brick_albedo.png',
+    'brick_height_map.png',
+    'brick_normal.png',
     'earth.png',
     'gold.png',
     'gold_normal.png',
@@ -18,6 +21,9 @@ texture_files = [
     'pine_normal.png',
     'quartz.png',
     'quartz_normal.png',
+    'stone_albedo.jpg',
+    'stone_normal.png',
+    'stone_height_map.png',
 ]
 
 texture_targets = []

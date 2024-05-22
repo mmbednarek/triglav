@@ -1,11 +1,13 @@
 material_files = [
     'bark.yaml',
+    'brick.yaml',
     'gold.yaml',
     'grass.yaml',
     'leaves.yaml',
     'metal.yaml',
     'pine.yaml',
     'quartz.yaml',
+    'stone.yaml',
 ]
 
 material_targets = []

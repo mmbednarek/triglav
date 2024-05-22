@@ -1,0 +1,8 @@
+template: pbr/parallax.mt
+properties:
+  albedo: "brick/albedo.tex"
+  normal: "brick/normal.tex"
+  height_map: "brick/height_map.tex"
+  roughness: 1.0
+  metallic: 0.0
+  height_scale: 0.01

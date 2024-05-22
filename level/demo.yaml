@@ -64,3 +64,10 @@ nodes:
           position: {x: 0.0, y: 24.0, z: -2.5}
           rotation: {yaw: 0, pitch: 0, roll: 0}
           scale: {x: 3, y: 3, z: 3}
+      - type: static_mesh
+        name: "stairs"
+        mesh: "stairs.model"
+        transform:
+          position: {x: -30.0, y: 0.0, z: -0.2}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 3, y: 3, z: 3}

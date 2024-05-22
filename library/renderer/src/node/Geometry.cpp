@@ -10,9 +10,11 @@ namespace triglav::renderer::node {
 using namespace name_literals;
 using graphics_api::AttachmentAttribute;
 
-class GeometryResources : public render_core::NodeFrameResources {
+class GeometryResources : public render_core::NodeFrameResources
+{
  public:
-   GeometryResources(graphics_api::Device &device, resource::ResourceManager &resourceManager, MaterialManager& materialManager, Scene& scene, DebugLinesRenderer &debugLinesRenderer) :
+   GeometryResources(graphics_api::Device &device, resource::ResourceManager &resourceManager,
+                     MaterialManager &materialManager, Scene &scene, DebugLinesRenderer &debugLinesRenderer) :
        m_device(device),
        m_resourceManager(resourceManager),
        m_sampler(resourceManager.get("linear_repeat_mlod8_aniso.sampler"_rc)),
@@ -21,29 +23,31 @@ class GeometryResources : public render_core::NodeFrameResources {
        m_debugLinesRenderer(debugLinesRenderer),
        m_groundUniformBuffer(m_device),
        m_skyboxUniformBuffer(m_device),
-       m_onAddedObjectSink(scene.OnObjectAddedToScene.connect<&GeometryResources::on_object_added_to_scene>(this)),
+       m_onAddedObjectSink(
+               scene.OnObjectAddedToScene.connect<&GeometryResources::on_object_added_to_scene>(this)),
        m_onViewportChangeSink(scene.OnViewportChange.connect<&GeometryResources::on_viewport_change>(this))
    {
       m_groundUniformBuffer->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
    }
 
-   void on_object_added_to_scene(const SceneObject& object)
+   void on_object_added_to_scene(const SceneObject &object)
    {
       const auto &model = m_resourceManager.get<ResourceType::Model>(object.model);
       graphics_api::UniformBuffer<render_core::UniformBufferObject> ubo(m_device);
 
       const auto modelMat = object.model_matrix();
-      ubo->model  = modelMat;
-      ubo->normal = glm::transpose(glm::inverse(glm::mat3(modelMat)));
+      ubo->model          = modelMat;
+      ubo->normal         = glm::transpose(glm::inverse(glm::mat3(modelMat)));
 
       for (const auto range : model.range) {
          const auto &material = m_resourceManager.get<ResourceType::Material>(range.materialName);
       }
 
-      m_models.emplace_back(render_core::InstancedModel{object.model,
-                            model.boundingBox,
-                            object.position,
-                            std::move(ubo),
+      m_models.emplace_back(render_core::InstancedModel{
+              object.model,
+              model.boundingBox,
+              object.position,
+              std::move(ubo),
       });
 
       auto &debugBoundingBox = m_debugLines.emplace_back(
@@ -51,7 +55,7 @@ class GeometryResources : public render_core::NodeFrameResources {
       debugBoundingBox.model = modelMat;
    }
 
-   void on_viewport_change(const graphics_api::Resolution& /*resolution*/)
+   void on_viewport_change(const graphics_api::Resolution & /*resolution*/)
    {
       m_needsUpdate = true;
    }
@@ -61,12 +65,13 @@ class GeometryResources : public render_core::NodeFrameResources {
       const auto cameraViewMat       = m_scene.camera().view_matrix();
       const auto cameraProjectionMat = m_scene.camera().projection_matrix();
       for (const auto &obj : m_models) {
-         obj.ubo->view          = cameraViewMat;
-         obj.ubo->proj          = cameraProjectionMat;
+         obj.ubo->view    = cameraViewMat;
+         obj.ubo->proj    = cameraProjectionMat;
+         obj.ubo->viewPos = m_scene.camera().position();
       }
    }
 
-   void draw_model(graphics_api::CommandList &cmdList, const render_core::InstancedModel& instancedModel)
+   void draw_model(graphics_api::CommandList &cmdList, const render_core::InstancedModel &instancedModel)
    {
       const auto &model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -77,18 +82,25 @@ class GeometryResources : public render_core::NodeFrameResources {
          cmdList.bind_uniform_buffer(0, instancedModel.ubo);
 
          if (not m_lastMaterial.has_value() || *m_lastMaterial != range.materialName) {
-            const auto& matResources = m_materialManager.material_resources(range.materialName);
+            const auto &matResources = m_materialManager.material_resources(range.materialName);
 
-            if (not m_lastMaterialTemplate.has_value() || *m_lastMaterialTemplate != matResources.materialTemplate) {
-               const auto& matTemplateResources = m_materialManager.material_template_resources(matResources.materialTemplate);
+            if (not m_lastMaterialTemplate.has_value() ||
+                *m_lastMaterialTemplate != matResources.materialTemplate) {
+               const auto &matTemplateResources =
+                       m_materialManager.material_template_resources(matResources.materialTemplate);
                cmdList.bind_pipeline(matTemplateResources.pipeline);
                m_lastMaterialTemplate = matResources.materialTemplate;
+
+               render_core::FragmentPushConstants pushConstants{
+                       .viewPosition = m_scene.camera().position(),
+               };
+               cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstants);
             }
 
             u32 binding = 1;
 
             for (const auto textureName : matResources.textures) {
-               const auto &texture  = m_resourceManager.get(textureName);
+               const auto &texture = m_resourceManager.get(textureName);
                cmdList.bind_texture(binding, texture, m_sampler);
                ++binding;
             }
@@ -143,9 +155,9 @@ class GeometryResources : public render_core::NodeFrameResources {
  private:
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
-   graphics_api::Sampler& m_sampler;
-   MaterialManager& m_materialManager;
-   Scene& m_scene;
+   graphics_api::Sampler &m_sampler;
+   MaterialManager &m_materialManager;
+   Scene &m_scene;
    DebugLinesRenderer &m_debugLinesRenderer;
    std::vector<render_core::InstancedModel> m_models{};
    std::vector<DebugLines> m_debugLines{};
@@ -159,7 +171,7 @@ class GeometryResources : public render_core::NodeFrameResources {
    Scene::OnViewportChangeDel::Sink<GeometryResources> m_onViewportChangeSink;
 };
 
-Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene& scene) :
+Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene &scene) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_scene(scene),
@@ -198,7 +210,7 @@ graphics_api::WorkTypeFlags Geometry::work_types() const
 void Geometry::record_commands(render_core::FrameResources &frameResources,
                                render_core::NodeFrameResources &resources, graphics_api::CommandList &cmdList)
 {
-   auto& geoResources = dynamic_cast<GeometryResources&>(resources);
+   auto &geoResources = dynamic_cast<GeometryResources &>(resources);
 
    cmdList.reset_timestamp_array(m_timestampArray, 0, 2);
    cmdList.write_timestamp(graphics_api::PipelineStage::Entrypoint, m_timestampArray, 0);
@@ -232,7 +244,8 @@ void Geometry::record_commands(render_core::FrameResources &frameResources,
 
 std::unique_ptr<render_core::NodeFrameResources> Geometry::create_node_resources()
 {
-   auto result = std::make_unique<GeometryResources>(m_device, m_resourceManager, m_materialManager, m_scene, m_debugLinesRenderer);
+   auto result = std::make_unique<GeometryResources>(m_device, m_resourceManager, m_materialManager, m_scene,
+                                                     m_debugLinesRenderer);
    result->add_render_target("gbuffer"_name, m_renderTarget);
    return result;
 }

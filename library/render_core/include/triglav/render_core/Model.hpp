@@ -51,4 +51,8 @@ struct Sprite
    graphics_api::DescriptorArray descriptors;
 };
 
+struct FragmentPushConstants {
+   alignas(16) glm::vec3 viewPosition;
+};
+
 }// namespace renderer

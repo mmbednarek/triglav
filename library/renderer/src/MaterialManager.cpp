@@ -6,6 +6,7 @@
 #include "triglav/io/BufferWriter.h"
 #include "triglav/io/Serializer.h"
 #include "triglav/render_core/Material.hpp"
+#include "triglav/render_core/Model.hpp"
 
 namespace triglav::renderer {
 
@@ -74,6 +75,7 @@ void MaterialManager::process_material_template(const MaterialTemplateName name,
                           .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
                           .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
                           .end_vertex_layout()
+                          .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(render_core::FragmentPushConstants), 0)
                           // Descriptor layout
                           .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                               graphics_api::PipelineStage::VertexShader);
