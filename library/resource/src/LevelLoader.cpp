@@ -59,12 +59,12 @@ world::StaticMesh parse_static_mesh(const ryml::ConstNodeRef node)
 
 }// namespace
 
-world::Level Loader<ResourceType::Level>::load(std::string_view path)
+world::Level Loader<ResourceType::Level>::load(const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
+   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
                                     c4::substr{file.data(), file.size()});
 
    world::Level result{};

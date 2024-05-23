@@ -4,6 +4,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/world/Level.h"
+#include "triglav/io/Path.h"
 
 #include <string_view>
 
@@ -14,7 +15,7 @@ struct Loader<ResourceType::Level>
 {
   constexpr static ResourceLoadType type{ResourceLoadType::Static};
 
-   static world::Level load(std::string_view path);
+   static world::Level load(const io::Path& path);
 };
 
 }// namespace triglav::resource

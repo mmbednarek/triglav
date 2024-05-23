@@ -111,7 +111,7 @@ DeviceMesh Mesh::upload_to_device(graphics_api::Device &device) const
    return m_mesh->upload_to_device(device);
 }
 
-Mesh Mesh::from_file(const std::string_view path)
+Mesh Mesh::from_file(const io::Path& path)
 {
    auto internalMesh = InternalMesh::from_obj_file(path);
    return Mesh(std::make_unique<InternalMesh>(std::move(internalMesh)));

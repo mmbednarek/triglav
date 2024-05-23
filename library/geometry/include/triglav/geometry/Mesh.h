@@ -4,6 +4,7 @@
 #include <span>
 
 #include "triglav/graphics_api/Array.hpp"
+#include "triglav/io/Path.h"
 
 #include "Geometry.h"
 
@@ -46,7 +47,7 @@ class Mesh
    [[nodiscard]] size_t vertex_count() const;
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device) const;
 
-   static Mesh from_file(std::string_view path);
+   static Mesh from_file(const io::Path& path);
 
  private:
    explicit Mesh(std::unique_ptr<InternalMesh> mesh);

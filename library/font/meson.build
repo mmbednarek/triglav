@@ -5,11 +5,12 @@ font_sources = files([
 
 font_lib = static_library('font',
                           sources : font_sources,
-                          dependencies : [freetype],
+                          dependencies : [freetype, io],
                           include_directories : ['include/triglav/font'],
 )
 
 font = declare_dependency(
     include_directories : include_directories(['include']),
     link_with : font_lib,
+    dependencies: [io]
 )

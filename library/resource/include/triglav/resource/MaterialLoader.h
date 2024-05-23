@@ -5,6 +5,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/render_core/Material.hpp"
+#include "triglav/io/Path.h"
 
 #include <string_view>
 
@@ -15,7 +16,7 @@ struct Loader<ResourceType::MaterialTemplate>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Static};
 
-   static render_core::MaterialTemplate load(std::string_view path);
+   static render_core::MaterialTemplate load(const io::Path& path);
 };
 
 template<>
@@ -23,7 +24,7 @@ struct Loader<ResourceType::Material>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::StaticDependent};
 
-   static render_core::Material load(ResourceManager& manager, std::string_view path);
+   static render_core::Material load(ResourceManager& manager, const io::Path& path);
 };
 
 }// namespace triglav::resource

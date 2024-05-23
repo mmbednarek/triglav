@@ -9,13 +9,13 @@
 
 namespace triglav::resource {
 
-render_core::MaterialTemplate Loader<ResourceType::MaterialTemplate>::load(std::string_view path)
+render_core::MaterialTemplate Loader<ResourceType::MaterialTemplate>::load(const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
+   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
                                     c4::substr{file.data(), file.size()});
 
    auto fragmentShader = tree["fragment_shader"].val();
@@ -48,12 +48,12 @@ render_core::MaterialTemplate Loader<ResourceType::MaterialTemplate>::load(std::
    return result;
 }
 
-render_core::Material Loader<ResourceType::Material>::load(ResourceManager &manager, std::string_view path)
+render_core::Material Loader<ResourceType::Material>::load(ResourceManager &manager, const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
+   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
                                     c4::substr{file.data(), file.size()});
 
    auto templateStr = tree["template"].val();

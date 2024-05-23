@@ -8,6 +8,7 @@
 #include "TypefaceLoader.h"
 #include "LevelLoader.h"
 #include "StaticResources.h"
+#include "PathManager.h"
 
 #include "triglav/io/File.h"
 #include "triglav/TypeMacroList.hpp"
@@ -25,12 +26,12 @@ struct ResourcePath
    std::string source;
 };
 
-std::vector<ResourcePath> parse_asset_list(const std::string_view path)
+std::vector<ResourcePath> parse_asset_list(const io::Path& path)
 {
    std::vector<ResourcePath> result{};
 
    auto file      = io::read_whole_file(path);
-   auto tree      = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
+   auto tree      = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
                                          c4::substr{file.data(), file.size()});
    auto resources = tree["resources"];
 
@@ -54,29 +55,31 @@ ResourceManager::ResourceManager(graphics_api::Device &device, font::FontManger 
    TG_RESOURCE_TYPE_LIST
 #undef TG_RESOURCE_TYPE
 
-   this->load_asset_list("../engine.yaml");
+   this->load_asset_list(PathManager::the().content_path().sub("index.yaml"));
 
    register_samplers(device, *this);
 }
 
-void ResourceManager::load_asset_list(const std::string_view path)
+void ResourceManager::load_asset_list(const io::Path& path)
 {
    auto list = parse_asset_list(path);
    spdlog::info("Loading {} assets", list.size());
+
+   auto buildPath = PathManager::the().build_path();
 
    int loadedCount{};
    for (const auto &[nameStr, source] : list) {
       auto name = make_rc_name(nameStr);
       m_registeredNames.emplace(name, nameStr);
       spdlog::info("[{}/{}] {}", loadedCount, list.size(), nameStr);
-      this->load_asset(name, source);
+      this->load_asset(name, buildPath.sub(source));
       ++loadedCount;
    }
 
    spdlog::info("[{}/{}] DONE", loadedCount, list.size());
 }
 
-void ResourceManager::load_asset(const ResourceName assetName, const std::string_view path)
+void ResourceManager::load_asset(const ResourceName assetName, const io::Path& path)
 {
    switch (assetName.type()) {
 #define TG_RESOURCE_TYPE(name, extension, cppType) \

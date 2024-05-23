@@ -15,7 +15,7 @@ class TimestampArray
  public:
    TimestampArray(vulkan::QueryPool queryPool, float timestampPeriod);
 
-   [[nodiscard]] void get_result(std::span<float> out, u32 first) const;
+   void get_result(std::span<float> out, u32 first) const;
    [[nodiscard]] float get_difference(u32 begin, u32 end) const;
    [[nodiscard]] VkQueryPool vulkan_query_pool() const;
 

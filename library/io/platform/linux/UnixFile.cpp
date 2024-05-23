@@ -6,7 +6,7 @@
 
 namespace triglav::io {
 
-Result<IFileUPtr> open_file(const std::string_view path, const FileOpenMode mode)
+Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
 {
    int flags{};
    switch (mode) {
@@ -15,12 +15,12 @@ Result<IFileUPtr> open_file(const std::string_view path, const FileOpenMode mode
    case FileOpenMode::ReadWrite: flags = O_RDWR; break;
    }
 
-   const auto res = ::open(path.data(), flags, 0644);
+   const auto res = ::open(path.string().c_str(), flags, 0644);
    if (res < 0) {
       return std::unexpected{Status::InvalidFile};
    }
 
-   return std::make_unique<linux::UnixFile>(res, std::string{path});
+   return std::make_unique<linux::UnixFile>(res, std::string{path.string()});
 }
 
 }// namespace triglav::io

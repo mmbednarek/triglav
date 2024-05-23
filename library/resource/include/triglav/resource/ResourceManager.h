@@ -8,6 +8,7 @@
 
 #include "Container.hpp"
 #include "Loader.hpp"
+#include "triglav/io/Path.h"
 
 namespace triglav::graphics_api {
 class Device;
@@ -20,9 +21,9 @@ class ResourceManager
  public:
    explicit ResourceManager(graphics_api::Device &device, font::FontManger &fontManager);
 
-   void load_asset_list(std::string_view path);
+   void load_asset_list(const io::Path& path);
 
-   void load_asset(ResourceName assetName, std::string_view path);
+   void load_asset(ResourceName assetName, const io::Path& path);
    [[nodiscard]] bool is_name_registered(ResourceName assetName) const;
 
    template<ResourceType CResourceType>
@@ -32,7 +33,7 @@ class ResourceManager
    }
 
    template<ResourceType CResourceType>
-   void load_resource(TypedName<CResourceType> name, std::string_view path)
+   void load_resource(TypedName<CResourceType> name, const io::Path& path)
    {
       if constexpr (Loader<CResourceType>::type == ResourceLoadType::Graphics) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path));

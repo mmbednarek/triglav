@@ -5,6 +5,7 @@
 #include <optional>
 
 #include "triglav/io/Stream.h"
+#include "triglav/io/Path.h"
 
 #include "Geometry.h"
 
@@ -66,7 +67,7 @@ class InternalMesh
    void reverse_orientation();
 
    static InternalMesh from_obj_file(io::IReader &stream);
-   static InternalMesh from_obj_file(std::string_view path);
+   static InternalMesh from_obj_file(const io::Path& path);
 
  private:
    SurfaceMesh m_mesh;

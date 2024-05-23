@@ -1,10 +1,12 @@
 #pragma once
 
-#include <memory>
-#include <string_view>
-
 #include "FreeTypeForwardDecl.h"
 #include "Typeface.h"
+
+#include "triglav/io/Path.h"
+
+#include <memory>
+#include <string_view>
 
 namespace triglav::font {
 
@@ -21,7 +23,7 @@ class FontManger
    FontManger(FontManger &&other) noexcept            = delete;
    FontManger &operator=(FontManger &&other) noexcept = delete;
 
-   [[nodiscard]] Typeface create_typeface(std::string_view path, int variant) const;
+   [[nodiscard]] Typeface create_typeface(const io::Path& path, int variant) const;
 
  private:
    FT_Library m_library{};

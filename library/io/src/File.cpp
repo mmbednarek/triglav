@@ -4,9 +4,9 @@
 
 namespace triglav::io {
 
-std::vector<char> read_whole_file(const std::string_view name)
+std::vector<char> read_whole_file(const Path& path)
 {
-   auto fileRes = open_file(name, FileOpenMode::Read);
+   auto fileRes = open_file(path, FileOpenMode::Read);
    if (not fileRes.has_value()) {
       return {};
    }

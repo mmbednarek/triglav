@@ -39,12 +39,12 @@ auto g_runes{make_runes()};
 
 }
 
-render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManager &resourceManager, graphics_api::Device &device, std::string_view path)
+render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManager &resourceManager, graphics_api::Device &device, const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
+   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
                                     c4::substr{file.data(), file.size()});
 
    auto typeface = tree["typeface"].val();

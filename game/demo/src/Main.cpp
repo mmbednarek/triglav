@@ -3,14 +3,17 @@
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/renderer/Renderer.h"
+#include "triglav/resource/PathManager.h"
+#include "triglav/io/CommandLine.h"
 
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 using triglav::desktop::DefaultSurfaceEventListener;
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
 using triglav::desktop::ISurface;
 using triglav::desktop::MouseButton;
+using triglav::resource::PathManager;
 
 constexpr auto g_initialWidth  = 1280;
 constexpr auto g_initialHeight = 720;
@@ -94,9 +97,15 @@ class EventListener final : public DefaultSurfaceEventListener
    bool m_isRunning{true};
 };
 
-int triglav_main(InputArgs & /*args*/, IDisplay &display)
+int triglav_main(InputArgs & args, IDisplay &display)
 {
    const auto surface = display.create_surface(g_initialWidth, g_initialHeight);
+
+   triglav::io::CommandLine::the().parse(args.arg_count, args.args);
+
+   spdlog::info("content path: {}", PathManager::the().content_path().string());
+   spdlog::info("build path: {}", PathManager::the().build_path().string());
+   spdlog::info("initializing renderer");
 
    triglav::renderer::Renderer renderer(*surface, g_initialWidth, g_initialHeight);
 

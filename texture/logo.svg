@@ -38,7 +38,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <path
+    <string
        id="path1-2-7"
        style="fill:none;stroke:#000000;stroke-width:1.769;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
        d="M 30.814473,28.016342 C 13.249126,26.182068 10.884517,18.612735 17.250459,6.7489011 22.871168,18.774974 20.120175,26.811433 3.0819148,27.728483 12.190355,15.061238 23.137944,16.359017 30.814473,28.016342 Z"

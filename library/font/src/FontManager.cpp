@@ -23,10 +23,10 @@ FontManger::~FontManger()
    FT_Done_FreeType(m_library);
 }
 
-Typeface FontManger::create_typeface(const std::string_view path, const int variant) const
+Typeface FontManger::create_typeface(const io::Path& path, const int variant) const
 {
    FT_Face face;
-   const auto err = FT_New_Face(m_library, path.data(), variant, &face);
+   const auto err = FT_New_Face(m_library, path.string().c_str(), variant, &face);
    if (err != 0) {
       throw std::runtime_error("failed to create typeface");
    }

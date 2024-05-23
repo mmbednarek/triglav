@@ -345,7 +345,7 @@ InternalMesh InternalMesh::from_obj_file(io::IReader &stream)
    return result;
 }
 
-InternalMesh InternalMesh::from_obj_file(const std::string_view path)
+InternalMesh InternalMesh::from_obj_file(const io::Path& path)
 {
    const auto file = io::open_file(path, io::FileOpenMode::Read);
    if (not file.has_value()) {

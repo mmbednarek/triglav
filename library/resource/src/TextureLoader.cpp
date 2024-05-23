@@ -11,10 +11,10 @@ using triglav::graphics_api::TextureUsage;
 namespace triglav::resource {
 
 graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device &device,
-                                                              const std::string_view path)
+                                                              const io::Path& path)
 {
    int texWidth, texHeight, texChannels;
-   const stbi_uc *pixels = stbi_load(path.data(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+   const stbi_uc *pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
    assert(pixels != nullptr);
 
    auto texture = GAPI_CHECK(device.create_texture(

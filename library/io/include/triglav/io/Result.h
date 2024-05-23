@@ -15,6 +15,7 @@ enum class Status
    StreamIsClosed,
    InvalidFile,
    BufferTooSmall,
+   InvalidDirectory,
 };
 
 template<typename T>

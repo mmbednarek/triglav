@@ -7,7 +7,7 @@
 
 namespace triglav::resource {
 
-render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device &device, std::string_view path)
+render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device &device, const io::Path& path)
 {
    const auto objMesh = geometry::Mesh::from_file(path);
    objMesh.triangulate();

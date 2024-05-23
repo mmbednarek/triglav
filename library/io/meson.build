@@ -1,13 +1,17 @@
 io_sources = files([
   'include/triglav/io/BufferedReader.h',
   'include/triglav/io/BufferWriter.h',
+  'include/triglav/io/CommandLine.h',
   'include/triglav/io/File.h',
+  'include/triglav/io/Path.h',
   'include/triglav/io/Result.h',
   'include/triglav/io/Serializer.h',
   'include/triglav/io/Stream.h',
   'src/BufferWriter.cpp',
   'src/BufferedReader.cpp',
+  'src/CommandLine.cpp',
   'src/File.cpp',
+  'src/Path.cpp',
   'src/Serializer.cpp',
 ])
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Stream.h"
+#include "Path.h"
 
 #include <memory>
 #include <string_view>
@@ -23,7 +24,7 @@ enum class FileOpenMode
    ReadWrite,
 };
 
-Result<IFileUPtr> open_file(std::string_view path, FileOpenMode mode);
-std::vector<char> read_whole_file(std::string_view name);
+Result<IFileUPtr> open_file(const Path& path, FileOpenMode mode);
+std::vector<char> read_whole_file(const Path& path);
 
 }// namespace triglav::io

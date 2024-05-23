@@ -8,6 +8,7 @@ resource_sources = files([
                              'src/StaticResources.cpp',
                              'src/ModelLoader.cpp',
                              'src/TypefaceLoader.cpp',
+                             'src/PathManager.cpp',
                          ])
 
 resource_deps = [glm, graphics_api, core, geometry, render_core, font, fonts, rapidyaml, world, spdlog]
