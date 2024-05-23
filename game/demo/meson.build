@@ -9,10 +9,6 @@ demo_deps = [
   desktop_main,
   fmt,
   shaders,
-  textures,
-  models,
-  materials,
-  levels
 ]
 
 demo_link_args = ''

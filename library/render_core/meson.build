@@ -12,7 +12,7 @@ render_core_sources = files([
   'src/RenderGraph.cpp',
 ])
 
-render_core_deps = [glm, graphics_api, core, geometry, font, fonts, io]
+render_core_deps = [glm, graphics_api, core, geometry, font, io]
 render_core_incl = include_directories(['include', 'include/triglav/render_core'])
 
 render_core_lib = static_library('render_core',
