@@ -11,7 +11,7 @@ resource_sources = files([
                              'src/PathManager.cpp',
                          ])
 
-resource_deps = [glm, graphics_api, core, geometry, render_core, font, fonts, rapidyaml, world, spdlog]
+resource_deps = [glm, graphics_api, core, geometry, render_core, font, rapidyaml, world, spdlog]
 resource_incl = include_directories(['include', 'include/triglav/resource'])
 
 resource_lib = static_library('resource',

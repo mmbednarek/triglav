@@ -29,12 +29,7 @@ if build_machine.system() == 'linux'
   wayland_client = dependency('wayland-client')
 endif
 
-subdir('fonts')
 subdir('shader')
-subdir('texture')
-subdir('model')
-subdir('material')
-subdir('level')
 
 subdir('library/external/mikktspace')
 

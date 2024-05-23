@@ -4,7 +4,7 @@ ui_core_sources = files([
   'src/Viewport.cpp',
 ])
 
-ui_core_deps = [glm, geometry, font, fonts, io, resource, core]
+ui_core_deps = [glm, geometry, font, io, resource, core]
 ui_core_incl = include_directories(['include', 'include/triglav/ui_core'])
 
 ui_core_lib = static_library('ui_core',
