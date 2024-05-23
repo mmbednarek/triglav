@@ -32,4 +32,9 @@ Path Path::parent() const
    return Path{std::string{m_path.begin(), it.begin()}};
 }
 
+bool Path::exists() const
+{
+   return is_existing_path(*this);
+}
+
 }

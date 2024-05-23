@@ -66,13 +66,24 @@ void ResourceManager::load_asset_list(const io::Path& path)
    spdlog::info("Loading {} assets", list.size());
 
    auto buildPath = PathManager::the().build_path();
+   auto contentPath = PathManager::the().content_path();
 
    int loadedCount{};
    for (const auto &[nameStr, source] : list) {
+      auto resourcePath = buildPath.sub(source);
+      if (not resourcePath.exists()) {
+         resourcePath = contentPath.sub(source);
+
+         if (not resourcePath.exists()) {
+            spdlog::error("failed to load resource: {}, file not found", source);
+            continue;
+         }
+      }
+
       auto name = make_rc_name(nameStr);
       m_registeredNames.emplace(name, nameStr);
       spdlog::info("[{}/{}] {}", loadedCount, list.size(), nameStr);
-      this->load_asset(name, buildPath.sub(source));
+      this->load_asset(name, resourcePath);
       ++loadedCount;
    }
 

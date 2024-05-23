@@ -4,7 +4,7 @@
 
 namespace triglav::io {
 
-[[nodiscard]] Result<Path> working_path()
+Result<Path> working_path()
 {
    char buffer[1024];
    auto* result = ::getcwd(buffer, 1024);
@@ -13,6 +13,11 @@ namespace triglav::io {
    }
 
    return Path{buffer};
+}
+
+bool is_existing_path(const Path& path)
+{
+   return ::access(path.string().c_str(), F_OK) == 0;
 }
 
 }

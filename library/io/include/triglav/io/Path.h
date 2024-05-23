@@ -12,12 +12,14 @@ class Path {
 
    [[nodiscard]] Path sub(std::string_view value) const;
    [[nodiscard]] Path parent() const;
+   [[nodiscard]] bool exists() const;
    [[nodiscard]] const std::string& string() const;
  private:
    std::string m_path;
 };
 
 [[nodiscard]] Result<Path> working_path();
+[[nodiscard]] bool is_existing_path(const Path& path);
 
 namespace path_literals {
 
