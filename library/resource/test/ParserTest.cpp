@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "triglav/io/File.h"
+#include "triglav/io/Path.h"
 #include "triglav/Int.hpp"
 
 #include <fstream>
@@ -21,7 +22,7 @@ std::vector<ResourcePath> parse_asset_list(const std::string_view path)
 {
    std::vector<ResourcePath> result{};
 
-   auto file      = triglav::io::read_whole_file(path);
+   auto file      = triglav::io::read_whole_file(triglav::io::Path{std::string{path}});
    auto tree      = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
                                          c4::substr{file.data(), file.size()});
    auto resources = tree["resources"];
