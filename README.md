@@ -24,3 +24,9 @@ Once the demo is built you can start with the following command:
 ./buildDir/game/demo/demo -buildDir=buildDir -contentDir=game/demo/content
 ```
 
+## Movement
+
+Move around - WSAD.
+Jump - Space.
+Hold middle mouse button to look around.
+

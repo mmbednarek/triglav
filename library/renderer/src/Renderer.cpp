@@ -189,8 +189,8 @@ static Renderer::Moving map_direction(const Key key)
    case Key::S: return Renderer::Moving::Backwards;
    case Key::A: return Renderer::Moving::Left;
    case Key::D: return Renderer::Moving::Right;
-   case Key::Q: return Renderer::Moving::Up;
-   case Key::E: return Renderer::Moving::Down;
+//   case Key::Q: return Renderer::Moving::Up;
+//   case Key::E: return Renderer::Moving::Down;
    }
 
    return Renderer::Moving::None;
