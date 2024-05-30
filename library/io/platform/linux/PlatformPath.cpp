@@ -20,4 +20,11 @@ bool is_existing_path(const Path& path)
    return ::access(path.string().c_str(), F_OK) == 0;
 }
 
+Result<std::string> full_path(std::string_view path)
+{
+   char result[PATH_MAX];
+   ::realpath(m_path.data(), result);
+   return std::string{result};
+}
+
 }

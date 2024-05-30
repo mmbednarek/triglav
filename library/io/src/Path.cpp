@@ -8,12 +8,13 @@
 
 namespace triglav::io {
 
-Path::Path(std::string &&path) :
-   m_path(std::move(path))
+Path::Path(const std::string_view path) :
+   m_path(path)
 {
-   char result[PATH_MAX];
-   ::realpath(m_path.c_str(), result);
-   m_path = result;
+   auto fullPath = full_path(m_path);
+   if (fullPath.has_value()) {
+      m_path = fullPath.value();
+   }
 }
 
 const std::string &Path::string() const

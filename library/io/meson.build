@@ -21,7 +21,7 @@ elif host_machine.system() == 'windows'
     subdir('platform/windows')
 endif
 
-io_deps = [core, glm]
+io_deps = [core, glm, fmt]
 io_incl = include_directories(['include', 'include/triglav/io'])
 
 io_lib = static_library('io',
