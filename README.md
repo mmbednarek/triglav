@@ -18,7 +18,7 @@ It supports a PBR material system and screen space ambient occlusion.
 
 ## Running the demo
 
-Once the demo is built you can start with the following command:
+Once the demo is built you can start it with the following command:
 
 ```
 ./buildDir/game/demo/demo -buildDir=buildDir -contentDir=game/demo/content
@@ -27,6 +27,8 @@ Once the demo is built you can start with the following command:
 ## Movement
 
 Move around - WSAD.
+
 Jump - Space.
+
 Hold middle mouse button to look around.
 
