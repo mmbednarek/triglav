@@ -1,6 +1,7 @@
 #include "Serializer.h"
 
 #include <array>
+#include <bit>
 
 namespace triglav::io {
 

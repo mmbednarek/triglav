@@ -20,10 +20,10 @@ UINT map_file_open_style(const FileOpenMode mode)
 
 }// namespace
 
-Result<IFileUPtr> open_file(const std::string_view path, const FileOpenMode mode)
+Result<IFileUPtr> open_file(const Path& path, const FileOpenMode mode)
 {
    OFSTRUCT openFileInfo{};
-   const auto file = OpenFile(path.data(), &openFileInfo, map_file_open_style(mode));
+   const auto file = OpenFile(path.string().data(), &openFileInfo, map_file_open_style(mode));
    if (file == HFILE_ERROR) {
       return std::unexpected(Status::BrokenPipe);
    }
