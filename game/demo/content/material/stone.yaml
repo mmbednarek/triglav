@@ -5,4 +5,4 @@ properties:
   height_map: "stone/height_map.tex"
   roughness: 1.0
   metallic: 0.0
-  height_scale: 0.025
+  height_scale: 0.035

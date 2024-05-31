@@ -97,7 +97,7 @@ class EventListener final : public DefaultSurfaceEventListener
    bool m_isRunning{true};
 };
 
-int triglav_main(InputArgs & args, IDisplay &display)
+int triglav_main(InputArgs &args, IDisplay &display)
 {
    const auto surface = display.create_surface(g_initialWidth, g_initialHeight);
 
