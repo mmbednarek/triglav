@@ -34,7 +34,7 @@ vec2 offset_parallax(vec2 texCoords, vec3 viewDir)
 {
     // number of depth layers
     const float minLayers = 4;
-    const float maxLayers = 16;
+    const float maxLayers = 48;
 
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
 
@@ -76,7 +76,7 @@ void main() {
     const mat3 tangentSpaceWorldMat = mat3(fragWorldTangent, fragWorldBitangent, fragWorldNormal);
 
     vec3 viewDir = normalize(tangentSpaceWorldMat * normalize(fragWorldPosition - pc.viewPos));
-    vec2 parallaxUV = offset_parallax(fragTexCoord, viewDir);
+    vec2 parallaxUV = offset_parallax(fragTexCoord, viewDir * vec3(-1, 1, -1));
 
     outColor = vec4(texture(texSampler, parallaxUV).rgb, mp.roughness);
     outPosition = vec4(fragPosition, mp.metallic);
