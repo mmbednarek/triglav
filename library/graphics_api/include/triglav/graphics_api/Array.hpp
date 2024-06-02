@@ -5,13 +5,13 @@
 
 namespace triglav::graphics_api {
 
-template<BufferPurpose CBufferPurpose, typename TValue>
+template<BufferUsageFlags CBufferUsage, typename TValue>
 class Array
 {
  public:
    Array(Device &device, const size_t element_count) :
        m_device(device),
-       m_buffer(GAPI_CHECK(device.create_buffer(CBufferPurpose, element_count * sizeof(TValue)))),
+       m_buffer(GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst, element_count * sizeof(TValue)))),
        m_elementCount(element_count)
    {
    }
@@ -46,7 +46,7 @@ class Array
    void write(const TValue *source, const size_t count)
    {
       assert(count <= m_elementCount);
-      write_to_buffer(m_device, m_buffer, source, count * sizeof(TValue));
+      m_buffer.write_indirect(source, count * sizeof(TValue));
    }
 
    [[nodiscard]] const Buffer &buffer() const
@@ -66,9 +66,9 @@ class Array
 };
 
 template<typename TVertex>
-using VertexArray = Array<BufferPurpose::VertexBuffer, TVertex>;
+using VertexArray = Array<BufferUsage::VertexBuffer, TVertex>;
 
-using IndexArray = Array<BufferPurpose::IndexBuffer, uint32_t>;
+using IndexArray = Array<BufferUsage::IndexBuffer, uint32_t>;
 
 template<typename TVertex>
 struct Mesh

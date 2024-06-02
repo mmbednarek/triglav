@@ -25,7 +25,6 @@ layout(location = 7) out vec3 fragWorldTangent;
 layout(location = 8) out vec3 fragWorldBitangent;
 
 void main() {
-
     vec4 viewSpace = ubo.view * ubo.model * vec4(inPosition, 1.0);
     const mat3 normMat = mat3(ubo.normal);
 

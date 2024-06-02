@@ -51,7 +51,7 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
    }
 
    const auto bufferSize = m_colorFormat.pixel_size() * m_width * m_height;
-   auto transferBuffer   = device.create_buffer(BufferPurpose::TransferBuffer, bufferSize);
+   auto transferBuffer   = device.create_buffer(BufferUsage::HostVisible | BufferUsage::TransferSrc, bufferSize);
    if (not transferBuffer.has_value())
       return transferBuffer.error();
 

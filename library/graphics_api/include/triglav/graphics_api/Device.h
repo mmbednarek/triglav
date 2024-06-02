@@ -81,7 +81,7 @@ class Device
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint,
                                               std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
-   [[nodiscard]] Result<Buffer> create_buffer(BufferPurpose purpose, uint64_t size);
+   [[nodiscard]] Result<Buffer> create_buffer(BufferUsageFlags usage, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
    [[nodiscard]] Result<Texture>

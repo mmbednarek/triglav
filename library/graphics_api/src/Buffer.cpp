@@ -50,11 +50,28 @@ void MappedMemory::write(const void *source, const size_t length) const
    std::memcpy(m_pointer, source, length);
 }
 
-Buffer::Buffer(VkDeviceSize size, vulkan::Buffer buffer, vulkan::DeviceMemory memory) :
+Buffer::Buffer(Device &device, VkDeviceSize size, vulkan::Buffer buffer, vulkan::DeviceMemory memory) :
+    m_device(device),
     m_size(size),
     m_buffer(std::move(buffer)),
     m_memory(std::move(memory))
 {
+}
+
+Buffer::Buffer(Buffer &&other) noexcept :
+    m_device(other.m_device),
+    m_size(std::exchange(other.m_size, 0)),
+    m_buffer(std::move(other.m_buffer)),
+    m_memory(std::move(other.m_memory))
+{
+}
+
+Buffer &Buffer::operator=(Buffer &&other) noexcept
+{
+   m_size   = std::exchange(other.m_size, 0);
+   m_buffer = std::move(other.m_buffer);
+   m_memory = std::move(other.m_memory);
+   return *this;
 }
 
 Result<MappedMemory> Buffer::map_memory()
@@ -77,9 +94,9 @@ size_t Buffer::size() const
    return m_size;
 }
 
-Status write_to_buffer(Device &device, const Buffer &buffer, const void *data, const size_t size)
+Status Buffer::write_indirect(const void *data, size_t size)
 {
-   auto transferBuffer = device.create_buffer(BufferPurpose::TransferBuffer, size);
+   auto transferBuffer = m_device.create_buffer(BufferUsage::HostVisible | BufferUsage::TransferSrc, size);
    if (not transferBuffer.has_value())
       return transferBuffer.error();
 
@@ -91,19 +108,19 @@ Status write_to_buffer(Device &device, const Buffer &buffer, const void *data, c
       mappedMemory->write(data, size);
    }
 
-   auto oneTimeCommands = device.create_command_list();
+   auto oneTimeCommands = m_device.create_command_list();
    if (not oneTimeCommands.has_value())
       return oneTimeCommands.error();
 
    if (const auto res = oneTimeCommands->begin(SubmitType::OneTime); res != Status::Success)
       return res;
 
-   oneTimeCommands->copy_buffer(*transferBuffer, buffer);
+   oneTimeCommands->copy_buffer(*transferBuffer, *this);
 
    if (const auto res = oneTimeCommands->finish(); res != Status::Success)
       return res;
 
-   if (const auto res = device.submit_command_list_one_time(*oneTimeCommands); res != Status::Success)
+   if (const auto res = m_device.submit_command_list_one_time(*oneTimeCommands); res != Status::Success)
       return res;
 
    return Status::Success;

@@ -25,7 +25,7 @@ class CameraBase
    [[nodiscard]] const glm::mat4 &view_matrix() const;
    [[nodiscard]] const glm::mat4 &view_projection_matrix() const;
    [[nodiscard]] bool is_point_visible(glm::vec3 point) const;
-   [[nodiscard]] bool is_bouding_box_visible(const geometry::BoundingBox &boudingBox,
+   [[nodiscard]] bool is_bounding_box_visible(const geometry::BoundingBox &boudingBox,
                                              const glm::mat4 &modelMat) const;
 
    [[nodiscard]] virtual const glm::mat4 &projection_matrix() const = 0;

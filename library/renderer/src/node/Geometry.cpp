@@ -127,7 +127,7 @@ class GeometryResources : public render_core::NodeFrameResources
       m_lastMaterialTemplate.reset();
 
       for (const auto &obj : m_models) {
-         if (not m_scene.camera().is_bouding_box_visible(obj.boundingBox, obj.ubo->model))
+         if (not m_scene.camera().is_bounding_box_visible(obj.boundingBox, obj.ubo->model))
             continue;
 
          this->draw_model(cmdList, obj);
