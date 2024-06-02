@@ -80,19 +80,19 @@ bool CameraBase::is_point_visible(const glm::vec3 point) const
    return (pointVP.x >= -1.0f) && (pointVP.x <= 1.0f) && (pointVP.y >= -1.0f) && (pointVP.y <= 1.0f);
 }
 
-bool CameraBase::is_bounding_box_visible(const geometry::BoundingBox &boudingBox,
+bool CameraBase::is_bounding_box_visible(const geometry::BoundingBox &boundingBox,
                                         const glm::mat4 &modelMat) const
 {
    const auto mat = this->view_projection_matrix() * modelMat;
    const std::array points{
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
+           glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.min.z},
+           glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.max.z},
+           glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.min.z},
+           glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.max.z},
+           glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.min.z},
+           glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.max.z},
+           glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.min.z},
+           glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.max.z},
    };
 
    glm::vec3 min{std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(),
@@ -102,23 +102,28 @@ bool CameraBase::is_bounding_box_visible(const geometry::BoundingBox &boudingBox
 
    for (const auto point : points) {
       auto projectedPoint = mat * glm::vec4(point, 1.0);
-      projectedPoint /= fabs(projectedPoint.w);
-      const float linearZ = this->to_linear_depth(projectedPoint.z);
 
-      if (projectedPoint.x < min.x) {
-         min.x = projectedPoint.x;
+      // linear Z from projected point.
+      const float linearZ = this->to_linear_depth(projectedPoint.z / projectedPoint.w);
+
+      // divide by abs value of the w term to avoid reflecting the point by the origin.
+      auto hmPoint = projectedPoint;
+      hmPoint /= fabs(projectedPoint.w);
+
+      if (hmPoint.x < min.x) {
+         min.x = hmPoint.x;
       }
-      if (projectedPoint.y < min.y) {
-         min.y = projectedPoint.y;
+      if (hmPoint.y < min.y) {
+         min.y = hmPoint.y;
       }
       if (linearZ < min.z) {
          min.z = linearZ;
       }
-      if (projectedPoint.x > max.x) {
-         max.x = projectedPoint.x;
+      if (hmPoint.x > max.x) {
+         max.x = hmPoint.x;
       }
-      if (projectedPoint.y > max.y) {
-         max.y = projectedPoint.y;
+      if (hmPoint.y > max.y) {
+         max.y = hmPoint.y;
       }
       if (linearZ > max.z) {
          max.z = linearZ;
