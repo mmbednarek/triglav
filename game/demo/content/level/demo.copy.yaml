@@ -1,0 +1,73 @@
+nodes:
+  - name: "root"
+    items:
+      - type: static_mesh
+        name: "hall"
+        mesh: "hall.model"
+        transform:
+          position: {x: 0, y: 0, z: 0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "teapot"
+        mesh: "teapot.model"
+        transform:
+          position: {x: 12.0, y: -12.0, z: 0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 1.2,y: 1.2, z: 1.2}
+      - type: static_mesh
+        name: "pine"
+        mesh: "pine.model"
+        transform:
+          position: {x: 12.0, y: -20.0, z: 0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 30.0, y: 30.0, z: 30.0}
+      - type: static_mesh
+        name: "column_0"
+        mesh: "column.model"
+        transform:
+          position: {x: 0.0, y: -32.0, z: 0.0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "column_1"
+        mesh: "column.model"
+        transform:
+          position: {x: 0.0, y: -16.0, z: 0.0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "column_2"
+        mesh: "column.model"
+        transform:
+          position: {x: 0.0, y: 0.0, z: 0.0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "column_3"
+        mesh: "column.model"
+        transform:
+          position: {x: 0.0, y: 16.0, z: 0.0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "column_4"
+        mesh: "column.model"
+        transform:
+          position: {x: 0.0, y: 32.0, z: 0.0}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 10, y: 10, z: 10}
+      - type: static_mesh
+        name: "sphere"
+        mesh: "ball.model"
+        transform:
+          position: {x: 0.0, y: 24.0, z: -2.5}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 3, y: 3, z: 3}
+      - type: static_mesh
+        name: "stairs"
+        mesh: "stairs.model"
+        transform:
+          position: {x: -30.0, y: 0.0, z: -0.2}
+          rotation: {yaw: 0, pitch: 0, roll: 0}
+          scale: {x: 3, y: 3, z: 3}

@@ -19,7 +19,6 @@
 #undef max
 
 using triglav::desktop::ISurface;
-using triglav::graphics_api::BufferPurpose;
 
 namespace {
 bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
@@ -28,36 +27,6 @@ bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
    vkGetPhysicalDeviceProperties(physicalDevice, &props);
    return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
    // return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
-}
-
-bool graphics_family_predicate(const VkQueueFamilyProperties &properties)
-{
-   return (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
-}
-
-VkBufferUsageFlags map_buffer_purpose_to_usage_flags(const BufferPurpose purpose)
-{
-   switch (purpose) {
-   case BufferPurpose::TransferBuffer: return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-   case BufferPurpose::VertexBuffer:
-      return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-   case BufferPurpose::UniformBuffer: return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-   case BufferPurpose::IndexBuffer:
-      return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-   }
-   return 0;
-}
-
-VkMemoryPropertyFlags map_buffer_purpose_to_memory_properties(const BufferPurpose purpose)
-{
-   switch (purpose) {
-   case BufferPurpose::TransferBuffer://fallthrough
-   case BufferPurpose::UniformBuffer:
-      return VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-   case BufferPurpose::VertexBuffer://fallthrough
-   case BufferPurpose::IndexBuffer: return VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-   }
-   return 0;
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(
@@ -260,14 +229,14 @@ Result<CommandList> Device::create_command_list(const WorkTypeFlags flags) const
    return m_queueManager.create_command_list(flags);
 }
 
-Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t size)
+Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_t size)
 {
    assert(size != 0);
 
    VkBufferCreateInfo bufferInfo{};
    bufferInfo.sType       = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
    bufferInfo.size        = size;
-   bufferInfo.usage       = map_buffer_purpose_to_usage_flags(purpose);
+   bufferInfo.usage       = vulkan::to_vulkan_buffer_usage_flags(usage);
    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
    vulkan::Buffer buffer(*m_device);
@@ -282,7 +251,7 @@ Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t
    allocateInfo.sType           = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
    allocateInfo.allocationSize  = memRequirements.size;
    allocateInfo.memoryTypeIndex = this->find_memory_type(memRequirements.memoryTypeBits,
-                                                         map_buffer_purpose_to_memory_properties(purpose));
+                                                         vulkan::to_vulkan_memory_properties_flags(usage));
 
    vulkan::DeviceMemory memory(*m_device);
    if (memory.construct(&allocateInfo) != VK_SUCCESS) {
@@ -293,7 +262,7 @@ Result<Buffer> Device::create_buffer(const BufferPurpose purpose, const uint64_t
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return Buffer(size, std::move(buffer), std::move(memory));
+   return Buffer{*this, size, std::move(buffer), std::move(memory)};
 }
 
 Result<Fence> Device::create_fence() const

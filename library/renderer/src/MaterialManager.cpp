@@ -10,6 +10,8 @@
 
 namespace triglav::renderer {
 
+using graphics_api::BufferUsage;
+
 MaterialManager::MaterialManager(graphics_api::Device &device, resource::ResourceManager &resourceManager,
                                  graphics_api::RenderTarget &renderTarget) :
     m_device(device),
@@ -18,12 +20,12 @@ MaterialManager::MaterialManager(graphics_api::Device &device, resource::Resourc
 {
    m_resourceManager.iterate_resources<ResourceType::MaterialTemplate>(
            [this](MaterialTemplateName name, const render_core::MaterialTemplate &material) {
-             this->process_material_template(name, material);
+              this->process_material_template(name, material);
            });
 
    m_resourceManager.iterate_resources<ResourceType::Material>(
            [this](MaterialName name, const render_core::Material &material) {
-             this->process_material(name, material);
+              this->process_material(name, material);
            });
 }
 
@@ -48,14 +50,23 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
    }
 
    if (writer.offset() == 0) {
-      m_materials.emplace(name, MaterialResources{.materialTemplate{material.materialTemplate}, .uniformBuffer{std::nullopt}, .textures{std::move(textures)}});
+      m_materials.emplace(name, MaterialResources{
+                                        .materialTemplate{material.materialTemplate},
+                                        .uniformBuffer{std::nullopt},
+                                        .textures{std::move(textures)},
+                                });
       return;
    }
 
-   auto uniformBuffer = GAPI_CHECK(m_device.create_buffer(graphics_api::BufferPurpose::UniformBuffer, writer.offset()));
-   uniformBuffer.map_memory()->write(buffer.data(), writer.offset());
+   auto uniformBuffer = GAPI_CHECK(
+           m_device.create_buffer(BufferUsage::TransferDst | BufferUsage::UniformBuffer, writer.offset()));
+   GAPI_CHECK_STATUS(uniformBuffer.write_indirect(buffer.data(), writer.offset()));
 
-   m_materials.emplace(name, MaterialResources{.materialTemplate{material.materialTemplate}, .uniformBuffer{std::move(uniformBuffer)}, .textures{std::move(textures)}});
+   m_materials.emplace(name, MaterialResources{
+                                     .materialTemplate{material.materialTemplate},
+                                     .uniformBuffer{std::move(uniformBuffer)},
+                                     .textures{std::move(textures)},
+                             });
 }
 
 void MaterialManager::process_material_template(const MaterialTemplateName name,
@@ -75,7 +86,8 @@ void MaterialManager::process_material_template(const MaterialTemplateName name,
                           .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
                           .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
                           .end_vertex_layout()
-                          .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(render_core::FragmentPushConstants), 0)
+                          .push_constant(graphics_api::PipelineStage::FragmentShader,
+                                         sizeof(render_core::FragmentPushConstants), 0)
                           // Descriptor layout
                           .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
                                               graphics_api::PipelineStage::VertexShader);
@@ -106,7 +118,8 @@ const MaterialResources &MaterialManager::material_resources(const MaterialName 
    return m_materials.at(name);
 }
 
-const MaterialTemplateResources &MaterialManager::material_template_resources(const MaterialTemplateName name) const
+const MaterialTemplateResources &
+MaterialManager::material_template_resources(const MaterialTemplateName name) const
 {
    return m_templates.at(name);
 }

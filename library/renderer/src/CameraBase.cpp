@@ -80,7 +80,7 @@ bool CameraBase::is_point_visible(const glm::vec3 point) const
    return (pointVP.x >= -1.0f) && (pointVP.x <= 1.0f) && (pointVP.y >= -1.0f) && (pointVP.y <= 1.0f);
 }
 
-bool CameraBase::is_bouding_box_visible(const geometry::BoundingBox &boudingBox,
+bool CameraBase::is_bounding_box_visible(const geometry::BoundingBox &boudingBox,
                                         const glm::mat4 &modelMat) const
 {
    const auto mat = this->view_projection_matrix() * modelMat;
@@ -102,8 +102,8 @@ bool CameraBase::is_bouding_box_visible(const geometry::BoundingBox &boudingBox,
 
    for (const auto point : points) {
       auto projectedPoint = mat * glm::vec4(point, 1.0);
-      projectedPoint /= projectedPoint.w;
-      const float linearZ = this->to_linear_depth (projectedPoint.z);
+      projectedPoint /= fabs(projectedPoint.w);
+      const float linearZ = this->to_linear_depth(projectedPoint.z);
 
       if (projectedPoint.x < min.x) {
          min.x = projectedPoint.x;
@@ -125,8 +125,7 @@ bool CameraBase::is_bouding_box_visible(const geometry::BoundingBox &boudingBox,
       }
    }
 
-   return min.x <= 1.0f && max.x >= -1.0f && min.y <= 1.0f && max.y >= -1.0f && min.z <= 1.0f &&
-          max.z >= 0.0f;
+   return min.x <= 1.0f && max.x >= -1.0f && min.y <= 1.0f && max.y >= -1.0f && min.z <= 1.0f && max.z >= 0.0f;
 }
 
 const glm::mat4 &CameraBase::view_matrix() const

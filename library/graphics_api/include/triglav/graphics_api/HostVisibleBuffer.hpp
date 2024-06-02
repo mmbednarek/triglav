@@ -4,12 +4,12 @@
 
 namespace triglav::graphics_api {
 
-template<BufferPurpose CBufferPurpose, typename TValue>
+template<BufferUsage CAdditionalUsageFlags, typename TValue>
 class HostVisibleBuffer
 {
  public:
    explicit HostVisibleBuffer(Device &device) :
-       m_buffer(GAPI_CHECK(device.create_buffer(CBufferPurpose, sizeof(TValue)))),
+       m_buffer(GAPI_CHECK(device.create_buffer(BufferUsage::HostVisible | CAdditionalUsageFlags, sizeof(TValue)))),
        m_mappedMemory(GAPI_CHECK(m_buffer.map_memory()))
    {
    }
@@ -35,6 +35,6 @@ class HostVisibleBuffer
 };
 
 template<typename TValue>
-using UniformBuffer = HostVisibleBuffer<BufferPurpose::UniformBuffer, TValue>;
+using UniformBuffer = HostVisibleBuffer<BufferUsage::UniformBuffer, TValue>;
 
 }// namespace graphics_api

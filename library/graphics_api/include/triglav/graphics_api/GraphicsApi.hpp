@@ -277,6 +277,19 @@ enum class WorkType : u32
 
 TRIGLAV_DECL_FLAGS(WorkType)
 
+enum class BufferUsage : u32
+{
+   None          = 0,
+   HostVisible   = (1 << 0),
+   TransferSrc   = (1 << 1),
+   TransferDst   = (1 << 2),
+   UniformBuffer = (1 << 3),
+   VertexBuffer  = (1 << 4),
+   IndexBuffer   = (1 << 5),
+};
+
+TRIGLAV_DECL_FLAGS(BufferUsage)
+
 template<typename T>
 using Result = std::expected<T, Status>;
 

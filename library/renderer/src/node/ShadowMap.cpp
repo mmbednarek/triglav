@@ -67,7 +67,7 @@ class ShadowMapResources : public render_core::NodeFrameResources
       cmdList.bind_pipeline(m_pipeline);
 
       for (const auto &obj : m_models) {
-         if (not m_scene.shadow_map_camera().is_bouding_box_visible(obj.boundingBox, obj.modelMat))
+         if (not m_scene.shadow_map_camera().is_bounding_box_visible(obj.boundingBox, obj.modelMat))
             continue;
 
          this->draw_model(cmdList, obj);

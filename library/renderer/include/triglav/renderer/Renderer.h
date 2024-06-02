@@ -52,14 +52,6 @@ class Renderer
    void on_mouse_wheel_turn(float x);
    [[nodiscard]] resource::ResourceManager &resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
-
-   template<typename TUbo>
-   [[nodiscard]] graphics_api::Buffer create_ubo_buffer() const
-   {
-      return render_core::checkResult(
-              m_device->create_buffer(graphics_api::BufferPurpose::UniformBuffer, sizeof(TUbo)));
-   }
-
    [[nodiscard]] graphics_api::Device &device() const;
 
  private:

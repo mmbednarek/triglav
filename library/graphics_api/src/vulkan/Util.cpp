@@ -319,4 +319,43 @@ VkImageAspectFlags to_vulkan_image_aspect_flags(const TextureUsageFlags usage)
    return VK_IMAGE_ASPECT_COLOR_BIT;
 }
 
+VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
+{
+   using enum BufferUsage;
+
+   VkBufferUsageFlags result{};
+
+   if (usage & TransferSrc) {
+      result |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+   }
+   if (usage & TransferDst) {
+      result |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+   }
+   if (usage & UniformBuffer) {
+      result |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+   }
+   if (usage & VertexBuffer) {
+      result |= VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+   }
+   if (usage & IndexBuffer) {
+      result |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+   }
+
+   return result;
+}
+
+VkMemoryPropertyFlags to_vulkan_memory_properties_flags(BufferUsageFlags usage)
+{
+   using enum BufferUsage;
+
+   VkMemoryPropertyFlags result{};
+   if (usage & HostVisible) {
+      result |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+   } else {
+      result |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+   }
+
+   return result;
+}
+
 }// namespace triglav::graphics_api::vulkan
