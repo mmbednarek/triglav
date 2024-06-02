@@ -20,174 +20,19 @@ layout(push_constant) uniform Constants
     bool enableSSAO;
 } pc;
 
-float linearize_depth(float depth)
-{
-    float n = 0.1;
-    float f = 200.0;
-    float z = depth;
-    return (2.0 * n) / (f + n - z * (f - n));
-}
-
-float textureProj(vec4 shadowCoord, vec2 off)
-{
-    float shadow = 1.0;
-    if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0)
-    {
-        float dist = texture(texShadowMap, shadowCoord.st + off).r;
-        if (shadowCoord.w > 0.0 && dist < shadowCoord.z - 0.001)
-        {
-            shadow = 0;
-        }
-    }
-    return shadow;
-}
-
-float filterPCF(vec4 sc)
-{
-    ivec2 texDim = textureSize(texShadowMap, 0);
-    float scale = 1.5;
-    float dx = scale * 1.0 / float(texDim.x);
-    float dy = scale * 1.0 / float(texDim.y);
-
-    float shadowFactor = 0.0;
-    int count = 0;
-    int range = 2;
-
-    for (int x = -range; x <= range; x++)
-    {
-        for (int y = -range; y <= range; y++)
-        {
-            shadowFactor += textureProj(sc, vec2(dx*x, dy*y));
-            count++;
-        }
-
-    }
-    return shadowFactor / count;
-}
+#include "../common/blur.glsl"
+#include "../common/brdf.glsl"
+#include "../common/constants.glsl"
+#include "../common/shadow_map.glsl"
 
 const float ambient = 0.5;
 
-const float radius = 0.8;
-
 const mat4 biasMat = mat4(
-0.5, 0.0, 0.0, 0.0,
-0.0, 0.5, 0.0, 0.0,
-0.0, 0.0, 1.0, 0.0,
-0.5, 0.5, 0.0, 1.0
+    0.5, 0.0, 0.0, 0.0,
+    0.0, 0.5, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.5, 0.5, 0.0, 1.0
 );
-
-vec4 visualizeVector(vec3 v) {
-    return vec4(0.5 * v + 0.5, 1.0);
-}
-
-const float pi = 3.14159265;
-
-float distribution_ggx(float NdotH, float roughness) {
-    float alpha = roughness * roughness;
-    float alphaSq = alpha * alpha;
-    float denominator = NdotH * NdotH * (alphaSq - 1.0) + 1.0;
-    denominator = pi * denominator * denominator;
-    return alphaSq / max(denominator, 0.000001);
-}
-
-float smith_formula(float NdotV, float NdotL, float roughness) {
-    float r = roughness + 1.0;
-    float k = (r*r) / 8.0;
-    float ggx1 = NdotV / (NdotV * (1.0 - k) + k);
-    float ggx2 = NdotL / (NdotL * (1.0 - k) + k);
-    return ggx1 * ggx2;
-}
-
-vec3 fresnel_schlick(float HdotV, vec3 baseReflectivity) {
-    return baseReflectivity + (1.0 - baseReflectivity) * pow(1.0 - HdotV, 5.0);
-}
-
-const float g_gaussCoefs[] = {
-7.399735821039532e-06,
-0.0010982181697249752,
-0.022058301597726565,
-0.05996068039976925,
-0.022058301597726565,
-0.0010982181697249752,
-7.399735821039532e-06,
-9.769077867254032e-06,
-0.0014498597077982306,
-0.02912121069442344,
-0.07915965785337846,
-0.02912121069442344,
-0.0014498597077982306,
-9.769077867254032e-06,
-1.154080186257586e-05,
-0.0017128068630017834,
-0.034402645489111545,
-0.09351608608397045,
-0.034402645489111545,
-0.0017128068630017834,
-1.154080186257586e-05,
-1.2200101845709555e-05,
-0.00181065565629493,
-0.036367991039690406,
-0.09885844918075183,
-0.036367991039690406,
-0.00181065565629493,
-1.2200101845709555e-05,
-1.154080186257586e-05,
-0.0017128068630017834,
-0.034402645489111545,
-0.09351608608397045,
-0.034402645489111545,
-0.0017128068630017834,
-1.154080186257586e-05,
-9.769077867254032e-06,
-0.0014498597077982306,
-0.02912121069442344,
-0.07915965785337846,
-0.02912121069442344,
-0.0014498597077982306,
-9.769077867254032e-06,
-7.399735821039532e-06,
-0.0010982181697249752,
-0.022058301597726565,
-0.05996068039976925,
-0.022058301597726565,
-0.0010982181697249752,
-7.399735821039532e-06
-};
-
-float sample_ao_blurred(vec2 coord) {
-    ivec2 texSize = textureSize(texAmbientOcclusion, 0);
-    vec2 pixelOffset = vec2(1.0 / texSize.x, 1.0 / texSize.y);
-
-    float result = 0.0;
-    int coefIndex = 0;
-    for (int y = -3; y <= 3; ++y) {
-        for (int x = -3; x <= 3; ++x) {
-            float coef = g_gaussCoefs[coefIndex];
-            result += coef * texture(texAmbientOcclusion, coord + vec2(x * pixelOffset.x, y * pixelOffset.y)).r;
-            ++coefIndex;
-        }
-    }
-
-    return result;
-}
-
-vec3 linear_to_srgb(vec3 linearRGB)
-{
-    bvec3 cutoff = lessThan(linearRGB.rgb, vec3(0.0031308));
-    vec3 higher = vec3(1.055)*pow(linearRGB.rgb, vec3(1.0/2.4)) - vec3(0.055);
-    vec3 lower = linearRGB.rgb * vec3(12.92);
-
-    return mix(higher, lower, cutoff);
-}
-
-vec3 srgb_to_linear(vec3 sRGB)
-{
-    bvec3 cutoff = lessThan(sRGB.rgb, vec3(0.04045));
-    vec3 higher = pow((sRGB.rgb + vec3(0.055))/vec3(1.055), vec3(2.4));
-    vec3 lower = sRGB.rgb/vec3(12.92);
-
-    return mix(higher, lower, cutoff);
-}
 
 void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
@@ -202,20 +47,14 @@ void main() {
     vec4 shadowUV = biasMat * ubo.shadowMapMat * vec4(position, 1.0);
     shadowUV /= shadowUV.w;
 
-    float shadow = filterPCF(shadowUV);
-    //    float ambientValue = ambient * texture(texAmbientOcclusion, fragTexCoord).r;
+    float shadow = shadow_map_test_pcr(texShadowMap, shadowUV);
     float ambientValue = ambient;
     if (pc.enableSSAO) {
-        ambientValue *= sample_ao_blurred(fragTexCoord);
-//        outColor = vec4(vec3(sample_ao_blurred(fragTexCoord)), 1.0);
-//        return;
+        ambientValue *= blur_image_single(texAmbientOcclusion, fragTexCoord);
     }
-//    outColor = vec4(vec3(ambientValue), 1.0);
-//    return;
 
     vec4 texColorSample = texture(texColor, fragTexCoord);
     vec3 albedo = texColorSample.rgb;
-//    albedo = pow(albedo, vec3(1.3));
 
     const float roughness = texColorSample.w;
     const float metallic = texPositionSample.w;
@@ -224,6 +63,7 @@ void main() {
     vec3 baseReflectivity = mix(vec3(0.04), albedo, metallic);
 
     vec3 Lo = vec3(0);
+
     // PER LIGHT
     vec3 lightDir = normalize(pc.lightPosition - position);
     vec3 halfpoint = normalize(viewDir + lightDir);
