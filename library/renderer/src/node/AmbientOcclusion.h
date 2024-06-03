@@ -9,8 +9,6 @@
 
 namespace triglav::renderer::node {
 
-// class AmbientOcclusionResources : public render_core::IRenderNode
-
 class AmbientOcclusion : public render_core::IRenderNode
 {
  public:

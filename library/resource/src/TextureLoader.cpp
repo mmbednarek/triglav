@@ -19,7 +19,7 @@ graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Devi
 
    auto texture = GAPI_CHECK(device.create_texture(
            GAPI_FORMAT(RGBA, sRGB), {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)},
-           TextureUsage::Sampled | TextureUsage::TransferDestination | TextureUsage::TransferSource,
+           TextureUsage::Sampled | TextureUsage::TransferDst | TextureUsage::TransferSrc,
            SampleCount::Single, graphics_api::g_maxMipMaps));
    GAPI_CHECK_STATUS(texture.write(device, pixels));
    return texture;

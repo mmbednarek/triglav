@@ -1,5 +1,6 @@
 #include "PostProcessingRenderer.h"
 
+#include "src/node/Downsample.h"
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
@@ -25,6 +26,8 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                         graphics_api::PipelineStage::FragmentShader)
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                         graphics_api::PipelineStage::FragmentShader)
+                    .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                        graphics_api::PipelineStage::FragmentShader)
                     .enable_depth_test(false)
                     .use_push_descriptors(true)
                     .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
@@ -40,16 +43,20 @@ void PostProcessingRenderer::draw(render_core::FrameResources &resources,
    cmdList.bind_pipeline(m_pipeline);
 
    auto &shading = resources.node("shading"_name).framebuffer("shading"_name);
-   auto &ui = resources.node("user_interface"_name).framebuffer("ui"_name);
+   auto &ui      = resources.node("user_interface"_name).framebuffer("ui"_name);
+   auto &bloomTexture =
+           dynamic_cast<node::DownsampleResources &>(resources.node("downsample_bloom"_name)).texture();
 
    graphics_api::DescriptorWriter writer(m_device);
    writer.set_sampled_texture(0, shading.texture("shading"_name), m_sampler);
-   writer.set_sampled_texture(1, ui.texture("user_interface"_name), m_sampler);
+   writer.set_sampled_texture(1, bloomTexture, m_sampler);
+   writer.set_sampled_texture(2, ui.texture("user_interface"_name), m_sampler);
    cmdList.push_descriptors(0, writer);
 
    PushConstants constants{
-           .enableFXAA = resources.has_flag("fxaa"_name),
-           .hideUI     = resources.has_flag("hide_ui"_name),
+           .enableFXAA   = resources.has_flag("fxaa"_name),
+           .hideUI       = resources.has_flag("hide_ui"_name),
+           .bloomEnabled = resources.has_flag("bloom"_name),
    };
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, constants);
    cmdList.draw_primitives(4, 0);

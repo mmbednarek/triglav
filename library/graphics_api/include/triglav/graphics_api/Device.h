@@ -86,8 +86,8 @@ class Device
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
    [[nodiscard]] Result<Texture>
    create_texture(const ColorFormat &format, const Resolution &imageSize,
-                  TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSource |
-                                                 TextureUsage::TransferDestination,
+                  TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSrc |
+                                                 TextureUsage::TransferDst,
                   SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo &info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);

@@ -26,9 +26,14 @@ Once the demo is built you can start it with the following command:
 
 ## Movement
 
-Move around - WSAD.
+- Move around - WSAD.
+- Jump - Space.
+- Hold middle mouse button to look around.
 
-Jump - Space.
+## Features
 
-Hold middle mouse button to look around.
-
+- **F3** - Toggle Bouding Boxes.
+- **F4** - Toggle Ambient Occlusion.
+- **F5** - Toggle Anti-Aliasing.
+- **F6** - Toggle Hide UI.
+- **F7** - Toggle Bloom.

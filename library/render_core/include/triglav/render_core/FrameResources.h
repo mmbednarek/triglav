@@ -22,6 +22,7 @@ class NodeResourcesBase
    virtual void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore);
    virtual void clean(graphics_api::Device &device);
    virtual void finalize();
+   virtual void update_resolution(const graphics_api::Resolution &resolution);
    [[nodiscard]] virtual graphics_api::Semaphore& semaphore(Name child);
 
  private:
@@ -33,7 +34,7 @@ class NodeFrameResources : public NodeResourcesBase
  public:
    void add_render_target(Name identifier, graphics_api::RenderTarget &renderTarget);
    void add_render_target_with_resolution(Name identifier, graphics_api::RenderTarget &renderTarget, const graphics_api::Resolution &resolution);
-   void update_resolution(const graphics_api::Resolution &resolution);
+   void update_resolution(const graphics_api::Resolution &resolution) override;
 
    [[nodiscard]] graphics_api::Framebuffer &framebuffer(Name identifier);
    [[nodiscard]] graphics_api::CommandList &command_list();

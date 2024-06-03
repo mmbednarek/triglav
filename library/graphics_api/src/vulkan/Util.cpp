@@ -244,8 +244,8 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
 {
    switch (resourceState) {
    case TextureState::Undefined: return VK_IMAGE_LAYOUT_UNDEFINED;
-   case TextureState::TransferSource: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-   case TextureState::TransferDestination: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+   case TextureState::TransferSrc: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+   case TextureState::TransferDst: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
    case TextureState::ShaderRead: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    }
 
@@ -256,8 +256,8 @@ VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
 {
    switch (resourceState) {
    case TextureState::Undefined: return 0;
-   case TextureState::TransferSource: return VK_ACCESS_TRANSFER_READ_BIT;
-   case TextureState::TransferDestination: return VK_ACCESS_TRANSFER_WRITE_BIT;
+   case TextureState::TransferSrc: return VK_ACCESS_TRANSFER_READ_BIT;
+   case TextureState::TransferDst: return VK_ACCESS_TRANSFER_WRITE_BIT;
    case TextureState::ShaderRead: return VK_ACCESS_SHADER_READ_BIT;
    }
 
@@ -292,10 +292,10 @@ VkImageUsageFlags to_vulkan_image_usage_flags(const TextureUsageFlags usage)
    if (usage & TextureUsage::Sampled) {
       result |= VK_IMAGE_USAGE_SAMPLED_BIT;
    }
-   if (usage & TextureUsage::TransferSource) {
+   if (usage & TextureUsage::TransferSrc) {
       result |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
    }
-   if (usage & TextureUsage::TransferDestination) {
+   if (usage & TextureUsage::TransferDst) {
       result |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
    }
    if (usage & TextureUsage::ColorAttachment) {
