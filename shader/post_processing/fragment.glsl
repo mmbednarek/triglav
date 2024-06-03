@@ -4,7 +4,8 @@ layout(location = 0) in vec2 fragTexCoord;
 layout(location = 0) out vec4 outColor;
 
 layout(binding = 0) uniform sampler2D texColor;
-layout(binding = 1) uniform sampler2D texOverlay;
+layout(binding = 1) uniform sampler2D texBloom;
+layout(binding = 2) uniform sampler2D texOverlay;
 
 #include "../common/blur.glsl"
 
@@ -23,6 +24,7 @@ layout(push_constant) uniform Constants
 {
     bool enableFXAA;
     bool hideUI;
+    bool enableBloom;
 } pc;
 
 float linearize_depth(float depth)
@@ -85,10 +87,15 @@ vec3 calculate_fxaa()
 void main() {
     vec3 backColor;
     if (pc.enableFXAA) {
-        backColor  = calculate_fxaa();
+        backColor = calculate_fxaa();
     } else {
-        backColor = blur_image(texColor, fragTexCoord);
-//        backColor = texture(texColor, fragTexCoord).rgb;
+        backColor = texture(texColor, fragTexCoord).rgb;
+    }
+
+    if (pc.enableBloom) {
+        float blurAlpha = texture(texBloom, fragTexCoord).a;
+        vec3 blurColor = blur_image(texBloom, fragTexCoord);
+        backColor += (0.1 + blurAlpha) * blurColor;
     }
 
     if (pc.hideUI) {

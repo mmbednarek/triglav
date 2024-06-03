@@ -16,6 +16,7 @@ class PostProcessingRenderer
    {
       int enableFXAA{};
       int hideUI{};
+      int bloomEnabled{};
    };
 
    PostProcessingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,

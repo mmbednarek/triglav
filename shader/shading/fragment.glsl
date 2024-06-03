@@ -13,6 +13,7 @@ layout(binding = 5) uniform PostProcessingUBO {
 } ubo;
 
 layout(location = 0) out vec4 outColor;
+layout(location = 1) out vec4 outBloom;
 
 layout(push_constant) uniform Constants
 {
@@ -94,6 +95,11 @@ void main() {
 
     float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
     color = mix(vec3(luminance), color, 1.25);
+    if (luminance > 1) {
+        outBloom = vec4(color, (luminance - 1) / 5);
+    } else {
+        outBloom = vec4(0.0);
+    }
 
     outColor = vec4(color, 1.0);
 }

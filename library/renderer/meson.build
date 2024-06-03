@@ -16,6 +16,8 @@ renderer_sources = files([
   'include/triglav/renderer/SpriteRenderer.h',
   'src/node/AmbientOcclusion.cpp',
   'src/node/AmbientOcclusion.h',
+  'src/node/Downsample.cpp',
+  'src/node/Downsample.h',
   'src/node/Geometry.cpp',
   'src/node/Geometry.h',
   'src/node/PostProcessing.cpp',

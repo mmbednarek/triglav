@@ -25,6 +25,13 @@ TextureUsageFlags to_texture_usage_flags(const AttachmentAttributeFlags attribut
       textureUsageFlags |= TextureUsage::Transient;
    }
 
+   if (attributeFlags & AttachmentAttribute::TransferSrc) {
+      textureUsageFlags |= TextureUsage::TransferSrc;
+   }
+   if (attributeFlags & AttachmentAttribute::TransferDst) {
+      textureUsageFlags |= TextureUsage::TransferDst;
+   }
+
    return textureUsageFlags;
 }
 

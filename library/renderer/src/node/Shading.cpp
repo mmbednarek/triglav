@@ -13,6 +13,10 @@ Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resour
                                            AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                                    AttachmentAttribute::StoreImage,
                                            GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                               .attachment("bloom"_name,
+                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                           AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
+                                           GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
                                .build())),
    m_shadingRenderer(device, m_shadingRenderTarget, resourceManager),
    m_scene(scene)
@@ -34,7 +38,8 @@ graphics_api::WorkTypeFlags Shading::work_types() const
 void Shading::record_commands(render_core::FrameResources &frameResources,
                               render_core::NodeFrameResources &resources, graphics_api::CommandList &cmdList)
 {
-   std::array<graphics_api::ClearValue, 1> clearValues{
+   std::array<graphics_api::ClearValue, 2> clearValues{
+           graphics_api::ColorPalette::Black,
            graphics_api::ColorPalette::Black,
    };
    cmdList.begin_render_pass(resources.framebuffer("shading"_name), clearValues);

@@ -1,6 +1,7 @@
 #include "Renderer.h"
 
 #include "node/AmbientOcclusion.h"
+#include "node/Downsample.h"
 #include "node/Geometry.h"
 #include "node/PostProcessing.h"
 #include "node/Shading.h"
@@ -98,13 +99,16 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
                                                    m_uiViewport);
    m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, *m_device, *m_resourceManager,
                                                     m_renderTarget, m_framebuffers);
+   m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, *m_device, "shading"_name,
+                                                "shading"_name, "bloom"_name);
 
    m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
    m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
    m_renderGraph.add_dependency("shading"_name, "ambient_occlusion"_name);
+   m_renderGraph.add_dependency("downsample_bloom"_name, "shading"_name);
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
-   m_renderGraph.add_dependency("post_processing"_name, "shading"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
+   m_renderGraph.add_dependency("post_processing"_name, "downsample_bloom"_name);
 
    m_renderGraph.bake("post_processing"_name);
    m_renderGraph.update_resolution(m_resolution);
@@ -126,7 +130,8 @@ void Renderer::update_debug_info(const float framerate)
    m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name, triangleCountStr);
 
    if (not isFirstFrame) {
-      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
+      const auto gpuTimeStr =
+              std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
       m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name, gpuTimeStr);
    }
 
@@ -140,6 +145,7 @@ void Renderer::update_debug_info(const float framerate)
    m_uiViewport.set_text_content("info_dialog/features/ao/value"_name,
                                  m_ssaoEnabled ? "Screen-Space" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name,
                                  m_showDebugLines ? "On" : "Off");
 
@@ -157,10 +163,11 @@ void Renderer::on_render()
    m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
    m_renderGraph.set_flag("ssao"_name, m_ssaoEnabled);
    m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
+   m_renderGraph.set_flag("bloom"_name, m_bloomEnabled);
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
    this->update_debug_info(framerate);
 
-   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
+   auto &frameReadySemaphore   = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
@@ -188,9 +195,10 @@ static Renderer::Moving map_direction(const Key key)
    case Key::W: return Renderer::Moving::Foward;
    case Key::S: return Renderer::Moving::Backwards;
    case Key::A: return Renderer::Moving::Left;
-   case Key::D: return Renderer::Moving::Right;
-//   case Key::Q: return Renderer::Moving::Up;
-//   case Key::E: return Renderer::Moving::Down;
+   case Key::D:
+      return Renderer::Moving::Right;
+      //   case Key::Q: return Renderer::Moving::Up;
+      //   case Key::E: return Renderer::Moving::Down;
    }
 
    return Renderer::Moving::None;
@@ -212,6 +220,9 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::F6) {
       m_hideUI = not m_hideUI;
+   }
+   if (key == Key::F7) {
+      m_bloomEnabled = not m_bloomEnabled;
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -32.0f;

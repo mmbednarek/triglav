@@ -46,7 +46,7 @@ Resolution Texture::resolution() const
 
 Status Texture::write(Device &device, const uint8_t *pixels) const
 {
-   if (!(this->usage_flags() & TextureUsage::TransferDestination)) {
+   if (!(this->usage_flags() & TextureUsage::TransferDst)) {
       return Status::InvalidTransferDestination;
    }
 
@@ -73,7 +73,7 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
    const TextureBarrierInfo transferBarrier{
            .texture       = this,
            .sourceState   = TextureState::Undefined,
-           .targetState   = TextureState::TransferDestination,
+           .targetState   = TextureState::TransferDst,
            .baseMipLevel  = 0,
            .mipLevelCount = m_mipCount,
    };
@@ -84,7 +84,7 @@ Status Texture::write(Device &device, const uint8_t *pixels) const
    if (m_mipCount == 1) {
       const TextureBarrierInfo fragmentShaderBarrier{
               .texture       = this,
-              .sourceState   = TextureState::TransferDestination,
+              .sourceState   = TextureState::TransferDst,
               .targetState   = TextureState::ShaderRead,
               .baseMipLevel  = 0,
               .mipLevelCount = 1,
@@ -133,8 +133,8 @@ void Texture::generate_mip_maps_internal(const CommandList &cmdList) const
    auto mipHeight = static_cast<int>(m_height);
 
    for (int i = 1; i < m_mipCount; i++) {
-      barrier.sourceState  = TextureState::TransferDestination;
-      barrier.targetState  = TextureState::TransferSource;
+      barrier.sourceState  = TextureState::TransferDst;
+      barrier.targetState  = TextureState::TransferSrc;
       barrier.baseMipLevel = i - 1;
       cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::Transfer, barrier);
 
@@ -150,7 +150,7 @@ void Texture::generate_mip_maps_internal(const CommandList &cmdList) const
       };
       cmdList.blit_texture(*this, srcRegion, *this, dstRegion);
 
-      barrier.sourceState  = TextureState::TransferSource;
+      barrier.sourceState  = TextureState::TransferSrc;
       barrier.targetState  = TextureState::ShaderRead;
       barrier.baseMipLevel = i - 1;
       cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::FragmentShader, barrier);
@@ -161,7 +161,7 @@ void Texture::generate_mip_maps_internal(const CommandList &cmdList) const
          mipHeight /= 2;
    }
 
-   barrier.sourceState  = TextureState::TransferDestination;
+   barrier.sourceState  = TextureState::TransferDst;
    barrier.targetState  = TextureState::ShaderRead;
    barrier.baseMipLevel = m_mipCount - 1;
    cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::FragmentShader, barrier);

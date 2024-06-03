@@ -157,8 +157,8 @@ struct DescriptorBinding
 enum class TextureUsage
 {
    None                   = 0,
-   TransferSource         = (1 << 0),
-   TransferDestination    = (1 << 1),
+   TransferSrc            = (1 << 0),
+   TransferDst            = (1 << 1),
    Sampled                = (1 << 2),
    ColorAttachment        = (1 << 3),
    DepthStencilAttachment = (1 << 4),
@@ -170,8 +170,8 @@ TRIGLAV_DECL_FLAGS(TextureUsage)
 enum class TextureState
 {
    Undefined,
-   TransferSource,
-   TransferDestination,
+   TransferSrc,
+   TransferDst,
    ShaderRead,
 };
 
@@ -234,6 +234,8 @@ enum class AttachmentAttribute
    LoadImage   = (1 << 4),
    ClearImage  = (1 << 5),
    StoreImage  = (1 << 6),
+   TransferSrc = (1 << 7),
+   TransferDst = (1 << 8),
 };
 
 TRIGLAV_DECL_FLAGS(AttachmentAttribute)

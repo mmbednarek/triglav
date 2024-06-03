@@ -28,6 +28,10 @@ void NodeResourcesBase::finalize()
    m_ownedSemaphores.make_heap();
 }
 
+void NodeResourcesBase::update_resolution(const graphics_api::Resolution &resolution)
+{
+}
+
 void NodeFrameResources::add_render_target(const Name identifier, graphics_api::RenderTarget &renderTarget)
 {
    m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, std::nullopt);

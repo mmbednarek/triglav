@@ -69,6 +69,7 @@ class Renderer
    bool m_showDebugLines{false};
    bool m_ssaoEnabled{true};
    bool m_fxaaEnabled{true};
+   bool m_bloomEnabled{true};
    bool m_hideUI{false};
    glm::vec3 m_position{};
    glm::vec3 m_motion{};
