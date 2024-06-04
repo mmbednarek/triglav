@@ -5,10 +5,11 @@
 namespace triglav::graphics_api {
 
 Pipeline::Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline,
-                   vulkan::DescriptorSetLayout descriptorSetLayout) :
+                   vulkan::DescriptorSetLayout descriptorSetLayout, PipelineType pipelineType) :
     m_layout(std::move(layout)),
     m_pipeline(std::move(pipeline)),
-    m_descriptorSetLayout(std::move(descriptorSetLayout))
+    m_descriptorSetLayout(std::move(descriptorSetLayout)),
+    m_pipelineType(pipelineType)
 {
 }
 
@@ -49,6 +50,11 @@ Result<DescriptorPool> Pipeline::create_descriptor_pool(const uint32_t uniformBu
       return std::unexpected(Status::UnsupportedDevice);
 
    return DescriptorPool(std::move(descriptorPool), *m_descriptorSetLayout);
+}
+
+PipelineType Pipeline::pipeline_type() const
+{
+   return m_pipelineType;
 }
 
 }// namespace triglav::graphics_api

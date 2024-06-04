@@ -30,6 +30,7 @@ struct Level;
    TG_RESOURCE_TYPE(Texture, "tex", ::triglav::graphics_api::Texture)                 \
    TG_RESOURCE_TYPE(FragmentShader, "fshader", ::triglav::graphics_api::Shader)       \
    TG_RESOURCE_TYPE(VertexShader, "vshader", ::triglav::graphics_api::Shader)         \
+   TG_RESOURCE_TYPE(ComputeShader, "cshader", ::triglav::graphics_api::Shader)        \
    TG_RESOURCE_TYPE(Sampler, "sampler", ::triglav::graphics_api::Sampler)             \
    TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_core::Material)                \
    TG_RESOURCE_TYPE(MaterialTemplate, "mt", ::triglav::render_core::MaterialTemplate) \

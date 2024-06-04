@@ -95,8 +95,8 @@ class Device
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
 
    [[nodiscard]] Status submit_command_list(const CommandList &commandList,
-                                            const SemaphoreArray &waitSemaphores,
-                                            const SemaphoreArray &signalSemaphores, const Fence *fence) const;
+                                            SemaphoreArrayView waitSemaphores,
+                                            SemaphoreArrayView signalSemaphores, const Fence *fence, WorkTypeFlags workTypes) const;
    [[nodiscard]] Status submit_command_list(const CommandList &commandList, const Semaphore &waitSemaphore,
                                             const Semaphore &signalSemaphore, const Fence &fence) const;
    [[nodiscard]] Status submit_command_list_one_time(const CommandList &commandList) const;

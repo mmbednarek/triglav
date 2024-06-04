@@ -428,15 +428,15 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
    };
 }
 
-Status Device::submit_command_list(const CommandList &commandList, const SemaphoreArray &waitSemaphores,
-                                   const SemaphoreArray &signalSemaphores, const Fence *fence) const
+Status Device::submit_command_list(const CommandList &commandList, const SemaphoreArrayView waitSemaphores,
+                                   const SemaphoreArrayView signalSemaphores, const Fence *fence, WorkTypeFlags workTypes) const
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
    std::vector<VkPipelineStageFlags> waitStages{};
    waitStages.resize(waitSemaphores.semaphore_count());
-   std::ranges::fill(waitStages, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+   std::ranges::fill(waitStages, vulkan::to_vulkan_wait_pipeline_stage(workTypes));
    const std::array commandBuffers{commandList.vulkan_command_buffer()};
 
    submitInfo.waitSemaphoreCount   = waitSemaphores.semaphore_count();
@@ -468,7 +468,7 @@ Status Device::submit_command_list(const CommandList &commandList, const Semapho
    SemaphoreArray signalSemaphores;
    signalSemaphores.add_semaphore(signalSemaphore);
 
-   return this->submit_command_list(commandList, waitSemaphores, signalSemaphores, &fence);
+   return this->submit_command_list(commandList, waitSemaphores, signalSemaphores, &fence, WorkType::Graphics);
 }
 
 Status Device::submit_command_list_one_time(const CommandList &commandList) const

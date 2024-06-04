@@ -27,4 +27,12 @@ struct Loader<ResourceType::VertexShader>
    static graphics_api::Shader load_gpu(graphics_api::Device &device, const io::Path& path);
 };
 
+template<>
+struct Loader<ResourceType::ComputeShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device &device, const io::Path& path);
+};
+
 }// namespace triglav::resource

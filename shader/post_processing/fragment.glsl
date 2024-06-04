@@ -93,9 +93,8 @@ void main() {
     }
 
     if (pc.enableBloom) {
-        float blurAlpha = texture(texBloom, fragTexCoord).a;
-        vec3 blurColor = blur_image(texBloom, fragTexCoord);
-        backColor += (0.1 + blurAlpha) * blurColor;
+        vec3 bloomColor = blur_image(texBloom, fragTexCoord);
+        backColor += bloomColor;
     }
 
     if (pc.hideUI) {

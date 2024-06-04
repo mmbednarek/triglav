@@ -85,6 +85,12 @@ class WrappedObject
       return result;
    }
 
+   void take_ownership(TWrapped wrapped)
+   {
+      this->destroy(m_wrapped);
+      m_wrapped = wrapped;
+   }
+
  private:
    void destroy(TWrapped wrapped)
    {

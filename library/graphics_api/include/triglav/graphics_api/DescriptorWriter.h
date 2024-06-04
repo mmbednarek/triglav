@@ -32,6 +32,7 @@ class DescriptorWriter
    DescriptorWriter(DescriptorWriter &&other) noexcept;
    DescriptorWriter &operator=(DescriptorWriter &&other) noexcept;
 
+   void set_storage_buffer(uint32_t binding, const Buffer &buffer);
    void set_raw_uniform_buffer(uint32_t binding, const Buffer &buffer);
 
    template<typename TValue>

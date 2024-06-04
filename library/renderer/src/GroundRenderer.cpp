@@ -15,7 +15,7 @@ namespace triglav::renderer {
 GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
+    m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
                                    .fragment_shader(resourceManager.get("ground.fshader"_rc))
                                    .vertex_shader(resourceManager.get("ground.vshader"_rc))
                                    // Descriptor layout
@@ -43,7 +43,7 @@ void GroundRenderer::draw(graphics_api::CommandList &cmdList, UniformBuffer& ubo
    graphics_api::DescriptorWriter writer(m_device);
    writer.set_uniform_buffer(0, ubo);
    writer.set_sampled_texture(1, m_texture, m_sampler);
-   cmdList.push_descriptors(0, writer);
+   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
 
    cmdList.draw_primitives(4, 0);
 }

@@ -20,6 +20,8 @@ renderer_sources = files([
   'src/node/Downsample.h',
   'src/node/Geometry.cpp',
   'src/node/Geometry.h',
+  'src/node/Particles.cpp',
+  'src/node/Particles.h',
   'src/node/PostProcessing.cpp',
   'src/node/PostProcessing.h',
   'src/node/Shading.cpp',

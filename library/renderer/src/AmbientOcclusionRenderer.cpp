@@ -21,7 +21,7 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device &device,
                                                    ResourceManager &resourceManager,
                                                    const graphics_api::Texture &noiseTexture) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(m_device, renderTarget)
+    m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
                                    .fragment_shader(resourceManager.get("ambient_occlusion.fshader"_rc))
                                    .vertex_shader(resourceManager.get("ambient_occlusion.vshader"_rc))
                                    // Descriptor layout
@@ -71,7 +71,7 @@ void AmbientOcclusionRenderer::draw(render_core::FrameResources &resources,
    writer.set_sampled_texture(1, gbuffer.texture("normal"_name), m_sampler);
    writer.set_sampled_texture(2, m_noiseTexture, m_sampler);
    writer.set_uniform_buffer(3, m_uniformBuffer);
-   cmdList.push_descriptors(0, writer);
+   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
 
    cmdList.draw_primitives(4, 0);
 }

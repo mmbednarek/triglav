@@ -7,39 +7,161 @@
 
 namespace triglav::graphics_api {
 
-PipelineBuilder::PipelineBuilder(Device &device, RenderTarget &renderPass) :
-    m_device(device),
+// -------------------------
+// PIPELINE BUILDER BASE
+// -------------------------
+
+PipelineBuilderBase::PipelineBuilderBase(Device &device) :
+   m_device(device)
+{}
+
+void PipelineBuilderBase::add_shader(const Shader &shader)
+{
+   VkPipelineShaderStageCreateInfo info{};
+   info.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+   info.module = *shader.vulkan_module();
+   info.pName  = shader.name().data();
+   info.stage  = vulkan::to_vulkan_shader_stage(shader.stage());
+   m_shaderStageInfos.emplace_back(info);
+}
+
+void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage)
+{
+   VkDescriptorSetLayoutBinding layoutBinding{};
+   layoutBinding.descriptorCount = 1;
+   layoutBinding.binding         = m_vulkanDescriptorBindings.size();
+   layoutBinding.descriptorType  = vulkan::to_vulkan_descriptor_type(descriptorType);
+   layoutBinding.stageFlags      = vulkan::to_vulkan_shader_stage_flags(shaderStage);
+   m_vulkanDescriptorBindings.emplace_back(layoutBinding);
+}
+
+void PipelineBuilderBase::add_push_constant(PipelineStage shaderStage, size_t size, size_t offset)
+{
+   VkPushConstantRange range;
+   range.offset     = offset;
+   range.size       = size;
+   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(PipelineStage::None | shaderStage);
+   m_pushConstantRanges.emplace_back(range);
+}
+
+Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> PipelineBuilderBase::build_pipeline_layout() const
+{
+   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
+   descriptorSetLayoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+   descriptorSetLayoutInfo.bindingCount = m_vulkanDescriptorBindings.size();
+   descriptorSetLayoutInfo.pBindings    = m_vulkanDescriptorBindings.data();
+   if (m_usePushDescriptors) {
+      descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+   }
+
+   vulkan::DescriptorSetLayout descriptorSetLayout(m_device.vulkan_device());
+   if (descriptorSetLayout.construct(&descriptorSetLayoutInfo) != VK_SUCCESS)
+      return std::unexpected(Status::UnsupportedDevice);
+
+   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+   pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+   pipelineLayoutInfo.setLayoutCount         = 1;
+   pipelineLayoutInfo.pSetLayouts            = &(*descriptorSetLayout);
+   pipelineLayoutInfo.pushConstantRangeCount = m_pushConstantRanges.size();
+   pipelineLayoutInfo.pPushConstantRanges    = m_pushConstantRanges.data();
+
+   vulkan::PipelineLayout pipelineLayout(m_device.vulkan_device());
+   if (const auto res = pipelineLayout.construct(&pipelineLayoutInfo); res != VK_SUCCESS) {
+      return std::unexpected(Status::UnsupportedDevice);
+   }
+
+   return std::make_tuple(std::move(descriptorSetLayout), std::move(pipelineLayout));
+}
+
+// -------------------------
+// COMPUTE PIPELINE BUILDER
+// -------------------------
+
+ComputePipelineBuilder::ComputePipelineBuilder(Device &device) :
+        PipelineBuilderBase(device)
+{
+}
+
+ComputePipelineBuilder &ComputePipelineBuilder::compute_shader(const Shader &shader)
+{
+   assert(shader.stage() == PipelineStage::ComputeShader);
+   this->add_shader(shader);
+   return *this;
+}
+
+ComputePipelineBuilder &ComputePipelineBuilder::descriptor_binding(DescriptorType descriptorType)
+{
+   this->add_descriptor_binding(descriptorType, PipelineStage::ComputeShader);
+   return *this;
+}
+
+ComputePipelineBuilder &ComputePipelineBuilder::push_constant(PipelineStage shaderStage, size_t size,
+                                                              size_t offset)
+{
+   this->add_push_constant(shaderStage, size, offset);
+   return *this;
+}
+
+Result<Pipeline> ComputePipelineBuilder::build() const
+{
+   if (m_shaderStageInfos.size() != 1) {
+      return std::unexpected{Status::InvalidShaderStage};
+   }
+
+   auto layouts = this->build_pipeline_layout();
+   if (not layouts.has_value()) {
+      return std::unexpected(layouts.error());
+   }
+   auto&& [descriptorSetLayout, pipelineLayout] = *layouts;
+
+   VkComputePipelineCreateInfo pipelineCreateInfo{VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+   pipelineCreateInfo.stage = m_shaderStageInfos.front();
+   pipelineCreateInfo.layout = *pipelineLayout;
+
+   vulkan::Pipeline pipeline(m_device.vulkan_device());
+
+   VkPipeline vulkanPipeline;
+   VkResult result = vkCreateComputePipelines(m_device.vulkan_device(), nullptr, 1, &pipelineCreateInfo, nullptr, &vulkanPipeline);
+   if (result != VK_SUCCESS) {
+      return std::unexpected{Status::PSOCreationFailed};
+   }
+
+   pipeline.take_ownership(vulkanPipeline);
+
+   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout), PipelineType::Compute};
+}
+
+ComputePipelineBuilder &ComputePipelineBuilder::use_push_descriptors(bool enabled)
+{
+   m_usePushDescriptors = enabled;
+   return *this;
+}
+
+// -------------------------
+// GRAPHICS PIPELINE BUILDER
+// -------------------------
+
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device &device, RenderTarget &renderPass) :
+    PipelineBuilderBase(device),
     m_renderTarget(renderPass)
 {
 }
 
-PipelineBuilder &PipelineBuilder::fragment_shader(const Shader &shader)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::fragment_shader(const Shader &shader)
 {
    assert(shader.stage() == PipelineStage::FragmentShader);
-
-   VkPipelineShaderStageCreateInfo info{};
-   info.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-   info.module = *shader.vulkan_module();
-   info.pName  = shader.name().data();
-   info.stage  = vulkan::to_vulkan_shader_stage(shader.stage());
-   m_shaderStageInfos.emplace_back(info);
+   this->add_shader(shader);
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::vertex_shader(const Shader &shader)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::vertex_shader(const Shader &shader)
 {
    assert(shader.stage() == PipelineStage::VertexShader);
-
-   VkPipelineShaderStageCreateInfo info{};
-   info.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-   info.module = *shader.vulkan_module();
-   info.pName  = shader.name().data();
-   info.stage  = vulkan::to_vulkan_shader_stage(shader.stage());
-   m_shaderStageInfos.emplace_back(info);
+   this->add_shader(shader);
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::vertex_attribute(const ColorFormat &format, const size_t offset)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::vertex_attribute(const ColorFormat &format, const size_t offset)
 {
    VkVertexInputAttributeDescription vertexAttribute{};
    vertexAttribute.binding  = m_vertexBinding;
@@ -53,69 +175,46 @@ PipelineBuilder &PipelineBuilder::vertex_attribute(const ColorFormat &format, co
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::end_vertex_layout()
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::end_vertex_layout()
 {
    ++m_vertexBinding;
    m_vertexLocation = 0;
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::descriptor_binding(const DescriptorType descriptorType,
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::descriptor_binding(const DescriptorType descriptorType,
                                                      const PipelineStage shaderStage)
 {
-   VkDescriptorSetLayoutBinding layoutBinding{};
-   layoutBinding.descriptorCount = 1;
-   layoutBinding.binding         = m_vulkanDescriptorBindings.size();
-   layoutBinding.descriptorType  = vulkan::to_vulkan_descriptor_type(descriptorType);
-   layoutBinding.stageFlags      = vulkan::to_vulkan_shader_stage_flags(PipelineStage::None | shaderStage);
-   m_vulkanDescriptorBindings.emplace_back(layoutBinding);
-
-   /*
-   using graphics_api::DescriptorBinding;
-   using graphics_api::DescriptorType;
-   using graphics_api::ShaderStage;
-
-   std::array<DescriptorBinding, 2> bindings{
-      DescriptorBinding{0, DescriptorType::ImageSampler, ShaderStage::Fragment},
-      DescriptorBinding{1, DescriptorType::ImageSampler, ShaderStage::Fragment},
-      DescriptorBinding{2, DescriptorType::ImageSampler, ShaderStage::Fragment},
-   };
-   device.create_descriptor_set_layout(bindings);
-   */
+   this->add_descriptor_binding(descriptorType, shaderStage);
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size,
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size,
                                                 const size_t offset)
 {
-   VkPushConstantRange range;
-   range.offset     = offset;
-   range.size       = size;
-   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(PipelineStage::None | shaderStage);
-   m_pushConstantRanges.emplace_back(range);
-
+   this->add_push_constant(shaderStage, size, offset);
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::enable_depth_test(const bool enabled)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::enable_depth_test(const bool enabled)
 {
    m_depthTestEnabled = enabled;
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::enable_blending(const bool enabled)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::enable_blending(const bool enabled)
 {
    m_blendingEnabled = enabled;
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::use_push_descriptors(bool enabled)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::use_push_descriptors(bool enabled)
 {
    m_usePushDescriptors = enabled;
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::vertex_topology(const VertexTopology topology)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::vertex_topology(const VertexTopology topology)
 {
    switch (topology) {
    case VertexTopology::TriangleList: m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; break;
@@ -127,7 +226,7 @@ PipelineBuilder &PipelineBuilder::vertex_topology(const VertexTopology topology)
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::razterization_method(const RasterizationMethod method)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::rasterization_method(const RasterizationMethod method)
 {
    switch (method) {
    case RasterizationMethod::Point: m_polygonMode = VK_POLYGON_MODE_POINT; break;
@@ -137,7 +236,7 @@ PipelineBuilder &PipelineBuilder::razterization_method(const RasterizationMethod
    return *this;
 }
 
-PipelineBuilder &PipelineBuilder::culling(const Culling cull)
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::culling(const Culling cull)
 {
    switch (cull) {
    case Culling::Clockwise: m_frontFace = VK_FRONT_FACE_CLOCKWISE; break;
@@ -151,7 +250,7 @@ constexpr std::array g_dynamicStates{
         VK_DYNAMIC_STATE_SCISSOR,
 };
 
-Result<Pipeline> PipelineBuilder::build() const
+Result<Pipeline> GraphicsPipelineBuilder::build() const
 {
    VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
    dynamicStateInfo.sType             = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -238,18 +337,6 @@ Result<Pipeline> PipelineBuilder::build() const
    colorBlendingInfo.blendConstants[2] = 0.0f;
    colorBlendingInfo.blendConstants[3] = 0.0f;
 
-   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
-   descriptorSetLayoutInfo.sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-   descriptorSetLayoutInfo.bindingCount = m_vulkanDescriptorBindings.size();
-   descriptorSetLayoutInfo.pBindings    = m_vulkanDescriptorBindings.data();
-   if (m_usePushDescriptors) {
-      descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
-   }
-
-   vulkan::DescriptorSetLayout descriptorSetLayout(m_device.vulkan_device());
-   if (descriptorSetLayout.construct(&descriptorSetLayoutInfo) != VK_SUCCESS)
-      return std::unexpected(Status::UnsupportedDevice);
-
    VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo{};
    depthStencilStateInfo.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
    depthStencilStateInfo.depthTestEnable       = m_depthTestEnabled;
@@ -258,17 +345,11 @@ Result<Pipeline> PipelineBuilder::build() const
    depthStencilStateInfo.depthBoundsTestEnable = false;
    depthStencilStateInfo.stencilTestEnable     = false;
 
-   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-   pipelineLayoutInfo.sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-   pipelineLayoutInfo.setLayoutCount         = 1;
-   pipelineLayoutInfo.pSetLayouts            = &(*descriptorSetLayout);
-   pipelineLayoutInfo.pushConstantRangeCount = m_pushConstantRanges.size();
-   pipelineLayoutInfo.pPushConstantRanges    = m_pushConstantRanges.data();
-
-   vulkan::PipelineLayout pipelineLayout(m_device.vulkan_device());
-   if (const auto res = pipelineLayout.construct(&pipelineLayoutInfo); res != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
+   auto layouts = this->build_pipeline_layout();
+   if (not layouts.has_value()) {
+      return std::unexpected(layouts.error());
    }
+   auto&& [descriptorSetLayout, pipelineLayout] = *layouts;
 
    VkGraphicsPipelineCreateInfo pipelineInfo{};
    pipelineInfo.sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -293,7 +374,7 @@ Result<Pipeline> PipelineBuilder::build() const
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout)};
+   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout), PipelineType::Graphics};
 }
 
 }// namespace triglav::graphics_api

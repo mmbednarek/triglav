@@ -20,7 +20,7 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device &device, graphics_api::Ren
                                  ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(m_device, renderTarget)
+            graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
                     .fragment_shader(resourceManager.get("shading.fshader"_rc))
                     .vertex_shader(resourceManager.get("shading.vshader"_rc))
                     .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
@@ -71,7 +71,7 @@ void ShadingRenderer::draw(render_core::FrameResources &resources, graphics_api:
    writer.set_sampled_texture(3, aoBuffer.texture("ao"_name), m_sampler);
    writer.set_sampled_texture(4, smBuffer.texture("sm"_name), m_sampler);
    writer.set_uniform_buffer(5, m_uniformBuffer);
-   cmdList.push_descriptors(0, writer);
+   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
 
    PushConstant pushConstant{
            .lightPosition = lightPosition,

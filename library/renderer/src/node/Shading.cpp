@@ -1,4 +1,7 @@
 #include "Shading.h"
+#include "Particles.h"
+
+#include "triglav/graphics_api/PipelineBuilder.h"
 
 namespace triglav::renderer::node {
 
@@ -8,18 +11,37 @@ using graphics_api::SampleCount;
 using namespace name_literals;
 
 Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene &scene) :
-    m_shadingRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("shading"_name,
-                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                   AttachmentAttribute::StoreImage,
-                                           GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
-                               .attachment("bloom"_name,
-                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                           AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
-                                           GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
-                               .build())),
-   m_shadingRenderer(device, m_shadingRenderTarget, resourceManager),
-   m_scene(scene)
+    m_shadingRenderTarget(GAPI_CHECK(
+            graphics_api::RenderTargetBuilder(device)
+                    .attachment("shading"_name,
+                                AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                        AttachmentAttribute::StoreImage,
+                                GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                    .attachment("bloom"_name,
+                                AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
+                                        AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
+                                GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                    .build())),
+    m_shadingRenderer(device, m_shadingRenderTarget, resourceManager),
+    m_scene(scene),
+    m_particlesPipeline(GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(device, m_shadingRenderTarget)
+                                           .fragment_shader(resourceManager.get("particles.fshader"_rc))
+                                           .vertex_shader(resourceManager.get("particles.vshader"_rc))
+                                           // Descriptor layout
+                                           .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                                               graphics_api::PipelineStage::VertexShader)
+                                           .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
+                                                               graphics_api::PipelineStage::VertexShader)
+                                           .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
+                                                               graphics_api::PipelineStage::FragmentShader)
+                                           .enable_depth_test(true)
+                                           .enable_blending(true)
+                                           .use_push_descriptors(true)
+                                           .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
+                                           .build())),
+    m_particlesUBO(device),
+    m_sampler(resourceManager.get("linear_repeat_mlod0_aniso.sampler"_rc)),
+    m_particlesTexture(resourceManager.get("particle.tex"_rc))
 {
 }
 
@@ -50,6 +72,17 @@ void Shading::record_commands(render_core::FrameResources &frameResources,
            m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
 
    m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat);
+
+   auto &particles = dynamic_cast<ParticlesResources &>(frameResources.node("particles"_name));
+
+   m_particlesUBO->view = m_scene.camera().view_matrix();
+   m_particlesUBO->proj = m_scene.camera().projection_matrix();
+
+   cmdList.bind_pipeline(m_particlesPipeline);
+   cmdList.bind_uniform_buffer(0, m_particlesUBO);
+   cmdList.bind_storage_buffer(1, particles.particles_buffer());
+   cmdList.bind_texture(2, m_particlesTexture, m_sampler);
+   cmdList.draw_primitives(4, 0, 256, 0);
 
    cmdList.end_render_pass();
 }

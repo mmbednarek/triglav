@@ -30,7 +30,7 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device &device, graphics_api::Rende
     m_renderTarget(renderTarget),
     m_resourceManager(resourceManager),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(m_device, renderTarget)
+            graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
                     .fragment_shader(resourceManager.get("sprite.fshader"_rc))
                     .vertex_shader(resourceManager.get("sprite.vshader"_rc))
                     // Descriptor layout

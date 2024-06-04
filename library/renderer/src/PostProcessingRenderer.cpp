@@ -18,7 +18,7 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device &device,
                                                ResourceManager &resourceManager) :
     m_device(device),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(m_device, renderTarget)
+            graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
                     .fragment_shader(resourceManager.get("post_processing.fshader"_rc))
                     .vertex_shader(resourceManager.get("post_processing.vshader"_rc))
                     // Descriptor layout
@@ -51,7 +51,7 @@ void PostProcessingRenderer::draw(render_core::FrameResources &resources,
    writer.set_sampled_texture(0, shading.texture("shading"_name), m_sampler);
    writer.set_sampled_texture(1, bloomTexture, m_sampler);
    writer.set_sampled_texture(2, ui.texture("user_interface"_name), m_sampler);
-   cmdList.push_descriptors(0, writer);
+   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
 
    PushConstants constants{
            .enableFXAA   = resources.has_flag("fxaa"_name),

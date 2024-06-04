@@ -28,6 +28,17 @@ DescriptorWriter::~DescriptorWriter()
    this->update();
 }
 
+void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer &buffer)
+{
+   auto &writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+
+   auto bufferInfo                = m_descriptorBufferInfoPool.aquire_object();
+   bufferInfo->offset             = 0;
+   bufferInfo->range              = buffer.size();
+   bufferInfo->buffer             = buffer.vulkan_buffer();
+   writeDescriptorSet.pBufferInfo = bufferInfo;
+}
+
 void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buffer &buffer)
 {
    auto &writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
