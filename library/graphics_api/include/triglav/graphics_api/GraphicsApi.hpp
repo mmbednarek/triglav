@@ -19,7 +19,9 @@ enum class Status
    UnsupportedDevice,
    UnsupportedFormat,
    UnsupportedColorSpace,
-   InvalidTransferDestination
+   PSOCreationFailed,
+   InvalidTransferDestination,
+   InvalidShaderStage
 };
 
 enum class ColorFormatOrder
@@ -84,8 +86,9 @@ enum class PipelineStage : uint32_t
    Entrypoint     = (1 << 0),
    VertexShader   = (1 << 1),
    FragmentShader = (1 << 2),
-   Transfer       = (1 << 3),
-   End            = (1 << 4),
+   ComputeShader  = (1 << 3),
+   Transfer       = (1 << 4),
+   End            = (1 << 5),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -142,6 +145,7 @@ constexpr Color Red{1.0f, 0.0f, 0.0f, 1.0f};
 enum class DescriptorType
 {
    UniformBuffer,
+   StorageBuffer,
    Sampler,
    ImageSampler,
 };
@@ -288,9 +292,15 @@ enum class BufferUsage : u32
    UniformBuffer = (1 << 3),
    VertexBuffer  = (1 << 4),
    IndexBuffer   = (1 << 5),
+   StorageBuffer = (1 << 6),
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)
+
+enum class PipelineType {
+   Graphics,
+   Compute
+};
 
 template<typename T>
 using Result = std::expected<T, Status>;

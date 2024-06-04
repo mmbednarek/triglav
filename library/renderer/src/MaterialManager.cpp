@@ -72,7 +72,7 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
 void MaterialManager::process_material_template(const MaterialTemplateName name,
                                                 const render_core::MaterialTemplate &materialTemplate)
 {
-   auto builder = graphics_api::PipelineBuilder(m_device, m_renderTarget)
+   auto builder = graphics_api::GraphicsPipelineBuilder(m_device, m_renderTarget)
                           .fragment_shader(m_resourceManager.get(materialTemplate.fragmentShader))
                           .vertex_shader(m_resourceManager.get(materialTemplate.vertexShader))
                           .enable_depth_test(true)

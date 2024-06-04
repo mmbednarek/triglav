@@ -182,6 +182,7 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
    switch (stage) {
    case PipelineStage::VertexShader: return VK_SHADER_STAGE_VERTEX_BIT;
    case PipelineStage::FragmentShader: return VK_SHADER_STAGE_FRAGMENT_BIT;
+   case PipelineStage::ComputeShader: return VK_SHADER_STAGE_COMPUTE_BIT;
    }
 
    return static_cast<VkShaderStageFlagBits>(0);
@@ -196,6 +197,9 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
    if (flags & PipelineStage::FragmentShader) {
       result |= VK_SHADER_STAGE_FRAGMENT_BIT;
    }
+   if (flags & PipelineStage::ComputeShader) {
+      result |= VK_SHADER_STAGE_COMPUTE_BIT;
+   }
    return result;
 }
 
@@ -205,6 +209,7 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
    case PipelineStage::Entrypoint: return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
    case PipelineStage::VertexShader: return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
    case PipelineStage::FragmentShader: return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   case PipelineStage::ComputeShader: return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    case PipelineStage::Transfer: return VK_PIPELINE_STAGE_TRANSFER_BIT;
    case PipelineStage::End: return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
    default: break;
@@ -224,6 +229,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    if (flags & PipelineStage::FragmentShader) {
       result |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
    }
+   if (flags & PipelineStage::ComputeShader) {
+      result |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+   }
    if (flags & PipelineStage::Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
@@ -234,6 +242,7 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
 {
    switch (descriptorType) {
    case DescriptorType::UniformBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   case DescriptorType::StorageBuffer: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
    case DescriptorType::Sampler: return VK_DESCRIPTOR_TYPE_SAMPLER;
    case DescriptorType::ImageSampler: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    }
@@ -340,6 +349,9 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
    if (usage & IndexBuffer) {
       result |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
    }
+   if (usage & StorageBuffer) {
+      result |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+   }
 
    return result;
 }
@@ -356,6 +368,34 @@ VkMemoryPropertyFlags to_vulkan_memory_properties_flags(BufferUsageFlags usage)
    }
 
    return result;
+}
+
+VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags workTypes)
+{
+   using enum WorkType;
+
+   if (workTypes & Graphics) {
+      return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+   }
+   if (workTypes & Compute) {
+      return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+   }
+   if (workTypes & Transfer) {
+      return VK_PIPELINE_STAGE_TRANSFER_BIT;
+   }
+
+   return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+}
+
+VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
+{
+   switch(pipelineType) {
+   case PipelineType::Graphics:
+      return VK_PIPELINE_BIND_POINT_GRAPHICS;
+   case PipelineType::Compute:
+      return VK_PIPELINE_BIND_POINT_COMPUTE;
+   }
+   return VK_PIPELINE_BIND_POINT_MAX_ENUM;
 }
 
 }// namespace triglav::graphics_api::vulkan

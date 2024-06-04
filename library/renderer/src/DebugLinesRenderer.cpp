@@ -14,17 +14,16 @@ namespace triglav::renderer {
 DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                        ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(device, renderTarget)
-                    .fragment_shader(resourceManager.get("debug_lines.fshader"_rc))
-                    .vertex_shader(resourceManager.get("debug_lines.vshader"_rc))
-                    .begin_vertex_layout<glm::vec3>()
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
-                    .end_vertex_layout()
-                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::PipelineStage::VertexShader)
-                    .vertex_topology(graphics_api::VertexTopology::LineList)
-                    .razterization_method(graphics_api::RasterizationMethod::Line)
+    m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(device, renderTarget)
+                                   .fragment_shader(resourceManager.get("debug_lines.fshader"_rc))
+                                   .vertex_shader(resourceManager.get("debug_lines.vshader"_rc))
+                                   .begin_vertex_layout<glm::vec3>()
+                                   .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
+                                   .end_vertex_layout()
+                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                                       graphics_api::PipelineStage::VertexShader)
+                                   .vertex_topology(graphics_api::VertexTopology::LineList)
+                                   .rasterization_method(graphics_api::RasterizationMethod::Line)
                     .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(60, 3, 60)))
 {

@@ -172,7 +172,7 @@ UserInterface::UserInterface(graphics_api::Device &device, resource::ResourceMan
                                            GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single)
                                .build())),
     m_textPipeline(GAPI_CHECK(
-            graphics_api::PipelineBuilder(device, m_textureRenderTarget)
+            graphics_api::GraphicsPipelineBuilder(device, m_textureRenderTarget)
                     .fragment_shader(resourceManager.get("text.fshader"_rc))
                     .vertex_shader(resourceManager.get("text.vshader"_rc))
                     // Vertex description

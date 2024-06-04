@@ -7,6 +7,7 @@
 #include "node/Shading.h"
 #include "node/ShadowMap.h"
 #include "node/UserInterface.h"
+#include "node/Particles.h"
 
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/Name.hpp"
@@ -101,10 +102,15 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
                                                     m_renderTarget, m_framebuffers);
    m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, *m_device, "shading"_name,
                                                 "shading"_name, "bloom"_name);
+   m_renderGraph.emplace_node<node::Particles>("particles"_name, *m_device, *m_resourceManager,
+                                                m_renderGraph);
+
+   m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
 
    m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
    m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
    m_renderGraph.add_dependency("shading"_name, "ambient_occlusion"_name);
+   m_renderGraph.add_dependency("shading"_name, "particles"_name);
    m_renderGraph.add_dependency("downsample_bloom"_name, "shading"_name);
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);

@@ -3,7 +3,6 @@
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/Synchronization.h"
 
-#include <ranges>
 #include <stack>
 
 namespace triglav::render_core {
@@ -24,6 +23,11 @@ void RenderGraph::add_external_node(Name node)
 void RenderGraph::add_dependency(Name target, Name dependency)
 {
    m_dependencies.emplace(target, dependency);
+}
+
+void RenderGraph::add_interframe_dependency(Name target, Name dependency)
+{
+   m_interframeDependencies.emplace(target, dependency);
 }
 
 bool RenderGraph::bake(Name targetNode)
@@ -77,8 +81,12 @@ bool RenderGraph::bake(Name targetNode)
 
       nodes.pop();
 
-      for (auto& frameRes : m_frameResources) {
+      for (u32 i = 0; i < m_frameResources.size(); ++i) {
+         auto &frameRes      = m_frameResources[i];
+         auto &previousFrameRes = m_frameResources[i == 0 ? (m_frameResources.size() - 1) : (i - 1)];
          graphics_api::SemaphoreArray semaphores{};
+
+         // In frame dependencies
          auto [it, end] = m_dependencies.equal_range(currentNode);
          while (it != end) {
             auto semaphore = GAPI_CHECK(m_device.create_semaphore());
@@ -88,16 +96,27 @@ bool RenderGraph::bake(Name targetNode)
             ++it;
          }
 
+         const auto inFrameSemaphoreCount = semaphores.semaphore_count();
+
+         // Dependencies between current end previous frame
+         std::tie(it, end) = m_interframeDependencies.equal_range(currentNode);
+         while (it != end) {
+            auto semaphore = GAPI_CHECK(m_device.create_semaphore());
+            semaphores.add_semaphore(semaphore);
+            previousFrameRes.add_signal_semaphore(it->second, currentNode, std::move(semaphore));
+            ++it;
+         }
+
          auto &node       = m_nodes[currentNode];
          auto commandList = GAPI_CHECK(m_device.queue_manager().create_command_list(node->work_types()));
 
-         frameRes.initialize_command_list(currentNode, std::move(semaphores), std::move(commandList));
+         frameRes.initialize_command_list(currentNode, std::move(semaphores), std::move(commandList), inFrameSemaphoreCount);
       }
 
       m_nodeOrder.emplace_back(currentNode);
    }
 
-   for (auto& frameRes : m_frameResources) {
+   for (auto &frameRes : m_frameResources) {
       frameRes.add_signal_semaphore(targetNode, "__TARGET__"_name, GAPI_CHECK(m_device.create_semaphore()));
       frameRes.finalize();
    }
@@ -108,13 +127,13 @@ bool RenderGraph::bake(Name targetNode)
 void RenderGraph::initialize_nodes()
 {
    for (const auto name : m_externalNodes) {
-      for (auto& frameRes : m_frameResources) {
+      for (auto &frameRes : m_frameResources) {
          frameRes.add_external_node(name);
       }
    }
 
    for (const auto &[name, node] : m_nodes) {
-      for (auto& frameRes : m_frameResources) {
+      for (auto &frameRes : m_frameResources) {
          frameRes.add_node_resources(name, node->create_node_resources());
       }
    }
@@ -134,7 +153,7 @@ void RenderGraph::record_command_lists()
 
 void RenderGraph::update_resolution(const graphics_api::Resolution &resolution)
 {
-   for (auto& frameRes : m_frameResources) {
+   for (auto &frameRes : m_frameResources) {
       frameRes.update_resolution(resolution);
    }
 }
@@ -148,13 +167,22 @@ graphics_api::Status RenderGraph::execute()
       if (name == m_targetNode) {
          fence = &this->active_frame_resources().target_fence();
       }
+      graphics_api::SemaphoreArrayView waitSemaphores{};
+      if (m_firstFrame) {
+         waitSemaphores = {resources.wait_semaphores(), resources.in_frame_wait_semaphore_count()};
+      } else {
+         waitSemaphores = resources.wait_semaphores();
+      }
 
-      const auto status = m_device.submit_command_list(resources.command_list(), resources.wait_semaphores(),
-                                                       resources.signal_semaphores(), fence);
+      const auto status = m_device.submit_command_list(resources.command_list(), waitSemaphores,
+                                                       resources.signal_semaphores(), fence, this->node<IRenderNode>(name).work_types());
       if (status != graphics_api::Status::Success) {
          return status;
       }
    }
+
+   m_firstFrame = false;
+
    return graphics_api::Status::Success;
 }
 
@@ -163,7 +191,7 @@ void RenderGraph::await()
    this->active_frame_resources().target_fence().await();
 }
 
-graphics_api::Semaphore& RenderGraph::target_semaphore()
+graphics_api::Semaphore &RenderGraph::target_semaphore()
 {
    return this->active_frame_resources().target_semaphore(m_targetNode);
 }
@@ -176,14 +204,14 @@ u32 RenderGraph::triangle_count(const Name node)
 
 void RenderGraph::clean()
 {
-   for (auto& frameRes : m_frameResources) {
+   for (auto &frameRes : m_frameResources) {
       frameRes.clean(m_device);
    }
 }
 
 void RenderGraph::set_flag(Name flag, const bool isEnabled)
 {
-   for (auto& frameRes : m_frameResources) {
+   for (auto &frameRes : m_frameResources) {
       frameRes.set_flag(flag, isEnabled);
    }
 }
@@ -193,12 +221,17 @@ FrameResources &RenderGraph::active_frame_resources()
    return m_frameResources[m_activeFrame];
 }
 
+FrameResources &RenderGraph::previous_frame_resources()
+{
+   return m_frameResources[m_activeFrame == 0 ? (m_frameResources.size() - 1) : (m_activeFrame - 1)];
+}
+
 void RenderGraph::swap_frames()
 {
    m_activeFrame = (m_activeFrame + 1) % m_frameResources.size();
 }
 
-graphics_api::Semaphore& RenderGraph::semaphore(Name parent, Name child)
+graphics_api::Semaphore &RenderGraph::semaphore(Name parent, Name child)
 {
    return this->active_frame_resources().semaphore(parent, child);
 }

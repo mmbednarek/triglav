@@ -31,4 +31,6 @@ VkImageUsageFlags to_vulkan_image_usage_flags(TextureUsageFlags usage);
 VkImageAspectFlags to_vulkan_image_aspect_flags(TextureUsageFlags usage);
 VkBufferUsageFlags to_vulkan_buffer_usage_flags(BufferUsageFlags usage);
 VkMemoryPropertyFlags to_vulkan_memory_properties_flags(BufferUsageFlags usage);
+VkPipelineStageFlags to_vulkan_wait_pipeline_stage(WorkTypeFlags workTypes);
+VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType);
 }// namespace triglav::graphics_api::vulkan

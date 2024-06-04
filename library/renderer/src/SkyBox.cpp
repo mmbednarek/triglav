@@ -33,7 +33,7 @@ SkyBox::SkyBox(graphics_api::Device &device, resource::ResourceManager &resource
     m_resourceManager(resourceManager),
     m_mesh(create_skybox_mesh(device)),
     m_pipeline(checkResult(
-            graphics_api::PipelineBuilder(device, renderTarget)
+            graphics_api::GraphicsPipelineBuilder(device, renderTarget)
                     .fragment_shader(m_resourceManager.get("skybox.fshader"_rc))
                     .vertex_shader(m_resourceManager.get("skybox.vshader"_rc))
                     // Vertex description
@@ -74,7 +74,7 @@ void SkyBox::on_render(graphics_api::CommandList &commandList, UniformBuffer& ub
    graphics_api::DescriptorWriter descWriter(m_device);
    descWriter.set_uniform_buffer(0, ubo);
    descWriter.set_sampled_texture(1, m_texture, m_sampler);
-   commandList.push_descriptors(0, descWriter);
+   commandList.push_descriptors(0, descWriter, graphics_api::PipelineType::Graphics);
 
    commandList.draw_mesh(m_mesh);
 }

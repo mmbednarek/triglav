@@ -44,7 +44,9 @@ class CommandList
    void bind_pipeline(const Pipeline &pipeline);
    void bind_descriptor_set(const DescriptorView &descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset);
+   void draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance);
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset);
+   void dispatch(u32 x, u32 y, u32 z);
    void bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer &buffer) const;
    void copy_buffer(const Buffer &source, const Buffer &dest) const;
@@ -58,9 +60,10 @@ class CommandList
                      const TextureRegion &targetRegion) const;
    void reset_timestamp_array(const TimestampArray &timestampArray, u32 first, u32 count) const;
    void write_timestamp(PipelineStage stage, const TimestampArray &timestampArray, u32 timestampIndex) const;
-   void push_descriptors(u32 setIndex, DescriptorWriter &writer) const;
+   void push_descriptors(u32 setIndex, DescriptorWriter &writer, PipelineType pipelineType) const;
 
    void bind_raw_uniform_buffer(u32 binding, const Buffer &buffer);
+   void bind_storage_buffer(u32 binding, const Buffer &buffer);
 
    template<typename TValue>
    void bind_uniform_buffer(const uint32_t binding, const TValue &buffer)

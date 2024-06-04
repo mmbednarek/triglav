@@ -134,7 +134,7 @@ void CommandList::end_render_pass() const
 
 void CommandList::bind_pipeline(const Pipeline &pipeline)
 {
-   vkCmdBindPipeline(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.vulkan_pipeline());
+   vkCmdBindPipeline(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipeline.pipeline_type()), pipeline.vulkan_pipeline());
    m_boundPipelineLayout = *pipeline.layout();
 }
 
@@ -145,16 +145,21 @@ void CommandList::bind_descriptor_set(const DescriptorView &descriptorSet) const
                            &vulkanDescriptorSet, 0, nullptr);
 }
 
-void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
+void CommandList::draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance)
 {
    if (m_hasPendingDescriptors) {
       m_hasPendingDescriptors = false;
-      this->push_descriptors(0, m_descriptorWriter);
+      this->push_descriptors(0, m_descriptorWriter, PipelineType::Graphics);
       m_descriptorWriter.reset_count();
    }
 
    m_triangleCount += vertexCount / 3;
-   vkCmdDraw(m_commandBuffer, vertexCount, 1, vertexOffset, 0);
+   vkCmdDraw(m_commandBuffer, vertexCount, instanceCount, vertexOffset, firstInstance);
+}
+
+void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
+{
+   this->draw_primitives(vertexCount, vertexOffset, 1, 0);
 }
 
 void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset,
@@ -162,12 +167,24 @@ void CommandList::draw_indexed_primitives(const int indexCount, const int indexO
 {
    if (m_hasPendingDescriptors) {
       m_hasPendingDescriptors = false;
-      this->push_descriptors(0, m_descriptorWriter);
+      this->push_descriptors(0, m_descriptorWriter, PipelineType::Graphics);
       m_descriptorWriter.reset_count();
    }
 
    m_triangleCount += indexCount / 3;
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
+}
+
+
+void CommandList::dispatch(u32 x, u32 y, u32 z)
+{
+   if (m_hasPendingDescriptors) {
+      m_hasPendingDescriptors = false;
+      this->push_descriptors(0, m_descriptorWriter, PipelineType::Compute);
+      m_descriptorWriter.reset_count();
+   }
+
+   vkCmdDispatch(m_commandBuffer, x, y, z);
 }
 
 void CommandList::bind_vertex_buffer(const Buffer &buffer, uint32_t layoutIndex) const
@@ -290,11 +307,11 @@ void CommandList::write_timestamp(const PipelineStage stage, const TimestampArra
                        timestampArray.vulkan_query_pool(), timestampIndex);
 }
 
-void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter &writer) const
+void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter &writer, const PipelineType pipelineType) const
 {
    const auto writes = writer.vulkan_descriptor_writes();
    assert(m_cmdPushDescriptorSet);
-   m_cmdPushDescriptorSet(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundPipelineLayout, setIndex,
+   m_cmdPushDescriptorSet(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType), m_boundPipelineLayout, setIndex,
                           static_cast<u32>(writes.size()), writes.data());
 }
 
@@ -315,6 +332,12 @@ Status CommandList::reset() const
       return Status::UnsupportedDevice;
    }
    return Status::Success;
+}
+
+void CommandList::bind_storage_buffer(u32 binding, const Buffer &buffer)
+{
+   m_descriptorWriter.set_storage_buffer(binding, buffer);
+   m_hasPendingDescriptors = true;
 }
 
 void CommandList::bind_raw_uniform_buffer(u32 binding, const Buffer &buffer)

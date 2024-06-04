@@ -40,10 +40,12 @@ class NodeFrameResources : public NodeResourcesBase
    [[nodiscard]] graphics_api::CommandList &command_list();
    void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore) override;
    void initialize_command_list(graphics_api::SemaphoreArray &&waitSemaphores,
-                                graphics_api::CommandList &&commands);
+                                graphics_api::CommandList &&commands, size_t inFrameWaitSemaphoreCount);
    graphics_api::SemaphoreArray &wait_semaphores();
    graphics_api::SemaphoreArray &signal_semaphores();
    void finalize() override;
+
+   size_t in_frame_wait_semaphore_count();
 
  private:
    struct RenderTargetResource
@@ -57,6 +59,7 @@ class NodeFrameResources : public NodeResourcesBase
    graphics_api::SemaphoreArray m_signalSemaphores;
    std::optional<graphics_api::SemaphoreArray> m_waitSemaphores{};
    std::optional<graphics_api::CommandList> m_commandList{};
+   size_t m_inFrameWaitSemaphoreCount{};
 };
 
 class FrameResources
@@ -90,7 +93,7 @@ class FrameResources
    void update_resolution(const graphics_api::Resolution &resolution);
    void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore);
    void initialize_command_list(Name nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
-                                graphics_api::CommandList &&commandList);
+                                graphics_api::CommandList &&commandList, size_t inFrameWaitSemaphoreCount);
    void clean(graphics_api::Device &device);
    void finalize();
 

@@ -14,7 +14,7 @@ namespace triglav::renderer {
 RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
                                      ResourceManager &resourceManager) :
     m_device(device),
-    m_pipeline(checkResult(graphics_api::PipelineBuilder(device, renderTarget)
+    m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(device, renderTarget)
                                    .fragment_shader(resourceManager.get("rectangle.fshader"_rc))
                                    .vertex_shader(resourceManager.get("rectangle.vshader"_rc))
                                    .begin_vertex_layout<glm::vec2>()

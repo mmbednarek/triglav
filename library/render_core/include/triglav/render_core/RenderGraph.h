@@ -33,6 +33,7 @@ class RenderGraph
 
    void add_external_node(Name node);
    void add_dependency(Name target, Name dependency);
+   void add_interframe_dependency(Name target, Name dependency);
    bool bake(Name targetNode);
    void initialize_nodes();
    void record_command_lists();
@@ -44,6 +45,7 @@ class RenderGraph
    [[nodiscard]] graphics_api::Semaphore& semaphore(Name parent, Name child);
    [[nodiscard]] u32 triangle_count(Name node);
    FrameResources& active_frame_resources();
+   FrameResources& previous_frame_resources();
    void swap_frames();
 
    void clean();
@@ -54,11 +56,13 @@ class RenderGraph
    std::set<Name> m_externalNodes;
    std::map<Name, std::unique_ptr<IRenderNode>> m_nodes;
    std::multimap<Name, Name> m_dependencies;
+   std::multimap<Name, Name> m_interframeDependencies;
    std::vector<Name> m_nodeOrder;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
    std::array<FrameResources, 2> m_frameResources;
    Name m_targetNode{};
    u32 m_activeFrame{0};
+   bool m_firstFrame{true};
 };
 
 }// namespace triglav::render_core

@@ -43,4 +43,32 @@ void SemaphoreArray::add_semaphore(const Semaphore &semaphore)
    m_semaphores.emplace_back(semaphore.vulkan_semaphore());
 }
 
+SemaphoreArrayView::SemaphoreArrayView() :
+    m_semaphores(nullptr),
+    m_count(0)
+{
+}
+
+SemaphoreArrayView::SemaphoreArrayView(const SemaphoreArray &array) :
+    m_semaphores(array.vulkan_semaphores()),
+    m_count(array.semaphore_count())
+{
+}
+
+SemaphoreArrayView::SemaphoreArrayView(const SemaphoreArray &array, size_t count) :
+        m_semaphores(array.vulkan_semaphores()),
+        m_count(std::min(count, array.semaphore_count()))
+{
+}
+
+const VkSemaphore *SemaphoreArrayView::vulkan_semaphores() const
+{
+   return m_semaphores;
+}
+
+size_t SemaphoreArrayView::semaphore_count() const
+{
+   return m_count;
+}
+
 }// namespace triglav::graphics_api
