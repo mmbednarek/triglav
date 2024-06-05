@@ -21,6 +21,12 @@ Key translate_key(const WPARAM keyCode)
    case VK_F4: return Key::F4;
    case VK_F5: return Key::F5;
    case VK_F6: return Key::F6;
+   case VK_F7: return Key::F7;
+   case VK_F8: return Key::F8;
+   case VK_F9: return Key::F9;
+   case VK_F10: return Key::F10;
+   case VK_F11: return Key::F11;
+   case VK_F12: return Key::F12;
    default: break;
    }
 

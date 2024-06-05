@@ -39,6 +39,7 @@ void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
     if (normal == vec3(0.0, 0.0, 0.0)) {
         outColor = vec4(texture(texColor, fragTexCoord).rgb, 1.0);
+        outBloom = vec4(0.0);
         return;
     }
     normal = normalize(normal);
