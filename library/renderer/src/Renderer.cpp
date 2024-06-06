@@ -177,6 +177,7 @@ void Renderer::on_render()
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
+   m_renderGraph.node<node::Particles>("particles"_name).set_delta_time(deltaTime);
    m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(framebufferIndex);
    m_renderGraph.record_command_lists();
 
@@ -261,7 +262,7 @@ std::tuple<uint32_t, uint32_t> Renderer::screen_resolution() const
 
 float Renderer::calculate_frame_duration()
 {
-   static std::chrono::steady_clock::time_point last;
+   static std::chrono::steady_clock::time_point last{std::chrono::steady_clock::now()};
 
    const auto now  = std::chrono::steady_clock::now();
    const auto diff = now - last;
