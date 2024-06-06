@@ -47,7 +47,7 @@ static graphics_api::Buffer generate_particles(graphics_api::Device &device, con
       particle.animation = 0.5f * (1.0f + dist(generator));
       particle.rotation = 2 * M_PI * dist(generator);
       particle.angularVelocity = dist(generator);
-      particle.scale = 0.5f + 0.5f*(1.0f + dist(generator));
+      particle.scale = 0.5f + (1.0f + dist(generator));
    }
 
    auto buffer = GAPI_CHECK(device.create_buffer(BufferUsage::StorageBuffer | BufferUsage::TransferDst,
