@@ -4,6 +4,7 @@
 #include "triglav/resource/ResourceManager.h"
 
 #include <glm/mat4x4.hpp>
+#include <random>
 
 namespace triglav::render_core {
 class RenderGraph;
@@ -29,11 +30,14 @@ class Particles : public render_core::IRenderNode
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
    void record_commands(render_core::FrameResources &frameResources, render_core::NodeFrameResources &resources, graphics_api::CommandList &cmdList) override;
+   void set_delta_time(float value);
 
  private:
    graphics_api::Device &m_device;
    render_core::RenderGraph &m_renderGraph;
    graphics_api::Pipeline m_computePipeline;
+   std::default_random_engine m_randomEngine;
+   float m_deltaTime{0.0166};
 };
 
 }
