@@ -256,6 +256,7 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
    case TextureState::TransferSrc: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
    case TextureState::TransferDst: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
    case TextureState::ShaderRead: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   case TextureState::DepthStencilRead: return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
@@ -267,7 +268,8 @@ VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
    case TextureState::Undefined: return 0;
    case TextureState::TransferSrc: return VK_ACCESS_TRANSFER_READ_BIT;
    case TextureState::TransferDst: return VK_ACCESS_TRANSFER_WRITE_BIT;
-   case TextureState::ShaderRead: return VK_ACCESS_SHADER_READ_BIT;
+   case TextureState::ShaderRead: [[fallthrough]];
+   case TextureState::DepthStencilRead: return VK_ACCESS_SHADER_READ_BIT;
    }
 
    return 0;
@@ -396,6 +398,23 @@ VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
       return VK_PIPELINE_BIND_POINT_COMPUTE;
    }
    return VK_PIPELINE_BIND_POINT_MAX_ENUM;
+}
+
+VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags)
+{
+   VkImageAspectFlags outFlags{};
+
+   if (usageFlags & TextureUsage::DepthStencilAttachment) {
+      outFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
+   } else if (usageFlags & TextureUsage::Sampled) {
+      outFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
+   }
+
+   if (usageFlags & TextureUsage::ColorAttachment) {
+      outFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
+   }
+
+   return outFlags;
 }
 
 }// namespace triglav::graphics_api::vulkan

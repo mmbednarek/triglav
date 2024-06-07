@@ -248,7 +248,15 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
       attachment.storeOp        = vulkanStoreOp;
       attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
       attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-      attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+      if (attachmentFlags & AttachmentAttribute::LoadImage) {
+         if (attachmentFlags & AttachmentAttribute::Depth) {
+            attachment.initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+         } else {
+            attachment.initialLayout  = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+         }
+      } else {
+         attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+      }
       attachment.finalLayout    = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentFlags));
    }
 

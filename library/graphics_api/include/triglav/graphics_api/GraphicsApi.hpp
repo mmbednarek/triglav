@@ -177,6 +177,7 @@ enum class TextureState
    TransferSrc,
    TransferDst,
    ShaderRead,
+   DepthStencilRead,
 };
 
 class Texture;
@@ -296,6 +297,12 @@ enum class BufferUsage : u32
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)
+
+enum class DepthTestMode {
+   Disabled,
+   Enabled,
+   ReadOnly
+};
 
 enum class PipelineType {
    Graphics,

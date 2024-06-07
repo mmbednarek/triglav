@@ -198,7 +198,13 @@ GraphicsPipelineBuilder &GraphicsPipelineBuilder::push_constant(const PipelineSt
 
 GraphicsPipelineBuilder &GraphicsPipelineBuilder::enable_depth_test(const bool enabled)
 {
-   m_depthTestEnabled = enabled;
+   m_depthTestMode = enabled ? DepthTestMode::Enabled : DepthTestMode::Disabled;
+   return *this;
+}
+
+GraphicsPipelineBuilder &GraphicsPipelineBuilder::depth_test_mode(DepthTestMode mode)
+{
+   m_depthTestMode = mode;
    return *this;
 }
 
@@ -339,8 +345,8 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
 
    VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo{};
    depthStencilStateInfo.sType                 = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-   depthStencilStateInfo.depthTestEnable       = m_depthTestEnabled;
-   depthStencilStateInfo.depthWriteEnable      = m_depthTestEnabled;
+   depthStencilStateInfo.depthTestEnable       = m_depthTestMode != DepthTestMode::Disabled;
+   depthStencilStateInfo.depthWriteEnable      = m_depthTestMode == DepthTestMode::Enabled;
    depthStencilStateInfo.depthCompareOp        = VK_COMPARE_OP_LESS_OR_EQUAL;
    depthStencilStateInfo.depthBoundsTestEnable = false;
    depthStencilStateInfo.stencilTestEnable     = false;

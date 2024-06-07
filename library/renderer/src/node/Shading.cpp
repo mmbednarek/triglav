@@ -1,5 +1,6 @@
 #include "Shading.h"
 #include "Particles.h"
+#include "TextureHelper.h"
 
 #include "triglav/graphics_api/PipelineBuilder.h"
 
@@ -7,6 +8,9 @@ namespace triglav::renderer::node {
 
 using graphics_api::AttachmentAttribute;
 using graphics_api::SampleCount;
+using graphics_api::TextureBarrierInfo;
+using graphics_api::TextureState;
+using graphics_api::PipelineStage;
 
 using namespace name_literals;
 
@@ -21,6 +25,10 @@ Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resour
                                 AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
                                         AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
                                 GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+                    .attachment("depth"_name,
+                                AttachmentAttribute::Depth | AttachmentAttribute::LoadImage |
+                                        AttachmentAttribute::StoreImage | AttachmentAttribute::TransferDst,
+                                GAPI_FORMAT(D, UNorm16))
                     .build())),
     m_shadingRenderer(device, m_shadingRenderTarget, resourceManager),
     m_scene(scene),
@@ -34,7 +42,7 @@ Shading::Shading(graphics_api::Device &device, resource::ResourceManager &resour
                                                                graphics_api::PipelineStage::VertexShader)
                                            .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
                                                                graphics_api::PipelineStage::FragmentShader)
-                                           .enable_depth_test(true)
+                                           .depth_test_mode(graphics_api::DepthTestMode::ReadOnly)
                                            .enable_blending(true)
                                            .use_push_descriptors(true)
                                            .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
@@ -60,11 +68,16 @@ graphics_api::WorkTypeFlags Shading::work_types() const
 void Shading::record_commands(render_core::FrameResources &frameResources,
                               render_core::NodeFrameResources &resources, graphics_api::CommandList &cmdList)
 {
+   auto &gbuffer = frameResources.node("geometry"_name).framebuffer("gbuffer"_name);
+   auto &framebuffer = resources.framebuffer("shading"_name);
+
+   copy_texture(cmdList, gbuffer.texture("depth"_name), framebuffer.texture("depth"_name));
+
    std::array<graphics_api::ClearValue, 2> clearValues{
            graphics_api::ColorPalette::Black,
            graphics_api::ColorPalette::Black,
    };
-   cmdList.begin_render_pass(resources.framebuffer("shading"_name), clearValues);
+   cmdList.begin_render_pass(framebuffer, clearValues);
 
    const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() *
                           glm::inverse(m_scene.camera().view_matrix());

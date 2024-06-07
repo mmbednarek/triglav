@@ -55,6 +55,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder &descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
    GraphicsPipelineBuilder &push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
    GraphicsPipelineBuilder &enable_depth_test(bool enabled);
+   GraphicsPipelineBuilder &depth_test_mode(DepthTestMode mode);
    GraphicsPipelineBuilder &enable_blending(bool enabled);
    GraphicsPipelineBuilder &use_push_descriptors(bool enabled);
    GraphicsPipelineBuilder &vertex_topology(VertexTopology topology);
@@ -82,7 +83,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    VkPolygonMode m_polygonMode             = VK_POLYGON_MODE_FILL;
    VkPrimitiveTopology m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    VkFrontFace m_frontFace                 = VK_FRONT_FACE_CLOCKWISE;
-   bool m_depthTestEnabled{false};
+   DepthTestMode m_depthTestMode{DepthTestMode::Disabled};
    bool m_blendingEnabled{true};
 
    std::vector<VkVertexInputBindingDescription> m_bindings{};
