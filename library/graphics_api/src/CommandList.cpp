@@ -134,7 +134,8 @@ void CommandList::end_render_pass() const
 
 void CommandList::bind_pipeline(const Pipeline &pipeline)
 {
-   vkCmdBindPipeline(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipeline.pipeline_type()), pipeline.vulkan_pipeline());
+   vkCmdBindPipeline(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipeline.pipeline_type()),
+                     pipeline.vulkan_pipeline());
    m_boundPipelineLayout = *pipeline.layout();
 }
 
@@ -162,8 +163,7 @@ void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
    this->draw_primitives(vertexCount, vertexOffset, 1, 0);
 }
 
-void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset,
-                                          const int vertexOffset)
+void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset, const int vertexOffset)
 {
    if (m_hasPendingDescriptors) {
       m_hasPendingDescriptors = false;
@@ -174,7 +174,6 @@ void CommandList::draw_indexed_primitives(const int indexCount, const int indexO
    m_triangleCount += indexCount / 3;
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
-
 
 void CommandList::dispatch(u32 x, u32 y, u32 z)
 {
@@ -223,6 +222,30 @@ void CommandList::copy_buffer_to_texture(const Buffer &source, const Texture &de
                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
+void CommandList::copy_texture(const Texture &source, const TextureState srcState, const Texture &destination,
+                               const TextureState dstState)
+{
+   VkImageCopy imageCopy{
+           .srcSubresource{
+                           .aspectMask     = vulkan::to_vulkan_aspect_flags(source.usage_flags()),
+                           .mipLevel       = 0,
+                           .baseArrayLayer = 0,
+                           .layerCount     = 1,
+                           },
+           .srcOffset{                                                                          0,                    0, 0 },
+           .dstSubresource{
+                           .aspectMask     = vulkan::to_vulkan_aspect_flags(destination.usage_flags()),
+                           .mipLevel       = 0,
+                           .baseArrayLayer = 0,
+                           .layerCount     = 1,
+                           },
+           .dstOffset{                                                                          0,                    0, 0 },
+           .extent{                                                        destination.width(), destination.height(), 1 }
+   };
+   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(srcState),
+                  destination.vulkan_image(), vulkan::to_vulkan_image_layout(dstState), 1, &imageCopy);
+}
+
 void CommandList::push_constant_ptr(const PipelineStage stage, const void *ptr, const size_t size,
                                     const size_t offset) const
 {
@@ -250,7 +273,7 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
       barrier.srcQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
       barrier.dstQueueFamilyIndex             = VK_QUEUE_FAMILY_IGNORED;
       barrier.image                           = info.texture->vulkan_image();
-      barrier.subresourceRange.aspectMask     = VK_IMAGE_ASPECT_COLOR_BIT;
+      barrier.subresourceRange.aspectMask     = vulkan::to_vulkan_aspect_flags(info.texture->usage_flags());
       barrier.subresourceRange.baseMipLevel   = info.baseMipLevel;
       barrier.subresourceRange.levelCount     = info.mipLevelCount;
       barrier.subresourceRange.baseArrayLayer = 0;
@@ -307,12 +330,13 @@ void CommandList::write_timestamp(const PipelineStage stage, const TimestampArra
                        timestampArray.vulkan_query_pool(), timestampIndex);
 }
 
-void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter &writer, const PipelineType pipelineType) const
+void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter &writer,
+                                   const PipelineType pipelineType) const
 {
    const auto writes = writer.vulkan_descriptor_writes();
    assert(m_cmdPushDescriptorSet);
-   m_cmdPushDescriptorSet(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType), m_boundPipelineLayout, setIndex,
-                          static_cast<u32>(writes.size()), writes.data());
+   m_cmdPushDescriptorSet(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType),
+                          m_boundPipelineLayout, setIndex, static_cast<u32>(writes.size()), writes.data());
 }
 
 WorkTypeFlags CommandList::work_types() const

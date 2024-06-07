@@ -14,6 +14,7 @@ renderer_sources = files([
   'include/triglav/renderer/ShadingRenderer.h',
   'include/triglav/renderer/SkyBox.h',
   'include/triglav/renderer/SpriteRenderer.h',
+  'include/triglav/renderer/TextureHelper.h',
   'src/node/AmbientOcclusion.cpp',
   'src/node/AmbientOcclusion.h',
   'src/node/Downsample.cpp',
@@ -45,6 +46,7 @@ renderer_sources = files([
   'src/ShadingRenderer.cpp',
   'src/SkyBox.cpp',
   'src/SpriteRenderer.cpp',
+  'src/TextureHelper.cpp',
 ])
 
 

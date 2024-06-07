@@ -51,6 +51,7 @@ class CommandList
    void bind_index_buffer(const Buffer &buffer) const;
    void copy_buffer(const Buffer &source, const Buffer &dest) const;
    void copy_buffer_to_texture(const Buffer &source, const Texture &destination, int mipLevel = 0) const;
+   void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState);
    void push_constant_ptr(PipelineStage stage, const void *ptr, size_t size, size_t offset = 0) const;
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage,
                         std::span<const TextureBarrierInfo> infos) const;

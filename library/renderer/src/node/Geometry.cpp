@@ -191,7 +191,7 @@ Geometry::Geometry(graphics_api::Device &device, resource::ResourceManager &reso
                                            GAPI_FORMAT(RGBA, Float16))
                                .attachment("depth"_name,
                                            AttachmentAttribute::Depth | AttachmentAttribute::ClearImage |
-                                                   AttachmentAttribute::StoreImage,
+                                                   AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
                                            GAPI_FORMAT(D, UNorm16))
                                .build())),
     m_materialManager(device, m_resourceManager, m_renderTarget),
