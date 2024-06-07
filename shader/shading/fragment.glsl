@@ -96,11 +96,13 @@ void main() {
 
     float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
     color = mix(vec3(luminance), color, 1.25);
-    if (luminance > 1) {
-        outBloom = vec4(color, (luminance - 1) / 5);
-    } else {
-        outBloom = vec4(0.0);
-    }
+    // Disable bloom for shading for now
+//    if (luminance > 1) {
+//        outBloom = vec4(color, (luminance - 1) / 5);
+//    } else {
+//        outBloom = vec4(0.0);
+//    }
+    outBloom = vec4(0.0);
 
     outColor = vec4(color, 1.0);
 }

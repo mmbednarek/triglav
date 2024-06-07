@@ -1,5 +1,6 @@
 #include "Particles.h"
 
+#include "triglav/geometry/Geometry.h"
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/RenderGraph.h"
@@ -45,7 +46,7 @@ static graphics_api::Buffer generate_particles(graphics_api::Device &device, con
       particle.position = center + range * glm::vec3(dist(generator), dist(generator), dist(generator));
       particle.velocity = glm::vec3(dist(generator), dist(generator), 0.0f) * 0.01f;
       particle.animation = 0.5f * (1.0f + dist(generator));
-      particle.rotation = 2 * M_PI * dist(generator);
+      particle.rotation = 2.0f * geometry::g_pi * dist(generator);
       particle.angularVelocity = dist(generator);
       particle.scale = 0.5f + (1.0f + dist(generator));
    }
