@@ -8,7 +8,9 @@ float shadow_map_test(sampler2D shadowMap, vec4 shadowCoord, vec2 off)
 {
     float shadow = 1.0;
 
-    if (shadowCoord.z > -1.0 && shadowCoord.z < 1.0) {
+    if (shadowCoord.z >= -1.0 && shadowCoord.z < 1.0 &&
+        shadowCoord.y > 0.0 && shadowCoord.y < 1.0 &&
+        shadowCoord.x > 0.0 && shadowCoord.x < 1.0) {
         float dist = texture(shadowMap, shadowCoord.xy + off).r;
 
         if (shadowCoord.w > 0.0 && dist < shadowCoord.z - 0.001) {
