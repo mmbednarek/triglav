@@ -28,7 +28,7 @@ void main()
 
     particlesOut[index].position = particleIn.position + pc.deltaTime * particleIn.velocity;
     particlesOut[index].velocity = particleIn.velocity;
-    particlesOut[index].animation = particleIn.animation + pc.deltaTime;
+    particlesOut[index].animation = particleIn.animation + 2*pc.deltaTime;
     particlesOut[index].rotation = particleIn.rotation + pc.deltaTime * particleIn.angularVelocity;
     particlesOut[index].angularVelocity = particleIn.angularVelocity;
     particlesOut[index].scale = particleIn.scale;
