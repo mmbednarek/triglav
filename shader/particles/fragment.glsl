@@ -10,6 +10,6 @@ layout(binding = 2) uniform sampler2D texSampler;
 
 void main() {
     outColor = texture(texSampler, fragTexCoord).rgba;
-    outColor.rgb *= vec3(1.0, 0.1, 0.1) * fragAnimation;
+    outColor.rgb *= vec3(1.0, 0.1, 0.1) * fragAnimation + vec3(1.0, 1.0, 0.1) * (1.0 - fragAnimation);
     outBloom = outColor;
 }
