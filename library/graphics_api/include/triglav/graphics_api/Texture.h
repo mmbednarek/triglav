@@ -23,8 +23,13 @@ class Texture
    [[nodiscard]] uint32_t width() const;
    [[nodiscard]] uint32_t height() const;
    [[nodiscard]] Resolution resolution() const;
+   [[nodiscard]] const SamplerProperties &sampler_properties() const;
    Status write(Device &device, const uint8_t *pixels) const;
    [[nodiscard]] Status generate_mip_maps(const Device &device) const;
+
+   void set_anisotropy_state(bool isEnabled);
+   void set_lod(float min, float max);
+
 
  private:
    void generate_mip_maps_internal(const CommandList &cmdList) const;
@@ -37,6 +42,7 @@ class Texture
    vulkan::DeviceMemory m_memory;
    vulkan::ImageView m_imageView;
    int m_mipCount;
+   SamplerProperties m_samplerProperties;
 };
 
 }// namespace triglav::graphics_api

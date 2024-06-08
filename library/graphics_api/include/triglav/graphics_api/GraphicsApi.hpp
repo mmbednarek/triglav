@@ -260,7 +260,7 @@ enum class TextureAddressMode
    MirrorOnce,
 };
 
-struct SamplerInfo
+struct SamplerProperties
 {
    FilterType minFilter{};
    FilterType magFilter{};

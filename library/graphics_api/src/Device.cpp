@@ -107,7 +107,8 @@ Device::Device(vulkan::Instance instance,
     m_device(std::move(device)),
     m_physicalDevice(physicalDevice),
     m_queueFamilyInfos{std::move(queueFamilyInfos)},
-    m_queueManager(*this, m_queueFamilyInfos)
+    m_queueManager(*this, m_queueFamilyInfos),
+    m_samplerCache(*this)
 {
 }
 
@@ -369,7 +370,7 @@ Result<Texture> Device::create_texture(const ColorFormat &format, const Resoluti
                   imageSize.width, imageSize.height, mipCount);
 }
 
-Result<Sampler> Device::create_sampler(const SamplerInfo &info)
+Result<Sampler> Device::create_sampler(const SamplerProperties &info)
 {
    VkPhysicalDeviceProperties properties{};
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
@@ -515,6 +516,11 @@ uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags pro
    }
 
    return 0;
+}
+
+SamplerCache &Device::sampler_cache()
+{
+   return m_samplerCache;
 }
 
 #if GAPI_ENABLE_VALIDATION

@@ -2,6 +2,9 @@ version: 1
 resources:
   - name: "board.tex"
     source: "texture/board.png"
+    properties:
+      repeat: mirror
+      anisotropy: off
   - name: "brick/albedo.tex"
     source: "texture/brick_albedo.png"
   - name: "brick/height_map.tex"

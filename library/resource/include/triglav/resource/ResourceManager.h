@@ -40,8 +40,7 @@ class ResourceManager
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::GraphicsDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(*this, m_device, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
-         container<CResourceType>().register_resource(name,
-                                                      Loader<CResourceType>::load_font(m_fontManager, path));
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_font(m_fontManager, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::StaticDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(*this, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Static) {

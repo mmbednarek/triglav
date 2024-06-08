@@ -15,7 +15,18 @@ Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::Image
     m_image(std::move(image)),
     m_memory(std::move(memory)),
     m_imageView(std::move(imageView)),
-    m_mipCount{mipCount}
+    m_mipCount{mipCount},
+    m_samplerProperties{
+            FilterType::Linear,
+            FilterType::Linear,
+            TextureAddressMode::Repeat,
+            TextureAddressMode::Repeat,
+            TextureAddressMode::Repeat,
+            true,
+            0.0f,
+            0.0f,
+            static_cast<float>(mipCount),
+    }
 {
 }
 
@@ -42,6 +53,11 @@ uint32_t Texture::height() const
 Resolution Texture::resolution() const
 {
    return {m_width, m_height};
+}
+
+const SamplerProperties &Texture::sampler_properties() const
+{
+   return m_samplerProperties;
 }
 
 Status Texture::write(Device &device, const uint8_t *pixels) const
@@ -170,6 +186,17 @@ void Texture::generate_mip_maps_internal(const CommandList &cmdList) const
 VkImageView Texture::vulkan_image_view() const
 {
    return *m_imageView;
+}
+
+void Texture::set_anisotropy_state(const bool isEnabled)
+{
+   m_samplerProperties.enableAnisotropy = isEnabled;
+}
+
+void Texture::set_lod(const float min, const float max)
+{
+   m_samplerProperties.minLod = min;
+   m_samplerProperties.maxLod = max;
 }
 
 }// namespace triglav::graphics_api

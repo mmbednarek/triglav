@@ -370,8 +370,9 @@ void CommandList::bind_raw_uniform_buffer(u32 binding, const Buffer &buffer)
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_texture(u32 binding, const Texture &texture, const Sampler &sampler)
+void CommandList::bind_texture(u32 binding, const Texture &texture)
 {
+   auto& sampler = m_device.sampler_cache().find_sampler(texture.sampler_properties());
    m_descriptorWriter.set_sampled_texture(binding, texture, sampler);
    m_hasPendingDescriptors = true;
 }

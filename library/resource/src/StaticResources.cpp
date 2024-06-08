@@ -11,10 +11,10 @@ using namespace name_literals;
 void register_samplers(graphics_api::Device &device, ResourceManager &manager)
 {
    using graphics_api::FilterType;
-   using graphics_api::SamplerInfo;
+   using graphics_api::SamplerProperties;
    using graphics_api::TextureAddressMode;
 
-   SamplerInfo info{};
+   SamplerProperties info{};
 
    info.magFilter        = FilterType::Linear;
    info.minFilter        = FilterType::Linear;

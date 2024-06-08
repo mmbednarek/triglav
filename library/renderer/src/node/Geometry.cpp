@@ -17,7 +17,6 @@ class GeometryResources : public render_core::NodeFrameResources
                      MaterialManager &materialManager, Scene &scene, DebugLinesRenderer &debugLinesRenderer) :
        m_device(device),
        m_resourceManager(resourceManager),
-       m_sampler(resourceManager.get("linear_repeat_mlod8_aniso.sampler"_rc)),
        m_materialManager(materialManager),
        m_scene(scene),
        m_debugLinesRenderer(debugLinesRenderer),
@@ -101,7 +100,7 @@ class GeometryResources : public render_core::NodeFrameResources
 
             for (const auto textureName : matResources.textures) {
                const auto &texture = m_resourceManager.get(textureName);
-               cmdList.bind_texture(binding, texture, m_sampler);
+               cmdList.bind_texture(binding, texture);
                ++binding;
             }
 
@@ -155,7 +154,6 @@ class GeometryResources : public render_core::NodeFrameResources
  private:
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
-   graphics_api::Sampler &m_sampler;
    MaterialManager &m_materialManager;
    Scene &m_scene;
    DebugLinesRenderer &m_debugLinesRenderer;

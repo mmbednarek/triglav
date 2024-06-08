@@ -94,7 +94,7 @@ void Shading::record_commands(render_core::FrameResources &frameResources,
    cmdList.bind_pipeline(m_particlesPipeline);
    cmdList.bind_uniform_buffer(0, m_particlesUBO);
    cmdList.bind_storage_buffer(1, particles.particles_buffer());
-   cmdList.bind_texture(2, m_particlesTexture, m_sampler);
+   cmdList.bind_texture(2, m_particlesTexture);
    cmdList.draw_primitives(4, 0, 256, 0);
 
    cmdList.end_render_pass();

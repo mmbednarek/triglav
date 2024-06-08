@@ -10,6 +10,7 @@
 #include "Synchronization.h"
 #include "Texture.h"
 #include "TimestampArray.h"
+#include "SamplerCache.h"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
@@ -89,7 +90,7 @@ class Device
                   TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSrc |
                                                  TextureUsage::TransferDst,
                   SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
-   [[nodiscard]] Result<Sampler> create_sampler(const SamplerInfo &info);
+   [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties &info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
@@ -102,6 +103,7 @@ class Device
    [[nodiscard]] Status submit_command_list_one_time(const CommandList &commandList) const;
    [[nodiscard]] VkDevice vulkan_device() const;
    [[nodiscard]] QueueManager &queue_manager();
+   [[nodiscard]] SamplerCache& sampler_cache();
    void await_all() const;
 
  private:
@@ -116,6 +118,7 @@ class Device
    vulkan::PhysicalDevice m_physicalDevice;
    std::vector<QueueFamilyInfo> m_queueFamilyInfos;
    QueueManager m_queueManager;
+   SamplerCache m_samplerCache;
 };
 
 using DeviceUPtr = std::unique_ptr<Device>;
