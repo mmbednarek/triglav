@@ -117,7 +117,6 @@ class UserInterfaceResources : public render_core::NodeFrameResources
 
       cmdList.bind_uniform_buffer(0, textRes.ubo);
 
-      atlas.texture().set_anisotropy_state(false);
       cmdList.bind_texture(1, atlas.texture());
 
       cmdList.draw_primitives(static_cast<int>(textRes.vertexCount), 0);

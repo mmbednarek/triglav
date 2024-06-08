@@ -2,9 +2,6 @@ version: 1
 resources:
   - name: "board.tex"
     source: "texture/board.png"
-    properties:
-      repeat: mirror
-      anisotropy: off
   - name: "brick/albedo.tex"
     source: "texture/brick_albedo.png"
   - name: "brick/height_map.tex"
@@ -21,6 +18,9 @@ resources:
     source: "texture/earth.png"
   - name: "skybox.tex"
     source: "texture/skybox.png"
+    properties:
+      anisotropy: off
+      max_lod: 0.0
   - name: "bark.tex"
     source: "texture/bark.png"
   - name: "bark/normal.tex"

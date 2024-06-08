@@ -45,10 +45,8 @@ struct InstancedModel
 
 struct Sprite
 {
-   float width{};
-   float height{};
+   const graphics_api::Texture* texture;
    graphics_api::UniformBuffer<SpriteUBO> ubo;
-   graphics_api::DescriptorArray descriptors;
 };
 
 struct FragmentPushConstants

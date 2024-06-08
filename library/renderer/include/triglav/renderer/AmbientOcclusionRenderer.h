@@ -36,7 +36,6 @@ class AmbientOcclusionRenderer
  private:
    graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler& m_sampler;
    std::vector<AlignedVec3> m_samplesSSAO;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
    const graphics_api::Texture& m_noiseTexture;

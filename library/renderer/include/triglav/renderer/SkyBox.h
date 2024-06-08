@@ -30,7 +30,6 @@ class SkyBox
    resource::ResourceManager& m_resourceManager;
    render_core::GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler& m_sampler;
    graphics_api::Texture& m_texture;
 };
 

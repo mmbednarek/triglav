@@ -1,14 +1,16 @@
 #pragma once
 
-#include <map>
-#include <memory>
+#include "Container.hpp"
+#include "Loader.hpp"
+#include "Resource.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/font/FontManager.h"
-
-#include "Container.hpp"
-#include "Loader.hpp"
 #include "triglav/io/Path.h"
+
+#include <map>
+#include <memory>
+#include <string>
 
 namespace triglav::graphics_api {
 class Device;
@@ -23,7 +25,7 @@ class ResourceManager
 
    void load_asset_list(const io::Path& path);
 
-   void load_asset(ResourceName assetName, const io::Path& path);
+   void load_asset(ResourceName assetName, const io::Path& path, const ResourceProperties& props);
    [[nodiscard]] bool is_name_registered(ResourceName assetName) const;
 
    template<ResourceType CResourceType>
@@ -33,10 +35,10 @@ class ResourceManager
    }
 
    template<ResourceType CResourceType>
-   void load_resource(TypedName<CResourceType> name, const io::Path& path)
+   void load_resource(TypedName<CResourceType> name, const io::Path& path, const ResourceProperties& props)
    {
       if constexpr (Loader<CResourceType>::type == ResourceLoadType::Graphics) {
-         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path));
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path, props));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::GraphicsDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(*this, m_device, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {

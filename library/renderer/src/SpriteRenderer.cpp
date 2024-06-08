@@ -36,9 +36,9 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device& device, graphics_api::Rende
                               .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                               .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                               .enable_depth_test(false)
+                              .use_push_descriptors(true)
                               .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40))),
-    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc))
+    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40)))
 {
 }
 
@@ -51,16 +51,7 @@ Sprite SpriteRenderer::create_sprite(const ResourceName textureName)
 Sprite SpriteRenderer::create_sprite_from_texture(const graphics_api::Texture& texture)
 {
    graphics_api::UniformBuffer<SpriteUBO> ubo(m_device);
-
-   auto descriptors = checkResult(m_descriptorPool.allocate_array(1));
-
-   {
-      graphics_api::DescriptorWriter writer(m_device, descriptors[0]);
-      writer.set_uniform_buffer(0, ubo);
-      writer.set_sampled_texture(1, texture, m_sampler);
-   }
-
-   return Sprite{static_cast<float>(texture.width()), static_cast<float>(texture.height()), std::move(ubo), std::move(descriptors)};
+   return Sprite{&texture, std::move(ubo)};
 }
 
 void SpriteRenderer::update_resolution(const graphics_api::Resolution& resolution)
@@ -78,15 +69,16 @@ void SpriteRenderer::draw_sprite(graphics_api::CommandList& cmdList, const Sprit
 {
    const auto [viewportWidth, viewportHeight] = m_resolution;
 
-   const auto scaleX = 2.0f * scale.x * sprite.width / static_cast<float>(viewportWidth);
-   const auto scaleY = 2.0f * scale.y * sprite.height / static_cast<float>(viewportHeight);
-   const auto transX = (position.x - 0.5f * static_cast<float>(viewportWidth)) / scale.x / sprite.width;
-   const auto transY = (position.y - 0.5f * static_cast<float>(viewportHeight)) / scale.y / sprite.height;
+   const auto scaleX = 2.0f * scale.x * sprite.texture->width() / static_cast<float>(viewportWidth);
+   const auto scaleY = 2.0f * scale.y * sprite.texture->height() / static_cast<float>(viewportHeight);
+   const auto transX = (position.x - 0.5f * static_cast<float>(viewportWidth)) / scale.x / sprite.texture->width();
+   const auto transY = (position.y - 0.5f * static_cast<float>(viewportHeight)) / scale.y / sprite.texture->height();
 
    const auto scaleMat = glm::scale(glm::mat3(1), glm::vec2(scaleX, scaleY));
    sprite.ubo->transform = glm::translate(scaleMat, glm::vec2(transX, transY));
 
-   cmdList.bind_descriptor_set(sprite.descriptors[0]);
+   cmdList.bind_uniform_buffer(0, sprite.ubo);
+   cmdList.bind_texture(1, *sprite.texture);
    cmdList.draw_primitives(4, 0);
 }
 

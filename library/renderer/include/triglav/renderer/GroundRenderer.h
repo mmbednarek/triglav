@@ -29,7 +29,6 @@ class GroundRenderer
  private:
    graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler& m_sampler;
    graphics_api::Texture& m_texture;
 };
 

@@ -34,7 +34,6 @@ class ShadingRenderer
  private:
    graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler& m_sampler;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
 };
 

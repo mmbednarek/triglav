@@ -57,6 +57,7 @@ GlyphAtlas::GlyphAtlas(graphics_api::Device& device, const font::Typeface& typef
    }
 
    m_texture.write(device, atlasData.data());
+   m_texture.set_anisotropy_state(false);
 }
 
 std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const std::string_view text, TextMetric* outMetric) const

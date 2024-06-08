@@ -31,7 +31,6 @@ AmbientOcclusionRenderer::AmbientOcclusionRenderer(graphics_api::Device& device,
                               .use_push_descriptors(true)
                               .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                               .build())),
-    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc)),
     m_samplesSSAO(generate_sample_points(g_SampleCountSSAO)),
     m_uniformBuffer(m_device),
     m_noiseTexture(noiseTexture)
@@ -46,23 +45,12 @@ void AmbientOcclusionRenderer::draw(render_core::FrameResources& resources, grap
 
    cmdList.bind_pipeline(m_pipeline);
 
-   /*
-    graphics_api::DescriptorWriter<4> desc;
-    desc.sampler(0, m_framebuffer.texture(1), m_sampler);
-    desc.sampler(1, m_framebuffer.texture(2), m_sampler);
-    desc.sampler(2, m_noiseTexture, m_sampler);
-    desc.ubo(3, m_uniformBuffer);
-    cmdList.push_descriptors(desc);
-    */
-
    auto& gbuffer = resources.node<render_core::NodeFrameResources>("geometry"_name).framebuffer("gbuffer"_name);
 
-   graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, gbuffer.texture("position"_name), m_sampler);
-   writer.set_sampled_texture(1, gbuffer.texture("normal"_name), m_sampler);
-   writer.set_sampled_texture(2, m_noiseTexture, m_sampler);
-   writer.set_uniform_buffer(3, m_uniformBuffer);
-   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
+   cmdList.bind_texture(0, gbuffer.texture("position"_name));
+   cmdList.bind_texture(1, gbuffer.texture("normal"_name));
+   cmdList.bind_texture(2, m_noiseTexture);
+   cmdList.bind_uniform_buffer(3, m_uniformBuffer);
 
    cmdList.draw_primitives(4, 0);
 }

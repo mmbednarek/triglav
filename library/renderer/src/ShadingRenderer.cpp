@@ -32,7 +32,6 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device& device, graphics_api::Ren
                               .enable_depth_test(false)
                               .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                               .build())),
-    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc)),
     m_uniformBuffer(m_device)
 {
 }
@@ -48,28 +47,18 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
    auto& aoBuffer = resources.node("ambient_occlusion"_name).framebuffer("ao"_name);
    auto& smBuffer = resources.node("shadow_map"_name).framebuffer("sm"_name);
 
-   /*
-   graphics_api::Descriptors<4> writer(m_device);
-   writer[0] = TextureSamplerPair{gbuffer.texture("albedo"_name_id), m_sampler};
-   writer[3] = gbuffer.texture("albedo"_name_id);
-    *
-    *
-    */
-
-   graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, gbuffer.texture("albedo"_name), m_sampler);
-   writer.set_sampled_texture(1, gbuffer.texture("position"_name), m_sampler);
-   writer.set_sampled_texture(2, gbuffer.texture("normal"_name), m_sampler);
-   writer.set_sampled_texture(3, aoBuffer.texture("ao"_name), m_sampler);
-   writer.set_sampled_texture(4, smBuffer.texture("sm"_name), m_sampler);
-   writer.set_uniform_buffer(5, m_uniformBuffer);
-   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
-
    PushConstant pushConstant{
       .lightPosition = lightPosition,
       .enableSSAO = resources.has_flag("ssao"_name),
    };
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstant);
+
+   cmdList.bind_texture(0, gbuffer.texture("albedo"_name));
+   cmdList.bind_texture(1, gbuffer.texture("position"_name));
+   cmdList.bind_texture(2, gbuffer.texture("normal"_name));
+   cmdList.bind_texture(3, aoBuffer.texture("ao"_name));
+   cmdList.bind_texture(4, smBuffer.texture("sm"_name));
+   cmdList.bind_uniform_buffer(5, m_uniformBuffer);
 
    cmdList.draw_primitives(4, 0);
 }
