@@ -35,7 +35,6 @@ class UserInterfaceResources : public render_core::NodeFrameResources
                           ui_core::Viewport &viewport, RectangleRenderer &rectangleRenderer, graphics_api::Pipeline &textPipeline) :
        m_device(device),
        m_resourceManager(resourceManager),
-       m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc)),
        m_viewport(viewport),
        m_rectangleRenderer(rectangleRenderer),
        m_textPipeline(textPipeline),
@@ -121,7 +120,9 @@ class UserInterfaceResources : public render_core::NodeFrameResources
       auto &atlas = m_resourceManager.get<ResourceType::GlyphAtlas>(textObj.glyphAtlas);
 
       cmdList.bind_uniform_buffer(0, textRes.ubo);
-      cmdList.bind_texture(1, atlas.texture(), m_sampler);
+
+      atlas.texture().set_anisotropy_state(false);
+      cmdList.bind_texture(1, atlas.texture());
 
       cmdList.draw_primitives(static_cast<int>(textRes.vertexCount), 0);
    }
@@ -147,7 +148,6 @@ class UserInterfaceResources : public render_core::NodeFrameResources
  private:
    graphics_api::Device &m_device;
    resource::ResourceManager &m_resourceManager;
-   graphics_api::Sampler &m_sampler;
    ui_core::Viewport &m_viewport;
    RectangleRenderer &m_rectangleRenderer;
    graphics_api::Pipeline &m_textPipeline;

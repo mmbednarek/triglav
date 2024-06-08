@@ -128,6 +128,11 @@ const graphics_api::Texture &GlyphAtlas::texture() const
    return m_texture;
 }
 
+graphics_api::Texture &GlyphAtlas::texture()
+{
+   return m_texture;
+}
+
 TextMetric GlyphAtlas::measure_text(const std::string_view text) const
 {
    float width  = 0.0f;

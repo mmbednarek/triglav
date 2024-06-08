@@ -39,6 +39,7 @@ class GlyphAtlas
 
    [[nodiscard]] std::vector<GlyphVertex> create_glyph_vertices(std::string_view text, TextMetric* outMetric = nullptr) const;
    [[nodiscard]] const graphics_api::Texture &texture() const;
+   [[nodiscard]] graphics_api::Texture &texture();
    [[nodiscard]] TextMetric measure_text(std::string_view text) const;
 
  private:

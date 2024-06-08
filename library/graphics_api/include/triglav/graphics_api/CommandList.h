@@ -73,7 +73,7 @@ class CommandList
       m_hasPendingDescriptors = true;
    }
 
-   void bind_texture(u32 binding, const Texture &texture, const Sampler &sampler);
+   void bind_texture(u32 binding, const Texture &texture);
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray &array) const
