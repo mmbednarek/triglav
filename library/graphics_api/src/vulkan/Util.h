@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 
 namespace triglav::graphics_api::vulkan {
-Result<VkFormat> to_vulkan_color_format(const ColorFormat &format);
+Result<VkFormat> to_vulkan_color_format(const ColorFormat& format);
 Result<ColorFormat> to_color_format(VkFormat format);
 
 Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace);

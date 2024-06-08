@@ -8,23 +8,23 @@ template<BufferUsage CAdditionalUsageFlags, typename TValue>
 class HostVisibleBuffer
 {
  public:
-   explicit HostVisibleBuffer(Device &device) :
+   explicit HostVisibleBuffer(Device& device) :
        m_buffer(GAPI_CHECK(device.create_buffer(BufferUsage::HostVisible | CAdditionalUsageFlags, sizeof(TValue)))),
        m_mappedMemory(GAPI_CHECK(m_buffer.map_memory()))
    {
    }
 
-   [[nodiscard]] TValue &operator*() const
+   [[nodiscard]] TValue& operator*() const
    {
       return *static_cast<TValue*>(*m_mappedMemory);
    }
 
-   [[nodiscard]] TValue *operator->() const
+   [[nodiscard]] TValue* operator->() const
    {
       return static_cast<TValue*>(*m_mappedMemory);
    }
 
-   [[nodiscard]] const Buffer &buffer() const
+   [[nodiscard]] const Buffer& buffer() const
    {
       return m_buffer;
    }
@@ -37,4 +37,4 @@ class HostVisibleBuffer
 template<typename TValue>
 using UniformBuffer = HostVisibleBuffer<BufferUsage::UniformBuffer, TValue>;
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

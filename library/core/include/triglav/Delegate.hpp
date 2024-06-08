@@ -19,7 +19,7 @@ class Delegate
       friend Self;
 
     public:
-      Sink(Self &delegate, THandler *handler) :
+      Sink(Self& delegate, THandler* handler) :
           m_sink{delegate.m_sigh},
           m_handler{handler}
       {
@@ -39,20 +39,20 @@ class Delegate
 
     private:
       entt::sink<Sigh> m_sink;
-      THandler *m_handler{};
+      THandler* m_handler{};
    };
 
    template<typename THandler>
    using OptSink = std::optional<Sink<THandler>>;
 
    template<typename... TCallArgs>
-   void publish(TCallArgs &&...args)
+   void publish(TCallArgs&&... args)
    {
       m_sigh.publish(std::forward<TCallArgs>(args)...);
    }
 
    template<auto CHandleFunction, typename THandler>
-   Sink<THandler> connect(THandler *handler)
+   Sink<THandler> connect(THandler* handler)
    {
       Sink<THandler> out(*this, handler);
       out.m_sink.template connect<CHandleFunction>(handler);
@@ -60,7 +60,7 @@ class Delegate
    }
 
    template<auto CHandleFunction, typename THandler>
-   void connect_to(OptSink<THandler> &sink, THandler *handler)
+   void connect_to(OptSink<THandler>& sink, THandler* handler)
    {
       sink.emplace(this->template connect<CHandleFunction>(handler));
    }

@@ -10,7 +10,7 @@ using Rune = uint32_t;
 
 struct RenderedRune
 {
-   uint8_t *data;
+   uint8_t* data;
    uint32_t width;
    uint32_t height;
    int advanceX;
@@ -25,10 +25,10 @@ class Typeface
    explicit Typeface(FT_Face face);
    ~Typeface();
 
-   Typeface(const Typeface &other)            = delete;
-   Typeface &operator=(const Typeface &other) = delete;
-   Typeface(Typeface &&other) noexcept;
-   Typeface &operator=(Typeface &&other) noexcept;
+   Typeface(const Typeface& other) = delete;
+   Typeface& operator=(const Typeface& other) = delete;
+   Typeface(Typeface&& other) noexcept;
+   Typeface& operator=(Typeface&& other) noexcept;
 
    [[nodiscard]] RenderedRune render_glyph(int size, Rune rune) const;
 
@@ -36,4 +36,4 @@ class Typeface
    FT_Face m_face{};
 };
 
-}// namespace font
+}// namespace triglav::font

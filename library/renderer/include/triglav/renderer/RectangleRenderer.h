@@ -1,10 +1,10 @@
 #pragma once
 
 #include "triglav/graphics_api/DescriptorPool.h"
+#include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
-#include "triglav/graphics_api/HostVisibleBuffer.hpp"
 
 namespace triglav::renderer {
 
@@ -33,18 +33,17 @@ struct Rectangle
 class RectangleRenderer
 {
  public:
-   RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                     triglav::resource::ResourceManager &resourceManager);
+   RectangleRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
+                     triglav::resource::ResourceManager& resourceManager);
 
    [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect);
-   void begin_render(graphics_api::CommandList &cmdList) const;
-   void draw(graphics_api::CommandList &cmdList,
-             const Rectangle &rect, const graphics_api::Resolution &resolution) const;
+   void begin_render(graphics_api::CommandList& cmdList) const;
+   void draw(graphics_api::CommandList& cmdList, const Rectangle& rect, const graphics_api::Resolution& resolution) const;
 
  private:
-   graphics_api::Device &m_device;
+   graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
    graphics_api::DescriptorPool m_descriptorPool;
 };
 
-}// namespace renderer
+}// namespace triglav::renderer

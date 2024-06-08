@@ -1,8 +1,8 @@
 #pragma once
 
-#include "detail/Crc.hpp"
-#include "ResourceType.hpp"
 #include "CompTimeString.hpp"
+#include "ResourceType.hpp"
+#include "detail/Crc.hpp"
 
 #include <cassert>
 #include <cstdint>
@@ -30,9 +30,9 @@ class TypedName
    // ReSharper disable once CppNonExplicitConversionOperator
    [[nodiscard]] operator ResourceName() const;// NOLINT(google-explicit-constructor)
 
-   constexpr auto operator<=>(const TypedName &other) const = default;
-   constexpr bool operator==(const TypedName &other) const  = default;
-   constexpr bool operator!=(const TypedName &other) const  = default;
+   constexpr auto operator<=>(const TypedName& other) const = default;
+   constexpr bool operator==(const TypedName& other) const = default;
+   constexpr bool operator!=(const TypedName& other) const = default;
 
  private:
    Name m_name;
@@ -66,18 +66,18 @@ class ResourceName
       return m_type;
    }
 
-   constexpr auto operator<=>(const ResourceName &other) const
+   constexpr auto operator<=>(const ResourceName& other) const
    {
       if (m_name == other.m_name && m_type != other.m_type)
          return m_type <=> other.m_type;
       return m_name <=> other.m_name;
    }
 
-   constexpr bool operator==(const ResourceName &other) const = default;
-   constexpr bool operator!=(const ResourceName &other) const = default;
+   constexpr bool operator==(const ResourceName& other) const = default;
+   constexpr bool operator!=(const ResourceName& other) const = default;
 
    template<ResourceType CResourceType>
-   constexpr bool operator==(const TypedName<CResourceType> &other) const
+   constexpr bool operator==(const TypedName<CResourceType>& other) const
    {
       return (*this) == static_cast<ResourceName>(other);
    }
@@ -118,9 +118,9 @@ constexpr auto make_resource_path_comptime()
 
 constexpr auto make_rc_name(const std::string_view value)
 {
-   const auto at        = value.find_last_of('.');
+   const auto at = value.find_last_of('.');
    const auto extension = value.substr(at + 1);
-   const auto hash      = detail::hash_string(value.substr(0, at));
+   const auto hash = detail::hash_string(value.substr(0, at));
    return ResourceName(type_by_extension(extension), hash);
 }
 
@@ -138,7 +138,7 @@ constexpr auto operator""_rc()
    return make_resource_path_comptime<TValue>();
 }
 
-constexpr Name operator""_name(const char *value, const std::size_t count)
+constexpr Name operator""_name(const char* value, const std::size_t count)
 {
    return detail::hash_string(std::string_view(value, count));
 }

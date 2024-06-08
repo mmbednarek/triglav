@@ -1,17 +1,17 @@
 #include "ResourceManager.h"
 
 #include "GlyphAtlasLoader.h"
+#include "LevelLoader.h"
 #include "MaterialLoader.h"
 #include "ModelLoader.h"
+#include "PathManager.h"
 #include "ShaderLoader.h"
+#include "StaticResources.h"
 #include "TextureLoader.h"
 #include "TypefaceLoader.h"
-#include "LevelLoader.h"
-#include "StaticResources.h"
-#include "PathManager.h"
 
-#include "triglav/io/File.h"
 #include "triglav/TypeMacroList.hpp"
+#include "triglav/io/File.h"
 
 #include <ryml.hpp>
 #include <spdlog/spdlog.h>
@@ -30,13 +30,13 @@ std::vector<ResourcePath> parse_asset_list(const io::Path& path)
 {
    std::vector<ResourcePath> result{};
 
-   auto file      = io::read_whole_file(path);
-   auto tree      = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
-                                         c4::substr{file.data(), file.size()});
+   auto file = io::read_whole_file(path);
+   auto tree =
+      ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
    auto resources = tree["resources"];
 
    for (const auto node : resources) {
-      auto name   = node["name"].val();
+      auto name = node["name"].val();
       auto source = node["source"].val();
       result.emplace_back(std::string{name.data(), name.size()}, std::string{source.data(), source.size()});
    }
@@ -46,7 +46,7 @@ std::vector<ResourcePath> parse_asset_list(const io::Path& path)
 
 }// namespace
 
-ResourceManager::ResourceManager(graphics_api::Device &device, font::FontManger &fontManager) :
+ResourceManager::ResourceManager(graphics_api::Device& device, font::FontManger& fontManager) :
     m_device(device),
     m_fontManager(fontManager)
 {
@@ -69,7 +69,7 @@ void ResourceManager::load_asset_list(const io::Path& path)
    auto contentPath = PathManager::the().content_path();
 
    int loadedCount{};
-   for (const auto &[nameStr, source] : list) {
+   for (const auto& [nameStr, source] : list) {
       auto resourcePath = buildPath.sub(source);
       if (not resourcePath.exists()) {
          resourcePath = contentPath.sub(source);
@@ -93,11 +93,14 @@ void ResourceManager::load_asset_list(const io::Path& path)
 void ResourceManager::load_asset(const ResourceName assetName, const io::Path& path)
 {
    switch (assetName.type()) {
-#define TG_RESOURCE_TYPE(name, extension, cppType) \
-   case ResourceType::name: this->load_resource<ResourceType::name>(assetName, path); break;
+#define TG_RESOURCE_TYPE(name, extension, cppType)              \
+   case ResourceType::name:                                     \
+      this->load_resource<ResourceType::name>(assetName, path); \
+      break;
       TG_RESOURCE_TYPE_LIST
 #undef TG_RESOURCE_TYPE
-   case ResourceType::Unknown: break;
+   case ResourceType::Unknown:
+      break;
    }
 }
 
@@ -106,7 +109,7 @@ bool ResourceManager::is_name_registered(const ResourceName assetName) const
    if (not m_containers.contains(assetName.type()))
       return false;
 
-   auto &container = m_containers.at(assetName.type());
+   auto& container = m_containers.at(assetName.type());
    return container->is_name_registered(assetName);
 }
 

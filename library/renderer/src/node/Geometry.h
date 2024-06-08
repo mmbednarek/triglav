@@ -2,9 +2,9 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 
+#include "MaterialManager.h"
 #include "Scene.h"
 #include "SkyBox.h"
-#include "MaterialManager.h"
 
 #include <GroundRenderer.h>
 
@@ -13,19 +13,18 @@ namespace triglav::renderer::node {
 class Geometry : public render_core::IRenderNode
 {
  public:
-   Geometry(graphics_api::Device &device, resource::ResourceManager &resourceManager, Scene& scene);
+   Geometry(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene);
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
-   void record_commands(render_core::FrameResources &frameResources,
-                        render_core::NodeFrameResources &resources,
-                        graphics_api::CommandList &cmdList) override;
+   void record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
+                        graphics_api::CommandList& cmdList) override;
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
 
    [[nodiscard]] float gpu_time() const;
 
  private:
-   graphics_api::Device &m_device;
-   resource::ResourceManager &m_resourceManager;
+   graphics_api::Device& m_device;
+   resource::ResourceManager& m_resourceManager;
    Scene& m_scene;
    graphics_api::RenderTarget m_renderTarget;
    MaterialManager m_materialManager;

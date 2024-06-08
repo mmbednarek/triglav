@@ -2,14 +2,15 @@
 
 #include "triglav/Name.hpp"
 
-#include <set>
 #include <map>
-#include <string>
 #include <optional>
+#include <set>
+#include <string>
 
 namespace triglav::io {
 
-class CommandLine {
+class CommandLine
+{
  public:
    void parse(int argc, const char** argv);
 
@@ -23,4 +24,4 @@ class CommandLine {
    std::map<Name, std::string> m_arguments;
 };
 
-}
+}// namespace triglav::io

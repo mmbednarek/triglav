@@ -2,13 +2,13 @@
 
 namespace triglav::io {
 
-CommandLine &CommandLine::the()
+CommandLine& CommandLine::the()
 {
    static CommandLine instance;
    return instance;
 }
 
-void CommandLine::parse(const int argc, const char **argv)
+void CommandLine::parse(const int argc, const char** argv)
 {
    std::string pendingArgument;
    for (int i = 1; i < argc; ++i) {
@@ -52,4 +52,4 @@ std::optional<std::string> CommandLine::arg(Name flag) const
    return it->second;
 }
 
-}
+}// namespace triglav::io

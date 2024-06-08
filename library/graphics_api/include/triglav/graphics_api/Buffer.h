@@ -16,22 +16,22 @@ using DeviceMemory = WrappedObject<VkDeviceMemory, vkAllocateMemory, vkFreeMemor
 class MappedMemory
 {
  public:
-   MappedMemory(void *pointer, VkDevice device, VkDeviceMemory deviceMemory);
+   MappedMemory(void* pointer, VkDevice device, VkDeviceMemory deviceMemory);
 
    ~MappedMemory();
 
-   MappedMemory(const MappedMemory &other)            = delete;
-   MappedMemory &operator=(const MappedMemory &other) = delete;
+   MappedMemory(const MappedMemory& other) = delete;
+   MappedMemory& operator=(const MappedMemory& other) = delete;
 
-   MappedMemory(MappedMemory &&other) noexcept;
-   MappedMemory &operator=(MappedMemory &&other) noexcept;
+   MappedMemory(MappedMemory&& other) noexcept;
+   MappedMemory& operator=(MappedMemory&& other) noexcept;
 
-   [[nodiscard]] void *operator*() const;
+   [[nodiscard]] void* operator*() const;
 
-   void write(const void *source, size_t length) const;
+   void write(const void* source, size_t length) const;
 
  private:
-   void *m_pointer;
+   void* m_pointer;
    VkDevice m_device;
    VkDeviceMemory m_deviceMemory;
 };
@@ -47,7 +47,7 @@ class Buffer
    Buffer& operator=(Buffer&& other) noexcept;
 
 
-   [[nodiscard]] Status write_indirect(const void *data, size_t size);
+   [[nodiscard]] Status write_indirect(const void* data, size_t size);
    [[nodiscard]] VkBuffer vulkan_buffer() const;
    Result<MappedMemory> map_memory();
    [[nodiscard]] size_t size() const;
@@ -59,4 +59,4 @@ class Buffer
    vulkan::DeviceMemory m_memory;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

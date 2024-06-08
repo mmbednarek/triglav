@@ -22,26 +22,26 @@ constexpr auto g_maxBinding{16};
 class DescriptorWriter
 {
  public:
-   DescriptorWriter(const Device &device, const DescriptorView &descView);
-   explicit DescriptorWriter(const Device &device);
+   DescriptorWriter(const Device& device, const DescriptorView& descView);
+   explicit DescriptorWriter(const Device& device);
    ~DescriptorWriter();
 
-   DescriptorWriter(const DescriptorWriter &other)            = delete;
-   DescriptorWriter &operator=(const DescriptorWriter &other) = delete;
+   DescriptorWriter(const DescriptorWriter& other) = delete;
+   DescriptorWriter& operator=(const DescriptorWriter& other) = delete;
 
-   DescriptorWriter(DescriptorWriter &&other) noexcept;
-   DescriptorWriter &operator=(DescriptorWriter &&other) noexcept;
+   DescriptorWriter(DescriptorWriter&& other) noexcept;
+   DescriptorWriter& operator=(DescriptorWriter&& other) noexcept;
 
-   void set_storage_buffer(uint32_t binding, const Buffer &buffer);
-   void set_raw_uniform_buffer(uint32_t binding, const Buffer &buffer);
+   void set_storage_buffer(uint32_t binding, const Buffer& buffer);
+   void set_raw_uniform_buffer(uint32_t binding, const Buffer& buffer);
 
    template<typename TValue>
-   void set_uniform_buffer(const uint32_t binding, const TValue &buffer)
+   void set_uniform_buffer(const uint32_t binding, const TValue& buffer)
    {
       this->set_raw_uniform_buffer(binding, buffer.buffer());
    }
 
-   void set_sampled_texture(uint32_t binding, const Texture &texture, const Sampler &sampler);
+   void set_sampled_texture(uint32_t binding, const Texture& texture, const Sampler& sampler);
    void reset_count();
 
    [[nodiscard]] VkDescriptorSet vulkan_descriptor_set() const;
@@ -49,7 +49,7 @@ class DescriptorWriter
 
  private:
    void update();
-   VkWriteDescriptorSet &write_binding(u32 binding, VkDescriptorType descType);
+   VkWriteDescriptorSet& write_binding(u32 binding, VkDescriptorType descType);
 
    VkDevice m_device{};
    VkDescriptorSet m_descriptorSet{};

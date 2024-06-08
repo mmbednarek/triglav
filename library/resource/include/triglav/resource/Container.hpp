@@ -4,9 +4,9 @@
 
 #include <map>
 #include <mutex>
+#include <ranges>
 #include <shared_mutex>
 #include <utility>
-#include <ranges>
 
 namespace triglav::resource {
 
@@ -22,10 +22,10 @@ template<ResourceType CResourceType>
 class Container final : public IContainer
 {
  public:
-   using ResName   = TypedName<CResourceType>;
+   using ResName = TypedName<CResourceType>;
    using ValueType = typename EnumToCppResourceType<CResourceType>::ResourceType;
 
-   ValueType &get(const ResName name)
+   ValueType& get(const ResName name)
    {
       std::shared_lock lk{m_mutex};
       return m_map.at(name);
@@ -38,7 +38,7 @@ class Container final : public IContainer
       m_map.emplace(name, std::forward<TArgs>(args)...);
    }
 
-   void register_resource(const ResName name, ValueType &&resource)
+   void register_resource(const ResName name, ValueType&& resource)
    {
       std::unique_lock lk{m_mutex};
       m_map.emplace(name, std::move(resource));
@@ -54,7 +54,8 @@ class Container final : public IContainer
    }
 
    template<typename TFunc>
-   void iterate_resources(TFunc func) {
+   void iterate_resources(TFunc func)
+   {
       for (const auto& [name, value] : m_map) {
          func(name, value);
       }

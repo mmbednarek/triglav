@@ -3,9 +3,9 @@
 #include <gtest/gtest.h>
 #include <random>
 
-using triglav::PoolBucket;
-using triglav::ObjectPool;
 using triglav::default_constructor;
+using triglav::ObjectPool;
+using triglav::PoolBucket;
 
 TEST(PoolTest, Bucket_SingleItem)
 {

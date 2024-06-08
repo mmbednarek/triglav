@@ -4,8 +4,8 @@
 #include "ResourceManager.h"
 
 #include "triglav/Name.hpp"
-#include "triglav/render_core/Material.hpp"
 #include "triglav/io/Path.h"
+#include "triglav/render_core/Material.hpp"
 
 #include <string_view>
 

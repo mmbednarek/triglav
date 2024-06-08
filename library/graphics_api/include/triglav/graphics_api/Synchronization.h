@@ -34,22 +34,23 @@ class Semaphore
 class SemaphoreArray
 {
  public:
-   [[nodiscard]] const VkSemaphore *vulkan_semaphores() const;
+   [[nodiscard]] const VkSemaphore* vulkan_semaphores() const;
    [[nodiscard]] size_t semaphore_count() const;
 
-   void add_semaphore(const Semaphore &semaphore);
+   void add_semaphore(const Semaphore& semaphore);
 
  private:
    std::vector<VkSemaphore> m_semaphores;
 };
 
-class SemaphoreArrayView {
+class SemaphoreArrayView
+{
  public:
    SemaphoreArrayView();
    SemaphoreArrayView(const SemaphoreArray& array);
    SemaphoreArrayView(const SemaphoreArray& array, size_t count);
 
-   [[nodiscard]] const VkSemaphore *vulkan_semaphores() const;
+   [[nodiscard]] const VkSemaphore* vulkan_semaphores() const;
    [[nodiscard]] size_t semaphore_count() const;
 
  private:

@@ -27,21 +27,19 @@ class AmbientOcclusionRenderer
       AlignedVec3 samplesSSAO[g_SampleCountSSAO];
    };
 
-   AmbientOcclusionRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                            resource::ResourceManager &resourceManager,
-                            const graphics_api::Texture &noiseTexture);
+   AmbientOcclusionRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
+                            resource::ResourceManager& resourceManager, const graphics_api::Texture& noiseTexture);
 
-   void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
-             const glm::mat4 &cameraProjection) const;
+   void draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::mat4& cameraProjection) const;
    static std::vector<AlignedVec3> generate_sample_points(size_t count);
 
  private:
-   graphics_api::Device &m_device;
+   graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler &m_sampler;
+   graphics_api::Sampler& m_sampler;
    std::vector<AlignedVec3> m_samplesSSAO;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
-   const graphics_api::Texture &m_noiseTexture;
+   const graphics_api::Texture& m_noiseTexture;
 };
 
 }// namespace triglav::renderer

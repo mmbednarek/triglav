@@ -25,7 +25,7 @@ struct Vertex
    glm::vec3 tangent;
    glm::vec3 bitangent;
 
-   bool operator==(const Vertex &rhs) const = default;
+   bool operator==(const Vertex& rhs) const = default;
 };
 
 struct IndexedVertex
@@ -35,7 +35,7 @@ struct IndexedVertex
    Index normal;
    Index tangent;
 
-   auto operator<=>(const IndexedVertex &rhs) const = default;
+   auto operator<=>(const IndexedVertex& rhs) const = default;
 };
 
 struct Extent3D
@@ -97,7 +97,7 @@ struct hash<glm::vec2>
 template<>
 struct hash<triglav::geometry::Vertex>
 {
-   size_t operator()(const triglav::geometry::Vertex &value) const noexcept
+   size_t operator()(const triglav::geometry::Vertex& value) const noexcept
    {
       return 62327 * std::hash<glm::vec3>{}(value.location) + 36067 * std::hash<glm::vec3>{}(value.normal) +
              44381 * std::hash<glm::vec2>{}(value.uv) + 15937 * std::hash<glm::vec3>{}(value.tangent);

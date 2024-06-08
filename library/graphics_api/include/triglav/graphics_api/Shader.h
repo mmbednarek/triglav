@@ -13,7 +13,7 @@ class Shader
  public:
    Shader(std::string name, PipelineStage stage, vulkan::ShaderModule module);
 
-   [[nodiscard]] const vulkan::ShaderModule &vulkan_module() const;
+   [[nodiscard]] const vulkan::ShaderModule& vulkan_module() const;
    [[nodiscard]] std::string_view name() const;
    [[nodiscard]] PipelineStage stage() const;
 
@@ -23,4 +23,4 @@ class Shader
    vulkan::ShaderModule m_module;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

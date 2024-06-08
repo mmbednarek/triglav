@@ -1,15 +1,15 @@
 #include "Path.h"
 
 #include <algorithm>
+#include <cstdlib>
 #include <fmt/format.h>
 #include <ranges>
 #include <utility>
-#include <cstdlib>
 
 namespace triglav::io {
 
 Path::Path(const std::string_view path) :
-   m_path(path)
+    m_path(path)
 {
    auto fullPath = full_path(m_path);
    if (fullPath.has_value()) {
@@ -17,7 +17,7 @@ Path::Path(const std::string_view path) :
    }
 }
 
-const std::string &Path::string() const
+const std::string& Path::string() const
 {
    return m_path;
 }
@@ -38,4 +38,4 @@ bool Path::exists() const
    return is_existing_path(*this);
 }
 
-}
+}// namespace triglav::io

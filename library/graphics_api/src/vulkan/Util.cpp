@@ -5,36 +5,53 @@
 #include <vulkan/vulkan.h>
 
 namespace triglav::graphics_api::vulkan {
-Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
+Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
 {
    switch (format.order) {
    case ColorFormatOrder::R:
       switch (format.parts[0]) {
-      case ColorFormatPart::sRGB: return VK_FORMAT_R8_SRGB;
-      case ColorFormatPart::UNorm8: return VK_FORMAT_R8_UNORM;
-      case ColorFormatPart::UNorm16: return VK_FORMAT_R16_UNORM;
-      case ColorFormatPart::UInt: return VK_FORMAT_R8_UINT;
-      case ColorFormatPart::Float16: return VK_FORMAT_R16_SFLOAT;
-      case ColorFormatPart::Float32: return VK_FORMAT_R32_SFLOAT;
-      default: break;
+      case ColorFormatPart::sRGB:
+         return VK_FORMAT_R8_SRGB;
+      case ColorFormatPart::UNorm8:
+         return VK_FORMAT_R8_UNORM;
+      case ColorFormatPart::UNorm16:
+         return VK_FORMAT_R16_UNORM;
+      case ColorFormatPart::UInt:
+         return VK_FORMAT_R8_UINT;
+      case ColorFormatPart::Float16:
+         return VK_FORMAT_R16_SFLOAT;
+      case ColorFormatPart::Float32:
+         return VK_FORMAT_R32_SFLOAT;
+      default:
+         break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::RGBA:
       switch (format.parts[0]) {
-      case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8A8_SRGB;
-      case ColorFormatPart::UNorm8: return VK_FORMAT_R8G8B8A8_UNORM;
-      case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16B16A16_UNORM;
-      case ColorFormatPart::UInt: return VK_FORMAT_R8G8B8A8_UINT;
-      case ColorFormatPart::Float16: return VK_FORMAT_R16G16B16A16_SFLOAT;
-      case ColorFormatPart::Float32: return VK_FORMAT_R32G32B32A32_SFLOAT;
-      default: break;
+      case ColorFormatPart::sRGB:
+         return VK_FORMAT_R8G8B8A8_SRGB;
+      case ColorFormatPart::UNorm8:
+         return VK_FORMAT_R8G8B8A8_UNORM;
+      case ColorFormatPart::UNorm16:
+         return VK_FORMAT_R16G16B16A16_UNORM;
+      case ColorFormatPart::UInt:
+         return VK_FORMAT_R8G8B8A8_UINT;
+      case ColorFormatPart::Float16:
+         return VK_FORMAT_R16G16B16A16_SFLOAT;
+      case ColorFormatPart::Float32:
+         return VK_FORMAT_R32G32B32A32_SFLOAT;
+      default:
+         break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::BGRA:
       switch (format.parts[0]) {
-      case ColorFormatPart::sRGB: return VK_FORMAT_B8G8R8A8_SRGB;
-      case ColorFormatPart::UInt: return VK_FORMAT_B8G8R8A8_UINT;
-      default: break;
+      case ColorFormatPart::sRGB:
+         return VK_FORMAT_B8G8R8A8_SRGB;
+      case ColorFormatPart::UInt:
+         return VK_FORMAT_B8G8R8A8_UINT;
+      default:
+         break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::DS:
@@ -44,31 +61,48 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::D:
       switch (format.parts[0]) {
-      case ColorFormatPart::UNorm16: return VK_FORMAT_D16_UNORM;
-      case ColorFormatPart::Float32: return VK_FORMAT_D32_SFLOAT;
-      default: break;
+      case ColorFormatPart::UNorm16:
+         return VK_FORMAT_D16_UNORM;
+      case ColorFormatPart::Float32:
+         return VK_FORMAT_D32_SFLOAT;
+      default:
+         break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::RG:
       switch (format.parts[0]) {
-      case ColorFormatPart::sRGB: return VK_FORMAT_R8G8_SRGB;
-      case ColorFormatPart::UNorm8: return VK_FORMAT_R8G8_UNORM;
-      case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16_UNORM;
-      case ColorFormatPart::UInt: return VK_FORMAT_R8G8_UINT;
-      case ColorFormatPart::Float16: return VK_FORMAT_R16G16_SFLOAT;
-      case ColorFormatPart::Float32: return VK_FORMAT_R32G32_SFLOAT;
-      default: break;
+      case ColorFormatPart::sRGB:
+         return VK_FORMAT_R8G8_SRGB;
+      case ColorFormatPart::UNorm8:
+         return VK_FORMAT_R8G8_UNORM;
+      case ColorFormatPart::UNorm16:
+         return VK_FORMAT_R16G16_UNORM;
+      case ColorFormatPart::UInt:
+         return VK_FORMAT_R8G8_UINT;
+      case ColorFormatPart::Float16:
+         return VK_FORMAT_R16G16_SFLOAT;
+      case ColorFormatPart::Float32:
+         return VK_FORMAT_R32G32_SFLOAT;
+      default:
+         break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::RGB:
       switch (format.parts[0]) {
-      case ColorFormatPart::sRGB: return VK_FORMAT_R8G8B8_SRGB;
-      case ColorFormatPart::UNorm8: return VK_FORMAT_R8G8B8_UNORM;
-      case ColorFormatPart::UNorm16: return VK_FORMAT_R16G16B16_UNORM;
-      case ColorFormatPart::UInt: return VK_FORMAT_R8G8B8_UINT;
-      case ColorFormatPart::Float16: return VK_FORMAT_R16G16B16_SFLOAT;
-      case ColorFormatPart::Float32: return VK_FORMAT_R32G32B32_SFLOAT;
-      default: break;
+      case ColorFormatPart::sRGB:
+         return VK_FORMAT_R8G8B8_SRGB;
+      case ColorFormatPart::UNorm8:
+         return VK_FORMAT_R8G8B8_UNORM;
+      case ColorFormatPart::UNorm16:
+         return VK_FORMAT_R16G16B16_UNORM;
+      case ColorFormatPart::UInt:
+         return VK_FORMAT_R8G8B8_UINT;
+      case ColorFormatPart::Float16:
+         return VK_FORMAT_R16G16B16_SFLOAT;
+      case ColorFormatPart::Float32:
+         return VK_FORMAT_R32G32B32_SFLOAT;
+      default:
+         break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    }
@@ -78,11 +112,16 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat &format)
 Result<ColorFormat> to_color_format(const VkFormat format)
 {
    switch (format) {
-   case VK_FORMAT_B8G8R8A8_SRGB: return GAPI_FORMAT(BGRA, sRGB);
-   case VK_FORMAT_R8G8B8A8_SRGB: return GAPI_FORMAT(RGBA, sRGB);
-   case VK_FORMAT_R32G32B32A32_SFLOAT: return GAPI_FORMAT(RGBA, Float32);
-   case VK_FORMAT_D16_UNORM_S8_UINT: return GAPI_FORMAT(DS, UNorm16, UInt);
-   default: break;
+   case VK_FORMAT_B8G8R8A8_SRGB:
+      return GAPI_FORMAT(BGRA, sRGB);
+   case VK_FORMAT_R8G8B8A8_SRGB:
+      return GAPI_FORMAT(RGBA, sRGB);
+   case VK_FORMAT_R32G32B32A32_SFLOAT:
+      return GAPI_FORMAT(RGBA, Float32);
+   case VK_FORMAT_D16_UNORM_S8_UINT:
+      return GAPI_FORMAT(DS, UNorm16, UInt);
+   default:
+      break;
    }
    return std::unexpected(Status::UnsupportedFormat);
 }
@@ -90,8 +129,10 @@ Result<ColorFormat> to_color_format(const VkFormat format)
 Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace)
 {
    switch (colorSpace) {
-   case ColorSpace::sRGB: return VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-   case ColorSpace::HDR: return VK_COLOR_SPACE_HDR10_ST2084_EXT;
+   case ColorSpace::sRGB:
+      return VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+   case ColorSpace::HDR:
+      return VK_COLOR_SPACE_HDR10_ST2084_EXT;
    }
 
    return std::unexpected{Status::UnsupportedColorSpace};
@@ -100,9 +141,12 @@ Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace)
 Result<ColorSpace> to_color_space(const VkColorSpaceKHR colorSpace)
 {
    switch (colorSpace) {
-   case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR: return ColorSpace::sRGB;
-   case VK_COLOR_SPACE_HDR10_ST2084_EXT: return ColorSpace::HDR;
-   default: break;
+   case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
+      return ColorSpace::sRGB;
+   case VK_COLOR_SPACE_HDR10_ST2084_EXT:
+      return ColorSpace::HDR;
+   default:
+      break;
    }
 
    return std::unexpected{Status::UnsupportedColorSpace};
@@ -130,11 +174,16 @@ WorkTypeFlags vulkan_queue_flags_to_work_type_flags(const VkQueueFlags flags, co
 Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sampleCount)
 {
    switch (sampleCount) {
-   case SampleCount::Single: return VK_SAMPLE_COUNT_1_BIT;
-   case SampleCount::Double: return VK_SAMPLE_COUNT_2_BIT;
-   case SampleCount::Quadruple: return VK_SAMPLE_COUNT_4_BIT;
-   case SampleCount::Octuple: return VK_SAMPLE_COUNT_8_BIT;
-   case SampleCount::Sexdecuple: return VK_SAMPLE_COUNT_16_BIT;
+   case SampleCount::Single:
+      return VK_SAMPLE_COUNT_1_BIT;
+   case SampleCount::Double:
+      return VK_SAMPLE_COUNT_2_BIT;
+   case SampleCount::Quadruple:
+      return VK_SAMPLE_COUNT_4_BIT;
+   case SampleCount::Octuple:
+      return VK_SAMPLE_COUNT_8_BIT;
+   case SampleCount::Sexdecuple:
+      return VK_SAMPLE_COUNT_16_BIT;
    }
 
    return std::unexpected{Status::UnsupportedFormat};
@@ -157,8 +206,7 @@ Result<VkImageLayout> to_vulkan_image_layout(const AttachmentAttributeFlags type
    return std::unexpected{Status::UnsupportedFormat};
 }
 
-std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp>
-to_vulkan_load_store_ops(const AttachmentAttributeFlags flags)
+std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(const AttachmentAttributeFlags flags)
 {
    VkAttachmentLoadOp loadOp{};
    if (flags & AttachmentAttribute::ClearImage)
@@ -180,9 +228,12 @@ to_vulkan_load_store_ops(const AttachmentAttributeFlags flags)
 VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
 {
    switch (stage) {
-   case PipelineStage::VertexShader: return VK_SHADER_STAGE_VERTEX_BIT;
-   case PipelineStage::FragmentShader: return VK_SHADER_STAGE_FRAGMENT_BIT;
-   case PipelineStage::ComputeShader: return VK_SHADER_STAGE_COMPUTE_BIT;
+   case PipelineStage::VertexShader:
+      return VK_SHADER_STAGE_VERTEX_BIT;
+   case PipelineStage::FragmentShader:
+      return VK_SHADER_STAGE_FRAGMENT_BIT;
+   case PipelineStage::ComputeShader:
+      return VK_SHADER_STAGE_COMPUTE_BIT;
    }
 
    return static_cast<VkShaderStageFlagBits>(0);
@@ -206,13 +257,20 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
 VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
 {
    switch (stage) {
-   case PipelineStage::Entrypoint: return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-   case PipelineStage::VertexShader: return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
-   case PipelineStage::FragmentShader: return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-   case PipelineStage::ComputeShader: return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-   case PipelineStage::Transfer: return VK_PIPELINE_STAGE_TRANSFER_BIT;
-   case PipelineStage::End: return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-   default: break;
+   case PipelineStage::Entrypoint:
+      return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   case PipelineStage::VertexShader:
+      return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+   case PipelineStage::FragmentShader:
+      return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   case PipelineStage::ComputeShader:
+      return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+   case PipelineStage::Transfer:
+      return VK_PIPELINE_STAGE_TRANSFER_BIT;
+   case PipelineStage::End:
+      return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   default:
+      break;
    }
    return VK_PIPELINE_STAGE_NONE;
 }
@@ -241,10 +299,14 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
 VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
 {
    switch (descriptorType) {
-   case DescriptorType::UniformBuffer: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-   case DescriptorType::StorageBuffer: return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-   case DescriptorType::Sampler: return VK_DESCRIPTOR_TYPE_SAMPLER;
-   case DescriptorType::ImageSampler: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   case DescriptorType::UniformBuffer:
+      return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+   case DescriptorType::StorageBuffer:
+      return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+   case DescriptorType::Sampler:
+      return VK_DESCRIPTOR_TYPE_SAMPLER;
+   case DescriptorType::ImageSampler:
+      return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    }
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
@@ -252,11 +314,16 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
 VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
 {
    switch (resourceState) {
-   case TextureState::Undefined: return VK_IMAGE_LAYOUT_UNDEFINED;
-   case TextureState::TransferSrc: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-   case TextureState::TransferDst: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-   case TextureState::ShaderRead: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   case TextureState::DepthStencilRead: return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+   case TextureState::Undefined:
+      return VK_IMAGE_LAYOUT_UNDEFINED;
+   case TextureState::TransferSrc:
+      return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+   case TextureState::TransferDst:
+      return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+   case TextureState::ShaderRead:
+      return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+   case TextureState::DepthStencilRead:
+      return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
@@ -265,11 +332,16 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
 VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
 {
    switch (resourceState) {
-   case TextureState::Undefined: return 0;
-   case TextureState::TransferSrc: return VK_ACCESS_TRANSFER_READ_BIT;
-   case TextureState::TransferDst: return VK_ACCESS_TRANSFER_WRITE_BIT;
-   case TextureState::ShaderRead: [[fallthrough]];
-   case TextureState::DepthStencilRead: return VK_ACCESS_SHADER_READ_BIT;
+   case TextureState::Undefined:
+      return 0;
+   case TextureState::TransferSrc:
+      return VK_ACCESS_TRANSFER_READ_BIT;
+   case TextureState::TransferDst:
+      return VK_ACCESS_TRANSFER_WRITE_BIT;
+   case TextureState::ShaderRead:
+      [[fallthrough]];
+   case TextureState::DepthStencilRead:
+      return VK_ACCESS_SHADER_READ_BIT;
    }
 
    return 0;
@@ -278,8 +350,10 @@ VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
 VkFilter to_vulkan_filter(const FilterType filterType)
 {
    switch (filterType) {
-   case FilterType::Linear: return VK_FILTER_LINEAR;
-   case FilterType::NearestNeighbour: return VK_FILTER_NEAREST;
+   case FilterType::Linear:
+      return VK_FILTER_LINEAR;
+   case FilterType::NearestNeighbour:
+      return VK_FILTER_NEAREST;
    }
    return VK_FILTER_MAX_ENUM;
 }
@@ -287,11 +361,16 @@ VkFilter to_vulkan_filter(const FilterType filterType)
 VkSamplerAddressMode to_vulkan_sampler_address_mode(const TextureAddressMode mode)
 {
    switch (mode) {
-   case TextureAddressMode::Repeat: return VK_SAMPLER_ADDRESS_MODE_REPEAT;
-   case TextureAddressMode::Mirror: return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
-   case TextureAddressMode::Clamp: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-   case TextureAddressMode::Border: return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-   case TextureAddressMode::MirrorOnce: return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
+   case TextureAddressMode::Repeat:
+      return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+   case TextureAddressMode::Mirror:
+      return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+   case TextureAddressMode::Clamp:
+      return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+   case TextureAddressMode::Border:
+      return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+   case TextureAddressMode::MirrorOnce:
+      return VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE;
    }
 
    return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
@@ -391,7 +470,7 @@ VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags workTypes
 
 VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
 {
-   switch(pipelineType) {
+   switch (pipelineType) {
    case PipelineType::Graphics:
       return VK_PIPELINE_BIND_POINT_GRAPHICS;
    case PipelineType::Compute:

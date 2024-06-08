@@ -30,35 +30,35 @@ void Display::dispatch_messages() const
 
       switch (event.type) {
       case KeyPress: {
-         auto *surface = dynamic_cast<Surface *>(m_surfaces.at(event.xkey.window).get());
+         auto* surface = dynamic_cast<Surface*>(m_surfaces.at(event.xkey.window).get());
          surface->dispatch_key_press(event.xkey.keycode);
          break;
       }
       case KeyRelease: {
-         auto *surface = dynamic_cast<Surface *>(m_surfaces.at(event.xkey.window).get());
+         auto* surface = dynamic_cast<Surface*>(m_surfaces.at(event.xkey.window).get());
          surface->dispatch_key_release(event.xkey.keycode);
          break;
       }
       case ButtonPress: {
-         auto *surface = dynamic_cast<Surface *>(m_surfaces.at(event.xbutton.window).get());
+         auto* surface = dynamic_cast<Surface*>(m_surfaces.at(event.xbutton.window).get());
          surface->dispatch_button_press(event.xbutton.button);
          break;
       }
       case ButtonRelease: {
-         auto *surface = dynamic_cast<Surface *>(m_surfaces.at(event.xbutton.window).get());
+         auto* surface = dynamic_cast<Surface*>(m_surfaces.at(event.xbutton.window).get());
          surface->dispatch_button_release(event.xbutton.button);
          break;
       }
       case MotionNotify: {
-         auto *surface = dynamic_cast<Surface *>(m_surfaces.at(event.xmotion.window).get());
+         auto* surface = dynamic_cast<Surface*>(m_surfaces.at(event.xmotion.window).get());
          surface->dispatch_mouse_move(event.xmotion.x, event.xmotion.y);
          break;
       }
       }
    }
 
-   for (const auto &[window, surfaceIFace] : m_surfaces) {
-      const auto *surface = dynamic_cast<Surface *>(surfaceIFace.get());
+   for (const auto& [window, surfaceIFace] : m_surfaces) {
+      const auto* surface = dynamic_cast<Surface*>(surfaceIFace.get());
       surface->tick();
    }
 }
@@ -68,8 +68,8 @@ std::shared_ptr<ISurface> Display::create_surface(const int width, const int hei
    auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, width, height, 0, 0, 0xffffffff);
    XMapWindow(m_display, window);
    XSelectInput(m_display, window,
-                ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
-                        PointerMotionMask | EnterNotify | LeaveNotify);
+                ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
+                   LeaveNotify);
 
    auto surface = std::make_shared<Surface>(m_display, window, Dimension{width, height});
    m_surfaces.emplace(window, surface);

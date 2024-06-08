@@ -14,16 +14,16 @@ DescriptorArray::DescriptorArray(const VkDevice device, const VkDescriptorPool d
 {
 }
 
-DescriptorArray::DescriptorArray(DescriptorArray &&other) noexcept :
+DescriptorArray::DescriptorArray(DescriptorArray&& other) noexcept :
     m_device(std::exchange(other.m_device, nullptr)),
     m_descriptorPool(std::exchange(other.m_descriptorPool, nullptr)),
     m_descriptorSets(std::move(other.m_descriptorSets))
 {
 }
 
-DescriptorArray &DescriptorArray::operator=(DescriptorArray &&other) noexcept
+DescriptorArray& DescriptorArray::operator=(DescriptorArray&& other) noexcept
 {
-   m_device         = std::exchange(other.m_device, nullptr);
+   m_device = std::exchange(other.m_device, nullptr);
    m_descriptorPool = std::exchange(other.m_descriptorPool, nullptr);
    m_descriptorSets = std::move(other.m_descriptorSets);
    return *this;

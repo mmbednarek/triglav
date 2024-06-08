@@ -27,8 +27,7 @@ class IWriter : virtual public IStreamBase
    virtual Result<MemorySize> write(std::span<u8> buffer) = 0;
 };
 
-class IStream : public IReader,
-                public IWriter
+class IStream : public IReader, public IWriter
 {};
 
 enum class SeekPosition

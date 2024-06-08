@@ -12,28 +12,25 @@ using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
-GroundRenderer::GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                               ResourceManager &resourceManager) :
+GroundRenderer::GroundRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, ResourceManager& resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
-                                   .fragment_shader(resourceManager.get("ground.fshader"_rc))
-                                   .vertex_shader(resourceManager.get("ground.vshader"_rc))
-                                   // Descriptor layout
-                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::PipelineStage::VertexShader)
-                                   .descriptor_binding(graphics_api::DescriptorType::ImageSampler,
-                                                       graphics_api::PipelineStage::FragmentShader)
-                                   .enable_depth_test(true)
-                                   .enable_blending(false)
-                                   .use_push_descriptors(true)
-                                   .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
-                                   .build())),
+                              .fragment_shader(resourceManager.get("ground.fshader"_rc))
+                              .vertex_shader(resourceManager.get("ground.vshader"_rc))
+                              // Descriptor layout
+                              .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::VertexShader)
+                              .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
+                              .enable_depth_test(true)
+                              .enable_blending(false)
+                              .use_push_descriptors(true)
+                              .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
+                              .build())),
     m_sampler(resourceManager.get("ground_sampler.sampler"_rc)),
     m_texture(resourceManager.get("board.tex"_rc))
 {
 }
 
-void GroundRenderer::draw(graphics_api::CommandList &cmdList, UniformBuffer& ubo, const Camera &camera) const
+void GroundRenderer::draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo, const Camera& camera) const
 {
    ubo->view = camera.view_matrix();
    ubo->proj = camera.projection_matrix();
@@ -48,4 +45,4 @@ void GroundRenderer::draw(graphics_api::CommandList &cmdList, UniformBuffer& ubo
    cmdList.draw_primitives(4, 0);
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

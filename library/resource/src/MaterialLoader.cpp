@@ -15,19 +15,18 @@ render_core::MaterialTemplate Loader<ResourceType::MaterialTemplate>::load(const
    assert(not file.empty());
 
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
-                                    c4::substr{file.data(), file.size()});
+   auto tree =
+      ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
 
    auto fragmentShader = tree["fragment_shader"].val();
-   auto vertexShader   = tree["vertex_shader"].val();
+   auto vertexShader = tree["vertex_shader"].val();
 
-   render_core::MaterialTemplate result{
-           .fragmentShader{make_rc_name({fragmentShader.data(), fragmentShader.size()})},
-           .vertexShader{make_rc_name({vertexShader.data(), vertexShader.size()})}};
+   render_core::MaterialTemplate result{.fragmentShader{make_rc_name({fragmentShader.data(), fragmentShader.size()})},
+                                        .vertexShader{make_rc_name({vertexShader.data(), vertexShader.size()})}};
 
    auto properties = tree["properties"];
 
-   for (const auto &property : properties) {
+   for (const auto& property : properties) {
       auto nameStr = property["name"].val();
       auto typeStr = property["type"].val();
 
@@ -48,29 +47,30 @@ render_core::MaterialTemplate Loader<ResourceType::MaterialTemplate>::load(const
    return result;
 }
 
-render_core::Material Loader<ResourceType::Material>::load(ResourceManager &manager, const io::Path& path)
+render_core::Material Loader<ResourceType::Material>::load(ResourceManager& manager, const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
-                                    c4::substr{file.data(), file.size()});
+   auto tree =
+      ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
 
    auto templateStr = tree["template"].val();
    auto templateName = make_rc_name({templateStr.data(), templateStr.size()});
 
-   auto &materialTemplate = manager.get<ResourceType::MaterialTemplate>(templateName);
+   auto& materialTemplate = manager.get<ResourceType::MaterialTemplate>(templateName);
 
    std::vector<render_core::MaterialPropertyValue> values;
    values.resize(materialTemplate.properties.size(), 0.0f);
 
    auto properties = tree["properties"];
-   for (const auto &property : properties) {
+   for (const auto& property : properties) {
       auto nameStr = property.key();
 
-      auto name    = make_name_id({nameStr.data(), nameStr.size()});
+      auto name = make_name_id({nameStr.data(), nameStr.size()});
 
-      auto it = std::ranges::find_if(materialTemplate.properties, [target = name](const render_core::MaterialProperty &prop) { return prop.name == target; });
+      auto it = std::ranges::find_if(materialTemplate.properties,
+                                     [target = name](const render_core::MaterialProperty& prop) { return prop.name == target; });
       if (it == materialTemplate.properties.end())
          continue;
 
@@ -92,9 +92,9 @@ render_core::Material Loader<ResourceType::Material>::load(ResourceManager &mana
          const auto yStr = property["y"].val();
          const auto zStr = property["z"].val();
          values[index] = glm::vec3{
-                 std::stof({xStr.data(), xStr.size()}),
-                 std::stof({yStr.data(), yStr.size()}),
-                 std::stof({zStr.data(), zStr.size()}),
+            std::stof({xStr.data(), xStr.size()}),
+            std::stof({yStr.data(), yStr.size()}),
+            std::stof({zStr.data(), zStr.size()}),
          };
          break;
       }
@@ -104,10 +104,10 @@ render_core::Material Loader<ResourceType::Material>::load(ResourceManager &mana
          const auto zStr = property["z"].val();
          const auto wStr = property["w"].val();
          values[index] = glm::vec4{
-                 std::stof({xStr.data(), xStr.size()}),
-                 std::stof({yStr.data(), yStr.size()}),
-                 std::stof({zStr.data(), zStr.size()}),
-                 std::stof({wStr.data(), wStr.size()}),
+            std::stof({xStr.data(), xStr.size()}),
+            std::stof({yStr.data(), yStr.size()}),
+            std::stof({zStr.data(), zStr.size()}),
+            std::stof({wStr.data(), wStr.size()}),
          };
          break;
       }

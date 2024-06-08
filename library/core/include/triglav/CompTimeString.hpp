@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <string_view>
 
 namespace triglav {
 
@@ -31,12 +32,11 @@ struct CompTimeString
    {
       if (other.size() != (CSize - 1))
          return false;
-      return std::all_of(m_data.begin(), m_data.end(),
-                         [at = other.begin()](char c) mutable { return c == *(at++); });
+      return std::all_of(m_data.begin(), m_data.end(), [at = other.begin()](char c) mutable { return c == *(at++); });
    }
 
    template<size_type COtherSize>
-   [[nodiscard]] constexpr bool operator==(const CompTimeString<COtherSize> &other) const
+   [[nodiscard]] constexpr bool operator==(const CompTimeString<COtherSize>& other) const
    {
       if (COtherSize != CSize)
          return false;

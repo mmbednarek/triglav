@@ -4,20 +4,22 @@
 
 namespace triglav::graphics_api {
 
-void CommandBatch::add_command_list(const WorkType type, CommandList &list)
+void CommandBatch::add_command_list(const WorkType type, CommandList& list)
 {
-   switch(type) {
+   switch (type) {
    case WorkType::Graphics:
       m_graphicCommands.emplace_back(&list);
       break;
    case WorkType::Transfer:
       m_transferCommands.emplace_back(&list);
       break;
-   default: break;
+   default:
+      break;
    }
 }
 
-// void CommandBatch::submit_worktype(const WorkType type, const std::vector<CommandList*>& commands, SemaphorePool& semaphorePool, FencePool& fencePool) const
+// void CommandBatch::submit_worktype(const WorkType type, const std::vector<CommandList*>& commands, SemaphorePool& semaphorePool,
+// FencePool& fencePool) const
 // {
 //    const auto queueCount = std::min(commands.size(), m_device.queue_count(type));
 //    const auto commandsRemainder = commands.size() % queueCount;

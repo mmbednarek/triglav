@@ -11,20 +11,19 @@ using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
-DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                                       ResourceManager &resourceManager) :
+DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
+                                       ResourceManager& resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(device, renderTarget)
-                                   .fragment_shader(resourceManager.get("debug_lines.fshader"_rc))
-                                   .vertex_shader(resourceManager.get("debug_lines.vshader"_rc))
-                                   .begin_vertex_layout<glm::vec3>()
-                                   .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
-                                   .end_vertex_layout()
-                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::PipelineStage::VertexShader)
-                                   .vertex_topology(graphics_api::VertexTopology::LineList)
-                                   .rasterization_method(graphics_api::RasterizationMethod::Line)
-                    .build())),
+                              .fragment_shader(resourceManager.get("debug_lines.fshader"_rc))
+                              .vertex_shader(resourceManager.get("debug_lines.vshader"_rc))
+                              .begin_vertex_layout<glm::vec3>()
+                              .vertex_attribute(GAPI_FORMAT(RGB, Float32), 0)
+                              .end_vertex_layout()
+                              .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::VertexShader)
+                              .vertex_topology(graphics_api::VertexTopology::LineList)
+                              .rasterization_method(graphics_api::RasterizationMethod::Line)
+                              .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(60, 3, 60)))
 {
 }
@@ -44,56 +43,43 @@ DebugLines DebugLinesRenderer::create_line_list(const std::span<glm::vec3> list)
    return DebugLines{std::move(array), glm::mat4(1), std::move(ubo), std::move(descriptors)};
 }
 
-DebugLines DebugLinesRenderer::create_line_list_from_bouding_box(const geometry::BoundingBox &boudingBox)
+DebugLines DebugLinesRenderer::create_line_list_from_bouding_box(const geometry::BoundingBox& boudingBox)
 {
    std::array<glm::vec3, 24> lines{
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
+      glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
 
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
+      glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
 
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
+      glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
 
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
+      glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
 
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z}, glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z}, glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z}, glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z}, glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
-           glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
-           glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
-           glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
 
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
-           glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
    };
 
    return this->create_line_list(lines);
 }
 
-void DebugLinesRenderer::begin_render(graphics_api::CommandList &cmdList) const
+void DebugLinesRenderer::begin_render(graphics_api::CommandList& cmdList) const
 {
    cmdList.bind_pipeline(m_pipeline);
 }
 
-void DebugLinesRenderer::draw(graphics_api::CommandList &cmdList, const DebugLines &list,
-                              const Camera &camera) const
+void DebugLinesRenderer::draw(graphics_api::CommandList& cmdList, const DebugLines& list, const Camera& camera) const
 {
    *list.ubo = camera.view_projection_matrix() * list.model;
 

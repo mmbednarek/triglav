@@ -34,12 +34,12 @@ struct GlyphInfo
 class GlyphAtlas
 {
  public:
-   GlyphAtlas(graphics_api::Device &device, const font::Typeface &typeface, std::span<font::Rune> atlasRunes,
-              int glyphSize, uint32_t width, uint32_t height);
+   GlyphAtlas(graphics_api::Device& device, const font::Typeface& typeface, std::span<font::Rune> atlasRunes, int glyphSize, uint32_t width,
+              uint32_t height);
 
    [[nodiscard]] std::vector<GlyphVertex> create_glyph_vertices(std::string_view text, TextMetric* outMetric = nullptr) const;
-   [[nodiscard]] const graphics_api::Texture &texture() const;
-   [[nodiscard]] graphics_api::Texture &texture();
+   [[nodiscard]] const graphics_api::Texture& texture() const;
+   [[nodiscard]] graphics_api::Texture& texture();
    [[nodiscard]] TextMetric measure_text(std::string_view text) const;
 
  private:
@@ -48,4 +48,4 @@ class GlyphAtlas
    std::map<font::Rune, GlyphInfo> m_glyphInfos;
 };
 
-}// namespace renderer
+}// namespace triglav::render_core

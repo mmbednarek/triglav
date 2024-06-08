@@ -11,7 +11,7 @@ enum class ResourceType
 #define TG_RESOURCE_TYPE(name, ext, cppType) name,
    TG_RESOURCE_TYPE_LIST
 #undef TG_RESOURCE_TYPE
-           Unknown,
+      Unknown,
 };
 
 template<ResourceType CResourceType>

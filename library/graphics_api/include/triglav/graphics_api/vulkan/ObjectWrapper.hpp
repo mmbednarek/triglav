@@ -22,16 +22,16 @@ class WrappedObject
    {
    }
 
-   WrappedObject(const WrappedObject &other)            = delete;
-   WrappedObject &operator=(const WrappedObject &other) = delete;
+   WrappedObject(const WrappedObject& other) = delete;
+   WrappedObject& operator=(const WrappedObject& other) = delete;
 
-   WrappedObject(WrappedObject &&other) noexcept :
+   WrappedObject(WrappedObject&& other) noexcept :
        m_wrapped(std::exchange(other.m_wrapped, nullptr)),
        m_parent(std::exchange(other.m_parent, TParentObject{}))
    {
    }
 
-   WrappedObject &operator=(WrappedObject &&other) noexcept
+   WrappedObject& operator=(WrappedObject&& other) noexcept
    {
       if (this == &other)
          return *this;
@@ -39,7 +39,7 @@ class WrappedObject
       this->destroy(m_wrapped);
 
       m_wrapped = std::exchange(other.m_wrapped, nullptr);
-      m_parent  = std::exchange(other.m_parent, TParentObject{});
+      m_parent = std::exchange(other.m_parent, TParentObject{});
       return *this;
    }
 
@@ -48,28 +48,28 @@ class WrappedObject
       this->destroy(m_wrapped);
    }
 
-   [[nodiscard]] constexpr TWrapped &operator*()
+   [[nodiscard]] constexpr TWrapped& operator*()
    {
       return m_wrapped;
    }
 
-   [[nodiscard]] constexpr const TWrapped &operator*() const
+   [[nodiscard]] constexpr const TWrapped& operator*() const
    {
       return m_wrapped;
    }
 
-   [[nodiscard]] constexpr TParentObject &parent()
+   [[nodiscard]] constexpr TParentObject& parent()
    {
       return m_parent;
    }
 
-   [[nodiscard]] constexpr const TParentObject &parent() const
+   [[nodiscard]] constexpr const TParentObject& parent() const
    {
       return m_parent;
    }
 
    template<typename... TArgs>
-   auto construct(TArgs &&...args)
+   auto construct(TArgs&&... args)
    {
       const auto old_ptr = m_wrapped;
       VkResult result{};
@@ -109,7 +109,7 @@ class WrappedObject
 };
 
 template<typename TResult, auto TGetter, typename... TArgs>
-std::vector<TResult> get_vulkan_items(TArgs &&...args)
+std::vector<TResult> get_vulkan_items(TArgs&&... args)
 {
    uint32_t count = 0;
    TGetter(std::forward<TArgs>(args)..., &count, nullptr);
@@ -120,22 +120,21 @@ std::vector<TResult> get_vulkan_items(TArgs &&...args)
    return result;
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api
 
-#define DECLARE_VLK_WRAPPED_OBJECT(object)                                                        \
-   namespace vulkan {                                                                             \
+#define DECLARE_VLK_WRAPPED_OBJECT(object)                                                                 \
+   namespace vulkan {                                                                                      \
    using object = ::triglav::graphics_api::WrappedObject<Vk##object, vkCreate##object, vkDestroy##object>; \
    }
-#define DECLARE_VLK_WRAPPED_CHILD_OBJECT(object, parent)                                               \
-   namespace vulkan {                                                                                  \
-   using object =                                                                                      \
-           ::triglav::graphics_api::WrappedObject<Vk##object, vkCreate##object, vkDestroy##object, Vk##parent>; \
+#define DECLARE_VLK_WRAPPED_CHILD_OBJECT(object, parent)                                                               \
+   namespace vulkan {                                                                                                  \
+   using object = ::triglav::graphics_api::WrappedObject<Vk##object, vkCreate##object, vkDestroy##object, Vk##parent>; \
    }
-#define DECLARE_VLK_ENUMERATOR(name, object, func)                                         \
-   namespace vulkan {                                                                      \
-   template<typename... TArgs>                                                             \
-   auto name(TArgs &&...args)                                                              \
-   {                                                                                       \
+#define DECLARE_VLK_ENUMERATOR(name, object, func)                                                  \
+   namespace vulkan {                                                                               \
+   template<typename... TArgs>                                                                      \
+   auto name(TArgs&&... args)                                                                       \
+   {                                                                                                \
       return ::triglav::graphics_api::get_vulkan_items<object, func>(std::forward<TArgs>(args)...); \
-   }                                                                                       \
+   }                                                                                                \
    }

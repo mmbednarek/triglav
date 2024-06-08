@@ -7,7 +7,8 @@
 
 namespace triglav::io {
 
-class Path {
+class Path
+{
  public:
    explicit Path(std::string_view path);
 
@@ -15,6 +16,7 @@ class Path {
    [[nodiscard]] Path parent() const;
    [[nodiscard]] bool exists() const;
    [[nodiscard]] const std::string& string() const;
+
  private:
    std::string m_path;
 };
@@ -25,11 +27,11 @@ class Path {
 
 namespace path_literals {
 
-inline Path operator""_path(const char *value, const std::size_t count)
+inline Path operator""_path(const char* value, const std::size_t count)
 {
    return Path{std::string{value, count}};
 }
 
-}
+}// namespace path_literals
 
-}
+}// namespace triglav::io

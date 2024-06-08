@@ -2,15 +2,14 @@
 
 #include "ISurface.hpp"
 
-#include <memory>
 #include <Windows.h>
+#include <memory>
 
 namespace triglav::desktop {
 
 constexpr auto g_windowClassName = "TRIGLAV_WINDOW";
 
-class Surface : public ISurface,
-                std::enable_shared_from_this<Surface>
+class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
  public:
    Surface(HINSTANCE instance, Dimension dimension);
@@ -19,7 +18,7 @@ class Surface : public ISurface,
    void lock_cursor() override;
    void unlock_cursor() override;
    void hide_cursor() const override;
-   void add_event_listener(ISurfaceEventListener *eventListener) override;
+   void add_event_listener(ISurfaceEventListener* eventListener) override;
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
 
@@ -39,7 +38,7 @@ class Surface : public ISurface,
    HINSTANCE m_instance;
    Dimension m_dimension;
    HWND m_windowHandle;
-   ISurfaceEventListener *m_eventListener{};
+   ISurfaceEventListener* m_eventListener{};
 };
 
 }// namespace triglav::desktop

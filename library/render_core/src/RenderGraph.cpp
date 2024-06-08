@@ -9,7 +9,7 @@ namespace triglav::render_core {
 
 using namespace name_literals;
 
-RenderGraph::RenderGraph(graphics_api::Device &device) :
+RenderGraph::RenderGraph(graphics_api::Device& device) :
     m_device(device),
     m_frameResources{FrameResources{device}, FrameResources{device}}
 {
@@ -82,8 +82,8 @@ bool RenderGraph::bake(Name targetNode)
       nodes.pop();
 
       for (u32 i = 0; i < m_frameResources.size(); ++i) {
-         auto &frameRes      = m_frameResources[i];
-         auto &previousFrameRes = m_frameResources[i == 0 ? (m_frameResources.size() - 1) : (i - 1)];
+         auto& frameRes = m_frameResources[i];
+         auto& previousFrameRes = m_frameResources[i == 0 ? (m_frameResources.size() - 1) : (i - 1)];
          graphics_api::SemaphoreArray semaphores{};
 
          // In frame dependencies
@@ -107,7 +107,7 @@ bool RenderGraph::bake(Name targetNode)
             ++it;
          }
 
-         auto &node       = m_nodes[currentNode];
+         auto& node = m_nodes[currentNode];
          auto commandList = GAPI_CHECK(m_device.queue_manager().create_command_list(node->work_types()));
 
          frameRes.initialize_command_list(currentNode, std::move(semaphores), std::move(commandList), inFrameSemaphoreCount);
@@ -116,7 +116,7 @@ bool RenderGraph::bake(Name targetNode)
       m_nodeOrder.emplace_back(currentNode);
    }
 
-   for (auto &frameRes : m_frameResources) {
+   for (auto& frameRes : m_frameResources) {
       frameRes.add_signal_semaphore(targetNode, "__TARGET__"_name, GAPI_CHECK(m_device.create_semaphore()));
       frameRes.finalize();
    }
@@ -127,13 +127,13 @@ bool RenderGraph::bake(Name targetNode)
 void RenderGraph::initialize_nodes()
 {
    for (const auto name : m_externalNodes) {
-      for (auto &frameRes : m_frameResources) {
+      for (auto& frameRes : m_frameResources) {
          frameRes.add_external_node(name);
       }
    }
 
-   for (const auto &[name, node] : m_nodes) {
-      for (auto &frameRes : m_frameResources) {
+   for (const auto& [name, node] : m_nodes) {
+      for (auto& frameRes : m_frameResources) {
          frameRes.add_node_resources(name, node->create_node_resources());
       }
    }
@@ -141,9 +141,9 @@ void RenderGraph::initialize_nodes()
 
 void RenderGraph::record_command_lists()
 {
-   for (const auto &[name, node] : m_nodes) {
-      auto &resources = this->active_frame_resources().node<NodeFrameResources>(name);
-      auto &cmdList   = resources.command_list();
+   for (const auto& [name, node] : m_nodes) {
+      auto& resources = this->active_frame_resources().node<NodeFrameResources>(name);
+      auto& cmdList = resources.command_list();
       GAPI_CHECK_STATUS(cmdList.reset());
       GAPI_CHECK_STATUS(cmdList.begin());
       node->record_commands(this->active_frame_resources(), resources, cmdList);
@@ -151,19 +151,19 @@ void RenderGraph::record_command_lists()
    }
 }
 
-void RenderGraph::update_resolution(const graphics_api::Resolution &resolution)
+void RenderGraph::update_resolution(const graphics_api::Resolution& resolution)
 {
-   for (auto &frameRes : m_frameResources) {
+   for (auto& frameRes : m_frameResources) {
       frameRes.update_resolution(resolution);
    }
 }
 
 graphics_api::Status RenderGraph::execute()
 {
-   for (const auto &name : m_nodeOrder) {
-      auto &resources = this->active_frame_resources().node<NodeFrameResources>(name);
+   for (const auto& name : m_nodeOrder) {
+      auto& resources = this->active_frame_resources().node<NodeFrameResources>(name);
 
-      const graphics_api::Fence *fence{};
+      const graphics_api::Fence* fence{};
       if (name == m_targetNode) {
          fence = &this->active_frame_resources().target_fence();
       }
@@ -174,8 +174,8 @@ graphics_api::Status RenderGraph::execute()
          waitSemaphores = resources.wait_semaphores();
       }
 
-      const auto status = m_device.submit_command_list(resources.command_list(), waitSemaphores,
-                                                       resources.signal_semaphores(), fence, this->node<IRenderNode>(name).work_types());
+      const auto status = m_device.submit_command_list(resources.command_list(), waitSemaphores, resources.signal_semaphores(), fence,
+                                                       this->node<IRenderNode>(name).work_types());
       if (status != graphics_api::Status::Success) {
          return status;
       }
@@ -191,37 +191,37 @@ void RenderGraph::await()
    this->active_frame_resources().target_fence().await();
 }
 
-graphics_api::Semaphore &RenderGraph::target_semaphore()
+graphics_api::Semaphore& RenderGraph::target_semaphore()
 {
    return this->active_frame_resources().target_semaphore(m_targetNode);
 }
 
 u32 RenderGraph::triangle_count(const Name node)
 {
-   auto &resources = this->active_frame_resources().node(node);
+   auto& resources = this->active_frame_resources().node(node);
    return static_cast<u32>(resources.command_list().triangle_count());
 }
 
 void RenderGraph::clean()
 {
-   for (auto &frameRes : m_frameResources) {
+   for (auto& frameRes : m_frameResources) {
       frameRes.clean(m_device);
    }
 }
 
 void RenderGraph::set_flag(Name flag, const bool isEnabled)
 {
-   for (auto &frameRes : m_frameResources) {
+   for (auto& frameRes : m_frameResources) {
       frameRes.set_flag(flag, isEnabled);
    }
 }
 
-FrameResources &RenderGraph::active_frame_resources()
+FrameResources& RenderGraph::active_frame_resources()
 {
    return m_frameResources[m_activeFrame];
 }
 
-FrameResources &RenderGraph::previous_frame_resources()
+FrameResources& RenderGraph::previous_frame_resources()
 {
    return m_frameResources[m_activeFrame == 0 ? (m_frameResources.size() - 1) : (m_activeFrame - 1)];
 }
@@ -231,7 +231,7 @@ void RenderGraph::swap_frames()
    m_activeFrame = (m_activeFrame + 1) % m_frameResources.size();
 }
 
-graphics_api::Semaphore &RenderGraph::semaphore(Name parent, Name child)
+graphics_api::Semaphore& RenderGraph::semaphore(Name parent, Name child)
 {
    return this->active_frame_resources().semaphore(parent, child);
 }

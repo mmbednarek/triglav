@@ -4,9 +4,10 @@
 
 namespace triglav::desktop {
 
-struct InputArgs {
+struct InputArgs
+{
    const char** args;
    i32 arg_count;
 };
 
-}
+}// namespace triglav::desktop

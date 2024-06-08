@@ -7,7 +7,8 @@
 
 namespace triglav::io {
 
-class Serializer {
+class Serializer
+{
  public:
    explicit Serializer(IWriter& writer);
 
@@ -22,4 +23,4 @@ class Serializer {
    u32 m_bytesWritten{};
 };
 
-}
+}// namespace triglav::io

@@ -2,10 +2,10 @@
 
 #include "triglav/Name.hpp"
 
-using triglav::ResourceName;
-using triglav::TextureName;
 using triglav::MaterialName;
+using triglav::ResourceName;
 using triglav::ResourceType;
+using triglav::TextureName;
 using namespace triglav::name_literals;
 
 TEST(NameTest, BasicBehavior)

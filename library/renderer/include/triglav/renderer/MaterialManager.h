@@ -11,19 +11,22 @@
 
 namespace triglav::renderer {
 
-struct MaterialResources {
+struct MaterialResources
+{
    MaterialTemplateName materialTemplate;
    std::optional<graphics_api::Buffer> uniformBuffer;
    std::vector<TextureName> textures;
 };
 
-struct MaterialTemplateResources {
+struct MaterialTemplateResources
+{
    graphics_api::Pipeline pipeline;
 };
 
-class MaterialManager {
+class MaterialManager
+{
  public:
-   MaterialManager(graphics_api::Device &device, resource::ResourceManager &resourceManager, graphics_api::RenderTarget &renderTarget);
+   MaterialManager(graphics_api::Device& device, resource::ResourceManager& resourceManager, graphics_api::RenderTarget& renderTarget);
 
    [[nodiscard]] const MaterialResources& material_resources(MaterialName name) const;
    [[nodiscard]] const MaterialTemplateResources& material_template_resources(MaterialTemplateName name) const;
@@ -32,11 +35,11 @@ class MaterialManager {
    void process_material(MaterialName name, const render_core::Material& material);
    void process_material_template(MaterialTemplateName name, const render_core::MaterialTemplate& materialTemplate);
 
-   graphics_api::Device &m_device;
-   resource::ResourceManager &m_resourceManager;
-   graphics_api::RenderTarget &m_renderTarget;
+   graphics_api::Device& m_device;
+   resource::ResourceManager& m_resourceManager;
+   graphics_api::RenderTarget& m_renderTarget;
    std::map<MaterialTemplateName, MaterialTemplateResources> m_templates;
    std::map<MaterialName, MaterialResources> m_materials;
 };
 
-}
+}// namespace triglav::renderer

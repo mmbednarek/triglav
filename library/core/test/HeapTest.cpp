@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include <map>
 #include <chrono>
+#include <map>
 
 #include "triglav/Heap.hpp"
 
@@ -56,7 +56,7 @@ TEST(HeapTest, LargeAmount)
    srand(2137);
 
    for (int i = 0; i < 10000; ++i) {
-      const auto key   = rand();
+      const auto key = rand();
       const auto value = rand();
       values.emplace(key, value);
    }
@@ -67,7 +67,7 @@ TEST(HeapTest, LargeAmount)
 
    const auto beg = std::chrono::steady_clock::now();
    for (int i = 0; i < 10000; ++i) {
-      const auto key   = rand();
+      const auto key = rand();
       const auto value = rand();
       EXPECT_EQ(values[key], value);
    }
@@ -82,7 +82,7 @@ TEST(HeapTest, CompareMap)
    srand(2137);
 
    for (int i = 0; i < 10000; ++i) {
-      const auto key   = rand();
+      const auto key = rand();
       const auto value = rand();
       values.emplace(key, value);
    }
@@ -91,7 +91,7 @@ TEST(HeapTest, CompareMap)
 
    const auto beg = std::chrono::steady_clock::now();
    for (int i = 0; i < 10000; ++i) {
-      const auto key   = rand();
+      const auto key = rand();
       const auto value = rand();
       EXPECT_EQ(values[key], value);
    }

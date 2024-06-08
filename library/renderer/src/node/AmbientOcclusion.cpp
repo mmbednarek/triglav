@@ -8,17 +8,13 @@ using namespace name_literals;
 using graphics_api::AttachmentAttribute;
 using graphics_api::SampleCount;
 
-AmbientOcclusion::AmbientOcclusion(graphics_api::Device &device, resource::ResourceManager &resourceManager,
-                                   Scene &scene) :
+AmbientOcclusion::AmbientOcclusion(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
     m_renderTarget(
-            GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                               .attachment("ao"_name,
-                                           AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                   AttachmentAttribute::StoreImage,
-                                           GAPI_FORMAT(R, Float16), SampleCount::Single)
-                               .build())),
-    m_renderer(device, m_renderTarget, resourceManager,
-               resourceManager.get("noise.tex"_rc)),
+       GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
+                     .attachment("ao"_name, AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
+                                 GAPI_FORMAT(R, Float16), SampleCount::Single)
+                     .build())),
+    m_renderer(device, m_renderTarget, resourceManager, resourceManager.get("noise.tex"_rc)),
     m_scene(scene)
 {
 }
@@ -35,15 +31,14 @@ graphics_api::WorkTypeFlags AmbientOcclusion::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void AmbientOcclusion::record_commands(render_core::FrameResources &frameResources,
-                                       render_core::NodeFrameResources &resources,
-                                       graphics_api::CommandList &cmdList)
+void AmbientOcclusion::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
+                                       graphics_api::CommandList& cmdList)
 {
    if (not frameResources.has_flag("ssao"_name))
       return;
 
    std::array<graphics_api::ClearValue, 1> clearValues{
-           graphics_api::ColorPalette::Black,
+      graphics_api::ColorPalette::Black,
    };
 
    cmdList.begin_render_pass(resources.framebuffer("ao"_name), clearValues);

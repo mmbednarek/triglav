@@ -8,7 +8,8 @@
 
 namespace triglav::ui_core {
 
-class Viewport {
+class Viewport
+{
  public:
    using OnAddedTextDel = Delegate<Name, const Text&>;
    using OnTextChangeContentDel = Delegate<Name, const Text&>;
@@ -30,4 +31,4 @@ class Viewport {
    std::map<Name, Rectangle> m_rectangles;
 };
 
-}
+}// namespace triglav::ui_core

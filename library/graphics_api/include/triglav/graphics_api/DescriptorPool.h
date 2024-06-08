@@ -17,8 +17,7 @@ class DescriptorPool
  public:
    DescriptorPool(vulkan::DescriptorPool descriptorPool, VkDescriptorSetLayout descriptorSetLayout);
 
-   [[nodiscard]] Status allocate_descriptors(std::span<VkDescriptorSetLayout> inLayouts,
-                                             std::span<VkDescriptorSet> outSets);
+   [[nodiscard]] Status allocate_descriptors(std::span<VkDescriptorSetLayout> inLayouts, std::span<VkDescriptorSet> outSets);
    [[nodiscard]] Status free_descriptors(std::span<VkDescriptorSet> sets);
 
    [[nodiscard]] Result<DescriptorArray> allocate_array(size_t descriptorCount);

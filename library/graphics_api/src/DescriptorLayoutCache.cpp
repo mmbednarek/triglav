@@ -19,7 +19,7 @@ DescriptorLayoutCache::Hash hash_bindings(const std::span<DescriptorBinding> bin
    return result;
 }
 
-}
+}// namespace
 
 VkDescriptorSetLayout DescriptorLayoutCache::find_layout(const std::span<DescriptorBinding> bindings)
 {
@@ -47,7 +47,7 @@ VkDescriptorSetLayout DescriptorLayoutCache::construct_layout(const Hash hash, c
       return outBinding;
    });
 
-   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{ VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
+   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
    descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
    descriptorSetLayoutInfo.pBindings = layoutBindings.data();
 
@@ -55,11 +55,11 @@ VkDescriptorSetLayout DescriptorLayoutCache::construct_layout(const Hash hash, c
    if (const auto res = layout.construct(&descriptorSetLayoutInfo); res != VK_SUCCESS) {
       throw std::runtime_error("error creating layout");
    }
-   
+
    auto [it, success] = m_pools.emplace(hash, std::move(layout));
    assert(success);
 
    return *it->second;
 }
 
-}
+}// namespace triglav::graphics_api

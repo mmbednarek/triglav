@@ -18,10 +18,10 @@ class FontManger
    FontManger();
    ~FontManger();
 
-   FontManger(const FontManger &other)                = delete;
-   FontManger &operator=(const FontManger &other)     = delete;
-   FontManger(FontManger &&other) noexcept            = delete;
-   FontManger &operator=(FontManger &&other) noexcept = delete;
+   FontManger(const FontManger& other) = delete;
+   FontManger& operator=(const FontManger& other) = delete;
+   FontManger(FontManger&& other) noexcept = delete;
+   FontManger& operator=(FontManger&& other) noexcept = delete;
 
    [[nodiscard]] Typeface create_typeface(const io::Path& path, int variant) const;
 
@@ -30,4 +30,4 @@ class FontManger
 };
 
 
-}// namespace font
+}// namespace triglav::font
