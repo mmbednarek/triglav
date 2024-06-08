@@ -25,7 +25,6 @@ GroundRenderer::GroundRenderer(graphics_api::Device& device, graphics_api::Rende
                               .use_push_descriptors(true)
                               .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                               .build())),
-    m_sampler(resourceManager.get("ground_sampler.sampler"_rc)),
     m_texture(resourceManager.get("board.tex"_rc))
 {
 }
@@ -37,11 +36,8 @@ void GroundRenderer::draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo
 
    cmdList.bind_pipeline(m_pipeline);
 
-   graphics_api::DescriptorWriter writer(m_device);
-   writer.set_uniform_buffer(0, ubo);
-   writer.set_sampled_texture(1, m_texture, m_sampler);
-   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
-
+   cmdList.bind_uniform_buffer(0, ubo);
+   cmdList.bind_texture(1, m_texture);
    cmdList.draw_primitives(4, 0);
 }
 

@@ -27,7 +27,6 @@ class PostProcessingRenderer
  private:
    graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler& m_sampler;
 };
 
 }// namespace triglav::renderer

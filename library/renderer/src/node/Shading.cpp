@@ -44,7 +44,6 @@ Shading::Shading(graphics_api::Device& device, resource::ResourceManager& resour
                      .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                      .build())),
     m_particlesUBO(device),
-    m_sampler(resourceManager.get("linear_repeat_mlod0_aniso.sampler"_rc)),
     m_particlesTexture(resourceManager.get("particle.tex"_rc))
 {
 }

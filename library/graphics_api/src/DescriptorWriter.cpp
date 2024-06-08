@@ -86,9 +86,11 @@ VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescr
 
    if (writeDescriptorSet.pBufferInfo != nullptr) {
       m_descriptorBufferInfoPool.release_object(writeDescriptorSet.pBufferInfo);
+      writeDescriptorSet.pBufferInfo = nullptr;
    }
    if (writeDescriptorSet.pImageInfo != nullptr) {
       m_descriptorImageInfoPool.release_object(writeDescriptorSet.pImageInfo);
+      writeDescriptorSet.pImageInfo = nullptr;
    }
 
    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

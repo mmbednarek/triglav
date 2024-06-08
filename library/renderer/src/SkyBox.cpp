@@ -45,7 +45,6 @@ SkyBox::SkyBox(graphics_api::Device& device, resource::ResourceManager& resource
                               .enable_depth_test(false)
                               .use_push_descriptors(true)
                               .build())),
-    m_sampler(m_resourceManager.get("linear_repeat_mlod0.sampler"_rc)),
     m_texture(m_resourceManager.get("skybox.tex"_rc))
 {
 }
@@ -65,10 +64,8 @@ void SkyBox::on_render(graphics_api::CommandList& commandList, UniformBuffer& ub
 
    commandList.bind_pipeline(m_pipeline);
 
-   graphics_api::DescriptorWriter descWriter(m_device);
-   descWriter.set_uniform_buffer(0, ubo);
-   descWriter.set_sampled_texture(1, m_texture, m_sampler);
-   commandList.push_descriptors(0, descWriter, graphics_api::PipelineType::Graphics);
+   commandList.bind_uniform_buffer(0, ubo);
+   commandList.bind_texture(1, m_texture);
 
    commandList.draw_mesh(m_mesh);
 }

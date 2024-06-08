@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Loader.hpp"
+#include "Resource.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/io/Path.h"
@@ -15,7 +16,7 @@ struct Loader<ResourceType::Model>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
 
-   static render_core::Model load_gpu(graphics_api::Device& device, const io::Path& path);
+   static render_core::Model load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
 };
 
 }// namespace triglav::resource

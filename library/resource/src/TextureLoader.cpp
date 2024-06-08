@@ -10,7 +10,10 @@ using triglav::graphics_api::TextureUsage;
 
 namespace triglav::resource {
 
-graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, const io::Path& path)
+using namespace name_literals;
+
+graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, const io::Path& path,
+                                                              const ResourceProperties& props)
 {
    int texWidth, texHeight, texChannels;
    const stbi_uc* pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -20,6 +23,13 @@ graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Devi
       GAPI_FORMAT(RGBA, sRGB), {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)},
       TextureUsage::Sampled | TextureUsage::TransferDst | TextureUsage::TransferSrc, SampleCount::Single, graphics_api::g_maxMipMaps));
    GAPI_CHECK_STATUS(texture.write(device, pixels));
+
+   texture.set_anisotropy_state(props.get_bool("anisotropy"_name, true));
+   auto maxLod = props.get_float_opt("max_lod"_name);
+   if (maxLod.has_value()) {
+      texture.set_lod(0.0f, *maxLod);
+   }
+
    return texture;
 }
 

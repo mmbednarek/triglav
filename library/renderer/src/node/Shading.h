@@ -29,7 +29,6 @@ class Shading : public render_core::IRenderNode
    Scene& m_scene;
    graphics_api::Pipeline m_particlesPipeline;
    graphics_api::UniformBuffer<ParticlesUBO> m_particlesUBO;
-   graphics_api::Sampler& m_sampler;
    graphics_api::Texture& m_particlesTexture;
 };
 

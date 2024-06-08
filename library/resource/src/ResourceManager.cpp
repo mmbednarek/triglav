@@ -6,7 +6,6 @@
 #include "ModelLoader.h"
 #include "PathManager.h"
 #include "ShaderLoader.h"
-#include "StaticResources.h"
 #include "TextureLoader.h"
 #include "TypefaceLoader.h"
 
@@ -16,6 +15,9 @@
 #include <ryml.hpp>
 #include <spdlog/spdlog.h>
 
+#include <map>
+#include <string>
+
 namespace triglav::resource {
 
 namespace {
@@ -24,6 +26,7 @@ struct ResourcePath
 {
    std::string name;
    std::string source;
+   ResourceProperties properties;
 };
 
 std::vector<ResourcePath> parse_asset_list(const io::Path& path)
@@ -38,7 +41,19 @@ std::vector<ResourcePath> parse_asset_list(const io::Path& path)
    for (const auto node : resources) {
       auto name = node["name"].val();
       auto source = node["source"].val();
-      result.emplace_back(std::string{name.data(), name.size()}, std::string{source.data(), source.size()});
+
+      ResourceProperties properties;
+
+      if (node.has_child("properties")) {
+         auto propertiesNode = node["properties"];
+         for (const auto property : propertiesNode) {
+            auto key = property.key();
+            auto value = property.val();
+            properties.add(make_name_id({key.data(), key.size()}), std::string{value.data(), value.size()});
+         }
+      }
+
+      result.emplace_back(std::string{name.data(), name.size()}, std::string{source.data(), source.size()}, std::move(properties));
    }
 
    return result;
@@ -56,8 +71,6 @@ ResourceManager::ResourceManager(graphics_api::Device& device, font::FontManger&
 #undef TG_RESOURCE_TYPE
 
    this->load_asset_list(PathManager::the().content_path().sub("index.yaml"));
-
-   register_samplers(device, *this);
 }
 
 void ResourceManager::load_asset_list(const io::Path& path)
@@ -69,7 +82,7 @@ void ResourceManager::load_asset_list(const io::Path& path)
    auto contentPath = PathManager::the().content_path();
 
    int loadedCount{};
-   for (const auto& [nameStr, source] : list) {
+   for (const auto& [nameStr, source, props] : list) {
       auto resourcePath = buildPath.sub(source);
       if (not resourcePath.exists()) {
          resourcePath = contentPath.sub(source);
@@ -83,19 +96,19 @@ void ResourceManager::load_asset_list(const io::Path& path)
       auto name = make_rc_name(nameStr);
       m_registeredNames.emplace(name, nameStr);
       spdlog::info("[{}/{}] {}", loadedCount, list.size(), nameStr);
-      this->load_asset(name, resourcePath);
+      this->load_asset(name, resourcePath, props);
       ++loadedCount;
    }
 
    spdlog::info("[{}/{}] DONE", loadedCount, list.size());
 }
 
-void ResourceManager::load_asset(const ResourceName assetName, const io::Path& path)
+void ResourceManager::load_asset(const ResourceName assetName, const io::Path& path, const ResourceProperties& props)
 {
    switch (assetName.type()) {
-#define TG_RESOURCE_TYPE(name, extension, cppType)              \
-   case ResourceType::name:                                     \
-      this->load_resource<ResourceType::name>(assetName, path); \
+#define TG_RESOURCE_TYPE(name, extension, cppType)                     \
+   case ResourceType::name:                                            \
+      this->load_resource<ResourceType::name>(assetName, path, props); \
       break;
       TG_RESOURCE_TYPE_LIST
 #undef TG_RESOURCE_TYPE

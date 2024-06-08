@@ -81,6 +81,7 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution& resolutio
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
+      texture->set_anisotropy_state(false);
       textures.emplace(attachment.identifier, std::move(*texture));
    }
 

@@ -27,8 +27,7 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device& device, gra
                               .use_push_descriptors(true)
                               .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                               .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstants))
-                              .build())),
-    m_sampler(resourceManager.get("linear_repeat_mlod0.sampler"_rc))
+                              .build()))
 {
 }
 
@@ -40,11 +39,9 @@ void PostProcessingRenderer::draw(render_core::FrameResources& resources, graphi
    auto& ui = resources.node("user_interface"_name).framebuffer("ui"_name);
    auto& bloomTexture = dynamic_cast<node::DownsampleResources&>(resources.node("downsample_bloom"_name)).texture();
 
-   graphics_api::DescriptorWriter writer(m_device);
-   writer.set_sampled_texture(0, shading.texture("shading"_name), m_sampler);
-   writer.set_sampled_texture(1, bloomTexture, m_sampler);
-   writer.set_sampled_texture(2, ui.texture("user_interface"_name), m_sampler);
-   cmdList.push_descriptors(0, writer, graphics_api::PipelineType::Graphics);
+   cmdList.bind_texture(0, shading.texture("shading"_name));
+   cmdList.bind_texture(1, bloomTexture);
+   cmdList.bind_texture(2, ui.texture("user_interface"_name));
 
    PushConstants constants{
       .enableFXAA = resources.has_flag("fxaa"_name),
