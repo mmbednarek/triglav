@@ -5,17 +5,15 @@
 namespace triglav::desktop {
 namespace {
 
-LRESULT CALLBACK process_messages(const HWND windowHandle, const UINT msg, const WPARAM wParam,
-                                  const LPARAM lParam)
+LRESULT CALLBACK process_messages(const HWND windowHandle, const UINT msg, const WPARAM wParam, const LPARAM lParam)
 {
    if (msg == WM_CREATE) {
-      const auto *createStruct = reinterpret_cast<CREATESTRUCT *>(lParam);
-      SetWindowLongPtrA(windowHandle, GWLP_USERDATA,
-                        reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
+      const auto* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
+      SetWindowLongPtrA(windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
       return 0;
    }
 
-   auto *surface = reinterpret_cast<Surface *>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
+   auto* surface = reinterpret_cast<Surface*>(GetWindowLongPtrA(windowHandle, GWLP_USERDATA));
    if (surface != nullptr) {
       return surface->handle_window_event(msg, wParam, lParam);
    }
@@ -28,18 +26,18 @@ Display::Display(const HINSTANCE instance) :
     m_instance(instance)
 {
    WNDCLASSEX wc;
-   wc.cbSize        = sizeof(WNDCLASSEX);
-   wc.style         = 0;
-   wc.lpfnWndProc   = process_messages;
-   wc.cbClsExtra    = 0;
-   wc.cbWndExtra    = 0;
-   wc.hInstance     = m_instance;
-   wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
-   wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
+   wc.cbSize = sizeof(WNDCLASSEX);
+   wc.style = 0;
+   wc.lpfnWndProc = process_messages;
+   wc.cbClsExtra = 0;
+   wc.cbWndExtra = 0;
+   wc.hInstance = m_instance;
+   wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
    wc.hbrBackground = reinterpret_cast<HBRUSH>((COLOR_WINDOW + 1));
-   wc.lpszMenuName  = nullptr;
+   wc.lpszMenuName = nullptr;
    wc.lpszClassName = g_windowClassName;
-   wc.hIconSm       = LoadIconA(nullptr, IDI_APPLICATION);
+   wc.hIconSm = LoadIconA(nullptr, IDI_APPLICATION);
 
    if (not RegisterClassExA(&wc)) {
       MessageBox(nullptr, "Cannot register window class", "Error", MB_ICONEXCLAMATION | MB_OK);

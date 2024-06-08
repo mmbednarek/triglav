@@ -22,16 +22,15 @@ class GroundRenderer
    };
    using UniformBuffer = graphics_api::UniformBuffer<UniformData>;
 
-   GroundRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                  resource::ResourceManager &resourceManager);
+   GroundRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
-   void draw(graphics_api::CommandList &cmdList, UniformBuffer& ubo, const Camera &camera) const;
+   void draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo, const Camera& camera) const;
 
  private:
-   graphics_api::Device &m_device;
+   graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
    graphics_api::Sampler& m_sampler;
    graphics_api::Texture& m_texture;
 };
 
-}// namespace renderer
+}// namespace triglav::renderer

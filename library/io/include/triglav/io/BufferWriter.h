@@ -6,7 +6,8 @@
 
 namespace triglav::io {
 
-class BufferWriter : public IWriter {
+class BufferWriter : public IWriter
+{
  public:
    explicit BufferWriter(std::span<u8> buffer);
 
@@ -18,4 +19,4 @@ class BufferWriter : public IWriter {
    u32 m_offset{};
 };
 
-}
+}// namespace triglav::io

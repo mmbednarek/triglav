@@ -6,7 +6,7 @@ namespace triglav::resource {
 
 using namespace name_literals;
 
-PathManager &PathManager::the()
+PathManager& PathManager::the()
 {
    static PathManager instance;
    return instance;
@@ -51,4 +51,4 @@ io::Path PathManager::build_path()
    return m_cachedBuildPath.value();
 }
 
-}
+}// namespace triglav::resource

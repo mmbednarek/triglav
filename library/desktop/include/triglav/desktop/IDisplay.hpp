@@ -8,8 +8,9 @@ namespace triglav::desktop {
 
 class ISurface;
 
-class IDisplay {
-public:
+class IDisplay
+{
+ public:
    virtual ~IDisplay() = default;
 
    virtual void dispatch_messages() const = 0;

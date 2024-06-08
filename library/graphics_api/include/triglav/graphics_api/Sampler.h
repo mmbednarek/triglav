@@ -8,12 +8,13 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(Sampler, Device)
 
 class Sampler
 {
-public:
+ public:
    explicit Sampler(vulkan::Sampler sampler);
 
    [[nodiscard]] VkSampler vulkan_sampler() const;
-private:
+
+ private:
    vulkan::Sampler m_sampler;
 };
 
-}
+}// namespace triglav::graphics_api

@@ -7,8 +7,8 @@ namespace triglav::io {
 
 std::array<u8, 32> g_padding;
 
-Serializer::Serializer(IWriter &writer) :
-   m_writer(writer)
+Serializer::Serializer(IWriter& writer) :
+    m_writer(writer)
 {
 }
 
@@ -44,7 +44,7 @@ Result<void> Serializer::add_padding(const u32 alignment)
 
 Result<void> Serializer::write_vec3(const glm::vec3 value)
 {
-   if (const auto res = this->add_padding(4*sizeof(float)); not res.has_value()) {
+   if (const auto res = this->add_padding(4 * sizeof(float)); not res.has_value()) {
       return res;
    }
 
@@ -59,7 +59,7 @@ Result<void> Serializer::write_vec3(const glm::vec3 value)
 
 Result<void> Serializer::write_vec4(const glm::vec4 value)
 {
-   if (const auto res = this->add_padding(4*sizeof(float)); not res.has_value()) {
+   if (const auto res = this->add_padding(4 * sizeof(float)); not res.has_value()) {
       return res;
    }
 
@@ -72,5 +72,4 @@ Result<void> Serializer::write_vec4(const glm::vec4 value)
    return {};
 }
 
-}
-
+}// namespace triglav::io

@@ -4,6 +4,6 @@
 
 namespace triglav::graphics_api {
 
-void copy_texture(graphics_api::CommandList &cmdList, const graphics_api::Texture& src, const graphics_api::Texture& dst);
+void copy_texture(graphics_api::CommandList& cmdList, const graphics_api::Texture& src, const graphics_api::Texture& dst);
 
 }

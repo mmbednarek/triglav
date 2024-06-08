@@ -7,9 +7,8 @@
 
 namespace triglav::graphics_api {
 
-Swapchain::Swapchain(QueueManager &queueManager, const Resolution &resolution,
-                     std::vector<vulkan::ImageView> imageViews, vulkan::SwapchainKHR swapchain,
-                     const ColorFormat &colorFormat) :
+Swapchain::Swapchain(QueueManager& queueManager, const Resolution& resolution, std::vector<vulkan::ImageView> imageViews,
+                     vulkan::SwapchainKHR swapchain, const ColorFormat& colorFormat) :
     m_queueManager(queueManager),
     m_resolution(resolution),
     m_imageViews(std::move(imageViews)),
@@ -23,11 +22,10 @@ VkSwapchainKHR Swapchain::vulkan_swapchain() const
    return *m_swapchain;
 }
 
-u32 Swapchain::get_available_framebuffer(const Semaphore &semaphore) const
+u32 Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
 {
    u32 imageIndex;
-   vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(),
-                         VK_NULL_HANDLE, &imageIndex);
+   vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex);
    return imageIndex;
 }
 
@@ -36,20 +34,20 @@ Resolution Swapchain::resolution() const
    return m_resolution;
 }
 
-Status Swapchain::present(const Semaphore &semaphore, const uint32_t framebufferIndex)
+Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebufferIndex)
 {
    const std::array waitSemaphores{semaphore.vulkan_semaphore()};
    const std::array swapchains{*m_swapchain};
    const std::array imageIndices{framebufferIndex};
 
    VkPresentInfoKHR presentInfo{};
-   presentInfo.sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
    presentInfo.waitSemaphoreCount = waitSemaphores.size();
-   presentInfo.pWaitSemaphores    = waitSemaphores.data();
-   presentInfo.swapchainCount     = swapchains.size();
-   presentInfo.pSwapchains        = swapchains.data();
-   presentInfo.pImageIndices      = imageIndices.data();
-   presentInfo.pResults           = nullptr;
+   presentInfo.pWaitSemaphores = waitSemaphores.data();
+   presentInfo.swapchainCount = swapchains.size();
+   presentInfo.pSwapchains = swapchains.data();
+   presentInfo.pImageIndices = imageIndices.data();
+   presentInfo.pResults = nullptr;
 
    if (auto status = vkQueuePresentKHR(m_queueManager.get().next_queue(WorkType::Presentation), &presentInfo);
        status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {

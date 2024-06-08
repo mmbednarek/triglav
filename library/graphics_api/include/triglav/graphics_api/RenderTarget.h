@@ -5,8 +5,8 @@
 #include "triglav/Name.hpp"
 
 #include "Framebuffer.h"
-#include "Texture.h"
 #include "Swapchain.h"
+#include "Texture.h"
 
 
 namespace triglav::graphics_api {
@@ -34,19 +34,18 @@ struct Subpass
 class RenderTarget
 {
  public:
-   RenderTarget(Device &device, vulkan::RenderPass renderPass, SampleCount sampleCount,
-                std::vector<AttachmentInfo> attachments);
+   RenderTarget(Device& device, vulkan::RenderPass renderPass, SampleCount sampleCount, std::vector<AttachmentInfo> attachments);
 
    [[nodiscard]] SampleCount sample_count() const;
    [[nodiscard]] int color_attachment_count() const;
    [[nodiscard]] VkRenderPass vulkan_render_pass() const;
-   [[nodiscard]] const std::vector<AttachmentInfo> &attachments() const;
+   [[nodiscard]] const std::vector<AttachmentInfo>& attachments() const;
 
    [[nodiscard]] Result<Framebuffer> create_framebuffer(const Resolution& resolution) const;
    [[nodiscard]] Result<Framebuffer> create_swapchain_framebuffer(const Swapchain& swapchain, u32 frameIndex) const;
 
  private:
-   Device &m_device;
+   Device& m_device;
    vulkan::RenderPass m_renderPass;
    SampleCount m_sampleCount{};
    std::vector<AttachmentInfo> m_attachments;
@@ -55,9 +54,10 @@ class RenderTarget
 class RenderTargetBuilder
 {
  public:
-   explicit RenderTargetBuilder(Device &device);
+   explicit RenderTargetBuilder(Device& device);
 
-   RenderTargetBuilder &attachment(Name identifier, AttachmentAttributeFlags flags, const ColorFormat &format, SampleCount sampleCount = SampleCount::Single);
+   RenderTargetBuilder& attachment(Name identifier, AttachmentAttributeFlags flags, const ColorFormat& format,
+                                   SampleCount sampleCount = SampleCount::Single);
 
    Result<RenderTarget> build();
 

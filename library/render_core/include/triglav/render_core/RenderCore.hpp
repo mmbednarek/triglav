@@ -32,7 +32,7 @@ struct ShadowMapUBO
 using GpuMesh = graphics_api::Mesh<geometry::Vertex>;
 
 template<typename TObject>
-TObject checkResult(std::expected<TObject, graphics_api::Status> &&object)
+TObject checkResult(std::expected<TObject, graphics_api::Status>&& object)
 {
    if (not object.has_value()) {
       throw std::runtime_error("failed to init graphics_api object");
@@ -47,4 +47,4 @@ inline void checkStatus(const graphics_api::Status status)
    }
 }
 
-}// namespace renderer
+}// namespace triglav::render_core

@@ -25,28 +25,28 @@ struct QueueFamilyInfo
 class QueueManager
 {
  public:
-   explicit QueueManager(Device &device, std::span<QueueFamilyInfo> infos);
+   explicit QueueManager(Device& device, std::span<QueueFamilyInfo> infos);
 
    [[nodiscard]] VkQueue next_queue(WorkTypeFlags flags) const;
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags) const;
    [[nodiscard]] u32 queue_index(WorkTypeFlags flags) const;
-   [[nodiscard]] Semaphore *aquire_semaphore();
-   void release_semaphore(const Semaphore *semaphore);
-   [[nodiscard]] Fence *aquire_fence();
-   void release_fence(const Fence *fence);
+   [[nodiscard]] Semaphore* aquire_semaphore();
+   void release_semaphore(const Semaphore* semaphore);
+   [[nodiscard]] Fence* aquire_fence();
+   void release_fence(const Fence* fence);
 
  private:
    class QueueGroup
    {
     public:
-      QueueGroup(Device &device, const QueueFamilyInfo &info);
+      QueueGroup(Device& device, const QueueFamilyInfo& info);
       VkQueue next_queue() const;
       [[nodiscard]] WorkTypeFlags flags() const;
       [[nodiscard]] Result<CommandList> create_command_list() const;
       [[nodiscard]] u32 index() const;
 
     private:
-      Device &m_device;
+      Device& m_device;
       std::vector<VkQueue> m_queues;
       WorkTypeFlags m_flags;
       vulkan::CommandPool m_commandPool;
@@ -57,29 +57,29 @@ class QueueManager
    class SemaphoreFactory
    {
     public:
-      explicit SemaphoreFactory(Device &device);
+      explicit SemaphoreFactory(Device& device);
 
       Semaphore operator()() const;
 
     private:
-      Device &m_device;
+      Device& m_device;
    };
 
    class FenceFactory
    {
     public:
-      explicit FenceFactory(Device &device);
+      explicit FenceFactory(Device& device);
 
       Fence operator()() const;
 
     private:
-      Device &m_device;
+      Device& m_device;
    };
 
-   QueueGroup &queue_group(WorkTypeFlags type);
-   const QueueGroup &queue_group(WorkTypeFlags type) const;
+   QueueGroup& queue_group(WorkTypeFlags type);
+   const QueueGroup& queue_group(WorkTypeFlags type) const;
 
-   Device &m_device;
+   Device& m_device;
    SemaphoreFactory m_semaphoreFactory;
    ObjectPool<Semaphore, SemaphoreFactory, 8> m_semaphorePool;
    FenceFactory m_fenceFactory;

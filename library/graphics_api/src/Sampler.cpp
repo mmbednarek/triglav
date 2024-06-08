@@ -12,4 +12,4 @@ VkSampler Sampler::vulkan_sampler() const
    return *m_sampler;
 }
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

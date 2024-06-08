@@ -11,8 +11,10 @@ namespace {
 UINT map_file_open_style(const FileOpenMode mode)
 {
    switch (mode) {
-   case FileOpenMode::Read: return OF_READ;
-   case FileOpenMode::Write: return OF_WRITE;
+   case FileOpenMode::Read:
+      return OF_READ;
+   case FileOpenMode::Write:
+      return OF_WRITE;
    }
 
    return 0;
@@ -48,8 +50,7 @@ WindowsFile::~WindowsFile()
 Result<MemorySize> WindowsFile::read(const std::span<u8> buffer)
 {
    DWORD bytesRead{};
-   const auto res = ReadFile(reinterpret_cast<HANDLE>(m_file), buffer.data(),
-                             static_cast<DWORD>(buffer.size()), &bytesRead, nullptr);
+   const auto res = ReadFile(reinterpret_cast<HANDLE>(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesRead, nullptr);
    if (not res) {
       return std::unexpected(Status::BrokenPipe);
    }
@@ -59,8 +60,7 @@ Result<MemorySize> WindowsFile::read(const std::span<u8> buffer)
 Result<MemorySize> WindowsFile::write(const std::span<u8> buffer)
 {
    DWORD bytesWritten{};
-   const auto res = WriteFile(reinterpret_cast<HANDLE>(m_file), buffer.data(),
-                              static_cast<DWORD>(buffer.size()), &bytesWritten, nullptr);
+   const auto res = WriteFile(reinterpret_cast<HANDLE>(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesWritten, nullptr);
    if (not res) {
       return std::unexpected(Status::BrokenPipe);
    }
@@ -71,13 +71,18 @@ Status WindowsFile::seek(const SeekPosition position, const MemoryOffset offset)
 {
    DWORD moveMethod{};
    switch (position) {
-   case SeekPosition::Begin: moveMethod = FILE_BEGIN; break;
-   case SeekPosition::Current: moveMethod = FILE_CURRENT; break;
-   case SeekPosition::End: moveMethod = FILE_END; break;
+   case SeekPosition::Begin:
+      moveMethod = FILE_BEGIN;
+      break;
+   case SeekPosition::Current:
+      moveMethod = FILE_CURRENT;
+      break;
+   case SeekPosition::End:
+      moveMethod = FILE_END;
+      break;
    }
 
-   const auto res =
-           SetFilePointer(reinterpret_cast<HANDLE>(m_file), static_cast<LONG>(offset), nullptr, moveMethod);
+   const auto res = SetFilePointer(reinterpret_cast<HANDLE>(m_file), static_cast<LONG>(offset), nullptr, moveMethod);
    if (res == INVALID_SET_FILE_POINTER) {
       return Status::BrokenPipe;
    }

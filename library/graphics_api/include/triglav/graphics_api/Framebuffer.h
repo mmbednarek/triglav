@@ -13,8 +13,7 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(Framebuffer, Device)
 class Framebuffer
 {
  public:
-   Framebuffer(Resolution resolution, VkRenderPass renderPass, vulkan::Framebuffer framebuffer,
-               Heap<Name, Texture> textures);
+   Framebuffer(Resolution resolution, VkRenderPass renderPass, vulkan::Framebuffer framebuffer, Heap<Name, Texture> textures);
 
    [[nodiscard]] Resolution resolution() const;
    [[nodiscard]] VkFramebuffer vulkan_framebuffer() const;

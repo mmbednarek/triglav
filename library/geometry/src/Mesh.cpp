@@ -46,8 +46,7 @@ Index Mesh::add_face_range(std::span<Index> vertices)
 {
    std::vector<InternalMesh::VertexIndex> vecVertices{};
    vecVertices.resize(vertices.size());
-   std::ranges::transform(vertices, vecVertices.begin(),
-                          [](const Index i) { return InternalMesh::VertexIndex{i}; });
+   std::ranges::transform(vertices, vecVertices.begin(), [](const Index i) { return InternalMesh::VertexIndex{i}; });
    return m_mesh->add_face(vecVertices);
 }
 
@@ -105,7 +104,7 @@ void Mesh::reverse_orientation()
    m_mesh->reverse_orientation();
 }
 
-DeviceMesh Mesh::upload_to_device(graphics_api::Device &device) const
+DeviceMesh Mesh::upload_to_device(graphics_api::Device& device) const
 {
    assert(m_mesh != nullptr);
    return m_mesh->upload_to_device(device);
@@ -122,4 +121,4 @@ Mesh::Mesh(std::unique_ptr<InternalMesh> mesh) :
 {
 }
 
-}// namespace geometry
+}// namespace triglav::geometry

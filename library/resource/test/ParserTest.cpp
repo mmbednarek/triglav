@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "triglav/Int.hpp"
 #include "triglav/io/File.h"
 #include "triglav/io/Path.h"
-#include "triglav/Int.hpp"
 
 #include <fstream>
 #include <iostream>
@@ -22,13 +22,12 @@ std::vector<ResourcePath> parse_asset_list(const std::string_view path)
 {
    std::vector<ResourcePath> result{};
 
-   auto file      = triglav::io::read_whole_file(triglav::io::Path{std::string{path}});
-   auto tree      = ryml::parse_in_place(c4::substr{const_cast<char *>(path.data()), path.size()},
-                                         c4::substr{file.data(), file.size()});
+   auto file = triglav::io::read_whole_file(triglav::io::Path{std::string{path}});
+   auto tree = ryml::parse_in_place(c4::substr{const_cast<char*>(path.data()), path.size()}, c4::substr{file.data(), file.size()});
    auto resources = tree["resources"];
 
    for (const auto node : resources) {
-      auto name   = node["name"].val();
+      auto name = node["name"].val();
       auto source = node["source"].val();
       result.emplace_back(std::string{name.data(), name.size()}, std::string{source.data(), source.size()});
    }

@@ -6,7 +6,8 @@
 
 namespace triglav::resource {
 
-class PathManager {
+class PathManager
+{
  public:
    [[nodiscard]] io::Path content_path();
    [[nodiscard]] io::Path build_path();
@@ -19,4 +20,4 @@ class PathManager {
    std::optional<io::Path> m_cachedBuildPath;
 };
 
-}
+}// namespace triglav::resource

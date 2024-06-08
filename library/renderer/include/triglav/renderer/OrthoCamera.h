@@ -10,7 +10,7 @@ class OrthoCamera final : public CameraBase
    void set_viewport_size(float width, float height);
    void set_viewspace_width(float width);
 
-   [[nodiscard]] const glm::mat4 &projection_matrix() const override;
+   [[nodiscard]] const glm::mat4& projection_matrix() const override;
    [[nodiscard]] float to_linear_depth(float depth) const override;
 
  private:
@@ -21,4 +21,4 @@ class OrthoCamera final : public CameraBase
    mutable glm::mat4 m_projectionMat{};
 };
 
-}// namespace renderer
+}// namespace triglav::renderer

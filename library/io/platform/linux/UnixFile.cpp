@@ -10,9 +10,15 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
 {
    int flags{};
    switch (mode) {
-   case FileOpenMode::Read: flags = O_RDONLY; break;
-   case FileOpenMode::Write: flags = O_WRONLY; break;
-   case FileOpenMode::ReadWrite: flags = O_RDWR; break;
+   case FileOpenMode::Read:
+      flags = O_RDONLY;
+      break;
+   case FileOpenMode::Write:
+      flags = O_WRONLY;
+      break;
+   case FileOpenMode::ReadWrite:
+      flags = O_RDWR;
+      break;
    }
 
    const auto res = ::open(path.string().c_str(), flags, 0644);
@@ -27,7 +33,7 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
 
 namespace triglav::io::linux {
 
-UnixFile::UnixFile(int fileDescriptor, std::string &&filePath) :
+UnixFile::UnixFile(int fileDescriptor, std::string&& filePath) :
     m_fileDescriptor(fileDescriptor),
     m_filePath(std::move(filePath))
 {
@@ -58,9 +64,12 @@ Status UnixFile::seek(SeekPosition position, MemoryOffset offset)
 {
    int whence{};
    switch (position) {
-   case SeekPosition::Begin: whence = SEEK_SET;
-   case SeekPosition::Current: whence = SEEK_CUR;
-   case SeekPosition::End: whence = SEEK_END;
+   case SeekPosition::Begin:
+      whence = SEEK_SET;
+   case SeekPosition::Current:
+      whence = SEEK_CUR;
+   case SeekPosition::End:
+      whence = SEEK_END;
    }
 
    const auto res = ::lseek(m_fileDescriptor, offset, whence);

@@ -41,7 +41,7 @@ class Renderer
       Down
    };
 
-   Renderer(const desktop::ISurface &surface, uint32_t width, uint32_t height);
+   Renderer(const desktop::ISurface& surface, uint32_t width, uint32_t height);
    void update_debug_info(float framerate);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
@@ -50,9 +50,9 @@ class Renderer
    void on_key_pressed(desktop::Key key);
    void on_key_released(desktop::Key key);
    void on_mouse_wheel_turn(float x);
-   [[nodiscard]] resource::ResourceManager &resource_manager() const;
+   [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
-   [[nodiscard]] graphics_api::Device &device() const;
+   [[nodiscard]] graphics_api::Device& device() const;
 
  private:
    void update_uniform_data(float deltaTime);

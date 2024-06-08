@@ -16,9 +16,9 @@ glm::vec3 parse_vector3(const ryml::ConstNodeRef node)
    auto z = node["z"].val();
 
    return glm::vec3{
-           std::stof(x.data()),
-           std::stof(y.data()),
-           std::stof(z.data()),
+      std::stof(x.data()),
+      std::stof(y.data()),
+      std::stof(z.data()),
    };
 }
 
@@ -29,9 +29,9 @@ glm::vec3 parse_angle3(const ryml::ConstNodeRef node)
    auto z = node["yaw"].val();
 
    return glm::vec3{
-           std::stof(x.data()),
-           std::stof(y.data()),
-           std::stof(z.data()),
+      std::stof(x.data()),
+      std::stof(y.data()),
+      std::stof(z.data()),
    };
 }
 
@@ -39,12 +39,12 @@ world::Transformation parse_transformation(const ryml::ConstNodeRef node)
 {
    const auto position = node["position"];
    const auto rotation = node["rotation"];
-   const auto scale    = node["scale"];
+   const auto scale = node["scale"];
 
    return world::Transformation{
-           .position = parse_vector3(position),
-           .rotation = parse_angle3(rotation),
-           .scale    = parse_vector3(scale),
+      .position = parse_vector3(position),
+      .rotation = parse_angle3(rotation),
+      .scale = parse_vector3(scale),
    };
 }
 
@@ -52,8 +52,8 @@ world::StaticMesh parse_static_mesh(const ryml::ConstNodeRef node)
 {
    auto meshName = node["mesh"].val();
    return world::StaticMesh{
-           .meshName  = make_rc_name(std::string_view{meshName.data(), meshName.size()}),
-           .transform = parse_transformation(node["transform"]),
+      .meshName = make_rc_name(std::string_view{meshName.data(), meshName.size()}),
+      .transform = parse_transformation(node["transform"]),
    };
 }
 
@@ -64,8 +64,8 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
-                                    c4::substr{file.data(), file.size()});
+   auto tree =
+      ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
 
    world::Level result{};
 

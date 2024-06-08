@@ -37,7 +37,7 @@ TextureUsageFlags to_texture_usage_flags(const AttachmentAttributeFlags attribut
 
 }// namespace
 
-RenderTarget::RenderTarget(Device &device, vulkan::RenderPass renderPass, SampleCount sampleCount,
+RenderTarget::RenderTarget(Device& device, vulkan::RenderPass renderPass, SampleCount sampleCount,
                            std::vector<AttachmentInfo> attachments) :
     m_device(device),
     m_renderPass(std::move(renderPass)),
@@ -54,7 +54,7 @@ SampleCount RenderTarget::sample_count() const
 int RenderTarget::color_attachment_count() const
 {
    int count = 0;
-   for (const auto &attachment : m_attachments) {
+   for (const auto& attachment : m_attachments) {
       if (attachment.flags & AttachmentAttribute::Color) {
          ++count;
       }
@@ -67,18 +67,17 @@ VkRenderPass RenderTarget::vulkan_render_pass() const
    return *m_renderPass;
 }
 
-const std::vector<AttachmentInfo> &RenderTarget::attachments() const
+const std::vector<AttachmentInfo>& RenderTarget::attachments() const
 {
    return m_attachments;
 }
 
-Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolution) const
+Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution& resolution) const
 {
    Heap<Name, Texture> textures;
-   for (const auto &attachment : m_attachments) {
+   for (const auto& attachment : m_attachments) {
       auto texture =
-              m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags),
-                                      attachment.sampleCount);
+         m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags), attachment.sampleCount);
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
@@ -95,13 +94,13 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolutio
    }
 
    VkFramebufferCreateInfo framebufferInfo{};
-   framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-   framebufferInfo.renderPass      = *m_renderPass;
+   framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+   framebufferInfo.renderPass = *m_renderPass;
    framebufferInfo.attachmentCount = attachmentImageViews.size();
-   framebufferInfo.pAttachments    = attachmentImageViews.data();
-   framebufferInfo.width           = resolution.width;
-   framebufferInfo.height          = resolution.height;
-   framebufferInfo.layers          = 1;
+   framebufferInfo.pAttachments = attachmentImageViews.data();
+   framebufferInfo.width = resolution.width;
+   framebufferInfo.height = resolution.height;
+   framebufferInfo.layers = 1;
 
    vulkan::Framebuffer framebuffer(m_device.vulkan_device());
    if (framebuffer.construct(&framebufferInfo) != VK_SUCCESS) {
@@ -111,12 +110,11 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution &resolutio
    return Framebuffer(resolution, *m_renderPass, std::move(framebuffer), std::move(textures));
 }
 
-Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &swapchain,
-                                                               const u32 frameIndex) const
+Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain& swapchain, const u32 frameIndex) const
 {
    u32 swapchainAttachment{};
    u32 index{};
-   for (const auto &attachment : m_attachments) {
+   for (const auto& attachment : m_attachments) {
       if (attachment.flags & AttachmentAttribute::Presentable) {
          swapchainAttachment = index;
          break;
@@ -127,15 +125,14 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
 
    index = 0;
    Heap<Name, Texture> textures;
-   for (const auto &attachment : m_attachments) {
+   for (const auto& attachment : m_attachments) {
       if (index == swapchainAttachment) {
          ++index;
          continue;
       }
 
-      auto texture =
-              m_device.create_texture(attachment.format, swapchain.resolution(),
-                                      to_texture_usage_flags(attachment.flags), attachment.sampleCount);
+      auto texture = m_device.create_texture(attachment.format, swapchain.resolution(), to_texture_usage_flags(attachment.flags),
+                                             attachment.sampleCount);
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
@@ -158,13 +155,13 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
    }
 
    VkFramebufferCreateInfo framebufferInfo{};
-   framebufferInfo.sType           = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-   framebufferInfo.renderPass      = *m_renderPass;
+   framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+   framebufferInfo.renderPass = *m_renderPass;
    framebufferInfo.attachmentCount = attachmentImageViews.size();
-   framebufferInfo.pAttachments    = attachmentImageViews.data();
-   framebufferInfo.width           = swapchain.resolution().width;
-   framebufferInfo.height          = swapchain.resolution().height;
-   framebufferInfo.layers          = 1;
+   framebufferInfo.pAttachments = attachmentImageViews.data();
+   framebufferInfo.width = swapchain.resolution().width;
+   framebufferInfo.height = swapchain.resolution().height;
+   framebufferInfo.layers = 1;
 
    vulkan::Framebuffer framebuffer(m_device.vulkan_device());
    if (framebuffer.construct(&framebufferInfo) != VK_SUCCESS) {
@@ -174,14 +171,13 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain &
    return Framebuffer(swapchain.resolution(), *m_renderPass, std::move(framebuffer), std::move(textures));
 }
 
-RenderTargetBuilder::RenderTargetBuilder(Device &device) :
+RenderTargetBuilder::RenderTargetBuilder(Device& device) :
     m_device(device)
 {
 }
 
-RenderTargetBuilder &RenderTargetBuilder::attachment(const Name identifier,
-                                                     const AttachmentAttributeFlags flags,
-                                                     const ColorFormat &format, const SampleCount sampleCount)
+RenderTargetBuilder& RenderTargetBuilder::attachment(const Name identifier, const AttachmentAttributeFlags flags, const ColorFormat& format,
+                                                     const SampleCount sampleCount)
 {
    assert(!(flags & AttachmentAttribute::Depth) || !(flags & AttachmentAttribute::Color));
    assert(!(flags & AttachmentAttribute::Color) || !(flags & AttachmentAttribute::Resolve));
@@ -209,8 +205,7 @@ Subpass RenderTargetBuilder::vulkan_subpass() const
    for (uint32_t i = 0; i < m_attachments.size(); ++i) {
       const auto type = m_attachments[i].flags;
       if (type & AttachmentAttribute::Color) {
-         result.references[referenceIndex] =
-                 VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+         result.references[referenceIndex] = VkAttachmentReference{i, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
          ++referenceIndex;
       } else if (type & AttachmentAttribute::Depth) {
          depthAttachmentIndex.emplace(i);
@@ -223,8 +218,7 @@ Subpass RenderTargetBuilder::vulkan_subpass() const
    }
 
    if (depthAttachmentIndex.has_value()) {
-      result.references[referenceIndex] =
-              VkAttachmentReference{*depthAttachmentIndex, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
+      result.references[referenceIndex] = VkAttachmentReference{*depthAttachmentIndex, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL};
       result.description.pDepthStencilAttachment = &result.references[referenceIndex];
       ++referenceIndex;
    }
@@ -241,23 +235,23 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
       const auto [name, attachmentFlags, attachmentFormat, sampleCount] = m_attachments[i];
       const auto [vulkanLoadOp, vulkanStoreOp] = vulkan::to_vulkan_load_store_ops(attachmentFlags);
 
-      auto &attachment          = result[i];
-      attachment.format         = GAPI_CHECK(vulkan::to_vulkan_color_format(attachmentFormat));
-      attachment.samples        = GAPI_CHECK(vulkan::to_vulkan_sample_count(sampleCount));
-      attachment.loadOp         = vulkanLoadOp;
-      attachment.storeOp        = vulkanStoreOp;
-      attachment.stencilLoadOp  = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+      auto& attachment = result[i];
+      attachment.format = GAPI_CHECK(vulkan::to_vulkan_color_format(attachmentFormat));
+      attachment.samples = GAPI_CHECK(vulkan::to_vulkan_sample_count(sampleCount));
+      attachment.loadOp = vulkanLoadOp;
+      attachment.storeOp = vulkanStoreOp;
+      attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
       attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
       if (attachmentFlags & AttachmentAttribute::LoadImage) {
          if (attachmentFlags & AttachmentAttribute::Depth) {
-            attachment.initialLayout  = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+            attachment.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
          } else {
-            attachment.initialLayout  = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            attachment.initialLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
          }
       } else {
-         attachment.initialLayout  = VK_IMAGE_LAYOUT_UNDEFINED;
+         attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
       }
-      attachment.finalLayout    = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentFlags));
+      attachment.finalLayout = GAPI_CHECK(vulkan::to_vulkan_image_layout(attachmentFlags));
    }
 
    return result;
@@ -269,9 +263,8 @@ std::vector<VkSubpassDependency> RenderTargetBuilder::vulkan_subpass_dependencie
    bool hasDepthDstExternalDependency = false;
    bool hasColorSrcExternalDependency = false;
 
-   for (const auto &attachment : m_attachments) {
-      if (attachment.flags & AttachmentAttribute::Color &&
-          attachment.flags & AttachmentAttribute::ClearImage) {
+   for (const auto& attachment : m_attachments) {
+      if (attachment.flags & AttachmentAttribute::Color && attachment.flags & AttachmentAttribute::ClearImage) {
          hasColorSrcExternalDependency = true;
       }
       if (attachment.flags & AttachmentAttribute::Depth) {
@@ -290,36 +283,36 @@ std::vector<VkSubpassDependency> RenderTargetBuilder::vulkan_subpass_dependencie
 
    if (hasDepthSrcExternalDependency) {
       VkSubpassDependency dependency;
-      dependency.srcSubpass      = VK_SUBPASS_EXTERNAL;
-      dependency.dstSubpass      = 0;
-      dependency.srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-      dependency.dstStageMask    = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-      dependency.srcAccessMask   = VK_ACCESS_SHADER_READ_BIT;
-      dependency.dstAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+      dependency.dstSubpass = 0;
+      dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+      dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
       dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
       dependencies.push_back(dependency);
    }
 
    if (hasColorSrcExternalDependency) {
       VkSubpassDependency dependency;
-      dependency.srcSubpass      = VK_SUBPASS_EXTERNAL;
-      dependency.dstSubpass      = 0;
-      dependency.srcStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-      dependency.dstStageMask    = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-      dependency.srcAccessMask   = VK_ACCESS_SHADER_READ_BIT;
-      dependency.dstAccessMask   = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+      dependency.dstSubpass = 0;
+      dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
       dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
       dependencies.push_back(dependency);
    }
 
    if (hasDepthDstExternalDependency) {
       VkSubpassDependency dependency;
-      dependency.srcSubpass      = 0;
-      dependency.dstSubpass      = VK_SUBPASS_EXTERNAL;
-      dependency.srcStageMask    = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-      dependency.dstStageMask    = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-      dependency.srcAccessMask   = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-      dependency.dstAccessMask   = VK_ACCESS_SHADER_READ_BIT;
+      dependency.srcSubpass = 0;
+      dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
+      dependency.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
       dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
       dependencies.push_back(dependency);
    }
@@ -329,18 +322,18 @@ std::vector<VkSubpassDependency> RenderTargetBuilder::vulkan_subpass_dependencie
 
 Result<RenderTarget> RenderTargetBuilder::build()
 {
-   const auto attachments  = this->vulkan_attachments();
-   const auto subpass      = this->vulkan_subpass();
+   const auto attachments = this->vulkan_attachments();
+   const auto subpass = this->vulkan_subpass();
    const auto dependencies = this->vulkan_subpass_dependencies();
 
    VkRenderPassCreateInfo renderPassInfo{};
-   renderPassInfo.sType           = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
    renderPassInfo.attachmentCount = attachments.size();
-   renderPassInfo.pAttachments    = attachments.data();
-   renderPassInfo.subpassCount    = 1;
-   renderPassInfo.pSubpasses      = &subpass.description;
+   renderPassInfo.pAttachments = attachments.data();
+   renderPassInfo.subpassCount = 1;
+   renderPassInfo.pSubpasses = &subpass.description;
    renderPassInfo.dependencyCount = dependencies.size();
-   renderPassInfo.pDependencies   = dependencies.data();
+   renderPassInfo.pDependencies = dependencies.data();
 
    vulkan::RenderPass renderPass(m_device.vulkan_device());
    if (const auto res = renderPass.construct(&renderPassInfo); res != VK_SUCCESS) {

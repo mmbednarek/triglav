@@ -2,26 +2,29 @@
 
 #include "triglav/Name.hpp"
 
-#include <vector>
-#include <variant>
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <variant>
+#include <vector>
 
 namespace triglav::render_core {
 
-enum class MaterialPropertyType {
+enum class MaterialPropertyType
+{
    Texture2D,
    Float32,
    Vec3,
    Vec4
 };
 
-struct MaterialProperty {
+struct MaterialProperty
+{
    Name name;
    MaterialPropertyType type;
 };
 
-struct MaterialTemplate {
+struct MaterialTemplate
+{
    FragmentShaderName fragmentShader;
    VertexShaderName vertexShader;
    std::vector<MaterialProperty> properties;
@@ -29,9 +32,10 @@ struct MaterialTemplate {
 
 using MaterialPropertyValue = std::variant<TextureName, float, glm::vec3, glm::vec4>;
 
-struct Material {
+struct Material
+{
    MaterialTemplateName materialTemplate;
    std::vector<MaterialPropertyValue> values{};
 };
 
-}// namespace renderer
+}// namespace triglav::render_core

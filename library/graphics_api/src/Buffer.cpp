@@ -7,7 +7,7 @@
 
 namespace triglav::graphics_api {
 
-MappedMemory::MappedMemory(void *pointer, const VkDevice device, const VkDeviceMemory deviceMemory) :
+MappedMemory::MappedMemory(void* pointer, const VkDevice device, const VkDeviceMemory deviceMemory) :
     m_pointer(pointer),
     m_device(device),
     m_deviceMemory(deviceMemory)
@@ -21,36 +21,36 @@ MappedMemory::~MappedMemory()
    }
 }
 
-MappedMemory::MappedMemory(MappedMemory &&other) noexcept :
+MappedMemory::MappedMemory(MappedMemory&& other) noexcept :
     m_pointer(std::exchange(other.m_pointer, nullptr)),
     m_device(std::exchange(other.m_device, nullptr)),
     m_deviceMemory(std::exchange(other.m_deviceMemory, nullptr))
 {
 }
 
-MappedMemory &MappedMemory::operator=(MappedMemory &&other) noexcept
+MappedMemory& MappedMemory::operator=(MappedMemory&& other) noexcept
 {
    if (this == &other)
       return *this;
 
-   m_pointer      = std::exchange(other.m_pointer, nullptr);
-   m_device       = std::exchange(other.m_device, nullptr);
+   m_pointer = std::exchange(other.m_pointer, nullptr);
+   m_device = std::exchange(other.m_device, nullptr);
    m_deviceMemory = std::exchange(other.m_deviceMemory, nullptr);
 
    return *this;
 }
 
-void *MappedMemory::operator*() const
+void* MappedMemory::operator*() const
 {
    return m_pointer;
 }
 
-void MappedMemory::write(const void *source, const size_t length) const
+void MappedMemory::write(const void* source, const size_t length) const
 {
    std::memcpy(m_pointer, source, length);
 }
 
-Buffer::Buffer(Device &device, VkDeviceSize size, vulkan::Buffer buffer, vulkan::DeviceMemory memory) :
+Buffer::Buffer(Device& device, VkDeviceSize size, vulkan::Buffer buffer, vulkan::DeviceMemory memory) :
     m_device(device),
     m_size(size),
     m_buffer(std::move(buffer)),
@@ -58,7 +58,7 @@ Buffer::Buffer(Device &device, VkDeviceSize size, vulkan::Buffer buffer, vulkan:
 {
 }
 
-Buffer::Buffer(Buffer &&other) noexcept :
+Buffer::Buffer(Buffer&& other) noexcept :
     m_device(other.m_device),
     m_size(std::exchange(other.m_size, 0)),
     m_buffer(std::move(other.m_buffer)),
@@ -66,9 +66,9 @@ Buffer::Buffer(Buffer &&other) noexcept :
 {
 }
 
-Buffer &Buffer::operator=(Buffer &&other) noexcept
+Buffer& Buffer::operator=(Buffer&& other) noexcept
 {
-   m_size   = std::exchange(other.m_size, 0);
+   m_size = std::exchange(other.m_size, 0);
    m_buffer = std::move(other.m_buffer);
    m_memory = std::move(other.m_memory);
    return *this;
@@ -76,7 +76,7 @@ Buffer &Buffer::operator=(Buffer &&other) noexcept
 
 Result<MappedMemory> Buffer::map_memory()
 {
-   void *pointer;
+   void* pointer;
    if (vkMapMemory(m_memory.parent(), *m_memory, 0, m_size, 0, &pointer) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
@@ -94,7 +94,7 @@ size_t Buffer::size() const
    return m_size;
 }
 
-Status Buffer::write_indirect(const void *data, size_t size)
+Status Buffer::write_indirect(const void* data, size_t size)
 {
    auto transferBuffer = m_device.create_buffer(BufferUsage::HostVisible | BufferUsage::TransferSrc, size);
    if (not transferBuffer.has_value())

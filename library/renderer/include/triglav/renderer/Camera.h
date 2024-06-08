@@ -9,7 +9,7 @@ class Camera final : public CameraBase
  public:
    void set_viewport_size(float width, float height);
 
-   [[nodiscard]] const glm::mat4 &projection_matrix() const override;
+   [[nodiscard]] const glm::mat4& projection_matrix() const override;
    [[nodiscard]] float to_linear_depth(float depth) const override;
 
  private:
@@ -20,4 +20,4 @@ class Camera final : public CameraBase
    mutable glm::mat4 m_projectionMat{};
 };
 
-}// namespace renderer
+}// namespace triglav::renderer

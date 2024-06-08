@@ -9,47 +9,47 @@ template<BufferUsageFlags CBufferUsage, typename TValue>
 class Array
 {
  public:
-   Array(Device &device, const size_t element_count) :
+   Array(Device& device, const size_t element_count) :
        m_device(device),
        m_buffer(GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst, element_count * sizeof(TValue)))),
        m_elementCount(element_count)
    {
    }
 
-   Array(const Array &other)            = delete;
-   Array &operator=(const Array &other) = delete;
+   Array(const Array& other) = delete;
+   Array& operator=(const Array& other) = delete;
 
-   Array(Array &&other) noexcept :
+   Array(Array&& other) noexcept :
        m_device(other.m_device),
        m_buffer(std::move(other.m_buffer)),
        m_elementCount(std::exchange(other.m_elementCount, 0))
    {
    }
 
-   Array &operator=(Array &&other) noexcept
+   Array& operator=(Array&& other) noexcept
    {
       if (this == &other)
          return *this;
 
-      m_buffer       = std::move(other.m_buffer);
+      m_buffer = std::move(other.m_buffer);
       m_elementCount = std::exchange(other.m_elementCount, 0);
 
       return *this;
    }
 
-   Array(Device &device, const std::vector<TValue> &values) :
+   Array(Device& device, const std::vector<TValue>& values) :
        Array(device, values.size())
    {
       this->write(values.data(), values.size());
    }
 
-   void write(const TValue *source, const size_t count)
+   void write(const TValue* source, const size_t count)
    {
       assert(count <= m_elementCount);
       m_buffer.write_indirect(source, count * sizeof(TValue));
    }
 
-   [[nodiscard]] const Buffer &buffer() const
+   [[nodiscard]] const Buffer& buffer() const
    {
       return m_buffer;
    }
@@ -60,7 +60,7 @@ class Array
    }
 
  private:
-   Device &m_device;
+   Device& m_device;
    Buffer m_buffer;
    size_t m_elementCount;
 };
@@ -77,4 +77,4 @@ struct Mesh
    IndexArray indices;
 };
 
-}// namespace graphics_api
+}// namespace triglav::graphics_api

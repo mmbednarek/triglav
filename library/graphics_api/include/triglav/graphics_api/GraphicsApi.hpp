@@ -38,13 +38,20 @@ enum class ColorFormatOrder
 constexpr size_t color_format_order_count(const ColorFormatOrder order)
 {
    switch (order) {
-   case ColorFormatOrder::RGB: return 3;
-   case ColorFormatOrder::RG: return 2;
-   case ColorFormatOrder::R: return 1;
-   case ColorFormatOrder::RGBA: return 4;
-   case ColorFormatOrder::BGRA: return 4;
-   case ColorFormatOrder::DS: return 2;
-   case ColorFormatOrder::D: return 1;
+   case ColorFormatOrder::RGB:
+      return 3;
+   case ColorFormatOrder::RG:
+      return 2;
+   case ColorFormatOrder::R:
+      return 1;
+   case ColorFormatOrder::RGBA:
+      return 4;
+   case ColorFormatOrder::BGRA:
+      return 4;
+   case ColorFormatOrder::DS:
+      return 2;
+   case ColorFormatOrder::D:
+      return 1;
    }
    return 0;
 }
@@ -63,13 +70,20 @@ enum class ColorFormatPart
 constexpr size_t color_format_part_size(const ColorFormatPart part)
 {
    switch (part) {
-   case ColorFormatPart::Unknown: return 0;
-   case ColorFormatPart::sRGB: return 1;
-   case ColorFormatPart::UNorm8: return 1;
-   case ColorFormatPart::UNorm16: return 2;
-   case ColorFormatPart::UInt: return 1;
-   case ColorFormatPart::Float16: return 2;
-   case ColorFormatPart::Float32: return 4;
+   case ColorFormatPart::Unknown:
+      return 0;
+   case ColorFormatPart::sRGB:
+      return 1;
+   case ColorFormatPart::UNorm8:
+      return 1;
+   case ColorFormatPart::UNorm16:
+      return 2;
+   case ColorFormatPart::UInt:
+      return 1;
+   case ColorFormatPart::Float16:
+      return 2;
+   case ColorFormatPart::Float32:
+      return 4;
    }
    return 0;
 }
@@ -82,13 +96,13 @@ enum class ColorSpace
 
 enum class PipelineStage : uint32_t
 {
-   None           = 0,
-   Entrypoint     = (1 << 0),
-   VertexShader   = (1 << 1),
+   None = 0,
+   Entrypoint = (1 << 0),
+   VertexShader = (1 << 1),
    FragmentShader = (1 << 2),
-   ComputeShader  = (1 << 3),
-   Transfer       = (1 << 4),
-   End            = (1 << 5),
+   ComputeShader = (1 << 3),
+   Transfer = (1 << 4),
+   End = (1 << 5),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -160,13 +174,13 @@ struct DescriptorBinding
 
 enum class TextureUsage
 {
-   None                   = 0,
-   TransferSrc            = (1 << 0),
-   TransferDst            = (1 << 1),
-   Sampled                = (1 << 2),
-   ColorAttachment        = (1 << 3),
+   None = 0,
+   TransferSrc = (1 << 0),
+   TransferDst = (1 << 1),
+   Sampled = (1 << 2),
+   ColorAttachment = (1 << 3),
    DepthStencilAttachment = (1 << 4),
-   Transient              = (1 << 5),
+   Transient = (1 << 5),
 };
 
 TRIGLAV_DECL_FLAGS(TextureUsage)
@@ -184,7 +198,7 @@ class Texture;
 
 struct TextureBarrierInfo
 {
-   const Texture *texture{};
+   const Texture* texture{};
    TextureState sourceState;
    TextureState targetState;
    int baseMipLevel{};
@@ -200,10 +214,10 @@ struct TextureRegion
 
 enum class SampleCount : uint32_t
 {
-   Single     = (1 << 0),
-   Double     = (1 << 1),
-   Quadruple  = (1 << 2),
-   Octuple    = (1 << 3),
+   Single = (1 << 0),
+   Double = (1 << 1),
+   Quadruple = (1 << 2),
+   Octuple = (1 << 3),
    Sexdecuple = (1 << 4),
 };
 
@@ -231,14 +245,14 @@ enum class Culling
 
 enum class AttachmentAttribute
 {
-   None        = 0,
-   Color       = (1 << 0),
-   Depth       = (1 << 1),
-   Resolve     = (1 << 2),
+   None = 0,
+   Color = (1 << 0),
+   Depth = (1 << 1),
+   Resolve = (1 << 2),
    Presentable = (1 << 3),
-   LoadImage   = (1 << 4),
-   ClearImage  = (1 << 5),
-   StoreImage  = (1 << 6),
+   LoadImage = (1 << 4),
+   ClearImage = (1 << 5),
+   StoreImage = (1 << 6),
    TransferSrc = (1 << 7),
    TransferDst = (1 << 8),
 };
@@ -275,10 +289,10 @@ struct SamplerProperties
 
 enum class WorkType : u32
 {
-   None         = 0,
-   Graphics     = (1 << 0),
-   Transfer     = (1 << 1),
-   Compute      = (1 << 2),
+   None = 0,
+   Graphics = (1 << 0),
+   Transfer = (1 << 1),
+   Compute = (1 << 2),
    Presentation = (1 << 3),
 };
 
@@ -286,25 +300,27 @@ TRIGLAV_DECL_FLAGS(WorkType)
 
 enum class BufferUsage : u32
 {
-   None          = 0,
-   HostVisible   = (1 << 0),
-   TransferSrc   = (1 << 1),
-   TransferDst   = (1 << 2),
+   None = 0,
+   HostVisible = (1 << 0),
+   TransferSrc = (1 << 1),
+   TransferDst = (1 << 2),
    UniformBuffer = (1 << 3),
-   VertexBuffer  = (1 << 4),
-   IndexBuffer   = (1 << 5),
+   VertexBuffer = (1 << 4),
+   IndexBuffer = (1 << 5),
    StorageBuffer = (1 << 6),
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)
 
-enum class DepthTestMode {
+enum class DepthTestMode
+{
    Disabled,
    Enabled,
    ReadOnly
 };
 
-enum class PipelineType {
+enum class PipelineType
+{
    Graphics,
    Compute
 };
@@ -324,7 +340,7 @@ class Exception final : public std::exception
    {
    }
 
-   [[nodiscard]] const char *what() const noexcept override
+   [[nodiscard]] const char* what() const noexcept override
    {
       return "graphics_api exception";
    }
@@ -350,15 +366,14 @@ inline void check_status(const Status status, const std::string_view message)
 
 #define GAPI_PARENS ()
 
-#define GAPI_EXPAND(...)  GAPI_EXPAND4(GAPI_EXPAND4(GAPI_EXPAND4(GAPI_EXPAND4(__VA_ARGS__))))
+#define GAPI_EXPAND(...) GAPI_EXPAND4(GAPI_EXPAND4(GAPI_EXPAND4(GAPI_EXPAND4(__VA_ARGS__))))
 #define GAPI_EXPAND4(...) GAPI_EXPAND3(GAPI_EXPAND3(GAPI_EXPAND3(GAPI_EXPAND3(__VA_ARGS__))))
 #define GAPI_EXPAND3(...) GAPI_EXPAND2(GAPI_EXPAND2(GAPI_EXPAND2(GAPI_EXPAND2(__VA_ARGS__))))
 #define GAPI_EXPAND2(...) GAPI_EXPAND1(GAPI_EXPAND1(GAPI_EXPAND1(GAPI_EXPAND1(__VA_ARGS__))))
 #define GAPI_EXPAND1(...) __VA_ARGS__
 
 #define GAPI_FOR_EACH(macro, ...) __VA_OPT__(GAPI_EXPAND(GAPI_FOR_EACH_HELPER(macro, __VA_ARGS__)))
-#define GAPI_FOR_EACH_HELPER(macro, a1, ...) \
-   macro(a1) __VA_OPT__(GAPI_FOR_EACH_AGAIN GAPI_PARENS(macro, __VA_ARGS__))
+#define GAPI_FOR_EACH_HELPER(macro, a1, ...) macro(a1) __VA_OPT__(GAPI_FOR_EACH_AGAIN GAPI_PARENS(macro, __VA_ARGS__))
 #define GAPI_FOR_EACH_AGAIN() GAPI_FOR_EACH_HELPER
 
 #define GAPI_PREPEND_FORMAT_PART(value) ::triglav::graphics_api::ColorFormatPart::value,
@@ -372,7 +387,7 @@ inline void check_status(const Status status, const std::string_view message)
       }                                                                     \
    }
 
-#define GAPI_CHECK(stmt)        ::triglav::graphics_api::check_result(stmt, #stmt)
+#define GAPI_CHECK(stmt) ::triglav::graphics_api::check_result(stmt, #stmt)
 #define GAPI_CHECK_STATUS(stmt) ::triglav::graphics_api::check_status(stmt, #stmt)
 
 #ifdef _WIN32

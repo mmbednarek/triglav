@@ -5,28 +5,26 @@
 #include "triglav/graphics_api/PipelineBuilder.h"
 
 using namespace triglav::name_literals;
-using triglav::resource::ResourceManager;
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
+using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
-RectangleRenderer::RectangleRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                                     ResourceManager &resourceManager) :
+RectangleRenderer::RectangleRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
+                                     ResourceManager& resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(device, renderTarget)
-                                   .fragment_shader(resourceManager.get("rectangle.fshader"_rc))
-                                   .vertex_shader(resourceManager.get("rectangle.vshader"_rc))
-                                   .begin_vertex_layout<glm::vec2>()
-                                   .vertex_attribute(GAPI_FORMAT(RG, Float32), 0)
-                                   .end_vertex_layout()
-                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::PipelineStage::VertexShader)
-                                   .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                       graphics_api::PipelineStage::FragmentShader)
-                                   .enable_depth_test(false)
-                                   .enable_blending(true)
-                                   .build())),
+                              .fragment_shader(resourceManager.get("rectangle.fshader"_rc))
+                              .vertex_shader(resourceManager.get("rectangle.vshader"_rc))
+                              .begin_vertex_layout<glm::vec2>()
+                              .vertex_attribute(GAPI_FORMAT(RG, Float32), 0)
+                              .end_vertex_layout()
+                              .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::VertexShader)
+                              .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::FragmentShader)
+                              .enable_depth_test(false)
+                              .enable_blending(true)
+                              .build())),
     m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 1, 20)))
 {
 }
@@ -35,12 +33,8 @@ Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect)
 {
    // rect: {left, top, right, bottom}
    std::array vertices{
-           glm::vec2{rect.x, rect.y},
-           glm::vec2{rect.x, rect.w},
-           glm::vec2{rect.z, rect.y},
-           glm::vec2{rect.z, rect.y},
-           glm::vec2{rect.x, rect.w},
-           glm::vec2{rect.z, rect.w},
+      glm::vec2{rect.x, rect.y}, glm::vec2{rect.x, rect.w}, glm::vec2{rect.z, rect.y},
+      glm::vec2{rect.z, rect.y}, glm::vec2{rect.x, rect.w}, glm::vec2{rect.z, rect.w},
    };
    graphics_api::VertexArray<glm::vec2> array(m_device, vertices.size());
    array.write(vertices.data(), vertices.size());
@@ -56,26 +50,23 @@ Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect)
    writer.set_uniform_buffer(0, vertexUbo);
    writer.set_uniform_buffer(1, fragmentUbo);
 
-   return Rectangle{rect, std::move(array), std::move(vertexUbo), std::move(fragmentUbo),
-                    std::move(descriptors)};
+   return Rectangle{rect, std::move(array), std::move(vertexUbo), std::move(fragmentUbo), std::move(descriptors)};
 }
 
-void RectangleRenderer::begin_render(graphics_api::CommandList &cmdList) const
+void RectangleRenderer::begin_render(graphics_api::CommandList& cmdList) const
 {
    cmdList.bind_pipeline(m_pipeline);
 }
 
-void RectangleRenderer::draw(graphics_api::CommandList &cmdList,
-                             const Rectangle &rect,
-                             const graphics_api::Resolution &resolution) const
+void RectangleRenderer::draw(graphics_api::CommandList& cmdList, const Rectangle& rect, const graphics_api::Resolution& resolution) const
 {
    rect.vertexUBO->viewportSize = {resolution.width, resolution.height};
-   rect.vertexUBO->position     = {rect.rect.x, rect.rect.y};
-   rect.fragmentUBO->rectSize   = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
+   rect.vertexUBO->position = {rect.rect.x, rect.rect.y};
+   rect.fragmentUBO->rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
 
    cmdList.bind_descriptor_set(rect.descriptors[0]);
    cmdList.bind_vertex_array(rect.array);
    cmdList.draw_primitives(static_cast<int>(rect.array.count()), 0);
 }
 
-}// namespace renderer
+}// namespace triglav::renderer

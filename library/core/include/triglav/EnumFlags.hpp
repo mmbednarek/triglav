@@ -6,7 +6,7 @@ template<typename TEnum>
 struct EnumFlags
 {
    using UnderlayingType = std::underlying_type_t<TEnum>;
-   using EnumType        = TEnum;
+   using EnumType = TEnum;
 
    UnderlayingType value;
 
@@ -45,7 +45,7 @@ struct EnumFlags
       return EnumFlags{this->value | rhs.value};
    }
 
-   constexpr EnumFlags &operator|=(TEnum rhs)
+   constexpr EnumFlags& operator|=(TEnum rhs)
    {
       this->value |= static_cast<UnderlayingType>(rhs);
       return *this;

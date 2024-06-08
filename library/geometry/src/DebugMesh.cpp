@@ -6,7 +6,7 @@
 
 namespace triglav::geometry {
 
-Mesh create_box(const Extent3D &extent)
+Mesh create_box(const Extent3D& extent)
 {
    const Extent3D half{0.5f * extent.width, 0.5f * extent.height, 0.5f * extent.depth};
 
@@ -23,11 +23,11 @@ Mesh create_box(const Extent3D &extent)
    mesh.add_vertex(half.width, half.height, -half.depth);
 
    const auto bottom = mesh.add_face(2, 3, 1, 0);
-   const auto top    = mesh.add_face(6, 7, 3, 2);
-   const auto front  = mesh.add_face(4, 5, 7, 6);
-   const auto back   = mesh.add_face(0, 1, 5, 4);
-   const auto left   = mesh.add_face(0, 4, 6, 2);
-   const auto right  = mesh.add_face(5, 1, 3, 7);
+   const auto top = mesh.add_face(6, 7, 3, 2);
+   const auto front = mesh.add_face(4, 5, 7, 6);
+   const auto back = mesh.add_face(0, 1, 5, 4);
+   const auto left = mesh.add_face(0, 4, 6, 2);
+   const auto right = mesh.add_face(5, 1, 3, 7);
 
    mesh.set_face_group(bottom, 0);
    mesh.set_face_group(top, 0);
@@ -36,24 +36,14 @@ Mesh create_box(const Extent3D &extent)
    mesh.set_face_group(left, 0);
    mesh.set_face_group(right, 0);
 
-   constexpr static auto oneThird  = 1.0f / 3.0f;
+   constexpr static auto oneThird = 1.0f / 3.0f;
    constexpr static auto twoThirds = 2.0f / 3.0f;
 
    std::array uvs{
-           glm::vec2{   1,  oneThird},
-           glm::vec2{   1, twoThirds},
-           glm::vec2{0.75, twoThirds},
-           glm::vec2{0.75,  oneThird},
-           glm::vec2{ 0.5, twoThirds},
-           glm::vec2{ 0.5,  oneThird},
-           glm::vec2{0.25, twoThirds},
-           glm::vec2{0.25,  oneThird},
-           glm::vec2{   0, twoThirds},
-           glm::vec2{   0,  oneThird},
-           glm::vec2{ 0.5,         0},
-           glm::vec2{0.25,         0},
-           glm::vec2{ 0.5,         1},
-           glm::vec2{0.25,         1},
+      glm::vec2{1, oneThird},    glm::vec2{1, twoThirds},  glm::vec2{0.75, twoThirds}, glm::vec2{0.75, oneThird},
+      glm::vec2{0.5, twoThirds}, glm::vec2{0.5, oneThird}, glm::vec2{0.25, twoThirds}, glm::vec2{0.25, oneThird},
+      glm::vec2{0, twoThirds},   glm::vec2{0, oneThird},   glm::vec2{0.5, 0},          glm::vec2{0.25, 0},
+      glm::vec2{0.5, 1},         glm::vec2{0.25, 1},
    };
 
    mesh.set_face_uvs(bottom, uvs[3], uvs[2], uvs[1], uvs[0]);
@@ -83,20 +73,20 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    size_t last_base_index = 0;
 
    for (int ring = 1; ring < ring_count; ++ring) {
-      const auto v          = static_cast<float>(ring) / static_cast<float>(ring_count);
-      const auto pitch      = v * g_pi + g_pi / 2.0f;
-      const auto cos_pitch  = cos(pitch);
-      const auto norm_z     = -sin(pitch);
-      const auto z          = radius * norm_z;
+      const auto v = static_cast<float>(ring) / static_cast<float>(ring_count);
+      const auto pitch = v * g_pi + g_pi / 2.0f;
+      const auto cos_pitch = cos(pitch);
+      const auto norm_z = -sin(pitch);
+      const auto z = radius * norm_z;
       const auto base_index = mesh.vertex_count();
 
       for (int segment = 0; segment <= segment_count; ++segment) {
-         const auto u      = 1.0f - static_cast<float>(segment) / static_cast<float>(segment_count);
-         const auto yaw    = 2 * g_pi * u;
+         const auto u = 1.0f - static_cast<float>(segment) / static_cast<float>(segment_count);
+         const auto yaw = 2 * g_pi * u;
          const auto norm_x = -cos_pitch * sin(yaw);
-         const auto x      = radius * norm_x;
+         const auto x = radius * norm_x;
          const auto norm_y = cos_pitch * cos(yaw);
-         const auto y      = radius * norm_y;
+         const auto y = radius * norm_y;
 
          mesh.add_vertex(x, y, z);
          uvs.emplace_back(u, v);
@@ -106,23 +96,21 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
       if (ring == 1) {
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
-            const auto face         = mesh.add_face(0, base_index + next_segment, base_index + segment);
+            const auto face = mesh.add_face(0, base_index + next_segment, base_index + segment);
             mesh.set_face_uvs(face, uvs[0], uvs[base_index + next_segment], uvs[base_index + segment]);
-            mesh.set_face_normals(face, normals[0], normals[base_index + next_segment],
-                                  normals[base_index + segment]);
+            mesh.set_face_normals(face, normals[0], normals[base_index + next_segment], normals[base_index + segment]);
             mesh.set_face_group(face, 0);
          }
       } else {
          for (int segment = 0; segment < segment_count; ++segment) {
             const auto next_segment = segment + 1;
 
-            const auto face = mesh.add_face(last_base_index + segment, last_base_index + next_segment,
-                                            base_index + next_segment, base_index + segment);
-            mesh.set_face_uvs(face, uvs[last_base_index + segment], uvs[last_base_index + next_segment],
-                              uvs[base_index + next_segment], uvs[base_index + segment]);
-            mesh.set_face_normals(face, normals[last_base_index + segment],
-                                  normals[last_base_index + next_segment], normals[base_index + next_segment],
-                                  normals[base_index + segment]);
+            const auto face =
+               mesh.add_face(last_base_index + segment, last_base_index + next_segment, base_index + next_segment, base_index + segment);
+            mesh.set_face_uvs(face, uvs[last_base_index + segment], uvs[last_base_index + next_segment], uvs[base_index + next_segment],
+                              uvs[base_index + segment]);
+            mesh.set_face_normals(face, normals[last_base_index + segment], normals[last_base_index + next_segment],
+                                  normals[base_index + next_segment], normals[base_index + segment]);
             mesh.set_face_group(face, 0);
          }
       }
@@ -138,10 +126,8 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    for (int segment = 0; segment < segment_count; ++segment) {
       const auto next_segment = segment + 1;
       const auto face = mesh.add_face(last_base_index + next_segment, last_index, last_base_index + segment);
-      mesh.set_face_uvs(face, uvs[last_base_index + next_segment], uvs[last_index],
-                        uvs[last_base_index + segment]);
-      mesh.set_face_normals(face, normals[last_base_index + next_segment], normals[last_index],
-                            normals[last_base_index + segment]);
+      mesh.set_face_uvs(face, uvs[last_base_index + next_segment], uvs[last_index], uvs[last_base_index + segment]);
+      mesh.set_face_normals(face, normals[last_base_index + next_segment], normals[last_index], normals[last_base_index + segment]);
       mesh.set_face_group(face, 0);
    }
 

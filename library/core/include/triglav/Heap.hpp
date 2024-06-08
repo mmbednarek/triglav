@@ -1,26 +1,29 @@
 #pragma once
 
-#include <vector>
-#include <utility>
-#include <stdexcept>
 #include <algorithm>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include "Int.hpp"
 
 namespace triglav {
 
 template<typename TKey, typename TValue>
-class Heap {
+class Heap
+{
  public:
    using Pair = std::pair<TKey, TValue>;
 
-   template<typename ...TArgs>
-   void emplace(TKey key, TArgs&&... args) {
+   template<typename... TArgs>
+   void emplace(TKey key, TArgs&&... args)
+   {
       m_built = false;
       m_staging.emplace_back(key, TValue{std::forward<TArgs>(args)...});
    }
 
-   TValue& operator[](const TKey key) {
+   TValue& operator[](const TKey key)
+   {
       if (not m_built) {
          throw std::runtime_error("heap: not constructed");
       }
@@ -45,15 +48,14 @@ class Heap {
       throw std::runtime_error("heap: key not found");
    }
 
-   void make_heap() {
+   void make_heap()
+   {
       if (m_staging.empty()) {
          m_built = true;
          return;
       }
 
-      std::sort(m_staging.begin(), m_staging.end(), [](const Pair& left, const Pair& right) {
-         return left.first < right.first;
-      });
+      std::sort(m_staging.begin(), m_staging.end(), [](const Pair& left, const Pair& right) { return left.first < right.first; });
 
       m_size = m_staging.size();
 
@@ -70,19 +72,23 @@ class Heap {
       m_staging.clear();
    }
 
-   [[nodiscard]] u32 size() const {
+   [[nodiscard]] u32 size() const
+   {
       return m_size;
    }
 
-   [[nodiscard]] auto begin() {
+   [[nodiscard]] auto begin()
+   {
       return m_heap.begin();
    }
 
-   [[nodiscard]] auto end() {
+   [[nodiscard]] auto end()
+   {
       return m_heap.end();
    }
 
-   void clear() {
+   void clear()
+   {
       m_built = false;
       m_size = 0;
       m_staging.clear();
@@ -90,13 +96,14 @@ class Heap {
    }
 
  private:
-   void make_heap_internal(const u32 base, const u32 extent, const u32 start, const u32 end) {
+   void make_heap_internal(const u32 base, const u32 extent, const u32 start, const u32 end)
+   {
       if (end == start) {
          m_heap[base + extent] = std::move(m_staging[start]);
          return;
       }
 
-      const u32 mid = (end - start)/2 + start;
+      const u32 mid = (end - start) / 2 + start;
       m_heap[base + extent] = std::move(m_staging[mid]);
 
       const u32 newBase = (base << 1) | 1;
@@ -114,4 +121,4 @@ class Heap {
    std::vector<std::optional<std::pair<TKey, TValue>>> m_heap;
 };
 
-}
+}// namespace triglav

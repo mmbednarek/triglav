@@ -2,8 +2,8 @@
 
 #include "ResourceManager.h"
 
-#include "triglav/io/File.h"
 #include "triglav/Name.hpp"
+#include "triglav/io/File.h"
 
 #include <ryml.hpp>
 #include <string_view>
@@ -37,15 +37,16 @@ std::vector<font::Rune> make_runes()
 
 auto g_runes{make_runes()};
 
-}
+}// namespace
 
-render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManager &resourceManager, graphics_api::Device &device, const io::Path& path)
+render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManager& resourceManager, graphics_api::Device& device,
+                                                                   const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
 
-   auto tree = ryml::parse_in_place(c4::substr{const_cast<char *>(path.string().data()), path.string().size()},
-                                    c4::substr{file.data(), file.size()});
+   auto tree =
+      ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
 
    auto typeface = tree["typeface"].val();
    auto typefaceName = make_rc_name(std::string_view{typeface.str, typeface.len});
@@ -55,4 +56,4 @@ render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManag
    return render_core::GlyphAtlas{device, resourceManager.get<ResourceType::Typeface>(typefaceName), g_runes, size, 512, 512};
 }
 
-}
+}// namespace triglav::resource

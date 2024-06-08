@@ -3,14 +3,14 @@
 #include "node/AmbientOcclusion.h"
 #include "node/Downsample.h"
 #include "node/Geometry.h"
+#include "node/Particles.h"
 #include "node/PostProcessing.h"
 #include "node/Shading.h"
 #include "node/ShadowMap.h"
 #include "node/UserInterface.h"
-#include "node/Particles.h"
 
-#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/Name.hpp"
+#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
@@ -39,23 +39,22 @@ constexpr auto g_sampleCount = SampleCount::Single;
 
 namespace {
 
-graphics_api::Resolution create_viewport_resolution(const graphics_api::Device &device, const uint32_t width,
-                                                    const uint32_t height)
+graphics_api::Resolution create_viewport_resolution(const graphics_api::Device& device, const uint32_t width, const uint32_t height)
 {
    graphics_api::Resolution resolution{
-           .width  = width,
-           .height = height,
+      .width = width,
+      .height = height,
    };
 
    const auto [minResolution, maxResolution] = device.get_surface_resolution_limits();
-   resolution.width  = std::clamp(resolution.width, minResolution.width, maxResolution.width);
+   resolution.width = std::clamp(resolution.width, minResolution.width, maxResolution.width);
    resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
 
    return resolution;
 }
 
-std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain &swapchain,
-                                                           const graphics_api::RenderTarget &renderTarget)
+std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain& swapchain,
+                                                           const graphics_api::RenderTarget& renderTarget)
 {
    std::vector<graphics_api::Framebuffer> result{};
    const auto frameCount = swapchain.frame_count();
@@ -67,22 +66,20 @@ std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::S
 
 }// namespace
 
-Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const uint32_t height) :
+Renderer::Renderer(const desktop::ISurface& surface, const uint32_t width, const uint32_t height) :
     m_device(checkResult(graphics_api::initialize_device(surface))),
     m_resourceManager(std::make_unique<ResourceManager>(*m_device, m_fontManger)),
     m_scene(*m_resourceManager),
     m_resolution(create_viewport_resolution(*m_device, width, height)),
-    m_swapchain(checkResult(
-            m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
-    m_renderTarget(checkResult(
-            graphics_api::RenderTargetBuilder(*m_device)
-                    .attachment("output"_name,
-                                AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                        AttachmentAttribute::StoreImage | AttachmentAttribute::Presentable,
-                                g_colorFormat)
-                    .attachment("output/zbuffer"_name,
-                                AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
-                    .build())),
+    m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
+    m_renderTarget(
+       checkResult(graphics_api::RenderTargetBuilder(*m_device)
+                      .attachment("output"_name,
+                                  AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage |
+                                     AttachmentAttribute::Presentable,
+                                  g_colorFormat)
+                      .attachment("output/zbuffer"_name, AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
+                      .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_context2D(*m_device, m_renderTarget, *m_resourceManager),
     m_renderGraph(*m_device),
@@ -93,17 +90,12 @@ Renderer::Renderer(const desktop::ISurface &surface, const uint32_t width, const
    m_renderGraph.add_external_node("frame_is_ready"_name);
    m_renderGraph.emplace_node<node::Geometry>("geometry"_name, *m_device, *m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, *m_device, *m_resourceManager,
-                                                      m_scene);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, *m_device, *m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, *m_device, *m_resourceManager,
-                                                   m_uiViewport);
-   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, *m_device, *m_resourceManager,
-                                                    m_renderTarget, m_framebuffers);
-   m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, *m_device, "shading"_name,
-                                                "shading"_name, "bloom"_name);
-   m_renderGraph.emplace_node<node::Particles>("particles"_name, *m_device, *m_resourceManager,
-                                                m_renderGraph);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, *m_device, *m_resourceManager, m_uiViewport);
+   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, *m_device, *m_resourceManager, m_renderTarget, m_framebuffers);
+   m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, *m_device, "shading"_name, "shading"_name, "bloom"_name);
+   m_renderGraph.emplace_node<node::Particles>("particles"_name, *m_device, *m_resourceManager, m_renderGraph);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
 
@@ -127,7 +119,7 @@ void Renderer::update_debug_info(const float framerate)
 {
    static bool isFirstFrame = true;
 
-   auto &ui = m_renderGraph.node<node::UserInterface>("user_interface"_name);
+   auto& ui = m_renderGraph.node<node::UserInterface>("user_interface"_name);
 
    const auto framerateStr = std::format("{}", framerate);
    m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name, framerateStr);
@@ -136,24 +128,21 @@ void Renderer::update_debug_info(const float framerate)
    m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name, triangleCountStr);
 
    if (not isFirstFrame) {
-      const auto gpuTimeStr =
-              std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
+      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
       m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name, gpuTimeStr);
    }
 
-   const auto camPos      = m_scene.camera().position();
+   const auto camPos = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
    m_uiViewport.set_text_content("info_dialog/location/position/value"_name, positionStr);
 
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
    m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
 
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name,
-                                 m_ssaoEnabled ? "Screen-Space" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, m_ssaoEnabled ? "Screen-Space" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name,
-                                 m_showDebugLines ? "On" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
 
    isFirstFrame = false;
 }
@@ -173,7 +162,7 @@ void Renderer::on_render()
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
    this->update_debug_info(framerate);
 
-   auto &frameReadySemaphore   = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
+   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
@@ -199,9 +188,12 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
 static Renderer::Moving map_direction(const Key key)
 {
    switch (key) {
-   case Key::W: return Renderer::Moving::Foward;
-   case Key::S: return Renderer::Moving::Backwards;
-   case Key::A: return Renderer::Moving::Left;
+   case Key::W:
+      return Renderer::Moving::Foward;
+   case Key::S:
+      return Renderer::Moving::Backwards;
+   case Key::A:
+      return Renderer::Moving::Left;
    case Key::D:
       return Renderer::Moving::Right;
       //   case Key::Q: return Renderer::Moving::Up;
@@ -250,7 +242,7 @@ void Renderer::on_mouse_wheel_turn(const float x)
    m_distance = std::clamp(m_distance, 1.0f, 100.0f);
 }
 
-ResourceManager &Renderer::resource_manager() const
+ResourceManager& Renderer::resource_manager() const
 {
    return *m_resourceManager;
 }
@@ -264,27 +256,26 @@ float Renderer::calculate_frame_duration()
 {
    static std::chrono::steady_clock::time_point last{std::chrono::steady_clock::now()};
 
-   const auto now  = std::chrono::steady_clock::now();
+   const auto now = std::chrono::steady_clock::now();
    const auto diff = now - last;
-   last            = now;
+   last = now;
 
-   return static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(diff).count()) /
-          1000000.0f;
+   return static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(diff).count()) / 1000000.0f;
 }
 
 float Renderer::calculate_framerate(const float frameDuration)
 {
    static float lastResult = 60.0f;
-   static float sum        = 0.0f;
-   static int count        = 0;
+   static float sum = 0.0f;
+   static int count = 0;
 
    sum += frameDuration;
    ++count;
 
    if (sum >= 0.5f) {
       lastResult = static_cast<float>(count) / sum;
-      sum        = 0.0f;
-      count      = 0;
+      sum = 0.0f;
+      count = 0;
    }
 
    return std::ceil(lastResult);
@@ -293,13 +284,20 @@ float Renderer::calculate_framerate(const float frameDuration)
 glm::vec3 Renderer::moving_direction()
 {
    switch (m_moveDirection) {
-   case Moving::None: break;
-   case Moving::Foward: return m_scene.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
-   case Moving::Backwards: return m_scene.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};
-   case Moving::Left: return m_scene.camera().orientation() * glm::vec3{-1.0f, 0.0f, 0.0f};
-   case Moving::Right: return m_scene.camera().orientation() * glm::vec3{1.0f, 0.0f, 0.0f};
-   case Moving::Up: return glm::vec3{0.0f, 0.0f, -1.0f};
-   case Moving::Down: return glm::vec3{0.0f, 0.0f, 1.0f};
+   case Moving::None:
+      break;
+   case Moving::Foward:
+      return m_scene.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
+   case Moving::Backwards:
+      return m_scene.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};
+   case Moving::Left:
+      return m_scene.camera().orientation() * glm::vec3{-1.0f, 0.0f, 0.0f};
+   case Moving::Right:
+      return m_scene.camera().orientation() * glm::vec3{1.0f, 0.0f, 0.0f};
+   case Moving::Up:
+      return glm::vec3{0.0f, 0.0f, -1.0f};
+   case Moving::Down:
+      return glm::vec3{0.0f, 0.0f, 1.0f};
    }
 
    return glm::vec3{0.0f, 0.0f, 0.0f};
@@ -321,14 +319,14 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_framebuffers.clear();
 
-   m_swapchain    = checkResult(m_device->create_swapchain(
-           m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
+   m_swapchain =
+      checkResult(m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};
 }
 
-graphics_api::Device &Renderer::device() const
+graphics_api::Device& Renderer::device() const
 {
    return *m_device;
 }
@@ -342,7 +340,7 @@ void Renderer::update_uniform_data(const float deltaTime)
    if (m_moveDirection != Moving::None) {
       glm::vec3 movingDir{this->moving_direction()};
       movingDir.z = 0.0f;
-      movingDir   = glm::normalize(movingDir);
+      movingDir = glm::normalize(movingDir);
       m_scene.camera().set_position(m_scene.camera().position() + movingDir * (g_movingSpeed * deltaTime));
    }
 

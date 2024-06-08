@@ -8,25 +8,24 @@ namespace triglav::desktop {
 
 DefaultSurfaceEventListener g_defaultListener;
 
-Surface::Surface(Display &display) :
+Surface::Surface(Display& display) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
     m_xdgSurface(xdg_wm_base_get_xdg_surface(display.wm_base(), m_surface)),
     m_topLevel(xdg_surface_get_toplevel(m_xdgSurface))
 {
-   m_surfaceListener.configure = [](void *data, xdg_surface *xdg_surface, const uint32_t serial) {
-      auto *surface = static_cast<Surface *>(data);
+   m_surfaceListener.configure = [](void* data, xdg_surface* xdg_surface, const uint32_t serial) {
+      auto* surface = static_cast<Surface*>(data);
       assert(surface->m_xdgSurface == xdg_surface);
       surface->on_configure(serial);
    };
-   m_topLevelListener.configure = [](void *data, xdg_toplevel *xdg_toplevel, const int32_t width,
-                                     const int32_t height, wl_array *states) {
-      auto *surface = static_cast<Surface *>(data);
+   m_topLevelListener.configure = [](void* data, xdg_toplevel* xdg_toplevel, const int32_t width, const int32_t height, wl_array* states) {
+      auto* surface = static_cast<Surface*>(data);
       assert(surface->m_topLevel == xdg_toplevel);
       surface->on_toplevel_configure(width, height, states);
    };
-   m_topLevelListener.close = [](void *data, xdg_toplevel *xdg_toplevel) {
-      const auto *surface = static_cast<Surface *>(data);
+   m_topLevelListener.close = [](void* data, xdg_toplevel* xdg_toplevel) {
+      const auto* surface = static_cast<Surface*>(data);
       assert(surface->m_topLevel == xdg_toplevel);
       surface->on_toplevel_close();
    };
@@ -58,7 +57,7 @@ void Surface::on_configure(const uint32_t serial)
    }
 }
 
-void Surface::on_toplevel_configure(const int32_t width, const int32_t height, wl_array * /*states*/)
+void Surface::on_toplevel_configure(const int32_t width, const int32_t height, wl_array* /*states*/)
 {
    if (width == 0 || height == 0)
       return;
@@ -79,8 +78,7 @@ void Surface::lock_cursor()
    if (m_lockedPointer != nullptr) {
       zwp_locked_pointer_v1_destroy(m_lockedPointer);
    }
-   m_lockedPointer = zwp_pointer_constraints_v1_lock_pointer(m_display.pointer_constraints(), m_surface,
-                                                             m_display.pointer(), nullptr, 1);
+   m_lockedPointer = zwp_pointer_constraints_v1_lock_pointer(m_display.pointer_constraints(), m_surface, m_display.pointer(), nullptr, 1);
 }
 
 void Surface::unlock_cursor()
@@ -96,7 +94,7 @@ void Surface::hide_cursor() const
    wl_pointer_set_cursor(m_display.pointer(), m_pointerSerial, nullptr, 0, 0);
 }
 
-void Surface::add_event_listener(ISurfaceEventListener *eventListener)
+void Surface::add_event_listener(ISurfaceEventListener* eventListener)
 {
    m_eventListener = eventListener;
 }
@@ -111,7 +109,7 @@ Dimension Surface::dimension() const
    return m_dimension;
 }
 
-ISurfaceEventListener &Surface::event_listener() const
+ISurfaceEventListener& Surface::event_listener() const
 {
    if (m_eventListener != nullptr) {
       return *m_eventListener;

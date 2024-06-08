@@ -1,7 +1,7 @@
 #include "Surface.h"
 
-#include <spdlog/spdlog.h>
 #include <Windowsx.h>
+#include <spdlog/spdlog.h>
 
 namespace triglav::desktop {
 
@@ -10,24 +10,42 @@ namespace {
 Key translate_key(const WPARAM keyCode)
 {
    switch (keyCode) {
-   case 'W': return Key::W;
-   case 'A': return Key::A;
-   case 'S': return Key::S;
-   case 'D': return Key::D;
-   case VK_SPACE: return Key::Space;
-   case VK_F1: return Key::F1;
-   case VK_F2: return Key::F2;
-   case VK_F3: return Key::F3;
-   case VK_F4: return Key::F4;
-   case VK_F5: return Key::F5;
-   case VK_F6: return Key::F6;
-   case VK_F7: return Key::F7;
-   case VK_F8: return Key::F8;
-   case VK_F9: return Key::F9;
-   case VK_F10: return Key::F10;
-   case VK_F11: return Key::F11;
-   case VK_F12: return Key::F12;
-   default: break;
+   case 'W':
+      return Key::W;
+   case 'A':
+      return Key::A;
+   case 'S':
+      return Key::S;
+   case 'D':
+      return Key::D;
+   case VK_SPACE:
+      return Key::Space;
+   case VK_F1:
+      return Key::F1;
+   case VK_F2:
+      return Key::F2;
+   case VK_F3:
+      return Key::F3;
+   case VK_F4:
+      return Key::F4;
+   case VK_F5:
+      return Key::F5;
+   case VK_F6:
+      return Key::F6;
+   case VK_F7:
+      return Key::F7;
+   case VK_F8:
+      return Key::F8;
+   case VK_F9:
+      return Key::F9;
+   case VK_F10:
+      return Key::F10;
+   case VK_F11:
+      return Key::F11;
+   case VK_F12:
+      return Key::F12;
+   default:
+      break;
    }
 
    return Key::Unknown;
@@ -38,9 +56,8 @@ Key translate_key(const WPARAM keyCode)
 Surface::Surface(const HINSTANCE instance, const Dimension dimension) :
     m_instance(instance),
     m_dimension(dimension),
-    m_windowHandle(CreateWindowExA(WS_EX_CLIENTEDGE, g_windowClassName, "Triglav Engine", WS_OVERLAPPEDWINDOW,
-                                   CW_USEDEFAULT, CW_USEDEFAULT, m_dimension.width, m_dimension.height,
-                                   nullptr, nullptr, m_instance, this))
+    m_windowHandle(CreateWindowExA(WS_EX_CLIENTEDGE, g_windowClassName, "Triglav Engine", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+                                   m_dimension.width, m_dimension.height, nullptr, nullptr, m_instance, this))
 {
    ShowWindow(m_windowHandle, SW_NORMAL);
    UpdateWindow(m_windowHandle);
@@ -70,7 +87,7 @@ void Surface::hide_cursor() const
    ShowCursor(false);
 }
 
-void Surface::add_event_listener(ISurfaceEventListener *eventListener)
+void Surface::add_event_listener(ISurfaceEventListener* eventListener)
 {
    m_eventListener = eventListener;
 }
@@ -140,8 +157,7 @@ void Surface::on_mouse_move(const int x, const int y) const
       SetCursorPos(originX, originY);
 
       if (m_eventListener != nullptr) {
-         m_eventListener->on_mouse_relative_move(0.5f * static_cast<float>(diffX),
-                                                 0.5f * static_cast<float>(diffY));
+         m_eventListener->on_mouse_relative_move(0.5f * static_cast<float>(diffX), 0.5f * static_cast<float>(diffY));
       }
    } else {
       if (m_eventListener != nullptr) {
@@ -171,7 +187,9 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       this->on_close();
       break;
    }
-   case WM_DESTROY: PostQuitMessage(0); break;
+   case WM_DESTROY:
+      PostQuitMessage(0);
+      break;
    case WM_KEYDOWN: {
       this->on_key_down(wParam);
       break;
@@ -212,7 +230,8 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       this->on_resize(LOWORD(lParam), HIWORD(lParam));
       break;
    }
-   default: return DefWindowProcA(m_windowHandle, msg, wParam, lParam);
+   default:
+      return DefWindowProcA(m_windowHandle, msg, wParam, lParam);
    }
 
    return 0;

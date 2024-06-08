@@ -2,17 +2,17 @@
 
 namespace triglav::world {
 
-void Level::add_node(const Name id, LevelNode &&node)
+void Level::add_node(const Name id, LevelNode&& node)
 {
    m_nodes.emplace(id, std::move(node));
 }
 
-LevelNode &Level::at(const Name id)
+LevelNode& Level::at(const Name id)
 {
    return m_nodes.at(id);
 }
 
-LevelNode &Level::root()
+LevelNode& Level::root()
 {
    using namespace name_literals;
    return this->at("root"_name);

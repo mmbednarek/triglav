@@ -3,8 +3,8 @@
 #include "Loader.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/render_core/Model.hpp"
 #include "triglav/io/Path.h"
+#include "triglav/render_core/Model.hpp"
 
 #include <string_view>
 
@@ -15,7 +15,7 @@ struct Loader<ResourceType::Model>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
 
-   static render_core::Model load_gpu(graphics_api::Device &device, const io::Path& path);
+   static render_core::Model load_gpu(graphics_api::Device& device, const io::Path& path);
 };
 
 }// namespace triglav::resource

@@ -18,10 +18,10 @@ class Mesh
    Mesh();
    ~Mesh();
 
-   Mesh(const Mesh &other)                = delete;
-   Mesh &operator=(const Mesh &other)     = delete;
-   Mesh(Mesh &&other) noexcept            = default;
-   Mesh &operator=(Mesh &&other) noexcept = default;
+   Mesh(const Mesh& other) = delete;
+   Mesh& operator=(const Mesh& other) = delete;
+   Mesh(Mesh&& other) noexcept = default;
+   Mesh& operator=(Mesh&& other) noexcept = default;
 
    void recalculate_normals() const;
    void recalculate_tangents() const;
@@ -45,7 +45,7 @@ class Mesh
    [[nodiscard]] BoundingBox calculate_bouding_box() const;
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
-   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device &device) const;
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device) const;
 
    static Mesh from_file(const io::Path& path);
 
@@ -79,4 +79,4 @@ void Mesh::set_face_normals(Index face, TNormals... vertices)
    this->set_face_normals_range(face, inVertices);
 }
 
-}// namespace geometry
+}// namespace triglav::geometry

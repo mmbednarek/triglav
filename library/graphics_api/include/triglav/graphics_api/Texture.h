@@ -13,9 +13,8 @@ class CommandList;
 class Texture
 {
  public:
-   Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::ImageView imageView,
-           const ColorFormat &colorFormat, TextureUsageFlags usageFlags, uint32_t width, uint32_t height,
-           int mipCount);
+   Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::ImageView imageView, const ColorFormat& colorFormat,
+           TextureUsageFlags usageFlags, uint32_t width, uint32_t height, int mipCount);
 
    [[nodiscard]] VkImage vulkan_image() const;
    [[nodiscard]] VkImageView vulkan_image_view() const;
@@ -23,16 +22,16 @@ class Texture
    [[nodiscard]] uint32_t width() const;
    [[nodiscard]] uint32_t height() const;
    [[nodiscard]] Resolution resolution() const;
-   [[nodiscard]] const SamplerProperties &sampler_properties() const;
-   Status write(Device &device, const uint8_t *pixels) const;
-   [[nodiscard]] Status generate_mip_maps(const Device &device) const;
+   [[nodiscard]] const SamplerProperties& sampler_properties() const;
+   Status write(Device& device, const uint8_t* pixels) const;
+   [[nodiscard]] Status generate_mip_maps(const Device& device) const;
 
    void set_anisotropy_state(bool isEnabled);
    void set_lod(float min, float max);
 
 
  private:
-   void generate_mip_maps_internal(const CommandList &cmdList) const;
+   void generate_mip_maps_internal(const CommandList& cmdList) const;
 
    uint32_t m_width{};
    uint32_t m_height{};

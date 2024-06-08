@@ -3,8 +3,8 @@
 #include <map>
 #include <memory>
 
-#include "triglav/font/FontManager.h"
 #include "triglav/Name.hpp"
+#include "triglav/font/FontManager.h"
 
 #include "Container.hpp"
 #include "Loader.hpp"
@@ -19,7 +19,7 @@ namespace triglav::resource {
 class ResourceManager
 {
  public:
-   explicit ResourceManager(graphics_api::Device &device, font::FontManger &fontManager);
+   explicit ResourceManager(graphics_api::Device& device, font::FontManger& fontManager);
 
    void load_asset_list(const io::Path& path);
 
@@ -27,7 +27,7 @@ class ResourceManager
    [[nodiscard]] bool is_name_registered(ResourceName assetName) const;
 
    template<ResourceType CResourceType>
-   auto &get(const TypedName<CResourceType> name)
+   auto& get(const TypedName<CResourceType> name)
    {
       return container<CResourceType>().get(name);
    }
@@ -48,8 +48,8 @@ class ResourceManager
       }
    }
 
-   template<ResourceType CResourceType, typename ...TArgs>
-   void emplace_resource(TypedName<CResourceType> name, TArgs&& ...args)
+   template<ResourceType CResourceType, typename... TArgs>
+   void emplace_resource(TypedName<CResourceType> name, TArgs&&... args)
    {
       container<CResourceType>().register_emplace(name, std::forward<TArgs>(args)...);
    }
@@ -62,15 +62,15 @@ class ResourceManager
 
  private:
    template<ResourceType CResourceType>
-   Container<CResourceType> &container()
+   Container<CResourceType>& container()
    {
-      return *static_cast<Container<CResourceType> *>(m_containers.at(CResourceType).get());
+      return *static_cast<Container<CResourceType>*>(m_containers.at(CResourceType).get());
    }
 
    std::map<ResourceType, std::unique_ptr<IContainer>> m_containers;
    std::map<ResourceName, std::string> m_registeredNames;
-   graphics_api::Device &m_device;
-   font::FontManger &m_fontManager;
+   graphics_api::Device& m_device;
+   font::FontManger& m_fontManager;
 };
 
 }// namespace triglav::resource

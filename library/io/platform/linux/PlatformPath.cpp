@@ -28,4 +28,4 @@ Result<std::string> full_path(const std::string_view path)
    return std::string{result};
 }
 
-}
+}// namespace triglav::io

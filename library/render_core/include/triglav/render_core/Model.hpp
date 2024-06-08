@@ -2,13 +2,13 @@
 
 #include <vector>
 
-#include "triglav/graphics_api/HostVisibleBuffer.hpp"
-#include "triglav/graphics_api/DescriptorArray.h"
 #include "triglav/Name.hpp"
 #include "triglav/geometry/Mesh.h"
+#include "triglav/graphics_api/DescriptorArray.h"
+#include "triglav/graphics_api/HostVisibleBuffer.hpp"
 
-#include "RenderCore.hpp"
 #include "Material.hpp"
+#include "RenderCore.hpp"
 
 
 namespace triglav::render_core {
@@ -51,8 +51,9 @@ struct Sprite
    graphics_api::DescriptorArray descriptors;
 };
 
-struct FragmentPushConstants {
+struct FragmentPushConstants
+{
    alignas(16) glm::vec3 viewPosition;
 };
 
-}// namespace renderer
+}// namespace triglav::render_core

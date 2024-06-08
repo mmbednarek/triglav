@@ -1,25 +1,24 @@
 #pragma once
 
-#include "GraphicsApi.hpp"
 #include "DescriptorPool.h"
+#include "GraphicsApi.hpp"
 
-#include <span>
 #include <map>
+#include <span>
 
 namespace triglav::graphics_api {
 
 class DescriptorLayoutCache
 {
-public:
+ public:
    using Hash = u64;
-   
+
    VkDescriptorSetLayout find_layout(std::span<DescriptorBinding> bindings);
 
-private:
+ private:
    VkDevice m_device;
    VkDescriptorSetLayout construct_layout(Hash hash, std::span<DescriptorBinding> bindings);
    std::map<Hash, vulkan::DescriptorSetLayout> m_pools;
-   
 };
 
-}
+}// namespace triglav::graphics_api

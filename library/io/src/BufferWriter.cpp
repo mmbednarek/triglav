@@ -6,7 +6,7 @@
 namespace triglav::io {
 
 BufferWriter::BufferWriter(std::span<u8> buffer) :
-   m_buffer(buffer)
+    m_buffer(buffer)
 {
 }
 
@@ -26,4 +26,4 @@ u32 BufferWriter::offset() const
    return m_offset;
 }
 
-}
+}// namespace triglav::io

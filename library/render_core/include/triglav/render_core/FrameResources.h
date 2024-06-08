@@ -1,9 +1,9 @@
 #pragma once
 
+#include "triglav/Name.hpp"
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/RenderTarget.h"
 #include "triglav/graphics_api/Synchronization.h"
-#include "triglav/Name.hpp"
 
 #include <map>
 #include <memory>
@@ -20,9 +20,9 @@ class NodeResourcesBase
    virtual ~NodeResourcesBase() = default;
 
    virtual void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore);
-   virtual void clean(graphics_api::Device &device);
+   virtual void clean(graphics_api::Device& device);
    virtual void finalize();
-   virtual void update_resolution(const graphics_api::Resolution &resolution);
+   virtual void update_resolution(const graphics_api::Resolution& resolution);
    [[nodiscard]] virtual graphics_api::Semaphore& semaphore(Name child);
 
  private:
@@ -32,17 +32,18 @@ class NodeResourcesBase
 class NodeFrameResources : public NodeResourcesBase
 {
  public:
-   void add_render_target(Name identifier, graphics_api::RenderTarget &renderTarget);
-   void add_render_target_with_resolution(Name identifier, graphics_api::RenderTarget &renderTarget, const graphics_api::Resolution &resolution);
-   void update_resolution(const graphics_api::Resolution &resolution) override;
+   void add_render_target(Name identifier, graphics_api::RenderTarget& renderTarget);
+   void add_render_target_with_resolution(Name identifier, graphics_api::RenderTarget& renderTarget,
+                                          const graphics_api::Resolution& resolution);
+   void update_resolution(const graphics_api::Resolution& resolution) override;
 
-   [[nodiscard]] graphics_api::Framebuffer &framebuffer(Name identifier);
-   [[nodiscard]] graphics_api::CommandList &command_list();
+   [[nodiscard]] graphics_api::Framebuffer& framebuffer(Name identifier);
+   [[nodiscard]] graphics_api::CommandList& command_list();
    void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore) override;
-   void initialize_command_list(graphics_api::SemaphoreArray &&waitSemaphores,
-                                graphics_api::CommandList &&commands, size_t inFrameWaitSemaphoreCount);
-   graphics_api::SemaphoreArray &wait_semaphores();
-   graphics_api::SemaphoreArray &signal_semaphores();
+   void initialize_command_list(graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commands,
+                                size_t inFrameWaitSemaphoreCount);
+   graphics_api::SemaphoreArray& wait_semaphores();
+   graphics_api::SemaphoreArray& signal_semaphores();
    void finalize() override;
 
    size_t in_frame_wait_semaphore_count();
@@ -50,7 +51,7 @@ class NodeFrameResources : public NodeResourcesBase
  private:
    struct RenderTargetResource
    {
-      graphics_api::RenderTarget *renderTarget{};
+      graphics_api::RenderTarget* renderTarget{};
       std::optional<graphics_api::Framebuffer> framebuffer{};
       std::optional<graphics_api::Resolution> resolution{};
    };
@@ -68,7 +69,7 @@ class FrameResources
    explicit FrameResources(graphics_api::Device& device);
 
    template<typename TNode>
-   auto &add_node_resources(const Name identifier, TNode &&node)
+   auto& add_node_resources(const Name identifier, TNode&& node)
    {
       auto [it, ok] = m_nodes.emplace(identifier, std::forward<TNode>(node));
       assert(ok);
@@ -76,9 +77,9 @@ class FrameResources
    }
 
    template<typename TNode = NodeFrameResources>
-   TNode &node(const Name identifier)
+   TNode& node(const Name identifier)
    {
-      return *dynamic_cast<TNode *>(m_nodes.at(identifier).get());
+      return *dynamic_cast<TNode*>(m_nodes.at(identifier).get());
    }
 
    void add_external_node(Name node);
@@ -90,11 +91,11 @@ class FrameResources
    [[nodiscard]] bool has_flag(Name flagName) const;
    void set_flag(Name flagName, bool isEnabled);
 
-   void update_resolution(const graphics_api::Resolution &resolution);
+   void update_resolution(const graphics_api::Resolution& resolution);
    void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore);
-   void initialize_command_list(Name nodeName, graphics_api::SemaphoreArray &&waitSemaphores,
-                                graphics_api::CommandList &&commandList, size_t inFrameWaitSemaphoreCount);
-   void clean(graphics_api::Device &device);
+   void initialize_command_list(Name nodeName, graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commandList,
+                                size_t inFrameWaitSemaphoreCount);
+   void clean(graphics_api::Device& device);
    void finalize();
 
  private:

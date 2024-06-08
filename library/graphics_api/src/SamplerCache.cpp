@@ -8,7 +8,8 @@ namespace triglav::graphics_api {
 
 namespace {
 
-SamplerCache::Hash calculate_hash(const SamplerProperties& properties) {
+SamplerCache::Hash calculate_hash(const SamplerProperties& properties)
+{
    SamplerCache::Hash result{};
    result += 7011713ULL * static_cast<u64>(properties.minFilter);
    result += 3424423ULL * static_cast<u64>(properties.magFilter);
@@ -22,14 +23,14 @@ SamplerCache::Hash calculate_hash(const SamplerProperties& properties) {
    return result;
 }
 
-}
+}// namespace
 
-SamplerCache::SamplerCache(Device &device) :
-   m_device(device)
+SamplerCache::SamplerCache(Device& device) :
+    m_device(device)
 {
 }
 
-const Sampler &SamplerCache::find_sampler(const SamplerProperties &properties)
+const Sampler& SamplerCache::find_sampler(const SamplerProperties& properties)
 {
    const auto hash = calculate_hash(properties);
    const auto it = m_samplers.find(hash);
@@ -43,4 +44,4 @@ const Sampler &SamplerCache::find_sampler(const SamplerProperties &properties)
    return samplerIt->second;
 }
 
-}
+}// namespace triglav::graphics_api

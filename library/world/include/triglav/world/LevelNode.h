@@ -8,26 +8,29 @@
 
 namespace triglav::world {
 
-struct Transformation {
-  glm::vec3 position{};
-  glm::vec3 rotation{};
-  glm::vec3 scale{};
+struct Transformation
+{
+   glm::vec3 position{};
+   glm::vec3 rotation{};
+   glm::vec3 scale{};
 };
 
-struct StaticMesh {
-  ModelName meshName{0};
-  Transformation transform{};
+struct StaticMesh
+{
+   ModelName meshName{0};
+   Transformation transform{};
 };
 
-class LevelNode {
-public:
-  void add_static_mesh(StaticMesh&& mesh);
+class LevelNode
+{
+ public:
+   void add_static_mesh(StaticMesh&& mesh);
 
    const std::vector<StaticMesh>& static_meshes();
 
-private:
-  std::vector<StaticMesh> m_staticMeshes;
-  std::vector<Name> m_children;
+ private:
+   std::vector<StaticMesh> m_staticMeshes;
+   std::vector<Name> m_children;
 };
 
-}
+}// namespace triglav::world

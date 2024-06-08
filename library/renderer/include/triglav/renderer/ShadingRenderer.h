@@ -26,16 +26,15 @@ class ShadingRenderer
       glm::mat4 shadowMapMat;
    };
 
-   ShadingRenderer(graphics_api::Device &device, graphics_api::RenderTarget &renderTarget,
-                   resource::ResourceManager &resourceManager);
+   ShadingRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
-   void draw(render_core::FrameResources &resources, graphics_api::CommandList &cmdList,
-             const glm::vec3 &lightPosition, const glm::mat4 &shadowMapMat) const;
+   void draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::vec3& lightPosition,
+             const glm::mat4& shadowMapMat) const;
 
  private:
-   graphics_api::Device &m_device;
+   graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::Sampler &m_sampler;
+   graphics_api::Sampler& m_sampler;
    graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
 };
 
