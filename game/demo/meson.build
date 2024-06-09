@@ -1,5 +1,7 @@
 demo_sources = files([
   'src/Main.cpp',
+  'src/GameInstance.cpp',
+  'src/GameInstance.h',
 ])
 
 demo_deps = [
@@ -7,6 +9,7 @@ demo_deps = [
   geometry,
   desktop,
   desktop_main,
+  threading,
   fmt,
   shaders,
 ]

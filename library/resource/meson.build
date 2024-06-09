@@ -2,9 +2,11 @@ resource_sources = files([
   'include/triglav/resource/Container.hpp',
   'include/triglav/resource/GlyphAtlasLoader.h',
   'include/triglav/resource/LevelLoader.h',
+  'include/triglav/resource/LoadContext.h',
   'include/triglav/resource/Loader.hpp',
   'include/triglav/resource/MaterialLoader.h',
   'include/triglav/resource/ModelLoader.h',
+  'include/triglav/resource/NameRegistry.h',
   'include/triglav/resource/PathManager.h',
   'include/triglav/resource/Resource.hpp',
   'include/triglav/resource/ResourceManager.h',
@@ -13,7 +15,9 @@ resource_sources = files([
   'include/triglav/resource/TypefaceLoader.h',
   'src/GlyphAtlasLoader.cpp',
   'src/LevelLoader.cpp',
+  'src/LoadContext.cpp',
   'src/MaterialLoader.cpp',
+  'src/NameRegistry.cpp',
   'src/ResourceManager.cpp',
   'src/TextureLoader.cpp',
   'src/ShaderLoader.cpp',
@@ -22,7 +26,7 @@ resource_sources = files([
   'src/PathManager.cpp',
 ])
 
-resource_deps = [glm, graphics_api, core, geometry, render_core, font, rapidyaml, world, spdlog]
+resource_deps = [glm, graphics_api, core, geometry, render_core, font, rapidyaml, world, spdlog, threading]
 resource_incl = include_directories(['include', 'include/triglav/resource'])
 
 resource_lib = static_library('resource',

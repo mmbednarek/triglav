@@ -49,8 +49,10 @@ Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebuffer
    presentInfo.pImageIndices = imageIndices.data();
    presentInfo.pResults = nullptr;
 
-   if (auto status = vkQueuePresentKHR(m_queueManager.get().next_queue(WorkType::Presentation), &presentInfo);
-       status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
+   auto& queue = m_queueManager.get().next_queue(WorkType::Presentation);
+
+   auto queueAccessor = queue.access();
+   if (auto status = vkQueuePresentKHR(*queueAccessor, &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
       return Status::UnsupportedDevice;
    }
 

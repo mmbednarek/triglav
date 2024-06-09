@@ -211,6 +211,21 @@ Display::Display() :
 
 Display::~Display()
 {
+   if (m_xkbKeymap != nullptr) {
+      xkb_keymap_unref(m_xkbKeymap);
+   }
+   if (m_pointer != nullptr) {
+      wl_pointer_destroy(m_pointer);
+   }
+   if (m_relativePointer != nullptr) {
+      zwp_relative_pointer_v1_destroy(m_relativePointer);
+   }
+   if (m_keyboard != nullptr) {
+      wl_keyboard_destroy(m_keyboard);
+   }
+   zwp_relative_pointer_manager_v1_destroy(m_relativePointerManager);
+   zwp_pointer_constraints_v1_destroy(m_pointerConstraints);
+   wl_seat_destroy(m_seat);
    xkb_context_unref(m_xkbContext);
    xdg_wm_base_destroy(m_wmBase);
    wl_compositor_destroy(m_compositor);

@@ -11,6 +11,7 @@
 
 #include "triglav/TypeMacroList.hpp"
 #include "triglav/io/File.h"
+#include "triglav/threading/ThreadPool.h"
 
 #include <ryml.hpp>
 #include <spdlog/spdlog.h>
@@ -22,16 +23,10 @@ namespace triglav::resource {
 
 namespace {
 
-struct ResourcePath
+std::vector<ResourceStage> parse_asset_list(const io::Path& path)
 {
-   std::string name;
-   std::string source;
-   ResourceProperties properties;
-};
-
-std::vector<ResourcePath> parse_asset_list(const io::Path& path)
-{
-   std::vector<ResourcePath> result{};
+   std::vector<ResourceStage> result{};
+   result.resize(loading_stage_count());
 
    auto file = io::read_whole_file(path);
    auto tree =
@@ -53,7 +48,9 @@ std::vector<ResourcePath> parse_asset_list(const io::Path& path)
          }
       }
 
-      result.emplace_back(std::string{name.data(), name.size()}, std::string{source.data(), source.size()}, std::move(properties));
+      auto resourceName = make_rc_name(std::string{name.data(), name.size()});
+      result[resourceName.loading_stage()].resourceList.emplace_back(std::string{name.data(), name.size()},
+                                                                     std::string{source.data(), source.size()}, std::move(properties));
    }
 
    return result;
@@ -65,24 +62,39 @@ ResourceManager::ResourceManager(graphics_api::Device& device, font::FontManger&
     m_device(device),
     m_fontManager(fontManager)
 {
-#define TG_RESOURCE_TYPE(name, extension, cppType) \
+#define TG_RESOURCE_TYPE(name, extension, cppType, stage) \
    m_containers.emplace(ResourceType::name, std::make_unique<Container<ResourceType::name>>());
    TG_RESOURCE_TYPE_LIST
 #undef TG_RESOURCE_TYPE
-
-   this->load_asset_list(PathManager::the().content_path().sub("index.yaml"));
 }
 
 void ResourceManager::load_asset_list(const io::Path& path)
 {
-   auto list = parse_asset_list(path);
-   spdlog::info("Loading {} assets", list.size());
+   if (m_loadContext != nullptr) {
+      spdlog::error("Loading assets already in progress");
+      return;
+   }
+   m_loadContext = LoadContext::from_asset_list(path);
+
+   spdlog::info("Loading {} assets", m_loadContext->total_assets());
+   this->load_next_stage();
+}
+
+void ResourceManager::load_next_stage()
+{
+   if (m_loadContext == nullptr) {
+      spdlog::error("Cannot load stage: no asset loading in progress");
+      return;
+   }
+
+   auto& stage = m_loadContext->next_stage();
+
+   spdlog::info("Loading {} assets in stage {}", stage.resourceList.size(), m_loadContext->current_stage_id());
 
    auto buildPath = PathManager::the().build_path();
    auto contentPath = PathManager::the().content_path();
 
-   int loadedCount{};
-   for (const auto& [nameStr, source, props] : list) {
+   for (const auto& [nameStr, source, props] : stage.resourceList) {
       auto resourcePath = buildPath.sub(source);
       if (not resourcePath.exists()) {
          resourcePath = contentPath.sub(source);
@@ -94,19 +106,18 @@ void ResourceManager::load_asset_list(const io::Path& path)
       }
 
       auto name = make_rc_name(nameStr);
-      m_registeredNames.emplace(name, nameStr);
-      spdlog::info("[{}/{}] {}", loadedCount, list.size(), nameStr);
-      this->load_asset(name, resourcePath, props);
-      ++loadedCount;
+      m_nameRegistry.register_resource(name, nameStr);
+      threading::ThreadPool::the().issue_job([this, name, resourcePath, props] { this->load_asset(name, resourcePath, props); });
    }
-
-   spdlog::info("[{}/{}] DONE", loadedCount, list.size());
 }
 
 void ResourceManager::load_asset(const ResourceName assetName, const io::Path& path, const ResourceProperties& props)
 {
+   spdlog::info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
+                m_nameRegistry.lookup_resource_name(assetName).value_or("UNKNOWN"));
+
    switch (assetName.type()) {
-#define TG_RESOURCE_TYPE(name, extension, cppType)                     \
+#define TG_RESOURCE_TYPE(name, extension, cppType, stage)              \
    case ResourceType::name:                                            \
       this->load_resource<ResourceType::name>(assetName, path, props); \
       break;
@@ -115,6 +126,8 @@ void ResourceManager::load_asset(const ResourceName assetName, const io::Path& p
    case ResourceType::Unknown:
       break;
    }
+
+   this->on_resource_is_loaded(assetName);
 }
 
 bool ResourceManager::is_name_registered(const ResourceName assetName) const
@@ -124,6 +137,33 @@ bool ResourceManager::is_name_registered(const ResourceName assetName) const
 
    auto& container = m_containers.at(assetName.type());
    return container->is_name_registered(assetName);
+}
+
+void ResourceManager::on_resource_is_loaded(ResourceName resourceName)
+{
+   if (m_loadContext == nullptr) {
+      spdlog::error("Cannot load stage: no asset loading in progress");
+      return;
+   }
+
+   spdlog::info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
+                m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
+
+   const auto result = m_loadContext->finish_loading_asset();
+
+   switch (result) {
+   case FinishLoadingAssetResult::FinishedStage:
+      spdlog::info("Loading stage {} DONE", m_loadContext->current_stage_id());
+      this->load_next_stage();
+      break;
+   case FinishLoadingAssetResult::FinishedLoadingAssets:
+      spdlog::info("Loading assets DONE");
+      m_loadContext.reset();
+      this->OnLoadedAssets.publish();
+      break;
+   case FinishLoadingAssetResult::None:
+      break;
+   }
 }
 
 }// namespace triglav::resource

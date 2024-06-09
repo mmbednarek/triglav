@@ -185,3 +185,5 @@ resources:
     source: "material/stone.yaml"
   - name: "demo.level"
     source: "level/demo.yaml"
+    dependencies:
+      - stone.mat

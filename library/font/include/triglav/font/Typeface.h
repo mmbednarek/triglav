@@ -2,7 +2,12 @@
 
 #include "FreeTypeForwardDecl.h"
 
+#include "triglav/Int.hpp"
+#include "triglav/threading/SafeAccess.hpp"
+
 #include <cstdint>
+#include <optional>
+#include <vector>
 
 namespace triglav::font {
 
@@ -10,13 +15,13 @@ using Rune = uint32_t;
 
 struct RenderedRune
 {
-   uint8_t* data;
-   uint32_t width;
-   uint32_t height;
-   int advanceX;
-   int advanceY;
-   int bitmapLeft;
-   int bitmapTop;
+   std::vector<u8> data;
+   u32 width;
+   u32 height;
+   i32 advanceX;
+   i32 advanceY;
+   i32 bitmapLeft;
+   i32 bitmapTop;
 };
 
 class Typeface
@@ -30,10 +35,10 @@ class Typeface
    Typeface(Typeface&& other) noexcept;
    Typeface& operator=(Typeface&& other) noexcept;
 
-   [[nodiscard]] RenderedRune render_glyph(int size, Rune rune) const;
+   [[nodiscard]] std::optional<RenderedRune> render_glyph(int size, Rune rune) const;
 
  private:
-   FT_Face m_face{};
+   threading::SafeAccess<FT_Face> m_face{};
 };
 
 }// namespace triglav::font

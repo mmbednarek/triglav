@@ -5,13 +5,14 @@
 #include "vulkan/ObjectWrapper.hpp"
 
 #include "triglav/ObjectPool.hpp"
+#include "triglav/threading/SafeAccess.hpp"
 
+#include <atomic>
+#include <mutex>
 #include <span>
 #include <vector>
 
 namespace triglav::graphics_api {
-
-DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
 
 class Device;
 
@@ -25,9 +26,11 @@ struct QueueFamilyInfo
 class QueueManager
 {
  public:
+   using SafeQueue = threading::SafeAccess<VkQueue>;
+
    explicit QueueManager(Device& device, std::span<QueueFamilyInfo> infos);
 
-   [[nodiscard]] VkQueue next_queue(WorkTypeFlags flags) const;
+   [[nodiscard]] SafeQueue& next_queue(WorkTypeFlags flags);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags) const;
    [[nodiscard]] u32 queue_index(WorkTypeFlags flags) const;
    [[nodiscard]] Semaphore* aquire_semaphore();
@@ -40,18 +43,19 @@ class QueueManager
    {
     public:
       QueueGroup(Device& device, const QueueFamilyInfo& info);
-      VkQueue next_queue() const;
+      SafeQueue& next_queue();
       [[nodiscard]] WorkTypeFlags flags() const;
       [[nodiscard]] Result<CommandList> create_command_list() const;
       [[nodiscard]] u32 index() const;
+      [[nodiscard]] const vulkan::CommandPool& command_pool() const;
 
     private:
       Device& m_device;
-      std::vector<VkQueue> m_queues;
+      std::vector<SafeQueue> m_queues;
       WorkTypeFlags m_flags;
-      vulkan::CommandPool m_commandPool;
+      std::vector<vulkan::CommandPool> m_commandPools;
       u32 m_queueFamilyIndex{};
-      mutable u32 m_nextQueue{};
+      mutable std::atomic<u32> m_nextQueue;
    };
 
    class SemaphoreFactory
@@ -76,15 +80,15 @@ class QueueManager
       Device& m_device;
    };
 
-   QueueGroup& queue_group(WorkTypeFlags type);
-   const QueueGroup& queue_group(WorkTypeFlags type) const;
+   [[nodiscard]] QueueGroup& queue_group(WorkTypeFlags type);
+   [[nodiscard]] const QueueGroup& queue_group(WorkTypeFlags type) const;
 
    Device& m_device;
    SemaphoreFactory m_semaphoreFactory;
    ObjectPool<Semaphore, SemaphoreFactory, 8> m_semaphorePool;
    FenceFactory m_fenceFactory;
    ObjectPool<Fence, FenceFactory, 4> m_fencePool;
-   std::vector<QueueGroup> m_queueGroups;
+   std::vector<std::unique_ptr<QueueGroup>> m_queueGroups;
    std::array<u32, 16> m_queueIndices{};
 };
 

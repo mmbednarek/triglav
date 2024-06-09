@@ -9,6 +9,8 @@
 
 namespace triglav::graphics_api {
 
+DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
+
 class Pipeline;
 class Framebuffer;
 class RenderTarget;
@@ -114,4 +116,5 @@ class CommandList
 
    PFN_vkCmdPushDescriptorSetKHR m_cmdPushDescriptorSet{};
 };
+
 }// namespace triglav::graphics_api

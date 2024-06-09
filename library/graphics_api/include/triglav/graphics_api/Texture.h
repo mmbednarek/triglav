@@ -24,7 +24,7 @@ class Texture
    [[nodiscard]] Resolution resolution() const;
    [[nodiscard]] const SamplerProperties& sampler_properties() const;
    Status write(Device& device, const uint8_t* pixels) const;
-   [[nodiscard]] Status generate_mip_maps(const Device& device) const;
+   [[nodiscard]] Status generate_mip_maps(Device& device) const;
 
    void set_anisotropy_state(bool isEnabled);
    void set_lod(float min, float max);

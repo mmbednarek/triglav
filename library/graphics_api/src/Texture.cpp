@@ -118,7 +118,7 @@ Status Texture::write(Device& device, const uint8_t* pixels) const
    return Status::Success;
 }
 
-Status Texture::generate_mip_maps(const Device& device) const
+Status Texture::generate_mip_maps(Device& device) const
 {
    auto oneTimeCommands = device.create_command_list();
 

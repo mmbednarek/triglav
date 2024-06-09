@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 #include <vector>

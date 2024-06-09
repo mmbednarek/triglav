@@ -10,6 +10,7 @@
 #include "node/UserInterface.h"
 
 #include "triglav/Name.hpp"
+#include "triglav/desktop/ISurface.hpp"
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
@@ -66,14 +67,14 @@ std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::S
 
 }// namespace
 
-Renderer::Renderer(const desktop::ISurface& surface, const uint32_t width, const uint32_t height) :
-    m_device(checkResult(graphics_api::initialize_device(surface))),
-    m_resourceManager(std::make_unique<ResourceManager>(*m_device, m_fontManger)),
-    m_scene(*m_resourceManager),
-    m_resolution(create_viewport_resolution(*m_device, width, height)),
-    m_swapchain(checkResult(m_device->create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
+Renderer::Renderer(graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
+    m_device(device),
+    m_resourceManager(resourceManager),
+    m_scene(m_resourceManager),
+    m_resolution(create_viewport_resolution(m_device, resolution.width, resolution.height)),
+    m_swapchain(checkResult(m_device.create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
     m_renderTarget(
-       checkResult(graphics_api::RenderTargetBuilder(*m_device)
+       checkResult(graphics_api::RenderTargetBuilder(m_device)
                       .attachment("output"_name,
                                   AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage |
                                      AttachmentAttribute::Presentable,
@@ -81,21 +82,21 @@ Renderer::Renderer(const desktop::ISurface& surface, const uint32_t width, const
                       .attachment("output/zbuffer"_name, AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
                       .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
-    m_context2D(*m_device, m_renderTarget, *m_resourceManager),
-    m_renderGraph(*m_device),
-    m_infoDialog(m_uiViewport, *m_resourceManager)
+    m_context2D(m_device, m_renderTarget, m_resourceManager),
+    m_renderGraph(m_device),
+    m_infoDialog(m_uiViewport, m_resourceManager)
 {
    m_context2D.update_resolution(m_resolution);
 
    m_renderGraph.add_external_node("frame_is_ready"_name);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::Shading>("shading"_name, *m_device, *m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, *m_device, *m_resourceManager, m_uiViewport);
-   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, *m_device, *m_resourceManager, m_renderTarget, m_framebuffers);
-   m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, *m_device, "shading"_name, "shading"_name, "bloom"_name);
-   m_renderGraph.emplace_node<node::Particles>("particles"_name, *m_device, *m_resourceManager, m_renderGraph);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name, m_device, m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, m_device, m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, m_device, m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::Shading>("shading"_name, m_device, m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, m_device, m_resourceManager, m_uiViewport);
+   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, m_device, m_resourceManager, m_renderTarget, m_framebuffers);
+   m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, m_device, "shading"_name, "shading"_name, "bloom"_name);
+   m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
 
@@ -177,7 +178,7 @@ void Renderer::on_render()
 void Renderer::on_close()
 {
    m_renderGraph.await();
-   m_device->await_all();
+   m_device.await_all();
 }
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
@@ -244,7 +245,7 @@ void Renderer::on_mouse_wheel_turn(const float x)
 
 ResourceManager& Renderer::resource_manager() const
 {
-   return *m_resourceManager;
+   return m_resourceManager;
 }
 
 std::tuple<uint32_t, uint32_t> Renderer::screen_resolution() const
@@ -313,14 +314,14 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    // m_textRenderer.update_resolution(resolution);
    m_context2D.update_resolution(resolution);
 
-   m_device->await_all();
+   m_device.await_all();
 
    m_renderGraph.update_resolution(resolution);
 
    m_framebuffers.clear();
 
    m_swapchain =
-      checkResult(m_device->create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
+      checkResult(m_device.create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};
@@ -328,7 +329,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
 graphics_api::Device& Renderer::device() const
 {
-   return *m_device;
+   return m_device;
 }
 
 constexpr auto g_movingSpeed = 10.0f;

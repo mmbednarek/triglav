@@ -4,6 +4,8 @@ build
 build-debug
 buildDir
 buildDir-rel
+buildDir-clang
+buildDir-clang-rel
 .cache
 compile_commands.json
 .docker-grpc
