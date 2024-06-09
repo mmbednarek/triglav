@@ -10,8 +10,8 @@
 #include "ShadingRenderer.h"
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
-
 #include "InfoDialog.h"
+
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
@@ -41,7 +41,8 @@ class Renderer
       Down
    };
 
-   Renderer(graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
+   Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
+
    void update_debug_info(float framerate);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
@@ -75,6 +76,7 @@ class Renderer
    glm::vec3 m_motion{};
    Moving m_moveDirection{Moving::None};
 
+   graphics_api::Surface& m_surface;
    graphics_api::Device& m_device;
 
    resource::ResourceManager& m_resourceManager;

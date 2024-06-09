@@ -9,6 +9,7 @@ using triglav::desktop::ISurface;
 using triglav::desktop::Key;
 using triglav::desktop::MouseButton;
 using triglav::resource::PathManager;
+namespace gapi = triglav::graphics_api;
 
 class EventListener final : public DefaultSurfaceEventListener
 {
@@ -92,7 +93,9 @@ class EventListener final : public DefaultSurfaceEventListener
 GameInstance::GameInstance(triglav::desktop::ISurface& surface, triglav::graphics_api::Resolution&& resolution) :
     m_surface(surface),
     m_resolution(resolution),
-    m_device(GAPI_CHECK(triglav::graphics_api::initialize_device(surface))),
+    m_instance(GAPI_CHECK(gapi::Instance::create_instance())),
+    m_graphicsSurface(GAPI_CHECK(m_instance.create_surface(m_surface))),
+    m_device(GAPI_CHECK(m_instance.create_device(m_graphicsSurface))),
     m_resourceManager(*m_device, m_fontManager),
     m_onLoadedAssetsSink(m_resourceManager.OnLoadedAssets.connect<&GameInstance::on_loaded_assets>(this))
 {
@@ -102,7 +105,7 @@ GameInstance::GameInstance(triglav::desktop::ISurface& surface, triglav::graphic
 void GameInstance::on_loaded_assets()
 {
    std::unique_lock lk{m_assetsAreLoadedMtx};
-   m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_device, m_resourceManager, m_resolution);
+   m_renderer = std::make_unique<triglav::renderer::Renderer>(m_graphicsSurface, *m_device, m_resourceManager, m_resolution);
    m_eventListener = std::make_unique<EventListener>(m_surface, *m_renderer);
    m_surface.add_event_listener(m_eventListener.get());
 
