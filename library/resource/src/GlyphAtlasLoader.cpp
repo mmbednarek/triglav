@@ -30,6 +30,11 @@ std::vector<font::Rune> make_runes()
    runes.emplace_back(',');
    runes.emplace_back('(');
    runes.emplace_back(')');
+   runes.emplace_back('[');
+   runes.emplace_back(']');
+   runes.emplace_back('?');
+   runes.emplace_back('/');
+   runes.emplace_back('\\');
    runes.emplace_back(' ');
    runes.emplace_back(281);
    return runes;

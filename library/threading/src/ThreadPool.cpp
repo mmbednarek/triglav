@@ -10,7 +10,7 @@ void ThreadPool::initialize(u32 count)
 {
    m_threads.reserve(count);
    std::generate_n(std::back_inserter(m_threads), count,
-                   [this, i = g_workerThreadBeg] () mutable { return std::thread(&ThreadPool::thread_entrypoint, this, i++); });
+                   [this, i = g_workerThreadBeg]() mutable { return std::thread(&ThreadPool::thread_entrypoint, this, i++); });
 }
 
 void ThreadPool::issue_job(Job&& job)

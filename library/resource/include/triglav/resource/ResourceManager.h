@@ -26,6 +26,12 @@ namespace triglav::resource {
 class ResourceManager
 {
  public:
+   using OnStartedLoadingAssetDel = Delegate<ResourceName>;
+   OnStartedLoadingAssetDel OnStartedLoadingAsset;
+
+   using OnFinishedLoadingAssetDel = Delegate<ResourceName, u32, u32>;
+   OnFinishedLoadingAssetDel OnFinishedLoadingAsset;
+
    using OnLoadedAssetsDel = Delegate<>;
    OnLoadedAssetsDel OnLoadedAssets;
 
@@ -71,6 +77,8 @@ class ResourceManager
    }
 
    void on_resource_is_loaded(ResourceName resourceName);
+
+   std::optional<std::string> lookup_name(ResourceName resourceName) const;
 
  private:
    void load_next_stage();

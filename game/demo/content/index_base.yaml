@@ -1,0 +1,17 @@
+# Minimal resources necessary to display the splash screen
+version: 1
+resources:
+  - name: "cantarell.typeface"
+    source: "fonts/cantarell.ttf"
+  - name: "cantarell/bold.typeface"
+    source: "fonts/cantarell_bold.ttf"
+  - name: "cantarell.glyphs"
+    source: "fonts/cantarell_18.yaml"
+  - name: "cantarell_20.glyphs"
+    source: "fonts/cantarell_20.yaml"
+  - name: "cantarell/bold.glyphs"
+    source: "fonts/cantarell_bold_24.yaml"
+  - name: "text.fshader"
+    source: "shader/text/fragment.spv"
+  - name: "text.vshader"
+    source: "shader/text/vertex.spv"

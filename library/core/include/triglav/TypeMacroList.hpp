@@ -1,6 +1,6 @@
 namespace triglav {
 namespace render_core {
-struct GlyphAtlas;
+class GlyphAtlas;
 struct Model;
 struct Material;
 struct MaterialTemplate;

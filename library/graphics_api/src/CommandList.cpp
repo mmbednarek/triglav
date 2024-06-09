@@ -92,7 +92,7 @@ void CommandList::begin_render_pass(const Framebuffer& framebuffer, std::span<Cl
    for (auto i = 0; i < clearValues.size(); ++i) {
       if (std::holds_alternative<Color>(clearValues[i].value)) {
          const auto [r, g, b, a] = std::get<Color>(clearValues[i].value);
-         vulkanClearValues[i].color = {r, g, b, a};
+         vulkanClearValues[i].color = {{r, g, b, a}};
       } else if (std::holds_alternative<DepthStenctilValue>(clearValues[i].value)) {
          const auto [depthValue, stencilValue] = std::get<DepthStenctilValue>(clearValues[i].value);
          vulkanClearValues[i].depthStencil.depth = depthValue;

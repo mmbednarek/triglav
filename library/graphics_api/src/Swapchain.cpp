@@ -53,6 +53,9 @@ Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebuffer
 
    auto queueAccessor = queue.access();
    if (auto status = vkQueuePresentKHR(*queueAccessor, &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
+      if (status == VK_ERROR_OUT_OF_DATE_KHR) {
+         return Status::OutOfDateSwapchain;
+      }
       return Status::UnsupportedDevice;
    }
 

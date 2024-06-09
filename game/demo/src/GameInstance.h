@@ -20,8 +20,10 @@ namespace demo {
 class GameInstance
 {
  public:
-   enum class State {
+   enum class State
+   {
       Uninitialized,
+      LoadingBaseResources,
       LoadingResources,
       Ready
    };
@@ -44,7 +46,10 @@ class GameInstance
    std::unique_ptr<SplashScreen> m_splashScreen;
    std::unique_ptr<triglav::renderer::Renderer> m_renderer;
    std::unique_ptr<triglav::desktop::ISurfaceEventListener> m_eventListener;
+   std::mutex m_stateMtx;
    std::atomic<State> m_state{State::Uninitialized};
+   std::condition_variable m_baseResourcesReadyCV;
+
    triglav::resource::ResourceManager::OnLoadedAssetsDel::Sink<GameInstance> m_onLoadedAssetsSink;
 };
 

@@ -186,7 +186,7 @@ Display::Display() :
    };
 
    m_keyboardListener.leave = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, wl_surface* surface) {
-      const auto* display = static_cast<Display*>(data);
+      // TODO: Handle
    };
 
    m_keyboardListener.key = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
@@ -196,12 +196,12 @@ Display::Display() :
 
    m_keyboardListener.modifiers = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched,
                                      uint32_t mods_locked, uint32_t group) {
-      const auto* display = static_cast<Display*>(data);
+      // TODO: Handle
       std::cout << "modifiers state changes\n";
    };
 
    m_keyboardListener.repeat_info = [](void* data, wl_keyboard* wl_keyboard, int32_t rate, int32_t delay) {
-      const auto* display = static_cast<Display*>(data);
+      // TODO: Handle
    };
 
 
@@ -324,7 +324,7 @@ void Display::dispatch_messages() const
    wl_display_dispatch(m_display);
 }
 
-std::shared_ptr<ISurface> Display::create_surface(int width, int height)
+std::shared_ptr<ISurface> Display::create_surface(int width, int height, WindowAttributeFlags flags)
 {
    return std::make_shared<Surface>(*this);
 }
@@ -393,6 +393,18 @@ void Display::on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t stat
    } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
       m_keyboardSurface->event_listener().on_key_is_released(map_key(key));
    }
+}
+
+void Display::on_destroyed_surface(Surface* surface)
+{
+   if (m_pointerSurface == surface) {
+      m_pointerSurface = nullptr;
+   }
+   if (m_keyboardSurface == surface) {
+      m_keyboardSurface = nullptr;
+   }
+
+   m_surfaceMap.erase(surface->surface());
 }
 
 std::unique_ptr<IDisplay> get_display()

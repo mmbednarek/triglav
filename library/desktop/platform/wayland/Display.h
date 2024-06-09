@@ -1,11 +1,10 @@
 #pragma once
 
+#include "IDisplay.hpp"
 #include "ISurfaceEventListener.hpp"
 #include "api/PointerConstraints.h"
 #include "api/RelativePointer.h"
 #include "api/XdgShell.h"
-
-#include "triglav/desktop/IDisplay.hpp"
 
 #include <map>
 #include <string_view>
@@ -26,7 +25,7 @@ class Display final : public IDisplay
 
    void dispatch_messages() const override;
 
-   std::shared_ptr<ISurface> create_surface(int width, int height) override;
+   std::shared_ptr<ISurface> create_surface(int width, int height, WindowAttributeFlags flags) override;
 
    [[nodiscard]] constexpr wl_display* display() const noexcept
    {
@@ -69,6 +68,7 @@ class Display final : public IDisplay
    void on_keyboard_enter(uint32_t serial, wl_surface* surface, wl_array* wls);
    void on_keymap(uint32_t format, int32_t fd, uint32_t size);
    void on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
+   void on_destroyed_surface(Surface* surface);
 
    wl_display* m_display;
    wl_registry* m_registry;

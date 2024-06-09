@@ -19,9 +19,10 @@ enum class Status
    UnsupportedDevice,
    UnsupportedFormat,
    UnsupportedColorSpace,
+   OutOfDateSwapchain,
    PSOCreationFailed,
    InvalidTransferDestination,
-   InvalidShaderStage
+   InvalidShaderStage,
 };
 
 enum class ColorFormatOrder

@@ -1,10 +1,26 @@
 #pragma once
 
-#include "triglav/desktop/ISurfaceEventListener.hpp"
+#include "ISurfaceEventListener.hpp"
+
+#include "triglav/EnumFlags.hpp"
+#include "triglav/Int.hpp"
 
 #include <memory>
 
 namespace triglav::desktop {
+
+enum class WindowAttribute : u32
+{
+   None = 0,
+   ShowDecorations = (1 << 0),
+   AlignCenter = (1 << 1),
+   TopMost = (1 << 2),
+   Resizeable = (1 << 3),
+
+   Default = ShowDecorations | Resizeable,
+};
+
+TRIGLAV_DECL_FLAGS(WindowAttribute)
 
 struct Dimension
 {

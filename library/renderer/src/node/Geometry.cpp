@@ -37,10 +37,6 @@ class GeometryResources : public render_core::NodeFrameResources
       ubo->model = modelMat;
       ubo->normal = glm::transpose(glm::inverse(glm::mat3(modelMat)));
 
-      for (const auto range : model.range) {
-         const auto& material = m_resourceManager.get<ResourceType::Material>(range.materialName);
-      }
-
       m_models.emplace_back(render_core::InstancedModel{
          object.model,
          model.boundingBox,

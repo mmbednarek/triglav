@@ -53,9 +53,9 @@ void Display::dispatch_messages() const
    }
 }
 
-std::shared_ptr<ISurface> Display::create_surface(const int width, const int height)
+std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, WindowAttributeFlags flags)
 {
-   return std::make_shared<Surface>(m_instance, Dimension{width, height});
+   return std::make_shared<Surface>(m_instance, Dimension{width, height}, flags);
 }
 
 std::unique_ptr<IDisplay> get_display()

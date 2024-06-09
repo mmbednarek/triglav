@@ -6,6 +6,7 @@
 #include "triglav/graphics_api/RenderTarget.h"
 #include "triglav/graphics_api/Texture.h"
 #include "triglav/render_core/IRenderNode.hpp"
+#include "triglav/renderer/TextRenderer.h"
 #include "triglav/ui_core/Viewport.h"
 
 #include <map>
@@ -34,7 +35,7 @@ class UserInterface : public render_core::IRenderNode
    resource::ResourceManager& m_resourceManager;
    ui_core::Viewport& m_viewport;
    graphics_api::RenderTarget m_textureRenderTarget;
-   graphics_api::Pipeline m_textPipeline;
+   TextRenderer m_textRenderer;
    RectangleRenderer m_rectangleRenderer;
 };
 

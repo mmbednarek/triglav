@@ -2,7 +2,9 @@
 
 #include "Entt.hpp"
 
+#include <mutex>
 #include <optional>
+#include <shared_mutex>
 
 namespace triglav {
 
@@ -48,12 +50,15 @@ class Delegate
    template<typename... TCallArgs>
    void publish(TCallArgs&&... args)
    {
+      std::shared_lock lk{m_mutex};
       m_sigh.publish(std::forward<TCallArgs>(args)...);
    }
 
    template<auto CHandleFunction, typename THandler>
    Sink<THandler> connect(THandler* handler)
    {
+      std::unique_lock lk{m_mutex};
+
       Sink<THandler> out(*this, handler);
       out.m_sink.template connect<CHandleFunction>(handler);
       return out;
@@ -65,6 +70,7 @@ class Delegate
       sink.emplace(this->template connect<CHandleFunction>(handler));
    }
 
+   std::shared_mutex m_mutex;
    Sigh m_sigh;
 };
 

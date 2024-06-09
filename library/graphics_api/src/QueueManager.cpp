@@ -161,6 +161,7 @@ u32 QueueManager::QueueGroup::index() const
 const vulkan::CommandPool& QueueManager::QueueGroup::command_pool() const
 {
    // Retrieve the pool assigned for this thread.
+   //   spdlog::info("getting command pool ID={}, from thread {}", threading::this_thread_id(), static_cast<u32>(pthread_self()));
    return m_commandPools[threading::this_thread_id()];
 }
 

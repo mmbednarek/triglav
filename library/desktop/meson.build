@@ -1,6 +1,6 @@
 desktop_sources = files([])
 
-desktop_deps = [vulkan, spdlog]
+desktop_deps = [vulkan, spdlog, core]
 
 if host_machine.system() == 'linux'
     if get_option('wayland').enabled()
@@ -25,4 +25,5 @@ desktop_lib = static_library('desktop',
 desktop = declare_dependency(
     include_directories : include_directories(['include']),
     link_with : desktop_lib,
+    dependencies: [core],
 )

@@ -41,6 +41,8 @@ Surface::Surface(Display& display) :
 
 Surface::~Surface()
 {
+   m_display.on_destroyed_surface(this);
+
    xdg_toplevel_destroy(m_topLevel);
    xdg_surface_destroy(m_xdgSurface);
    wl_surface_destroy(m_surface);
