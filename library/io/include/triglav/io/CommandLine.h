@@ -16,6 +16,7 @@ class CommandLine
 
    [[nodiscard]] bool is_enabled(Name flag) const;
    [[nodiscard]] std::optional<std::string> arg(Name flag) const;
+   [[nodiscard]] std::optional<int> arg_int(Name flag) const;
 
    [[nodiscard]] static CommandLine& the();
 

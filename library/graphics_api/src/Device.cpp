@@ -429,7 +429,7 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits() const
 }
 
 Status Device::submit_command_list(const CommandList& commandList, const SemaphoreArrayView waitSemaphores,
-                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes) const
+                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes)
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -452,7 +452,10 @@ Status Device::submit_command_list(const CommandList& commandList, const Semapho
       vulkanFence = fence->vulkan_fence();
    }
 
-   if (vkQueueSubmit(m_queueManager.next_queue(commandList.work_types()), 1, &submitInfo, vulkanFence) != VK_SUCCESS) {
+   auto& queue = m_queueManager.next_queue(commandList.work_types());
+   auto queueAccessor = queue.access();
+
+   if (vkQueueSubmit(*queueAccessor, 1, &submitInfo, vulkanFence) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
@@ -460,7 +463,7 @@ Status Device::submit_command_list(const CommandList& commandList, const Semapho
 }
 
 Status Device::submit_command_list(const CommandList& commandList, const Semaphore& waitSemaphore, const Semaphore& signalSemaphore,
-                                   const Fence& fence) const
+                                   const Fence& fence)
 {
    SemaphoreArray waitSemaphores;
    waitSemaphores.add_semaphore(waitSemaphore);
@@ -470,7 +473,7 @@ Status Device::submit_command_list(const CommandList& commandList, const Semapho
    return this->submit_command_list(commandList, waitSemaphores, signalSemaphores, &fence, WorkType::Graphics);
 }
 
-Status Device::submit_command_list_one_time(const CommandList& commandList) const
+Status Device::submit_command_list_one_time(const CommandList& commandList)
 {
    const auto vulkanCommandList = commandList.vulkan_command_buffer();
 
@@ -479,9 +482,11 @@ Status Device::submit_command_list_one_time(const CommandList& commandList) cons
    submitInfo.commandBufferCount = 1;
    submitInfo.pCommandBuffers = &vulkanCommandList;
 
-   const auto queue = m_queueManager.next_queue(commandList.work_types());
-   vkQueueSubmit(queue, 1, &submitInfo, nullptr);
-   vkQueueWaitIdle(queue);
+   auto& queue = m_queueManager.next_queue(commandList.work_types());
+   auto queueAccessor = queue.access();
+
+   vkQueueSubmit(*queueAccessor, 1, &submitInfo, nullptr);
+   vkQueueWaitIdle(*queueAccessor);
 
    return Status::Success;
 }

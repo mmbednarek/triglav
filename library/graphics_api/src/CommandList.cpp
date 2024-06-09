@@ -8,6 +8,8 @@
 #include "TimestampArray.h"
 #include "vulkan/Util.h"
 
+#include <spdlog/spdlog.h>
+
 namespace triglav::graphics_api {
 
 CommandList::CommandList(Device& device, const VkCommandBuffer commandBuffer, const VkCommandPool commandPool,

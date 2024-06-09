@@ -52,4 +52,13 @@ std::optional<std::string> CommandLine::arg(Name flag) const
    return it->second;
 }
 
+std::optional<int> CommandLine::arg_int(Name flag) const
+{
+   auto argStr = this->arg(flag);
+   if (not argStr.has_value()) {
+      return std::nullopt;
+   }
+   return std::stoi(*argStr);
+}
+
 }// namespace triglav::io

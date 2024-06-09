@@ -1,7 +1,3 @@
-/*
-TG_RESOURCE_TYPE(name, extension, cppType)
-*/
-
 namespace triglav {
 namespace render_core {
 struct GlyphAtlas;
@@ -25,14 +21,18 @@ struct Level;
 
 }// namespace triglav
 
-#define TG_RESOURCE_TYPE_LIST                                                         \
-   TG_RESOURCE_TYPE(Texture, "tex", ::triglav::graphics_api::Texture)                 \
-   TG_RESOURCE_TYPE(FragmentShader, "fshader", ::triglav::graphics_api::Shader)       \
-   TG_RESOURCE_TYPE(VertexShader, "vshader", ::triglav::graphics_api::Shader)         \
-   TG_RESOURCE_TYPE(ComputeShader, "cshader", ::triglav::graphics_api::Shader)        \
-   TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_core::Material)                \
-   TG_RESOURCE_TYPE(MaterialTemplate, "mt", ::triglav::render_core::MaterialTemplate) \
-   TG_RESOURCE_TYPE(Model, "model", ::triglav::render_core::Model)                    \
-   TG_RESOURCE_TYPE(GlyphAtlas, "glyphs", ::triglav::render_core::GlyphAtlas)         \
-   TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface)                  \
-   TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level)
+/*
+TG_RESOURCE_TYPE(name, extension, cppType, loadingStage)
+*/
+
+#define TG_RESOURCE_TYPE_LIST                                                            \
+   TG_RESOURCE_TYPE(Texture, "tex", ::triglav::graphics_api::Texture, 0)                 \
+   TG_RESOURCE_TYPE(FragmentShader, "fshader", ::triglav::graphics_api::Shader, 0)       \
+   TG_RESOURCE_TYPE(VertexShader, "vshader", ::triglav::graphics_api::Shader, 0)         \
+   TG_RESOURCE_TYPE(ComputeShader, "cshader", ::triglav::graphics_api::Shader, 0)        \
+   TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_core::Material, 1)                \
+   TG_RESOURCE_TYPE(MaterialTemplate, "mt", ::triglav::render_core::MaterialTemplate, 0) \
+   TG_RESOURCE_TYPE(Model, "model", ::triglav::render_core::Model, 0)                    \
+   TG_RESOURCE_TYPE(GlyphAtlas, "glyphs", ::triglav::render_core::GlyphAtlas, 1)         \
+   TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface, 0)                  \
+   TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level, 0)

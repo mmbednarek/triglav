@@ -5,7 +5,7 @@ font_sources = files([
 
 font_lib = static_library('font',
                           sources : font_sources,
-                          dependencies : [freetype, io],
+                          dependencies : [freetype, io, threading],
                           include_directories : ['include/triglav/font'],
 )
 

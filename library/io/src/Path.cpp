@@ -29,8 +29,10 @@ Path Path::sub(std::string_view value) const
 
 Path Path::parent() const
 {
-   auto it = std::ranges::find_last(m_path, '/');
-   return Path{std::string{m_path.begin(), it.begin()}};
+   auto it = std::find(m_path.rbegin(), m_path.rend(), '/');
+   if (it == m_path.rend())
+      return Path{""};
+   return Path{std::string{m_path.begin(), it.base() - 1}};
 }
 
 bool Path::exists() const

@@ -1,5 +1,6 @@
 #include "Typeface.h"
 
+#include <cstring>
 #include <freetype/freetype.h>
 #include <utility>
 
@@ -12,30 +13,51 @@ Typeface::Typeface(const FT_Face face) :
 
 Typeface::~Typeface()
 {
-   FT_Done_Face(m_face);
+   auto faceAccess = m_face.access();
+   FT_Done_Face(*faceAccess);
 }
 
 Typeface::Typeface(Typeface&& other) noexcept :
-    m_face(std::exchange(other.m_face, nullptr))
+    m_face(std::exchange(other.m_face.access().value(), nullptr))
 {
 }
 
 Typeface& Typeface::operator=(Typeface&& other) noexcept
 {
-   m_face = std::exchange(other.m_face, nullptr);
+   auto otherFaceAccess = other.m_face.access();
+   auto faceAccess = m_face.access();
+   *faceAccess = std::exchange(*otherFaceAccess, nullptr);
    return *this;
 }
 
-RenderedRune Typeface::render_glyph(const int size, const Rune rune) const
+std::optional<RenderedRune> Typeface::render_glyph(const int size, const Rune rune) const
 {
-   FT_Set_Pixel_Sizes(m_face, 0, size);
-   const auto index = FT_Get_Char_Index(m_face, rune);
-   FT_Load_Glyph(m_face, index, FT_LOAD_DEFAULT);
-   FT_Render_Glyph(m_face->glyph, FT_RENDER_MODE_NORMAL);
+   auto faceAccess = m_face.const_access();
+
+   if (auto err = FT_Set_Pixel_Sizes(*faceAccess, 0, size); err != FT_Err_Ok) {
+      return std::nullopt;
+   }
+
+   const auto index = FT_Get_Char_Index(*faceAccess, rune);
+
+   if (auto err = FT_Load_Glyph(*faceAccess, index, FT_LOAD_DEFAULT); err != FT_Err_Ok) {
+      return std::nullopt;
+   }
+   if (auto err = FT_Render_Glyph(faceAccess.value()->glyph, FT_RENDER_MODE_NORMAL); err != FT_Err_Ok) {
+      return std::nullopt;
+   }
+
+   std::vector<u8> data(faceAccess.value()->glyph->bitmap.width * faceAccess.value()->glyph->bitmap.rows);
+   std::memcpy(data.data(), faceAccess.value()->glyph->bitmap.buffer, sizeof(u8) * data.size());
 
    return RenderedRune{
-      m_face->glyph->bitmap.buffer,  m_face->glyph->bitmap.width, m_face->glyph->bitmap.rows, m_face->glyph->advance.x >> 6,
-      m_face->glyph->advance.y >> 6, m_face->glyph->bitmap_left,  m_face->glyph->bitmap_top,
+      std::move(data),
+      faceAccess.value()->glyph->bitmap.width,
+      faceAccess.value()->glyph->bitmap.rows,
+      static_cast<i32>(faceAccess.value()->glyph->advance.x >> 6),
+      static_cast<i32>(faceAccess.value()->glyph->advance.y >> 6),
+      faceAccess.value()->glyph->bitmap_left,
+      faceAccess.value()->glyph->bitmap_top,
    };
 }
 

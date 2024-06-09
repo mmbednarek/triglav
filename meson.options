@@ -1,1 +1,3 @@
 option('wayland', type : 'feature', value : 'enabled')
+option('thread_sanitizer', type : 'feature', value : 'disabled')
+option('address_sanitizer', type : 'feature', value : 'disabled')

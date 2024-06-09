@@ -35,34 +35,14 @@ class CommandList;
 
 DECLARE_VLK_WRAPPED_OBJECT(Instance)
 DECLARE_VLK_WRAPPED_OBJECT(Device)
-DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
 
 #if GAPI_ENABLE_VALIDATION
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(DebugUtilsMessengerEXT, Instance)
 #endif
 
-constexpr uint32_t g_invalidQueueIndex = std::numeric_limits<uint32_t>::max();
-
 namespace vulkan {
 using PhysicalDevice = VkPhysicalDevice;
-
-struct QueueFamilyIndices
-{
-   uint32_t graphicsQueue;
-   uint32_t graphicsQueueCount;
-   uint32_t presentQueue;
-   uint32_t presentQueueCount;
-};
 }// namespace vulkan
-
-struct RenderPassCreateInfo
-{
-   Resolution resolution;
-   bool is_depth_enabled;
-   ColorFormat depth_format;
-   SampleCount sample_count;
-   std::vector<ColorFormat> color_image_formats;
-};
 
 constexpr auto g_maxMipMaps = 0;
 
@@ -93,10 +73,10 @@ class Device
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
 
    [[nodiscard]] Status submit_command_list(const CommandList& commandList, SemaphoreArrayView waitSemaphores,
-                                            SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes) const;
+                                            SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes);
    [[nodiscard]] Status submit_command_list(const CommandList& commandList, const Semaphore& waitSemaphore,
-                                            const Semaphore& signalSemaphore, const Fence& fence) const;
-   [[nodiscard]] Status submit_command_list_one_time(const CommandList& commandList) const;
+                                            const Semaphore& signalSemaphore, const Fence& fence);
+   [[nodiscard]] Status submit_command_list_one_time(const CommandList& commandList);
    [[nodiscard]] VkDevice vulkan_device() const;
    [[nodiscard]] QueueManager& queue_manager();
    [[nodiscard]] SamplerCache& sampler_cache();

@@ -54,12 +54,12 @@ graphics_api_sources = files([
 
 graphics_api_lib = static_library('graphics_api',
                                   sources : graphics_api_sources,
-                                  dependencies : [vulkan, desktop, core, spdlog],
+                                  dependencies : [vulkan, desktop, core, spdlog, threading],
                                   include_directories : ['include/triglav/graphics_api'],
 )
 
 graphics_api = declare_dependency(
     include_directories : ['include'],
     link_with : graphics_api_lib,
-    dependencies : [vulkan, desktop, core],
+    dependencies : [vulkan, desktop, core, threading],
 )

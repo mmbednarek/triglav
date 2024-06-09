@@ -41,7 +41,7 @@ class Renderer
       Down
    };
 
-   Renderer(const desktop::ISurface& surface, uint32_t width, uint32_t height);
+   Renderer(graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
    void update_debug_info(float framerate);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
@@ -75,10 +75,9 @@ class Renderer
    glm::vec3 m_motion{};
    Moving m_moveDirection{Moving::None};
 
-   graphics_api::DeviceUPtr m_device;
+   graphics_api::Device& m_device;
 
-   font::FontManger m_fontManger;
-   std::unique_ptr<resource::ResourceManager> m_resourceManager;
+   resource::ResourceManager& m_resourceManager;
    Scene m_scene;
 
    graphics_api::Resolution m_resolution;

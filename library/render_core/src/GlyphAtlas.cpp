@@ -4,6 +4,8 @@
 
 #include "triglav/graphics_api/Device.h"
 
+#include <spdlog/spdlog.h>
+
 #include <codecvt>
 #include <cstring>
 #include <locale>
@@ -30,27 +32,29 @@ GlyphAtlas::GlyphAtlas(graphics_api::Device& device, const font::Typeface& typef
 
    for (const auto rune : atlasRunes) {
       auto glyph = typeface.render_glyph(glyphSize, rune);
-      auto bottom = top + glyph.height;
+      assert(glyph.has_value());
+
+      auto bottom = top + glyph->height;
       assert((bottom + separation) <= height);
 
-      maxHeight = std::max(maxHeight, glyph.height + separation);
-      auto right = left + glyph.width;
+      maxHeight = std::max(maxHeight, glyph->height + separation);
+      auto right = left + glyph->width;
       if (right > width) {
          left = separation;
-         right = left + glyph.width;
+         right = left + glyph->width;
          top += maxHeight;
-         bottom = top + glyph.height;
-         maxHeight = glyph.height + separation;
+         bottom = top + glyph->height;
+         maxHeight = glyph->height + separation;
       }
 
       m_glyphInfos.emplace(rune, GlyphInfo{{static_cast<float>(left) / widthFP, static_cast<float>(top) / heightFP},
                                            {static_cast<float>(right) / widthFP, static_cast<float>(bottom) / heightFP},
-                                           {glyph.width, glyph.height},
-                                           {glyph.advanceX, glyph.advanceY},
-                                           {glyph.bitmapLeft, glyph.bitmapTop}});
+                                           {glyph->width, glyph->height},
+                                           {glyph->advanceX, glyph->advanceY},
+                                           {glyph->bitmapLeft, glyph->bitmapTop}});
 
-      for (int y = 0; y < glyph.height; ++y) {
-         std::memcpy(&atlasData[left + (top + y) * width], &glyph.data[y * glyph.width], glyph.width);
+      for (int y = 0; y < glyph->height; ++y) {
+         std::memcpy(&atlasData[left + (top + y) * width], &glyph->data[y * glyph->width], glyph->width);
       }
 
       left = right + separation;

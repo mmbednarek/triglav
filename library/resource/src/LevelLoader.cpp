@@ -16,9 +16,9 @@ glm::vec3 parse_vector3(const ryml::ConstNodeRef node)
    auto z = node["z"].val();
 
    return glm::vec3{
-      std::stof(x.data()),
-      std::stof(y.data()),
-      std::stof(z.data()),
+      std::stof(std::string{x.data(), x.size()}),
+      std::stof(std::string{y.data(), y.size()}),
+      std::stof(std::string{z.data(), z.size()}),
    };
 }
 
@@ -29,9 +29,9 @@ glm::vec3 parse_angle3(const ryml::ConstNodeRef node)
    auto z = node["yaw"].val();
 
    return glm::vec3{
-      std::stof(x.data()),
-      std::stof(y.data()),
-      std::stof(z.data()),
+      std::stof(std::string{x.data(), x.size()}),
+      std::stof(std::string{y.data(), y.size()}),
+      std::stof(std::string{z.data(), z.size()}),
    };
 }
 

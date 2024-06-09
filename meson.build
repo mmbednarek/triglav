@@ -11,6 +11,17 @@ if build_machine.system() == 'windows'
   add_project_arguments('/Zc:preprocessor', language : 'cpp')
 endif
 
+if meson.get_compiler('cpp').get_id() == 'clang'
+  if get_option('thread_sanitizer').enabled()
+    add_project_arguments('-fsanitize=thread', language: 'cpp')
+    add_project_link_arguments('-fsanitize=thread', language: 'cpp')
+  elif get_option('address_sanitizer').enabled()
+    add_project_arguments('-fsanitize=address', language: 'cpp')
+    add_project_arguments('-fno-omit-frame-pointer', language: 'cpp')
+    add_project_link_arguments('-fsanitize=address', language: 'cpp')
+  endif
+endif
+
 fs = import('fs')
 
 vulkan = dependency('vulkan', method:'pkg-config')
@@ -39,6 +50,7 @@ subdir('library/io')
 subdir('library/world')
 subdir('library/desktop')
 subdir('library/desktop_main')
+subdir('library/threading')
 subdir('library/graphics_api')
 subdir('library/font')
 subdir('library/geometry')

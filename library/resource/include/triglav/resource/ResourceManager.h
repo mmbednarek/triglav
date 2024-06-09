@@ -2,12 +2,16 @@
 
 #include "Container.hpp"
 #include "Loader.hpp"
+#include "NameRegistry.h"
 #include "Resource.hpp"
 
+#include "LoadContext.h"
+#include "triglav/Delegate.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/font/FontManager.h"
 #include "triglav/io/Path.h"
 
+#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -18,9 +22,13 @@ class Device;
 
 namespace triglav::resource {
 
+
 class ResourceManager
 {
  public:
+   using OnLoadedAssetsDel = Delegate<>;
+   OnLoadedAssetsDel OnLoadedAssets;
+
    explicit ResourceManager(graphics_api::Device& device, font::FontManger& fontManager);
 
    void load_asset_list(const io::Path& path);
@@ -62,15 +70,20 @@ class ResourceManager
       container<CResourceType>().iterate_resources(func);
    }
 
+   void on_resource_is_loaded(ResourceName resourceName);
+
  private:
+   void load_next_stage();
+
    template<ResourceType CResourceType>
    Container<CResourceType>& container()
    {
       return *static_cast<Container<CResourceType>*>(m_containers.at(CResourceType).get());
    }
 
+   std::unique_ptr<LoadContext> m_loadContext{};
    std::map<ResourceType, std::unique_ptr<IContainer>> m_containers;
-   std::map<ResourceName, std::string> m_registeredNames;
+   NameRegistry m_nameRegistry;
    graphics_api::Device& m_device;
    font::FontManger& m_fontManager;
 };

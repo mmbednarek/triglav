@@ -51,7 +51,7 @@ render_core::GlyphAtlas Loader<ResourceType::GlyphAtlas>::load_gpu(ResourceManag
    auto typeface = tree["typeface"].val();
    auto typefaceName = make_rc_name(std::string_view{typeface.str, typeface.len});
    auto sizeStr = tree["size"].val();
-   auto size = std::stoi(sizeStr.str);
+   auto size = std::stoi(std::string{sizeStr.data(), sizeStr.size()});
 
    return render_core::GlyphAtlas{device, resourceManager.get<ResourceType::Typeface>(typefaceName), g_runes, size, 512, 512};
 }

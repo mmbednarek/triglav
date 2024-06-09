@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/io/Path.h"
+#include "triglav/threading/SafeAccess.hpp"
 
 #include <optional>
 
@@ -16,8 +17,8 @@ class PathManager
    [[nodiscard]] static PathManager& the();
 
  private:
-   std::optional<io::Path> m_cachedContentPath;
-   std::optional<io::Path> m_cachedBuildPath;
+   threading::SafeReadWriteAccess<std::optional<io::Path>> m_cachedContentPath;
+   threading::SafeReadWriteAccess<std::optional<io::Path>> m_cachedBuildPath;
 };
 
 }// namespace triglav::resource

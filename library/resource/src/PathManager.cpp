@@ -14,41 +14,50 @@ PathManager& PathManager::the()
 
 io::Path PathManager::content_path()
 {
-   if (m_cachedContentPath.has_value()) {
-      return m_cachedContentPath.value();
+   {
+      auto RA_contentPath = m_cachedContentPath.read_access();
+      if (RA_contentPath->has_value()) {
+         return **RA_contentPath;
+      }
    }
+
+   auto WA_contentPath = m_cachedContentPath.access();
 
    auto commandLineArg = io::CommandLine::the().arg("contentDir"_name);
    if (commandLineArg.has_value()) {
-      m_cachedContentPath.emplace(io::Path{std::move(*commandLineArg)});
-      return m_cachedContentPath.value();
+      WA_contentPath->emplace(io::Path{std::move(*commandLineArg)});
+      return **WA_contentPath;
    }
 
    // TODO: Handle the situation when we don't get working directory
    auto workingDir = io::working_path().value();
 
-
-   m_cachedContentPath.emplace(workingDir.sub("content"));
-   return m_cachedContentPath.value();
+   WA_contentPath->emplace(workingDir.sub("content"));
+   return **WA_contentPath;
 }
 
 io::Path PathManager::build_path()
 {
-   if (m_cachedBuildPath.has_value()) {
-      return m_cachedBuildPath.value();
+   {
+      auto RA_buildPath = m_cachedBuildPath.read_access();
+      if (RA_buildPath->has_value()) {
+         return **RA_buildPath;
+      }
    }
+
+   auto WA_buildPath = m_cachedBuildPath.access();
 
    auto commandLineArg = io::CommandLine::the().arg("buildDir"_name);
    if (commandLineArg.has_value()) {
-      m_cachedBuildPath.emplace(io::Path{std::move(*commandLineArg)});
-      return m_cachedBuildPath.value();
+      WA_buildPath->emplace(io::Path{std::move(*commandLineArg)});
+      return **WA_buildPath;
    }
 
    // TODO: Handle the situation when we don't get working directory
    auto workingDir = io::working_path().value();
 
-   m_cachedBuildPath.emplace(workingDir.parent().parent());
-   return m_cachedBuildPath.value();
+   WA_buildPath->emplace(workingDir.parent().parent());
+   return **WA_buildPath;
 }
 
 }// namespace triglav::resource
