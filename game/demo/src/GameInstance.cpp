@@ -90,37 +90,48 @@ class EventListener final : public DefaultSurfaceEventListener
    bool m_isRunning{true};
 };
 
-GameInstance::GameInstance(triglav::desktop::ISurface& surface, triglav::graphics_api::Resolution&& resolution) :
-    m_surface(surface),
+GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution) :
+    m_splashScreenSurface(display.create_surface(1024, 360)),
     m_resolution(resolution),
     m_instance(GAPI_CHECK(gapi::Instance::create_instance())),
-    m_graphicsSurface(GAPI_CHECK(m_instance.create_surface(m_surface))),
-    m_device(GAPI_CHECK(m_instance.create_device(m_graphicsSurface))),
+    m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
+    m_device(GAPI_CHECK(m_instance.create_device(*m_graphicsSplashScreenSurface))),
     m_resourceManager(*m_device, m_fontManager),
+    m_splashScreen(std::make_unique<SplashScreen>(*m_graphicsSplashScreenSurface, *m_device, m_resourceManager)),
     m_onLoadedAssetsSink(m_resourceManager.OnLoadedAssets.connect<&GameInstance::on_loaded_assets>(this))
 {
    m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index.yaml"));
+   m_state.store(State::LoadingResources);
 }
 
 void GameInstance::on_loaded_assets()
 {
-   std::unique_lock lk{m_assetsAreLoadedMtx};
-   m_renderer = std::make_unique<triglav::renderer::Renderer>(m_graphicsSurface, *m_device, m_resourceManager, m_resolution);
-   m_eventListener = std::make_unique<EventListener>(m_surface, *m_renderer);
-   m_surface.add_event_listener(m_eventListener.get());
-
-   lk.unlock();
-   m_assetsAreLoadedCV.notify_one();
+   m_state.store(State::Ready);
 }
 
 void GameInstance::loop(triglav::desktop::IDisplay& display)
 {
    display.dispatch_messages();
+   while (m_state.load() != State::Ready) {
+      if (m_splashScreen != nullptr) {
+         m_splashScreen->update();
+      }
+      display.dispatch_messages();
+   }
 
-   std::unique_lock lk{m_assetsAreLoadedMtx};
-   m_assetsAreLoadedCV.wait(lk, [this] { return m_renderer != nullptr && m_eventListener != nullptr; });
+   m_splashScreen->await();
+   m_splashScreen.reset();
+   m_device->await_all();
 
-   lk.unlock();
+   m_graphicsSplashScreenSurface.reset();
+   m_splashScreenSurface.reset();
+
+   m_demoSurface = display.create_surface(static_cast<int>(m_resolution.width), static_cast<int>(m_resolution.height));
+   m_graphicsDemoSurface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demoSurface)));
+
+   m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_graphicsDemoSurface, *m_device, m_resourceManager, m_resolution);
+   m_eventListener = std::make_unique<EventListener>(*m_demoSurface, *m_renderer);
+   m_demoSurface->add_event_listener(m_eventListener.get());
 
    auto& eventListener = dynamic_cast<EventListener&>(*m_eventListener);
 

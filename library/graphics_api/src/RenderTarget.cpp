@@ -145,14 +145,18 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain& 
    std::vector<VkImageView> attachmentImageViews;
    attachmentImageViews.resize(textures.size() + 1);
 
-   index = 0;
-   for (size_t i = 0; i < textures.size(); ++i) {
-      if (index == swapchainAttachment) {
-         attachmentImageViews[index] = swapchain.vulkan_image_view(frameIndex);
+   if (textures.size() == 0) {
+      attachmentImageViews[swapchainAttachment] = swapchain.vulkan_image_view(frameIndex);
+   } else {
+      index = 0;
+      for (size_t i = 0; i < textures.size(); ++i) {
+         if (index == swapchainAttachment) {
+            attachmentImageViews[index] = swapchain.vulkan_image_view(frameIndex);
+            ++index;
+         }
+         attachmentImageViews[index] = textures[m_attachments[index].identifier].vulkan_image_view();
          ++index;
       }
-      attachmentImageViews[index] = textures[m_attachments[index].identifier].vulkan_image_view();
-      ++index;
    }
 
    VkFramebufferCreateInfo framebufferInfo{};
