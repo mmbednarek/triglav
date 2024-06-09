@@ -4,6 +4,7 @@
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Instance.h"
 #include "triglav/renderer/Renderer.h"
 #include "triglav/resource/ResourceManager.h"
 
@@ -24,6 +25,8 @@ class GameInstance
  private:
    triglav::desktop::ISurface& m_surface;
    triglav::graphics_api::Resolution m_resolution;
+   triglav::graphics_api::Instance m_instance;
+   triglav::graphics_api::Surface m_graphicsSurface;
    triglav::graphics_api::DeviceUPtr m_device;
    triglav::font::FontManger m_fontManager;
    triglav::resource::ResourceManager m_resourceManager;

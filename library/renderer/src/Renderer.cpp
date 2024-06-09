@@ -40,14 +40,14 @@ constexpr auto g_sampleCount = SampleCount::Single;
 
 namespace {
 
-graphics_api::Resolution create_viewport_resolution(const graphics_api::Device& device, const uint32_t width, const uint32_t height)
+graphics_api::Resolution create_viewport_resolution(const graphics_api::Device& device, const graphics_api::Surface& surface, const uint32_t width, const uint32_t height)
 {
    graphics_api::Resolution resolution{
       .width = width,
       .height = height,
    };
 
-   const auto [minResolution, maxResolution] = device.get_surface_resolution_limits();
+   const auto [minResolution, maxResolution] = device.get_surface_resolution_limits(surface);
    resolution.width = std::clamp(resolution.width, minResolution.width, maxResolution.width);
    resolution.height = std::clamp(resolution.height, minResolution.height, maxResolution.height);
 
@@ -67,12 +67,13 @@ std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::S
 
 }// namespace
 
-Renderer::Renderer(graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
+Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
+    m_surface(surface),
     m_device(device),
     m_resourceManager(resourceManager),
     m_scene(m_resourceManager),
-    m_resolution(create_viewport_resolution(m_device, resolution.width, resolution.height)),
-    m_swapchain(checkResult(m_device.create_swapchain(g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
+    m_resolution(create_viewport_resolution(m_device, m_surface, resolution.width, resolution.height)),
+    m_swapchain(checkResult(m_device.create_swapchain(m_surface, g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
     m_renderTarget(
        checkResult(graphics_api::RenderTargetBuilder(m_device)
                       .attachment("output"_name,
@@ -320,8 +321,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_framebuffers.clear();
 
-   m_swapchain =
-      checkResult(m_device.create_swapchain(m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
+   m_swapchain = checkResult(m_device.create_swapchain(m_surface, m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};

@@ -6,7 +6,7 @@
 #include "Sampler.h"
 #include "SamplerCache.h"
 #include "Shader.h"
-#include "Surface.hpp"
+#include "Surface.h"
 #include "Swapchain.h"
 #include "Synchronization.h"
 #include "Texture.h"
@@ -33,7 +33,6 @@ namespace triglav::graphics_api {
 
 class CommandList;
 
-DECLARE_VLK_WRAPPED_OBJECT(Instance)
 DECLARE_VLK_WRAPPED_OBJECT(Device)
 
 #if GAPI_ENABLE_VALIDATION
@@ -49,14 +48,9 @@ constexpr auto g_maxMipMaps = 0;
 class Device
 {
  public:
-   Device(vulkan::Instance instance,
-#if GAPI_ENABLE_VALIDATION
-          vulkan::DebugUtilsMessengerEXT debugMessenger,
-#endif
-          vulkan::SurfaceKHR surface, vulkan::Device device, vulkan::PhysicalDevice physicalDevice,
-          std::vector<QueueFamilyInfo>&& queueFamilyInfos);
+   Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos);
 
-   [[nodiscard]] Result<Swapchain> create_swapchain(ColorFormat colorFormat, ColorSpace colorSpace, const Resolution& resolution,
+   [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace, const Resolution& resolution,
                                                     Swapchain* oldSwapchain = nullptr);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint, std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
@@ -70,7 +64,7 @@ class Device
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties& info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
 
-   [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits() const;
+   [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits(const Surface& surface) const;
 
    [[nodiscard]] Status submit_command_list(const CommandList& commandList, SemaphoreArrayView waitSemaphores,
                                             SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes);
@@ -85,11 +79,6 @@ class Device
  private:
    [[nodiscard]] uint32_t find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
 
-   vulkan::Instance m_instance;
-#if GAPI_ENABLE_VALIDATION
-   vulkan::DebugUtilsMessengerEXT m_debugMessenger;
-#endif
-   vulkan::SurfaceKHR m_surface;
    vulkan::Device m_device;
    vulkan::PhysicalDevice m_physicalDevice;
    std::vector<QueueFamilyInfo> m_queueFamilyInfos;
@@ -98,7 +87,5 @@ class Device
 };
 
 using DeviceUPtr = std::unique_ptr<Device>;
-
-Result<DeviceUPtr> initialize_device(const triglav::desktop::ISurface& surface);
 
 }// namespace triglav::graphics_api
