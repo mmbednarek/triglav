@@ -36,13 +36,11 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto threadCount = CommandLine::the().arg_int("threadCount"_name).value_or(8);
    ThreadPool::the().initialize(threadCount);
 
-   const auto surface = display.create_surface(g_initialWidth, g_initialHeight);
-
    spdlog::info("content path: {}", PathManager::the().content_path().string());
    spdlog::info("build path: {}", PathManager::the().build_path().string());
    spdlog::info("initializing renderer");
 
-   demo::GameInstance instance(*surface, {g_initialWidth, g_initialHeight});
+   demo::GameInstance instance(display, {g_initialWidth, g_initialHeight});
    instance.loop(display);
 
    ThreadPool::the().quit();
