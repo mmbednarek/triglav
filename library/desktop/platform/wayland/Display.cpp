@@ -395,6 +395,18 @@ void Display::on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t stat
    }
 }
 
+void Display::on_destroyed_surface(Surface* surface)
+{
+   if (m_pointerSurface == surface) {
+      m_pointerSurface = nullptr;
+   }
+   if (m_keyboardSurface == surface) {
+      m_keyboardSurface = nullptr;
+   }
+
+   m_surfaceMap.erase(surface->surface());
+}
+
 std::unique_ptr<IDisplay> get_display()
 {
    return std::make_unique<Display>();

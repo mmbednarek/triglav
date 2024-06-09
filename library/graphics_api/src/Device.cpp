@@ -68,8 +68,8 @@ Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std
 {
 }
 
-Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace, const Resolution& resolution,
-                                           Swapchain* oldSwapchain)
+Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
+                                           const Resolution& resolution, Swapchain* oldSwapchain)
 {
    if (not is_surface_format_supported(m_physicalDevice, surface.vulkan_surface(), colorFormat, colorSpace))
       return std::unexpected(Status::UnsupportedFormat);

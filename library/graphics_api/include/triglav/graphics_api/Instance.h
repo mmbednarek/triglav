@@ -1,14 +1,15 @@
 #pragma once
 
-#include "vulkan/ObjectWrapper.hpp"
-#include "Surface.h"
 #include "Device.h"
+#include "Surface.h"
+#include "vulkan/ObjectWrapper.hpp"
 
 namespace triglav::graphics_api {
 
 DECLARE_VLK_WRAPPED_OBJECT(Instance)
 
-class Instance {
+class Instance
+{
  public:
    explicit Instance(vulkan::Instance&& instance);
 
@@ -16,6 +17,7 @@ class Instance {
    [[nodiscard]] Result<DeviceUPtr> create_device(const Surface& surface) const;
 
    [[nodiscard]] static Result<Instance> create_instance();
+
  private:
    vulkan::Instance m_instance;
 #if GAPI_ENABLE_VALIDATION
@@ -23,4 +25,4 @@ class Instance {
 #endif
 };
 
-}
+}// namespace triglav::graphics_api

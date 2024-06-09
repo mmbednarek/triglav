@@ -42,16 +42,17 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(VkDebugUtilsMessageSev
    return VK_FALSE;
 }
 
-}
+}// namespace
 
 DECLARE_VLK_ENUMERATOR(get_physical_devices, VkPhysicalDevice, vkEnumeratePhysicalDevices)
 DECLARE_VLK_ENUMERATOR(get_queue_family_properties, VkQueueFamilyProperties, vkGetPhysicalDeviceQueueFamilyProperties)
 DECLARE_VLK_ENUMERATOR(get_device_extension_properties, VkExtensionProperties, vkEnumerateDeviceExtensionProperties)
 
 Instance::Instance(vulkan::Instance&& instance) :
-   m_instance(std::move(instance))
+    m_instance(std::move(instance))
 #if GAPI_ENABLE_VALIDATION
-   , m_debugMessenger(*m_instance)
+    ,
+    m_debugMessenger(*m_instance)
 #endif
 {
 #if GAPI_ENABLE_VALIDATION
@@ -195,12 +196,12 @@ Result<Instance> Instance::create_instance()
    appInfo.apiVersion = VK_API_VERSION_1_3;
 
    const std::array g_vulkanInstanceExtensions
-      {
-         VK_KHR_SURFACE_EXTENSION_NAME, triglav::desktop::vulkan_extension_name(),
+   {
+      VK_KHR_SURFACE_EXTENSION_NAME, triglav::desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
          VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
-      };
+   };
 
    VkInstanceCreateInfo instanceInfo{};
    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -220,4 +221,4 @@ Result<Instance> Instance::create_instance()
    return Instance{std::move(instance)};
 }
 
-}
+}// namespace triglav::graphics_api

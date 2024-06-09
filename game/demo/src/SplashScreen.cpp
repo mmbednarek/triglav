@@ -1,23 +1,23 @@
 #include "SplashScreen.h"
 
-#include <utility>
+#include <fmt/core.h>
 
 namespace demo {
 
 using namespace triglav::name_literals;
 
+using triglav::u32;
 using triglav::graphics_api::AttachmentAttribute;
-using triglav::graphics_api::ColorFormat;
-using triglav::graphics_api::ColorSpace;
-using triglav::graphics_api::RenderTargetBuilder;
-using triglav::graphics_api::Resolution;
 using triglav::graphics_api::ClearValue;
 using triglav::graphics_api::Color;
-using triglav::graphics_api::WorkType;
+using triglav::graphics_api::ColorFormat;
+using triglav::graphics_api::ColorSpace;
 using triglav::graphics_api::Framebuffer;
-using triglav::graphics_api::Swapchain;
 using triglav::graphics_api::RenderTarget;
-using triglav::u32;
+using triglav::graphics_api::RenderTargetBuilder;
+using triglav::graphics_api::Resolution;
+using triglav::graphics_api::Swapchain;
+using triglav::graphics_api::WorkType;
 
 constexpr Resolution g_splashScreenResolution{1024, 360};
 constexpr ColorFormat g_splashScreenColorFormat{GAPI_FORMAT(BGRA, sRGB)};
@@ -34,9 +34,10 @@ std::vector<Framebuffer> create_framebuffers(const Swapchain& swapchain, const R
    return result;
 }
 
-}
+}// namespace
 
-SplashScreen::SplashScreen(triglav::graphics_api::Surface& surface, triglav::graphics_api::Device& device, triglav::resource::ResourceManager& resourceManager) :
+SplashScreen::SplashScreen(triglav::graphics_api::Surface& surface, triglav::graphics_api::Device& device,
+                           triglav::resource::ResourceManager& resourceManager) :
     m_surface(surface),
     m_device(device),
     m_resourceManager(resourceManager),
@@ -48,10 +49,16 @@ SplashScreen::SplashScreen(triglav::graphics_api::Surface& surface, triglav::gra
                                              g_splashScreenColorFormat)
                                  .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
+    m_textRenderer(m_device, m_resourceManager, m_renderTarget),
     m_commandList(GAPI_CHECK(m_device.queue_manager().create_command_list(WorkType::Graphics))),
     m_frameReadySemaphore(GAPI_CHECK(m_device.create_semaphore())),
     m_targetSemaphore(GAPI_CHECK(m_device.create_semaphore())),
-    m_frameFinishedFence(GAPI_CHECK(m_device.create_fence()))
+    m_frameFinishedFence(GAPI_CHECK(m_device.create_fence())),
+    m_textTitle(m_textRenderer.create_text_object("cantarell/bold.glyphs"_rc, "TRIGLAV RENDER DEMO")),
+    m_textDesc(m_textRenderer.create_text_object("cantarell.glyphs"_rc, "Loading Resource")),
+    m_textStatus(m_textRenderer.create_text_object("cantarell.glyphs"_rc, "[0/?]")),
+    m_onStartedLoadingAssetSink(m_resourceManager.OnStartedLoadingAsset.connect<&SplashScreen::on_started_loading_asset>(this)),
+    m_onFinishedLoadingAssetSink(m_resourceManager.OnFinishedLoadingAsset.connect<&SplashScreen::on_finished_loading_asset>(this))
 {
 }
 
@@ -69,6 +76,19 @@ void SplashScreen::update()
       {{Color{0, 0, 0, 0}}},
    };
    m_commandList.begin_render_pass(framebuffer, clearValues);
+
+   m_textRenderer.bind_pipeline(m_commandList);
+   m_textRenderer.draw_text(m_commandList, m_textTitle, {g_splashScreenResolution.width, g_splashScreenResolution.height}, {64.0f, 64.0f},
+                            {0.13f, 0.39f, 0.78f, 1.0f});
+
+   {
+      std::unique_lock lk{m_updateTextMutex};
+      m_textRenderer.draw_text(m_commandList, m_textDesc, {g_splashScreenResolution.width, g_splashScreenResolution.height},
+                               {64.0f, 128.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+      m_textRenderer.draw_text(m_commandList, m_textStatus, {g_splashScreenResolution.width, g_splashScreenResolution.height},
+                               {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+   }
+
    m_commandList.end_render_pass();
 
    GAPI_CHECK_STATUS(m_commandList.finish());
@@ -78,9 +98,29 @@ void SplashScreen::update()
    GAPI_CHECK_STATUS(m_swapchain.present(m_targetSemaphore, framebufferIndex));
 }
 
-void SplashScreen::await()
+void SplashScreen::on_close()
 {
+   m_onStartedLoadingAssetSink.disconnect();
+
+   std::unique_lock lk{m_updateTextMutex};
    m_frameFinishedFence.await();
+   m_device.await_all();
+}
+
+void SplashScreen::on_started_loading_asset(const triglav::ResourceName resourceName)
+{
+   std::unique_lock lk{m_updateTextMutex};
+
+   auto msg = fmt::format("Loading resource {}...", m_resourceManager.lookup_name(resourceName).value_or("unknown"));
+   m_textRenderer.update_text(m_textDesc, msg);
+}
+
+void SplashScreen::on_finished_loading_asset(triglav::ResourceName resourceName, triglav::u32 loadedAssets, triglav::u32 totalAssets)
+{
+   std::unique_lock lk{m_updateTextMutex};
+
+   auto msg = fmt::format("[{}/{}]", loadedAssets, totalAssets);
+   m_textRenderer.update_text(m_textStatus, msg);
 }
 
 }// namespace demo

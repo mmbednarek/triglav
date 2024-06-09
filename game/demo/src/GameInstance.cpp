@@ -97,34 +97,51 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
     m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
     m_device(GAPI_CHECK(m_instance.create_device(*m_graphicsSplashScreenSurface))),
     m_resourceManager(*m_device, m_fontManager),
-    m_splashScreen(std::make_unique<SplashScreen>(*m_graphicsSplashScreenSurface, *m_device, m_resourceManager)),
     m_onLoadedAssetsSink(m_resourceManager.OnLoadedAssets.connect<&GameInstance::on_loaded_assets>(this))
 {
-   m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index.yaml"));
-   m_state.store(State::LoadingResources);
+   m_state = State::LoadingBaseResources;
+   m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index_base.yaml"));
 }
 
 void GameInstance::on_loaded_assets()
 {
-   m_state.store(State::Ready);
+   {
+      if (m_state.load() == State::LoadingBaseResources) {
+         {
+            std::unique_lock lk{m_stateMtx};
+            m_state.store(State::LoadingResources);
+         }
+         m_baseResourcesReadyCV.notify_one();
+         m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index.yaml"));
+      } else {
+         m_state.store(State::Ready);
+      }
+   }
 }
 
 void GameInstance::loop(triglav::desktop::IDisplay& display)
 {
    display.dispatch_messages();
+
+   std::unique_lock lk{m_stateMtx};
+   m_baseResourcesReadyCV.wait(lk, [this] { return m_state == State::LoadingResources; });
+   lk.unlock();
+
+   m_splashScreen = std::make_unique<SplashScreen>(*m_graphicsSplashScreenSurface, *m_device, m_resourceManager);
+
    while (m_state.load() != State::Ready) {
-      if (m_splashScreen != nullptr) {
-         m_splashScreen->update();
-      }
+      m_splashScreen->update();
       display.dispatch_messages();
    }
 
-   m_splashScreen->await();
+   m_splashScreen->on_close();
    m_splashScreen.reset();
    m_device->await_all();
 
    m_graphicsSplashScreenSurface.reset();
    m_splashScreenSurface.reset();
+
+   display.dispatch_messages();
 
    m_demoSurface = display.create_surface(static_cast<int>(m_resolution.width), static_cast<int>(m_resolution.height));
    m_graphicsDemoSurface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demoSurface)));

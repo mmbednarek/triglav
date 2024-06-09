@@ -3,6 +3,7 @@
 #include "AmbientOcclusionRenderer.h"
 #include "DebugLinesRenderer.h"
 #include "GroundRenderer.h"
+#include "InfoDialog.h"
 #include "PostProcessingRenderer.h"
 #include "RectangleRenderer.h"
 #include "Renderer.h"
@@ -10,7 +11,6 @@
 #include "ShadingRenderer.h"
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
-#include "InfoDialog.h"
 
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/font/FontManager.h"
@@ -41,7 +41,8 @@ class Renderer
       Down
    };
 
-   Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
+   Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
+            const graphics_api::Resolution& resolution);
 
    void update_debug_info(float framerate);
    void on_render();

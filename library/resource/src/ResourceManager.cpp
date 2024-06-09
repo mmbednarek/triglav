@@ -116,6 +116,8 @@ void ResourceManager::load_asset(const ResourceName assetName, const io::Path& p
    spdlog::info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
                 m_nameRegistry.lookup_resource_name(assetName).value_or("UNKNOWN"));
 
+   this->OnStartedLoadingAsset.publish(assetName);
+
    switch (assetName.type()) {
 #define TG_RESOURCE_TYPE(name, extension, cppType, stage)              \
    case ResourceType::name:                                            \
@@ -148,6 +150,7 @@ void ResourceManager::on_resource_is_loaded(ResourceName resourceName)
 
    spdlog::info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
                 m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
+   this->OnFinishedLoadingAsset.publish(resourceName, m_loadContext->total_loaded_assets(), m_loadContext->total_assets());
 
    const auto result = m_loadContext->finish_loading_asset();
 
@@ -164,6 +167,11 @@ void ResourceManager::on_resource_is_loaded(ResourceName resourceName)
    case FinishLoadingAssetResult::None:
       break;
    }
+}
+
+std::optional<std::string> ResourceManager::lookup_name(ResourceName resourceName) const
+{
+   return m_nameRegistry.lookup_resource_name(resourceName);
 }
 
 }// namespace triglav::resource

@@ -11,7 +11,8 @@ namespace vulkan {
 using SurfaceKHR = WrappedObject<VkSurfaceKHR, triglav::desktop::create_vulkan_surface, vkDestroySurfaceKHR, VkInstance>;
 }
 
-class Surface {
+class Surface
+{
  public:
    explicit Surface(vulkan::SurfaceKHR&& surface);
 
@@ -23,4 +24,4 @@ class Surface {
    vulkan::SurfaceKHR m_surface;
 };
 
-}// namespace triglav::graphics_api::vulkan
+}// namespace triglav::graphics_api

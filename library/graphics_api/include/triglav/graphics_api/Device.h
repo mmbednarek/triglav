@@ -50,8 +50,8 @@ class Device
  public:
    Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos);
 
-   [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace, const Resolution& resolution,
-                                                    Swapchain* oldSwapchain = nullptr);
+   [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
+                                                    const Resolution& resolution, Swapchain* oldSwapchain = nullptr);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint, std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
    [[nodiscard]] Result<Buffer> create_buffer(BufferUsageFlags usage, uint64_t size);
