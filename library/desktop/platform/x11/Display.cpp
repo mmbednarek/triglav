@@ -12,7 +12,8 @@ namespace triglav::desktop::x11 {
 
 Display::Display() :
     m_display(XOpenDisplay(nullptr)),
-    m_rootWindow(DefaultRootWindow(m_display))
+    m_rootWindow(DefaultRootWindow(m_display)),
+    m_onMouseMoveSink(m_mouse.OnMouseMove.connect<&Display::on_mouse_move>(this))
 {
 }
 
@@ -74,6 +75,8 @@ void Display::dispatch_messages()
          break;
       surface->tick();
    }
+
+   m_mouse.tick();
 }
 
 std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, WindowAttributeFlags flags)
@@ -94,6 +97,17 @@ std::shared_ptr<ISurface> Display::create_surface(const int width, const int hei
    auto surface = std::make_shared<Surface>(m_display, window, Dimension{width, height});
    m_surfaces.emplace(window, surface);
    return surface;
+}
+
+void Display::on_mouse_move(float x, float y)
+{
+   for (const auto wndHandle : std::views::keys(m_surfaces)) {
+      auto surface = this->surface_by_window(wndHandle);
+      if (not surface)
+         break;
+
+      surface->dispatch_mouse_relative_move(x, y);
+   }
 }
 
 std::shared_ptr<Surface> Display::surface_by_window(Window wndHandle)
