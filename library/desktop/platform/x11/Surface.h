@@ -26,6 +26,7 @@ class Surface final : public ISurface
    void dispatch_button_press(uint32_t code) const;
    void dispatch_button_release(uint32_t code) const;
    void dispatch_mouse_move(int x, int y) const;
+   void dispatch_mouse_relative_move(float x, float y) const;
    void tick() const;
 
    [[nodiscard]] constexpr ::Display* display() const

@@ -153,14 +153,18 @@ void Surface::dispatch_button_release(const uint32_t code) const
 
 void Surface::dispatch_mouse_move(const int x, const int y) const
 {
-   if (m_isCursorLocked) {
-      Dimension center{m_dimension.width / 2, m_dimension.height / 2};
-      const auto dx = x - center.width;
-      const auto dy = y - center.height;
+   for (ISurfaceEventListener* listener : m_listeners) {
+      listener->on_mouse_move(static_cast<float>(x), static_cast<float>(y));
+   }
+}
 
-      for (ISurfaceEventListener* listener : m_listeners) {
-         listener->on_mouse_relative_move(static_cast<float>(dx), static_cast<float>(dy));
-      }
+void Surface::dispatch_mouse_relative_move(float x, float y) const
+{
+   if (not m_isCursorLocked)
+      return;
+
+   for (ISurfaceEventListener* listener : m_listeners) {
+      listener->on_mouse_relative_move(x, y);
    }
 }
 

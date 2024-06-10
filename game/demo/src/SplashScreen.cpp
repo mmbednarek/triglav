@@ -102,8 +102,6 @@ void SplashScreen::update()
 
    m_textRenderer.draw_text(m_commandList, m_textDesc, {m_resolution.width, m_resolution.height},
                             {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
-//   m_textRenderer.draw_text(m_commandList, m_textStatus, {m_resolution.width, m_resolution.height},
-//                            {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
 
    m_rectangleRenderer.begin_render(m_commandList);
 
