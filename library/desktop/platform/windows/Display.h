@@ -12,7 +12,7 @@ class Display : public IDisplay
    explicit Display(HINSTANCE instance);
 
    void dispatch_messages() const override;
-   std::shared_ptr<ISurface> create_surface(int width, int height) override;
+   std::shared_ptr<ISurface> create_surface(int width, int height, WindowAttributeFlags flags) override;
 
  private:
    HINSTANCE m_instance;

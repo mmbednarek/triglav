@@ -51,13 +51,58 @@ Key translate_key(const WPARAM keyCode)
    return Key::Unknown;
 }
 
+DWORD map_window_attributes_to_ex_style(WindowAttributeFlags flags)
+{
+   DWORD result{};
+   if (flags & WindowAttribute::TopMost) {
+      result |= WS_EX_TOPMOST;
+   }
+   if (not(flags & WindowAttribute::NoDecorations)) {
+      result |= WS_EX_CLIENTEDGE;
+   }
+
+   return result;
+}
+
+DWORD map_window_attributes_to_style(WindowAttributeFlags flags)
+{
+   DWORD result{};
+
+   if (flags & WindowAttribute::NoDecorations) {
+      result |= WS_DLGFRAME;
+   } else {
+      result |= WS_OVERLAPPEDWINDOW;
+   }
+   return result;
+}
+
+int map_window_attributes_to_x_position(WindowAttributeFlags flags, const Dimension& dimension)
+{
+   if (flags & WindowAttribute::AlignCenter) {
+      auto screenWidth = GetSystemMetrics(SM_CXSCREEN);
+      return screenWidth / 2 - dimension.width / 2;
+   }
+   return CW_USEDEFAULT;
+}
+
+int map_window_attributes_to_y_position(WindowAttributeFlags flags, const Dimension& dimension)
+{
+   if (flags & WindowAttribute::AlignCenter) {
+      auto screenHeight = GetSystemMetrics(SM_CYSCREEN);
+      return screenHeight / 2 - dimension.height / 2;
+   }
+   return CW_USEDEFAULT;
+}
+
 }// namespace
 
-Surface::Surface(const HINSTANCE instance, const Dimension dimension) :
+Surface::Surface(const HINSTANCE instance, const Dimension dimension, WindowAttributeFlags flags) :
     m_instance(instance),
     m_dimension(dimension),
-    m_windowHandle(CreateWindowExA(WS_EX_CLIENTEDGE, g_windowClassName, "Triglav Engine", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-                                   m_dimension.width, m_dimension.height, nullptr, nullptr, m_instance, this))
+    m_windowHandle(CreateWindowExA(map_window_attributes_to_ex_style(flags), g_windowClassName, "Triglav Engine",
+                                   map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
+                                   map_window_attributes_to_y_position(flags, dimension), m_dimension.width, m_dimension.height, nullptr,
+                                   nullptr, m_instance, this))
 {
    ShowWindow(m_windowHandle, SW_NORMAL);
    UpdateWindow(m_windowHandle);

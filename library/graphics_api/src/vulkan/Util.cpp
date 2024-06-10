@@ -234,6 +234,8 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
       return VK_SHADER_STAGE_FRAGMENT_BIT;
    case PipelineStage::ComputeShader:
       return VK_SHADER_STAGE_COMPUTE_BIT;
+   default:
+      break;
    }
 
    return static_cast<VkShaderStageFlagBits>(0);

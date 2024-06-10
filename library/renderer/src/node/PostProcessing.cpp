@@ -23,8 +23,7 @@ void PostProcessing::record_commands(render_core::FrameResources& frameResources
                                      graphics_api::CommandList& cmdList)
 {
    std::array<graphics_api::ClearValue, 2> clearValues{
-      graphics_api::ColorPalette::Black,
-      graphics_api::DepthStenctilValue{1.0f, 0},
+      {{graphics_api::ColorPalette::Black}, {graphics_api::DepthStenctilValue{1.0f, 0}}},
    };
 
    cmdList.begin_render_pass(m_framebuffers[m_frameIndex], clearValues);

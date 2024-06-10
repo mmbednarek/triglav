@@ -12,7 +12,7 @@ constexpr auto g_windowClassName = "TRIGLAV_WINDOW";
 class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
  public:
-   Surface(HINSTANCE instance, Dimension dimension);
+   Surface(HINSTANCE instance, Dimension dimension, WindowAttributeFlags flags);
    ~Surface() override;
 
    void lock_cursor() override;

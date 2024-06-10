@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 namespace triglav {
 
 template<typename TEnum>

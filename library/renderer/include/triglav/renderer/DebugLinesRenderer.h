@@ -1,6 +1,8 @@
 #pragma once
 
+#include "triglav/graphics_api/Array.hpp"
 #include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.h"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/resource/ResourceManager.h"
