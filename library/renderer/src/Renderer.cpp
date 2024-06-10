@@ -30,8 +30,6 @@ using triglav::render_core::checkStatus;
 using triglav::resource::ResourceManager;
 using namespace triglav::name_literals;
 
-// using triglav::re
-
 namespace triglav::renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
@@ -85,9 +83,10 @@ Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device,
                       .attachment("output/zbuffer"_name, AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
                       .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
+    m_glyphCache(m_device, m_resourceManager),
     m_context2D(m_device, m_renderTarget, m_resourceManager),
     m_renderGraph(m_device),
-    m_infoDialog(m_uiViewport, m_resourceManager)
+    m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache)
 {
    m_context2D.update_resolution(m_resolution);
 
@@ -96,7 +95,7 @@ Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device,
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name, m_device, m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, m_device, m_resourceManager, m_uiViewport);
+   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, m_device, m_resourceManager, m_uiViewport, m_glyphCache);
    m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, m_device, m_resourceManager, m_renderTarget, m_framebuffers);
    m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, m_device, "shading"_name, "shading"_name, "bloom"_name);
    m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);

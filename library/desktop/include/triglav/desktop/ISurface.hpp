@@ -7,6 +7,11 @@
 
 #include <memory>
 
+#ifdef None
+#define TRI_TMP_None None
+#undef None
+#endif
+
 namespace triglav::desktop {
 
 enum class WindowAttribute : u32

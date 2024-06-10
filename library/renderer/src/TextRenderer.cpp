@@ -17,9 +17,10 @@ struct TextColorConstant
 };
 
 TextRenderer::TextRenderer(graphics_api::Device& device, resource::ResourceManager& resourceManager,
-                           graphics_api::RenderTarget& renderTarget) :
+                           graphics_api::RenderTarget& renderTarget, GlyphCache& glyphCache) :
     m_device(device),
     m_resourceManager(resourceManager),
+    m_glyphCache(glyphCache),
     m_pipeline(GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(device, renderTarget)
                              .fragment_shader(m_resourceManager.get("text.fshader"_rc))
                              .vertex_shader(m_resourceManager.get("text.vshader"_rc))
@@ -45,18 +46,22 @@ void TextRenderer::bind_pipeline(graphics_api::CommandList& cmdList)
    cmdList.bind_pipeline(m_pipeline);
 }
 
-TextObject TextRenderer::create_text_object(GlyphAtlasName atlasName, std::string_view content)
+TextObject TextRenderer::create_text_object(TypefaceName typefaceName, int fontSize, std::string_view content)
 {
    graphics_api::UniformBuffer<render_core::SpriteUBO> ubo(m_device);
 
-   auto& atlas = m_resourceManager.get(atlasName);
+   GlyphProperties glyphProperties{
+      .typeface = typefaceName,
+      .fontSize = fontSize,
+   };
+   auto& atlas = m_glyphCache.find_glyph_atlas(glyphProperties);
 
    render_core::TextMetric metric{};
    const auto vertices = atlas.create_glyph_vertices(content, &metric);
    graphics_api::VertexArray<render_core::GlyphVertex> gpuVertices(m_device, vertices.size());
    gpuVertices.write(vertices.data(), vertices.size());
 
-   return TextObject(atlasName, metric, std::move(ubo), std::move(gpuVertices), vertices.size());
+   return TextObject(&atlas, metric, std::move(ubo), std::move(gpuVertices), vertices.size());
 }
 
 void TextRenderer::draw_text(graphics_api::CommandList& cmdList, const TextObject& textObject, const glm::vec2& viewportSize,
@@ -68,19 +73,15 @@ void TextRenderer::draw_text(graphics_api::CommandList& cmdList, const TextObjec
    const auto sc = glm::scale(glm::mat3(1), glm::vec2(2.0f / viewportSize.x, 2.0f / viewportSize.y));
    textObject.ubo->transform = glm::translate(sc, glm::vec2(position.x - viewportSize.x / 2.0f, position.y - viewportSize.y / 2.0f));
 
-   auto& atlas = m_resourceManager.get(textObject.glyphAtlas);
-
    cmdList.bind_vertex_array(textObject.vertices);
    cmdList.bind_uniform_buffer(0, textObject.ubo);
-   cmdList.bind_texture(1, atlas.texture());
+   cmdList.bind_texture(1, textObject.glyphAtlas->texture());
    cmdList.draw_primitives(static_cast<int>(textObject.vertexCount), 0);
 }
 
 void TextRenderer::update_text(TextObject& textObject, std::string_view content)
 {
-   auto& atlas = m_resourceManager.get(textObject.glyphAtlas);
-
-   const auto vertices = atlas.create_glyph_vertices(content, &textObject.metric);
+   const auto vertices = textObject.glyphAtlas->create_glyph_vertices(content, &textObject.metric);
    if (vertices.size() > textObject.vertices.count()) {
       graphics_api::VertexArray<render_core::GlyphVertex> gpuVertices(m_device, vertices.size());
       gpuVertices.write(vertices.data(), vertices.size());

@@ -23,7 +23,7 @@ class UserInterface : public render_core::IRenderNode
    OnAddedLabelGroupDel OnAddedLabelGroup;
    OnAddedLabelDel OnAddedLabel;
 
-   UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport);
+   UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport, GlyphCache& glyphCache);
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;

@@ -35,7 +35,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
 
    void on_added_text(Name id, const ui_core::Text& textObj)
    {
-      m_textResources.emplace(id, m_textRenderer.create_text_object(textObj.glyphAtlas, textObj.content));
+      m_textResources.emplace(id, m_textRenderer.create_text_object(textObj.typefaceName, textObj.fontSize, textObj.content));
    }
 
    void on_text_content_change(Name id, const ui_core::Text& /*content*/)
@@ -45,7 +45,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
 
    void on_added_rectangle(Name id, const ui_core::Rectangle& rectObj)
    {
-      m_rectangleResources.emplace(id, m_rectangleRenderer.create_rectangle(rectObj.rect));
+      m_rectangleResources.emplace(id, m_rectangleRenderer.create_rectangle(rectObj.rect, glm::vec4{0.0f, 0.0f, 0.0f, 0.8f}));
    }
 
    void update_text(const Name name)
@@ -101,7 +101,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    ui_core::Viewport::OnAddedRectangleDel::Sink<UserInterfaceResources> m_onAddedRectangleSink;
 };
 
-UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport) :
+UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport, GlyphCache& glyphCache) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_viewport(viewport),
@@ -110,7 +110,7 @@ UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceMan
           .attachment("user_interface"_name, AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
                       GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single)
           .build())),
-    m_textRenderer(m_device, m_resourceManager, m_textureRenderTarget),
+    m_textRenderer(m_device, m_resourceManager, m_textureRenderTarget, glyphCache),
     m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager)
 {
 }

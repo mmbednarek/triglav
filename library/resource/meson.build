@@ -1,6 +1,5 @@
 resource_sources = files([
   'include/triglav/resource/Container.hpp',
-  'include/triglav/resource/GlyphAtlasLoader.h',
   'include/triglav/resource/LevelLoader.h',
   'include/triglav/resource/LoadContext.h',
   'include/triglav/resource/Loader.hpp',
@@ -13,7 +12,6 @@ resource_sources = files([
   'include/triglav/resource/ShaderLoader.h',
   'include/triglav/resource/TextureLoader.h',
   'include/triglav/resource/TypefaceLoader.h',
-  'src/GlyphAtlasLoader.cpp',
   'src/LevelLoader.cpp',
   'src/LoadContext.cpp',
   'src/MaterialLoader.cpp',

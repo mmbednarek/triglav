@@ -319,7 +319,7 @@ void Display::on_pointer_motion(uint32_t /*time*/, const int32_t x, const int32_
    m_pointerSurface->event_listener().on_mouse_move(static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f);
 }
 
-void Display::dispatch_messages() const
+void Display::dispatch_messages()
 {
    wl_display_dispatch(m_display);
 }
