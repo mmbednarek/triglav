@@ -75,7 +75,6 @@ Surface::~Surface()
 void Surface::lock_cursor()
 {
    m_isCursorLocked = true;
-   std::cout << "locking!\n";
 
    XGrabPointer(m_display, m_window, false,
                 ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | EnterWindowMask | LeaveWindowMask,
@@ -87,7 +86,6 @@ void Surface::lock_cursor()
 
 void Surface::unlock_cursor()
 {
-   std::cout << "unlocking!\n";
    m_isCursorLocked = false;
    XUngrabPointer(m_display, CurrentTime);
 }
@@ -121,7 +119,6 @@ Dimension Surface::dimension() const
 
 void Surface::dispatch_key_press(const KeyCode code) const
 {
-   std::cout << "PRESS: " << static_cast<int>(code) << '\n';
    for (ISurfaceEventListener* listener : m_listeners) {
       listener->on_key_is_pressed(map_key(code));
    }
@@ -129,7 +126,6 @@ void Surface::dispatch_key_press(const KeyCode code) const
 
 void Surface::dispatch_key_release(const KeyCode code) const
 {
-   std::cout << "RELEASE: " << static_cast<int>(code) << '\n';
    for (ISurfaceEventListener* listener : m_listeners) {
       listener->on_key_is_released(map_key(code));
    }
@@ -137,7 +133,6 @@ void Surface::dispatch_key_release(const KeyCode code) const
 
 void Surface::dispatch_button_press(const uint32_t code) const
 {
-   std::cout << "MOUSE PRESS: " << static_cast<int>(code) << '\n';
    for (ISurfaceEventListener* listener : m_listeners) {
       listener->on_mouse_button_is_pressed(map_button(code));
    }
@@ -145,7 +140,6 @@ void Surface::dispatch_button_press(const uint32_t code) const
 
 void Surface::dispatch_button_release(const uint32_t code) const
 {
-   std::cout << "MOUSE RELEASE: " << static_cast<int>(code) << '\n';
    for (ISurfaceEventListener* listener : m_listeners) {
       listener->on_mouse_button_is_released(map_button(code));
    }
