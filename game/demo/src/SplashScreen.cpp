@@ -120,8 +120,9 @@ void SplashScreen::recreate_swapchain()
    m_device.await_all();
 
    const auto newDimension = m_surface.dimension();
-   m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
-                                                      {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)}));
+   m_swapchain =
+      GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
+                                           {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)}, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 }
 

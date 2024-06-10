@@ -173,7 +173,7 @@ void Surface::on_close() const
    }
 }
 
-void Surface::on_resize(const short x, const short y) const
+void Surface::on_resize(const short x, const short y)
 {
    m_dimension = Dimension{x, y};
    if (m_eventListener != nullptr) {

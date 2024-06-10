@@ -33,7 +33,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    void on_button_up(MouseButton button) const;
    void on_mouse_move(int x, int y) const;
    void on_close() const;
-   void on_resize(short x, short y) const;
+   void on_resize(short x, short y);
 
    HINSTANCE m_instance;
    Dimension m_dimension;
