@@ -12,10 +12,12 @@ namespace triglav::desktop {
 enum class WindowAttribute : u32
 {
    None = 0,
-   NoDecorations = (1 << 0),
+   ShowDecorations = (1 << 0),
    AlignCenter = (1 << 1),
    TopMost = (1 << 2),
-   StaticSize = (1 << 3),
+   Resizeable = (1 << 3),
+
+   Default = ShowDecorations | Resizeable,
 };
 
 TRIGLAV_DECL_FLAGS(WindowAttribute)

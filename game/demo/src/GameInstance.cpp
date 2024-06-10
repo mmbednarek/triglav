@@ -92,7 +92,7 @@ class EventListener final : public DefaultSurfaceEventListener
 };
 
 GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution) :
-    m_splashScreenSurface(display.create_surface(1024, 360, WindowAttribute::AlignCenter | WindowAttribute::NoDecorations)),
+    m_splashScreenSurface(display.create_surface(1024, 360, WindowAttribute::AlignCenter | WindowAttribute::TopMost)),
     m_resolution(resolution),
     m_instance(GAPI_CHECK(gapi::Instance::create_instance())),
     m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
@@ -145,7 +145,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
    display.dispatch_messages();
 
    m_demoSurface =
-      display.create_surface(static_cast<int>(m_resolution.width), static_cast<int>(m_resolution.height), WindowAttribute::None);
+      display.create_surface(static_cast<int>(m_resolution.width), static_cast<int>(m_resolution.height), WindowAttribute::Default);
    m_graphicsDemoSurface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demoSurface)));
 
    m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_graphicsDemoSurface, *m_device, m_resourceManager, m_resolution);

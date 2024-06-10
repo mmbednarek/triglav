@@ -57,7 +57,7 @@ DWORD map_window_attributes_to_ex_style(WindowAttributeFlags flags)
    if (flags & WindowAttribute::TopMost) {
       result |= WS_EX_TOPMOST;
    }
-   if (not(flags & WindowAttribute::NoDecorations)) {
+   if (flags & WindowAttribute::ShowDecorations) {
       result |= WS_EX_CLIENTEDGE;
    }
 
@@ -68,10 +68,13 @@ DWORD map_window_attributes_to_style(WindowAttributeFlags flags)
 {
    DWORD result{};
 
-   if (flags & WindowAttribute::NoDecorations) {
-      result |= WS_DLGFRAME;
+   if (flags & WindowAttribute::ShowDecorations) {
+      result |= WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME;
    } else {
-      result |= WS_OVERLAPPEDWINDOW;
+      result |= WS_DLGFRAME;
+   }
+   if (flags & WindowAttribute::Resizeable) {
+      result |= WS_THICKFRAME;
    }
    return result;
 }
