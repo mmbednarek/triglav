@@ -16,6 +16,7 @@ using triglav::graphics_api::Framebuffer;
 using triglav::graphics_api::RenderTarget;
 using triglav::graphics_api::RenderTargetBuilder;
 using triglav::graphics_api::Resolution;
+using triglav::graphics_api::Status;
 using triglav::graphics_api::Swapchain;
 using triglav::graphics_api::WorkType;
 
@@ -36,12 +37,14 @@ std::vector<Framebuffer> create_framebuffers(const Swapchain& swapchain, const R
 
 }// namespace
 
-SplashScreen::SplashScreen(triglav::graphics_api::Surface& surface, triglav::graphics_api::Device& device,
-                           triglav::resource::ResourceManager& resourceManager) :
+SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface,
+                           triglav::graphics_api::Device& device, triglav::resource::ResourceManager& resourceManager) :
     m_surface(surface),
+    m_graphicsSurface(graphicsSurface),
     m_device(device),
     m_resourceManager(resourceManager),
-    m_swapchain(GAPI_CHECK(m_device.create_swapchain(m_surface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution))),
+    m_swapchain(
+       GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution))),
     m_renderTarget(GAPI_CHECK(RenderTargetBuilder(m_device)
                                  .attachment("output"_name,
                                              AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
@@ -95,7 +98,12 @@ void SplashScreen::update()
 
    GAPI_CHECK_STATUS(m_device.submit_command_list(m_commandList, m_frameReadySemaphore, m_targetSemaphore, m_frameFinishedFence));
 
-   GAPI_CHECK_STATUS(m_swapchain.present(m_targetSemaphore, framebufferIndex));
+   const auto status = m_swapchain.present(m_targetSemaphore, framebufferIndex);
+   if (status == Status::OutOfDateSwapchain) {
+      this->recreate_swapchain();
+   } else {
+      GAPI_CHECK_STATUS(status);
+   }
 }
 
 void SplashScreen::on_close()
@@ -105,6 +113,16 @@ void SplashScreen::on_close()
    std::unique_lock lk{m_updateTextMutex};
    m_frameFinishedFence.await();
    m_device.await_all();
+}
+
+void SplashScreen::recreate_swapchain()
+{
+   m_device.await_all();
+
+   const auto newDimension = m_surface.dimension();
+   m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
+                                                      {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)}));
+   m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 }
 
 void SplashScreen::on_started_loading_asset(const triglav::ResourceName resourceName)

@@ -127,7 +127,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
    m_baseResourcesReadyCV.wait(lk, [this] { return m_state == State::LoadingResources; });
    lk.unlock();
 
-   m_splashScreen = std::make_unique<SplashScreen>(*m_graphicsSplashScreenSurface, *m_device, m_resourceManager);
+   m_splashScreen = std::make_unique<SplashScreen>(*m_splashScreenSurface, *m_graphicsSplashScreenSurface, *m_device, m_resourceManager);
 
    while (m_state.load() != State::Ready) {
       m_splashScreen->update();

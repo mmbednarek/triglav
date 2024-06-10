@@ -15,17 +15,19 @@ namespace demo {
 class SplashScreen
 {
  public:
-   SplashScreen(triglav::graphics_api::Surface& surface, triglav::graphics_api::Device& device,
+   SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface, triglav::graphics_api::Device& device,
                 triglav::resource::ResourceManager& resourceManager);
 
    void update();
    void on_close();
+   void recreate_swapchain();
 
    void on_started_loading_asset(triglav::ResourceName resourceName);
    void on_finished_loading_asset(triglav::ResourceName resourceName, triglav::u32 loadedAssets, triglav::u32 totalAssets);
 
  private:
-   triglav::graphics_api::Surface& m_surface;
+   triglav::desktop::ISurface& m_surface;
+   triglav::graphics_api::Surface& m_graphicsSurface;
    triglav::graphics_api::Device& m_device;
    triglav::resource::ResourceManager& m_resourceManager;
    triglav::graphics_api::Swapchain m_swapchain;
