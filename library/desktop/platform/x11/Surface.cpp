@@ -65,6 +65,13 @@ Surface::Surface(::Display* display, const Window window, const Dimension dimens
 {
 }
 
+Surface::~Surface()
+{
+   if (m_display != nullptr) {
+      this->internal_close();
+   }
+}
+
 void Surface::lock_cursor()
 {
    m_isCursorLocked = true;
@@ -72,9 +79,9 @@ void Surface::lock_cursor()
 
    XGrabPointer(m_display, m_window, false,
                 ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | EnterWindowMask | LeaveWindowMask,
-                GrabModeAsync, GrabModeAsync, RootWindow(m_display, DefaultScreen(m_display)), None, CurrentTime);
+                GrabModeAsync, GrabModeAsync, RootWindow(m_display, DefaultScreen(m_display)), 0L, CurrentTime);
    Dimension center{m_dimension.width / 2, m_dimension.height / 2};
-   XWarpPointer(m_display, None, m_window, 0, 0, 0, 0, center.width, center.height);
+   XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.width, center.height);
    XSync(m_display, false);
 }
 
@@ -93,6 +100,13 @@ void Surface::hide_cursor() const
 void Surface::add_event_listener(ISurfaceEventListener* eventListener)
 {
    m_listeners.emplace_back(eventListener);
+}
+
+void Surface::internal_close()
+{
+   XDestroyWindow(m_display, m_window);
+   m_window = ~0;
+   m_display = nullptr;
 }
 
 bool Surface::is_cursor_locked() const
@@ -154,7 +168,7 @@ void Surface::tick() const
 {
    if (m_isCursorLocked) {
       Dimension center{m_dimension.width / 2, m_dimension.height / 2};
-      XWarpPointer(m_display, None, m_window, 0, 0, 0, 0, center.width, center.height);
+      XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.width, center.height);
       XSync(m_display, false);
    }
 }

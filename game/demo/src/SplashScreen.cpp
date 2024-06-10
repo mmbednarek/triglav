@@ -43,6 +43,8 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_graphicsSurface(graphicsSurface),
     m_device(device),
     m_resourceManager(resourceManager),
+    m_resolution(g_splashScreenResolution),
+    m_glyphCache(device, m_resourceManager),
     m_swapchain(
        GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution))),
     m_renderTarget(GAPI_CHECK(RenderTargetBuilder(m_device)
@@ -52,14 +54,16 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
                                              g_splashScreenColorFormat)
                                  .build())),
     m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
-    m_textRenderer(m_device, m_resourceManager, m_renderTarget),
+    m_textRenderer(m_device, m_resourceManager, m_renderTarget, m_glyphCache),
+    m_rectangleRenderer(m_device, m_renderTarget, m_resourceManager),
     m_commandList(GAPI_CHECK(m_device.queue_manager().create_command_list(WorkType::Graphics))),
     m_frameReadySemaphore(GAPI_CHECK(m_device.create_semaphore())),
     m_targetSemaphore(GAPI_CHECK(m_device.create_semaphore())),
     m_frameFinishedFence(GAPI_CHECK(m_device.create_fence())),
-    m_textTitle(m_textRenderer.create_text_object("cantarell/bold.glyphs"_rc, "TRIGLAV RENDER DEMO")),
-    m_textDesc(m_textRenderer.create_text_object("cantarell.glyphs"_rc, "Loading Resource")),
-    m_textStatus(m_textRenderer.create_text_object("cantarell.glyphs"_rc, "[0/?]")),
+    m_textTitle(m_textRenderer.create_text_object("cantarell/bold.typeface"_rc, 36, "TRIGLAV RENDER DEMO")),
+    m_textDesc(m_textRenderer.create_text_object("cantarell.typeface"_rc, 24, "Loading Resource")),
+    m_statusBgRect(m_rectangleRenderer.create_rectangle({40.0f, 250.0f, g_splashScreenResolution.width - 40.0f, 300.0f}, {0.06f, 0.18f, 0.37f, 1.0f})),
+    m_statusFgRect(m_rectangleRenderer.create_rectangle({40.0f, 250.0f, 300.0f, 300.0f}, {0.13f, 0.39f, 0.78f, 1.0f})),
     m_onStartedLoadingAssetSink(m_resourceManager.OnStartedLoadingAsset.connect<&SplashScreen::on_started_loading_asset>(this)),
     m_onFinishedLoadingAssetSink(m_resourceManager.OnFinishedLoadingAsset.connect<&SplashScreen::on_finished_loading_asset>(this))
 {
@@ -73,6 +77,18 @@ void SplashScreen::update()
 
    auto& framebuffer = m_framebuffers[framebufferIndex];
 
+   {
+      std::unique_lock lk{m_updateTextMutex};
+      if (not m_pendingDescChange.empty()) {
+         m_textRenderer.update_text(m_textDesc, m_pendingDescChange);
+         m_pendingDescChange.clear();
+      }
+      if (m_pendingStatusChange.has_value()) {
+         m_rectangleRenderer.update_rectangle(m_statusFgRect, {40.0f, 250.0f, 40.0f + *m_pendingStatusChange * (m_resolution.width - 80.0f), 300.0f}, {0.13f, 0.39f, 0.78f, 1.0f});
+         m_pendingStatusChange.reset();
+      }
+   }
+
    GAPI_CHECK_STATUS(m_commandList.begin());
 
    std::array<ClearValue, 1> clearValues{
@@ -81,16 +97,18 @@ void SplashScreen::update()
    m_commandList.begin_render_pass(framebuffer, clearValues);
 
    m_textRenderer.bind_pipeline(m_commandList);
-   m_textRenderer.draw_text(m_commandList, m_textTitle, {g_splashScreenResolution.width, g_splashScreenResolution.height}, {64.0f, 64.0f},
+   m_textRenderer.draw_text(m_commandList, m_textTitle, {m_resolution.width, m_resolution.height}, {64.0f, 96.0f},
                             {0.13f, 0.39f, 0.78f, 1.0f});
 
-   {
-      std::unique_lock lk{m_updateTextMutex};
-      m_textRenderer.draw_text(m_commandList, m_textDesc, {g_splashScreenResolution.width, g_splashScreenResolution.height},
-                               {64.0f, 128.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
-      m_textRenderer.draw_text(m_commandList, m_textStatus, {g_splashScreenResolution.width, g_splashScreenResolution.height},
-                               {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
-   }
+   m_textRenderer.draw_text(m_commandList, m_textDesc, {m_resolution.width, m_resolution.height},
+                            {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+//   m_textRenderer.draw_text(m_commandList, m_textStatus, {m_resolution.width, m_resolution.height},
+//                            {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+
+   m_rectangleRenderer.begin_render(m_commandList);
+
+   m_rectangleRenderer.draw(m_commandList, m_statusBgRect, {m_resolution.width, m_resolution.height});
+   m_rectangleRenderer.draw(m_commandList, m_statusFgRect, {m_resolution.width, m_resolution.height});
 
    m_commandList.end_render_pass();
 
@@ -120,6 +138,7 @@ void SplashScreen::recreate_swapchain()
    m_device.await_all();
 
    const auto newDimension = m_surface.dimension();
+   m_resolution = {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)};
    m_swapchain =
       GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
                                            {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)}, &m_swapchain));
@@ -129,17 +148,22 @@ void SplashScreen::recreate_swapchain()
 void SplashScreen::on_started_loading_asset(const triglav::ResourceName resourceName)
 {
    std::unique_lock lk{m_updateTextMutex};
-
-   auto msg = fmt::format("Loading resource {}...", m_resourceManager.lookup_name(resourceName).value_or("unknown"));
-   m_textRenderer.update_text(m_textDesc, msg);
+   m_pendingDescChange = fmt::format("Loading resource {}", m_resourceManager.lookup_name(resourceName).value_or("unknown"));
+   m_pendingResources.insert(resourceName);
+   m_displayedResource = resourceName;
 }
 
 void SplashScreen::on_finished_loading_asset(triglav::ResourceName resourceName, triglav::u32 loadedAssets, triglav::u32 totalAssets)
 {
    std::unique_lock lk{m_updateTextMutex};
-
-   auto msg = fmt::format("[{}/{}]", loadedAssets, totalAssets);
-   m_textRenderer.update_text(m_textStatus, msg);
+   m_pendingStatusChange.emplace(static_cast<float>(loadedAssets) / static_cast<float>(totalAssets));
+   m_pendingResources.erase(resourceName);
+   if (m_displayedResource == resourceName && not m_pendingResources.empty()) {
+      auto index = rand() % m_pendingResources.size();
+      auto it = m_pendingResources.begin();
+      std::advance(it, index);
+      m_pendingDescChange = fmt::format("Loading resource {}", m_resourceManager.lookup_name(*it).value_or("unknown"));
+   }
 }
 
 }// namespace demo

@@ -11,11 +11,13 @@ class Surface final : public ISurface
 {
  public:
    explicit Surface(::Display* display, Window window, Dimension dimension);
+   ~Surface() override;
 
    void lock_cursor() override;
    void unlock_cursor() override;
    void hide_cursor() const override;
    void add_event_listener(ISurfaceEventListener* eventListener) override;
+   void internal_close();
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
 

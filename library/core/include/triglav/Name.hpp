@@ -27,6 +27,10 @@ class TypedName
    {
    }
 
+   [[nodiscard]] constexpr Name name() const {
+      return m_name;
+   }
+
    // ReSharper disable once CppNonExplicitConversionOperator
    [[nodiscard]] operator ResourceName() const;// NOLINT(google-explicit-constructor)
 

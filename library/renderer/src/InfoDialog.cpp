@@ -37,45 +37,49 @@ constexpr std::array g_labelGroups{
    std::tuple{"info_dialog/features"_name, "Features", std::span{g_featureLabels.data(), g_featureLabels.size()}},
 };
 
-InfoDialog::InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& resourceManager) :
+InfoDialog::InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& resourceManager, GlyphCache& glyphCache) :
     m_viewport(viewport),
-    m_resourceManager(resourceManager)
+    m_resourceManager(resourceManager),
+    m_glyphCache(glyphCache)
 {
 }
 
 void InfoDialog::initialize()
 {
-   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 420.0f}});
+   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 430.0f}});
 
    m_position = {g_leftOffset, g_topOffset};
 
-   this->add_text("info_dialog/title"_name, "Triglav Render Demo", "cantarell/bold.glyphs"_rc, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top,
+   this->add_text("info_dialog/title"_name, "Triglav Render Demo", "cantarell/bold.typeface"_rc, 24, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top,
                   0.0f);
 
+   m_position.y += 10.0f;
+
    for (const auto& labelGroups : g_labelGroups) {
-      this->add_text(std::get<0>(labelGroups), std::get<1>(labelGroups), "segoeui/bold/20.glyphs"_rc, {1.0f, 1.0f, 0.4f, 1.0f},
+      this->add_text(std::get<0>(labelGroups), std::get<1>(labelGroups), "segoeui/bold.typeface"_rc, 20, {1.0f, 1.0f, 0.4f, 1.0f},
                      Alignment::Top, 16.0f);
 
       for (const auto& label : std::get<2>(labelGroups)) {
-         this->add_text(std::get<0>(label), std::get<2>(label), "segoeui/regular/18.glyphs"_rc, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top,
+         this->add_text(std::get<0>(label), std::get<2>(label), "segoeui.typeface"_rc, 18, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top,
                         16.0f);
-         this->add_text(std::get<1>(label), "none", "segoeui/regular/18.glyphs"_rc, {1.0f, 1.0f, 0.4f, 1.0f}, Alignment::Left, 16.0f);
+         this->add_text(std::get<1>(label), "none", "segoeui.typeface"_rc, 18, {1.0f, 1.0f, 0.4f, 1.0f}, Alignment::Left, 16.0f);
       }
    }
 }
 
 render_core::TextMetric InfoDialog::measure_text(const ui_core::Text& text)
 {
-   auto& atlas = m_resourceManager.get<ResourceType::GlyphAtlas>(text.glyphAtlas);
+   auto& atlas = m_glyphCache.find_glyph_atlas(GlyphProperties{text.typefaceName, text.fontSize});
    return atlas.measure_text(text.content);
 }
 
-void InfoDialog::add_text(const Name id, const std::string_view content, const GlyphAtlasName glyphAtlasName, glm::vec4 color,
+void InfoDialog::add_text(const Name id, const std::string_view content, TypefaceName typefaceName, int fontSize, glm::vec4 color,
                           Alignment align, float offset)
 {
    ui_core::Text textObj{
       .content = std::string{content},
-      .glyphAtlas = glyphAtlasName,
+      .typefaceName = typefaceName,
+      .fontSize = fontSize,
       .color = color,
    };
 

@@ -9,13 +9,15 @@
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
+#include "GlyphCache.h"
+
 #include <glm/vec2.hpp>
 
 namespace triglav::renderer {
 
 struct TextObject
 {
-   GlyphAtlasName glyphAtlas;
+   const render_core::GlyphAtlas* glyphAtlas;
    render_core::TextMetric metric;
    graphics_api::UniformBuffer<triglav::render_core::SpriteUBO> ubo;
    graphics_api::VertexArray<render_core::GlyphVertex> vertices;
@@ -26,10 +28,10 @@ class TextRenderer
 {
  public:
    explicit TextRenderer(graphics_api::Device& device, resource::ResourceManager& resourceManager,
-                         graphics_api::RenderTarget& renderTarget);
+                         graphics_api::RenderTarget& renderTarget, GlyphCache& glyphCache);
 
    void bind_pipeline(graphics_api::CommandList& cmdList);
-   TextObject create_text_object(GlyphAtlasName atlasName, std::string_view content);
+   TextObject create_text_object(TypefaceName typefaceName, int fontSize, std::string_view content);
    void draw_text(graphics_api::CommandList& cmdList, const TextObject& textObject, const glm::vec2& viewportSize,
                   const glm::vec2& position, const glm::vec4& color) const;
    void update_text(TextObject& textObject, std::string_view content);
@@ -37,6 +39,7 @@ class TextRenderer
  private:
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
+   GlyphCache& m_glyphCache;
    graphics_api::Pipeline m_pipeline;
 };
 

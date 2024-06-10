@@ -33,6 +33,5 @@ TG_RESOURCE_TYPE(name, extension, cppType, loadingStage)
    TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_core::Material, 1)                \
    TG_RESOURCE_TYPE(MaterialTemplate, "mt", ::triglav::render_core::MaterialTemplate, 0) \
    TG_RESOURCE_TYPE(Model, "model", ::triglav::render_core::Model, 0)                    \
-   TG_RESOURCE_TYPE(GlyphAtlas, "glyphs", ::triglav::render_core::GlyphAtlas, 1)         \
    TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface, 0)                  \
    TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level, 0)

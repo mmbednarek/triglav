@@ -88,6 +88,9 @@ std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
                                                                      std::string{source.data(), source.size()}, std::move(properties));
    }
 
+   result.erase(std::ranges::remove_if(result, [](const ResourceStage& stage) { return stage.resourceList.empty(); }).begin(),
+                result.end());
+
    return std::make_unique<LoadContext>(std::move(result));
 }
 

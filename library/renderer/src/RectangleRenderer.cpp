@@ -29,7 +29,7 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device& device, graphics_api:
 {
 }
 
-Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect)
+Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect, glm::vec4 backgroundColor)
 {
    // rect: {left, top, right, bottom}
    std::array vertices{
@@ -42,7 +42,9 @@ Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect)
    graphics_api::UniformBuffer<Rectangle::VertexUBO> vertexUbo{m_device};
    *vertexUbo = Rectangle::VertexUBO{};
    graphics_api::UniformBuffer<Rectangle::FragmentUBO> fragmentUbo{m_device};
-   *fragmentUbo = Rectangle::FragmentUBO{};
+   *fragmentUbo = Rectangle::FragmentUBO{
+      .backgroundColor = backgroundColor,
+   };
 
    auto descriptors = checkResult(m_descriptorPool.allocate_array(1));
 
@@ -51,6 +53,20 @@ Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect)
    writer.set_uniform_buffer(1, fragmentUbo);
 
    return Rectangle{rect, std::move(array), std::move(vertexUbo), std::move(fragmentUbo), std::move(descriptors)};
+}
+
+void RectangleRenderer::update_rectangle(Rectangle& rectangle, glm::vec4 rectCoords, glm::vec4 backgroundColor)
+{
+   std::array vertices{
+      glm::vec2{rectCoords.x, rectCoords.y}, glm::vec2{rectCoords.x, rectCoords.w}, glm::vec2{rectCoords.z, rectCoords.y},
+      glm::vec2{rectCoords.z, rectCoords.y}, glm::vec2{rectCoords.x, rectCoords.w}, glm::vec2{rectCoords.z, rectCoords.w},
+   };
+   graphics_api::VertexArray<glm::vec2> array(m_device, vertices.size());
+   array.write(vertices.data(), vertices.size());
+
+   rectangle.rect = rectCoords;
+   rectangle.array = std::move(array);
+   rectangle.fragmentUBO->backgroundColor = backgroundColor;
 }
 
 void RectangleRenderer::begin_render(graphics_api::CommandList& cmdList) const

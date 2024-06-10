@@ -11,7 +11,8 @@ namespace triglav::ui_core {
 struct Text
 {
    std::string content;
-   GlyphAtlasName glyphAtlas;
+   TypefaceName typefaceName;
+   int fontSize{};
    glm::vec2 position;
    glm::vec4 color;
 };

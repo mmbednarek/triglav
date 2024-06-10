@@ -36,7 +36,8 @@ class RectangleRenderer
    RectangleRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
                      triglav::resource::ResourceManager& resourceManager);
 
-   [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect);
+   [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect, glm::vec4 backgroundColor);
+   void update_rectangle(Rectangle& rectangle, glm::vec4 rectCoords, glm::vec4 backgroundColor);
    void begin_render(graphics_api::CommandList& cmdList) const;
    void draw(graphics_api::CommandList& cmdList, const Rectangle& rect, const graphics_api::Resolution& resolution) const;
 

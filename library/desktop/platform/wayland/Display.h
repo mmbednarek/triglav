@@ -23,7 +23,7 @@ class Display final : public IDisplay
    Display();
    ~Display() override;
 
-   void dispatch_messages() const override;
+   void dispatch_messages() override;
 
    std::shared_ptr<ISurface> create_surface(int width, int height, WindowAttributeFlags flags) override;
 

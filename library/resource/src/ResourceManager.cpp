@@ -1,6 +1,5 @@
 #include "ResourceManager.h"
 
-#include "GlyphAtlasLoader.h"
 #include "LevelLoader.h"
 #include "MaterialLoader.h"
 #include "ModelLoader.h"
