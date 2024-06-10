@@ -44,7 +44,7 @@ Display::Display(const HINSTANCE instance) :
    }
 }
 
-void Display::dispatch_messages() const
+void Display::dispatch_messages()
 {
    MSG message;
    if (PeekMessageA(&message, nullptr, 0, 0, PM_REMOVE) > 0) {
