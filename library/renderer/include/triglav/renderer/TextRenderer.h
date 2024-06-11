@@ -27,8 +27,8 @@ struct TextObject
 class TextRenderer
 {
  public:
-   explicit TextRenderer(graphics_api::Device& device, resource::ResourceManager& resourceManager,
-                         graphics_api::RenderTarget& renderTarget, GlyphCache& glyphCache);
+   explicit TextRenderer(graphics_api::Device& device, resource::ResourceManager& resourceManager, graphics_api::RenderTarget& renderTarget,
+                         GlyphCache& glyphCache);
 
    void bind_pipeline(graphics_api::CommandList& cmdList);
    TextObject create_text_object(TypefaceName typefaceName, int fontSize, std::string_view content);

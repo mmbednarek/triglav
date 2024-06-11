@@ -23,7 +23,8 @@ class InfoDialog
    };
 
    [[nodiscard]] render_core::TextMetric measure_text(const ui_core::Text& text);
-   void add_text(Name id, std::string_view content, TypefaceName typefaceName, int fontSize, glm::vec4 color, Alignment align, float offset);
+   void add_text(Name id, std::string_view content, TypefaceName typefaceName, int fontSize, glm::vec4 color, Alignment align,
+                 float offset);
 
    ui_core::Viewport& m_viewport;
    resource::ResourceManager& m_resourceManager;

@@ -50,8 +50,8 @@ void InfoDialog::initialize()
 
    m_position = {g_leftOffset, g_topOffset};
 
-   this->add_text("info_dialog/title"_name, "Triglav Render Demo", "cantarell/bold.typeface"_rc, 24, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top,
-                  0.0f);
+   this->add_text("info_dialog/title"_name, "Triglav Render Demo", "cantarell/bold.typeface"_rc, 24, {1.0f, 1.0f, 1.0f, 1.0f},
+                  Alignment::Top, 0.0f);
 
    m_position.y += 10.0f;
 
@@ -60,8 +60,7 @@ void InfoDialog::initialize()
                      Alignment::Top, 16.0f);
 
       for (const auto& label : std::get<2>(labelGroups)) {
-         this->add_text(std::get<0>(label), std::get<2>(label), "segoeui.typeface"_rc, 18, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top,
-                        16.0f);
+         this->add_text(std::get<0>(label), std::get<2>(label), "segoeui.typeface"_rc, 18, {1.0f, 1.0f, 1.0f, 1.0f}, Alignment::Top, 16.0f);
          this->add_text(std::get<1>(label), "none", "segoeui.typeface"_rc, 18, {1.0f, 1.0f, 0.4f, 1.0f}, Alignment::Left, 16.0f);
       }
    }

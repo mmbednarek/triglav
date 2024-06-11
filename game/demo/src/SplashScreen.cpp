@@ -62,7 +62,8 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_frameFinishedFence(GAPI_CHECK(m_device.create_fence())),
     m_textTitle(m_textRenderer.create_text_object("cantarell/bold.typeface"_rc, 36, "TRIGLAV RENDER DEMO")),
     m_textDesc(m_textRenderer.create_text_object("cantarell.typeface"_rc, 24, "Loading Resource")),
-    m_statusBgRect(m_rectangleRenderer.create_rectangle({40.0f, 225.0f, g_splashScreenResolution.width - 40.0f, 275.0f}, {0.06f, 0.18f, 0.37f, 1.0f})),
+    m_statusBgRect(
+       m_rectangleRenderer.create_rectangle({40.0f, 225.0f, g_splashScreenResolution.width - 40.0f, 275.0f}, {0.06f, 0.18f, 0.37f, 1.0f})),
     m_statusFgRect(m_rectangleRenderer.create_rectangle({40.0f, 225.0f, 300.0f, 275.0f}, {0.13f, 0.39f, 0.78f, 1.0f})),
     m_onStartedLoadingAssetSink(m_resourceManager.OnStartedLoadingAsset.connect<&SplashScreen::on_started_loading_asset>(this)),
     m_onFinishedLoadingAssetSink(m_resourceManager.OnFinishedLoadingAsset.connect<&SplashScreen::on_finished_loading_asset>(this))
@@ -84,7 +85,9 @@ void SplashScreen::update()
          m_pendingDescChange.clear();
       }
       if (m_pendingStatusChange.has_value()) {
-         m_rectangleRenderer.update_rectangle(m_statusFgRect, {40.0f, 225.0f, 40.0f + *m_pendingStatusChange * (m_resolution.width - 80.0f), 275.0f}, {0.13f, 0.39f, 0.78f, 1.0f});
+         m_rectangleRenderer.update_rectangle(m_statusFgRect,
+                                              {40.0f, 225.0f, 40.0f + *m_pendingStatusChange * (m_resolution.width - 80.0f), 275.0f},
+                                              {0.13f, 0.39f, 0.78f, 1.0f});
          m_pendingStatusChange.reset();
       }
    }
@@ -100,8 +103,8 @@ void SplashScreen::update()
    m_textRenderer.draw_text(m_commandList, m_textTitle, {m_resolution.width, m_resolution.height}, {64.0f, 80.0f},
                             {0.13f, 0.39f, 0.78f, 1.0f});
 
-   m_textRenderer.draw_text(m_commandList, m_textDesc, {m_resolution.width, m_resolution.height},
-                            {64.0f, 160.0f}, {1.0f, 1.0f, 1.0f, 1.0f});
+   m_textRenderer.draw_text(m_commandList, m_textDesc, {m_resolution.width, m_resolution.height}, {64.0f, 160.0f},
+                            {1.0f, 1.0f, 1.0f, 1.0f});
 
    m_rectangleRenderer.begin_render(m_commandList);
 

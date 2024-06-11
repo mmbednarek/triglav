@@ -2,8 +2,8 @@
 
 #include "AmbientOcclusionRenderer.h"
 #include "DebugLinesRenderer.h"
-#include "GroundRenderer.h"
 #include "GlyphCache.h"
+#include "GroundRenderer.h"
 #include "InfoDialog.h"
 #include "PostProcessingRenderer.h"
 #include "RectangleRenderer.h"

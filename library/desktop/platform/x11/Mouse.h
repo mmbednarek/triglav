@@ -4,7 +4,8 @@
 
 namespace triglav::desktop::x11 {
 
-class Mouse {
+class Mouse
+{
  public:
    using OnMouseMoveDel = Delegate<float, float>;
    OnMouseMoveDel OnMouseMove;
@@ -17,4 +18,4 @@ class Mouse {
    int m_fileDescriptor;
 };
 
-}
+}// namespace triglav::desktop::x11

@@ -101,7 +101,8 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    ui_core::Viewport::OnAddedRectangleDel::Sink<UserInterfaceResources> m_onAddedRectangleSink;
 };
 
-UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport, GlyphCache& glyphCache) :
+UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport,
+                             GlyphCache& glyphCache) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_viewport(viewport),

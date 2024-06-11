@@ -27,7 +27,8 @@ class TypedName
    {
    }
 
-   [[nodiscard]] constexpr Name name() const {
+   [[nodiscard]] constexpr Name name() const
+   {
       return m_name;
    }
 

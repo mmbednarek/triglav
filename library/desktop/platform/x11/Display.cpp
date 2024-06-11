@@ -83,10 +83,10 @@ std::shared_ptr<ISurface> Display::create_surface(const int width, const int hei
 {
    auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, width, height, 0, 0, 0xffffffff);
 
-   if (not (flags & WindowAttribute::ShowDecorations)) {
+   if (not(flags & WindowAttribute::ShowDecorations)) {
       Atom window_type = XInternAtom(m_display, "_NET_WM_WINDOW_TYPE", False);
       auto value = XInternAtom(m_display, "_NET_WM_WINDOW_TYPE_DOCK", False);
-      XChangeProperty(m_display, window, window_type, XA_ATOM, 32, PropModeReplace, reinterpret_cast<unsigned char *>(&value), 1);
+      XChangeProperty(m_display, window, window_type, XA_ATOM, 32, PropModeReplace, reinterpret_cast<unsigned char*>(&value), 1);
    }
 
    XMapWindow(m_display, window);

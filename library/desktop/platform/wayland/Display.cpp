@@ -321,7 +321,7 @@ void Display::on_pointer_motion(uint32_t /*time*/, const int32_t x, const int32_
 
 void Display::dispatch_messages()
 {
-   wl_display_dispatch(m_display);
+   wl_display_dispatch_pending(m_display);
 }
 
 std::shared_ptr<ISurface> Display::create_surface(int width, int height, WindowAttributeFlags flags)
