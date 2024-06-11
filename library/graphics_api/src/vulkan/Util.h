@@ -34,4 +34,5 @@ VkMemoryPropertyFlags to_vulkan_memory_properties_flags(BufferUsageFlags usage);
 VkPipelineStageFlags to_vulkan_wait_pipeline_stage(WorkTypeFlags workTypes);
 VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType);
 VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags);
+VkPresentModeKHR to_vulkan_present_mode(PresentMode presentMode);
 }// namespace triglav::graphics_api::vulkan

@@ -12,6 +12,7 @@
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/io/CommandLine.h"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
@@ -64,6 +65,21 @@ std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::S
    return result;
 }
 
+graphics_api::PresentMode get_present_mode()
+{
+   auto presentModeStr = io::CommandLine::the().arg("presentMode"_name);
+   if (not presentModeStr.has_value())
+      return graphics_api::PresentMode::Fifo;
+
+   if (*presentModeStr == "mailbox")
+      return graphics_api::PresentMode::Mailbox;
+
+   if (*presentModeStr == "immediate")
+      return graphics_api::PresentMode::Immediate;
+
+   return graphics_api::PresentMode::Fifo;
+}
+
 }// namespace
 
 Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
@@ -73,7 +89,8 @@ Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device,
     m_resourceManager(resourceManager),
     m_scene(m_resourceManager),
     m_resolution(create_viewport_resolution(m_device, m_surface, resolution.width, resolution.height)),
-    m_swapchain(checkResult(m_device.create_swapchain(m_surface, g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution))),
+    m_swapchain(
+       checkResult(m_device.create_swapchain(m_surface, g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution, get_present_mode()))),
     m_renderTarget(
        checkResult(graphics_api::RenderTargetBuilder(m_device)
                       .attachment("output"_name,
@@ -127,12 +144,16 @@ void Renderer::update_debug_info(const float framerate)
    const auto framerateStr = std::format("{}", framerate);
    m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name, framerateStr);
 
-   const auto triangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
-   m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name, triangleCountStr);
+   const auto gBufferTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
+   m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_triangles/value"_name, gBufferTriangleCountStr);
+   const auto shadingTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("shading"_name));
+   m_uiViewport.set_text_content("info_dialog/metrics/shading_triangles/value"_name, shadingTriangleCountStr);
 
    if (not isFirstFrame) {
-      const auto gpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
-      m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name, gpuTimeStr);
+      const auto gBufferGpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
+      m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_gpu_time/value"_name, gBufferGpuTimeStr);
+      const auto shadingGpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
+      m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
    }
 
    const auto camPos = m_scene.camera().position();
@@ -322,8 +343,8 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
    m_framebuffers.clear();
 
-   m_swapchain = checkResult(
-      m_device.create_swapchain(m_surface, m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution, &m_swapchain));
+   m_swapchain = checkResult(m_device.create_swapchain(m_surface, m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution,
+                                                       get_present_mode(), &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};

@@ -15,8 +15,10 @@ constexpr auto g_topOffset = 16.0f;
 
 constexpr std::array g_metricsLabels{
    std::tuple{"info_dialog/metrics/fps"_name, "info_dialog/metrics/fps/value"_name, "Framerate"sv},
-   std::tuple{"info_dialog/metrics/triangles"_name, "info_dialog/metrics/triangles/value"_name, "GBuffer Triangles"sv},
-   std::tuple{"info_dialog/metrics/gpu_time"_name, "info_dialog/metrics/gpu_time/value"_name, "GBuffer Render Time"sv},
+   std::tuple{"info_dialog/metrics/gbuffer_triangles"_name, "info_dialog/metrics/gbuffer_triangles/value"_name, "GBuffer Triangles"sv},
+   std::tuple{"info_dialog/metrics/gbuffer_gpu_time"_name, "info_dialog/metrics/gbuffer_gpu_time/value"_name, "GBuffer Render Time"sv},
+   std::tuple{"info_dialog/metrics/shading_triangles"_name, "info_dialog/metrics/shading_triangles/value"_name, "Shading Triangles"sv},
+   std::tuple{"info_dialog/metrics/shading_gpu_time"_name, "info_dialog/metrics/shading_gpu_time/value"_name, "Shading Render Time"sv},
 };
 
 constexpr std::array g_locationLabels{
@@ -46,7 +48,7 @@ InfoDialog::InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& r
 
 void InfoDialog::initialize()
 {
-   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 430.0f}});
+   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 480.0f}});
 
    m_position = {g_leftOffset, g_topOffset};
 

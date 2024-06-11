@@ -1,8 +1,8 @@
 #include "Util.h"
-#include "GraphicsApi.hpp"
-
 
 #include <vulkan/vulkan.h>
+
+#include "GraphicsApi.hpp"
 
 namespace triglav::graphics_api::vulkan {
 Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
@@ -496,6 +496,20 @@ VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags)
    }
 
    return outFlags;
+}
+
+VkPresentModeKHR to_vulkan_present_mode(const PresentMode presentMode)
+{
+   switch (presentMode) {
+   case PresentMode::Fifo:
+      return VK_PRESENT_MODE_FIFO_KHR;
+   case PresentMode::Immediate:
+      return VK_PRESENT_MODE_IMMEDIATE_KHR;
+   case PresentMode::Mailbox:
+      return VK_PRESENT_MODE_MAILBOX_KHR;
+   }
+
+   return VK_PRESENT_MODE_MAX_ENUM_KHR;
 }
 
 }// namespace triglav::graphics_api::vulkan

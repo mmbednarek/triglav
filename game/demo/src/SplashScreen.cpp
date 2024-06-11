@@ -13,6 +13,7 @@ using triglav::graphics_api::Color;
 using triglav::graphics_api::ColorFormat;
 using triglav::graphics_api::ColorSpace;
 using triglav::graphics_api::Framebuffer;
+using triglav::graphics_api::PresentMode;
 using triglav::graphics_api::RenderTarget;
 using triglav::graphics_api::RenderTargetBuilder;
 using triglav::graphics_api::Resolution;
@@ -45,8 +46,8 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_resourceManager(resourceManager),
     m_resolution(g_splashScreenResolution),
     m_glyphCache(device, m_resourceManager),
-    m_swapchain(
-       GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution))),
+    m_swapchain(GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution,
+                                                     PresentMode::Immediate))),
     m_renderTarget(GAPI_CHECK(RenderTargetBuilder(m_device)
                                  .attachment("output"_name,
                                              AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
@@ -61,10 +62,10 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_targetSemaphore(GAPI_CHECK(m_device.create_semaphore())),
     m_frameFinishedFence(GAPI_CHECK(m_device.create_fence())),
     m_textTitle(m_textRenderer.create_text_object("cantarell/bold.typeface"_rc, 36, "TRIGLAV RENDER DEMO")),
-    m_textDesc(m_textRenderer.create_text_object("cantarell.typeface"_rc, 24, "Loading Resource")),
+    m_textDesc(m_textRenderer.create_text_object("cantarell.typeface"_rc, 24, "Loading Resources")),
     m_statusBgRect(
        m_rectangleRenderer.create_rectangle({40.0f, 225.0f, g_splashScreenResolution.width - 40.0f, 275.0f}, {0.06f, 0.18f, 0.37f, 1.0f})),
-    m_statusFgRect(m_rectangleRenderer.create_rectangle({40.0f, 225.0f, 300.0f, 275.0f}, {0.13f, 0.39f, 0.78f, 1.0f})),
+    m_statusFgRect(m_rectangleRenderer.create_rectangle({40.0f, 225.0f, 50.0f, 275.0f}, {0.13f, 0.39f, 0.78f, 1.0f})),
     m_onStartedLoadingAssetSink(m_resourceManager.OnStartedLoadingAsset.connect<&SplashScreen::on_started_loading_asset>(this)),
     m_onFinishedLoadingAssetSink(m_resourceManager.OnFinishedLoadingAsset.connect<&SplashScreen::on_finished_loading_asset>(this))
 {
@@ -140,9 +141,9 @@ void SplashScreen::recreate_swapchain()
 
    const auto newDimension = m_surface.dimension();
    m_resolution = {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)};
-   m_swapchain =
-      GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
-                                           {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)}, &m_swapchain));
+   m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
+                                                      {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)},
+                                                      PresentMode::Immediate, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 }
 

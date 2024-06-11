@@ -23,6 +23,8 @@ class Shading : public render_core::IRenderNode
    void record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
                         graphics_api::CommandList& cmdList) override;
 
+   [[nodiscard]] float gpu_time() const;
+
  private:
    graphics_api::RenderTarget m_shadingRenderTarget;
    ShadingRenderer m_shadingRenderer;
@@ -30,6 +32,7 @@ class Shading : public render_core::IRenderNode
    graphics_api::Pipeline m_particlesPipeline;
    graphics_api::UniformBuffer<ParticlesUBO> m_particlesUBO;
    graphics_api::Texture& m_particlesTexture;
+   graphics_api::TimestampArray m_timestampArray;
 };
 
 }// namespace triglav::renderer::node

@@ -326,6 +326,13 @@ enum class PipelineType
    Compute
 };
 
+enum class PresentMode
+{
+   Fifo,
+   Immediate,
+   Mailbox,
+};
+
 template<typename T>
 using Result = std::expected<T, Status>;
 

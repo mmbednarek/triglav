@@ -154,7 +154,7 @@ void CommandList::draw_primitives(int vertexCount, int vertexOffset, int instanc
       m_descriptorWriter.reset_count();
    }
 
-   m_triangleCount += vertexCount / 3;
+   m_triangleCount += instanceCount * (vertexCount / 3);
    vkCmdDraw(m_commandBuffer, vertexCount, instanceCount, vertexOffset, firstInstance);
 }
 

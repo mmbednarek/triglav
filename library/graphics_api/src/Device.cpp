@@ -69,7 +69,7 @@ Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std
 }
 
 Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
-                                           const Resolution& resolution, Swapchain* oldSwapchain)
+                                           const Resolution& resolution, PresentMode presentMode, Swapchain* oldSwapchain)
 {
    if (not is_surface_format_supported(m_physicalDevice, surface.vulkan_surface(), colorFormat, colorSpace))
       return std::unexpected(Status::UnsupportedFormat);
@@ -88,8 +88,7 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
    VkSwapchainCreateInfoKHR swapchainInfo{};
    swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
    swapchainInfo.surface = surface.vulkan_surface();
-   swapchainInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
-   //   swapchainInfo.presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+   swapchainInfo.presentMode = vulkan::to_vulkan_present_mode(presentMode);
    swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
    swapchainInfo.imageFormat = *vulkanColorFormat;
    swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
