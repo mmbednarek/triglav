@@ -1,5 +1,6 @@
 #include "GameInstance.h"
 
+#include "triglav/io/CommandLine.h"
 #include "triglav/resource/PathManager.h"
 
 namespace demo {
@@ -11,6 +12,8 @@ using triglav::desktop::MouseButton;
 using triglav::desktop::WindowAttribute;
 using triglav::resource::PathManager;
 namespace gapi = triglav::graphics_api;
+
+using namespace triglav::name_literals;
 
 class EventListener final : public DefaultSurfaceEventListener
 {
@@ -91,12 +94,24 @@ class EventListener final : public DefaultSurfaceEventListener
    bool m_isRunning{true};
 };
 
+namespace {
+
+gapi::DevicePickStrategy device_pick_strategy()
+{
+   if (triglav::io::CommandLine::the().is_enabled("preferIntegratedGpu"_name))
+      return gapi::DevicePickStrategy::PreferIntegrated;
+
+   return gapi::DevicePickStrategy::PreferDedicated;
+}
+
+}// namespace
+
 GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution) :
     m_splashScreenSurface(display.create_surface(1024, 360, WindowAttribute::AlignCenter | WindowAttribute::TopMost)),
     m_resolution(resolution),
     m_instance(GAPI_CHECK(gapi::Instance::create_instance())),
     m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
-    m_device(GAPI_CHECK(m_instance.create_device(*m_graphicsSplashScreenSurface))),
+    m_device(GAPI_CHECK(m_instance.create_device(*m_graphicsSplashScreenSurface, device_pick_strategy()))),
     m_resourceManager(*m_device, m_fontManager),
     m_onLoadedAssetsSink(m_resourceManager.OnLoadedAssets.connect<&GameInstance::on_loaded_assets>(this))
 {

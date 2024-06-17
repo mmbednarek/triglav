@@ -1,5 +1,6 @@
 #include "Renderer.h"
 
+#include "StatisticManager.h"
 #include "node/AmbientOcclusion.h"
 #include "node/Downsample.h"
 #include "node/Geometry.h"
@@ -133,28 +134,33 @@ Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device,
 
    m_infoDialog.initialize();
    m_scene.load_level("demo.level"_rc);
+
+   StatisticManager::the().initialize();
 }
 
-void Renderer::update_debug_info(const float framerate)
+void Renderer::update_debug_info()
 {
-   static bool isFirstFrame = true;
-
-   auto& ui = m_renderGraph.node<node::UserInterface>("user_interface"_name);
-
-   const auto framerateStr = std::format("{}", framerate);
+   const auto framerateStr = std::format("{:.1f}", StatisticManager::the().value(Stat::FramesPerSecond));
    m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name, framerateStr);
+
+   const auto framerateMinStr = std::format("{:.1f}", StatisticManager::the().min(Stat::FramesPerSecond));
+   m_uiViewport.set_text_content("info_dialog/metrics/fps_min/value"_name, framerateMinStr);
+
+   const auto framerateMaxStr = std::format("{:.1f}", StatisticManager::the().max(Stat::FramesPerSecond));
+   m_uiViewport.set_text_content("info_dialog/metrics/fps_max/value"_name, framerateMaxStr);
+
+   const auto framerateAvgStr = std::format("{:.1f}", StatisticManager::the().average(Stat::FramesPerSecond));
+   m_uiViewport.set_text_content("info_dialog/metrics/fps_avg/value"_name, framerateAvgStr);
 
    const auto gBufferTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
    m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_triangles/value"_name, gBufferTriangleCountStr);
    const auto shadingTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("shading"_name));
    m_uiViewport.set_text_content("info_dialog/metrics/shading_triangles/value"_name, shadingTriangleCountStr);
 
-   if (not isFirstFrame) {
-      const auto gBufferGpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
-      m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_gpu_time/value"_name, gBufferGpuTimeStr);
-      const auto shadingGpuTimeStr = std::format("{:.2f}ms", m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
-      m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
-   }
+   const auto gBufferGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::GBufferGpuTime));
+   m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_gpu_time/value"_name, gBufferGpuTimeStr);
+   const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
+   m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
 
    const auto camPos = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
@@ -167,14 +173,21 @@ void Renderer::update_debug_info(const float framerate)
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
-
-   isFirstFrame = false;
 }
 
 void Renderer::on_render()
 {
+   static bool isFirstFrame = true;
+
    const auto deltaTime = calculate_frame_duration();
-   const auto framerate = calculate_framerate(deltaTime);
+
+   if (not isFirstFrame) {
+      StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
+      StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
+      StatisticManager::the().push_accumulated(Stat::ShadingGpuTime, m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
+   } else {
+      isFirstFrame = false;
+   }
 
    m_renderGraph.swap_frames();
    m_renderGraph.await();
@@ -184,7 +197,7 @@ void Renderer::on_render()
    m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
    m_renderGraph.set_flag("bloom"_name, m_bloomEnabled);
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
-   this->update_debug_info(framerate);
+   this->update_debug_info();
 
    auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
@@ -196,6 +209,8 @@ void Renderer::on_render()
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
    GAPI_CHECK_STATUS(m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex));
+
+   StatisticManager::the().tick();
 }
 
 void Renderer::on_close()

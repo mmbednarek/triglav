@@ -333,6 +333,12 @@ enum class PresentMode
    Mailbox,
 };
 
+enum class DevicePickStrategy
+{
+   PreferDedicated,
+   PreferIntegrated,
+};
+
 template<typename T>
 using Result = std::expected<T, Status>;
 

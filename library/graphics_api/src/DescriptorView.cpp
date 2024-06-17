@@ -1,7 +1,5 @@
 #include "DescriptorView.h"
 
-#include "vulkan/Util.h"
-
 namespace triglav::graphics_api {
 
 DescriptorView::DescriptorView(const VkDescriptorSet descriptorSet) :

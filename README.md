@@ -32,8 +32,18 @@ Once the demo is built you can start it with the following command:
 
 ## Features
 
-- **F3** - Toggle Bouding Boxes.
+- **F3** - Toggle Bounding Boxes.
 - **F4** - Toggle Ambient Occlusion.
 - **F5** - Toggle Anti-Aliasing.
 - **F6** - Toggle Hide UI.
 - **F7** - Toggle Bloom.
+
+## Command Line Options
+
+- `-threadCount=<COUNT>` - Number of worker threads in a thread pool.
+- `-width=<SIZE>` - Width of the viewport window.
+- `-height=<SIZE>` - Height of the viewport window.
+- `-buildDir=<PATH>` - Path to the game build directory.
+- `-contentDir=<PATH>` - Path to the game content directory.
+- `-preferIntegratedGpu` - Choose an integrated GPU over a dedicated one.
+- `-presentMode=<MODE>` - Presentation mode. Must be one of allowed values: fifo, immediate, or mailbox.

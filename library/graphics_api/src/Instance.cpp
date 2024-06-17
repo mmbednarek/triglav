@@ -8,11 +8,25 @@ namespace triglav::graphics_api {
 
 namespace {
 
+
+template<VkPhysicalDeviceType CType>
 bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
 {
    VkPhysicalDeviceProperties props{};
    vkGetPhysicalDeviceProperties(physicalDevice, &props);
-   return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+   return props.deviceType == CType;
+}
+
+auto create_physical_device_pick_predicate(const DevicePickStrategy strategy)
+{
+   switch (strategy) {
+   case DevicePickStrategy::PreferDedicated:
+      return physical_device_pick_predicate<VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU>;
+   case DevicePickStrategy::PreferIntegrated:
+      return physical_device_pick_predicate<VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU>;
+   }
+
+   return +[](VkPhysicalDevice /*physicalDevice*/) -> bool { return true; };
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -81,10 +95,10 @@ Result<Surface> Instance::create_surface(const desktop::ISurface& surface) const
    return Surface{std::move(vulkan_surface)};
 }
 
-Result<DeviceUPtr> Instance::create_device(const Surface& surface) const
+Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DevicePickStrategy strategy) const
 {
    auto physicalDevices = vulkan::get_physical_devices(*m_instance);
-   auto pickedDevice = std::find_if(physicalDevices.begin(), physicalDevices.end(), physical_device_pick_predicate);
+   auto pickedDevice = std::find_if(physicalDevices.begin(), physicalDevices.end(), create_physical_device_pick_predicate(strategy));
    if (pickedDevice == physicalDevices.end()) {
       pickedDevice = physicalDevices.begin();
    }

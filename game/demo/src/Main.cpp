@@ -16,8 +16,8 @@ using triglav::threading::ThreadPool;
 
 using namespace triglav::name_literals;
 
-constexpr auto g_initialWidth = 1280;
-constexpr auto g_initialHeight = 720;
+constexpr auto g_defaultWidth = 1920;
+constexpr auto g_defaultHeight = 1080;
 constexpr auto g_minThreads = 1;
 constexpr auto g_maxThreads = 64;
 
@@ -33,11 +33,14 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto threadCount = CommandLine::the().arg_int("threadCount"_name).value_or(8);
    ThreadPool::the().initialize(std::clamp(threadCount, g_minThreads, g_maxThreads));
 
+   const auto initialWidth = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_defaultWidth));
+   const auto initialHeight = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_defaultHeight));
+
    spdlog::info("content path: {}", PathManager::the().content_path().string());
    spdlog::info("build path: {}", PathManager::the().build_path().string());
    spdlog::info("initializing renderer");
 
-   demo::GameInstance instance(display, {g_initialWidth, g_initialHeight});
+   demo::GameInstance instance(display, {initialWidth, initialHeight});
    instance.loop(display);
 
    ThreadPool::the().quit();

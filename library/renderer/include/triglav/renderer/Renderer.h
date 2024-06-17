@@ -45,7 +45,7 @@ class Renderer
    Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
             const graphics_api::Resolution& resolution);
 
-   void update_debug_info(float framerate);
+   void update_debug_info();
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close();

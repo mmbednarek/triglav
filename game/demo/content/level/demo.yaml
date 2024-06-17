@@ -68,6 +68,6 @@ nodes:
         name: "stairs"
         mesh: "stairs.model"
         transform:
-          position: {x: -30.0, y: 0.0, z: -0.2}
+          position: {x: -40.0, y: 0.0, z: -0.02}
           rotation: {yaw: 0, pitch: 0, roll: 0}
-          scale: {x: 3, y: 3, z: 3}
+          scale: {x: 4, y: 4, z: 4}
