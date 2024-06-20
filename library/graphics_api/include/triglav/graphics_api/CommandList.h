@@ -68,8 +68,7 @@ class CommandList
    template<typename TValue>
    void bind_uniform_buffer(const uint32_t binding, const TValue& buffer)
    {
-      m_descriptorWriter.set_uniform_buffer(binding, buffer);
-      m_hasPendingDescriptors = true;
+      this->bind_raw_uniform_buffer(binding, buffer.buffer());
    }
 
    void bind_texture(u32 binding, const Texture& texture);

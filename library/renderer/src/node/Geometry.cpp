@@ -10,7 +10,7 @@ namespace triglav::renderer::node {
 using namespace name_literals;
 using graphics_api::AttachmentAttribute;
 
-class GeometryResources : public render_core::NodeFrameResources
+class GeometryResources : public IGeometryResources
 {
  public:
    GeometryResources(graphics_api::Device& device, resource::ResourceManager& resourceManager, MaterialManager& materialManager,
@@ -25,7 +25,8 @@ class GeometryResources : public render_core::NodeFrameResources
        m_onAddedObjectSink(scene.OnObjectAddedToScene.connect<&GeometryResources::on_object_added_to_scene>(this)),
        m_onViewportChangeSink(scene.OnViewportChange.connect<&GeometryResources::on_viewport_change>(this))
    {
-      m_groundUniformBuffer->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
+      auto lock = m_groundUniformBuffer.lock();
+      lock->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
    }
 
    void on_object_added_to_scene(const SceneObject& object)
@@ -212,7 +213,7 @@ void Geometry::record_commands(render_core::FrameResources& frameResources, rend
    m_skybox.on_render(cmdList, geoResources.skybox_ubo(), m_scene.yaw(), m_scene.pitch(),
                       static_cast<float>(framebuffer.resolution().width), static_cast<float>(framebuffer.resolution().height));
 
-   m_groundRenderer.draw(cmdList, geoResources.ground_ubo(), m_scene.camera());
+   m_groundRenderer.draw(cmdList, geoResources.ground_ubo());
 
    geoResources.draw_scene_models(cmdList);
 
@@ -235,6 +236,11 @@ std::unique_ptr<render_core::NodeFrameResources> Geometry::create_node_resources
 float Geometry::gpu_time() const
 {
    return m_timestampArray.get_difference(0, 1);
+}
+
+const GroundRenderer& Geometry::ground_renderer() const
+{
+   return m_groundRenderer;
 }
 
 }// namespace triglav::renderer::node

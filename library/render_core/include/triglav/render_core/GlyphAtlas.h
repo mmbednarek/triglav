@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/font/Charset.h"
 #include "triglav/font/Typeface.h"
 #include "triglav/graphics_api/Texture.h"
 
@@ -34,7 +35,7 @@ struct GlyphInfo
 class GlyphAtlas
 {
  public:
-   GlyphAtlas(graphics_api::Device& device, const font::Typeface& typeface, std::span<font::Rune> atlasRunes, int glyphSize, uint32_t width,
+   GlyphAtlas(graphics_api::Device& device, const font::Typeface& typeface, const font::Charset& atlasRunes, int glyphSize, uint32_t width,
               uint32_t height);
 
    [[nodiscard]] std::vector<GlyphVertex> create_glyph_vertices(std::string_view text, TextMetric* outMetric = nullptr) const;

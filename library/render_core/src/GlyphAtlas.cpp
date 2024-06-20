@@ -3,8 +3,7 @@
 #include "RenderCore.hpp"
 
 #include "triglav/graphics_api/Device.h"
-
-#include <spdlog/spdlog.h>
+#include "triglav/font/Utf8StringView.h"
 
 #include <codecvt>
 #include <cstring>
@@ -13,7 +12,7 @@
 
 namespace triglav::render_core {
 
-GlyphAtlas::GlyphAtlas(graphics_api::Device& device, const font::Typeface& typeface, const std::span<font::Rune> atlasRunes,
+GlyphAtlas::GlyphAtlas(graphics_api::Device& device, const font::Typeface& typeface, const font::Charset& atlasRunes,
                        const int glyphSize, const uint32_t width, const uint32_t height) :
     m_glyphSize(static_cast<float>(glyphSize)),
     m_texture(checkResult(device.create_texture(GAPI_FORMAT(R, UNorm8), {width, height})))
@@ -72,10 +71,8 @@ std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const std::string_vie
    float x = 0.0f;
    float maxHeight = 0.0f;
 
-   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-   const auto textUtf16 = converter.from_bytes(text.data());
-
-   for (const auto ch : textUtf16) {
+   font::Utf8StringView textUtf8{text};
+   for (const auto ch : textUtf8) {
       if (not m_glyphInfos.contains(ch)) {
          x += m_glyphSize;
          continue;

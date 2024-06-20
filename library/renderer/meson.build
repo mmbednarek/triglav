@@ -32,6 +32,8 @@ renderer_sources = files([
   'src/node/Shading.h',
   'src/node/ShadowMap.cpp',
   'src/node/ShadowMap.h',
+  'src/node/SyncBuffers.cpp',
+  'src/node/SyncBuffers.h',
   'src/node/UserInterface.cpp',
   'src/node/UserInterface.h',
   'src/AmbientOcclusionRenderer.cpp',

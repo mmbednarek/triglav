@@ -3,7 +3,7 @@
 #include "Camera.h"
 
 #include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/HostVisibleBuffer.hpp"
+#include "triglav/graphics_api/ReplicatedBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.h"
 #include "triglav/resource/ResourceManager.h"
 
@@ -20,11 +20,12 @@ class GroundRenderer
       glm::mat4 view;
       glm::mat4 proj;
    };
-   using UniformBuffer = graphics_api::UniformBuffer<UniformData>;
+   using UniformBuffer = graphics_api::UniformReplicatedBuffer<UniformData>;
 
    GroundRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
-   void draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo, const Camera& camera) const;
+   static void prepare_resources(graphics_api::CommandList& cmdList, UniformBuffer& ubo, const Camera& camera);
+   void draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo) const;
 
  private:
    graphics_api::Device& m_device;

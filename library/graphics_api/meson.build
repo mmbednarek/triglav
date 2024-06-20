@@ -17,6 +17,7 @@ graphics_api_sources = files([
                                 'include/triglav/graphics_api/PipelineBuilder.h',
                                 'include/triglav/graphics_api/QueueManager.h',
                                 'include/triglav/graphics_api/RenderTarget.h',
+                                'include/triglav/graphics_api/ReplicatedBuffer.hpp',
                                 'include/triglav/graphics_api/Sampler.h',
                                 'include/triglav/graphics_api/SamplerCache.h',
                                 'include/triglav/graphics_api/Shader.h',
