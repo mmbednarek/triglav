@@ -1,5 +1,7 @@
 #include "UserInterface.h"
 
+#include "ProcessGlyphs.h"
+
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/ui_core/Viewport.h"
@@ -8,6 +10,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_transform_2d.hpp>
 #undef GLM_ENABLE_EXPERIMENTAL
+#include <glm/ext/matrix_transform.hpp>
 
 using triglav::graphics_api::AttachmentAttribute;
 
@@ -106,13 +109,15 @@ UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceMan
     m_device(device),
     m_resourceManager(resourceManager),
     m_viewport(viewport),
+    m_glyphCache(glyphCache),
     m_textureRenderTarget(GAPI_CHECK(
        graphics_api::RenderTargetBuilder(m_device)
           .attachment("user_interface"_name, AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
                       GAPI_FORMAT(RGBA, Float16), graphics_api::SampleCount::Single)
           .build())),
     m_textRenderer(m_device, m_resourceManager, m_textureRenderTarget, glyphCache),
-    m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager)
+    m_rectangleRenderer(device, m_textureRenderTarget, m_resourceManager),
+    m_ubo(m_device)
 {
 }
 
@@ -141,6 +146,16 @@ void UserInterface::record_commands(render_core::FrameResources& frameResources,
    cmdList.begin_render_pass(framebuffer, clearValues);
 
    uiResources.draw_ui(cmdList);
+
+   auto& processGlyphsRes = dynamic_cast<ProcessGlyphsResources&>(frameResources.node("process_glyphs"_name));
+
+   auto& atlas = m_glyphCache.find_glyph_atlas(GlyphProperties{"segoeui/bold.typeface"_rc, 20});
+
+   m_ubo->transform = glm::scale(glm::mat4(1), glm::vec3(0.01));
+   cmdList.bind_vertex_buffer(processGlyphsRes.vertex_buffer(), 0);
+   cmdList.bind_uniform_buffer(0, m_ubo);
+   cmdList.bind_texture(1, atlas.texture());
+   cmdList.draw_primitives(11*6, 0);
 
    cmdList.end_render_pass();
 }

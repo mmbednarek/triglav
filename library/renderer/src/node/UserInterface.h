@@ -35,9 +35,11 @@ class UserInterface : public render_core::IRenderNode
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
    ui_core::Viewport& m_viewport;
+   GlyphCache& m_glyphCache;
    graphics_api::RenderTarget m_textureRenderTarget;
    TextRenderer m_textRenderer;
    RectangleRenderer m_rectangleRenderer;
+   graphics_api::UniformBuffer<triglav::render_core::SpriteUBO> m_ubo;
 };
 
 }// namespace triglav::renderer::node

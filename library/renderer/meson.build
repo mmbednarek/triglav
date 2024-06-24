@@ -28,6 +28,8 @@ renderer_sources = files([
   'src/node/Particles.h',
   'src/node/PostProcessing.cpp',
   'src/node/PostProcessing.h',
+  'src/node/ProcessGlyphs.cpp',
+  'src/node/ProcessGlyphs.h',
   'src/node/Shading.cpp',
   'src/node/Shading.h',
   'src/node/ShadowMap.cpp',

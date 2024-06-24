@@ -1,5 +1,7 @@
 #version 450
 
+#extension GL_EXT_debug_printf : enable
+
 struct GlyphInfo
 {
     vec2 texCoordTopLeft;
@@ -32,26 +34,28 @@ layout(std140, binding = 2) buffer VertexOutBuffer
 
 shared float position[256];
 
-layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 11, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
-    uint index = gl_WorkGroupID.x;
+    uint index = gl_GlobalInvocationID.x;
 
     if (index == 0) {
         position[index] = 0;
     } else {
         uint prevChar = characters[index - 1];
         position[index] = glyphs[prevChar].advance.x;
+        debugPrintfEXT("STEP A: index %d, pos %f", index, position[index]);
     }
 
     memoryBarrierShared();
 
-    for (uint i = 2; i < characters.length(); i = i << 1) {
+    for (uint i = 2; i <= 16; i = i << 1) {
         const uint iHalf = i >> 1;
         if (index % i >= iHalf) {
             position[index] += position[index - (index % iHalf) - 1];
         }
+        debugPrintfEXT("STEP B: i %d, index %d, pos %f", i, index, position[index]);
         memoryBarrierShared();
     }
 

@@ -42,10 +42,12 @@ class GlyphAtlas
    [[nodiscard]] const graphics_api::Texture& texture() const;
    [[nodiscard]] graphics_api::Texture& texture();
    [[nodiscard]] TextMetric measure_text(std::string_view text) const;
+   [[nodiscard]] const graphics_api::Buffer& storage_buffer() const;
 
  private:
    float m_glyphSize{};
    graphics_api::Texture m_texture;
+   graphics_api::Buffer m_glyphStorageBuffer;
    std::map<font::Rune, GlyphInfo> m_glyphInfos;
 };
 

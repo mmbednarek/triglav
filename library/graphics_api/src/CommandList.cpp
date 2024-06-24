@@ -8,7 +8,7 @@
 #include "TimestampArray.h"
 #include "vulkan/Util.h"
 
-#include <spdlog/spdlog.h>
+#include <cassert>
 
 namespace triglav::graphics_api {
 
@@ -177,6 +177,9 @@ void CommandList::draw_indexed_primitives(const int indexCount, const int indexO
 
 void CommandList::dispatch(u32 x, u32 y, u32 z)
 {
+   // For some reason I need that XDDD
+   assert(x != 0 && y != 0 && z != 0);
+
    if (m_hasPendingDescriptors) {
       m_hasPendingDescriptors = false;
       this->push_descriptors(0, m_descriptorWriter, PipelineType::Compute);

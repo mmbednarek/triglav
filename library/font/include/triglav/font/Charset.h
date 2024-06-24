@@ -3,6 +3,7 @@
 #include "Typeface.h"
 
 #include <vector>
+#include <string_view>
 
 namespace triglav::font {
 
@@ -39,6 +40,8 @@ class Charset
    };
 
    Charset& add_range(Rune from, Rune to);
+   [[nodiscard]] std::vector<u32> encode_string(std::string_view str) const;
+   [[nodiscard]] u32 count() const;
 
    [[nodiscard]] Iterator begin() const;
    [[nodiscard]] Iterator end() const;
