@@ -1,7 +1,5 @@
 #include "Charset.h"
 
-#include "Utf8StringView.h"
-
 namespace triglav::font {
 
 const Charset Charset::Ascii = Charset().add_range(32, 126);
@@ -10,9 +8,9 @@ const Charset Charset::European = Charset().add_range(32, 126).add_range(0xc0, 0
 // ***** Charset::Iterator *****
 
 Charset::Iterator::Iterator(const Charset* charset, std::vector<RuneRange>::const_iterator rangeIt, Rune rune) :
-   m_charset(charset),
-   m_rangeIt(rangeIt),
-   m_rune(rune)
+    m_charset(charset),
+    m_rangeIt(rangeIt),
+    m_rune(rune)
 {
 }
 
@@ -53,19 +51,8 @@ Charset& Charset::add_range(Rune from, Rune to)
 std::vector<u32> Charset::encode_string(std::string_view str) const
 {
    std::vector<u32> result;
-
-   Utf8StringView utf8Str(str);
-   for (const auto rune : utf8Str) {
-      u32 indexBase = 0;
-      for (const auto& [from, to] : m_ranges) {
-         if (rune >= from && rune <= to) {
-            result.push_back(indexBase + rune - from);
-            break;
-         }
-         indexBase += to - from + 1;
-      }
-   }
-
+   result.reserve(str.size());
+   this->encode_string_to(str, std::back_inserter(result));
    return result;
 }
 
@@ -91,4 +78,4 @@ Charset::Iterator Charset::end() const
    return Iterator{this, m_ranges.end(), 0};
 }
 
-}
+}// namespace triglav::font

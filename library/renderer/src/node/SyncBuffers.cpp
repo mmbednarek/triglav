@@ -8,7 +8,7 @@ namespace gapi = graphics_api;
 using namespace name_literals;
 
 SyncBuffers::SyncBuffers(Scene& scene) :
-   m_scene(scene)
+    m_scene(scene)
 {
 }
 
@@ -31,4 +31,4 @@ std::unique_ptr<render_core::NodeFrameResources> SyncBuffers::create_node_resour
    return std::make_unique<render_core::NodeFrameResources>();
 }
 
-}
+}// namespace triglav::renderer::node

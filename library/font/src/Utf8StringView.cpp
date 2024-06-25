@@ -66,7 +66,7 @@ bool Utf8StringView::Iterator::operator!=(const Utf8StringView::Iterator& other)
 // ***** Utf8StringView *****
 
 Utf8StringView::Utf8StringView(std::string_view string) :
-   m_string(string)
+    m_string(string)
 {
 }
 

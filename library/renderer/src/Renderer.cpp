@@ -6,11 +6,11 @@
 #include "node/Geometry.h"
 #include "node/Particles.h"
 #include "node/PostProcessing.h"
+#include "node/ProcessGlyphs.h"
 #include "node/Shading.h"
 #include "node/ShadowMap.h"
-#include "node/UserInterface.h"
 #include "node/SyncBuffers.h"
-#include "node/ProcessGlyphs.h"
+#include "node/UserInterface.h"
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
@@ -120,7 +120,7 @@ Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device,
    m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, m_device, "shading"_name, "shading"_name, "bloom"_name);
    m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
    m_renderGraph.emplace_node<node::SyncBuffers>("sync_buffers"_name, m_scene);
-   m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache);
+   m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
 

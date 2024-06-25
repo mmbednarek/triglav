@@ -3,8 +3,8 @@
 #include "Camera.h"
 
 #include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/ReplicatedBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.h"
+#include "triglav/graphics_api/ReplicatedBuffer.hpp"
 #include "triglav/resource/ResourceManager.h"
 
 #include <glm/mat4x4.hpp>

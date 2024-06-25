@@ -460,4 +460,11 @@ SamplerCache& Device::sampler_cache()
    return m_samplerCache;
 }
 
+u32 Device::min_storage_buffer_alignment() const
+{
+   VkPhysicalDeviceProperties props;
+   vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
+   return props.limits.minStorageBufferOffsetAlignment;
+}
+
 }// namespace triglav::graphics_api

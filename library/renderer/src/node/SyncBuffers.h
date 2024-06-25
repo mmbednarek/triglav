@@ -21,4 +21,4 @@ class SyncBuffers : public render_core::IRenderNode
    Scene& m_scene;
 };
 
-}
+}// namespace triglav::renderer::node

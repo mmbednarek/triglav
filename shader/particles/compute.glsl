@@ -4,11 +4,11 @@
 
 #include "particle.glsl"
 
-layout(std140, binding = 0) readonly buffer ParticleSSBOIn {
+layout(std430, binding = 0) readonly buffer ParticleSSBOIn {
     Particle particlesIn[];
 };
 
-layout(std140, binding = 1) buffer ParticleSSBOOut {
+layout(std430, binding = 1) buffer ParticleSSBOOut {
     Particle particlesOut[];
 };
 

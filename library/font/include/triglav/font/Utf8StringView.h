@@ -10,7 +10,8 @@ namespace triglav::font {
 class Utf8StringView
 {
  public:
-   class Iterator {
+   class Iterator
+   {
     public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = Rune;
@@ -39,4 +40,4 @@ class Utf8StringView
    std::string_view m_string;
 };
 
-}
+}// namespace triglav::font

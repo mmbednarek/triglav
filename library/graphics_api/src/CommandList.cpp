@@ -208,6 +208,17 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
 }
 
+void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const
+{
+   assert(size > 0);
+
+   VkBufferCopy region{};
+   region.srcOffset = srcOffset;
+   region.dstOffset = dstOffset;
+   region.size = size;
+   vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
+}
+
 void CommandList::copy_buffer_to_texture(const Buffer& source, const Texture& destination, const int mipLevel) const
 {
    VkBufferImageCopy region{};
@@ -289,6 +300,12 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
    this->texture_barrier(sourceStage, targetStage, std::span(&info, &info + 1));
 }
 
+void CommandList::execution_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage) const
+{
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
+                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, 0, nullptr, 0, nullptr);
+}
+
 void CommandList::blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                                const TextureRegion& targetRegion) const
 {
@@ -350,6 +367,12 @@ Status CommandList::reset() const
 void CommandList::bind_storage_buffer(u32 binding, const Buffer& buffer)
 {
    m_descriptorWriter.set_storage_buffer(binding, buffer);
+   m_hasPendingDescriptors = true;
+}
+
+void CommandList::bind_storage_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size)
+{
+   m_descriptorWriter.set_storage_buffer(binding, buffer, offset, size);
    m_hasPendingDescriptors = true;
 }
 

@@ -10,6 +10,7 @@
 namespace triglav::renderer {
 
 using namespace name_literals;
+namespace gapi = graphics_api;
 
 struct TextColorConstant
 {
@@ -91,6 +92,10 @@ void TextRenderer::update_text(TextObject& textObject, std::string_view content)
       textObject.vertices.write(vertices.data(), vertices.size());
       textObject.vertexCount = vertices.size();
    }
+}
+const graphics_api::Pipeline& TextRenderer::pipeline() const
+{
+   return m_pipeline;
 }
 
 }// namespace triglav::renderer

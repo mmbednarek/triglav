@@ -17,45 +17,56 @@ struct GlyphVertex
     vec2 texCoord;
 };
 
-layout(std140, binding = 0) readonly buffer GlyphInfoBuffer
+layout(std430, binding = 0) readonly buffer GlyphInfoBuffer
 {
     GlyphInfo glyphs[];
 };
 
-layout(std140, binding = 1) readonly buffer CharacterBuffer
+layout(std430, binding = 1) readonly buffer CharacterBuffer
 {
     uint characters[];
 };
 
-layout(std140, binding = 2) buffer VertexOutBuffer
+layout(std430, binding = 2) buffer VertexOutBuffer
 {
     GlyphVertex vertices[];
 };
 
+uint next_power_of_two(int value)
+{
+    uint result = 1;
+    while (result < value) {
+        result <<= 1;
+    }
+    return result;
+}
+
 shared float position[256];
 
-layout (local_size_x = 11, local_size_y = 1, local_size_z = 1) in;
+layout (local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
 
 void main()
 {
-    uint index = gl_GlobalInvocationID.x;
+    const uint index = gl_GlobalInvocationID.x;
+    if (index >= characters.length())
+        return;
+
+    const uint lenNextPow = next_power_of_two(characters.length());
 
     if (index == 0) {
         position[index] = 0;
     } else {
         uint prevChar = characters[index - 1];
         position[index] = glyphs[prevChar].advance.x;
-        debugPrintfEXT("STEP A: index %d, pos %f", index, position[index]);
     }
 
     memoryBarrierShared();
 
-    for (uint i = 2; i <= 16; i = i << 1) {
+    for (uint i = 2; i <= lenNextPow; i = i << 1) {
         const uint iHalf = i >> 1;
         if (index % i >= iHalf) {
             position[index] += position[index - (index % iHalf) - 1];
         }
-        debugPrintfEXT("STEP B: i %d, index %d, pos %f", i, index, position[index]);
         memoryBarrierShared();
     }
 

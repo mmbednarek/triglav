@@ -2,8 +2,8 @@
 
 #include "RenderCore.hpp"
 
-#include "triglav/graphics_api/Device.h"
 #include "triglav/font/Utf8StringView.h"
+#include "triglav/graphics_api/Device.h"
 
 #include <codecvt>
 #include <cstring>
@@ -14,11 +14,12 @@ namespace triglav::render_core {
 
 namespace gapi = graphics_api;
 
-GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, const font::Charset& atlasRunes,
-                       const int glyphSize, const uint32_t width, const uint32_t height) :
+GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, const font::Charset& atlasRunes, const int glyphSize,
+                       const uint32_t width, const uint32_t height) :
     m_glyphSize(static_cast<float>(glyphSize)),
     m_texture(checkResult(device.create_texture(GAPI_FORMAT(R, UNorm8), {width, height}))),
-    m_glyphStorageBuffer(GAPI_CHECK(device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, sizeof(GlyphInfo) * atlasRunes.count())))
+    m_glyphStorageBuffer(GAPI_CHECK(
+       device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, sizeof(GlyphInfo) * atlasRunes.count())))
 {
    std::vector<uint8_t> atlasData{};
    atlasData.resize(width * height);
@@ -54,10 +55,10 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
 
       m_glyphInfos.emplace(rune,
                            glyphInfoVec.emplace_back(GlyphInfo{{static_cast<float>(left) / widthFP, static_cast<float>(top) / heightFP},
-                                           {static_cast<float>(right) / widthFP, static_cast<float>(bottom) / heightFP},
-                                           {glyph->width, glyph->height},
-                                           {glyph->advanceX, glyph->advanceY},
-                                           {glyph->bitmapLeft, glyph->bitmapTop}}));
+                                                               {static_cast<float>(right) / widthFP, static_cast<float>(bottom) / heightFP},
+                                                               {glyph->width, glyph->height},
+                                                               {glyph->advanceX, glyph->advanceY},
+                                                               {glyph->bitmapLeft, glyph->bitmapTop}}));
 
       for (int y = 0; y < glyph->height; ++y) {
          std::memcpy(&atlasData[left + (top + y) * width], &glyph->data[y * glyph->width], glyph->width);
@@ -69,7 +70,7 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
    m_texture.write(device, atlasData.data());
    m_texture.set_anisotropy_state(false);
 
-   GAPI_CHECK_STATUS(m_glyphStorageBuffer.write_indirect(glyphInfoVec.data(), sizeof(GlyphInfo)*glyphInfoVec.size()));
+   GAPI_CHECK_STATUS(m_glyphStorageBuffer.write_indirect(glyphInfoVec.data(), sizeof(GlyphInfo) * glyphInfoVec.size()));
 }
 
 std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const std::string_view text, TextMetric* outMetric) const

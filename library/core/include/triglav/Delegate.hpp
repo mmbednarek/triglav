@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Entt.hpp"
+#include "Template.hpp"
 
 #include <mutex>
 #include <optional>
