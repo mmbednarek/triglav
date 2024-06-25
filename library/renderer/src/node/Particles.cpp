@@ -115,7 +115,7 @@ void Particles::record_commands(render_core::FrameResources& frameResources, ren
    };
    cmdList.push_constant(PipelineStage::ComputeShader, pushConstants);
 
-   cmdList.dispatch(g_particleCount, 1, 1);
+   cmdList.dispatch(1, 1, 1);
 }
 
 }// namespace triglav::renderer::node

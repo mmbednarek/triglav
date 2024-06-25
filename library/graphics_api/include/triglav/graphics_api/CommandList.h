@@ -51,11 +51,15 @@ class CommandList
    void bind_vertex_buffer(const Buffer& buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer& buffer) const;
    void copy_buffer(const Buffer& source, const Buffer& dest) const;
+   void copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const;
    void copy_buffer_to_texture(const Buffer& source, const Texture& destination, int mipLevel = 0) const;
    void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState);
    void push_constant_ptr(PipelineStage stage, const void* ptr, size_t size, size_t offset = 0) const;
+
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
+   void execution_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage) const;
+
    void blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                      const TextureRegion& targetRegion) const;
    void reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const;
@@ -64,12 +68,12 @@ class CommandList
 
    void bind_raw_uniform_buffer(u32 binding, const Buffer& buffer);
    void bind_storage_buffer(u32 binding, const Buffer& buffer);
+   void bind_storage_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size);
 
    template<typename TValue>
    void bind_uniform_buffer(const uint32_t binding, const TValue& buffer)
    {
-      m_descriptorWriter.set_uniform_buffer(binding, buffer);
-      m_hasPendingDescriptors = true;
+      this->bind_raw_uniform_buffer(binding, buffer.buffer());
    }
 
    void bind_texture(u32 binding, const Texture& texture);
@@ -102,6 +106,11 @@ class CommandList
 
    [[nodiscard]] WorkTypeFlags work_types() const;
    [[nodiscard]] uint64_t triangle_count() const;
+
+   [[nodiscard]] Device& device()
+   {
+      return m_device;
+   }
 
  private:
    Device& m_device;

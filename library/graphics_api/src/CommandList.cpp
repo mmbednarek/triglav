@@ -8,7 +8,7 @@
 #include "TimestampArray.h"
 #include "vulkan/Util.h"
 
-#include <spdlog/spdlog.h>
+#include <cassert>
 
 namespace triglav::graphics_api {
 
@@ -177,6 +177,9 @@ void CommandList::draw_indexed_primitives(const int indexCount, const int indexO
 
 void CommandList::dispatch(u32 x, u32 y, u32 z)
 {
+   // For some reason I need that XDDD
+   assert(x != 0 && y != 0 && z != 0);
+
    if (m_hasPendingDescriptors) {
       m_hasPendingDescriptors = false;
       this->push_descriptors(0, m_descriptorWriter, PipelineType::Compute);
@@ -202,6 +205,17 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
 {
    VkBufferCopy region{};
    region.size = source.size();
+   vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
+}
+
+void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const
+{
+   assert(size > 0);
+
+   VkBufferCopy region{};
+   region.srcOffset = srcOffset;
+   region.dstOffset = dstOffset;
+   region.size = size;
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
 }
 
@@ -286,6 +300,12 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
    this->texture_barrier(sourceStage, targetStage, std::span(&info, &info + 1));
 }
 
+void CommandList::execution_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage) const
+{
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
+                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, 0, nullptr, 0, nullptr);
+}
+
 void CommandList::blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                                const TextureRegion& targetRegion) const
 {
@@ -347,6 +367,12 @@ Status CommandList::reset() const
 void CommandList::bind_storage_buffer(u32 binding, const Buffer& buffer)
 {
    m_descriptorWriter.set_storage_buffer(binding, buffer);
+   m_hasPendingDescriptors = true;
+}
+
+void CommandList::bind_storage_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size)
+{
+   m_descriptorWriter.set_storage_buffer(binding, buffer, offset, size);
    m_hasPendingDescriptors = true;
 }
 

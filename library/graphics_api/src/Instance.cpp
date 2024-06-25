@@ -153,6 +153,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    std::vector<const char*> vulkanDeviceExtensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+      "VK_KHR_shader_non_semantic_info",
    };
 
    const auto extensionProperties = vulkan::get_device_extension_properties(*pickedDevice, nullptr);

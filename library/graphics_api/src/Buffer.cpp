@@ -2,6 +2,7 @@
 
 #include "CommandList.h"
 #include "Device.h"
+#include "ReplicatedBuffer.hpp"
 
 #include <cstring>
 

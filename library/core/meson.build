@@ -10,6 +10,7 @@ core_sources = files([
                     'include/triglav/Name.hpp',
                     'include/triglav/ObjectPool.hpp',
                     'include/triglav/ResourceType.hpp',
+                    'include/triglav/Template.hpp',
                     'include/triglav/TypeMacroList.hpp',
                     'src/Core.cpp'
 ])

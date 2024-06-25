@@ -29,11 +29,19 @@ GroundRenderer::GroundRenderer(graphics_api::Device& device, graphics_api::Rende
 {
 }
 
-void GroundRenderer::draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo, const Camera& camera) const
+void GroundRenderer::prepare_resources(graphics_api::CommandList& cmdList, UniformBuffer& ubo, const Camera& camera)
 {
-   ubo->view = camera.view_matrix();
-   ubo->proj = camera.projection_matrix();
+   {
+      auto lock = ubo.lock();
+      lock->view = camera.view_matrix();
+      lock->proj = camera.projection_matrix();
+   }
 
+   ubo.sync(cmdList);
+}
+
+void GroundRenderer::draw(graphics_api::CommandList& cmdList, UniformBuffer& ubo) const
+{
    cmdList.bind_pipeline(m_pipeline);
 
    cmdList.bind_uniform_buffer(0, ubo);

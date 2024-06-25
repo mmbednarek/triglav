@@ -1,5 +1,7 @@
 #include "FontManager.h"
 
+#include "Charset.h"
+
 #include <freetype/freetype.h>
 #include <stdexcept>
 

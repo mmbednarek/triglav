@@ -36,6 +36,8 @@ class TextRenderer
                   const glm::vec2& position, const glm::vec4& color) const;
    void update_text(TextObject& textObject, std::string_view content);
 
+   [[nodiscard]] const graphics_api::Pipeline& pipeline() const;
+
  private:
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;

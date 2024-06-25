@@ -11,6 +11,8 @@ resources:
     source: "shader/text/fragment.spv"
   - name: "text.vshader"
     source: "shader/text/vertex.spv"
+  - name: "text.cshader"
+    source: "shader/text/compute.spv"
   - name: "rectangle.fshader"
     source: "shader/rectangle/fragment.spv"
   - name: "rectangle.vshader"

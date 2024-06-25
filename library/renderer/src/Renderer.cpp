@@ -6,8 +6,10 @@
 #include "node/Geometry.h"
 #include "node/Particles.h"
 #include "node/PostProcessing.h"
+#include "node/ProcessGlyphs.h"
 #include "node/Shading.h"
 #include "node/ShadowMap.h"
+#include "node/SyncBuffers.h"
 #include "node/UserInterface.h"
 
 #include "triglav/Name.hpp"
@@ -117,9 +119,13 @@ Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device,
    m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, m_device, m_resourceManager, m_renderTarget, m_framebuffers);
    m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, m_device, "shading"_name, "shading"_name, "bloom"_name);
    m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
+   m_renderGraph.emplace_node<node::SyncBuffers>("sync_buffers"_name, m_scene);
+   m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
 
+   m_renderGraph.add_dependency("geometry"_name, "sync_buffers"_name);
+   m_renderGraph.add_dependency("user_interface"_name, "process_glyphs"_name);
    m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
    m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
    m_renderGraph.add_dependency("shading"_name, "ambient_occlusion"_name);

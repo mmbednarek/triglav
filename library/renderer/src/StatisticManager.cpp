@@ -12,10 +12,12 @@ void StatisticManager::push_accumulated(Stat stat, float value)
    auto& props = m_properties[static_cast<u32>(stat)];
    std::unique_lock lk{props.mtx};
 
-   if (props.maxValue < value)
-      props.maxValue = value;
-   if (props.minValue > value)
-      props.minValue = value;
+   if (props.totalSamples > 0.0f) {
+      if (props.maxValue < value)
+         props.maxValue = value;
+      if (props.minValue > value)
+         props.minValue = value;
+   }
    props.accumulated += value;
    ++props.samples;
 }
@@ -54,11 +56,19 @@ float StatisticManager::value(Stat stat) const
 
 float StatisticManager::min(Stat stat) const
 {
+   auto& props = m_properties[static_cast<u32>(stat)];
+   if (props.totalSamples <= 0.0f) {
+      return 0.0f;
+   }
    return m_properties[static_cast<u32>(stat)].minValue;
 }
 
 float StatisticManager::max(Stat stat) const
 {
+   auto& props = m_properties[static_cast<u32>(stat)];
+   if (props.totalSamples <= 0.0f) {
+      return 0.0f;
+   }
    return m_properties[static_cast<u32>(stat)].maxValue;
 }
 float StatisticManager::average(Stat stat) const
