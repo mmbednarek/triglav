@@ -72,6 +72,9 @@ void ProcessGlyphsResources::on_added_text(Name name, const ui_core::Text& text)
 
 void ProcessGlyphsResources::update_resources(graphics_api::CommandList& cmdList)
 {
+   if (m_pendingUpdates.empty())
+      return;
+
    u32 textOffset = 0;
 
    {
@@ -84,9 +87,6 @@ void ProcessGlyphsResources::update_resources(graphics_api::CommandList& cmdList
          textOffset = next_multiple_of(textOffset + textCount, m_device.min_storage_buffer_alignment() / sizeof(u32));
       }
    }
-
-   if (textOffset == 0)
-      return;
 
    cmdList.copy_buffer(m_textStagingBuffer, m_textBuffer, 0, 0, textOffset * sizeof(u32));
 
