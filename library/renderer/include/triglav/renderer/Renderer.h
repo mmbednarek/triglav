@@ -14,6 +14,7 @@
 #include "SpriteRenderer.h"
 
 #include "triglav/desktop/ISurfaceEventListener.hpp"
+#include "triglav/desktop/ISurface.hpp"
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
@@ -42,7 +43,7 @@ class Renderer
       Down
    };
 
-   Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
+   Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
             const graphics_api::Resolution& resolution);
 
    void update_debug_info();
@@ -58,6 +59,7 @@ class Renderer
    [[nodiscard]] graphics_api::Device& device() const;
 
  private:
+   void recreate_swapchain(uint32_t width, uint32_t height);
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    static float calculate_framerate(float frameDuration);
@@ -78,6 +80,7 @@ class Renderer
    glm::vec3 m_motion{};
    Moving m_moveDirection{Moving::None};
 
+   desktop::ISurface& m_desktopSurface;
    graphics_api::Surface& m_surface;
    graphics_api::Device& m_device;
 

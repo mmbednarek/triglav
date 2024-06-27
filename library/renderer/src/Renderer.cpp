@@ -85,8 +85,9 @@ graphics_api::PresentMode get_present_mode()
 
 }// namespace
 
-Renderer::Renderer(graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
+Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
                    const graphics_api::Resolution& resolution) :
+    m_desktopSurface(desktopSurface),
     m_surface(surface),
     m_device(device),
     m_resourceManager(resourceManager),
@@ -198,6 +199,18 @@ void Renderer::on_render()
    m_renderGraph.swap_frames();
    m_renderGraph.await();
 
+   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
+   const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
+   if (not framebufferIndex.has_value()) {
+      if (framebufferIndex.error() == graphics_api::Status::OutOfDateSwapchain) {
+         auto dim = m_desktopSurface.dimension();
+         this->recreate_swapchain(dim.width, dim.height);
+         return;
+      } else {
+         GAPI_CHECK_STATUS(framebufferIndex.error());
+      }
+   }
+
    m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
    m_renderGraph.set_flag("ssao"_name, m_ssaoEnabled);
    m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
@@ -205,16 +218,21 @@ void Renderer::on_render()
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
    this->update_debug_info();
 
-   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
-   const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
    this->update_uniform_data(deltaTime);
 
    m_renderGraph.node<node::Particles>("particles"_name).set_delta_time(deltaTime);
-   m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(framebufferIndex);
+   m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(*framebufferIndex);
    m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
-   GAPI_CHECK_STATUS(m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex));
+   auto status = m_swapchain.present(m_renderGraph.target_semaphore(), *framebufferIndex);
+   if (status == graphics_api::Status::OutOfDateSwapchain) {
+      auto dim = m_desktopSurface.dimension();
+      this->recreate_swapchain(dim.width, dim.height);
+      return;
+   } else {
+      GAPI_CHECK_STATUS(status);
+   }
 
    StatisticManager::the().tick();
 }
@@ -353,13 +371,16 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
    if (m_resolution.width == width && m_resolution.height == height)
       return;
 
-   const graphics_api::Resolution resolution{width, height};
+   this->recreate_swapchain(width, height);
+}
 
-   // m_textRenderer.update_resolution(resolution);
-   m_context2D.update_resolution(resolution);
+void Renderer::recreate_swapchain(const u32 width, const u32 height)
+{
+   const graphics_api::Resolution resolution{width, height};
 
    m_device.await_all();
 
+   m_context2D.update_resolution(resolution);
    m_renderGraph.update_resolution(resolution);
 
    m_framebuffers.clear();

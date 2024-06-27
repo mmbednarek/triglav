@@ -14,6 +14,7 @@ class IDisplay
    virtual ~IDisplay() = default;
 
    virtual void dispatch_messages() = 0;
+   virtual void dispatch_messages_blocking() = 0;
    virtual std::shared_ptr<ISurface> create_surface(int width, int height, WindowAttributeFlags flags) = 0;
 };
 

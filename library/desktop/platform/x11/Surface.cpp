@@ -114,7 +114,9 @@ bool Surface::is_cursor_locked() const
 
 Dimension Surface::dimension() const
 {
-   return m_dimension;
+   XWindowAttributes attribs;
+   ::XGetWindowAttributes(m_display, m_window, &attribs);
+   return {attribs.width, attribs.height};
 }
 
 void Surface::dispatch_key_press(const KeyCode code) const

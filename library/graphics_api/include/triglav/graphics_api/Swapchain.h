@@ -22,7 +22,7 @@ class Swapchain
    [[nodiscard]] Resolution resolution() const;
 
    [[nodiscard]] VkSwapchainKHR vulkan_swapchain() const;
-   [[nodiscard]] u32 get_available_framebuffer(const Semaphore& semaphore) const;
+   [[nodiscard]] Result<u32> get_available_framebuffer(const Semaphore& semaphore) const;
    [[nodiscard]] Status present(const Semaphore& semaphore, uint32_t framebufferIndex);
    [[nodiscard]] VkImageView vulkan_image_view(u32 frameIndex) const;
    [[nodiscard]] u32 frame_count() const;

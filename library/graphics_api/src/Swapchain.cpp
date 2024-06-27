@@ -2,8 +2,7 @@
 
 #include "Synchronization.h"
 #include "vulkan/Util.h"
-
-#include <QueueManager.h>
+#include "QueueManager.h"
 
 namespace triglav::graphics_api {
 
@@ -22,10 +21,15 @@ VkSwapchainKHR Swapchain::vulkan_swapchain() const
    return *m_swapchain;
 }
 
-u32 Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
+Result<u32> Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
 {
    u32 imageIndex;
-   vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex);
+   if (const auto res = vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex); res != VK_SUCCESS) {
+      if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
+         return std::unexpected{Status::OutOfDateSwapchain};
+      }
+      return std::unexpected{Status::UnsupportedDevice};
+   }
    return imageIndex;
 }
 
@@ -52,8 +56,8 @@ Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebuffer
    auto& queue = m_queueManager.get().next_queue(WorkType::Presentation);
 
    auto queueAccessor = queue.access();
-   if (auto status = vkQueuePresentKHR(*queueAccessor, &presentInfo); status != VK_SUCCESS && status != VK_SUBOPTIMAL_KHR) {
-      if (status == VK_ERROR_OUT_OF_DATE_KHR) {
+   if (auto status = vkQueuePresentKHR(*queueAccessor, &presentInfo); status != VK_SUCCESS) {
+      if (status == VK_ERROR_OUT_OF_DATE_KHR || status == VK_SUBOPTIMAL_KHR) {
          return Status::OutOfDateSwapchain;
       }
       return Status::UnsupportedDevice;
