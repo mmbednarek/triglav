@@ -38,6 +38,16 @@ Key map_key(const KeyCode keyCode)
       return Key::F6;
    case 73:
       return Key::F7;
+   case 74:
+      return Key::F8;
+   case 75:
+      return Key::F9;
+   case 76:
+      return Key::F10;
+   case 77:
+      return Key::F11;
+   case 78:
+      return Key::F12;
    }
 
    return Key::Unknown;

@@ -111,7 +111,7 @@ void Display::on_mouse_move(float x, float y)
       if (not surface)
          break;
 
-      surface->dispatch_mouse_relative_move(x, y);
+      surface->dispatch_mouse_relative_move(1.5f * x, 1.5f * y);
    }
 }
 
