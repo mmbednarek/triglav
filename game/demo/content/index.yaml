@@ -12,6 +12,9 @@ resources:
     source: "texture/stone_albedo.jpg"
   - name: "stone/height_map.tex"
     source: "texture/stone_height_map.png"
+    properties:
+      anisotropy: off
+      max_lod: 0.0
   - name: "stone/normal.tex"
     source: "texture/stone_normal.png"
   - name: "earth.tex"

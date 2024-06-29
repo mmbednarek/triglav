@@ -47,7 +47,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_resolution(g_splashScreenResolution),
     m_glyphCache(device, m_resourceManager),
     m_swapchain(GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution,
-                                                     PresentMode::Immediate))),
+                                                     PresentMode::Fifo))),
     m_renderTarget(GAPI_CHECK(RenderTargetBuilder(m_device)
                                  .attachment("output"_name,
                                              AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
@@ -76,8 +76,15 @@ void SplashScreen::update()
    m_frameFinishedFence.await();
 
    const auto framebufferIndex = m_swapchain.get_available_framebuffer(m_frameReadySemaphore);
+   if (not framebufferIndex.has_value()) {
+      if (framebufferIndex.error() == Status::OutOfDateSwapchain) {
+         this->recreate_swapchain();
+      } else {
+         GAPI_CHECK_STATUS(framebufferIndex.error());
+      }
+   }
 
-   auto& framebuffer = m_framebuffers[framebufferIndex];
+   auto& framebuffer = m_framebuffers[*framebufferIndex];
 
    {
       std::unique_lock lk{m_updateTextMutex};
@@ -118,7 +125,7 @@ void SplashScreen::update()
 
    GAPI_CHECK_STATUS(m_device.submit_command_list(m_commandList, m_frameReadySemaphore, m_targetSemaphore, m_frameFinishedFence));
 
-   const auto status = m_swapchain.present(m_targetSemaphore, framebufferIndex);
+   const auto status = m_swapchain.present(m_targetSemaphore, *framebufferIndex);
    if (status == Status::OutOfDateSwapchain) {
       this->recreate_swapchain();
    } else {

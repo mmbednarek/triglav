@@ -38,6 +38,16 @@ Key map_key(const KeyCode keyCode)
       return Key::F6;
    case 73:
       return Key::F7;
+   case 74:
+      return Key::F8;
+   case 75:
+      return Key::F9;
+   case 76:
+      return Key::F10;
+   case 77:
+      return Key::F11;
+   case 78:
+      return Key::F12;
    }
 
    return Key::Unknown;
@@ -114,7 +124,9 @@ bool Surface::is_cursor_locked() const
 
 Dimension Surface::dimension() const
 {
-   return m_dimension;
+   XWindowAttributes attribs;
+   ::XGetWindowAttributes(m_display, m_window, &attribs);
+   return {attribs.width, attribs.height};
 }
 
 void Surface::dispatch_key_press(const KeyCode code) const
