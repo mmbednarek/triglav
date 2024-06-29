@@ -163,7 +163,8 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
       display.create_surface(static_cast<int>(m_resolution.width), static_cast<int>(m_resolution.height), WindowAttribute::Default);
    m_graphicsDemoSurface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demoSurface)));
 
-   m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_demoSurface, *m_graphicsDemoSurface, *m_device, m_resourceManager, m_resolution);
+   m_renderer =
+      std::make_unique<triglav::renderer::Renderer>(*m_demoSurface, *m_graphicsDemoSurface, *m_device, m_resourceManager, m_resolution);
    m_eventListener = std::make_unique<EventListener>(*m_demoSurface, *m_renderer);
    m_demoSurface->add_event_listener(m_eventListener.get());
 

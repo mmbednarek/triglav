@@ -85,8 +85,8 @@ graphics_api::PresentMode get_present_mode()
 
 }// namespace
 
-Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
-                   const graphics_api::Resolution& resolution) :
+Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device,
+                   resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
     m_desktopSurface(desktopSurface),
     m_surface(surface),
     m_device(device),
@@ -180,6 +180,7 @@ void Renderer::update_debug_info()
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, m_smoothCamera ? "On" : "Off");
 }
 
 void Renderer::on_render()
@@ -196,7 +197,7 @@ void Renderer::on_render()
       isFirstFrame = false;
    }
 
-   m_renderGraph.swap_frames();
+   m_renderGraph.change_active_frame();
    m_renderGraph.await();
 
    auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
@@ -245,7 +246,7 @@ void Renderer::on_close()
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
 {
-   m_scene.update_orientation(-dx * 0.01f, dy * 0.01f);
+   m_mouseOffset += glm::vec2{-dx * 0.1f, dy * 0.1f};
 }
 
 static Renderer::Moving map_direction(const Key key)
@@ -286,6 +287,9 @@ void Renderer::on_key_pressed(const Key key)
    if (key == Key::F7) {
       m_bloomEnabled = not m_bloomEnabled;
    }
+   if (key == Key::F8) {
+      m_smoothCamera = not m_smoothCamera;
+   }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -32.0f;
    }
@@ -299,11 +303,7 @@ void Renderer::on_key_released(const triglav::desktop::Key key)
    }
 }
 
-void Renderer::on_mouse_wheel_turn(const float x)
-{
-   m_distance += x;
-   m_distance = std::clamp(m_distance, 1.0f, 100.0f);
-}
+void Renderer::on_mouse_wheel_turn(const float x) {}
 
 ResourceManager& Renderer::resource_manager() const
 {
@@ -324,24 +324,6 @@ float Renderer::calculate_frame_duration()
    last = now;
 
    return static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(diff).count()) / 1000000.0f;
-}
-
-float Renderer::calculate_framerate(const float frameDuration)
-{
-   static float lastResult = 60.0f;
-   static float sum = 0.0f;
-   static int count = 0;
-
-   sum += frameDuration;
-   ++count;
-
-   if (sum >= 0.5f) {
-      lastResult = static_cast<float>(count) / sum;
-      sum = 0.0f;
-      count = 0;
-   }
-
-   return std::ceil(lastResult);
 }
 
 glm::vec3 Renderer::moving_direction()
@@ -417,6 +399,14 @@ void Renderer::update_uniform_data(const float deltaTime)
       m_scene.camera().set_position(camPos);
    } else {
       m_motion.z += 30.0f * deltaTime;
+   }
+
+   if (m_smoothCamera) {
+      m_scene.update_orientation(m_mouseOffset.x * deltaTime, m_mouseOffset.y * deltaTime);
+      m_mouseOffset += m_mouseOffset * (pow(0.5f, 50.0f * deltaTime) - 1.0f);
+   } else {
+      m_scene.update_orientation(0.1f * m_mouseOffset.x, 0.1f * m_mouseOffset.y);
+      m_mouseOffset = {0.0f, 0.0f};
    }
 
    m_scene.update(m_resolution);

@@ -46,7 +46,7 @@ class RenderGraph
    [[nodiscard]] u32 triangle_count(Name node);
    FrameResources& active_frame_resources();
    FrameResources& previous_frame_resources();
-   void swap_frames();
+   void change_active_frame();
 
    void clean();
 
@@ -59,9 +59,10 @@ class RenderGraph
    std::multimap<Name, Name> m_interframeDependencies;
    std::vector<Name> m_nodeOrder;
    std::vector<graphics_api::Framebuffer> m_framebuffers;
-   std::array<FrameResources, 2> m_frameResources;
+   std::array<FrameResources, 3> m_frameResources;
    Name m_targetNode{};
    u32 m_activeFrame{0};
+   u32 m_previousFrame{0};
    bool m_firstFrame{true};
 };
 

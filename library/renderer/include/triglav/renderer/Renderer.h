@@ -13,8 +13,8 @@
 #include "SkyBox.h"
 #include "SpriteRenderer.h"
 
-#include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/desktop/ISurface.hpp"
+#include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
@@ -43,8 +43,8 @@ class Renderer
       Down
    };
 
-   Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device, resource::ResourceManager& resourceManager,
-            const graphics_api::Resolution& resolution);
+   Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device,
+            resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
 
    void update_debug_info();
    void on_render();
@@ -62,22 +62,17 @@ class Renderer
    void recreate_swapchain(uint32_t width, uint32_t height);
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
-   static float calculate_framerate(float frameDuration);
    glm::vec3 moving_direction();
 
-   bool m_receivedMouseInput{false};
-   float m_lastMouseX{};
-   float m_lastMouseY{};
-
-   float m_distance{12};
-   float m_lightX{-40};
    bool m_showDebugLines{false};
    bool m_ssaoEnabled{true};
    bool m_fxaaEnabled{true};
    bool m_bloomEnabled{true};
    bool m_hideUI{false};
+   bool m_smoothCamera{true};
    glm::vec3 m_position{};
    glm::vec3 m_motion{};
+   glm::vec2 m_mouseOffset{};
    Moving m_moveDirection{Moving::None};
 
    desktop::ISurface& m_desktopSurface;

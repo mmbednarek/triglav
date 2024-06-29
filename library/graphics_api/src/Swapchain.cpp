@@ -1,8 +1,8 @@
 #include "Swapchain.h"
 
+#include "QueueManager.h"
 #include "Synchronization.h"
 #include "vulkan/Util.h"
-#include "QueueManager.h"
 
 namespace triglav::graphics_api {
 
@@ -24,7 +24,9 @@ VkSwapchainKHR Swapchain::vulkan_swapchain() const
 Result<u32> Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
 {
    u32 imageIndex;
-   if (const auto res = vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex); res != VK_SUCCESS) {
+   if (const auto res =
+          vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex);
+       res != VK_SUCCESS) {
       if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
          return std::unexpected{Status::OutOfDateSwapchain};
       }

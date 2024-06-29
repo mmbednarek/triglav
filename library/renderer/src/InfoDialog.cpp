@@ -34,6 +34,7 @@ constexpr std::array g_featureLabels{
    std::tuple{"info_dialog/features/aa"_name, "info_dialog/features/aa/value"_name, "Anti-Aliasing"sv},
    std::tuple{"info_dialog/features/bloom"_name, "info_dialog/features/bloom/value"_name, "Bloom"sv},
    std::tuple{"info_dialog/features/debug_lines"_name, "info_dialog/features/debug_lines/value"_name, "Debug Lines"sv},
+   std::tuple{"info_dialog/features/smooth_camera"_name, "info_dialog/features/smooth_camera/value"_name, "Smooth Camera"sv},
 };
 
 constexpr std::array g_labelGroups{
@@ -51,7 +52,7 @@ InfoDialog::InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& r
 
 void InfoDialog::initialize()
 {
-   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 570.0f}});
+   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 600.0f}});
 
    m_position = {g_leftOffset, g_topOffset};
 

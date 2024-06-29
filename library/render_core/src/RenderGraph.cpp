@@ -11,7 +11,7 @@ using namespace name_literals;
 
 RenderGraph::RenderGraph(graphics_api::Device& device) :
     m_device(device),
-    m_frameResources{FrameResources{device}, FrameResources{device}}
+    m_frameResources{FrameResources{device}, FrameResources{device}, FrameResources{device}}
 {
 }
 
@@ -223,12 +223,12 @@ FrameResources& RenderGraph::active_frame_resources()
 
 FrameResources& RenderGraph::previous_frame_resources()
 {
-   return m_frameResources[m_activeFrame == 0 ? (m_frameResources.size() - 1) : (m_activeFrame - 1)];
+   return m_frameResources[m_previousFrame];
 }
 
-void RenderGraph::swap_frames()
+void RenderGraph::change_active_frame()
 {
-   m_activeFrame = (m_activeFrame + 1) % m_frameResources.size();
+   m_previousFrame = std::exchange(m_activeFrame, (m_activeFrame + 1) % m_frameResources.size());
 }
 
 graphics_api::Semaphore& RenderGraph::semaphore(Name parent, Name child)
