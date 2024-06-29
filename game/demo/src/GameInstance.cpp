@@ -147,7 +147,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
 
    while (m_state.load() != State::Ready) {
       m_splashScreen->update();
-      display.dispatch_messages_blocking();
+      display.dispatch_messages();
    }
 
    m_splashScreen->on_close();

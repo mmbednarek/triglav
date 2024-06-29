@@ -79,11 +79,6 @@ void Display::dispatch_messages()
    m_mouse.tick();
 }
 
-void Display::dispatch_messages_blocking()
-{
-   this->dispatch_messages();
-}
-
 std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, WindowAttributeFlags flags)
 {
    auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, width, height, 0, 0, 0xffffffff);

@@ -324,11 +324,6 @@ void Display::dispatch_messages()
    wl_display_dispatch_pending(m_display);
 }
 
-void Display::dispatch_messages_blocking()
-{
-   wl_display_dispatch(m_display);
-}
-
 std::shared_ptr<ISurface> Display::create_surface(int width, int height, WindowAttributeFlags flags)
 {
    return std::make_shared<Surface>(*this);

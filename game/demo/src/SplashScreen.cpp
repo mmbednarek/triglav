@@ -47,7 +47,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_resolution(g_splashScreenResolution),
     m_glyphCache(device, m_resourceManager),
     m_swapchain(GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution,
-                                                     PresentMode::Immediate))),
+                                                     PresentMode::Fifo))),
     m_renderTarget(GAPI_CHECK(RenderTargetBuilder(m_device)
                                  .attachment("output"_name,
                                              AttachmentAttribute::Color | AttachmentAttribute::ClearImage |

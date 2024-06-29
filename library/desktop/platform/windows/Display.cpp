@@ -53,15 +53,6 @@ void Display::dispatch_messages()
    }
 }
 
-void Display::dispatch_messages_blocking()
-{
-   MSG message;
-   if (GetMessageA(&message, nullptr, 0, 0) != 0) {
-      TranslateMessage(&message);
-      DispatchMessageA(&message);
-   }
-}
-
 std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, WindowAttributeFlags flags)
 {
    return std::make_shared<Surface>(m_instance, Dimension{width, height}, flags);
