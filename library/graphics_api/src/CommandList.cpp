@@ -389,4 +389,10 @@ void CommandList::bind_texture(u32 binding, const Texture& texture)
    m_hasPendingDescriptors = true;
 }
 
+void CommandList::bind_storage_image(u32 binding, const Texture& texture)
+{
+   m_descriptorWriter.set_storage_image(binding, texture);
+   m_hasPendingDescriptors = true;
+}
+
 }// namespace triglav::graphics_api

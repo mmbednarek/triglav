@@ -265,6 +265,8 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
       return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
    case PipelineStage::FragmentShader:
       return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   case PipelineStage::AttachmentOutput:
+      return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    case PipelineStage::ComputeShader:
       return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    case PipelineStage::Transfer:
@@ -289,6 +291,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    if (flags & PipelineStage::FragmentShader) {
       result |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
    }
+   if (flags & PipelineStage::AttachmentOutput) {
+      result |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+   }
    if (flags & PipelineStage::ComputeShader) {
       result |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    }
@@ -309,6 +314,8 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
       return VK_DESCRIPTOR_TYPE_SAMPLER;
    case DescriptorType::ImageSampler:
       return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   case DescriptorType::StorageImage:
+      return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
    }
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
@@ -326,6 +333,12 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
       return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
    case TextureState::DepthStencilRead:
       return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+   case TextureState::General:
+      [[fallthrough]];
+   case TextureState::GeneralRead:
+      [[fallthrough]];
+   case TextureState::GeneralWrite:
+      return VK_IMAGE_LAYOUT_GENERAL;
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
@@ -342,8 +355,14 @@ VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
       return VK_ACCESS_TRANSFER_WRITE_BIT;
    case TextureState::ShaderRead:
       [[fallthrough]];
+   case TextureState::GeneralRead:
+      [[fallthrough]];
    case TextureState::DepthStencilRead:
       return VK_ACCESS_SHADER_READ_BIT;
+   case TextureState::General:
+      return VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+   case TextureState::GeneralWrite:
+      return VK_ACCESS_SHADER_WRITE_BIT;
    }
 
    return 0;
@@ -398,6 +417,9 @@ VkImageUsageFlags to_vulkan_image_usage_flags(const TextureUsageFlags usage)
    }
    if (usage & TextureUsage::Transient) {
       result |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+   }
+   if (usage & TextureUsage::Storage) {
+      result |= VK_IMAGE_USAGE_STORAGE_BIT;
    }
 
    return result;

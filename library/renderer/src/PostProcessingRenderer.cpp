@@ -1,5 +1,6 @@
 #include "PostProcessingRenderer.h"
 
+#include "src/node/Blur.h"
 #include "src/node/Downsample.h"
 #include "triglav/graphics_api/CommandList.h"
 #include "triglav/graphics_api/DescriptorWriter.h"
@@ -23,6 +24,8 @@ PostProcessingRenderer::PostProcessingRenderer(graphics_api::Device& device, gra
                               .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                               .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                               .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
+                              .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
+                              .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                               .enable_depth_test(false)
                               .use_push_descriptors(true)
                               .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
@@ -37,7 +40,7 @@ void PostProcessingRenderer::draw(render_core::FrameResources& resources, graphi
 
    auto& shading = resources.node("shading"_name).framebuffer("shading"_name);
    auto& ui = resources.node("user_interface"_name).framebuffer("ui"_name);
-   auto& bloomTexture = dynamic_cast<node::DownsampleResources&>(resources.node("downsample_bloom"_name)).texture();
+   auto& bloomTexture = dynamic_cast<node::BlurResources&>(resources.node("blur_bloom"_name)).texture();
 
    cmdList.bind_texture(0, shading.texture("shading"_name));
    cmdList.bind_texture(1, bloomTexture);

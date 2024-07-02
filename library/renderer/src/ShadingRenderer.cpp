@@ -9,6 +9,8 @@
 #include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/render_core/RenderCore.hpp"
 
+#include "node/Blur.h"
+
 using namespace triglav::name_literals;
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
@@ -44,7 +46,7 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
    cmdList.bind_pipeline(m_pipeline);
 
    auto& gbuffer = resources.node("geometry"_name).framebuffer("gbuffer"_name);
-   auto& aoBuffer = resources.node("ambient_occlusion"_name).framebuffer("ao"_name);
+   auto& aoTexture = dynamic_cast<node::BlurResources&>(resources.node("blur_ao"_name)).texture();
    auto& smBuffer = resources.node("shadow_map"_name).framebuffer("sm"_name);
 
    PushConstant pushConstant{
@@ -56,7 +58,7 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
    cmdList.bind_texture(0, gbuffer.texture("albedo"_name));
    cmdList.bind_texture(1, gbuffer.texture("position"_name));
    cmdList.bind_texture(2, gbuffer.texture("normal"_name));
-   cmdList.bind_texture(3, aoBuffer.texture("ao"_name));
+   cmdList.bind_texture(3, aoTexture);
    cmdList.bind_texture(4, smBuffer.texture("sm"_name));
    cmdList.bind_uniform_buffer(5, m_uniformBuffer);
 

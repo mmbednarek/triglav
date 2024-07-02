@@ -13,7 +13,7 @@ float shadow_map_test(sampler2D shadowMap, vec4 shadowCoord, vec2 off)
         shadowCoord.x > 0.0 && shadowCoord.x < 1.0) {
         float dist = texture(shadowMap, shadowCoord.xy + off).r;
 
-        if (shadowCoord.w > 0.0 && dist < shadowCoord.z - 0.001) {
+        if (shadowCoord.w > 0.0 && dist < shadowCoord.z - 0.005) {
             shadow = 0;
         }
     }

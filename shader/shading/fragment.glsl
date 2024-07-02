@@ -21,7 +21,6 @@ layout(push_constant) uniform Constants
     bool enableSSAO;
 } pc;
 
-#include "../common/blur.glsl"
 #include "../common/brdf.glsl"
 #include "../common/constants.glsl"
 #include "../common/shadow_map.glsl"
@@ -52,7 +51,7 @@ void main() {
     float shadow = shadow_map_test_pcr(texShadowMap, shadowUV);
     float ambientValue = ambient;
     if (pc.enableSSAO) {
-        ambientValue *= blur_image_single(texAmbientOcclusion, fragTexCoord);
+        ambientValue *= pow(texture(texAmbientOcclusion, fragTexCoord).r, 1.5);
     }
 
     vec4 texColorSample = texture(texColor, fragTexCoord);
@@ -96,12 +95,6 @@ void main() {
 
     float luminance = dot(color, vec3(0.2125, 0.7153, 0.07121));
     color = mix(vec3(luminance), color, 1.25);
-    // Disable bloom for shading for now
-//    if (luminance > 1) {
-//        outBloom = vec4(color, (luminance - 1) / 5);
-//    } else {
-//        outBloom = vec4(0.0);
-//    }
     outBloom = vec4(0.0);
 
     outColor = vec4(color, 1.0);

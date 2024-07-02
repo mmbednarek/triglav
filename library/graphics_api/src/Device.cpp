@@ -232,7 +232,7 @@ Result<Semaphore> Device::create_semaphore() const
 }
 
 Result<Texture> Device::create_texture(const ColorFormat& format, const Resolution& imageSize, const TextureUsageFlags usageFlags,
-                                       SampleCount sampleCount, int mipCount) const
+                                       TextureState initialTextureState, SampleCount sampleCount, int mipCount) const
 {
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
@@ -260,7 +260,7 @@ Result<Texture> Device::create_texture(const ColorFormat& format, const Resoluti
    imageInfo.mipLevels = mipCount;
    imageInfo.arrayLayers = 1;
    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-   imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   imageInfo.initialLayout = vulkan::to_vulkan_image_layout(initialTextureState);
    imageInfo.samples = static_cast<VkSampleCountFlagBits>(sampleCount);
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
    imageInfo.usage = vulkan::to_vulkan_image_usage_flags(usageFlags);

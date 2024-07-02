@@ -61,6 +61,7 @@ class Device
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat& format, const Resolution& imageSize,
                                                 TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSrc |
                                                                                TextureUsage::TransferDst,
+                                                TextureState initialTextureState = TextureState::Undefined,
                                                 SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties& info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);

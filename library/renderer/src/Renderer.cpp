@@ -2,6 +2,7 @@
 
 #include "StatisticManager.h"
 #include "node/AmbientOcclusion.h"
+#include "node/Blur.h"
 #include "node/Downsample.h"
 #include "node/Geometry.h"
 #include "node/Particles.h"
@@ -38,7 +39,6 @@ namespace triglav::renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
 constexpr auto g_depthFormat = GAPI_FORMAT(D, UNorm16);
-constexpr auto g_sampleCount = SampleCount::Single;
 
 namespace {
 
@@ -118,23 +118,27 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.emplace_node<node::Shading>("shading"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, m_device, m_resourceManager, m_uiViewport, m_glyphCache);
    m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, m_device, m_resourceManager, m_renderTarget, m_framebuffers);
-   m_renderGraph.emplace_node<node::Downsample>("downsample_bloom"_name, m_device, "shading"_name, "shading"_name, "bloom"_name);
    m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
    m_renderGraph.emplace_node<node::SyncBuffers>("sync_buffers"_name, m_scene);
    m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
+   m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "shading"_name, "bloom"_name,
+                                          false);
+   m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, "ao"_name,
+                                          true);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
 
    m_renderGraph.add_dependency("geometry"_name, "sync_buffers"_name);
    m_renderGraph.add_dependency("user_interface"_name, "process_glyphs"_name);
    m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
+   m_renderGraph.add_dependency("blur_ao"_name, "ambient_occlusion"_name);
    m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
-   m_renderGraph.add_dependency("shading"_name, "ambient_occlusion"_name);
+   m_renderGraph.add_dependency("shading"_name, "blur_ao"_name);
    m_renderGraph.add_dependency("shading"_name, "particles"_name);
-   m_renderGraph.add_dependency("downsample_bloom"_name, "shading"_name);
+   m_renderGraph.add_dependency("blur_bloom"_name, "shading"_name);
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
-   m_renderGraph.add_dependency("post_processing"_name, "downsample_bloom"_name);
+   m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);
 
    m_renderGraph.bake("post_processing"_name);
    m_renderGraph.update_resolution(m_resolution);
@@ -197,19 +201,19 @@ void Renderer::on_render()
       isFirstFrame = false;
    }
 
+   if (m_mustRecreateSwapchain) {
+      auto dim = m_desktopSurface.dimension();
+      this->recreate_swapchain(dim.width, dim.height);
+      m_mustRecreateSwapchain = false;
+   }
+
    m_renderGraph.change_active_frame();
    m_renderGraph.await();
 
    auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
-   const auto framebufferIndex = m_swapchain.get_available_framebuffer(frameReadySemaphore);
-   if (not framebufferIndex.has_value()) {
-      if (framebufferIndex.error() == graphics_api::Status::OutOfDateSwapchain) {
-         auto dim = m_desktopSurface.dimension();
-         this->recreate_swapchain(dim.width, dim.height);
-         return;
-      } else {
-         GAPI_CHECK_STATUS(framebufferIndex.error());
-      }
+   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(frameReadySemaphore));
+   if (mustRecreate) {
+      m_mustRecreateSwapchain = true;
    }
 
    m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
@@ -222,15 +226,13 @@ void Renderer::on_render()
    this->update_uniform_data(deltaTime);
 
    m_renderGraph.node<node::Particles>("particles"_name).set_delta_time(deltaTime);
-   m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(*framebufferIndex);
+   m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(framebufferIndex);
    m_renderGraph.record_command_lists();
 
    GAPI_CHECK_STATUS(m_renderGraph.execute());
-   auto status = m_swapchain.present(m_renderGraph.target_semaphore(), *framebufferIndex);
+   auto status = m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex);
    if (status == graphics_api::Status::OutOfDateSwapchain) {
-      auto dim = m_desktopSurface.dimension();
-      this->recreate_swapchain(dim.width, dim.height);
-      return;
+      m_mustRecreateSwapchain = true;
    } else {
       GAPI_CHECK_STATUS(status);
    }

@@ -37,11 +37,11 @@ void main()
         particlesOut[index].animation -= 1;
     }
 
-    if (particlesOut[index].position.z > -0.5) {
-        particlesOut[index].velocity.z = -particlesOut[index].velocity.z;
+    if (particlesOut[index].position.z < -40.0) {
+        particlesOut[index].velocity.z = 0.0;
         particlesOut[index].position.z = -0.5;
     } else {
-        particlesOut[index].velocity.z += 10 * pc.deltaTime;
+        particlesOut[index].velocity.z -= 10 * pc.deltaTime;
     }
 
 }

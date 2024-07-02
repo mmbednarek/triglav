@@ -31,6 +31,9 @@ TextureUsageFlags to_texture_usage_flags(const AttachmentAttributeFlags attribut
    if (attributeFlags & AttachmentAttribute::TransferDst) {
       textureUsageFlags |= TextureUsage::TransferDst;
    }
+   if (attributeFlags & AttachmentAttribute::Storage) {
+      textureUsageFlags |= TextureUsage::Storage;
+   }
 
    return textureUsageFlags;
 }
@@ -76,8 +79,8 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution& resolutio
 {
    Heap<Name, Texture> textures;
    for (const auto& attachment : m_attachments) {
-      auto texture =
-         m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags), attachment.sampleCount);
+      auto texture = m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags),
+                                             TextureState::Undefined, attachment.sampleCount);
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }
@@ -133,7 +136,7 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain& 
       }
 
       auto texture = m_device.create_texture(attachment.format, swapchain.resolution(), to_texture_usage_flags(attachment.flags),
-                                             attachment.sampleCount);
+                                             TextureState::Undefined, attachment.sampleCount);
       if (not texture.has_value()) {
          return std::unexpected{texture.error()};
       }

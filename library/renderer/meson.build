@@ -20,6 +20,8 @@ renderer_sources = files([
   'include/triglav/renderer/TextureHelper.h',
   'src/node/AmbientOcclusion.cpp',
   'src/node/AmbientOcclusion.h',
+  'src/node/Blur.cpp',
+  'src/node/Blur.h',
   'src/node/Downsample.cpp',
   'src/node/Downsample.h',
   'src/node/Geometry.cpp',

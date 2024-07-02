@@ -6,6 +6,7 @@ compile_compute_cmds = [shader_compiler, '-fshader-stage=comp', '@INPUT@', '-o',
 shader_targets = []
 
 subdir('ambient_occlusion')
+subdir('blur')
 subdir('debug_lines')
 subdir('ground')
 subdir('particles')

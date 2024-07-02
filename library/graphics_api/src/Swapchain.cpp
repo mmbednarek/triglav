@@ -21,18 +21,18 @@ VkSwapchainKHR Swapchain::vulkan_swapchain() const
    return *m_swapchain;
 }
 
-Result<u32> Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
+Result<std::tuple<u32, bool>> Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
 {
    u32 imageIndex;
    if (const auto res =
           vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex);
        res != VK_SUCCESS) {
       if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
-         return std::unexpected{Status::OutOfDateSwapchain};
+         return std::make_tuple(imageIndex, true);
       }
       return std::unexpected{Status::UnsupportedDevice};
    }
-   return imageIndex;
+   return std::make_tuple(imageIndex, false);
 }
 
 Resolution Swapchain::resolution() const

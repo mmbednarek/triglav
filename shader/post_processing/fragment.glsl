@@ -7,8 +7,6 @@ layout(binding = 0) uniform sampler2D texColor;
 layout(binding = 1) uniform sampler2D texBloom;
 layout(binding = 2) uniform sampler2D texOverlay;
 
-#include "../common/blur.glsl"
-
 const vec3 luma = vec3(0.299, 0.587, 0.114);
 
 float getLuma(vec2 offset) {
@@ -26,14 +24,6 @@ layout(push_constant) uniform Constants
     bool hideUI;
     bool enableBloom;
 } pc;
-
-float linearize_depth(float depth)
-{
-    float n = 0.1;
-    float f = 200.0;
-    float z = depth;
-    return (2.0 * n) / (f + n - z * (f - n));
-}
 
 vec3 calculate_fxaa()
 {
@@ -93,8 +83,8 @@ void main() {
     }
 
     if (pc.enableBloom) {
-        vec3 bloomColor = blur_image(texBloom, fragTexCoord);
-        backColor += bloomColor;
+        vec4 bloomColor = texture(texBloom, fragTexCoord);
+        backColor = backColor*(1.0 - bloomColor.a) + bloomColor.rgb*bloomColor.a;
     }
 
     if (pc.hideUI) {

@@ -101,9 +101,10 @@ enum class PipelineStage : uint32_t
    Entrypoint = (1 << 0),
    VertexShader = (1 << 1),
    FragmentShader = (1 << 2),
-   ComputeShader = (1 << 3),
-   Transfer = (1 << 4),
-   End = (1 << 5),
+   AttachmentOutput = (1 << 3),
+   ComputeShader = (1 << 4),
+   Transfer = (1 << 5),
+   End = (1 << 6),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -163,6 +164,7 @@ enum class DescriptorType
    StorageBuffer,
    Sampler,
    ImageSampler,
+   StorageImage,
 };
 
 struct DescriptorBinding
@@ -182,6 +184,7 @@ enum class TextureUsage
    ColorAttachment = (1 << 3),
    DepthStencilAttachment = (1 << 4),
    Transient = (1 << 5),
+   Storage = (1 << 6),
 };
 
 TRIGLAV_DECL_FLAGS(TextureUsage)
@@ -193,6 +196,9 @@ enum class TextureState
    TransferDst,
    ShaderRead,
    DepthStencilRead,
+   General,
+   GeneralRead,
+   GeneralWrite,
 };
 
 class Texture;
@@ -256,6 +262,7 @@ enum class AttachmentAttribute
    StoreImage = (1 << 6),
    TransferSrc = (1 << 7),
    TransferDst = (1 << 8),
+   Storage = (1 << 9),
 };
 
 TRIGLAV_DECL_FLAGS(AttachmentAttribute)

@@ -43,6 +43,7 @@ class DescriptorWriter
    }
 
    void set_sampled_texture(uint32_t binding, const Texture& texture, const Sampler& sampler);
+   void set_storage_image(uint32_t binding, const Texture& texture);
    void reset_count();
 
    [[nodiscard]] VkDescriptorSet vulkan_descriptor_set() const;

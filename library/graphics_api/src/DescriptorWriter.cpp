@@ -85,6 +85,17 @@ void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
+void DescriptorWriter::set_storage_image(uint32_t binding, const Texture& texture)
+{
+   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+
+   auto imageInfo = m_descriptorImageInfoPool.aquire_object();
+   imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+   imageInfo->imageView = texture.vulkan_image_view();
+
+   writeDescriptorSet.pImageInfo = imageInfo;
+}
+
 VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescriptorType descType)
 {
    assert(binding < 16);
