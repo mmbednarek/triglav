@@ -14,8 +14,8 @@ void main() {
     vec3 pos = fragViewPosition.xyz / fragViewPosition.w;
     float dist = clamp(2.0 / sqrt(abs(pos.z)) - 0.1, 0.0, 1.0);
     float color = mix(0.7, texture(texTile, 0.2 * fragWorldPosition.xy).r, dist);
-    outColor = vec4(vec3(color), 1.0);
+    outColor = vec4(vec3(color), 1.0 - 0.4*color);
 
-    outPosition = vec4(fragViewPosition.xyz, color - 0.3);
+    outPosition = vec4(fragViewPosition.xyz, 0.0);
     outNormal = vec4(normalize(fragNormal), 1.0);
 }

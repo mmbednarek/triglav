@@ -43,8 +43,9 @@ static graphics_api::Buffer generate_particles(graphics_api::Device& device, con
    std::default_random_engine generator{};
 
    for (auto& particle : particles) {
-      particle.position = center + range * glm::vec3(dist(generator), dist(generator), dist(generator));
-      particle.velocity = glm::vec3(dist(generator), dist(generator), 0.0f) * 0.01f;
+      auto offset = glm::vec3(dist(generator), dist(generator), dist(generator));
+      particle.position = center + range * glm::normalize(offset);
+      particle.velocity = 0.01f * glm::vec3(dist(generator), dist(generator), dist(generator));
       particle.animation = 0.5f * (1.0f + dist(generator));
       particle.rotation = 2.0f * geometry::g_pi * dist(generator);
       particle.angularVelocity = dist(generator);
@@ -60,7 +61,7 @@ static graphics_api::Buffer generate_particles(graphics_api::Device& device, con
 
 ParticlesResources::ParticlesResources(graphics_api::Device& device) :
     m_device(device),
-    m_particlesBuffer(generate_particles(m_device, {-30, 0, -30}, {2, 2, 2}))
+    m_particlesBuffer(generate_particles(m_device, {-30, 0, -4}, {2, 2, 2}))
 {
 }
 

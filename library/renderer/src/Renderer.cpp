@@ -405,7 +405,7 @@ void Renderer::update_uniform_data(const float deltaTime)
 
    if (m_smoothCamera) {
       m_scene.update_orientation(m_mouseOffset.x * deltaTime, m_mouseOffset.y * deltaTime);
-      m_mouseOffset += m_mouseOffset * (pow(0.5f, 50.0f * deltaTime) - 1.0f);
+      m_mouseOffset += m_mouseOffset * (static_cast<float>(pow(0.5f, 50.0f * deltaTime)) - 1.0f);
    } else {
       m_scene.update_orientation(0.1f * m_mouseOffset.x, 0.1f * m_mouseOffset.y);
       m_mouseOffset = {0.0f, 0.0f};

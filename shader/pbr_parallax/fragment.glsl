@@ -33,7 +33,7 @@ layout(push_constant) uniform Constants
 vec2 offset_parallax(vec2 texCoords, vec3 viewDir)
 {
     // number of depth layers
-    const float minLayers = 16;
+    const float minLayers = 24;
     const float maxLayers = 64;
 
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));

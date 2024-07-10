@@ -41,7 +41,7 @@ void main()
         particlesOut[index].velocity.z = 0.0;
         particlesOut[index].position.z = -0.5;
     } else {
-        particlesOut[index].velocity.z -= 10 * pc.deltaTime;
+//        particlesOut[index].velocity.z -= 10 * pc.deltaTime;
     }
 
 }

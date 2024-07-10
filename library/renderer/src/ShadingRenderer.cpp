@@ -39,9 +39,10 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device& device, graphics_api::Ren
 }
 
 void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::vec3& lightPosition,
-                           const glm::mat4& shadowMapMat) const
+                           const glm::mat4& shadowMapMat, const glm::mat4& viewMat) const
 {
    m_uniformBuffer->shadowMapMat = shadowMapMat;
+   m_uniformBuffer->viewMat = viewMat;
 
    cmdList.bind_pipeline(m_pipeline);
 

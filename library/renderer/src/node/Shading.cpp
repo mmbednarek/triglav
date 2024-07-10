@@ -85,9 +85,9 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
    cmdList.begin_render_pass(framebuffer, clearValues);
 
    const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() * glm::inverse(m_scene.camera().view_matrix());
-   const auto lightPosition = m_scene.camera().view_matrix() * glm::vec4(m_scene.shadow_map_camera().position(), 1.0);
+   const auto lightPosition = m_scene.camera().view_matrix() * glm::vec4(-30, 0, -5, 1.0);
 
-   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat);
+   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat, m_scene.camera().view_matrix());
 
    if (m_scene.camera().is_bounding_box_visible(g_particlesBoundingBox, glm::mat4{1})) {
       auto& particles = dynamic_cast<ParticlesResources&>(frameResources.node("particles"_name));

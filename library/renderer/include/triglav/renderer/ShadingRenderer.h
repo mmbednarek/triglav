@@ -24,12 +24,13 @@ class ShadingRenderer
    struct UniformData
    {
       glm::mat4 shadowMapMat;
+      glm::mat4 viewMat;
    };
 
    ShadingRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
    void draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::vec3& lightPosition,
-             const glm::mat4& shadowMapMat) const;
+             const glm::mat4& shadowMapMat, const glm::mat4& viewMat) const;
 
  private:
    graphics_api::Device& m_device;

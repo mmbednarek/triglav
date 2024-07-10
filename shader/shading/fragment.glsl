@@ -10,6 +10,7 @@ layout(binding = 4) uniform sampler2D texShadowMap;
 
 layout(binding = 5) uniform PostProcessingUBO {
     mat4 shadowMapMat;
+    mat4 viewMat;
 } ubo;
 
 layout(location = 0) out vec4 outColor;
@@ -33,6 +34,30 @@ const mat4 biasMat = mat4(
     0.0, 0.0, 1.0, 0.0,
     0.5, 0.5, 0.0, 1.0
 );
+
+vec3 calculate_light(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 baseReflectivity, vec3 albedo, float roughness, float metallic)
+{
+    vec3 halfpoint = normalize(viewDir + lightDir);
+    float attenuation = 4.0;
+    vec3 radience = vec3(1, 1, 1) * attenuation;
+
+    float NdotV = max(dot(normal, viewDir), 0.00000001);
+    float NdotL = max(dot(normal, lightDir), 0.00000001);
+    float HdotV = max(dot(halfpoint, viewDir), 0);
+    float NdotH = max(dot(normal, halfpoint), 0);
+
+    float dist = distribution_ggx(NdotH, roughness);
+    float geo = smith_formula(NdotV, NdotL, roughness);
+    vec3 fresnel = fresnel_schlick(HdotV, baseReflectivity);
+
+    vec3 specular = dist * geo * fresnel;
+    specular /= 4.0 * NdotV * NdotL;
+
+    vec3 kD = vec3(1.0) - fresnel;
+    kD *= 1.0 - metallic;
+
+    return (kD * albedo / pi + specular) * radience * NdotL;
+}
 
 void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
@@ -66,29 +91,14 @@ void main() {
     vec3 Lo = vec3(0);
 
     // PER LIGHT
-    vec3 lightDir = normalize(pc.lightPosition - position);
-    vec3 halfpoint = normalize(viewDir + lightDir);
-    float attenuation = 4.0;
-    vec3 radience = vec3(1, 1, 1) * attenuation;
+    vec3 lightDir = normalize(mat3(ubo.viewMat) * vec3(-1, 0.0, -0.4));
+    Lo += calculate_light(normal, viewDir, lightDir, baseReflectivity, albedo, roughness, metallic);
 
-    float NdotV = max(dot(normal, viewDir), 0.00000001);
-    float NdotL = max(dot(normal, lightDir), 0.00000001);
-    float HdotV = max(dot(halfpoint, viewDir), 0);
-    float NdotH = max(dot(normal, halfpoint), 0);
-
-    float dist = distribution_ggx(NdotH, roughness);
-    float geo = smith_formula(NdotV, NdotL, roughness);
-    vec3 fresnel = fresnel_schlick(HdotV, baseReflectivity);
-
-    vec3 specular = dist * geo * fresnel;
-    specular /= 4.0 * NdotV * NdotL;
-
-    vec3 kD = vec3(1.0) - fresnel;
-    kD *= 1.0 - metallic;
-
-    Lo += (kD * albedo / pi + specular) * radience * NdotL;
-
-    // END PER LIGHT
+    float lightDist = length(pc.lightPosition - position);
+    if (lightDist < 24.0) {
+        lightDir = normalize(pc.lightPosition - position);
+        Lo += (1 - lightDist/24.0) * vec3(1, 0.6, 0.05) * calculate_light(normal, viewDir, lightDir, baseReflectivity, albedo, roughness, metallic);
+    }
 
     vec3 ambient = albedo * ambientValue;
     vec3 color = 0.5 * ambient + 1.2 * shadow * Lo;
