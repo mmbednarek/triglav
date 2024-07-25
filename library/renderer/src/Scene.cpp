@@ -15,8 +15,6 @@ using triglav::ResourceType;
 
 namespace triglav::renderer {
 
-constexpr auto g_upVector = glm::vec3{0.0f, 0.0f, 1.0f};
-
 glm::mat4 SceneObject::model_matrix() const
 {
    return glm::scale(glm::translate(glm::mat4(1), this->position), this->scale) * glm::mat4_cast(this->rotation);
@@ -25,10 +23,6 @@ glm::mat4 SceneObject::model_matrix() const
 Scene::Scene(resource::ResourceManager& resourceManager) :
     m_resourceManager(resourceManager)
 {
-   m_shadowMapCamera.set_position(glm::vec3{-68.0f, 0.0f, -30.0f});
-   m_shadowMapCamera.set_orientation(glm::quat{glm::vec3{0.24f, 0.0f, 4.71f}});
-   m_shadowMapCamera.set_near_far_planes(-100.0f, 200.0f);
-   m_shadowMapCamera.set_viewspace_width(150.0f);
 }
 
 void Scene::update(graphics_api::Resolution& resolution)
@@ -36,13 +30,13 @@ void Scene::update(graphics_api::Resolution& resolution)
    const auto [width, height] = resolution;
    m_camera.set_viewport_size(width, height);
 
-   this->OnViewportChange.publish(resolution);
+   event_OnViewportChange.publish(resolution);
 }
 
 void Scene::add_object(SceneObject object)
 {
    auto& emplacedObj = m_objects.emplace_back(std::move(object));
-   this->OnObjectAddedToScene.publish(emplacedObj);
+   event_OnObjectAddedToScene.publish(emplacedObj);
 }
 
 void Scene::load_level(const LevelName name)
@@ -76,9 +70,14 @@ Camera& Scene::camera()
    return m_camera;
 }
 
-const OrthoCamera& Scene::shadow_map_camera() const
+const OrthoCamera& Scene::shadow_map_camera(u32 index) const
 {
-   return m_shadowMapCamera;
+   return m_directionalShadowMapCameras[index];
+}
+
+u32 Scene::directional_shadow_map_count() const
+{
+   return m_directionalShadowMapCameras.size();
 }
 
 float Scene::yaw() const
@@ -105,6 +104,26 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
    m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f, static_cast<float>(M_PI) / 2.0f - 0.01f);
 
    this->camera().set_orientation(glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}});
+}
+
+void Scene::add_bounding_box(const geometry::BoundingBox& box)
+{
+   event_OnAddedBoundingBox.publish(box);
+}
+
+void Scene::update_shadow_maps()
+{
+   auto smProps1 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 32.0f, 96.0f);
+   m_directionalShadowMapCameras[0] = OrthoCamera::from_properties(smProps1);
+   event_OnShadowMapChanged.publish(0, m_directionalShadowMapCameras[0]);
+
+   auto smProps2 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 64.0f, 192.0f);
+   m_directionalShadowMapCameras[1] = OrthoCamera::from_properties(smProps2);
+   event_OnShadowMapChanged.publish(1, m_directionalShadowMapCameras[1]);
+
+   auto smProps3 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 180.0f, 256.0f);
+   m_directionalShadowMapCameras[2] = OrthoCamera::from_properties(smProps3);
+   event_OnShadowMapChanged.publish(2, m_directionalShadowMapCameras[2]);
 }
 
 }// namespace triglav::renderer

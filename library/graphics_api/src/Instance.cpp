@@ -210,11 +210,11 @@ Result<Instance> Instance::create_instance()
    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
    appInfo.apiVersion = VK_API_VERSION_1_3;
 
-   const std::array g_vulkanInstanceExtensions
-   {
-      VK_KHR_SURFACE_EXTENSION_NAME, triglav::desktop::vulkan_extension_name(),
+   const std::array g_vulkanInstanceExtensions{
+      VK_KHR_SURFACE_EXTENSION_NAME,
+      triglav::desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
-         VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+      VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
    };
 

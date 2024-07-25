@@ -23,19 +23,18 @@ class ShadingRenderer
 
    struct UniformData
    {
-      glm::mat4 shadowMapMat;
       glm::mat4 viewMat;
+      glm::mat4 shadowMapMats[3];
    };
 
    ShadingRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
    void draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::vec3& lightPosition,
-             const glm::mat4& shadowMapMat, const glm::mat4& viewMat) const;
+             const std::array<glm::mat4, 3>& shadowMapMats, const glm::mat4& viewMat, graphics_api::UniformBuffer<UniformData>& ubo);
 
  private:
    graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
-   graphics_api::UniformBuffer<UniformData> m_uniformBuffer;
 };
 
 }// namespace triglav::renderer

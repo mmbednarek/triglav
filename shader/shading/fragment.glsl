@@ -1,17 +1,19 @@
 #version 450
 
+#extension GL_EXT_nonuniform_qualifier : enable
+
 layout(location = 0) in vec2 fragTexCoord;
 
 layout(binding = 0) uniform sampler2D texColor;
 layout(binding = 1) uniform sampler2D texPosition;
 layout(binding = 2) uniform sampler2D texNormal;
 layout(binding = 3) uniform sampler2D texAmbientOcclusion;
-layout(binding = 4) uniform sampler2D texShadowMap;
+layout(binding = 4) uniform sampler2D texShadowMaps[];
 
-layout(binding = 5) uniform PostProcessingUBO {
-    mat4 shadowMapMat;
+layout(binding = 5) uniform ShadingData {
     mat4 viewMat;
-} ubo;
+    mat4 shadowMapMats[3];
+} sd;
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out vec4 outBloom;
@@ -61,8 +63,9 @@ vec3 calculate_light(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 baseReflecti
 
 void main() {
     vec3 normal = texture(texNormal, fragTexCoord).rgb;
+    vec4 texColorSample = texture(texColor, fragTexCoord);
     if (normal == vec3(0.0, 0.0, 0.0)) {
-        outColor = vec4(texture(texColor, fragTexCoord).rgb, 1.0);
+        outColor = vec4(texColorSample.rgb, 1.0);
         outBloom = vec4(0.0);
         return;
     }
@@ -70,16 +73,35 @@ void main() {
 
     vec4 texPositionSample = texture(texPosition, fragTexCoord);
     vec3 position = texPositionSample.xyz;
-    vec4 shadowUV = biasMat * ubo.shadowMapMat * vec4(position, 1.0);
+
+    vec4 shadowUV = biasMat * sd.shadowMapMats[0] * vec4(position, 1.0);
     shadowUV /= shadowUV.w;
 
-    float shadow = shadow_map_test_pcr(texShadowMap, shadowUV);
+
+    float shadow;
+
+    if (shadow_map_bound_test(shadowUV)) {
+        shadow = shadow_map_test_pcr(texShadowMaps[0], shadowUV, 0.006);
+//        texColorSample.rgb *= vec3(1.0, 0.1, 0.1);
+    } else  {
+        shadowUV = biasMat * sd.shadowMapMats[1] * vec4(position, 1.0);
+        shadowUV /= shadowUV.w;
+        if (shadow_map_bound_test(shadowUV)) {
+            shadow = shadow_map_test_pcr(texShadowMaps[1], shadowUV, 0.006);
+//            texColorSample.rgb *= vec3(0.1, 1.0, 0.1);
+        } else {
+            shadowUV = biasMat * sd.shadowMapMats[2] * vec4(position, 1.0);
+            shadowUV /= shadowUV.w;
+            shadow = shadow_map_test_pcr(texShadowMaps[2], shadowUV, 0.006);
+//            texColorSample.rgb *= vec3(0.1, 0.1, 1.0);
+        }
+    }
+
     float ambientValue = ambient;
     if (pc.enableSSAO) {
         ambientValue *= pow(texture(texAmbientOcclusion, fragTexCoord).r, 1.5);
     }
 
-    vec4 texColorSample = texture(texColor, fragTexCoord);
     vec3 albedo = texColorSample.rgb;
 
     const float roughness = texColorSample.w;
@@ -88,17 +110,21 @@ void main() {
     vec3 viewDir = normalize(-position);
     vec3 baseReflectivity = mix(vec3(0.04), albedo, metallic);
 
+    ShadingInfo shadingInfo;
+    shadingInfo.normal = normal;
+    shadingInfo.viewDir = viewDir;
+    shadingInfo.position = position;
+    shadingInfo.baseReflectivity = baseReflectivity;
+    shadingInfo.albedo = albedo;
+    shadingInfo.roughness = roughness;
+    shadingInfo.metallic = metallic;
+
     vec3 Lo = vec3(0);
 
-    // PER LIGHT
-    vec3 lightDir = normalize(mat3(ubo.viewMat) * vec3(-1, 0.0, -0.4));
-    Lo += calculate_light(normal, viewDir, lightDir, baseReflectivity, albedo, roughness, metallic);
+    vec3 lightDir = normalize(mat3(sd.viewMat) * vec3(-1, 0.0, -0.4));
+    Lo += calculate_directional_light(shadingInfo, lightDir);
 
-    float lightDist = length(pc.lightPosition - position);
-    if (lightDist < 24.0) {
-        lightDir = normalize(pc.lightPosition - position);
-        Lo += (1 - lightDist/24.0) * vec3(1, 0.6, 0.05) * calculate_light(normal, viewDir, lightDir, baseReflectivity, albedo, roughness, metallic);
-    }
+    Lo += calculate_point_light(shadingInfo, pc.lightPosition, vec3(1, 0.6, 0.05), 24.0);
 
     vec3 ambient = albedo * ambientValue;
     vec3 color = 0.5 * ambient + 1.2 * shadow * Lo;

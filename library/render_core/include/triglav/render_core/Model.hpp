@@ -32,7 +32,7 @@ struct ModelShaderMapProperties
    ResourceName modelName;
    geometry::BoundingBox boundingBox;
    glm::mat4 modelMat;
-   graphics_api::UniformBuffer<ShadowMapUBO> ubo;
+   std::array<graphics_api::UniformBuffer<ShadowMapUBO>, 3> ubos;
 };
 
 struct InstancedModel

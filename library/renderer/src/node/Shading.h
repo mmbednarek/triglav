@@ -26,6 +26,7 @@ class Shading : public render_core::IRenderNode
    [[nodiscard]] float gpu_time() const;
 
  private:
+   graphics_api::Device& m_device;
    graphics_api::RenderTarget m_shadingRenderTarget;
    ShadingRenderer m_shadingRenderer;
    Scene& m_scene;

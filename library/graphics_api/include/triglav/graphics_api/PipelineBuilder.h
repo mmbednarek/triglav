@@ -18,7 +18,7 @@ class PipelineBuilderBase
 
  protected:
    void add_shader(const Shader& shader);
-   void add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
+   void add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount);
    void add_push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
 
    [[nodiscard]] Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> build_pipeline_layout() const;
@@ -53,6 +53,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& vertex_attribute(const ColorFormat& format, size_t offset);
    GraphicsPipelineBuilder& end_vertex_layout();
    GraphicsPipelineBuilder& descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
+   GraphicsPipelineBuilder& descriptor_binding_array(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount);
    GraphicsPipelineBuilder& push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
    GraphicsPipelineBuilder& enable_depth_test(bool enabled);
    GraphicsPipelineBuilder& depth_test_mode(DepthTestMode mode);
@@ -83,6 +84,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    VkPolygonMode m_polygonMode = VK_POLYGON_MODE_FILL;
    VkPrimitiveTopology m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    VkFrontFace m_frontFace = VK_FRONT_FACE_CLOCKWISE;
+   VkCullModeFlags m_cullMode = VK_CULL_MODE_FRONT_BIT;
    DepthTestMode m_depthTestMode{DepthTestMode::Disabled};
    bool m_blendingEnabled{true};
 

@@ -13,6 +13,8 @@ using graphics_api::AttachmentAttribute;
 class GeometryResources : public IGeometryResources
 {
  public:
+   using Self = GeometryResources;
+
    GeometryResources(graphics_api::Device& device, resource::ResourceManager& resourceManager, MaterialManager& materialManager,
                      Scene& scene, DebugLinesRenderer& debugLinesRenderer) :
        m_device(device),
@@ -22,8 +24,9 @@ class GeometryResources : public IGeometryResources
        m_debugLinesRenderer(debugLinesRenderer),
        m_groundUniformBuffer(m_device),
        m_skyboxUniformBuffer(m_device),
-       m_onAddedObjectSink(scene.OnObjectAddedToScene.connect<&GeometryResources::on_object_added_to_scene>(this)),
-       m_onViewportChangeSink(scene.OnViewportChange.connect<&GeometryResources::on_viewport_change>(this))
+       TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene),
+       TG_CONNECT(scene, OnViewportChange, on_viewport_change),
+       TG_CONNECT(scene, OnAddedBoundingBox, on_added_debug_box)
    {
       auto lock = m_groundUniformBuffer.lock();
       lock->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
@@ -45,8 +48,14 @@ class GeometryResources : public IGeometryResources
          std::move(ubo),
       });
 
-      auto& debugBoundingBox = m_debugLines.emplace_back(m_debugLinesRenderer.create_line_list_from_bouding_box(model.boundingBox));
+      auto& debugBoundingBox = m_debugLines.emplace_back(m_debugLinesRenderer.create_line_list_from_bounding_box(model.boundingBox));
       debugBoundingBox.model = modelMat;
+   }
+
+   void on_added_debug_box(const geometry::BoundingBox& bb)
+   {
+      auto& debugBoundingBox = m_debugLines.emplace_back(m_debugLinesRenderer.create_line_list_from_bounding_box(bb));
+      debugBoundingBox.model = glm::mat4{1};
    }
 
    void on_viewport_change(const graphics_api::Resolution& /*resolution*/)
@@ -158,8 +167,9 @@ class GeometryResources : public IGeometryResources
    std::optional<MaterialName> m_lastMaterial;
    std::optional<MaterialTemplateName> m_lastMaterialTemplate;
 
-   Scene::OnObjectAddedToSceneDel::Sink<GeometryResources> m_onAddedObjectSink;
-   Scene::OnViewportChangeDel::Sink<GeometryResources> m_onViewportChangeSink;
+   TG_SINK(Scene, OnObjectAddedToScene);
+   TG_SINK(Scene, OnViewportChange);
+   TG_SINK(Scene, OnAddedBoundingBox);
 };
 
 Geometry::Geometry(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :

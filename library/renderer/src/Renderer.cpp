@@ -25,6 +25,7 @@
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
+#include <spdlog/spdlog.h>
 
 using triglav::ResourceType;
 using triglav::desktop::Key;
@@ -147,6 +148,8 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_scene.load_level("demo.level"_rc);
 
    StatisticManager::the().initialize();
+
+   m_scene.update_shadow_maps();
 }
 
 void Renderer::update_debug_info()
@@ -293,7 +296,7 @@ void Renderer::on_key_pressed(const Key key)
       m_smoothCamera = not m_smoothCamera;
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
-      m_motion.z += -32.0f;
+      m_motion.z += -16.0f;
    }
 }
 
@@ -385,6 +388,8 @@ constexpr auto g_movingSpeed = 10.0f;
 
 void Renderer::update_uniform_data(const float deltaTime)
 {
+   bool updated = m_motion != glm::vec3{0, 0, 0} || m_mouseOffset != glm::vec2{0, 0};
+
    m_scene.camera().set_position(m_scene.camera().position() + m_motion * deltaTime);
 
    if (m_moveDirection != Moving::None) {
@@ -392,6 +397,7 @@ void Renderer::update_uniform_data(const float deltaTime)
       movingDir.z = 0.0f;
       movingDir = glm::normalize(movingDir);
       m_scene.camera().set_position(m_scene.camera().position() + movingDir * (g_movingSpeed * deltaTime));
+      updated = true;
    }
 
    if (m_scene.camera().position().z >= -5.0f) {
@@ -399,6 +405,7 @@ void Renderer::update_uniform_data(const float deltaTime)
       glm::vec3 camPos{m_scene.camera().position()};
       camPos.z = -5.0f;
       m_scene.camera().set_position(camPos);
+      updated = true;
    } else {
       m_motion.z += 30.0f * deltaTime;
    }
@@ -407,11 +414,15 @@ void Renderer::update_uniform_data(const float deltaTime)
       m_scene.update_orientation(m_mouseOffset.x * deltaTime, m_mouseOffset.y * deltaTime);
       m_mouseOffset += m_mouseOffset * (static_cast<float>(pow(0.5f, 50.0f * deltaTime)) - 1.0f);
    } else {
-      m_scene.update_orientation(0.1f * m_mouseOffset.x, 0.1f * m_mouseOffset.y);
+      m_scene.update_orientation(0.05f * m_mouseOffset.x, 0.05f * m_mouseOffset.y);
       m_mouseOffset = {0.0f, 0.0f};
    }
 
    m_scene.update(m_resolution);
+
+   if (updated) {
+      m_scene.update_shadow_maps();
+   }
 }
 
 }// namespace triglav::renderer

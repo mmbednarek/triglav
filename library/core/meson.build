@@ -2,6 +2,7 @@ core_sources = files([
                     'include/triglav/detail/Crc.hpp',
                     'include/triglav/Array.hpp',
                     'include/triglav/CompTimeString.hpp',
+                    'include/triglav/Debug.hpp',
                     'include/triglav/Delegate.hpp',
                     'include/triglav/Entt.hpp',
                     'include/triglav/EnumFlags.hpp',

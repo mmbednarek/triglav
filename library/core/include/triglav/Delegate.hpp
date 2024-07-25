@@ -76,3 +76,11 @@ class Delegate
 };
 
 }// namespace triglav
+
+#define TG_EVENT(name, ...)                                 \
+   using name##Delegate = ::triglav::Delegate<__VA_ARGS__>; \
+   name##Delegate event_##name;
+
+#define TG_SINK(sender, name) sender::name##Delegate::Sink<Self> sink_##name
+
+#define TG_CONNECT(obj, name, func) sink_##name(obj.event_##name.connect<&Self::func>(this))

@@ -7,6 +7,15 @@
 
 namespace triglav::renderer {
 
+struct OrthoCameraProperties
+{
+   glm::vec3 position;
+   glm::quat orientation;
+   float range;
+   float aspect;
+   float viewSpaceWidth;
+};
+
 class CameraBase
 {
  public:

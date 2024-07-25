@@ -246,6 +246,7 @@ enum class RasterizationMethod
 
 enum class Culling
 {
+   None,
    Clockwise,
    CounterClockwise,
 };

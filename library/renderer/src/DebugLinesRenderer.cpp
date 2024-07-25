@@ -43,32 +43,44 @@ DebugLines DebugLinesRenderer::create_line_list(const std::span<glm::vec3> list)
    return DebugLines{std::move(array), glm::mat4(1), std::move(ubo), std::move(descriptors)};
 }
 
-DebugLines DebugLinesRenderer::create_line_list_from_bouding_box(const geometry::BoundingBox& boudingBox)
+DebugLines DebugLinesRenderer::create_line_list_from_bounding_box(const geometry::BoundingBox& boundingBox)
 {
    std::array<glm::vec3, 24> lines{
-      glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z},
+      glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.min.z},
+      glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.min.z},
 
-      glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z},
+      glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.min.z},
+      glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.min.z},
 
-      glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z},
+      glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.min.z},
+      glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.min.z},
 
-      glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z},
+      glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.min.z},
+      glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.min.z},
 
-      glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z}, glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.max.z},
+      glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z}, glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.max.z},
+      glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z}, glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.max.z},
+      glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z}, glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.max.z},
+      glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.min.z},
+      glm::vec3{boundingBox.min.x, boundingBox.min.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.min.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.min.z},
+      glm::vec3{boundingBox.min.x, boundingBox.max.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.min.y, boudingBox.max.z},
+      glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.min.z},
+      glm::vec3{boundingBox.max.x, boundingBox.min.y, boundingBox.max.z},
 
-      glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.min.z}, glm::vec3{boudingBox.max.x, boudingBox.max.y, boudingBox.max.z},
+      glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.min.z},
+      glm::vec3{boundingBox.max.x, boundingBox.max.y, boundingBox.max.z},
    };
 
    return this->create_line_list(lines);

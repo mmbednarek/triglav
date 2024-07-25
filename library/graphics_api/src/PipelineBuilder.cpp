@@ -26,10 +26,10 @@ void PipelineBuilderBase::add_shader(const Shader& shader)
    m_shaderStageInfos.emplace_back(info);
 }
 
-void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage)
+void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount)
 {
    VkDescriptorSetLayoutBinding layoutBinding{};
-   layoutBinding.descriptorCount = 1;
+   layoutBinding.descriptorCount = descriptorCount;
    layoutBinding.binding = m_vulkanDescriptorBindings.size();
    layoutBinding.descriptorType = vulkan::to_vulkan_descriptor_type(descriptorType);
    layoutBinding.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStage);
@@ -92,7 +92,7 @@ ComputePipelineBuilder& ComputePipelineBuilder::compute_shader(const Shader& sha
 
 ComputePipelineBuilder& ComputePipelineBuilder::descriptor_binding(DescriptorType descriptorType)
 {
-   this->add_descriptor_binding(descriptorType, PipelineStage::ComputeShader);
+   this->add_descriptor_binding(descriptorType, PipelineStage::ComputeShader, 1);
    return *this;
 }
 
@@ -184,7 +184,14 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::end_vertex_layout()
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding(const DescriptorType descriptorType, const PipelineStage shaderStage)
 {
-   this->add_descriptor_binding(descriptorType, shaderStage);
+   this->add_descriptor_binding(descriptorType, shaderStage, 1);
+   return *this;
+}
+
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding_array(DescriptorType descriptorType, PipelineStage shaderStage,
+                                                                           u32 descriptorCount)
+{
+   this->add_descriptor_binding(descriptorType, shaderStage, descriptorCount);
    return *this;
 }
 
@@ -260,10 +267,13 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::culling(const Culling cull)
 {
    switch (cull) {
    case Culling::Clockwise:
-      m_frontFace = VK_FRONT_FACE_CLOCKWISE;
+      m_cullMode = VK_CULL_MODE_FRONT_BIT;
       break;
    case Culling::CounterClockwise:
-      m_frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+      m_cullMode = VK_CULL_MODE_BACK_BIT;
+      break;
+   case Culling::None:
+      m_cullMode = VK_CULL_MODE_NONE;
       break;
    }
    return *this;
@@ -320,8 +330,8 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
    rasterizationStateInfo.polygonMode = m_polygonMode;
    rasterizationStateInfo.lineWidth = 2.0f;
-   rasterizationStateInfo.cullMode = VK_CULL_MODE_FRONT_BIT;
-   rasterizationStateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+   rasterizationStateInfo.cullMode = m_cullMode;
+   rasterizationStateInfo.frontFace = m_frontFace;
    rasterizationStateInfo.depthBiasEnable = VK_FALSE;
    rasterizationStateInfo.depthBiasConstantFactor = 0.0f;
    rasterizationStateInfo.depthBiasClamp = 0.0f;

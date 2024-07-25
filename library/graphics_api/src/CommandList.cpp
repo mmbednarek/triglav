@@ -389,6 +389,12 @@ void CommandList::bind_texture(u32 binding, const Texture& texture)
    m_hasPendingDescriptors = true;
 }
 
+void CommandList::bind_texture_array(u32 binding, std::span<Texture*> textures)
+{
+   m_descriptorWriter.set_texture_array(binding, textures);
+   m_hasPendingDescriptors = true;
+}
+
 void CommandList::bind_storage_image(u32 binding, const Texture& texture)
 {
    m_descriptorWriter.set_storage_image(binding, texture);

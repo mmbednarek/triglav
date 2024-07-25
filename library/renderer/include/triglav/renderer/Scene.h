@@ -29,11 +29,10 @@ struct SceneObject
 class Scene
 {
  public:
-   using OnObjectAddedToSceneDel = Delegate<const SceneObject&>;
-   using OnViewportChangeDel = Delegate<const graphics_api::Resolution&>;
-
-   OnObjectAddedToSceneDel OnObjectAddedToScene;
-   OnViewportChangeDel OnViewportChange;
+   TG_EVENT(OnObjectAddedToScene, const SceneObject&)
+   TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
+   TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
+   TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
 
    explicit Scene(resource::ResourceManager& resourceManager);
 
@@ -41,24 +40,26 @@ class Scene
    void add_object(SceneObject object);
    void load_level(LevelName name);
    void set_camera(glm::vec3 position, glm::quat orientation);
+   void update_shadow_maps();
 
    [[nodiscard]] const Camera& camera() const;
    [[nodiscard]] Camera& camera();
-   [[nodiscard]] const OrthoCamera& shadow_map_camera() const;
+   [[nodiscard]] const OrthoCamera& shadow_map_camera(u32 index) const;
+   [[nodiscard]] u32 directional_shadow_map_count() const;
 
    [[nodiscard]] float yaw() const;
    [[nodiscard]] float pitch() const;
 
    void update_orientation(float delta_yaw, float delta_pitch);
+   void add_bounding_box(const geometry::BoundingBox& box);
 
  private:
    resource::ResourceManager& m_resourceManager;
    float m_yaw{};
    float m_pitch{};
-
-   OrthoCamera m_shadowMapCamera{};
    Camera m_camera{};
-
+   glm::quat m_directionalLightOrientation{glm::vec3{geometry::g_pi * 0.1f, 0, geometry::g_pi * 1.5f}};
+   std::array<OrthoCamera, 3> m_directionalShadowMapCameras{};
    std::vector<SceneObject> m_objects{};
 };
 

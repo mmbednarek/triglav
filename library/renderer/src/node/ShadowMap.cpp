@@ -15,14 +15,17 @@ constexpr auto g_shadowMapFormat = GAPI_FORMAT(D, Float32);
 class ShadowMapResources : public render_core::NodeFrameResources
 {
  public:
+   using Self = ShadowMapResources;
+
    ShadowMapResources(graphics_api::Device& device, resource::ResourceManager& resourceManager, graphics_api::Pipeline& pipeline,
                       Scene& scene) :
        m_device(device),
        m_resourceManager(resourceManager),
        m_pipeline(pipeline),
        m_scene(scene),
-       m_onAddedObjectSink(scene.OnObjectAddedToScene.connect<&ShadowMapResources::on_object_added_to_scene>(this)),
-       m_onViewportChangeSink(scene.OnViewportChange.connect<&ShadowMapResources::on_viewport_change>(this))
+       TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene),
+       TG_CONNECT(scene, OnViewportChange, on_viewport_change),
+       TG_CONNECT(scene, OnShadowMapChanged, on_shadow_map_changed)
    {
    }
 
@@ -30,20 +33,35 @@ class ShadowMapResources : public render_core::NodeFrameResources
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(object.model);
 
-      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo(m_device);
+      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo1(m_device);
+      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo2(m_device);
+      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo3(m_device);
       m_models.emplace_back(
-         render_core::ModelShaderMapProperties{object.model, model.boundingBox, object.model_matrix(), std::move(shadowMapUbo)});
+         render_core::ModelShaderMapProperties{object.model,
+                                               model.boundingBox,
+                                               object.model_matrix(),
+                                               {std::move(shadowMapUbo1), std::move(shadowMapUbo2), std::move(shadowMapUbo3)}});
    }
 
    void on_viewport_change(const graphics_api::Resolution& /*resolution*/)
    {
-      const auto camMatShadow = m_scene.shadow_map_camera().view_projection_matrix();
-      for (const auto& obj : m_models) {
-         obj.ubo->mvp = camMatShadow * obj.modelMat;
+      for (u32 smIndex = 0; smIndex < m_scene.directional_shadow_map_count(); ++smIndex) {
+         const auto camMatShadow = m_scene.shadow_map_camera(smIndex).view_projection_matrix();
+         for (const auto& obj : m_models) {
+            obj.ubos[smIndex]->mvp = camMatShadow * obj.modelMat;
+         }
       }
    }
 
-   void draw_model(graphics_api::CommandList& cmdList, const render_core::ModelShaderMapProperties& instancedModel)
+   void on_shadow_map_changed(const u32 index, const OrthoCamera& cam)
+   {
+      const auto camMatShadow = cam.view_projection_matrix();
+      for (const auto& obj : m_models) {
+         obj.ubos[index]->mvp = camMatShadow * obj.modelMat;
+      }
+   }
+
+   void draw_model(graphics_api::CommandList& cmdList, const u32 smIndex, const render_core::ModelShaderMapProperties& instancedModel)
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -56,19 +74,18 @@ class ShadowMapResources : public render_core::NodeFrameResources
          size += range.size;
       }
 
-      cmdList.bind_uniform_buffer(0, instancedModel.ubo);
-      cmdList.draw_indexed_primitives(size, firstOffset, 0);
+      cmdList.bind_uniform_buffer(0, instancedModel.ubos[smIndex]);
+      cmdList.draw_indexed_primitives(static_cast<int>(size), static_cast<int>(firstOffset), 0);
    }
 
-   void draw_scene_models(graphics_api::CommandList& cmdList)
+   void draw_scene_models(graphics_api::CommandList& cmdList, const u32 smIndex)
    {
       cmdList.bind_pipeline(m_pipeline);
-
       for (const auto& obj : m_models) {
-         if (not m_scene.shadow_map_camera().is_bounding_box_visible(obj.boundingBox, obj.modelMat))
+         if (not m_scene.shadow_map_camera(smIndex).is_bounding_box_visible(obj.boundingBox, obj.modelMat))
             continue;
 
-         this->draw_model(cmdList, obj);
+         this->draw_model(cmdList, smIndex, obj);
       }
    }
 
@@ -78,8 +95,10 @@ class ShadowMapResources : public render_core::NodeFrameResources
    graphics_api::Pipeline& m_pipeline;
    Scene& m_scene;
    std::vector<render_core::ModelShaderMapProperties> m_models;
-   Scene::OnObjectAddedToSceneDel::Sink<ShadowMapResources> m_onAddedObjectSink;
-   Scene::OnViewportChangeDel::Sink<ShadowMapResources> m_onViewportChangeSink;
+
+   TG_SINK(Scene, OnObjectAddedToScene);
+   TG_SINK(Scene, OnViewportChange);
+   TG_SINK(Scene, OnShadowMapChanged);
 };
 
 ShadowMap::ShadowMap(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
@@ -99,6 +118,7 @@ ShadowMap::ShadowMap(graphics_api::Device& device, resource::ResourceManager& re
                              .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::VertexShader)
                              .enable_depth_test(true)
                              .use_push_descriptors(true)
+                             .culling(graphics_api::Culling::None)
                              .build())),
     m_scene(scene)
 {
@@ -107,7 +127,9 @@ ShadowMap::ShadowMap(graphics_api::Device& device, resource::ResourceManager& re
 std::unique_ptr<render_core::NodeFrameResources> ShadowMap::create_node_resources()
 {
    auto result = std::make_unique<ShadowMapResources>(m_device, m_resourceManager, m_pipeline, m_scene);
-   result->add_render_target_with_resolution("sm"_name, m_depthRenderTarget, g_shadowMapResolution);
+   result->add_render_target_with_resolution("sm1"_name, m_depthRenderTarget, g_shadowMapResolution);
+   result->add_render_target_with_resolution("sm2"_name, m_depthRenderTarget, g_shadowMapResolution);
+   result->add_render_target_with_resolution("sm3"_name, m_depthRenderTarget, g_shadowMapResolution);
    return result;
 }
 
@@ -123,11 +145,18 @@ void ShadowMap::record_commands(render_core::FrameResources& frameResources, ren
       graphics_api::ClearValue{graphics_api::DepthStenctilValue{1.0f, 0}},
    };
 
-   cmdList.begin_render_pass(resources.framebuffer("sm"_name), clearValues);
-
    auto& smResources = dynamic_cast<ShadowMapResources&>(resources);
-   smResources.draw_scene_models(cmdList);
 
+   cmdList.begin_render_pass(resources.framebuffer("sm1"_name), clearValues);
+   smResources.draw_scene_models(cmdList, 0);
+   cmdList.end_render_pass();
+
+   cmdList.begin_render_pass(resources.framebuffer("sm2"_name), clearValues);
+   smResources.draw_scene_models(cmdList, 1);
+   cmdList.end_render_pass();
+
+   cmdList.begin_render_pass(resources.framebuffer("sm3"_name), clearValues);
+   smResources.draw_scene_models(cmdList, 2);
    cmdList.end_render_pass();
 }
 

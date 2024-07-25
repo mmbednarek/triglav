@@ -19,7 +19,25 @@ constexpr geometry::BoundingBox g_particlesBoundingBox{
    {-29.0f, 1.0f, 0.0f},
 };
 
+class ShadingResources : public render_core::NodeFrameResources
+{
+ public:
+   explicit ShadingResources(graphics_api::Device& device) :
+       m_uniformBuffer(device)
+   {
+   }
+
+   graphics_api::UniformBuffer<ShadingRenderer::UniformData>& get_ubo()
+   {
+      return m_uniformBuffer;
+   }
+
+ private:
+   graphics_api::UniformBuffer<ShadingRenderer::UniformData> m_uniformBuffer;
+};
+
 Shading::Shading(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
+    m_device(device),
     m_shadingRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
                                         .attachment("shading"_name,
                                                     AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
@@ -57,7 +75,7 @@ Shading::Shading(graphics_api::Device& device, resource::ResourceManager& resour
 
 std::unique_ptr<render_core::NodeFrameResources> Shading::create_node_resources()
 {
-   auto result = IRenderNode::create_node_resources();
+   auto result = std::make_unique<ShadingResources>(m_device);
    result->add_render_target("shading"_name, m_shadingRenderTarget);
    return result;
 }
@@ -84,10 +102,17 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
    };
    cmdList.begin_render_pass(framebuffer, clearValues);
 
-   const auto shadowMat = m_scene.shadow_map_camera().view_projection_matrix() * glm::inverse(m_scene.camera().view_matrix());
+   auto inverseViewMat = glm::inverse(m_scene.camera().view_matrix());
+   std::array<glm::mat4, 3> shadowMats{};
+   shadowMats[0] = m_scene.shadow_map_camera(0).view_projection_matrix() * inverseViewMat;
+   shadowMats[1] = m_scene.shadow_map_camera(1).view_projection_matrix() * inverseViewMat;
+   shadowMats[2] = m_scene.shadow_map_camera(2).view_projection_matrix() * inverseViewMat;
    const auto lightPosition = m_scene.camera().view_matrix() * glm::vec4(-30, 0, -5, 1.0);
 
-   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMat, m_scene.camera().view_matrix());
+   auto& shadingResources = static_cast<ShadingResources&>(resources);
+
+   m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMats, m_scene.camera().view_matrix(),
+                          shadingResources.get_ubo());
 
    if (m_scene.camera().is_bounding_box_visible(g_particlesBoundingBox, glm::mat4{1})) {
       auto& particles = dynamic_cast<ParticlesResources&>(frameResources.node("particles"_name));

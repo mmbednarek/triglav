@@ -478,18 +478,19 @@ VkMemoryPropertyFlags to_vulkan_memory_properties_flags(BufferUsageFlags usage)
 VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags workTypes)
 {
    using enum WorkType;
+   VkPipelineStageFlags result{};
 
    if (workTypes & Graphics) {
-      return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      result |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    }
    if (workTypes & Compute) {
-      return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+      result |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    }
    if (workTypes & Transfer) {
-      return VK_PIPELINE_STAGE_TRANSFER_BIT;
+      result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
 
-   return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   return result;
 }
 
 VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)

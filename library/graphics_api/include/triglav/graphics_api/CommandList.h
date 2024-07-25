@@ -77,6 +77,7 @@ class CommandList
    }
 
    void bind_texture(u32 binding, const Texture& texture);
+   void bind_texture_array(u32 binding, std::span<Texture*> textures);
    void bind_storage_image(u32 binding, const Texture& texture);
 
    template<typename TIndexArray>
