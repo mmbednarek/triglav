@@ -4,7 +4,7 @@
 #include "IRenderNode.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/graphics_api/QueueManager.h"
+#include "triglav/graphics_api/QueueManager.hpp"
 
 #include <map>
 #include <memory>

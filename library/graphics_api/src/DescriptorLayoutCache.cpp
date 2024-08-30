@@ -1,6 +1,6 @@
-#include "DescriptorLayoutCache.h"
+#include "DescriptorLayoutCache.hpp"
 
-#include "vulkan/Util.h"
+#include "vulkan/Util.hpp"
 
 #include <algorithm>
 #include <stdexcept>

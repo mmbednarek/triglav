@@ -1,6 +1,6 @@
-#include "QueueManager.h"
+#include "QueueManager.hpp"
 
-#include "Device.h"
+#include "Device.hpp"
 
 #include "triglav/Int.hpp"
 #include "triglav/threading/Threading.h"

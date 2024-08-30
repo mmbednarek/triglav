@@ -4,9 +4,9 @@
 #include <optional>
 
 #include "triglav/Name.hpp"
-#include "triglav/graphics_api/Buffer.h"
-#include "triglav/graphics_api/Pipeline.h"
-#include "triglav/graphics_api/RenderTarget.h"
+#include "triglav/graphics_api/Buffer.hpp"
+#include "triglav/graphics_api/Pipeline.hpp"
+#include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/resource/ResourceManager.h"
 
 namespace triglav::renderer {

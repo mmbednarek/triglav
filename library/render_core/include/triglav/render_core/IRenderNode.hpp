@@ -2,7 +2,7 @@
 
 #include "FrameResources.h"
 
-#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/CommandList.hpp"
 
 #include <memory>
 

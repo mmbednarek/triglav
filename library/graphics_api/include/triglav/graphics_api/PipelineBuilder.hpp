@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GraphicsApi.hpp"
-#include "Pipeline.h"
+#include "Pipeline.hpp"
 
 #include <vector>
 

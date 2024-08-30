@@ -2,7 +2,7 @@
 
 #include "triglav/font/Charset.h"
 #include "triglav/font/Typeface.h"
-#include "triglav/graphics_api/Texture.h"
+#include "triglav/graphics_api/Texture.hpp"
 
 #include <glm/vec2.hpp>
 #include <glm/vec4.hpp>

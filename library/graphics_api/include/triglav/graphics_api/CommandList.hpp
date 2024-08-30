@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Buffer.h"
-#include "DescriptorWriter.h"
+#include "Buffer.hpp"
+#include "DescriptorWriter.hpp"
 #include "GraphicsApi.hpp"
-#include "Pipeline.h"
+#include "Pipeline.hpp"
 
 #include <span>
 

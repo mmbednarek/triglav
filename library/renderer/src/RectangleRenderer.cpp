@@ -1,8 +1,8 @@
 #include "RectangleRenderer.h"
 
-#include "triglav/graphics_api/CommandList.h"
-#include "triglav/graphics_api/DescriptorWriter.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.hpp"
+#include "triglav/graphics_api/DescriptorWriter.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 using namespace triglav::name_literals;
 using triglav::ResourceType;

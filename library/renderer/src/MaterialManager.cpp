@@ -1,8 +1,8 @@
 #include "MaterialManager.h"
 
 #include "triglav/geometry/Geometry.h"
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/io/BufferWriter.h"
 #include "triglav/io/Serializer.h"
 #include "triglav/render_core/Material.hpp"

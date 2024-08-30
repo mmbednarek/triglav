@@ -3,8 +3,8 @@
 #include "RectangleRenderer.h"
 
 #include "triglav/Delegate.hpp"
-#include "triglav/graphics_api/RenderTarget.h"
-#include "triglav/graphics_api/Texture.h"
+#include "triglav/graphics_api/RenderTarget.hpp"
+#include "triglav/graphics_api/Texture.hpp"
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/renderer/TextRenderer.h"
 #include "triglav/ui_core/Viewport.h"

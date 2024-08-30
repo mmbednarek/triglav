@@ -2,7 +2,7 @@
 #include "Particles.h"
 #include "TextureHelper.h"
 
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 namespace triglav::renderer::node {
 

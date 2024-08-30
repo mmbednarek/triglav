@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Buffer.h"
+#include "Buffer.hpp"
 #include "GraphicsApi.hpp"
-#include "QueueManager.h"
-#include "Sampler.h"
-#include "SamplerCache.h"
-#include "Shader.h"
-#include "Surface.h"
-#include "Swapchain.h"
-#include "Synchronization.h"
-#include "Texture.h"
-#include "TimestampArray.h"
+#include "QueueManager.hpp"
+#include "Sampler.hpp"
+#include "SamplerCache.hpp"
+#include "Shader.hpp"
+#include "Surface.hpp"
+#include "Swapchain.hpp"
+#include "Synchronization.hpp"
+#include "Texture.hpp"
+#include "TimestampArray.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>

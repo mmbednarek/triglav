@@ -1,4 +1,4 @@
-#include "Device.h"
+#include "Device.hpp"
 
 #include <algorithm>
 #include <array>
@@ -8,9 +8,9 @@
 #include <shared_mutex>
 #include <vector>
 
-#include "CommandList.h"
-#include "Surface.h"
-#include "vulkan/Util.h"
+#include "CommandList.hpp"
+#include "Surface.hpp"
+#include "vulkan/Util.hpp"
 
 #undef max
 

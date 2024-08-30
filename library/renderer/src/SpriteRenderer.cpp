@@ -1,8 +1,8 @@
 #include "SpriteRenderer.h"
 
-#include "triglav/graphics_api/CommandList.h"
-#include "triglav/graphics_api/DescriptorWriter.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.hpp"
+#include "triglav/graphics_api/DescriptorWriter.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_transform_2d.hpp>

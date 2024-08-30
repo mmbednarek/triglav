@@ -1,7 +1,7 @@
-#include "Buffer.h"
+#include "Buffer.hpp"
 
-#include "CommandList.h"
-#include "Device.h"
+#include "CommandList.hpp"
+#include "Device.hpp"
 #include "ReplicatedBuffer.hpp"
 
 #include <cstring>

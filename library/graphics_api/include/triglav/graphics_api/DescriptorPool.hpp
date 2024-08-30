@@ -2,7 +2,7 @@
 
 #include "vulkan/ObjectWrapper.hpp"
 
-#include "DescriptorArray.h"
+#include "DescriptorArray.hpp"
 #include "GraphicsApi.hpp"
 
 #include <span>

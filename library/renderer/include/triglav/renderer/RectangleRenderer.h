@@ -1,8 +1,8 @@
 #pragma once
 
-#include "triglav/graphics_api/DescriptorPool.h"
+#include "triglav/graphics_api/DescriptorPool.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
-#include "triglav/graphics_api/Pipeline.h"
+#include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 

@@ -1,6 +1,6 @@
 #include "ProcessGlyphs.h"
 
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_transform_2d.hpp>

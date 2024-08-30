@@ -1,9 +1,9 @@
 #pragma once
 
 #include "triglav/Name.hpp"
-#include "triglav/graphics_api/CommandList.h"
-#include "triglav/graphics_api/RenderTarget.h"
-#include "triglav/graphics_api/Synchronization.h"
+#include "triglav/graphics_api/CommandList.hpp"
+#include "triglav/graphics_api/RenderTarget.hpp"
+#include "triglav/graphics_api/Synchronization.hpp"
 
 #include <map>
 #include <memory>

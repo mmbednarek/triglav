@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/CommandList.hpp"
 
 namespace triglav::graphics_api {
 

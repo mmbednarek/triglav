@@ -1,7 +1,7 @@
 #include "Blur.h"
 
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 namespace triglav::renderer::node {
 

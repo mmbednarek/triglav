@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/graphics_api/RenderTarget.h"
+#include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/render_core/FrameResources.h"
 #include "triglav/render_core/IRenderNode.hpp"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DescriptorPool.h"
+#include "DescriptorPool.hpp"
 #include "GraphicsApi.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 

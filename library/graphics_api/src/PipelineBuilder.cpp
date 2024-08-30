@@ -1,9 +1,9 @@
-#include "PipelineBuilder.h"
+#include "PipelineBuilder.hpp"
 
-#include "Device.h"
-#include "RenderTarget.h"
-#include "Shader.h"
-#include "vulkan/Util.h"
+#include "Device.hpp"
+#include "RenderTarget.hpp"
+#include "Shader.hpp"
+#include "vulkan/Util.hpp"
 
 namespace triglav::graphics_api {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "triglav/graphics_api/Framebuffer.h"
-#include "triglav/graphics_api/RenderTarget.h"
+#include "triglav/graphics_api/Framebuffer.hpp"
+#include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/render_core/IRenderNode.hpp"
 
 #include "AmbientOcclusionRenderer.h"

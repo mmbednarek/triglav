@@ -2,7 +2,7 @@
 
 #include "triglav/Int.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Device.hpp"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/resource/ResourceManager.h"
 

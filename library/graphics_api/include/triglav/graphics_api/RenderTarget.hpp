@@ -4,9 +4,9 @@
 
 #include "triglav/Name.hpp"
 
-#include "Framebuffer.h"
-#include "Swapchain.h"
-#include "Texture.h"
+#include "Framebuffer.hpp"
+#include "Swapchain.hpp"
+#include "Texture.hpp"
 
 
 namespace triglav::graphics_api {

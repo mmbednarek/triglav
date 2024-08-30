@@ -1,6 +1,6 @@
 #include "FrameResources.h"
 
-#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Device.hpp"
 
 #include <ranges>
 

@@ -2,9 +2,9 @@
 
 #include "src/node/Blur.h"
 #include "src/node/Downsample.h"
-#include "triglav/graphics_api/CommandList.h"
-#include "triglav/graphics_api/DescriptorWriter.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.hpp"
+#include "triglav/graphics_api/DescriptorWriter.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
 using namespace triglav::name_literals;

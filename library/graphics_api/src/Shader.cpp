@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "Shader.hpp"
 
 namespace triglav::graphics_api {
 Shader::Shader(std::string name, const PipelineStage stage, vulkan::ShaderModule module) :

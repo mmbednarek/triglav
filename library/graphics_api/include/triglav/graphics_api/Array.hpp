@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Buffer.h"
-#include "Device.h"
+#include "Buffer.hpp"
+#include "Device.hpp"
 
 namespace triglav::graphics_api {
 

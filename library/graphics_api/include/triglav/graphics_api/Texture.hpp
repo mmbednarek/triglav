@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Buffer.h"
+#include "Buffer.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 namespace triglav::graphics_api {

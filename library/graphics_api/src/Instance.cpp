@@ -1,6 +1,6 @@
-#include "Instance.h"
+#include "Instance.hpp"
 
-#include "vulkan/Util.h"
+#include "vulkan/Util.hpp"
 
 #include <spdlog/spdlog.h>
 

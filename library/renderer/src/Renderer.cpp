@@ -15,7 +15,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/io/CommandLine.h"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"

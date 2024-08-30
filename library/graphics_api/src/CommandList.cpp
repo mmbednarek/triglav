@@ -1,12 +1,12 @@
-#include "CommandList.h"
+#include "CommandList.hpp"
 
-#include "DescriptorWriter.h"
-#include "Device.h"
-#include "Framebuffer.h"
-#include "Pipeline.h"
-#include "Texture.h"
-#include "TimestampArray.h"
-#include "vulkan/Util.h"
+#include "DescriptorWriter.hpp"
+#include "Device.hpp"
+#include "Framebuffer.hpp"
+#include "Pipeline.hpp"
+#include "Texture.hpp"
+#include "TimestampArray.hpp"
+#include "vulkan/Util.hpp"
 
 #include <cassert>
 

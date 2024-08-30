@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Device.h"
-#include "Surface.h"
+#include "Device.hpp"
+#include "Surface.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 namespace triglav::graphics_api {

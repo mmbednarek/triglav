@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Buffer.h"
-#include "CommandList.h"
-#include "Device.h"
+#include "Buffer.hpp"
+#include "CommandList.hpp"
+#include "Device.hpp"
 
 #include <mutex>
 

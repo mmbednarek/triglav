@@ -1,6 +1,6 @@
 #include "ShaderLoader.h"
 
-#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Device.hpp"
 #include "triglav/io/File.h"
 
 namespace triglav::resource {

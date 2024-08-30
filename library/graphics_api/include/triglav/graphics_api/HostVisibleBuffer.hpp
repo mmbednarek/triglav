@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Device.h"
+#include "Device.hpp"
 
 namespace triglav::graphics_api {
 

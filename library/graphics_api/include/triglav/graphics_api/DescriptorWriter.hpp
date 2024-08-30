@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DescriptorView.h"
+#include "DescriptorView.hpp"
 #include "GraphicsApi.hpp"
 #include "triglav/ObjectPool.hpp"
 

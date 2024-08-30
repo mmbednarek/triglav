@@ -1,7 +1,7 @@
 #pragma once
 
-#include "CommandList.h"
-#include "Synchronization.h"
+#include "CommandList.hpp"
+#include "Synchronization.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include "triglav/ObjectPool.hpp"

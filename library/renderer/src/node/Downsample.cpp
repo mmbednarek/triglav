@@ -1,6 +1,6 @@
 #include "Downsample.h"
 
-#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Device.hpp"
 
 namespace triglav::renderer::node {
 

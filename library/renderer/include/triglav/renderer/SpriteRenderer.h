@@ -1,9 +1,9 @@
 #pragma once
 
-#include "triglav/graphics_api/DescriptorPool.h"
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/Pipeline.h"
-#include "triglav/graphics_api/Sampler.h"
+#include "triglav/graphics_api/DescriptorPool.hpp"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/graphics_api/Pipeline.hpp"
+#include "triglav/graphics_api/Sampler.hpp"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/resource/ResourceManager.h"
 

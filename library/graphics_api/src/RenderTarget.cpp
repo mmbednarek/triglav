@@ -1,10 +1,10 @@
-#include "RenderTarget.h"
+#include "RenderTarget.hpp"
 
 #include <optional>
 #include <stdexcept>
 
-#include "Device.h"
-#include "vulkan/Util.h"
+#include "Device.hpp"
+#include "vulkan/Util.hpp"
 
 namespace triglav::graphics_api {
 

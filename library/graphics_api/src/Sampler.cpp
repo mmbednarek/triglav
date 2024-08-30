@@ -1,4 +1,4 @@
-#include "Sampler.h"
+#include "Sampler.hpp"
 
 namespace triglav::graphics_api {
 

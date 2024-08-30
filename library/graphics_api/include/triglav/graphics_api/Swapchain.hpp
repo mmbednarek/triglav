@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Texture.h"
+#include "Texture.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <optional>

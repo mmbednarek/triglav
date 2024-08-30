@@ -1,9 +1,9 @@
 #pragma once
 
-#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
-#include "triglav/graphics_api/Pipeline.h"
-#include "triglav/graphics_api/Texture.h"
+#include "triglav/graphics_api/Pipeline.hpp"
+#include "triglav/graphics_api/Texture.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 

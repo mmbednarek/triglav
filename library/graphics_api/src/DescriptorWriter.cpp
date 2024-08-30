@@ -1,11 +1,11 @@
-#include "DescriptorWriter.h"
+#include "DescriptorWriter.hpp"
 
-#include "Buffer.h"
-#include "Sampler.h"
-#include "Texture.h"
-#include "vulkan/Util.h"
+#include "Buffer.hpp"
+#include "Sampler.hpp"
+#include "Texture.hpp"
+#include "vulkan/Util.hpp"
 
-#include <Device.h>
+#include <Device.hpp>
 
 namespace triglav::graphics_api {
 

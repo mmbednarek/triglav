@@ -1,7 +1,7 @@
 #pragma once
 
 #include "GraphicsApi.hpp"
-#include "Sampler.h"
+#include "Sampler.hpp"
 
 #include "triglav/Int.hpp"
 

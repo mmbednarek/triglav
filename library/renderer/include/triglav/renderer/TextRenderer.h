@@ -2,9 +2,9 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/Array.hpp"
-#include "triglav/graphics_api/CommandList.h"
+#include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
-#include "triglav/graphics_api/Pipeline.h"
+#include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
