@@ -44,24 +44,65 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
          serializer.write_vec3(std::get<glm::vec3>(value));
       } else if (std::holds_alternative<glm::vec4>(value)) {
          serializer.write_vec4(std::get<glm::vec4>(value));
+      } else if (std::holds_alternative<glm::mat4>(value)) {
+         serializer.write_mat4(std::get<glm::mat4>(value));
       }
    }
 
-   if (writer.offset() == 0) {
-      m_materials.emplace(name, MaterialResources{
-                                   .materialTemplate{material.materialTemplate},
-                                   .uniformBuffer{std::nullopt},
-                                   .textures{std::move(textures)},
-                                });
-      return;
+   std::optional<graphics_api::Buffer> constantsBuffer{};
+   if (writer.offset() != 0) {
+      constantsBuffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::TransferDst | BufferUsage::UniformBuffer, writer.offset()));
+      GAPI_CHECK_STATUS(constantsBuffer->write_indirect(buffer.data(), writer.offset()));
    }
 
-   auto uniformBuffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::TransferDst | BufferUsage::UniformBuffer, writer.offset()));
-   GAPI_CHECK_STATUS(uniformBuffer.write_indirect(buffer.data(), writer.offset()));
+   u32 worldDataUboSize = 0;
+   auto& matTem = m_resourceManager.get(material.materialTemplate);
+   for (const auto& prop : matTem.properties) {
+      if (prop.source == render_core::PropertySource::Constant)
+         continue;
+
+      switch(prop.type) {
+      case render_core::MaterialPropertyType::Float32:
+         worldDataUboSize += sizeof(float);
+      case render_core::MaterialPropertyType::Vector3: {
+         const auto mod = worldDataUboSize % (4*sizeof(float));
+         if (mod != 0) {
+            auto padding = 4*sizeof(float) - mod;
+            worldDataUboSize += padding;
+         }
+         worldDataUboSize += 3*sizeof(float);
+         break;
+      }
+      case render_core::MaterialPropertyType::Vector4: {
+         const auto mod = worldDataUboSize % (4*sizeof(float));
+         if (mod != 0) {
+            auto padding = 4*sizeof(float) - mod;
+            worldDataUboSize += padding;
+         }
+         worldDataUboSize += 4*sizeof(glm::vec4);
+         break;
+      }
+      case render_core::MaterialPropertyType::Matrix4x4: {
+         const auto mod = worldDataUboSize % (4*sizeof(float));
+         if (mod != 0) {
+            auto padding = 4*sizeof(float) - mod;
+            worldDataUboSize += padding;
+         }
+         worldDataUboSize += 16*sizeof(glm::vec4);
+         break;
+      }
+      }
+   }
+
+   std::optional<graphics_api::Buffer> worldDataBuffer{};
+   if (worldDataUboSize != 0) {
+      worldDataBuffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::HostVisible | BufferUsage::UniformBuffer, worldDataUboSize));
+   }
 
    m_materials.emplace(name, MaterialResources{
                                 .materialTemplate{material.materialTemplate},
-                                .uniformBuffer{std::move(uniformBuffer)},
+                                .constantsUniformBuffer{std::move(constantsBuffer)},
+                                .worldDataUniformBuffer{std::move(worldDataBuffer)},
                                 .textures{std::move(textures)},
                              });
 }
@@ -82,11 +123,11 @@ void MaterialManager::process_material_template(const MaterialTemplateName name,
                      .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
                      .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
                      .end_vertex_layout()
-                     .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(render_core::FragmentPushConstants), 0)
                      // Descriptor layout
                      .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::VertexShader);
 
-   bool hasUbo = false;
+   bool hasConstantsUbo = false;
+   bool hasWorldDataUbo = false;
    for (const auto& property : materialTemplate.properties) {
       switch (property.type) {
       case render_core::MaterialPropertyType::Texture2D:
@@ -94,22 +135,31 @@ void MaterialManager::process_material_template(const MaterialTemplateName name,
          break;
       case render_core::MaterialPropertyType::Float32:
          [[fallthrough]];
-      case render_core::MaterialPropertyType::Vec3:
+      case render_core::MaterialPropertyType::Vector3:
          [[fallthrough]];
-      case render_core::MaterialPropertyType::Vec4:
-         hasUbo = true;
+      case render_core::MaterialPropertyType::Vector4:
+         [[fallthrough]];
+      case render_core::MaterialPropertyType::Matrix4x4:
+         if (property.source == render_core::PropertySource::Constant) {
+            hasConstantsUbo = true;
+         } else {
+            hasWorldDataUbo = true;
+         }
          break;
       }
    }
 
-   if (hasUbo) {
+   if (hasConstantsUbo) {
+      builder.descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::FragmentShader);
+   }
+   if (hasWorldDataUbo) {
       builder.descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::FragmentShader);
    }
 
    m_templates.emplace(name, MaterialTemplateResources{.pipeline = GAPI_CHECK(builder.build())});
 }
 
-const MaterialResources& MaterialManager::material_resources(const MaterialName name) const
+MaterialResources& MaterialManager::material_resources(const MaterialName name)
 {
    return m_materials.at(name);
 }

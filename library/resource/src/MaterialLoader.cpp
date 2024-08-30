@@ -3,6 +3,7 @@
 #include "triglav/io/File.h"
 #include "triglav/render_core/Material.hpp"
 
+#include <glm/mat4x4.hpp>
 #include <ranges>
 #include <ryml.hpp>
 #include <string>
@@ -35,13 +36,29 @@ render_core::MaterialTemplate Loader<ResourceType::MaterialTemplate>::load(const
          type = render_core::MaterialPropertyType::Texture2D;
       } else if (typeStr == "float32") {
          type = render_core::MaterialPropertyType::Float32;
-      } else if (typeStr == "vec3") {
-         type = render_core::MaterialPropertyType::Vec3;
-      } else if (typeStr == "vec4") {
-         type = render_core::MaterialPropertyType::Vec4;
+      } else if (typeStr == "vector3") {
+         type = render_core::MaterialPropertyType::Vector3;
+      } else if (typeStr == "vector4") {
+         type = render_core::MaterialPropertyType::Vector4;
+      } else if (typeStr == "matrix4x4") {
+         type = render_core::MaterialPropertyType::Matrix4x4;
       }
 
-      result.properties.emplace_back(make_name_id(std::string_view{nameStr.data(), nameStr.size()}), type);
+      render_core::PropertySource source{render_core::PropertySource::Constant};
+      if (property.has_child("source")) {
+         auto sourceStr = property["source"].val();
+         if (sourceStr == "lastFrameColorOut") {
+            source = render_core::PropertySource::LastFrameColorOut;
+         } else if (sourceStr == "lastFrameDepthOut") {
+            source = render_core::PropertySource::LastFrameDepthOut;
+         } else if (sourceStr == "lastViewProjectionMatrix") {
+            source = render_core::PropertySource::LastViewProjectionMatrix;
+         } else if (sourceStr == "viewPosition") {
+            source = render_core::PropertySource::ViewPosition;
+         }
+      }
+
+      result.properties.emplace_back(make_name_id(std::string_view{nameStr.data(), nameStr.size()}), type, source);
    }
 
    return result;
@@ -60,13 +77,19 @@ render_core::Material Loader<ResourceType::Material>::load(ResourceManager& mana
 
    auto& materialTemplate = manager.get<ResourceType::MaterialTemplate>(templateName);
 
+   u32 constantPropCount = 0;
+   for (const auto& prop : materialTemplate.properties) {
+      if (prop.source == render_core::PropertySource::Constant) {
+         ++constantPropCount;
+      }
+   }
+
    std::vector<render_core::MaterialPropertyValue> values;
-   values.resize(materialTemplate.properties.size(), 0.0f);
+   values.resize(constantPropCount, 0.0f);
 
    auto properties = tree["properties"];
    for (const auto& property : properties) {
       auto nameStr = property.key();
-
       auto name = make_name_id({nameStr.data(), nameStr.size()});
 
       auto it = std::ranges::find_if(materialTemplate.properties,
@@ -87,7 +110,7 @@ render_core::Material Loader<ResourceType::Material>::load(ResourceManager& mana
          values[index] = std::stof({valueStr.data(), valueStr.size()});
          break;
       }
-      case render_core::MaterialPropertyType::Vec3: {
+      case render_core::MaterialPropertyType::Vector3: {
          const auto xStr = property["x"].val();
          const auto yStr = property["y"].val();
          const auto zStr = property["z"].val();
@@ -98,7 +121,7 @@ render_core::Material Loader<ResourceType::Material>::load(ResourceManager& mana
          };
          break;
       }
-      case render_core::MaterialPropertyType::Vec4: {
+      case render_core::MaterialPropertyType::Vector4: {
          const auto xStr = property["x"].val();
          const auto yStr = property["y"].val();
          const auto zStr = property["z"].val();
@@ -109,6 +132,10 @@ render_core::Material Loader<ResourceType::Material>::load(ResourceManager& mana
             std::stof({zStr.data(), zStr.size()}),
             std::stof({wStr.data(), wStr.size()}),
          };
+         break;
+      }
+      case render_core::MaterialPropertyType::Matrix4x4: {
+         values[index] = glm::mat4{};
          break;
       }
       }

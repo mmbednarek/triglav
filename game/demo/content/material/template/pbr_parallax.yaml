@@ -13,3 +13,6 @@ properties:
     type: float32
   - name: height_scale
     type: float32
+  - name: viewPos
+    type: vector3
+    source: viewPosition

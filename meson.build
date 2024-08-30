@@ -24,7 +24,8 @@ endif
 
 fs = import('fs')
 
-vulkan = dependency('vulkan', method:'pkg-config')
+# Using system vulkan
+vulkan = dependency('vulkan')
 fmt = dependency('fmt', method:'pkg-config')
 glm = dependency('glm', method:'pkg-config')
 cgal = dependency('cgal', method:'pkg-config')

@@ -1,0 +1,15 @@
+fragment_shader: pbr/ssr.fshader
+vertex_shader: pbr/ssr.vshader
+properties:
+  - name: prevColor
+    type: texture2D
+    source: lastFrameColorOut
+  - name: prevDepth
+    type: texture2D
+    source: lastFrameDepthOut
+  - name: prevModelViewProj
+    type: matrix4x4
+    source: lastViewProjectionMatrix
+  - name: viewPos
+    type: vector3
+    source: viewPosition

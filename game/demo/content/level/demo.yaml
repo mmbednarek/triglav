@@ -64,3 +64,10 @@ nodes:
           position: {x: -20.0, y: -30.0, z: -0.02}
           rotation: {yaw: 0, pitch: 0, roll: 0}
           scale: {x: 4, y: 4, z: 4}
+          # - type: static_mesh
+          #   name: "mirror"
+          #   mesh: "mirror.model"
+          #   transform:
+          #     position: {x: 5.0, y: 25.0, z: -0.2}
+          #     rotation: {yaw: 0, pitch: 0, roll: 0}
+          #     scale: {x: 1, y: 1, z: 1}

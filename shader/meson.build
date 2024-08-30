@@ -20,6 +20,7 @@ subdir('skybox')
 subdir('rectangle')
 subdir('shading')
 subdir('sprite')
+subdir('ssr')
 subdir('text')
 
 shaders = declare_dependency(sources: [shader_targets])

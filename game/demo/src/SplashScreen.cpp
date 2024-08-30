@@ -146,7 +146,7 @@ void SplashScreen::recreate_swapchain()
    m_resolution = {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)};
    m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
                                                       {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)},
-                                                      PresentMode::Immediate, &m_swapchain));
+                                                      PresentMode::Fifo, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 }
 

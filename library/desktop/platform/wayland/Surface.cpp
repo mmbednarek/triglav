@@ -8,11 +8,12 @@ namespace triglav::desktop {
 
 DefaultSurfaceEventListener g_defaultListener;
 
-Surface::Surface(Display& display) :
+Surface::Surface(Display& display, Dimension dimension) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
     m_xdgSurface(xdg_wm_base_get_xdg_surface(display.wm_base(), m_surface)),
-    m_topLevel(xdg_surface_get_toplevel(m_xdgSurface))
+    m_topLevel(xdg_surface_get_toplevel(m_xdgSurface)),
+    m_dimension(dimension)
 {
    m_surfaceListener.configure = [](void* data, xdg_surface* xdg_surface, const uint32_t serial) {
       auto* surface = static_cast<Surface*>(data);
@@ -34,6 +35,9 @@ Surface::Surface(Display& display) :
    xdg_toplevel_add_listener(m_topLevel, &m_topLevelListener, this);
    xdg_toplevel_set_title(m_topLevel, "Example client");
    xdg_toplevel_set_app_id(m_topLevel, "example-client");
+
+   wl_surface_commit(m_surface);
+   wl_display_roundtrip(m_display.display());
    wl_surface_commit(m_surface);
 
    display.register_surface(m_surface, this);
@@ -52,10 +56,8 @@ void Surface::on_configure(const uint32_t serial)
 {
    xdg_surface_ack_configure(m_xdgSurface, serial);
 
-   if (m_penndingDimension.has_value()) {
-      m_dimension = *m_penndingDimension;
-      m_penndingDimension.reset();
-      this->event_listener().on_resize(m_dimension.width, m_dimension.height);
+   if (m_pendingDimension.has_value()) {
+      m_resizeReady = true;
    }
 }
 
@@ -67,7 +69,7 @@ void Surface::on_toplevel_configure(const int32_t width, const int32_t height, w
    if (width == m_dimension.width && height == m_dimension.height)
       return;
 
-   m_penndingDimension = Dimension{width, height};
+   m_pendingDimension = Dimension{width, height};
 }
 
 void Surface::on_toplevel_close() const
@@ -118,6 +120,18 @@ ISurfaceEventListener& Surface::event_listener() const
    }
 
    return g_defaultListener;
+}
+
+void Surface::tick()
+{
+   if (m_resizeReady) {
+      m_dimension = *m_pendingDimension;
+      m_pendingDimension.reset();
+      m_resizeReady = false;
+      this->event_listener().on_resize(m_dimension.width, m_dimension.height);
+
+      wl_surface_commit(m_surface);
+   }
 }
 
 }// namespace triglav::desktop

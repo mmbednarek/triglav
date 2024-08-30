@@ -25,10 +25,10 @@ layout(binding = 4) uniform MaterialProperties
     float heightScale;
 } mp;
 
-layout(push_constant) uniform Constants
+layout(binding = 5) uniform WorldProperties
 {
     vec3 viewPos;
-} pc;
+} wp;
 
 vec2 offset_parallax(vec2 texCoords, vec3 viewDir)
 {
@@ -75,7 +75,7 @@ vec2 offset_parallax(vec2 texCoords, vec3 viewDir)
 void main() {
     const mat3 tangentSpaceWorldMat = mat3(fragWorldTangent, fragWorldBitangent, fragWorldNormal);
 
-    vec3 viewDir = normalize(tangentSpaceWorldMat * normalize(fragWorldPosition - pc.viewPos));
+    vec3 viewDir = normalize(tangentSpaceWorldMat * normalize(fragWorldPosition - wp.viewPos));
     vec2 parallaxUV = offset_parallax(fragTexCoord, viewDir * vec3(-1, 1, -1));
 
     outColor = vec4(texture(texSampler, parallaxUV).rgb, mp.roughness);

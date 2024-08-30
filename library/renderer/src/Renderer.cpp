@@ -113,7 +113,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_context2D.update_resolution(m_resolution);
 
    m_renderGraph.add_external_node("frame_is_ready"_name);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name, m_device, m_resourceManager, m_scene);
+   m_renderGraph.emplace_node<node::Geometry>("geometry"_name, m_device, m_resourceManager, m_scene, m_renderGraph);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name, m_device, m_resourceManager, m_scene);
@@ -128,6 +128,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
                                           true);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
+   m_renderGraph.add_interframe_dependency("geometry"_name, "shading"_name);
 
    m_renderGraph.add_dependency("geometry"_name, "sync_buffers"_name);
    m_renderGraph.add_dependency("user_interface"_name, "process_glyphs"_name);

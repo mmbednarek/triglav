@@ -13,9 +13,9 @@ class TriglavEngine(ConanFile):
         "gtest/1.14.0",
         "glm/0.9.9.8",
         "rapidyaml/0.5.0",
-        "vulkan-loader/1.3.268.0",
         "spdlog/1.13.0"
     )
+    # We should use system vulkan
 
     def generate(self):
         pc = PkgConfigDeps(self)

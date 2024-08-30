@@ -11,6 +11,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <xkbcommon/xkbcommon.h>
+#include <ranges>
 
 namespace triglav::desktop {
 
@@ -321,12 +322,15 @@ void Display::on_pointer_motion(uint32_t /*time*/, const int32_t x, const int32_
 
 void Display::dispatch_messages()
 {
+   for (auto& surface : m_surfaceMap | std::views::values) {
+      surface->tick();
+   }
    wl_display_dispatch_pending(m_display);
 }
 
 std::shared_ptr<ISurface> Display::create_surface(int width, int height, WindowAttributeFlags flags)
 {
-   return std::make_shared<Surface>(*this);
+   return std::make_shared<Surface>(*this, Dimension{width, height});
 }
 
 void Display::register_surface(wl_surface* wayland_surface, Surface* surface)
@@ -376,8 +380,7 @@ void Display::on_keymap(const uint32_t format, const int32_t fd, const uint32_t 
 
    auto* mapped = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-   m_xkbKeymap =
-      xkb_keymap_new_from_string(m_xkbContext, static_cast<const char*>(mapped), XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+   m_xkbKeymap = xkb_keymap_new_from_string(m_xkbContext, static_cast<const char*>(mapped), XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
    munmap(mapped, size);
    close(fd);

@@ -49,9 +49,4 @@ struct Sprite
    graphics_api::UniformBuffer<SpriteUBO> ubo;
 };
 
-struct FragmentPushConstants
-{
-   alignas(16) glm::vec3 viewPosition;
-};
-
 }// namespace triglav::render_core

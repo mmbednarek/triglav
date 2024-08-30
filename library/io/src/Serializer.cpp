@@ -72,4 +72,19 @@ Result<void> Serializer::write_vec4(const glm::vec4 value)
    return {};
 }
 
+Result<void> Serializer::write_mat4(const glm::mat4 value)
+{
+   if (const auto res = this->add_padding(4 * sizeof(float)); not res.has_value()) {
+      return res;
+   }
+
+   auto bytes = std::bit_cast<std::array<u8, 64>>(value);
+   const auto res = m_writer.write(bytes);
+   if (not res.has_value()) {
+      return std::unexpected{res.error()};
+   }
+
+   return {};
+}
+
 }// namespace triglav::io

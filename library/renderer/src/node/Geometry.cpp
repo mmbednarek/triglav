@@ -2,6 +2,9 @@
 
 #include "triglav/graphics_api/Framebuffer.h"
 #include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/io/BufferWriter.h"
+#include "triglav/io/Serializer.h"
+#include "triglav/render_core/RenderGraph.h"
 
 #include <ranges>
 
@@ -74,7 +77,7 @@ class GeometryResources : public IGeometryResources
       }
    }
 
-   void draw_model(graphics_api::CommandList& cmdList, const render_core::InstancedModel& instancedModel)
+   void draw_model(graphics_api::CommandList& cmdList, const render_core::InstancedModel& instancedModel, render_core::NodeFrameResources& shadingRes)
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -85,20 +88,17 @@ class GeometryResources : public IGeometryResources
          cmdList.bind_uniform_buffer(0, instancedModel.ubo);
 
          if (not m_lastMaterial.has_value() || *m_lastMaterial != range.materialName) {
-            const auto& matResources = m_materialManager.material_resources(range.materialName);
+            auto& matResources = m_materialManager.material_resources(range.materialName);
 
             if (not m_lastMaterialTemplate.has_value() || *m_lastMaterialTemplate != matResources.materialTemplate) {
                const auto& matTemplateResources = m_materialManager.material_template_resources(matResources.materialTemplate);
                cmdList.bind_pipeline(matTemplateResources.pipeline);
                m_lastMaterialTemplate = matResources.materialTemplate;
-
-               render_core::FragmentPushConstants pushConstants{
-                  .viewPosition = m_scene.camera().position(),
-               };
-               cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstants);
             }
 
             u32 binding = 1;
+
+            const auto& matTemplate = m_resourceManager.get(matResources.materialTemplate);
 
             for (const auto textureName : matResources.textures) {
                const auto& texture = m_resourceManager.get(textureName);
@@ -106,8 +106,31 @@ class GeometryResources : public IGeometryResources
                ++binding;
             }
 
-            if (matResources.uniformBuffer.has_value()) {
-               cmdList.bind_raw_uniform_buffer(binding, *matResources.uniformBuffer);
+            for (const auto& prop : matTemplate.properties) {
+               if (prop.type != render_core::MaterialPropertyType::Texture2D)
+                  continue;
+
+               switch (prop.source) {
+               case render_core::PropertySource::LastFrameColorOut:
+                  cmdList.bind_texture(binding, shadingRes.framebuffer("shading"_name).texture("shading"_name));
+                  ++binding;
+                  break;
+               case render_core::PropertySource::LastFrameDepthOut:
+                  cmdList.bind_texture(binding, shadingRes.framebuffer("shading"_name).texture("depth"_name));
+                  ++binding;
+                  break;
+               default: break;
+               }
+            }
+
+            if (matResources.constantsUniformBuffer.has_value()) {
+               cmdList.bind_raw_uniform_buffer(binding, *matResources.constantsUniformBuffer);
+               ++binding;
+            }
+
+            if (matResources.worldDataUniformBuffer.has_value()) {
+               this->write_world_data(matTemplate, *matResources.worldDataUniformBuffer);
+               cmdList.bind_raw_uniform_buffer(binding, *matResources.worldDataUniformBuffer);
             }
 
             m_lastMaterial = range.materialName;
@@ -117,7 +140,7 @@ class GeometryResources : public IGeometryResources
       }
    }
 
-   void draw_scene_models(graphics_api::CommandList& cmdList)
+   void draw_scene_models(graphics_api::CommandList& cmdList, render_core::NodeFrameResources& shadingRes)
    {
       if (m_needsUpdate) {
          m_needsUpdate = false;
@@ -131,7 +154,7 @@ class GeometryResources : public IGeometryResources
          if (not m_scene.camera().is_bounding_box_visible(obj.boundingBox, obj.ubo->model))
             continue;
 
-         this->draw_model(cmdList, obj);
+         this->draw_model(cmdList, obj, shadingRes);
       }
    }
 
@@ -140,6 +163,27 @@ class GeometryResources : public IGeometryResources
       m_debugLinesRenderer.begin_render(cmdList);
       for (const auto& obj : m_debugLines) {
          m_debugLinesRenderer.draw(cmdList, obj, m_scene.camera());
+      }
+   }
+
+   void write_world_data(const render_core::MaterialTemplate& templ, graphics_api::Buffer& buffer)
+   {
+      auto mapping = GAPI_CHECK(buffer.map_memory());
+
+      io::BufferWriter writer({static_cast<u8*>(*mapping), buffer.size()});
+      io::Serializer serializer(writer);
+
+      for (const auto& prop : templ.properties) {
+         switch (prop.source)
+         {
+         case render_core::PropertySource::LastViewProjectionMatrix:
+            serializer.write_mat4(m_scene.camera().view_projection_matrix());
+            break;
+         case render_core::PropertySource::ViewPosition:
+            serializer.write_vec3(m_scene.camera().position());
+            break;
+         default: break;
+         }
       }
    }
 
@@ -172,10 +216,11 @@ class GeometryResources : public IGeometryResources
    TG_SINK(Scene, OnAddedBoundingBox);
 };
 
-Geometry::Geometry(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
+Geometry::Geometry(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene, render_core::RenderGraph& renderGraph) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_scene(scene),
+    m_renderGraph(renderGraph),
     m_renderTarget(GAPI_CHECK(
        graphics_api::RenderTargetBuilder(device)
           .attachment("albedo"_name, AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
@@ -206,6 +251,7 @@ void Geometry::record_commands(render_core::FrameResources& frameResources, rend
                                graphics_api::CommandList& cmdList)
 {
    auto& geoResources = dynamic_cast<GeometryResources&>(resources);
+   auto& prevShading = m_renderGraph.previous_frame_resources().node("shading"_name);
 
    cmdList.reset_timestamp_array(m_timestampArray, 0, 2);
    cmdList.write_timestamp(graphics_api::PipelineStage::Entrypoint, m_timestampArray, 0);
@@ -225,7 +271,7 @@ void Geometry::record_commands(render_core::FrameResources& frameResources, rend
 
    m_groundRenderer.draw(cmdList, geoResources.ground_ubo());
 
-   geoResources.draw_scene_models(cmdList);
+   geoResources.draw_scene_models(cmdList, prevShading);
 
    if (frameResources.has_flag("debug_lines"_name)) {
       geoResources.draw_debug_lines(cmdList);

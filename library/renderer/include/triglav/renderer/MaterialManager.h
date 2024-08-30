@@ -14,7 +14,8 @@ namespace triglav::renderer {
 struct MaterialResources
 {
    MaterialTemplateName materialTemplate;
-   std::optional<graphics_api::Buffer> uniformBuffer;
+   std::optional<graphics_api::Buffer> constantsUniformBuffer;
+   std::optional<graphics_api::Buffer> worldDataUniformBuffer;
    std::vector<TextureName> textures;
 };
 
@@ -28,7 +29,7 @@ class MaterialManager
  public:
    MaterialManager(graphics_api::Device& device, resource::ResourceManager& resourceManager, graphics_api::RenderTarget& renderTarget);
 
-   [[nodiscard]] const MaterialResources& material_resources(MaterialName name) const;
+   [[nodiscard]] MaterialResources& material_resources(MaterialName name);
    [[nodiscard]] const MaterialTemplateResources& material_template_resources(MaterialTemplateName name) const;
 
  private:

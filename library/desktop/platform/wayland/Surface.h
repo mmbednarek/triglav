@@ -14,7 +14,7 @@ class Surface : public ISurface
    friend Display;
 
  public:
-   explicit Surface(Display& display);
+   explicit Surface(Display& display, Dimension dimension);
    ~Surface() override;
 
    void on_configure(uint32_t serial);
@@ -24,6 +24,7 @@ class Surface : public ISurface
    void unlock_cursor() override;
    void hide_cursor() const override;
    void add_event_listener(ISurfaceEventListener* eventListener) override;
+   void tick();
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
 
@@ -47,12 +48,13 @@ class Surface : public ISurface
    xdg_toplevel* m_topLevel{};
    xdg_toplevel_listener m_topLevelListener{};
    zwp_locked_pointer_v1* m_lockedPointer{};
+   bool m_resizeReady = false;
 
    ISurfaceEventListener* m_eventListener{};
    uint32_t m_pointerSerial{};
 
    Dimension m_dimension{};
-   std::optional<Dimension> m_penndingDimension{};
+   std::optional<Dimension> m_pendingDimension{};
 };
 
 }// namespace triglav::desktop
