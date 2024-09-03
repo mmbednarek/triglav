@@ -32,7 +32,7 @@ void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.aquire_object();
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
    bufferInfo->offset = 0;
    bufferInfo->range = buffer.size();
    bufferInfo->buffer = buffer.vulkan_buffer();
@@ -43,7 +43,7 @@ void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.aquire_object();
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
    bufferInfo->offset = offset;
    bufferInfo->range = size;
    bufferInfo->buffer = buffer.vulkan_buffer();
@@ -54,7 +54,7 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.aquire_object();
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
    bufferInfo->offset = 0;
    bufferInfo->range = buffer.size();
    bufferInfo->buffer = buffer.vulkan_buffer();
@@ -77,7 +77,7 @@ void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-   auto imageInfo = m_descriptorImageInfoPool.aquire_object();
+   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
    imageInfo->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
    imageInfo->imageView = texture.vulkan_image_view();
    imageInfo->sampler = sampler.vulkan_sampler();
@@ -108,7 +108,7 @@ void DescriptorWriter::set_storage_image(uint32_t binding, const Texture& textur
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
-   auto imageInfo = m_descriptorImageInfoPool.aquire_object();
+   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
    imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
    imageInfo->imageView = texture.vulkan_image_view();
 

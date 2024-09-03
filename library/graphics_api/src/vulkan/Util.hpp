@@ -1,6 +1,8 @@
 #pragma once
 #include "GraphicsApi.hpp"
 
+#include "ray_tracing/RayTracing.hpp"
+
 #include <tuple>
 #include <vulkan/vulkan.h>
 
@@ -35,4 +37,7 @@ VkPipelineStageFlags to_vulkan_wait_pipeline_stage(WorkTypeFlags workTypes);
 VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType);
 VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags);
 VkPresentModeKHR to_vulkan_present_mode(PresentMode presentMode);
+
+// Ray tracing
+VkAccelerationStructureTypeKHR to_vulkan_acceleration_structure_type(ray_tracing::AccelerationStructureType type);
 }// namespace triglav::graphics_api::vulkan

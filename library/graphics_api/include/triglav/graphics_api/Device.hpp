@@ -11,6 +11,8 @@
 #include "Synchronization.hpp"
 #include "Texture.hpp"
 #include "TimestampArray.hpp"
+#include "ray_tracing/RayTracing.hpp"
+#include "ray_tracing/AccelerationStructure.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
@@ -65,6 +67,7 @@ class Device
                                                 SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties& info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
+   [[nodiscard]] Result<ray_tracing::AccelerationStructure> create_acceleration_structure(ray_tracing::AccelerationStructureType structType, const Buffer& buffer);
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits(const Surface& surface) const;
 

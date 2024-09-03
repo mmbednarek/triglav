@@ -206,6 +206,7 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
    VkBufferCopy region{};
    region.size = source.size();
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
+   vkCmdCopyMemoryToAccelerationStructureKHR()
 }
 
 void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const

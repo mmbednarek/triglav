@@ -467,4 +467,20 @@ u32 Device::min_storage_buffer_alignment() const
    return props.limits.minStorageBufferOffsetAlignment;
 }
 
+Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType structType, const Buffer& buffer)
+{
+   VkAccelerationStructureCreateInfoKHR asInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
+   asInfo.buffer = buffer.vulkan_buffer();
+   asInfo.offset = 0;
+   asInfo.size = buffer.size();
+   asInfo.type = vulkan::to_vulkan_acceleration_structure_type(structType);
+
+   ray_tracing::vulkan::AccelerationStructureKHR structure(*m_device);
+   if (structure.construct(&asInfo) != VK_SUCCESS) {
+      return std::unexpected{Status::UnsupportedDevice};
+   }
+
+   return ray_tracing::AccelerationStructure(std::move(structure));
+}
+
 }// namespace triglav::graphics_api

@@ -317,6 +317,7 @@ enum class BufferUsage : u32
    VertexBuffer = (1 << 4),
    IndexBuffer = (1 << 5),
    StorageBuffer = (1 << 6),
+   AccelerationStructure = (1 << 7),
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)

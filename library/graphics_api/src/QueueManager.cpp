@@ -73,7 +73,7 @@ u32 QueueManager::queue_index(const WorkTypeFlags flags) const
 
 Semaphore* QueueManager::aquire_semaphore()
 {
-   return m_semaphorePool.aquire_object();
+   return m_semaphorePool.acquire_object();
 }
 
 void QueueManager::release_semaphore(const Semaphore* semaphore)
@@ -83,7 +83,7 @@ void QueueManager::release_semaphore(const Semaphore* semaphore)
 
 Fence* QueueManager::aquire_fence()
 {
-   return m_fencePool.aquire_object();
+   return m_fencePool.acquire_object();
 }
 
 void QueueManager::release_fence(const Fence* fence)
