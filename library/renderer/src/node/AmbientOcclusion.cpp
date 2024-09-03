@@ -1,4 +1,4 @@
-#include "AmbientOcclusion.h"
+#include "AmbientOcclusion.hpp"
 
 #include <triglav/render_core/FrameResources.h>
 

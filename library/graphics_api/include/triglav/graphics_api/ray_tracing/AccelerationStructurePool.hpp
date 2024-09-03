@@ -1,13 +1,20 @@
 #pragma once
 
-#include "AccelerationStructure.hpp"
+#include "RayTracing.hpp"
 
 #include "triglav/Int.hpp"
 #include "triglav/ObjectPool.hpp"
 
 #include <vector>
 
+namespace triglav::graphics_api {
+class Device;
+class Buffer;
+}
+
 namespace triglav::graphics_api::ray_tracing {
+
+class AccelerationStructure;
 
 class AccelerationStructurePool {
  public:

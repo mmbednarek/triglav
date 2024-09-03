@@ -1,4 +1,4 @@
-#include "InfoDialog.h"
+#include "InfoDialog.hpp"
 
 #include "triglav/Name.hpp"
 

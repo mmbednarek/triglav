@@ -1,4 +1,4 @@
-#include "ShadingRenderer.h"
+#include "ShadingRenderer.hpp"
 
 #include <cstring>
 #include <random>
@@ -9,7 +9,7 @@
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
-#include "node/Blur.h"
+#include "node/Blur.hpp"
 
 using namespace triglav::name_literals;
 using triglav::ResourceType;

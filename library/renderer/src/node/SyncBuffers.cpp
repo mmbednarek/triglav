@@ -1,6 +1,6 @@
-#include "SyncBuffers.h"
+#include "SyncBuffers.hpp"
 
-#include "Geometry.h"
+#include "Geometry.hpp"
 
 namespace triglav::renderer::node {
 

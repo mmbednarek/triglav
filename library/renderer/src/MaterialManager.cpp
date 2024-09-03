@@ -1,4 +1,4 @@
-#include "MaterialManager.h"
+#include "MaterialManager.hpp"
 
 #include "triglav/geometry/Geometry.h"
 #include "triglav/graphics_api/Device.hpp"

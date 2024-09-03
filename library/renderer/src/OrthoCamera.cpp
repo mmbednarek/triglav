@@ -1,4 +1,4 @@
-#include "OrthoCamera.h"
+#include "OrthoCamera.hpp"
 
 namespace triglav::renderer {
 

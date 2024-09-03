@@ -1,4 +1,4 @@
-#include "TextureHelper.h"
+#include "TextureHelper.hpp"
 
 #include "triglav/graphics_api/Texture.hpp"
 

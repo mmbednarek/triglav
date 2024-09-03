@@ -1,4 +1,4 @@
-#include "AmbientOcclusionRenderer.h"
+#include "AmbientOcclusionRenderer.hpp"
 
 #include <cstring>
 #include <random>

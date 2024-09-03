@@ -1,6 +1,6 @@
-#include "Scene.h"
+#include "Scene.hpp"
 
-#include "Renderer.h"
+#include "Renderer.hpp"
 
 #include "triglav/world/Level.h"
 

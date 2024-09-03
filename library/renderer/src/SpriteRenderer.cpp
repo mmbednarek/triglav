@@ -1,4 +1,4 @@
-#include "SpriteRenderer.h"
+#include "SpriteRenderer.hpp"
 
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"

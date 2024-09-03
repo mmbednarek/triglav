@@ -1,4 +1,4 @@
-#include "StatisticManager.h"
+#include "StatisticManager.hpp"
 
 namespace triglav::renderer {
 

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "../Device.hpp"
 #include "../vulkan/ObjectWrapper.hpp"
+#include "../vulkan/DynamicProcedures.hpp"
 
-namespace triglav::graphics_api::ray_tracing {
-
+namespace triglav::graphics_api {
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(AccelerationStructureKHR, Device);
+}
+namespace triglav::graphics_api::ray_tracing {
 
 class AccelerationStructure
 {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "GlyphCache.h"
-#include "TextRenderer.h"
+#include "GlyphCache.hpp"
+#include "TextRenderer.hpp"
 
 #include "triglav/Delegate.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"

@@ -9,7 +9,7 @@
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
-#include "GlyphCache.h"
+#include "GlyphCache.hpp"
 
 #include <glm/vec2.hpp>
 

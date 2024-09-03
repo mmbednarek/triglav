@@ -1,4 +1,4 @@
-#include "TextRenderer.h"
+#include "TextRenderer.hpp"
 
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 

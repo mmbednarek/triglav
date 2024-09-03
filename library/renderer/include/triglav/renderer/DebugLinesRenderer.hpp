@@ -7,7 +7,7 @@
 #include "triglav/render_core/Model.hpp"
 #include "triglav/resource/ResourceManager.h"
 
-#include "Camera.h"
+#include "Camera.hpp"
 
 namespace triglav::renderer {
 

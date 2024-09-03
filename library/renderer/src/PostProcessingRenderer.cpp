@@ -1,7 +1,7 @@
-#include "PostProcessingRenderer.h"
+#include "PostProcessingRenderer.hpp"
 
-#include "src/node/Blur.h"
-#include "src/node/Downsample.h"
+#include "src/node/Blur.hpp"
+#include "src/node/Downsample.hpp"
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"

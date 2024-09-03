@@ -11,6 +11,7 @@
 #include "CommandList.hpp"
 #include "Surface.hpp"
 #include "vulkan/Util.hpp"
+#include "vulkan/DynamicProcedures.hpp"
 
 #undef max
 
@@ -66,6 +67,7 @@ Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std
     m_queueManager(*this, m_queueFamilyInfos),
     m_samplerCache(*this)
 {
+   vulkan::DynamicProcedures::the().init(*m_device);
 }
 
 Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
@@ -475,7 +477,7 @@ Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure
    asInfo.size = buffer.size();
    asInfo.type = vulkan::to_vulkan_acceleration_structure_type(structType);
 
-   ray_tracing::vulkan::AccelerationStructureKHR structure(*m_device);
+   vulkan::AccelerationStructureKHR structure(*m_device);
    if (structure.construct(&asInfo) != VK_SUCCESS) {
       return std::unexpected{Status::UnsupportedDevice};
    }

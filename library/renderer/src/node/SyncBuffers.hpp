@@ -3,7 +3,7 @@
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/render_core/RenderGraph.h"
 
-#include "Scene.h"
+#include "Scene.hpp"
 
 namespace triglav::renderer::node {
 

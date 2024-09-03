@@ -1,6 +1,6 @@
-#include "UserInterface.h"
+#include "UserInterface.hpp"
 
-#include "ProcessGlyphs.h"
+#include "ProcessGlyphs.hpp"
 
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_core/GlyphAtlas.h"

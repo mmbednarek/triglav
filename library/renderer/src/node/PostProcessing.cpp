@@ -1,4 +1,4 @@
-#include "PostProcessing.h"
+#include "PostProcessing.hpp"
 
 #include "triglav/graphics_api/Framebuffer.hpp"
 

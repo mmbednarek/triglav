@@ -1,4 +1,4 @@
-#include "Blur.h"
+#include "Blur.hpp"
 
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"

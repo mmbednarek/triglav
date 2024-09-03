@@ -2,7 +2,7 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 
-#include "PostProcessingRenderer.h"
+#include "PostProcessingRenderer.hpp"
 
 namespace triglav::renderer::node {
 

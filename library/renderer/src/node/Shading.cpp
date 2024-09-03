@@ -1,6 +1,6 @@
-#include "Shading.h"
-#include "Particles.h"
-#include "TextureHelper.h"
+#include "Shading.hpp"
+#include "Particles.hpp"
+#include "TextureHelper.hpp"
 
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 

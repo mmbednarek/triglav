@@ -6,6 +6,7 @@
 #include "Pipeline.hpp"
 #include "Texture.hpp"
 #include "TimestampArray.hpp"
+#include "vulkan/DynamicProcedures.hpp"
 #include "vulkan/Util.hpp"
 
 #include <cassert>
@@ -18,9 +19,7 @@ CommandList::CommandList(Device& device, const VkCommandBuffer commandBuffer, co
     m_commandBuffer(commandBuffer),
     m_commandPool(commandPool),
     m_workTypes(workTypes),
-    m_descriptorWriter(device),
-    m_cmdPushDescriptorSet(
-       reinterpret_cast<PFN_vkCmdPushDescriptorSetKHR>(vkGetDeviceProcAddr(device.vulkan_device(), "vkCmdPushDescriptorSetKHR")))
+    m_descriptorWriter(device)
 {
 }
 
@@ -36,8 +35,7 @@ CommandList::CommandList(CommandList&& other) noexcept :
     m_commandBuffer(std::exchange(other.m_commandBuffer, nullptr)),
     m_commandPool(std::exchange(other.m_commandPool, nullptr)),
     m_workTypes(std::exchange(other.m_workTypes, WorkType::None)),
-    m_descriptorWriter(std::move(other.m_descriptorWriter)),
-    m_cmdPushDescriptorSet(other.m_cmdPushDescriptorSet)
+    m_descriptorWriter(std::move(other.m_descriptorWriter))
 {
 }
 
@@ -49,7 +47,6 @@ CommandList& CommandList::operator=(CommandList&& other) noexcept
    m_commandPool = std::exchange(other.m_commandPool, nullptr);
    m_workTypes = std::exchange(other.m_workTypes, WorkType::None);
    m_descriptorWriter = std::move(other.m_descriptorWriter);
-   m_cmdPushDescriptorSet = other.m_cmdPushDescriptorSet;
    return *this;
 }
 
@@ -206,7 +203,6 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
    VkBufferCopy region{};
    region.size = source.size();
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
-   vkCmdCopyMemoryToAccelerationStructureKHR()
 }
 
 void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const
@@ -341,9 +337,8 @@ void CommandList::write_timestamp(const PipelineStage stage, const TimestampArra
 void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer, const PipelineType pipelineType) const
 {
    const auto writes = writer.vulkan_descriptor_writes();
-   assert(m_cmdPushDescriptorSet);
-   m_cmdPushDescriptorSet(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType), m_boundPipelineLayout, setIndex,
-                          static_cast<u32>(writes.size()), writes.data());
+   vulkan::vkCmdPushDescriptorSetKHR(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType), m_boundPipelineLayout, setIndex,
+                                                      static_cast<u32>(writes.size()), writes.data());
 }
 
 WorkTypeFlags CommandList::work_types() const

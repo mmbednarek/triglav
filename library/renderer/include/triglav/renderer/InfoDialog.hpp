@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GlyphCache.h"
+#include "GlyphCache.hpp"
 
 #include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/resource/ResourceManager.h"

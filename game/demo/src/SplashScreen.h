@@ -5,8 +5,8 @@
 #include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/graphics_api/Swapchain.hpp"
 #include "triglav/render_core/RenderGraph.h"
-#include "triglav/renderer/RectangleRenderer.h"
-#include "triglav/renderer/TextRenderer.h"
+#include "triglav/renderer/RectangleRenderer.hpp"
+#include "triglav/renderer/TextRenderer.hpp"
 #include "triglav/resource/ResourceManager.h"
 
 #include <memory>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Camera.h"
+#include "Camera.hpp"
 
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"

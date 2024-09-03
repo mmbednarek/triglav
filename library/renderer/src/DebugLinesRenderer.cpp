@@ -1,4 +1,4 @@
-#include "DebugLinesRenderer.h"
+#include "DebugLinesRenderer.hpp"
 
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"

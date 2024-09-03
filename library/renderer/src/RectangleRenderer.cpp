@@ -1,4 +1,4 @@
-#include "RectangleRenderer.h"
+#include "RectangleRenderer.hpp"
 
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Camera.h"
-#include "DebugLinesRenderer.h"
-#include "OrthoCamera.h"
+#include "Camera.hpp"
+#include "DebugLinesRenderer.hpp"
+#include "OrthoCamera.hpp"
 
 #include "triglav/Delegate.hpp"
 #include "triglav/Name.hpp"

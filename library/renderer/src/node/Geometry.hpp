@@ -2,11 +2,11 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 
-#include "MaterialManager.h"
-#include "Scene.h"
-#include "SkyBox.h"
+#include "MaterialManager.hpp"
+#include "Scene.hpp"
+#include "SkyBox.hpp"
 
-#include <GroundRenderer.h>
+#include <GroundRenderer.hpp>
 
 namespace triglav::render_core {
 class RenderGraph;

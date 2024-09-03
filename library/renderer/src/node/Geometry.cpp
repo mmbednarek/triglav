@@ -1,4 +1,4 @@
-#include "Geometry.h"
+#include "Geometry.hpp"
 
 #include "triglav/graphics_api/Framebuffer.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"

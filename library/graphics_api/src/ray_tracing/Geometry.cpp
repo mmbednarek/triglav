@@ -1,5 +1,6 @@
 #include "ray_tracing/Geometry.hpp"
 #include "../vulkan/Util.hpp"
+#include "CommandList.hpp"
 
 namespace triglav::graphics_api::ray_tracing {
 
@@ -81,7 +82,7 @@ void GeometryBuildContext::commit_triangles()
 {
    auto& geo = m_triangleGeometries.emplace_back(std::move(m_currentTriangles));
 
-   auto* nextAc = m_asPool.acquire_acceleration_structure(geo.size_requirement());
+   auto* nextAc = m_asPool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, geo.size_requirement());
    auto lastAc = geo.update_last_acceleration_structure(nextAc);
    auto buildInfo = geo.build(lastAc, *nextAc);
 

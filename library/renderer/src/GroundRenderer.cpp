@@ -1,4 +1,4 @@
-#include "GroundRenderer.h"
+#include "GroundRenderer.hpp"
 
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"

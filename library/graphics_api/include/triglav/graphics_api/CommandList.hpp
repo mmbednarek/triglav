@@ -124,8 +124,6 @@ class CommandList
    mutable uint64_t m_triangleCount{};
    DescriptorWriter m_descriptorWriter;
    bool m_hasPendingDescriptors{false};
-
-   PFN_vkCmdPushDescriptorSetKHR m_cmdPushDescriptorSet{};
 };
 
 }// namespace triglav::graphics_api

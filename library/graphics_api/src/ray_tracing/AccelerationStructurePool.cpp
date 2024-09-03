@@ -1,4 +1,6 @@
 #include "ray_tracing/AccelerationStructurePool.hpp"
+#include "Buffer.hpp"
+#include "Device.hpp"
 
 namespace triglav::graphics_api::ray_tracing {
 

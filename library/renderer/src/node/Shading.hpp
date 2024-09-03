@@ -2,8 +2,8 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 
-#include "Scene.h"
-#include "ShadingRenderer.h"
+#include "Scene.hpp"
+#include "ShadingRenderer.hpp"
 
 namespace triglav::renderer::node {
 

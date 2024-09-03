@@ -1,4 +1,4 @@
-#include "Downsample.h"
+#include "Downsample.hpp"
 
 #include "triglav/graphics_api/Device.hpp"
 

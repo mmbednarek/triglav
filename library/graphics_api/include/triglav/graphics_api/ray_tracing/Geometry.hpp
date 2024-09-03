@@ -7,6 +7,10 @@
 #include "AccelerationStructure.hpp"
 #include "AccelerationStructurePool.hpp"
 
+
+namespace triglav::graphics_api {
+class CommandList;
+}
 namespace triglav::graphics_api::ray_tracing {
 
 class BottomLevelGeometry
