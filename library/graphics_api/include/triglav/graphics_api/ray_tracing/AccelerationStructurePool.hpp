@@ -23,6 +23,9 @@ class AccelerationStructurePool {
    AccelerationStructure* acquire_acceleration_structure(AccelerationStructureType type, MemorySize size);
    void release_acceleration_structure(AccelerationStructure* as);
 
+   Buffer* allocate_scratch_buffer(MemorySize size);
+   void release_scratch_buffer(Buffer* buff);
+
  private:
    Device& m_device;
    std::map<AccelerationStructure*, Buffer*> m_asToBufferMap;

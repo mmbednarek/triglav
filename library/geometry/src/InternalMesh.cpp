@@ -346,10 +346,23 @@ InternalMesh InternalMesh::from_obj_file(const io::Path& path)
    return InternalMesh::from_obj_file(**file);
 }
 
-DeviceMesh InternalMesh::upload_to_device(graphics_api::Device& device)
+DeviceMesh InternalMesh::upload_to_device(graphics_api::Device& device, graphics_api::BufferUsage usageFlags)
+{
+   auto vertexData = this->to_vertex_data();
+
+   graphics_api::VertexArray<Vertex> gpuVertices{device, vertexData.vertices.size(), usageFlags};
+   GAPI_CHECK_STATUS(gpuVertices.write(vertexData.vertices.data(), vertexData.vertices.size()));
+
+   graphics_api::IndexArray gpuIndices{device, vertexData.indices.size(), usageFlags};
+   GAPI_CHECK_STATUS(gpuIndices.write(vertexData.indices.data(), vertexData.indices.size()));
+
+   return {{std::move(gpuVertices), std::move(gpuIndices)}, std::move(vertexData.ranges)};
+}
+
+VertexData InternalMesh::to_vertex_data()
 {
    if (not this->is_triangulated())
-      throw std::runtime_error("mesh must be triangulated before upload to GPU");
+      throw std::runtime_error("mesh must be triangulated before calculating vertex data");
    assert(not m_mesh.faces().empty());
 
    std::unordered_map<Vertex, uint32_t> vertexMap{};
@@ -401,13 +414,7 @@ DeviceMesh InternalMesh::upload_to_device(graphics_api::Device& device)
       materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
    }
 
-   graphics_api::VertexArray<Vertex> gpuVertices{device, outVertices.size()};
-   gpuVertices.write(outVertices.data(), outVertices.size());
-
-   graphics_api::IndexArray gpuIndices{device, outIndices.size()};
-   gpuIndices.write(outIndices.data(), outIndices.size());
-
-   return {{std::move(gpuVertices), std::move(gpuIndices)}, std::move(materialRanges)};
+   return {.vertices{std::move(outVertices)}, .indices{std::move(outIndices)}, .ranges{std::move(materialRanges)}};
 }
 
 void InternalMesh::reverse_orientation()

@@ -318,6 +318,7 @@ enum class BufferUsage : u32
    IndexBuffer = (1 << 5),
    StorageBuffer = (1 << 6),
    AccelerationStructure = (1 << 7),
+   AccelerationStructureRead = (1 << 8),
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)
@@ -348,25 +349,23 @@ enum class DevicePickStrategy
    PreferIntegrated,
 };
 
+struct DeviceFeatures {
+   bool rayTracing{false};
+};
+
 template<typename T>
 using Result = std::expected<T, Status>;
 
 class Exception final : public std::exception
 {
  public:
+   Exception(Status status, std::string_view invoked_function);
+
+   [[nodiscard]] const char* what() const noexcept override;
+
+ private:
    Status status;
    std::string invoked_function;
-
-   Exception(const Status status, const std::string_view invoked_function) :
-       status(status),
-       invoked_function(std::string(invoked_function))
-   {
-   }
-
-   [[nodiscard]] const char* what() const noexcept override
-   {
-      return "graphics_api exception";
-   }
 };
 
 template<typename TResultValue>

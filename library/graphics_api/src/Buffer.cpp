@@ -127,4 +127,11 @@ Status Buffer::write_indirect(const void* data, size_t size)
    return Status::Success;
 }
 
+VkDeviceAddress Buffer::vulkan_device_address() const
+{
+   VkBufferDeviceAddressInfo info{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO };
+   info.buffer = *m_buffer;
+   return vkGetBufferDeviceAddress(m_device.vulkan_device(), &info);
+}
+
 }// namespace triglav::graphics_api

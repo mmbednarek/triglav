@@ -12,6 +12,7 @@
 #include "ShadingRenderer.hpp"
 #include "SkyBox.hpp"
 #include "SpriteRenderer.hpp"
+#include "RayTracingScene.hpp"
 
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
@@ -91,6 +92,7 @@ class Renderer
    render_core::RenderGraph m_renderGraph;
    ui_core::Viewport m_uiViewport;
    InfoDialog m_infoDialog;
+   RayTracingScene m_rayTracingScene;
 };
 
 }// namespace triglav::renderer

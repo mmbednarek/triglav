@@ -189,10 +189,15 @@ Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_
    VkMemoryRequirements memRequirements;
    vkGetBufferMemoryRequirements(*m_device, *buffer, &memRequirements);
 
-   VkMemoryAllocateInfo allocateInfo{};
-   allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   VkMemoryAllocateInfo allocateInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
    allocateInfo.allocationSize = memRequirements.size;
    allocateInfo.memoryTypeIndex = this->find_memory_type(memRequirements.memoryTypeBits, vulkan::to_vulkan_memory_properties_flags(usage));
+
+   VkMemoryAllocateFlagsInfo allocateFlagsInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO};
+   if (!(usage & BufferUsage::HostVisible)) {
+      allocateFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+      allocateInfo.pNext = &allocateFlagsInfo;
+   }
 
    vulkan::DeviceMemory memory(*m_device);
    if (memory.construct(&allocateInfo) != VK_SUCCESS) {

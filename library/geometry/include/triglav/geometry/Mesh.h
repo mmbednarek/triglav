@@ -42,10 +42,11 @@ class Mesh
    void set_face_group(Index face, Index group);
    void set_material(Index meshGroup, std::string_view material);
 
-   [[nodiscard]] BoundingBox calculate_bouding_box() const;
+   [[nodiscard]] BoundingBox calculate_bounding_box() const;
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
-   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device) const;
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsage usageFlags = graphics_api::BufferUsage::None) const;
+   [[nodiscard]] VertexData to_vertex_data();
 
    static Mesh from_file(const io::Path& path);
 

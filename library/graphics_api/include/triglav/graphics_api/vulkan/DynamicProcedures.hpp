@@ -3,10 +3,14 @@
 #include <utility>
 #include <vulkan/vulkan.h>
 
-#define TRIGLAV_GAPI_VULKAN_DYNAMIC_PROCS            \
-   TRIGLAV_HANDLE(vkCreateAccelerationStructureKHR)  \
-   TRIGLAV_HANDLE(vkDestroyAccelerationStructureKHR) \
+#define TRIGLAV_GAPI_VULKAN_DYNAMIC_PROCS                     \
+   TRIGLAV_HANDLE(vkCreateAccelerationStructureKHR)           \
+   TRIGLAV_HANDLE(vkDestroyAccelerationStructureKHR)          \
+   TRIGLAV_HANDLE(vkCmdBuildAccelerationStructuresKHR)        \
+   TRIGLAV_HANDLE(vkGetAccelerationStructureBuildSizesKHR)    \
+   TRIGLAV_HANDLE(vkGetAccelerationStructureDeviceAddressKHR) \
    TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)
+
 
 namespace triglav::graphics_api::vulkan {
 
@@ -40,5 +44,15 @@ void vkDestroyAccelerationStructureKHR(VkDevice device, VkAccelerationStructureK
 
 void vkCmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set,
                                uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites);
+
+void vkCmdBuildAccelerationStructuresKHR(VkCommandBuffer commandBuffer, uint32_t infoCount,
+                                         const VkAccelerationStructureBuildGeometryInfoKHR* pInfos,
+                                         const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos);
+
+void vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStructureBuildTypeKHR buildType,
+                                             const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo,
+                                             const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo);
+
+VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo);
 
 }// namespace triglav::graphics_api::vulkan

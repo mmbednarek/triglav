@@ -21,7 +21,7 @@ render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& d
       return render_core::MaterialRange{range.offset, range.size, make_rc_name(std::format("{}.mat", range.materialName))};
    });
 
-   return render_core::Model{std::move(deviceMesh.mesh), objMesh.calculate_bouding_box(), std::move(ranges)};
+   return render_core::Model{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};
 }
 
 }// namespace triglav::resource

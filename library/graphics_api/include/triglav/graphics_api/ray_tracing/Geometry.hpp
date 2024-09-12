@@ -13,19 +13,22 @@ class CommandList;
 }
 namespace triglav::graphics_api::ray_tracing {
 
-class BottomLevelGeometry
+class GeometryBuildInfo
 {
  public:
-    void add_triangles(void* vertexData, void* indexData, ColorFormat vertexFormat, MemorySize vertexSize, u32 maxVertexCount, u32 triangleCount);
-    void add_bounding_boxes(void* boundingBoxes, MemorySize bbSize, u32 bbCount);
+    void add_triangles(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat, MemorySize vertexSize, u32 vertexCount, u32 triangleCount);
+    void add_bounding_boxes(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount);
+    void add_instances(const Buffer& instanceBuffer, u32 instanceCount);
 
-    [[nodiscard]] MemorySize size_requirement() const;
-    [[nodiscard]] VkAccelerationStructureBuildGeometryInfoKHR build(AccelerationStructure* srcAs, AccelerationStructure& dstAs);
-   [[nodiscard]] AccelerationStructure* update_last_acceleration_structure(AccelerationStructure* as);
+    [[nodiscard]] VkAccelerationStructureBuildSizesInfoKHR size_requirement(Device& device) const;
+    [[nodiscard]] VkAccelerationStructureBuildGeometryInfoKHR build(AccelerationStructure& dstAs, Buffer& scratchBuffer);
+    [[nodiscard]] VkAccelerationStructureBuildRangeInfoKHR* ranges();
+   void finalize(VkAccelerationStructureTypeKHR accelerationStructureType);
 
  private:
    AccelerationStructure* m_lastAccelerationStructure{};
-   MemorySize m_sizeRequirement{};
+   VkAccelerationStructureBuildGeometryInfoKHR m_buildInfo{};
+   std::vector<u32> m_primitiveCounts{};
    std::vector<VkAccelerationStructureGeometryKHR> m_geometries;
    std::vector<VkAccelerationStructureBuildRangeInfoKHR> m_ranges;
 };
@@ -33,19 +36,26 @@ class BottomLevelGeometry
 class GeometryBuildContext
 {
  public:
-   explicit GeometryBuildContext(AccelerationStructurePool& asPool);
+   GeometryBuildContext(Device& device, AccelerationStructurePool& asPool);
 
-   void add_triangle_buffer(void* vertexData, void* indexData, ColorFormat vertexFormat, MemorySize vertexSize, u32 maxVertexCount, u32 triangleCount);
-   void commit_triangles();
+   void add_triangle_buffer(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat, MemorySize vertexSize, u32 maxVertexCount, u32 triangleCount);
+   void add_bounding_box_buffer(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount);
+   void add_instance_buffer(const Buffer& instanceBuffer, u32 instanceCount);
+   AccelerationStructure* commit_triangles();
+   AccelerationStructure* commit_bounding_boxes();
+   AccelerationStructure* commit_instances();
 
    void build_acceleration_structures(CommandList& cmdList);
  private:
+   Device& m_device;
    AccelerationStructurePool& m_asPool;
 
-   BottomLevelGeometry m_currentTriangles;
-   BottomLevelGeometry m_currentBoundingBoxes;
-   std::vector<BottomLevelGeometry> m_triangleGeometries;
-   std::vector<BottomLevelGeometry> m_boundingBoxesGeometries;
+   GeometryBuildInfo m_currentTriangles;
+   GeometryBuildInfo m_currentBoundingBoxes;
+   GeometryBuildInfo m_currentInstances;
+   std::vector<GeometryBuildInfo> m_triangleGeometries;
+   std::vector<GeometryBuildInfo> m_boundingBoxesGeometries;
+   std::vector<GeometryBuildInfo> m_instanceGeometries;
    std::vector<VkAccelerationStructureBuildGeometryInfoKHR> m_buildInfos;
    std::vector<VkAccelerationStructureBuildRangeInfoKHR*> m_buildRangePtrs;
 };

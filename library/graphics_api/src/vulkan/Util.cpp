@@ -439,6 +439,10 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
 
    VkBufferUsageFlags result{};
 
+   if (!(usage & HostVisible)) {
+      result |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+   }
+
    if (usage & TransferSrc) {
       result |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
    }
@@ -459,6 +463,9 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
    }
    if (usage & AccelerationStructure) {
       result |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR;
+   }
+   if (usage & AccelerationStructureRead) {
+      result |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
    }
 
    return result;

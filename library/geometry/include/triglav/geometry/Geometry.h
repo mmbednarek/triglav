@@ -64,6 +64,13 @@ struct DeviceMesh
    std::vector<MaterialRange> ranges;
 };
 
+struct VertexData
+{
+   std::vector<Vertex> vertices;
+   std::vector<u32> indices;
+   std::vector<MaterialRange> ranges;
+};
+
 struct BoundingBox
 {
    glm::vec3 min;

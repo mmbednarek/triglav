@@ -95,7 +95,7 @@ Result<Surface> Instance::create_surface(const desktop::ISurface& surface) const
    return Surface{std::move(vulkan_surface)};
 }
 
-Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DevicePickStrategy strategy) const
+Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DevicePickStrategy strategy, const DeviceFeatures& features) const
 {
    auto physicalDevices = vulkan::get_physical_devices(*m_instance);
    auto pickedDevice = std::find_if(physicalDevices.begin(), physicalDevices.end(), create_physical_device_pick_predicate(strategy));
@@ -156,6 +156,14 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
       "VK_KHR_shader_non_semantic_info",
    };
 
+   if (features.rayTracing) {
+      vulkanDeviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+   }
+
    const auto extensionProperties = vulkan::get_device_extension_properties(*pickedDevice, nullptr);
    for (const auto& property : extensionProperties) {
       const std::string extensionName{property.extensionName};
@@ -165,16 +173,26 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
       }
    }
 
-   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
-   hostQueryResetFeatures.hostQueryReset = true;
-
    VkPhysicalDeviceFeatures2 deviceFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
-   deviceFeatures.pNext = &hostQueryResetFeatures;
    deviceFeatures.features.sampleRateShading = true;
    deviceFeatures.features.logicOp = true;
    deviceFeatures.features.fillModeNonSolid = true;
    deviceFeatures.features.wideLines = true;
    deviceFeatures.features.samplerAnisotropy = true;
+
+   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
+   hostQueryResetFeatures.hostQueryReset = true;
+   deviceFeatures.pNext = &hostQueryResetFeatures;
+
+   VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES};
+   bufferDeviceAddressFeatures.bufferDeviceAddress = true;
+   hostQueryResetFeatures.pNext = &bufferDeviceAddressFeatures;
+
+   VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
+   if (features.rayTracing) {
+      accelerationStructureFeatures.accelerationStructure = true;
+      bufferDeviceAddressFeatures.pNext = &accelerationStructureFeatures;
+   }
 
    VkDeviceCreateInfo deviceInfo{};
    deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

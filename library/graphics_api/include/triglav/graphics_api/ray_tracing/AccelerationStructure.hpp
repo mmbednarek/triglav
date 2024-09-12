@@ -14,6 +14,7 @@ class AccelerationStructure
    explicit AccelerationStructure(vulkan::AccelerationStructureKHR structure);
 
    vulkan::AccelerationStructureKHR& vulkan_acceleration_structure();
+   VkDeviceAddress vulkan_device_address();
 
  private:
    vulkan::AccelerationStructureKHR m_structure;

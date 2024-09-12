@@ -28,4 +28,15 @@ void AccelerationStructurePool::release_acceleration_structure(AccelerationStruc
    delete buffer;
 }
 
+Buffer* AccelerationStructurePool::allocate_scratch_buffer(MemorySize size)
+{
+   auto buffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::AccelerationStructure | BufferUsage::StorageBuffer, size));
+   return new Buffer(std::move(buffer));
+}
+
+void AccelerationStructurePool::release_scratch_buffer(Buffer* buff)
+{
+   delete buff;
+}
+
 }

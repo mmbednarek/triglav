@@ -33,4 +33,23 @@ void vkCmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer, VkPipelineBindPoin
                                                              pDescriptorWrites);
 }
 
+void vkCmdBuildAccelerationStructuresKHR(VkCommandBuffer commandBuffer, uint32_t infoCount,
+                                         const VkAccelerationStructureBuildGeometryInfoKHR* pInfos,
+                                         const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos)
+{
+   DynamicProcedures::the().proc_vkCmdBuildAccelerationStructuresKHR()(commandBuffer, infoCount, pInfos, ppBuildRangeInfos);
+}
+
+void vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStructureBuildTypeKHR buildType,
+                                             const VkAccelerationStructureBuildGeometryInfoKHR* pBuildInfo,
+                                             const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo)
+{
+   DynamicProcedures::the().proc_vkGetAccelerationStructureBuildSizesKHR()(device, buildType, pBuildInfo, pMaxPrimitiveCounts, pSizeInfo);
+}
+
+VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo)
+{
+   return DynamicProcedures::the().proc_vkGetAccelerationStructureDeviceAddressKHR()(device, pInfo);
+}
+
 }// namespace triglav::graphics_api::vulkan
