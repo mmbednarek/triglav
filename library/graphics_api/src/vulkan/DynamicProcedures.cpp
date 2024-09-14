@@ -52,4 +52,12 @@ VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, cons
    return DynamicProcedures::the().proc_vkGetAccelerationStructureDeviceAddressKHR()(device, pInfo);
 }
 
+VkResult vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache,
+                                        uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
+                                        const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines)
+{
+   return DynamicProcedures::the().proc_vkCreateRayTracingPipelinesKHR()(device, deferredOperation, pipelineCache, createInfoCount,
+                                                                         pCreateInfos, pAllocator, pPipelines);
+}
+
 }// namespace triglav::graphics_api::vulkan

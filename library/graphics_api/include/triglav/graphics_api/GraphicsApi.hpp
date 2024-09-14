@@ -103,8 +103,16 @@ enum class PipelineStage : uint32_t
    FragmentShader = (1 << 2),
    AttachmentOutput = (1 << 3),
    ComputeShader = (1 << 4),
-   Transfer = (1 << 5),
-   End = (1 << 6),
+
+   RayGenerationShader = (1 << 5),
+   AnyHitShader = (1 << 6),
+   ClosestHitShader = (1 << 7),
+   MissShader = (1 << 8),
+   IntersectionShader = (1 << 9),
+   CallableShader = (1 << 10),
+
+   Transfer = (1 << 11),
+   End = (1 << 12),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -165,6 +173,7 @@ enum class DescriptorType
    Sampler,
    ImageSampler,
    StorageImage,
+   AccelerationStructure,
 };
 
 struct DescriptorBinding
@@ -333,7 +342,8 @@ enum class DepthTestMode
 enum class PipelineType
 {
    Graphics,
-   Compute
+   Compute,
+   RayTracing,
 };
 
 enum class PresentMode

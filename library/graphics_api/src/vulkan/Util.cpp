@@ -234,6 +234,12 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
       return VK_SHADER_STAGE_FRAGMENT_BIT;
    case PipelineStage::ComputeShader:
       return VK_SHADER_STAGE_COMPUTE_BIT;
+   case PipelineStage::RayGenerationShader:
+      return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+   case PipelineStage::ClosestHitShader:
+      return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+   case PipelineStage::MissShader:
+      return VK_SHADER_STAGE_MISS_BIT_KHR;
    default:
       break;
    }
@@ -252,6 +258,15 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
    }
    if (flags & PipelineStage::ComputeShader) {
       result |= VK_SHADER_STAGE_COMPUTE_BIT;
+   }
+   if (flags & PipelineStage::RayGenerationShader) {
+      result |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+   }
+   if (flags & PipelineStage::ClosestHitShader) {
+      result |= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+   }
+   if (flags & PipelineStage::MissShader) {
+      result |= VK_SHADER_STAGE_MISS_BIT_KHR;
    }
    return result;
 }
@@ -316,6 +331,8 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
       return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    case DescriptorType::StorageImage:
       return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+   case DescriptorType::AccelerationStructure:
+      return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
    }
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }

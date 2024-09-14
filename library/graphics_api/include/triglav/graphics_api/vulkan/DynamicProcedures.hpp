@@ -9,6 +9,7 @@
    TRIGLAV_HANDLE(vkCmdBuildAccelerationStructuresKHR)        \
    TRIGLAV_HANDLE(vkGetAccelerationStructureBuildSizesKHR)    \
    TRIGLAV_HANDLE(vkGetAccelerationStructureDeviceAddressKHR) \
+   TRIGLAV_HANDLE(vkCreateRayTracingPipelinesKHR)             \
    TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)
 
 
@@ -54,5 +55,9 @@ void vkGetAccelerationStructureBuildSizesKHR(VkDevice device, VkAccelerationStru
                                              const uint32_t* pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR* pSizeInfo);
 
 VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo);
+
+VkResult vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache,
+                                        uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
+                                        const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines);
 
 }// namespace triglav::graphics_api::vulkan

@@ -188,10 +188,20 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    bufferDeviceAddressFeatures.bufferDeviceAddress = true;
    hostQueryResetFeatures.pNext = &bufferDeviceAddressFeatures;
 
+   void** lastFeaturesPtr = &bufferDeviceAddressFeatures.pNext;
+
    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
    if (features.rayTracing) {
       accelerationStructureFeatures.accelerationStructure = true;
-      bufferDeviceAddressFeatures.pNext = &accelerationStructureFeatures;
+      *lastFeaturesPtr = &accelerationStructureFeatures;
+      lastFeaturesPtr = &accelerationStructureFeatures.pNext;
+   }
+
+   VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
+   if (features.rayTracing) {
+      rayTracingPipelineFeatures.rayTracingPipeline = true;
+      *lastFeaturesPtr = &rayTracingPipelineFeatures;
+      lastFeaturesPtr = &rayTracingPipelineFeatures.pNext;
    }
 
    VkDeviceCreateInfo deviceInfo{};

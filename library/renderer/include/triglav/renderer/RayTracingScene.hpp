@@ -6,11 +6,15 @@
 
 #include <utility>
 
+namespace triglav::resource {
+class ResourceManager;
+}
+
 namespace triglav::renderer {
 
 class RayTracingScene {
  public:
-   explicit RayTracingScene(graphics_api::Device &device);
+   explicit RayTracingScene(graphics_api::Device &device, resource::ResourceManager& resources);
 
  private:
    graphics_api::Device &m_device;
@@ -22,6 +26,7 @@ class RayTracingScene {
    graphics_api::ray_tracing::AccelerationStructurePool m_asPool;
    graphics_api::ray_tracing::GeometryBuildContext m_buildBLContext;
    graphics_api::ray_tracing::GeometryBuildContext m_buildTLContext;
+   graphics_api::Pipeline m_pipeline;
 };
 
 }

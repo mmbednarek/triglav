@@ -36,4 +36,28 @@ struct Loader<ResourceType::ComputeShader>
    static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
 };
 
+template<>
+struct Loader<ResourceType::RayGenShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
+};
+
+template<>
+struct Loader<ResourceType::RayClosestHitShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
+};
+
+template<>
+struct Loader<ResourceType::RayMissShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
+};
+
 }// namespace triglav::resource

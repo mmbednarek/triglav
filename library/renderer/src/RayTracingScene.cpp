@@ -1,22 +1,37 @@
 #include "RayTracingScene.hpp"
 
 #include "triglav/geometry/DebugMesh.h"
+#include "triglav/resource/ResourceManager.h"
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
+#include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 
 namespace triglav::renderer {
 
 namespace gapi = graphics_api;
 namespace rt = graphics_api::ray_tracing;
 namespace geo = geometry;
+using namespace name_literals;
 
-RayTracingScene::RayTracingScene(gapi::Device& device) :
+RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager& resources) :
     m_device{device},
     m_exampleMesh{geo::create_box(geo::Extent3D{2.0f, 2.0f, 2.0f})},
     m_boundingBoxBuffer{GAPI_CHECK(device.create_buffer(gapi::BufferUsage::AccelerationStructureRead | gapi::BufferUsage::TransferDst, sizeof(VkAabbPositionsKHR)))},
     m_asPool{device},
     m_buildBLContext{device, m_asPool},
-    m_buildTLContext{device, m_asPool}
+    m_buildTLContext{device, m_asPool},
+    m_pipeline{GAPI_CHECK(rt::RayTracingPipelineBuilder(device)
+                             .ray_generation_shader("rgen"_name, resources.get("rt_general.rgenshader"_rc))
+                             .closest_hit_shader("rchit"_name, resources.get("rt_general.rchitshader"_rc))
+                             .miss_shader("rmiss"_name, resources.get("rt_general.rmissshader"_rc))
+                             .general_group("rmiss"_name)
+                             .triangle_group("rmiss"_name, "rchit"_name)
+                             .use_push_descriptors(true)
+                             .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::AccelerationStructure)
+                             .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::StorageImage)
+                             .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::UniformBuffer)
+                             .build()
+   )}
 {
    VkAabbPositionsKHR positions{
       .minX=-1.0f,

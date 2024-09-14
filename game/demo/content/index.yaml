@@ -1,5 +1,6 @@
 version: 1
 resources:
+# TEXTURES
   - name: "board.tex"
     source: "texture/board.png"
   - name: "brick/albedo.tex"
@@ -58,6 +59,7 @@ resources:
     source: "texture/metal_roughness.jpg"
   - name: "particle.tex"
     source: "texture/particle.png"
+# MODELS
   - name: "ball.model"
     source: "model/ball.obj"
   - name: "tree.model"
@@ -82,6 +84,7 @@ resources:
     source: "model/stairs.obj"
   - name: "mirror.model"
     source: "model/mirror.obj"
+# SHADERS
   - name: "ambient_occlusion.fshader"
     source: "shader/ambient_occlusion/fragment.spv"
   - name: "ambient_occlusion.vshader"
@@ -144,8 +147,16 @@ resources:
     source: "shader/shading/fragment.spv"
   - name: "shading.vshader"
     source: "shader/shading/vertex.spv"
+  - name: "rt_general.rgenshader"
+    source: "shader/ray_tracing/ray_generation.spv"
+  - name: "rt_general.rmissshader"
+    source: "shader/ray_tracing/miss.spv"
+  - name: "rt_general.rchitshader"
+    source: "shader/ray_tracing/closest_hit.spv"
+# TYPEFACES
   - name: "segoeui/bold.typeface"
     source: "fonts/segoeuib.ttf"
+# MATERIALS
   - name: "pbr/full.mt"
     source: "material/template/pbr_full.yaml"
   - name: "pbr/normal_map.mt"

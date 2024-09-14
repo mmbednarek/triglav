@@ -17,9 +17,9 @@ class PipelineBuilderBase
    explicit PipelineBuilderBase(Device& device);
 
  protected:
-   void add_shader(const Shader& shader);
-   void add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount);
-   void add_push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
+   Index add_shader(const Shader& shader);
+   void add_descriptor_binding(DescriptorType descriptorType, PipelineStageFlags shaderStages, u32 descriptorCount);
+   void add_push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset = 0);
 
    [[nodiscard]] Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> build_pipeline_layout() const;
 
