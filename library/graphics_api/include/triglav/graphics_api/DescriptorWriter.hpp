@@ -17,6 +17,10 @@ class Sampler;
 class Device;
 class DescriptorView;
 
+namespace ray_tracing {
+class AccelerationStructure;
+}
+
 constexpr auto g_maxBinding{16};
 
 class DescriptorWriter
@@ -35,6 +39,7 @@ class DescriptorWriter
    void set_storage_buffer(uint32_t binding, const Buffer& buffer);
    void set_storage_buffer(uint32_t binding, const Buffer& buffer, u32 offset, u32 size);
    void set_raw_uniform_buffer(uint32_t binding, const Buffer& buffer);
+   void set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct);
 
    template<typename TValue>
    void set_uniform_buffer(const uint32_t binding, const TValue& buffer)
@@ -60,6 +65,7 @@ class DescriptorWriter
    u32 m_topBinding{};
    ObjectPool<VkDescriptorBufferInfo> m_descriptorBufferInfoPool{};
    ObjectPool<VkDescriptorImageInfo> m_descriptorImageInfoPool{};
+   ObjectPool<VkWriteDescriptorSetAccelerationStructureKHR> m_descriptorAccelerationStructurePool{};
    std::array<VkWriteDescriptorSet, g_maxBinding> m_descriptorWrites{};
 };
 

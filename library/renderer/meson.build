@@ -33,6 +33,8 @@ renderer_sources = files([
   'src/node/PostProcessing.hpp',
   'src/node/ProcessGlyphs.cpp',
   'src/node/ProcessGlyphs.hpp',
+  'src/node/RayTracedImage.cpp',
+  'src/node/RayTracedImage.hpp',
   'src/node/Shading.cpp',
   'src/node/Shading.hpp',
   'src/node/ShadowMap.cpp',

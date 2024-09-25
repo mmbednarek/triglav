@@ -12,6 +12,7 @@
 #include "node/ShadowMap.hpp"
 #include "node/SyncBuffers.hpp"
 #include "node/UserInterface.hpp"
+#include "node/RayTracedImage.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
@@ -127,6 +128,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
                                           false);
    m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, "ao"_name,
                                           true);
+   m_renderGraph.emplace_node<node::RayTracedImage>("ray_traced_image"_name, m_device, m_rayTracingScene, m_scene);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
    m_renderGraph.add_interframe_dependency("geometry"_name, "shading"_name);
@@ -139,6 +141,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.add_dependency("shading"_name, "blur_ao"_name);
    m_renderGraph.add_dependency("shading"_name, "particles"_name);
    m_renderGraph.add_dependency("blur_bloom"_name, "shading"_name);
+   m_renderGraph.add_dependency("post_processing"_name, "ray_traced_image"_name);
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
    m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);

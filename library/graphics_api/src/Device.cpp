@@ -438,6 +438,11 @@ VkDevice Device::vulkan_device() const
    return *m_device;
 }
 
+VkPhysicalDevice Device::vulkan_physical_device() const
+{
+   return m_physicalDevice;
+}
+
 QueueManager& Device::queue_manager()
 {
    return m_queueManager;

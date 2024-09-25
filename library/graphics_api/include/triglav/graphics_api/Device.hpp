@@ -77,6 +77,7 @@ class Device
                                             const Semaphore& signalSemaphore, const Fence& fence);
    [[nodiscard]] Status submit_command_list_one_time(const CommandList& commandList);
    [[nodiscard]] VkDevice vulkan_device() const;
+   [[nodiscard]] VkPhysicalDevice vulkan_physical_device() const;
    [[nodiscard]] QueueManager& queue_manager();
    [[nodiscard]] SamplerCache& sampler_cache();
 

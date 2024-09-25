@@ -9,6 +9,7 @@ layout(binding = 0) uniform accelerationStructureEXT topLevelAS;
 layout(binding = 1, rgba32f) uniform image2D outImage;
 layout(binding = 2) uniform Ubo { GlobalUbo uni; };
 
+
 void main()
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);
@@ -19,9 +20,9 @@ void main()
     const vec4 target    = uni.projInverse * vec4(d.x, d.y, 1, 1);
     const vec4 direction = uni.viewInverse * vec4(normalize(target.xyz), 0);
 
-    uint  rayFlags = gl_RayFlagsOpaqueEXT;
-    float tMin     = 0.001;
-    float tMax     = 10000.0;
+    const uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    const float tMin     = 0.001;
+    const float tMax     = 10000.0;
 
     traceRayEXT(
         topLevelAS, // acceleration structure

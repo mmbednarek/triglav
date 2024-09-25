@@ -24,7 +24,7 @@ class IReader : virtual public IStreamBase
 class IWriter : virtual public IStreamBase
 {
  public:
-   virtual Result<MemorySize> write(std::span<u8> buffer) = 0;
+   virtual Result<MemorySize> write(std::span<const u8> buffer) = 0;
 };
 
 class IStream : public IReader, public IWriter

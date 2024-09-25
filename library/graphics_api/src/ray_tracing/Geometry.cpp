@@ -74,7 +74,7 @@ VkAccelerationStructureBuildSizesInfoKHR GeometryBuildInfo::size_requirement(Dev
 
 VkAccelerationStructureBuildGeometryInfoKHR GeometryBuildInfo::build(AccelerationStructure& dstAs, Buffer& scratchBuffer)
 {
-   m_buildInfo.dstAccelerationStructure = *dstAs.vulkan_acceleration_structure();
+   m_buildInfo.dstAccelerationStructure = dstAs.vulkan_acceleration_structure();
    m_buildInfo.scratchData.deviceAddress = scratchBuffer.vulkan_device_address();
    m_lastAccelerationStructure = &dstAs;
    return m_buildInfo;
@@ -91,7 +91,7 @@ void GeometryBuildInfo::finalize(VkAccelerationStructureTypeKHR accelerationStru
    m_buildInfo.type = accelerationStructureType;
    m_buildInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
    m_buildInfo.srcAccelerationStructure =
-      m_lastAccelerationStructure == nullptr ? nullptr : *m_lastAccelerationStructure->vulkan_acceleration_structure();
+      m_lastAccelerationStructure == nullptr ? nullptr : m_lastAccelerationStructure->vulkan_acceleration_structure();
    m_buildInfo.mode = m_lastAccelerationStructure == nullptr ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR
                                                              : VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR;
    m_buildInfo.dstAccelerationStructure = nullptr;

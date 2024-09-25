@@ -115,6 +115,18 @@ void DescriptorWriter::set_storage_image(uint32_t binding, const Texture& textur
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
+void DescriptorWriter::set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct)
+{
+   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
+
+   auto asInfo = m_descriptorAccelerationStructurePool.acquire_object();
+   asInfo->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+   asInfo->accelerationStructureCount = 1;
+   asInfo->pAccelerationStructures = &accStruct.vulkan_acceleration_structure();
+
+   writeDescriptorSet.pNext = asInfo;
+}
+
 VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescriptorType descType)
 {
    assert(binding < 16);
@@ -125,6 +137,11 @@ VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescr
 
    auto& writeDescriptorSet = m_descriptorWrites[binding];
 
+   if (writeDescriptorSet.pNext != nullptr) {
+      m_descriptorAccelerationStructurePool.release_object(
+         static_cast<const VkWriteDescriptorSetAccelerationStructureKHR*>(writeDescriptorSet.pNext));
+      writeDescriptorSet.pNext = nullptr;
+   }
    if (writeDescriptorSet.pBufferInfo != nullptr) {
       m_descriptorBufferInfoPool.release_object(writeDescriptorSet.pBufferInfo);
       writeDescriptorSet.pBufferInfo = nullptr;

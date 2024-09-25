@@ -60,4 +60,18 @@ VkResult vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR 
                                                                          pCreateInfos, pAllocator, pPipelines);
 }
 
+VkResult vkGetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount,
+                                              size_t dataSize, void* pData)
+{
+   return DynamicProcedures::the().proc_vkGetRayTracingShaderGroupHandlesKHR()(device, pipeline, firstGroup, groupCount, dataSize, pData);
+}
+
+void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
+{
+   return DynamicProcedures::the().proc_vkCmdTraceRaysKHR()(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
+}
+
 }// namespace triglav::graphics_api::vulkan

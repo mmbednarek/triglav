@@ -9,6 +9,8 @@
 
 namespace triglav::graphics_api::ray_tracing {
 
+class RayTracingPipeline;
+
 struct ShaderIndexWithType
 {
    Index shaderIndex;
@@ -36,21 +38,35 @@ class RayTracingPipelineBuilder : public PipelineBuilderBase
    RayTracingPipelineBuilder& general_group(Name generalShader);
 
    template<typename... TArgs>
-   RayTracingPipelineBuilder& triangle_group(Name generalShader, TArgs&&... args)
+   RayTracingPipelineBuilder& triangle_group(TArgs&&... args)
    {
       std::array<Name, sizeof...(args)> argsArr{args...};
-      return this->shader_group_internal(VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR, generalShader, argsArr);
+      return this->shader_group_internal(VK_RAY_TRACING_SHADER_GROUP_TYPE_TRIANGLES_HIT_GROUP_KHR, argsArr);
    }
 
-   Result<Pipeline> build();
+   Result<RayTracingPipeline> build();
 
  private:
    RayTracingPipelineBuilder& shader(Name name, const Shader& shader);
-   RayTracingPipelineBuilder& shader_group_internal(VkRayTracingShaderGroupTypeKHR groupType, Name generalShader, std::span<Name> shaders);
+   RayTracingPipelineBuilder& shader_group_internal(VkRayTracingShaderGroupTypeKHR groupType, std::span<const Name> shaders);
 
    std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_shaderGroups;
    std::map<Name, ShaderIndexWithType> m_shaderIndices;
    u32 m_maxRecursion{2};
+};
+
+class RayTracingPipeline : public Pipeline {
+ public:
+   RayTracingPipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorSetLayout descriptorSetLayout,
+                      PipelineType pipelineType, std::map<Name, ShaderIndexWithType> indices, u32 groupCount);
+
+   [[nodiscard]] u32 group_count() const;
+   [[nodiscard]] u32 shader_count() const;
+   [[nodiscard]] ShaderIndexWithType shader_index(Name name) const;
+
+ private:
+   std::map<Name, ShaderIndexWithType> m_shaderIndices;
+   u32 m_groupCount{};
 };
 
 }// namespace triglav::graphics_api::ray_tracing

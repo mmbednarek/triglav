@@ -11,7 +11,7 @@ class BufferWriter : public IWriter
  public:
    explicit BufferWriter(std::span<u8> buffer);
 
-   Result<MemorySize> write(std::span<u8> buffer) override;
+   Result<MemorySize> write(std::span<const u8> buffer) override;
    [[nodiscard]] u32 offset() const;
 
  private:

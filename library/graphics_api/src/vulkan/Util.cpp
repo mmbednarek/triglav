@@ -284,6 +284,8 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
       return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    case PipelineStage::ComputeShader:
       return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+   case PipelineStage::RayGenerationShader:
+      return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    case PipelineStage::Transfer:
       return VK_PIPELINE_STAGE_TRANSFER_BIT;
    case PipelineStage::End:
@@ -311,6 +313,15 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    }
    if (flags & PipelineStage::ComputeShader) {
       result |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+   }
+   if (flags & PipelineStage::RayGenerationShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::MissShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::ClosestHitShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    }
    if (flags & PipelineStage::Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -484,6 +495,9 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
    if (usage & AccelerationStructureRead) {
       result |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
    }
+   if (usage & ShaderBindingTable) {
+      result |= VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR;
+   }
 
    return result;
 }
@@ -527,6 +541,8 @@ VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
       return VK_PIPELINE_BIND_POINT_GRAPHICS;
    case PipelineType::Compute:
       return VK_PIPELINE_BIND_POINT_COMPUTE;
+   case PipelineType::RayTracing:
+      return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
    }
    return VK_PIPELINE_BIND_POINT_MAX_ENUM;
 }

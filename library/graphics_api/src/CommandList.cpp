@@ -6,6 +6,7 @@
 #include "Pipeline.hpp"
 #include "Texture.hpp"
 #include "TimestampArray.hpp"
+#include "ray_tracing/ShaderBindingTable.hpp"
 #include "vulkan/DynamicProcedures.hpp"
 #include "vulkan/Util.hpp"
 
@@ -338,7 +339,7 @@ void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer,
 {
    const auto writes = writer.vulkan_descriptor_writes();
    vulkan::vkCmdPushDescriptorSetKHR(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType), m_boundPipelineLayout, setIndex,
-                                                      static_cast<u32>(writes.size()), writes.data());
+                                     static_cast<u32>(writes.size()), writes.data());
 }
 
 WorkTypeFlags CommandList::work_types() const
@@ -395,6 +396,24 @@ void CommandList::bind_storage_image(u32 binding, const Texture& texture)
 {
    m_descriptorWriter.set_storage_image(binding, texture);
    m_hasPendingDescriptors = true;
+}
+
+void CommandList::bind_acceleration_structure(u32 binding, const ray_tracing::AccelerationStructure& accStructure)
+{
+   m_descriptorWriter.set_acceleration_structure(binding, accStructure);
+   m_hasPendingDescriptors = true;
+}
+
+void CommandList::trace_rays(ray_tracing::ShaderBindingTable& binding_table, glm::ivec3 extent)
+{
+   if (m_hasPendingDescriptors) {
+      m_hasPendingDescriptors = false;
+      this->push_descriptors(0, m_descriptorWriter, PipelineType::RayTracing);
+      m_descriptorWriter.reset_count();
+   }
+
+   vulkan::vkCmdTraceRaysKHR(m_commandBuffer, &binding_table.gen_rays_region(), &binding_table.miss_region(), &binding_table.hit_region(),
+                             &binding_table.callable_region(), extent.x, extent.y, extent.z);
 }
 
 }// namespace triglav::graphics_api

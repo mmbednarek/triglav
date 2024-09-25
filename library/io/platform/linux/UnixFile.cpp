@@ -52,7 +52,7 @@ Result<MemorySize> UnixFile::read(std::span<u8> buffer)
    return static_cast<MemorySize>(result);
 }
 
-Result<MemorySize> UnixFile::write(std::span<u8> buffer)
+Result<MemorySize> UnixFile::write(std::span<const u8> buffer)
 {
    const auto result = ::write(m_fileDescriptor, buffer.data(), buffer.size());
    if (result < 0)

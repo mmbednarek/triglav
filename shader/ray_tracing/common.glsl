@@ -7,7 +7,6 @@ struct HitPayload {
 
 struct GlobalUbo
 {
-    mat4 viewProj;
     mat4 viewInverse;
     mat4 projInverse;
 };

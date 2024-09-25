@@ -10,6 +10,8 @@
    TRIGLAV_HANDLE(vkGetAccelerationStructureBuildSizesKHR)    \
    TRIGLAV_HANDLE(vkGetAccelerationStructureDeviceAddressKHR) \
    TRIGLAV_HANDLE(vkCreateRayTracingPipelinesKHR)             \
+   TRIGLAV_HANDLE(vkGetRayTracingShaderGroupHandlesKHR)       \
+   TRIGLAV_HANDLE(vkCmdTraceRaysKHR)                          \
    TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)
 
 
@@ -59,5 +61,12 @@ VkDeviceAddress vkGetAccelerationStructureDeviceAddressKHR(VkDevice device, cons
 VkResult vkCreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache,
                                         uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos,
                                         const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines);
+
+VkResult vkGetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount,
+                                              size_t dataSize, void* pData);
+void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
+                       const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth);
 
 }// namespace triglav::graphics_api::vulkan

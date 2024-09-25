@@ -328,6 +328,7 @@ enum class BufferUsage : u32
    StorageBuffer = (1 << 6),
    AccelerationStructure = (1 << 7),
    AccelerationStructureRead = (1 << 8),
+   ShaderBindingTable = (1 << 9),
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)

@@ -31,6 +31,7 @@ graphics_api_sources = files([
                                 'include/triglav/graphics_api/ray_tracing/InstanceBuilder.hpp',
                                 'include/triglav/graphics_api/ray_tracing/RayTracing.hpp',
                                 'include/triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp',
+                                'include/triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp',
                                 'include/triglav/graphics_api/vulkan/DynamicProcedures.hpp',
                                 'include/triglav/graphics_api/vulkan/Extensions.hpp',
                                 'include/triglav/graphics_api/vulkan/ObjectWrapper.hpp',
@@ -63,6 +64,7 @@ graphics_api_sources = files([
                                 'src/ray_tracing/InstanceBuilder.cpp',
                                 'src/ray_tracing/RayTracing.cpp',
                                 'src/ray_tracing/RayTracingPipeline.cpp',
+                                'src/ray_tracing/ShaderBindingTable.cpp',
                                 'src/vulkan/DynamicProcedures.cpp',
                                 'src/vulkan/Extensions.cpp',
                                 'src/vulkan/Util.cpp',
@@ -71,12 +73,12 @@ graphics_api_sources = files([
 
 graphics_api_lib = static_library('graphics_api',
                                   sources : graphics_api_sources,
-                                  dependencies : [vulkan, desktop, core, spdlog, threading],
+                                  dependencies : [vulkan, desktop, core, spdlog, threading, io],
                                   include_directories : ['include/triglav/graphics_api'],
 )
 
 graphics_api = declare_dependency(
     include_directories : ['include'],
     link_with : graphics_api_lib,
-    dependencies : [vulkan, desktop, core, threading],
+    dependencies : [vulkan, desktop, core, threading, io],
 )

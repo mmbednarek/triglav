@@ -7,7 +7,7 @@
 namespace triglav::graphics_api::ray_tracing {
 
 InstanceBuilder::InstanceBuilder(Device& device) :
-   m_device(device)
+    m_device(device)
 {
 }
 
@@ -15,17 +15,23 @@ void InstanceBuilder::add_instance(AccelerationStructure& accStructure, glm::mat
 {
    VkAccelerationStructureInstanceKHR instance{};
    instance.accelerationStructureReference = accStructure.vulkan_device_address();
+   instance.instanceCustomIndex = 0;
+   instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
+   instance.mask = 0xFF;
+   instance.instanceShaderBindingTableRecordOffset = 0;
 
-   std::memcpy(instance.transform.matrix, &matrix, 12*sizeof(float));
+   auto matT = glm::transpose(matrix);
+   std::memcpy(instance.transform.matrix, &matT, sizeof(VkTransformMatrixKHR));
 
    m_instances.emplace_back(instance);
 }
 
 Buffer InstanceBuilder::build_buffer()
 {
-   auto buffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::AccelerationStructureRead | BufferUsage::TransferDst, m_instances.size() * sizeof(VkAccelerationStructureInstanceKHR)));
+   auto buffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::AccelerationStructureRead | BufferUsage::TransferDst,
+                                                   m_instances.size() * sizeof(VkAccelerationStructureInstanceKHR)));
    GAPI_CHECK_STATUS(buffer.write_indirect(m_instances.data(), m_instances.size() * sizeof(VkAccelerationStructureInstanceKHR)));
    return buffer;
 }
 
-}
+}// namespace triglav::graphics_api::ray_tracing

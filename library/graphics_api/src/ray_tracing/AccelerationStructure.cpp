@@ -8,9 +8,9 @@ AccelerationStructure::AccelerationStructure(vulkan::AccelerationStructureKHR st
 {
 }
 
-vulkan::AccelerationStructureKHR& AccelerationStructure::vulkan_acceleration_structure()
+const VkAccelerationStructureKHR& AccelerationStructure::vulkan_acceleration_structure() const
 {
-   return m_structure;
+   return *m_structure;
 }
 
 VkDeviceAddress AccelerationStructure::vulkan_device_address()

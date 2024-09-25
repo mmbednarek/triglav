@@ -13,7 +13,7 @@ class AccelerationStructure
  public:
    explicit AccelerationStructure(vulkan::AccelerationStructureKHR structure);
 
-   vulkan::AccelerationStructureKHR& vulkan_acceleration_structure();
+   [[nodiscard]] const VkAccelerationStructureKHR& vulkan_acceleration_structure() const;
    VkDeviceAddress vulkan_device_address();
 
  private:
