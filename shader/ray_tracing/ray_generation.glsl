@@ -9,7 +9,6 @@ layout(binding = 0) uniform accelerationStructureEXT topLevelAS;
 layout(binding = 1, rgba32f) uniform image2D outImage;
 layout(binding = 2) uniform Ubo { GlobalUbo uni; };
 
-
 void main()
 {
     const vec2 pixelCenter = vec2(gl_LaunchIDEXT.xy) + vec2(0.5);

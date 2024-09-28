@@ -52,7 +52,7 @@ class RayTracingPipelineBuilder : public PipelineBuilderBase
 
    std::vector<VkRayTracingShaderGroupCreateInfoKHR> m_shaderGroups;
    std::map<Name, ShaderIndexWithType> m_shaderIndices;
-   u32 m_maxRecursion{2};
+   u32 m_maxRecursion{1};
 };
 
 class RayTracingPipeline : public Pipeline {

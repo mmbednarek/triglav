@@ -24,6 +24,11 @@ struct RayGenerationUboData {
 };
 using RayGenerationUbo = graphics_api::UniformReplicatedBuffer<RayGenerationUboData>;
 
+struct ObjectDesc {
+   graphics_api::BufferAddress indexBuffer;
+   graphics_api::BufferAddress vertexBuffer;
+};
+
 class RayTracingScene {
  public:
    explicit RayTracingScene(graphics_api::Device &device, resource::ResourceManager& resources);
@@ -32,10 +37,13 @@ class RayTracingScene {
 
  private:
    graphics_api::Device &m_device;
-   geometry::Mesh m_exampleMesh;
-   std::optional<geometry::DeviceMesh> m_examplesMeshVertexData;
+   geometry::Mesh m_exampleMeshBox;
+   geometry::Mesh m_exampleMeshSphere;
+   std::optional<geometry::DeviceMesh> m_examplesMeshBoxVertexData;
+   std::optional<geometry::DeviceMesh> m_examplesMeshSphereVertexData;
    graphics_api::Buffer m_boundingBoxBuffer;
    std::optional<graphics_api::Buffer> m_instanceListBuffer;
+   graphics_api::Buffer m_objectBuffer;
 
    graphics_api::ray_tracing::AccelerationStructurePool m_asPool;
    graphics_api::ray_tracing::GeometryBuildContext m_buildBLContext;

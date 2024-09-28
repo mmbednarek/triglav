@@ -134,4 +134,9 @@ VkDeviceAddress Buffer::vulkan_device_address() const
    return vkGetBufferDeviceAddress(m_device.vulkan_device(), &info);
 }
 
+BufferAddress Buffer::buffer_address() const
+{
+   return BufferAddress{this->vulkan_device_address()};
+}
+
 }// namespace triglav::graphics_api

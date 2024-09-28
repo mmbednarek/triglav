@@ -5,20 +5,37 @@
 #include "triglav/Int.hpp"
 #include "triglav/ObjectPool.hpp"
 
-#include <vector>
+#include <memory>
+#include <set>
 
 namespace triglav::graphics_api {
 class Device;
 class Buffer;
-}
+}// namespace triglav::graphics_api
 
 namespace triglav::graphics_api::ray_tracing {
 
 class AccelerationStructure;
 
-class AccelerationStructurePool {
+class AccelerationStructurePool
+{
  public:
+   struct Node
+   {
+      Index chunkCount;
+      bool isFree;
+      Node* next;
+   };
+
+   struct Page
+   {
+      std::unique_ptr<Buffer> buffer;
+      Index availableChunks;
+      Node* headNode;
+   };
+
    explicit AccelerationStructurePool(Device& device);
+   ~AccelerationStructurePool();
 
    AccelerationStructure* acquire_acceleration_structure(AccelerationStructureType type, MemorySize size);
    void release_acceleration_structure(AccelerationStructure* as);
@@ -27,8 +44,13 @@ class AccelerationStructurePool {
    void release_scratch_buffer(Buffer* buff);
 
  private:
+  Page& allocate_page();
+  std::vector<Page>::iterator find_available_page(std::vector<Page>::iterator start, Index chunkCount);
+
    Device& m_device;
-   std::map<AccelerationStructure*, Buffer*> m_asToBufferMap;
+   std::vector<Page> m_pages;
+   std::map<AccelerationStructure*, Node*> m_asToNodeMap;
+   std::set<Buffer*> m_scratchBuffers;
 };
 
-}
+}// namespace triglav::graphics_api::ray_tracing

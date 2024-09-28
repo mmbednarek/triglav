@@ -14,7 +14,7 @@ class InstanceBuilder {
  public:
    explicit InstanceBuilder(Device& device);
 
-   void add_instance(AccelerationStructure& accStructure, glm::mat4 matrix);
+   void add_instance(AccelerationStructure& accStructure, glm::mat4 matrix, Index instanceIndex);
 
    Buffer build_buffer();
 

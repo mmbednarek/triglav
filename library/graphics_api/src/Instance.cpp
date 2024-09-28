@@ -179,6 +179,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    deviceFeatures.features.fillModeNonSolid = true;
    deviceFeatures.features.wideLines = true;
    deviceFeatures.features.samplerAnisotropy = true;
+   deviceFeatures.features.shaderInt64 = true;
 
    VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
    hostQueryResetFeatures.hostQueryReset = true;

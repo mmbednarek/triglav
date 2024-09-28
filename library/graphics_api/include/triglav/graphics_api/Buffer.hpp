@@ -36,6 +36,8 @@ class MappedMemory
    VkDeviceMemory m_deviceMemory;
 };
 
+using BufferAddress = VkDeviceAddress;
+
 class Buffer
 {
  public:
@@ -48,10 +50,13 @@ class Buffer
 
 
    [[nodiscard]] Status write_indirect(const void* data, size_t size);
+   [[nodiscard]] size_t size() const;
+   [[nodiscard]] BufferAddress buffer_address() const;
+
    [[nodiscard]] VkBuffer vulkan_buffer() const;
    [[nodiscard]] VkDeviceAddress vulkan_device_address() const;
+
    Result<MappedMemory> map_memory();
-   [[nodiscard]] size_t size() const;
 
  private:
    Device& m_device;

@@ -11,11 +11,11 @@ InstanceBuilder::InstanceBuilder(Device& device) :
 {
 }
 
-void InstanceBuilder::add_instance(AccelerationStructure& accStructure, glm::mat4 matrix)
+void InstanceBuilder::add_instance(AccelerationStructure& accStructure, glm::mat4 matrix, const Index instanceIndex)
 {
    VkAccelerationStructureInstanceKHR instance{};
    instance.accelerationStructureReference = accStructure.vulkan_device_address();
-   instance.instanceCustomIndex = 0;
+   instance.instanceCustomIndex = instanceIndex;
    instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
    instance.mask = 0xFF;
    instance.instanceShaderBindingTableRecordOffset = 0;

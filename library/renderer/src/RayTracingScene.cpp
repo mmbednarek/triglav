@@ -16,11 +16,19 @@ namespace rt = graphics_api::ray_tracing;
 namespace geo = geometry;
 using namespace name_literals;
 
+struct RayTracingConstants
+{
+   alignas(16) glm::vec3 viewPos;
+};
+
 RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager& resources) :
     m_device{device},
-    m_exampleMesh{geo::create_sphere(16, 16, 3.0f)},
+    m_exampleMeshBox{geo::create_box({2.0f, 2.0f, 2.0f})},
+    m_exampleMeshSphere{geo::create_sphere(48, 24, 3.0f)},
     m_boundingBoxBuffer{GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::AccelerationStructureRead | gapi::BufferUsage::TransferDst, sizeof(VkAabbPositionsKHR)))},
+    m_objectBuffer{GAPI_CHECK(
+       device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, 2*sizeof(ObjectDesc)))},
     m_asPool{device},
     m_buildBLContext{device, m_asPool},
     m_buildTLContext{device, m_asPool},
@@ -32,9 +40,11 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
                              .general_group("rmiss"_name)
                              .triangle_group("rchit"_name)
                              .use_push_descriptors(true)
-                             .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::AccelerationStructure)
+                             .descriptor_binding(gapi::PipelineStage::RayGenerationShader | gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::AccelerationStructure)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::StorageImage)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::UniformBuffer)
+                             .descriptor_binding(gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::StorageBuffer)
+                             .push_constant(gapi::PipelineStage::ClosestHitShader, sizeof(RayTracingConstants))
                              .build())},
     m_bindingTable(rt::ShaderBindingTableBuilder(device, m_pipeline)
                       .add_binding("rgen"_name)
@@ -53,17 +63,44 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
 //   };
 //   GAPI_CHECK_STATUS(m_boundingBoxBuffer.write_indirect(&positions, sizeof(VkAabbPositionsKHR)));
 
-   m_exampleMesh.triangulate();
-   m_examplesMeshVertexData.emplace(m_exampleMesh.upload_to_device(device, gapi::BufferUsage::AccelerationStructureRead));
+   m_exampleMeshBox.recalculate_normals();
+   m_exampleMeshBox.triangulate();
+   m_exampleMeshSphere.recalculate_normals();
+   m_exampleMeshSphere.triangulate();
 
-//   m_buildBLContext.add_bounding_box_buffer(m_boundingBoxBuffer, sizeof(VkAabbPositionsKHR), 1);
-//   m_buildBLContext.commit_bounding_boxes();
+   m_examplesMeshBoxVertexData.emplace(m_exampleMeshBox.upload_to_device(device, gapi::BufferUsage::AccelerationStructureRead));
+   m_examplesMeshSphereVertexData.emplace(m_exampleMeshSphere.upload_to_device(device, gapi::BufferUsage::AccelerationStructureRead));
 
-   auto vertexCount = m_examplesMeshVertexData->mesh.vertices.count();
-   auto triangleCount = m_examplesMeshVertexData->mesh.indices.count() / 3;
-   m_buildBLContext.add_triangle_buffer(m_examplesMeshVertexData->mesh.vertices.buffer(), m_examplesMeshVertexData->mesh.indices.buffer(),
-                                        GAPI_FORMAT(RGB, Float32), sizeof(geo::Vertex), vertexCount, triangleCount);
-   auto* trianglesStruct = m_buildBLContext.commit_triangles();
+   std::array<ObjectDesc, 2> objects{
+      ObjectDesc{
+         .indexBuffer = m_examplesMeshBoxVertexData->mesh.indices.buffer().buffer_address(),
+         .vertexBuffer = m_examplesMeshBoxVertexData->mesh.vertices.buffer().buffer_address(),
+      },
+      {
+         .indexBuffer = m_examplesMeshSphereVertexData->mesh.indices.buffer().buffer_address(),
+         .vertexBuffer = m_examplesMeshSphereVertexData->mesh.vertices.buffer().buffer_address(),
+      },
+   };
+   GAPI_CHECK_STATUS(m_objectBuffer.write_indirect(objects.data(), objects.size()*sizeof(ObjectDesc)));
+
+   {
+      auto vertexCount = m_examplesMeshBoxVertexData->mesh.vertices.count();
+      auto triangleCount = m_examplesMeshBoxVertexData->mesh.indices.count() / 3;
+      m_buildBLContext.add_triangle_buffer(m_examplesMeshBoxVertexData->mesh.vertices.buffer(),
+                                           m_examplesMeshBoxVertexData->mesh.indices.buffer(),
+                                           GAPI_FORMAT(RGB, Float32), sizeof(geo::Vertex), vertexCount, triangleCount);
+   }
+   auto* boxAs = m_buildBLContext.commit_triangles();
+
+   {
+      auto vertexCount = m_examplesMeshSphereVertexData->mesh.vertices.count();
+      auto triangleCount = m_examplesMeshSphereVertexData->mesh.indices.count() / 3;
+      m_buildBLContext.add_triangle_buffer(m_examplesMeshSphereVertexData->mesh.vertices.buffer(),
+                                           m_examplesMeshSphereVertexData->mesh.indices.buffer(),
+                                           GAPI_FORMAT(RGB, Float32), sizeof(geo::Vertex), vertexCount, triangleCount);
+   }
+   auto* sphereAs = m_buildBLContext.commit_triangles();
+
 
    auto cmdList = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
 
@@ -74,11 +111,12 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
    GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(cmdList));
 
    rt::InstanceBuilder instanceBuilder(m_device);
-   instanceBuilder.add_instance(*trianglesStruct, glm::mat4(1));
+   instanceBuilder.add_instance(*boxAs, glm::translate(glm::mat4(1), glm::vec3(-8.0f, -8.0f, 0.0f)), 0);
+   instanceBuilder.add_instance(*sphereAs, glm::mat4(1), 1);
 
    m_instanceListBuffer.emplace(instanceBuilder.build_buffer());
 
-   m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, 1);
+   m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, 2);
    m_tlAccelerationStructure = m_buildTLContext.commit_instances();
 
    GAPI_CHECK_STATUS(cmdList.begin(gapi::SubmitType::OneTime));
@@ -103,6 +141,9 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
    cmdList.bind_acceleration_structure(0, *m_tlAccelerationStructure);
    cmdList.bind_storage_image(1, texture);
    cmdList.bind_uniform_buffer(2, m_ubo);
+   cmdList.bind_storage_buffer(3, m_objectBuffer);
+   RayTracingConstants constants{.viewPos{camera.position()}};
+   cmdList.push_constant(graphics_api::PipelineStage::ClosestHitShader, constants);
    cmdList.trace_rays(m_bindingTable, {texture.width(), texture.height(), 1});
 }
 

@@ -10,8 +10,8 @@
 
 #include "CommandList.hpp"
 #include "Surface.hpp"
-#include "vulkan/Util.hpp"
 #include "vulkan/DynamicProcedures.hpp"
+#include "vulkan/Util.hpp"
 
 #undef max
 
@@ -479,12 +479,14 @@ u32 Device::min_storage_buffer_alignment() const
    return props.limits.minStorageBufferOffsetAlignment;
 }
 
-Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType structType, const Buffer& buffer)
+Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType structType,
+                                                                                 const Buffer& buffer, MemorySize bufferOffset,
+                                                                                 MemorySize bufferSize)
 {
-   VkAccelerationStructureCreateInfoKHR asInfo{ VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR };
+   VkAccelerationStructureCreateInfoKHR asInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR};
    asInfo.buffer = buffer.vulkan_buffer();
-   asInfo.offset = 0;
-   asInfo.size = buffer.size();
+   asInfo.offset = bufferOffset;
+   asInfo.size = std::min(buffer.size() - bufferOffset, bufferSize);
    asInfo.type = vulkan::to_vulkan_acceleration_structure_type(structType);
 
    vulkan::AccelerationStructureKHR structure(*m_device);
