@@ -16,13 +16,14 @@ namespace triglav::graphics_api::ray_tracing {
 class GeometryBuildInfo
 {
  public:
-    void add_triangles(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat, MemorySize vertexSize, u32 vertexCount, u32 triangleCount);
-    void add_bounding_boxes(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount);
-    void add_instances(const Buffer& instanceBuffer, u32 instanceCount);
+   void add_triangles(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat, MemorySize vertexSize,
+                      u32 vertexCount, u32 triangleCount);
+   void add_bounding_boxes(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount);
+   void add_instances(const Buffer& instanceBuffer, u32 instanceCount);
 
-    [[nodiscard]] VkAccelerationStructureBuildSizesInfoKHR size_requirement(Device& device) const;
-    [[nodiscard]] VkAccelerationStructureBuildGeometryInfoKHR build(AccelerationStructure& dstAs, Buffer& scratchBuffer);
-    [[nodiscard]] VkAccelerationStructureBuildRangeInfoKHR* ranges();
+   [[nodiscard]] VkAccelerationStructureBuildSizesInfoKHR size_requirement(Device& device) const;
+   [[nodiscard]] VkAccelerationStructureBuildGeometryInfoKHR build(AccelerationStructure& dstAs, const BufferHeap::Section& scratchBuffer);
+   [[nodiscard]] VkAccelerationStructureBuildRangeInfoKHR* ranges();
    void finalize(VkAccelerationStructureTypeKHR accelerationStructureType);
 
  private:
@@ -36,9 +37,10 @@ class GeometryBuildInfo
 class GeometryBuildContext
 {
  public:
-   GeometryBuildContext(Device& device, AccelerationStructurePool& asPool);
+   GeometryBuildContext(Device& device, AccelerationStructurePool& asPool, BufferHeap& scratchBufferHeap);
 
-   void add_triangle_buffer(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat, MemorySize vertexSize, u32 maxVertexCount, u32 triangleCount);
+   void add_triangle_buffer(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat, MemorySize vertexSize,
+                            u32 maxVertexCount, u32 triangleCount);
    void add_bounding_box_buffer(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount);
    void add_instance_buffer(const Buffer& instanceBuffer, u32 instanceCount);
    AccelerationStructure* commit_triangles();
@@ -46,9 +48,11 @@ class GeometryBuildContext
    AccelerationStructure* commit_instances();
 
    void build_acceleration_structures(CommandList& cmdList);
+
  private:
    Device& m_device;
    AccelerationStructurePool& m_asPool;
+   BufferHeap& m_scratchBufferHeap;
 
    GeometryBuildInfo m_currentTriangles;
    GeometryBuildInfo m_currentBoundingBoxes;
@@ -67,4 +71,4 @@ ctx.add_triangle_buffer(...);
 ctx.build_bottom_level_triangles();
  */
 
-}
+}// namespace triglav::graphics_api::ray_tracing

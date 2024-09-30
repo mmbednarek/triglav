@@ -45,6 +45,7 @@ class RayTracingScene {
    std::optional<graphics_api::Buffer> m_instanceListBuffer;
    graphics_api::Buffer m_objectBuffer;
 
+   graphics_api::BufferHeap m_scratchHeap;
    graphics_api::ray_tracing::AccelerationStructurePool m_asPool;
    graphics_api::ray_tracing::GeometryBuildContext m_buildBLContext;
    graphics_api::ray_tracing::GeometryBuildContext m_buildTLContext;

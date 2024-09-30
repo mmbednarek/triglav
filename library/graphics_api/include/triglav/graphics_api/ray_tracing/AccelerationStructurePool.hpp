@@ -1,12 +1,12 @@
 #pragma once
 
+#include "../BufferHeap.hpp"
 #include "RayTracing.hpp"
 
 #include "triglav/Int.hpp"
 #include "triglav/ObjectPool.hpp"
 
 #include <memory>
-#include <set>
 
 namespace triglav::graphics_api {
 class Device;
@@ -38,19 +38,12 @@ class AccelerationStructurePool
    ~AccelerationStructurePool();
 
    AccelerationStructure* acquire_acceleration_structure(AccelerationStructureType type, MemorySize size);
-   void release_acceleration_structure(AccelerationStructure* as);
-
-   Buffer* allocate_scratch_buffer(MemorySize size);
-   void release_scratch_buffer(Buffer* buff);
+   void release_acceleration_structure(const AccelerationStructure* as);
 
  private:
-  Page& allocate_page();
-  std::vector<Page>::iterator find_available_page(std::vector<Page>::iterator start, Index chunkCount);
-
    Device& m_device;
-   std::vector<Page> m_pages;
-   std::map<AccelerationStructure*, Node*> m_asToNodeMap;
-   std::set<Buffer*> m_scratchBuffers;
+   BufferHeap m_accStructHeap;
+   std::map<const AccelerationStructure*, BufferHeap::Section> m_sections;
 };
 
 }// namespace triglav::graphics_api::ray_tracing

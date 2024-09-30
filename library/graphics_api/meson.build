@@ -1,6 +1,7 @@
 graphics_api_sources = files([
                                 'include/triglav/graphics_api/Array.hpp',
                                 'include/triglav/graphics_api/Buffer.hpp',
+                                'include/triglav/graphics_api/BufferHeap.hpp',
                                 'include/triglav/graphics_api/CommandList.hpp',
                                 'include/triglav/graphics_api/DescriptorArray.hpp',
                                 'include/triglav/graphics_api/DescriptorPool.hpp',
@@ -36,6 +37,7 @@ graphics_api_sources = files([
                                 'include/triglav/graphics_api/vulkan/Extensions.hpp',
                                 'include/triglav/graphics_api/vulkan/ObjectWrapper.hpp',
                                 'src/Buffer.cpp',
+                                'src/BufferHeap.cpp',
                                 'src/CommandList.cpp',
                                 'src/DescriptorArray.cpp',
                                 'src/DescriptorPool.cpp',

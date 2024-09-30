@@ -72,10 +72,10 @@ VkAccelerationStructureBuildSizesInfoKHR GeometryBuildInfo::size_requirement(Dev
    return outInfo;
 }
 
-VkAccelerationStructureBuildGeometryInfoKHR GeometryBuildInfo::build(AccelerationStructure& dstAs, Buffer& scratchBuffer)
+VkAccelerationStructureBuildGeometryInfoKHR GeometryBuildInfo::build(AccelerationStructure& dstAs, const BufferHeap::Section& scratchBuffer)
 {
    m_buildInfo.dstAccelerationStructure = dstAs.vulkan_acceleration_structure();
-   m_buildInfo.scratchData.deviceAddress = scratchBuffer.vulkan_device_address();
+   m_buildInfo.scratchData.deviceAddress = scratchBuffer.buffer->vulkan_device_address() + scratchBuffer.offset;
    m_lastAccelerationStructure = &dstAs;
    return m_buildInfo;
 }
@@ -104,9 +104,10 @@ void GeometryBuildInfo::finalize(VkAccelerationStructureTypeKHR accelerationStru
 // ****** GEOMETRY BUILD CONTEXT ***************
 // *********************************************
 
-GeometryBuildContext::GeometryBuildContext(Device& device, AccelerationStructurePool& asPool) :
+GeometryBuildContext::GeometryBuildContext(Device& device, AccelerationStructurePool& asPool, BufferHeap& scratchBufferHeap) :
     m_device(device),
-    m_asPool(asPool)
+    m_asPool(asPool),
+    m_scratchBufferHeap(scratchBufferHeap)
 {
 }
 
@@ -135,9 +136,9 @@ AccelerationStructure* GeometryBuildContext::commit_triangles()
 
    auto* nextAccelerationStruct =
       m_asPool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, requirement.accelerationStructureSize);
-   auto* scratchBuffer = m_asPool.allocate_scratch_buffer(requirement.buildScratchSize);
+   auto scratchSection = m_scratchBufferHeap.allocate_section(requirement.buildScratchSize);
 
-   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, *scratchBuffer));
+   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, scratchSection));
    m_buildRangePtrs.push_back(geo.ranges());
 
    return nextAccelerationStruct;
@@ -152,9 +153,9 @@ AccelerationStructure* GeometryBuildContext::commit_bounding_boxes()
 
    auto* nextAccelerationStruct =
       m_asPool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, requirement.accelerationStructureSize);
-   auto* scratchBuffer = m_asPool.allocate_scratch_buffer(requirement.buildScratchSize);
+   auto scratchSection = m_scratchBufferHeap.allocate_section(requirement.buildScratchSize);
 
-   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, *scratchBuffer));
+   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, scratchSection));
    m_buildRangePtrs.push_back(geo.ranges());
 
    return nextAccelerationStruct;
@@ -167,10 +168,11 @@ AccelerationStructure* GeometryBuildContext::commit_instances()
    geo.finalize(VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR);
    const auto requirement = geo.size_requirement(m_device);
 
-   auto* nextAccelerationStruct = m_asPool.acquire_acceleration_structure(AccelerationStructureType::TopLevel, requirement.accelerationStructureSize);
-   auto* scratchBuffer = m_asPool.allocate_scratch_buffer(requirement.buildScratchSize);
+   auto* nextAccelerationStruct =
+      m_asPool.acquire_acceleration_structure(AccelerationStructureType::TopLevel, requirement.accelerationStructureSize);
+   auto scratchSection = m_scratchBufferHeap.allocate_section(requirement.buildScratchSize);
 
-   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, *scratchBuffer));
+   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, scratchSection));
    m_buildRangePtrs.push_back(geo.ranges());
 
    return nextAccelerationStruct;

@@ -29,9 +29,10 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
        device.create_buffer(gapi::BufferUsage::AccelerationStructureRead | gapi::BufferUsage::TransferDst, sizeof(VkAabbPositionsKHR)))},
     m_objectBuffer{GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, 2*sizeof(ObjectDesc)))},
+    m_scratchHeap(device, gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer),
     m_asPool{device},
-    m_buildBLContext{device, m_asPool},
-    m_buildTLContext{device, m_asPool},
+    m_buildBLContext{device, m_asPool, m_scratchHeap},
+    m_buildTLContext{device, m_asPool, m_scratchHeap},
     m_pipeline{GAPI_CHECK(rt::RayTracingPipelineBuilder(device)
                              .ray_generation_shader("rgen"_name, resources.get("rt_general.rgenshader"_rc))
                              .miss_shader("rmiss"_name, resources.get("rt_general.rmissshader"_rc))
