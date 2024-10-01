@@ -45,7 +45,7 @@ class Mesh
    [[nodiscard]] BoundingBox calculate_bounding_box() const;
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
-   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsage usageFlags = graphics_api::BufferUsage::None) const;
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsageFlags usageFlags = graphics_api::BufferUsage::None) const;
    [[nodiscard]] VertexData to_vertex_data();
 
    static Mesh from_file(const io::Path& path);

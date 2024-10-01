@@ -18,7 +18,7 @@ class Renderer;
 
 struct SceneObject
 {
-   triglav::ModelName model;
+   ModelName model;
    glm::vec3 position;
    glm::quat rotation;
    glm::vec3 scale;

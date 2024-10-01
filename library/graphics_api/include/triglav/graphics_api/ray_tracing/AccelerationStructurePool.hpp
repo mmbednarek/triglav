@@ -7,6 +7,7 @@
 #include "triglav/ObjectPool.hpp"
 
 #include <memory>
+#include <map>
 
 namespace triglav::graphics_api {
 class Device;
@@ -37,13 +38,19 @@ class AccelerationStructurePool
    explicit AccelerationStructurePool(Device& device);
    ~AccelerationStructurePool();
 
+   AccelerationStructurePool(const AccelerationStructurePool& other) = delete;
+   AccelerationStructurePool(AccelerationStructurePool&& other) noexcept = delete;
+   AccelerationStructurePool& operator=(const AccelerationStructurePool& other) = delete;
+   AccelerationStructurePool& operator=(AccelerationStructurePool&& other) noexcept = delete;
+
    AccelerationStructure* acquire_acceleration_structure(AccelerationStructureType type, MemorySize size);
-   void release_acceleration_structure(const AccelerationStructure* as);
+   void release_acceleration_structure(AccelerationStructure* as);
 
  private:
    Device& m_device;
    BufferHeap m_accStructHeap;
    std::map<const AccelerationStructure*, BufferHeap::Section> m_sections;
+   std::multimap<MemorySize, AccelerationStructure*> m_freeAccelerationStructures;
 };
 
 }// namespace triglav::graphics_api::ray_tracing

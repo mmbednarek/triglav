@@ -104,7 +104,7 @@ void Mesh::reverse_orientation()
    m_mesh->reverse_orientation();
 }
 
-DeviceMesh Mesh::upload_to_device(graphics_api::Device& device, graphics_api::BufferUsage usageFlags) const
+DeviceMesh Mesh::upload_to_device(graphics_api::Device& device, const graphics_api::BufferUsageFlags usageFlags) const
 {
    assert(m_mesh != nullptr);
    return m_mesh->upload_to_device(device, usageFlags);

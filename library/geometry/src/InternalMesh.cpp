@@ -346,7 +346,7 @@ InternalMesh InternalMesh::from_obj_file(const io::Path& path)
    return InternalMesh::from_obj_file(**file);
 }
 
-DeviceMesh InternalMesh::upload_to_device(graphics_api::Device& device, graphics_api::BufferUsage usageFlags)
+DeviceMesh InternalMesh::upload_to_device(graphics_api::Device& device, const graphics_api::BufferUsageFlags usageFlags)
 {
    auto vertexData = this->to_vertex_data();
 

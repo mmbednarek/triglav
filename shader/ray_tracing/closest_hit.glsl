@@ -59,31 +59,31 @@ void main()
     // const vec3 viewDir = normalize(worldPos - pc.viewPosition);
     vec3 viewDir = gl_WorldRayDirectionEXT;
 
-     vec3 traceDir = reflect(viewDir, -normal);
+     vec3 traceDir = reflect(viewDir, normal);
 
     vec3 outColor = vec3(0.5, 1.0, 0.5);
 
-    if (gl_InstanceCustomIndexEXT == 1 && dot(-normal, traceDir) >= 0) {
-        const uint  rayFlags = gl_RayFlagsOpaqueEXT;
-        const float tMin     = 0.01;
-        const float tMax     = 1000.0;
-
-        traceRayEXT(
-        topLevelAS, // acceleration structure
-        rayFlags, // rayFlags
-        0xFF, // cullMask
-        0, // sbtRecordOffset
-        0, // sbtRecordStride
-        0, // missIndex
-        worldPos + 0.1*traceDir, // ray origin
-        tMin, // ray min range
-        traceDir, // ray direction
-        tMax, // ray max range
-        1// payload (location = 0)
-        );
-
-        outColor = refl.hitValue;
-    }
+//    if (gl_InstanceCustomIndexEXT == 1 && dot(normal, traceDir) >= 0) {
+//        const uint  rayFlags = gl_RayFlagsOpaqueEXT;
+//        const float tMin     = 0.01;
+//        const float tMax     = 1000.0;
+//
+//        traceRayEXT(
+//        topLevelAS, // acceleration structure
+//        rayFlags, // rayFlags
+//        0xFF, // cullMask
+//        0, // sbtRecordOffset
+//        0, // sbtRecordStride
+//        0, // missIndex
+//        worldPos + 0.1*traceDir, // ray origin
+//        tMin, // ray min range
+//        traceDir, // ray direction
+//        tMax, // ray max range
+//        1// payload (location = 0)
+//        );
+//
+//        outColor = refl.hitValue;
+//    }
 
     prd.hitValue = outColor * (lightVal + 0.1);
     refl.hitValue = prd.hitValue;

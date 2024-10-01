@@ -56,7 +56,7 @@ void RayTracedImage::record_commands(render_core::FrameResources& frameResources
    };
    cmdList.texture_barrier(PipelineStage::ComputeShader, PipelineStage::RayGenerationShader, dstBarrierIn);
 
-   m_rtScene.render(cmdList, texture, m_scene.camera());
+   m_rtScene.render(cmdList, texture);
 
    TextureBarrierInfo dstBarrierOut{
       .texture = &texture,

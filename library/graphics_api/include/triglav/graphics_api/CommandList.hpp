@@ -76,7 +76,7 @@ class CommandList
    void bind_storage_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size);
    void bind_acceleration_structure(u32 binding, const ray_tracing::AccelerationStructure& accStructure);
 
-   void trace_rays(ray_tracing::ShaderBindingTable& binding_table, glm::ivec3 extent);
+   void trace_rays(const ray_tracing::ShaderBindingTable& binding_table, glm::ivec3 extent);
 
    template<typename TValue>
    void bind_uniform_buffer(const uint32_t binding, const TValue& buffer)
@@ -123,6 +123,8 @@ class CommandList
    }
 
  private:
+   void handle_pending_descriptors(PipelineType pipelineType);
+
    Device& m_device;
 
    VkCommandBuffer m_commandBuffer;

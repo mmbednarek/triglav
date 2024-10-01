@@ -60,10 +60,12 @@ uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 
 }// namespace
 
-Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos) :
+Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
+               const DeviceFeatureFlags enabledFeatures) :
     m_device(std::move(device)),
     m_physicalDevice(physicalDevice),
     m_queueFamilyInfos{std::move(queueFamilyInfos)},
+    m_enabledFeatures{enabledFeatures},
     m_queueManager(*this, m_queueFamilyInfos),
     m_samplerCache(*this)
 {
@@ -472,6 +474,11 @@ SamplerCache& Device::sampler_cache()
    return m_samplerCache;
 }
 
+DeviceFeatureFlags Device::enabled_features() const
+{
+   return m_enabledFeatures;
+}
+
 u32 Device::min_storage_buffer_alignment() const
 {
    VkPhysicalDeviceProperties props;
@@ -480,8 +487,8 @@ u32 Device::min_storage_buffer_alignment() const
 }
 
 Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType structType,
-                                                                                 const Buffer& buffer, MemorySize bufferOffset,
-                                                                                 MemorySize bufferSize)
+                                                                                 const Buffer& buffer, const MemorySize bufferOffset,
+                                                                                 const MemorySize bufferSize)
 {
    VkAccelerationStructureCreateInfoKHR asInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR};
    asInfo.buffer = buffer.vulkan_buffer();

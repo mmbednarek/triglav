@@ -63,7 +63,7 @@ class InternalMesh
    [[nodiscard]] bool is_triangulated();
    [[nodiscard]] BoundingBox calculate_bouding_box() const;
 
-   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsage usageFlags);
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsageFlags usageFlags);
    [[nodiscard]] VertexData to_vertex_data();
    void reverse_orientation();
 

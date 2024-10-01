@@ -50,7 +50,7 @@ constexpr auto g_maxMipMaps = 0;
 class Device
 {
  public:
-   Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos);
+   Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos, DeviceFeatureFlags enabledFeatures);
 
    [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
                                                     const Resolution& resolution, PresentMode presentMode,
@@ -80,6 +80,7 @@ class Device
    [[nodiscard]] VkPhysicalDevice vulkan_physical_device() const;
    [[nodiscard]] QueueManager& queue_manager();
    [[nodiscard]] SamplerCache& sampler_cache();
+   [[nodiscard]] DeviceFeatureFlags enabled_features() const;
 
    void await_all() const;
 
@@ -91,6 +92,7 @@ class Device
    vulkan::Device m_device;
    vulkan::PhysicalDevice m_physicalDevice;
    std::vector<QueueFamilyInfo> m_queueFamilyInfos;
+   DeviceFeatureFlags m_enabledFeatures;
    QueueManager m_queueManager;
    SamplerCache m_samplerCache;
 };

@@ -14,7 +14,8 @@ class Instance
    explicit Instance(vulkan::Instance&& instance);
 
    [[nodiscard]] Result<Surface> create_surface(const desktop::ISurface& surface) const;
-   [[nodiscard]] Result<DeviceUPtr> create_device(const Surface& surface, DevicePickStrategy strategy, const DeviceFeatures& features) const;
+   [[nodiscard]] Result<DeviceUPtr> create_device(const Surface& surface, DevicePickStrategy strategy, DeviceFeatureFlags enabledFeatures) const;
+   [[nodiscard]] bool are_features_supported(DeviceFeatureFlags enabledFeatures) const;
 
    [[nodiscard]] static Result<Instance> create_instance();
 

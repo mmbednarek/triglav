@@ -36,7 +36,7 @@ class BufferHeap
       Node* node;
    };
 
-   BufferHeap(Device& device, BufferUsageFlags usageFlags, MemorySize chunkCountPerPage = 2048);
+   BufferHeap(Device& device, BufferUsageFlags usageFlags, MemorySize chunkCountPerPage = 8192);
    ~BufferHeap();
 
    BufferHeap(const BufferHeap& other) = delete;

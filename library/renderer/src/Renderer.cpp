@@ -110,7 +110,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_context2D(m_device, m_renderTarget, m_resourceManager),
     m_renderGraph(m_device),
     m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache),
-    m_rayTracingScene(m_device, m_resourceManager)
+    m_rayTracingScene(m_device, m_resourceManager, m_scene)
 {
    m_context2D.update_resolution(m_resolution);
 

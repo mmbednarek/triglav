@@ -1,5 +1,6 @@
 #include "PostProcessingRenderer.hpp"
 
+#include "../../../../../../.conan2/p/b/boost1865a4bb9fd52/p/include/boost/mpl/back.hpp"
 #include "node/Blur.hpp"
 #include "node/Downsample.hpp"
 #include "node/RayTracedImage.hpp"
@@ -39,14 +40,20 @@ void PostProcessingRenderer::draw(render_core::FrameResources& resources, graphi
 {
    cmdList.bind_pipeline(m_pipeline);
 
-//   auto& shading = resources.node("shading"_name).framebuffer("shading"_name);
+   const graphics_api::Texture* backTex{};
+   auto& shading = resources.node("shading"_name).framebuffer("shading"_name);
    auto &ray_tracing_resources = dynamic_cast<node::RayTracedImageResources&>(resources.node("ray_traced_image"_name));
-   auto& ray_traced_tex = ray_tracing_resources.texture();
+
+   if (resources.has_flag("bloom"_name)) {
+      backTex = &ray_tracing_resources.texture();
+   } else {
+      backTex = &shading.texture("shading"_name);
+   }
+
    auto& ui = resources.node("user_interface"_name).framebuffer("ui"_name);
    auto& bloomTexture = dynamic_cast<node::BlurResources&>(resources.node("blur_bloom"_name)).texture();
 
-//   cmdList.bind_texture(0, shading.texture("shading"_name));
-   cmdList.bind_texture(0, ray_traced_tex);
+   cmdList.bind_texture(0, *backTex);
    cmdList.bind_texture(1, bloomTexture);
    cmdList.bind_texture(2, ui.texture("user_interface"_name));
 

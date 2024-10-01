@@ -16,6 +16,8 @@ namespace triglav::graphics_api {
 enum class Status
 {
    Success,
+   NoSupportedDevicesFound,
+   NoDeviceSupportsRequestedFeatures,
    UnsupportedDevice,
    UnsupportedFormat,
    UnsupportedColorSpace,
@@ -358,11 +360,15 @@ enum class DevicePickStrategy
 {
    PreferDedicated,
    PreferIntegrated,
+   Any,
 };
 
-struct DeviceFeatures {
-   bool rayTracing{false};
+enum class DeviceFeature : u32
+{
+   RayTracing = (1 << 0),
 };
+
+TRIGLAV_DECL_FLAGS(DeviceFeature)
 
 template<typename T>
 using Result = std::expected<T, Status>;

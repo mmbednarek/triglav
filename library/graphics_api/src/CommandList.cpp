@@ -146,12 +146,7 @@ void CommandList::bind_descriptor_set(const DescriptorView& descriptorSet) const
 
 void CommandList::draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance)
 {
-   if (m_hasPendingDescriptors) {
-      m_hasPendingDescriptors = false;
-      this->push_descriptors(0, m_descriptorWriter, PipelineType::Graphics);
-      m_descriptorWriter.reset_count();
-   }
-
+   this->handle_pending_descriptors(PipelineType::Graphics);
    m_triangleCount += instanceCount * (vertexCount / 3);
    vkCmdDraw(m_commandBuffer, vertexCount, instanceCount, vertexOffset, firstInstance);
 }
@@ -163,12 +158,7 @@ void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
 
 void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset, const int vertexOffset)
 {
-   if (m_hasPendingDescriptors) {
-      m_hasPendingDescriptors = false;
-      this->push_descriptors(0, m_descriptorWriter, PipelineType::Graphics);
-      m_descriptorWriter.reset_count();
-   }
-
+   this->handle_pending_descriptors(PipelineType::Graphics);
    m_triangleCount += indexCount / 3;
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
@@ -178,12 +168,7 @@ void CommandList::dispatch(u32 x, u32 y, u32 z)
    // For some reason I need that XDDD
    assert(x != 0 && y != 0 && z != 0);
 
-   if (m_hasPendingDescriptors) {
-      m_hasPendingDescriptors = false;
-      this->push_descriptors(0, m_descriptorWriter, PipelineType::Compute);
-      m_descriptorWriter.reset_count();
-   }
-
+   this->handle_pending_descriptors(PipelineType::Compute);
    vkCmdDispatch(m_commandBuffer, x, y, z);
 }
 
@@ -361,59 +346,64 @@ Status CommandList::reset() const
    return Status::Success;
 }
 
-void CommandList::bind_storage_buffer(u32 binding, const Buffer& buffer)
+void CommandList::bind_storage_buffer(const u32 binding, const Buffer& buffer)
 {
    m_descriptorWriter.set_storage_buffer(binding, buffer);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_storage_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size)
+void CommandList::bind_storage_buffer(const u32 binding, const Buffer& buffer, u32 offset, u32 size)
 {
    m_descriptorWriter.set_storage_buffer(binding, buffer, offset, size);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_raw_uniform_buffer(u32 binding, const Buffer& buffer)
+void CommandList::bind_raw_uniform_buffer(const u32 binding, const Buffer& buffer)
 {
    m_descriptorWriter.set_raw_uniform_buffer(binding, buffer);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_texture(u32 binding, const Texture& texture)
+void CommandList::bind_texture(const u32 binding, const Texture& texture)
 {
    auto& sampler = m_device.sampler_cache().find_sampler(texture.sampler_properties());
    m_descriptorWriter.set_sampled_texture(binding, texture, sampler);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_texture_array(u32 binding, std::span<Texture*> textures)
+void CommandList::bind_texture_array(const u32 binding, std::span<Texture*> textures)
 {
    m_descriptorWriter.set_texture_array(binding, textures);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_storage_image(u32 binding, const Texture& texture)
+void CommandList::bind_storage_image(const u32 binding, const Texture& texture)
 {
    m_descriptorWriter.set_storage_image(binding, texture);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_acceleration_structure(u32 binding, const ray_tracing::AccelerationStructure& accStructure)
+void CommandList::bind_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStructure)
 {
    m_descriptorWriter.set_acceleration_structure(binding, accStructure);
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::trace_rays(ray_tracing::ShaderBindingTable& binding_table, glm::ivec3 extent)
+void CommandList::trace_rays(const ray_tracing::ShaderBindingTable& binding_table, const glm::ivec3 extent)
 {
-   if (m_hasPendingDescriptors) {
-      m_hasPendingDescriptors = false;
-      this->push_descriptors(0, m_descriptorWriter, PipelineType::RayTracing);
-      m_descriptorWriter.reset_count();
-   }
-
+   this->handle_pending_descriptors(PipelineType::RayTracing);
    vulkan::vkCmdTraceRaysKHR(m_commandBuffer, &binding_table.gen_rays_region(), &binding_table.miss_region(), &binding_table.hit_region(),
                              &binding_table.callable_region(), extent.x, extent.y, extent.z);
+}
+
+void CommandList::handle_pending_descriptors(const PipelineType pipelineType)
+{
+   if (!m_hasPendingDescriptors)
+      return;
+
+   m_hasPendingDescriptors = false;
+   this->push_descriptors(0, m_descriptorWriter, pipelineType);
+   m_descriptorWriter.reset_count();
 }
 
 }// namespace triglav::graphics_api
