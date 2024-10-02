@@ -9,7 +9,7 @@
 hitAttributeEXT vec2 attribs;
 
 layout(location = 0) rayPayloadInEXT HitPayload prd;
-layout(location = 1) rayPayloadEXT HitPayload refl;
+layout(location = 1) rayPayloadEXT bool isShadowed;
 
 layout(buffer_reference, scalar, std430) readonly buffer IndexBuffer
 {
@@ -35,7 +35,7 @@ layout(binding = 3, std430) readonly buffer ObjectDataBuffer
 
 layout(push_constant) uniform Constants
 {
-    vec3 viewPosition;
+    vec3 lightDir;
 } pc;
 
 void main()
@@ -53,9 +53,29 @@ void main()
     const vec3 normal = normalize(barycentrics.x * vecData0.normal + barycentrics.y * vecData1.normal + barycentrics.z * vecData2.normal);
     const vec3 worldPos = vec3(gl_ObjectToWorldEXT * vec4(position, 1.0));
 
-    const vec3 lightDir = normalize(vec3(1, 0, 1));
-    const float dotNL = dot(normal, lightDir);
-    const float lightVal = max(dotNL, 0);
+    const vec3 lightDir = -normalize(pc.lightDir);
+
+    const uint  rayFlags = gl_RayFlagsOpaqueEXT;
+    const float tMin     = 0.01;
+    const float tMax     = 1000.0;
+    traceRayEXT(
+        topLevelAS, // acceleration structure
+        rayFlags, // rayFlags
+        0xFF, // cullMask
+        1, // sbtRecordOffset
+        0, // sbtRecordStride
+        1, // missIndex
+        worldPos + 0.1*lightDir, // ray origin
+        tMin, // ray min range
+        lightDir, // ray direction
+        tMax, // ray max range
+        1// payload (location = 1)
+    );
+
+    float lightVal = max(dot(normal, lightDir), 0);
+    if (isShadowed) {
+        lightVal = 0;
+    }
     // const vec3 viewDir = normalize(worldPos - pc.viewPosition);
     vec3 viewDir = gl_WorldRayDirectionEXT;
 
@@ -64,27 +84,10 @@ void main()
     vec3 outColor = vec3(0.5, 1.0, 0.5);
 
 //    if (gl_InstanceCustomIndexEXT == 1 && dot(normal, traceDir) >= 0) {
-//        const uint  rayFlags = gl_RayFlagsOpaqueEXT;
-//        const float tMin     = 0.01;
-//        const float tMax     = 1000.0;
 //
-//        traceRayEXT(
-//        topLevelAS, // acceleration structure
-//        rayFlags, // rayFlags
-//        0xFF, // cullMask
-//        0, // sbtRecordOffset
-//        0, // sbtRecordStride
-//        0, // missIndex
-//        worldPos + 0.1*traceDir, // ray origin
-//        tMin, // ray min range
-//        traceDir, // ray direction
-//        tMax, // ray max range
-//        1// payload (location = 0)
-//        );
 //
 //        outColor = refl.hitValue;
 //    }
 
     prd.hitValue = outColor * (lightVal + 0.1);
-    refl.hitValue = prd.hitValue;
 }

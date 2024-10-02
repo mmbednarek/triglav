@@ -10,8 +10,20 @@ shader_targets += custom_target('shader_ray_tracing_chit',
                                 command : compile_raychit_cmds,
 )
 
+shader_targets += custom_target('shader_ray_tracing_shadow_chit',
+                                input : 'shadow_closest_hit.glsl',
+                                output : '@BASENAME@.spv',
+                                command : compile_raychit_cmds,
+)
+
 shader_targets += custom_target('shader_ray_tracing_miss',
                                 input : 'miss.glsl',
+                                output : '@BASENAME@.spv',
+                                command : compile_raymiss_cmds,
+)
+
+shader_targets += custom_target('shader_ray_tracing_shadow_miss',
+                                input : 'shadow_miss.glsl',
                                 output : '@BASENAME@.spv',
                                 command : compile_raymiss_cmds,
 )

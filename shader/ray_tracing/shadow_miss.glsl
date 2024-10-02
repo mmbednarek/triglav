@@ -3,9 +3,9 @@
 
 #include "common.glsl"
 
-layout(location = 0) rayPayloadInEXT HitPayload prd;
+layout(location = 1) rayPayloadInEXT bool isShadowed;
 
 void main()
 {
-    prd.hitValue = vec3(0.05, 0.05, 0.1);
+    isShadowed = false;
 }
