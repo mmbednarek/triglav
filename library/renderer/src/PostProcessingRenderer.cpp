@@ -42,7 +42,7 @@ void PostProcessingRenderer::draw(render_core::FrameResources& resources, graphi
 
    const graphics_api::Texture* backTex{};
    auto& shading = resources.node("shading"_name).framebuffer("shading"_name);
-   auto &ray_tracing_resources = dynamic_cast<node::RayTracedImageResources&>(resources.node("ray_traced_image"_name));
+   auto& ray_tracing_resources = dynamic_cast<node::RayTracedImageResources&>(resources.node("ray_traced_image"_name));
 
    if (resources.has_flag("bloom"_name)) {
       backTex = &ray_tracing_resources.texture();

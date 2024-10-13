@@ -19,11 +19,11 @@ constexpr bool is_valid(const Index index)
 
 struct Vertex
 {
-   alignas(16) glm::vec3 location;
+   glm::vec3 location;
    glm::vec2 uv;
-   alignas(16) glm::vec3 normal;
-   alignas(16) glm::vec3 tangent;
-   alignas(16) glm::vec3 bitangent;
+   glm::vec3 normal;
+   glm::vec3 tangent;
+   glm::vec3 bitangent;
 
    bool operator==(const Vertex& rhs) const = default;
 };

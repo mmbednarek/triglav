@@ -218,16 +218,18 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    deviceFeatures.features.samplerAnisotropy = true;
    deviceFeatures.features.shaderInt64 = true;
 
-   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
-   hostQueryResetFeatures.hostQueryReset = true;
-   deviceFeatures.pNext = &hostQueryResetFeatures;
+   VkPhysicalDeviceVulkan12Features vulkan12Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
+   vulkan12Features.hostQueryReset = true;
+   vulkan12Features.scalarBlockLayout = true;
+   vulkan12Features.bufferDeviceAddress = true;
+   deviceFeatures.pNext = &vulkan12Features;
 
-   VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures{
-      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES};
-   bufferDeviceAddressFeatures.bufferDeviceAddress = true;
-   hostQueryResetFeatures.pNext = &bufferDeviceAddressFeatures;
+   VkPhysicalDeviceVulkan11Features vulkan11Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
+   vulkan11Features.variablePointers = true;
+   vulkan11Features.variablePointersStorageBuffer = true;
+   vulkan12Features.pNext = &vulkan11Features;
 
-   void** lastFeaturesPtr = &bufferDeviceAddressFeatures.pNext;
+   void** lastFeaturesPtr = &vulkan11Features.pNext;
 
    VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
