@@ -27,3 +27,15 @@ shader_targets += custom_target('shader_ray_tracing_shadow_miss',
                                 output : 'shadow_miss.spv',
                                 command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT0@', '-entry', 'miss_main', '-stage', 'miss', '-o', '@OUTPUT@'],
 )
+
+shader_targets += custom_target('shader_ray_tracing_ao_chit',
+                                input : ['ambient_occlusion.slang', 'ray_payload.slang', 'ray_tracing.slang'],
+                                output : 'ambient_occlusion_hit.spv',
+                                command : ['slangc', '-O0', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT0@', '-entry', 'chit_main', '-stage', 'closesthit', '-o', '@OUTPUT@'],
+)
+
+shader_targets += custom_target('shader_ray_tracing_ao_miss',
+                                input : ['ambient_occlusion.slang', 'ray_payload.slang', 'ray_tracing.slang'],
+                                output : 'ambient_occlusion_miss.spv',
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT0@', '-entry', 'miss_main', '-stage', 'miss', '-o', '@OUTPUT@'],
+)

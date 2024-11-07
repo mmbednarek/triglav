@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AmbientOcclusionRenderer.hpp"
 #include "Camera.hpp"
 #include "Scene.hpp"
 
@@ -7,11 +8,11 @@
 #include "triglav/graphics_api/ReplicatedBuffer.hpp"
 #include "triglav/graphics_api/ray_tracing/AccelerationStructurePool.hpp"
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
+#include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
 
 #include <glm/mat4x4.hpp>
-#include <triglav/graphics_api/ray_tracing/InstanceBuilder.hpp>
 #include <utility>
 
 namespace triglav::resource {
@@ -19,6 +20,8 @@ class ResourceManager;
 }
 
 namespace triglav::renderer {
+
+constexpr auto AO_POINT_COUNT = 64;
 
 struct RayGenerationUboData
 {
@@ -37,6 +40,11 @@ class RayTracingScene
 {
  public:
    using Self = RayTracingScene;
+
+   struct AmbientOcclusionPoints
+   {
+      glm::vec4 points[AO_POINT_COUNT];
+   };
 
    explicit RayTracingScene(graphics_api::Device& device, resource::ResourceManager& resources, Scene& scene);
 
@@ -67,6 +75,7 @@ class RayTracingScene
    RayGenerationUbo m_ubo;
    bool m_mustUpdateAccelerationStructures{false};
    std::vector<ObjectDesc> m_objects;
+   graphics_api::UniformReplicatedBuffer<AmbientOcclusionPoints> m_aoPointsUbo;
 
    graphics_api::ray_tracing::AccelerationStructure* m_tlAccelerationStructure{};
 

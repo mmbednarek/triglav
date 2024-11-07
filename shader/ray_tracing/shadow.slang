@@ -1,4 +1,4 @@
-import ray_tracing;
+import ray_payload;
 
 [shader("closesthit")]
 void chit_main(inout ray_payload.Shadow payload)

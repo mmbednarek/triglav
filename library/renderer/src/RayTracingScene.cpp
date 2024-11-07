@@ -43,31 +43,45 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
                              .ray_generation_shader("rgen"_name, resources.get("rt_general.rgenshader"_rc))
                              .miss_shader("rmiss"_name, resources.get("rt_general.rmissshader"_rc))
                              .miss_shader("shadow_rmiss"_name, resources.get("rt_shadow.rmissshader"_rc))
+                             .miss_shader("ao_rmiss"_name, resources.get("rt_ao.rmissshader"_rc))
                              .closest_hit_shader("rchit"_name, resources.get("rt_general.rchitshader"_rc))
                              .closest_hit_shader("shadow_rchit"_name, resources.get("rt_shadow.rchitshader"_rc))
+                             .closest_hit_shader("ao_rchit"_name, resources.get("rt_ao.rchitshader"_rc))
                              .general_group("rgen"_name)
                              .general_group("rmiss"_name)
                              .general_group("shadow_rmiss"_name)
+                             .general_group("ao_rmiss"_name)
                              .triangle_group("rchit"_name)
                              .triangle_group("shadow_rchit"_name)
+                             .triangle_group("ao_rchit"_name)
                              .use_push_descriptors(true)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader | gapi::PipelineStage::ClosestHitShader,
                                                  gapi::DescriptorType::AccelerationStructure)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::StorageImage)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::UniformBuffer)
                              .descriptor_binding(gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::StorageBuffer)
+                             .descriptor_binding(gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::UniformBuffer)
                              .push_constant(gapi::PipelineStage::ClosestHitShader, sizeof(RayTracingConstants))
                              .build())},
     m_bindingTable(rt::ShaderBindingTableBuilder(device, m_pipeline)
                       .add_binding("rgen"_name)
                       .add_binding("rmiss"_name)
                       .add_binding("shadow_rmiss"_name)
+                      .add_binding("ao_rmiss"_name)
                       .add_binding("rchit"_name)
                       .add_binding("shadow_rchit"_name)
+                      .add_binding("ao_rchit"_name)
                       .build()),
     m_ubo(device),
+    m_aoPointsUbo(device),
     TG_CONNECT(m_scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
+   const auto aoPoints = AmbientOcclusionRenderer::generate_sample_points(AO_POINT_COUNT);
+   {
+      const auto lk{m_aoPointsUbo.lock()};
+      std::ranges::transform(aoPoints, lk->points,
+                     [](const AmbientOcclusionRenderer::AlignedVec3& point) { return glm::vec4(point.value, 1.0); });
+   }
 }
 
 void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture)
@@ -105,6 +119,7 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
    }
 
    m_ubo.sync(cmdList);
+   m_aoPointsUbo.sync(cmdList);
    cmdList.execution_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::RayGenerationShader);
 
    cmdList.bind_pipeline(m_pipeline);
@@ -112,6 +127,7 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
    cmdList.bind_storage_image(1, texture);
    cmdList.bind_uniform_buffer(2, m_ubo);
    cmdList.bind_storage_buffer(3, m_objectBuffer);
+   cmdList.bind_uniform_buffer(4, m_aoPointsUbo);
    RayTracingConstants constants{.lightDir{m_scene.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)}};
    cmdList.push_constant(graphics_api::PipelineStage::ClosestHitShader, constants);
    cmdList.trace_rays(m_bindingTable, {texture.width(), texture.height(), 1});
@@ -119,7 +135,6 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
 
 void RayTracingScene::on_object_added_to_scene(const SceneObject& object)
 {
-   spdlog::info("Adding object to scene INDEX: {}", m_objects.size());
    m_mustUpdateAccelerationStructures = true;
 
    const auto& model = m_resourceManager.get(object.model);

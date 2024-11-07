@@ -1,4 +1,5 @@
 import ray_tracing;
+import ray_payload;
 
 [[vk::binding(0)]]
 uniform RaytracingAccelerationStructure topLevelAS : register(t0);
@@ -8,10 +9,7 @@ uniform RaytracingAccelerationStructure topLevelAS : register(t0);
 uniform RWTexture2D<float4> outImage : register(t1);
 
 [[vk::binding(2)]]
-cbuffer TransformUBO
-{
-    ray_tracing.ObjectTransform transform;
-};
+uniform ConstantBuffer<ray_tracing.ObjectTransform> transform;
 
 [shader("raygeneration")]
 void rgen_main()

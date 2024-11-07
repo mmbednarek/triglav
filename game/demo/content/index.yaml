@@ -157,6 +157,10 @@ resources:
     source: "shader/ray_tracing/closest_hit.spv"
   - name: "rt_shadow.rchitshader"
     source: "shader/ray_tracing/shadow_closest_hit.spv"
+  - name: "rt_ao.rchitshader"
+    source: "shader/ray_tracing/ambient_occlusion_hit.spv"
+  - name: "rt_ao.rmissshader"
+    source: "shader/ray_tracing/ambient_occlusion_miss.spv"
 # TYPEFACES
   - name: "segoeui/bold.typeface"
     source: "fonts/segoeuib.ttf"
