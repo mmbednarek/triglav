@@ -1,7 +1,7 @@
 #pragma once
 
-#include "triglav/Int.hpp"
 #include "GraphicsApi.hpp"
+#include "triglav/Int.hpp"
 
 #include <memory>
 #include <vector>

@@ -13,6 +13,25 @@ namespace triglav::renderer {
 
 constexpr size_t g_SampleCountSSAO = 64;
 
+enum class AmbientOcclusionMethod
+{
+   None,
+   ScreenSpace,
+   RayTraced,
+};
+
+inline std::string_view ambient_occlusion_method_to_string(const AmbientOcclusionMethod method)
+{
+   switch (method) {
+   case AmbientOcclusionMethod::None:
+      return "None";
+   case AmbientOcclusionMethod::ScreenSpace:
+      return "Screen Space";
+   case AmbientOcclusionMethod::RayTraced:
+      return "Ray Traced";
+   }
+}
+
 class AmbientOcclusionRenderer
 {
  public:

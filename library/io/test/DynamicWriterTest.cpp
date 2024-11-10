@@ -1,10 +1,10 @@
 #include "triglav/io/DynamicWriter.hpp"
 
-#include <gtest/gtest.h>
 #include <cstring>
+#include <gtest/gtest.h>
 
-using triglav::io::DynamicWriter;
 using triglav::u8;
+using triglav::io::DynamicWriter;
 
 const auto TEST_STRING =
    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad "

@@ -10,9 +10,13 @@
 #include <set>
 #include <stack>
 #include <utility>
-#include <vector>
 
 namespace triglav::render_core {
+
+template<typename T>
+concept FrameOption = requires(T a) {
+   { std::is_same_v<std::underlying_type_t<T>, u32> };
+};
 
 class NodeResourcesBase
 {
@@ -37,6 +41,9 @@ class NodeFrameResources : public NodeResourcesBase
                                           const graphics_api::Resolution& resolution);
    void update_resolution(const graphics_api::Resolution& resolution) override;
 
+   void register_texture(Name name, graphics_api::Texture& texture);
+   graphics_api::Texture& texture(Name name) const;
+
    [[nodiscard]] graphics_api::Framebuffer& framebuffer(Name identifier);
    [[nodiscard]] graphics_api::CommandList& command_list();
    void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore) override;
@@ -57,6 +64,7 @@ class NodeFrameResources : public NodeResourcesBase
    };
 
    Heap<Name, RenderTargetResource> m_renderTargets{};
+   std::map<Name, graphics_api::Texture*> m_registeredTextures{};
    graphics_api::SemaphoreArray m_signalSemaphores;
    std::optional<graphics_api::SemaphoreArray> m_waitSemaphores{};
    std::optional<graphics_api::CommandList> m_commandList{};
@@ -90,6 +98,19 @@ class FrameResources
 
    [[nodiscard]] bool has_flag(Name flagName) const;
    void set_flag(Name flagName, bool isEnabled);
+   [[nodiscard]] u32 get_option_raw(Name optName) const;
+   void set_option_raw(Name optName, u32 option);
+
+   template<FrameOption TOption>
+   [[nodiscard]] TOption get_option(const Name optName) const
+   {
+      return static_cast<TOption>(this->get_option_raw(optName));
+   }
+
+   void set_option(const Name optName, const FrameOption auto option)
+   {
+      this->set_option_raw(optName, static_cast<u32>(option));
+   }
 
    void update_resolution(const graphics_api::Resolution& resolution);
    void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore);
@@ -101,6 +122,7 @@ class FrameResources
  private:
    std::map<Name, std::unique_ptr<NodeResourcesBase>> m_nodes;
    std::set<Name> m_renderFlags;
+   std::map<Name, u32> m_renderOptions;
    graphics_api::Fence m_targetFence;
 };
 

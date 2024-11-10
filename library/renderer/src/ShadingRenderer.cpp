@@ -9,6 +9,7 @@
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
+#include "AmbientOcclusionRenderer.hpp"
 #include "node/Blur.hpp"
 
 using namespace triglav::name_literals;
@@ -60,7 +61,7 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
 
    PushConstant pushConstant{
       .lightPosition = lightPosition,
-      .enableSSAO = resources.has_flag("ssao"_name),
+      .enableSSAO = resources.get_option<AmbientOcclusionMethod>("ao_method"_name) != AmbientOcclusionMethod::None,
    };
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstant);
 

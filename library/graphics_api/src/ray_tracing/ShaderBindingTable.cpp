@@ -7,13 +7,13 @@ namespace triglav::graphics_api::ray_tracing {
 
 namespace {
 
-template <std::integral TIntegral>
+template<std::integral TIntegral>
 constexpr TIntegral align_up(TIntegral x, size_t a) noexcept
 {
    return TIntegral((x + (TIntegral(a) - 1)) & ~TIntegral(a - 1));
 }
 
-}
+}// namespace
 
 ShaderBindingTableBuilder::ShaderBindingTableBuilder(Device& device, RayTracingPipeline& pipeline) :
     m_device(device),
@@ -29,8 +29,8 @@ ShaderBindingTableBuilder::ShaderBindingTableBuilder(Device& device, RayTracingP
 
    const auto bufferSize = m_handleSize * pipeline.shader_count();
    m_handleBuffer.resize(bufferSize);
-   auto getHandlesResult = vulkan::vkGetRayTracingShaderGroupHandlesKHR(device.vulkan_device(), pipeline.vulkan_pipeline(), 0, pipeline.group_count(),
-                                                m_handleBuffer.size(), m_handleBuffer.data());
+   auto getHandlesResult = vulkan::vkGetRayTracingShaderGroupHandlesKHR(
+      device.vulkan_device(), pipeline.vulkan_pipeline(), 0, pipeline.group_count(), m_handleBuffer.size(), m_handleBuffer.data());
    assert(getHandlesResult == VK_SUCCESS);
 }
 

@@ -2,7 +2,8 @@
 
 namespace triglav::graphics_api::ray_tracing {
 
-enum class AccelerationStructureType {
+enum class AccelerationStructureType
+{
    TopLevel,
    BottomLevel,
 };

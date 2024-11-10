@@ -55,7 +55,8 @@ class RayTracingPipelineBuilder : public PipelineBuilderBase
    u32 m_maxRecursion{1};
 };
 
-class RayTracingPipeline : public Pipeline {
+class RayTracingPipeline : public Pipeline
+{
  public:
    RayTracingPipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorSetLayout descriptorSetLayout,
                       PipelineType pipelineType, std::map<Name, ShaderIndexWithType> indices, u32 groupCount);

@@ -2,17 +2,21 @@
 
 namespace triglav::renderer::node {
 
-using graphics_api::TextureUsage;
-using graphics_api::TextureState;
-using graphics_api::WorkType;
-using graphics_api::TextureBarrierInfo;
+using namespace name_literals;
+
 using graphics_api::PipelineStage;
+using graphics_api::TextureBarrierInfo;
+using graphics_api::TextureState;
+using graphics_api::TextureUsage;
+using graphics_api::WorkType;
 
 // RayTracedImageResources
 
 RayTracedImageResources::RayTracedImageResources(graphics_api::Device& device) :
-   m_texture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(RGBA, Float16), {1600, 900}, TextureUsage::Sampled | TextureUsage::Storage)))
+    m_device(device),
+    m_texture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {1600, 900}, TextureUsage::Sampled | TextureUsage::Storage)))
 {
+   this->register_texture("ao"_name, m_texture);
 }
 
 const graphics_api::Texture& RayTracedImageResources::texture() const
@@ -20,11 +24,19 @@ const graphics_api::Texture& RayTracedImageResources::texture() const
    return m_texture;
 }
 
-graphics_api::TextureState RayTracedImageResources::in_texture_state()
+TextureState RayTracedImageResources::in_texture_state()
 {
    const auto res = m_initialLayout ? TextureState::Undefined : TextureState::ShaderRead;
    m_initialLayout = false;
    return res;
+}
+
+void RayTracedImageResources::update_resolution(const graphics_api::Resolution& resolution)
+{
+   NodeFrameResources::update_resolution(resolution);
+   m_texture = GAPI_CHECK(m_device.create_texture(GAPI_FORMAT(R, Float16), {resolution.width, resolution.height},
+                                                  TextureUsage::Sampled | TextureUsage::Storage));
+   this->register_texture("ao"_name, m_texture);
 }
 
 // RayTracedImage

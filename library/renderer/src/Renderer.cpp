@@ -8,11 +8,11 @@
 #include "node/Particles.hpp"
 #include "node/PostProcessing.hpp"
 #include "node/ProcessGlyphs.hpp"
+#include "node/RayTracedImage.hpp"
 #include "node/Shading.hpp"
 #include "node/ShadowMap.hpp"
 #include "node/SyncBuffers.hpp"
 #include "node/UserInterface.hpp"
-#include "node/RayTracedImage.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
@@ -124,11 +124,9 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
    m_renderGraph.emplace_node<node::SyncBuffers>("sync_buffers"_name, m_scene);
    m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
-   m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "shading"_name, "bloom"_name,
-                                          false);
-   m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, "ao"_name,
-                                          true);
-   m_renderGraph.emplace_node<node::RayTracedImage>("ray_traced_image"_name, m_device, m_rayTracingScene, m_scene);
+   m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "bloom"_name, false);
+   m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, true);
+   m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, m_rayTracingScene, m_scene);
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
    m_renderGraph.add_interframe_dependency("geometry"_name, "shading"_name);
@@ -137,11 +135,11 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.add_dependency("user_interface"_name, "process_glyphs"_name);
    m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
    m_renderGraph.add_dependency("blur_ao"_name, "ambient_occlusion"_name);
+   m_renderGraph.add_dependency("blur_ao"_name, "ray_tracing"_name);
    m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
    m_renderGraph.add_dependency("shading"_name, "blur_ao"_name);
    m_renderGraph.add_dependency("shading"_name, "particles"_name);
    m_renderGraph.add_dependency("blur_bloom"_name, "shading"_name);
-   m_renderGraph.add_dependency("post_processing"_name, "ray_traced_image"_name);
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
    m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);
@@ -188,7 +186,7 @@ void Renderer::update_debug_info()
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
    m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
 
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, m_ssaoEnabled ? "Screen-Space" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(m_aoMethod));
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
@@ -225,7 +223,7 @@ void Renderer::on_render()
    }
 
    m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
-   m_renderGraph.set_flag("ssao"_name, m_ssaoEnabled);
+   m_renderGraph.set_option("ao_method"_name, m_aoMethod);
    m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
    m_renderGraph.set_flag("bloom"_name, m_bloomEnabled);
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
@@ -263,7 +261,7 @@ static Renderer::Moving map_direction(const Key key)
 {
    switch (key) {
    case Key::W:
-      return Renderer::Moving::Foward;
+      return Renderer::Moving::Forward;
    case Key::S:
       return Renderer::Moving::Backwards;
    case Key::A:
@@ -286,7 +284,23 @@ void Renderer::on_key_pressed(const Key key)
       m_showDebugLines = not m_showDebugLines;
    }
    if (key == Key::F4) {
-      m_ssaoEnabled = not m_ssaoEnabled;
+      switch (m_aoMethod) {
+      case AmbientOcclusionMethod::None:
+         m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ambient_occlusion"_name, "ao"_name);
+         m_aoMethod = AmbientOcclusionMethod::ScreenSpace;
+         break;
+      case AmbientOcclusionMethod::ScreenSpace:
+         if (m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
+            m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ray_tracing"_name, "ao"_name);
+            m_aoMethod = AmbientOcclusionMethod::RayTraced;
+         } else {
+            m_aoMethod = AmbientOcclusionMethod::None;
+         }
+         break;
+      case AmbientOcclusionMethod::RayTraced:
+         m_aoMethod = AmbientOcclusionMethod::None;
+         break;
+      }
    }
    if (key == Key::F5) {
       m_fxaaEnabled = not m_fxaaEnabled;
@@ -341,7 +355,7 @@ glm::vec3 Renderer::moving_direction()
    switch (m_moveDirection) {
    case Moving::None:
       break;
-   case Moving::Foward:
+   case Moving::Forward:
       return m_scene.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
    case Moving::Backwards:
       return m_scene.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};

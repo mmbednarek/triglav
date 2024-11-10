@@ -1,14 +1,11 @@
 #include "RayTracingScene.hpp"
 
-#include "triglav/geometry/DebugMesh.h"
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/render_core/Model.hpp"
 #include "triglav/resource/ResourceManager.h"
 
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
 
 namespace triglav::renderer {
@@ -17,6 +14,8 @@ namespace gapi = graphics_api;
 namespace rt = graphics_api::ray_tracing;
 namespace geo = geometry;
 using namespace name_literals;
+
+constexpr auto MAX_OBJECT_COUNT = 32;
 
 struct RayTracingConstants
 {
@@ -28,12 +27,8 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
     m_resourceManager{resources},
     m_teapot(resources.get("teapot.model"_rc)),
     m_scene(scene),
-    m_exampleMeshBox{geo::create_box({2.0f, 2.0f, 2.0f})},
-    m_exampleMeshSphere{geo::create_sphere(48, 24, 3.0f)},
-    m_boundingBoxBuffer{GAPI_CHECK(
-       device.create_buffer(gapi::BufferUsage::AccelerationStructureRead | gapi::BufferUsage::TransferDst, sizeof(VkAabbPositionsKHR)))},
-    m_objectBuffer{
-       GAPI_CHECK(device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, 32 * sizeof(ObjectDesc)))},
+    m_objectBuffer{GAPI_CHECK(
+       device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, MAX_OBJECT_COUNT * sizeof(ObjectDesc)))},
     m_instanceBuilder(m_device),
     m_scratchHeap(device, gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer),
     m_asPool{device},
@@ -60,7 +55,6 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::StorageImage)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::UniformBuffer)
                              .descriptor_binding(gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::StorageBuffer)
-                             .descriptor_binding(gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::UniformBuffer)
                              .push_constant(gapi::PipelineStage::ClosestHitShader, sizeof(RayTracingConstants))
                              .build())},
     m_bindingTable(rt::ShaderBindingTableBuilder(device, m_pipeline)
@@ -73,15 +67,8 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
                       .add_binding("ao_rchit"_name)
                       .build()),
     m_ubo(device),
-    m_aoPointsUbo(device),
     TG_CONNECT(m_scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
-   const auto aoPoints = AmbientOcclusionRenderer::generate_sample_points(AO_POINT_COUNT);
-   {
-      const auto lk{m_aoPointsUbo.lock()};
-      std::ranges::transform(aoPoints, lk->points,
-                     [](const AmbientOcclusionRenderer::AlignedVec3& point) { return glm::vec4(point.value, 1.0); });
-   }
 }
 
 void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture)
@@ -113,13 +100,12 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
    }
 
    {
-      auto lk{m_ubo.lock()};
+      const auto lk{m_ubo.lock()};
       lk->viewInverse = glm::inverse(m_scene.camera().view_matrix());
       lk->projInverse = glm::inverse(m_scene.camera().projection_matrix());
    }
 
    m_ubo.sync(cmdList);
-   m_aoPointsUbo.sync(cmdList);
    cmdList.execution_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::RayGenerationShader);
 
    cmdList.bind_pipeline(m_pipeline);
@@ -127,7 +113,6 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
    cmdList.bind_storage_image(1, texture);
    cmdList.bind_uniform_buffer(2, m_ubo);
    cmdList.bind_storage_buffer(3, m_objectBuffer);
-   cmdList.bind_uniform_buffer(4, m_aoPointsUbo);
    RayTracingConstants constants{.lightDir{m_scene.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)}};
    cmdList.push_constant(graphics_api::PipelineStage::ClosestHitShader, constants);
    cmdList.trace_rays(m_bindingTable, {texture.width(), texture.height(), 1});

@@ -26,7 +26,7 @@ AccelerationStructurePool::~AccelerationStructurePool()
 AccelerationStructure* AccelerationStructurePool::acquire_acceleration_structure(const AccelerationStructureType type, MemorySize size)
 {
    spdlog::trace("as-pool: Acquiring {} acceleration structure, requested size {}",
-                type == AccelerationStructureType::TopLevel ? "top level" : "bottom level", size);
+                 type == AccelerationStructureType::TopLevel ? "top level" : "bottom level", size);
 
    AccelerationStructure* result{};
    auto it = m_freeAccelerationStructures.upper_bound(size);

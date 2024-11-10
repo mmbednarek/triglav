@@ -2,8 +2,8 @@
 
 #include "../Buffer.hpp"
 
-#include "triglav/io/DynamicWriter.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/io/DynamicWriter.hpp"
 
 namespace triglav::graphics_api {
 class Device;

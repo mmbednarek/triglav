@@ -82,7 +82,8 @@ RayTracingPipelineBuilder& RayTracingPipelineBuilder::general_group(const Name g
    return this->shader_group_internal(VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, std::span<const Name>{&generalShader, 1});
 }
 
-RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(const VkRayTracingShaderGroupTypeKHR groupType, std::span<const Name> shaders)
+RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(const VkRayTracingShaderGroupTypeKHR groupType,
+                                                                            std::span<const Name> shaders)
 {
    VkRayTracingShaderGroupCreateInfoKHR info{VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR};
    info.type = groupType;
@@ -95,7 +96,8 @@ RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(cons
    for (const auto& shaderName : shaders) {
       auto [index, stage] = m_shaderIndices.at(shaderName);
       switch (stage) {
-      case PipelineStage::RayGenerationShader: [[fallthrough]];
+      case PipelineStage::RayGenerationShader:
+         [[fallthrough]];
       case PipelineStage::MissShader:
          info.generalShader = index;
          break;

@@ -11,8 +11,8 @@
 #include "Synchronization.hpp"
 #include "Texture.hpp"
 #include "TimestampArray.hpp"
-#include "ray_tracing/RayTracing.hpp"
 #include "ray_tracing/AccelerationStructure.hpp"
+#include "ray_tracing/RayTracing.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
@@ -50,7 +50,8 @@ constexpr auto g_maxMipMaps = 0;
 class Device
 {
  public:
-   Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos, DeviceFeatureFlags enabledFeatures);
+   Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
+          DeviceFeatureFlags enabledFeatures);
 
    [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
                                                     const Resolution& resolution, PresentMode presentMode,
@@ -67,7 +68,9 @@ class Device
                                                 SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties& info);
    [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
-   [[nodiscard]] Result<ray_tracing::AccelerationStructure> create_acceleration_structure(ray_tracing::AccelerationStructureType structType, const Buffer& buffer, MemorySize bufferOffset, MemorySize bufferSize);
+   [[nodiscard]] Result<ray_tracing::AccelerationStructure> create_acceleration_structure(ray_tracing::AccelerationStructureType structType,
+                                                                                          const Buffer& buffer, MemorySize bufferOffset,
+                                                                                          MemorySize bufferSize);
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits(const Surface& surface) const;
 

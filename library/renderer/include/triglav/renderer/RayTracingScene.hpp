@@ -57,11 +57,6 @@ class RayTracingScene
    resource::ResourceManager& m_resourceManager;
    render_core::Model& m_teapot;
    Scene& m_scene;
-   geometry::Mesh m_exampleMeshBox;
-   geometry::Mesh m_exampleMeshSphere;
-   std::optional<geometry::DeviceMesh> m_examplesMeshBoxVertexData;
-   std::optional<geometry::DeviceMesh> m_examplesMeshSphereVertexData;
-   graphics_api::Buffer m_boundingBoxBuffer;
    std::optional<graphics_api::Buffer> m_instanceListBuffer;
    graphics_api::Buffer m_objectBuffer;
    graphics_api::ray_tracing::InstanceBuilder m_instanceBuilder;
@@ -75,7 +70,6 @@ class RayTracingScene
    RayGenerationUbo m_ubo;
    bool m_mustUpdateAccelerationStructures{false};
    std::vector<ObjectDesc> m_objects;
-   graphics_api::UniformReplicatedBuffer<AmbientOcclusionPoints> m_aoPointsUbo;
 
    graphics_api::ray_tracing::AccelerationStructure* m_tlAccelerationStructure{};
 

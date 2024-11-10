@@ -6,13 +6,13 @@
 #include "GroundRenderer.hpp"
 #include "InfoDialog.hpp"
 #include "PostProcessingRenderer.hpp"
+#include "RayTracingScene.hpp"
 #include "RectangleRenderer.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
 #include "ShadingRenderer.hpp"
 #include "SkyBox.hpp"
 #include "SpriteRenderer.hpp"
-#include "RayTracingScene.hpp"
 
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
@@ -36,7 +36,7 @@ class Renderer
    enum class Moving
    {
       None,
-      Foward,
+      Forward,
       Backwards,
       Left,
       Right,
@@ -66,7 +66,7 @@ class Renderer
    glm::vec3 moving_direction();
 
    bool m_showDebugLines{false};
-   bool m_ssaoEnabled{true};
+   AmbientOcclusionMethod m_aoMethod{AmbientOcclusionMethod::ScreenSpace};
    bool m_fxaaEnabled{true};
    bool m_bloomEnabled{true};
    bool m_hideUI{false};

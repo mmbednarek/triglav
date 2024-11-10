@@ -71,7 +71,8 @@ void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddre
                        const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
                        const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth)
 {
-   return DynamicProcedures::the().proc_vkCmdTraceRaysKHR()(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
+   return DynamicProcedures::the().proc_vkCmdTraceRaysKHR()(commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable,
+                                                            pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
 }
 
 }// namespace triglav::graphics_api::vulkan

@@ -2,15 +2,16 @@
 
 #include <vulkan/vulkan.h>
 
-#include <vector>
 #include <glm/mat4x4.hpp>
+#include <vector>
 
-#include "AccelerationStructure.hpp"
 #include "../Buffer.hpp"
+#include "AccelerationStructure.hpp"
 
 namespace triglav::graphics_api::ray_tracing {
 
-class InstanceBuilder {
+class InstanceBuilder
+{
  public:
    explicit InstanceBuilder(Device& device);
 
@@ -19,9 +20,8 @@ class InstanceBuilder {
    Buffer build_buffer();
 
  private:
-   Device &m_device;
+   Device& m_device;
    std::vector<VkAccelerationStructureInstanceKHR> m_instances;
-
 };
 
-}
+}// namespace triglav::graphics_api::ray_tracing

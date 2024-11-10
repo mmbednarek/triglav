@@ -11,7 +11,8 @@ class Array
  public:
    Array(Device& device, const size_t element_count, BufferUsageFlags additionalFlags = 0) :
        m_device(device),
-       m_buffer(GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst | additionalFlags, element_count * sizeof(TValue)))),
+       m_buffer(
+          GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst | additionalFlags, element_count * sizeof(TValue)))),
        m_elementCount(element_count)
    {
    }

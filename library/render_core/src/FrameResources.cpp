@@ -5,7 +5,6 @@
 #include <ranges>
 
 namespace triglav::render_core {
-
 using namespace name_literals;
 
 void NodeResourcesBase::add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore)
@@ -55,6 +54,25 @@ void NodeFrameResources::update_resolution(const graphics_api::Resolution& resol
 
       target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution)));
    }
+
+   for (auto& target : m_renderTargets) {
+      if (not target.has_value())
+         continue;
+
+      for (const auto& attachment : target->second.renderTarget->attachments()) {
+         this->register_texture(attachment.identifier, target->second.framebuffer->texture(attachment.identifier));
+      }
+   }
+}
+
+void NodeFrameResources::register_texture(Name name, graphics_api::Texture& texture)
+{
+   m_registeredTextures.emplace(name, &texture);
+}
+
+graphics_api::Texture& NodeFrameResources::texture(const Name name) const
+{
+   return *m_registeredTextures.at(name);
 }
 
 graphics_api::Framebuffer& NodeFrameResources::framebuffer(const Name identifier)
@@ -140,12 +158,12 @@ void FrameResources::clean(graphics_api::Device& device)
    m_nodes.clear();
 }
 
-bool FrameResources::has_flag(Name flagName) const
+bool FrameResources::has_flag(const Name flagName) const
 {
    return m_renderFlags.contains(flagName);
 }
 
-void FrameResources::set_flag(Name flagName, bool isEnabled)
+void FrameResources::set_flag(const Name flagName, const bool isEnabled)
 {
    if (m_renderFlags.contains(flagName)) {
       if (not isEnabled) {
@@ -154,6 +172,20 @@ void FrameResources::set_flag(Name flagName, bool isEnabled)
    } else if (isEnabled) {
       m_renderFlags.insert(flagName);
    }
+}
+
+u32 FrameResources::get_option_raw(const Name optName) const
+{
+   const auto opt = m_renderOptions.find(optName);
+   if (opt == m_renderOptions.end()) {
+      return 0;
+   }
+   return opt->second;
+}
+
+void FrameResources::set_option_raw(const Name optName, const u32 option)
+{
+   m_renderOptions[optName] = option;
 }
 
 void FrameResources::finalize()

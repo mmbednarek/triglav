@@ -15,6 +15,7 @@ namespace ray_payload
 
     public struct Color
     {
-        public float3 hitValue;
+        public float shadowTerm;
+        public float ambientOcclusionTerm;
     };
 }

@@ -8,10 +8,10 @@
 #include <cassert>
 #include <format>
 #include <iostream>
+#include <ranges>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <xkbcommon/xkbcommon.h>
-#include <ranges>
 
 namespace triglav::desktop {
 
@@ -380,7 +380,8 @@ void Display::on_keymap(const uint32_t format, const int32_t fd, const uint32_t 
 
    auto* mapped = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
 
-   m_xkbKeymap = xkb_keymap_new_from_string(m_xkbContext, static_cast<const char*>(mapped), XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+   m_xkbKeymap =
+      xkb_keymap_new_from_string(m_xkbContext, static_cast<const char*>(mapped), XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
    munmap(mapped, size);
    close(fd);

@@ -50,6 +50,13 @@ class RenderGraph
 
    void clean();
 
+   void set_option(const Name optName, const FrameOption auto option)
+   {
+      for (auto& frameResources : m_frameResources) {
+         frameResources.set_option(optName, option);
+      }
+   }
+
 
  private:
    graphics_api::Device& m_device;

@@ -582,8 +582,10 @@ VkAccelerationStructureTypeKHR to_vulkan_acceleration_structure_type(ray_tracing
 {
    using enum ray_tracing::AccelerationStructureType;
    switch (type) {
-   case TopLevel: return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
-   case BottomLevel: return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+   case TopLevel:
+      return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
+   case BottomLevel:
+      return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
    }
 
    return VK_ACCELERATION_STRUCTURE_TYPE_MAX_ENUM_KHR;

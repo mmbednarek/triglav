@@ -10,7 +10,8 @@ namespace {
 
 DeviceFeatureFlags feature_flags_from_physical_device(const VkPhysicalDevice physicalDevice)
 {
-   VkPhysicalDeviceAccelerationStructureFeaturesKHR asPipelineFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR };
+   VkPhysicalDeviceAccelerationStructureFeaturesKHR asPipelineFeatures{
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
 
    VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
    rtPipelineFeatures.pNext = &asPipelineFeatures;
@@ -29,7 +30,8 @@ DeviceFeatureFlags feature_flags_from_physical_device(const VkPhysicalDevice phy
    return result;
 }
 
-bool physical_device_pick_predicate(const VkPhysicalDevice physicalDevice, const DevicePickStrategy strategy, const DeviceFeatureFlags preferredFeatures)
+bool physical_device_pick_predicate(const VkPhysicalDevice physicalDevice, const DevicePickStrategy strategy,
+                                    const DeviceFeatureFlags preferredFeatures)
 {
    VkPhysicalDeviceProperties props{};
    vkGetPhysicalDeviceProperties(physicalDevice, &props);

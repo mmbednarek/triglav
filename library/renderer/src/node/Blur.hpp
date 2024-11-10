@@ -27,20 +27,19 @@ class BlurResources : public render_core::NodeFrameResources
 class Blur : public render_core::IRenderNode
 {
  public:
-   Blur(graphics_api::Device& device, resource::ResourceManager& resourceManager, Name srcNode, Name srcFramebuffer, Name srcAttachment,
-        bool isSingleChannel);
+   Blur(graphics_api::Device& device, resource::ResourceManager& resourceManager, Name srcNode, Name srcTexture, bool isSingleChannel);
 
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    void record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
                         graphics_api::CommandList& cmdList) override;
+   void set_source_texture(Name srcNode, Name srcTexture);
 
  private:
    graphics_api::Device& m_device;
    graphics_api::Pipeline m_pipeline;
    Name m_srcNode;
-   Name m_srcFramebuffer;
-   Name m_srcAttachment;
+   Name m_srcTexture;
    bool m_isSingleChannel;
 };
 

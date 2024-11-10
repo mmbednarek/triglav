@@ -5,8 +5,8 @@
 #include "GraphicsApi.hpp"
 #include "Pipeline.hpp"
 
-#include <span>
 #include <glm/vec3.hpp>
+#include <span>
 
 namespace triglav::graphics_api {
 

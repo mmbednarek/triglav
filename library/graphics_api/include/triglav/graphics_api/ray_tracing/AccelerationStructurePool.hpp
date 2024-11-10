@@ -6,8 +6,8 @@
 #include "triglav/Int.hpp"
 #include "triglav/ObjectPool.hpp"
 
-#include <memory>
 #include <map>
+#include <memory>
 
 namespace triglav::graphics_api {
 class Device;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../vulkan/ObjectWrapper.hpp"
 #include "../vulkan/DynamicProcedures.hpp"
+#include "../vulkan/ObjectWrapper.hpp"
 
 namespace triglav::graphics_api {
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(AccelerationStructureKHR, Device);

@@ -61,34 +61,34 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
       if (prop.source == render_core::PropertySource::Constant)
          continue;
 
-      switch(prop.type) {
+      switch (prop.type) {
       case render_core::MaterialPropertyType::Float32:
          worldDataUboSize += sizeof(float);
       case render_core::MaterialPropertyType::Vector3: {
-         const auto mod = worldDataUboSize % (4*sizeof(float));
+         const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {
-            auto padding = 4*sizeof(float) - mod;
+            auto padding = 4 * sizeof(float) - mod;
             worldDataUboSize += padding;
          }
-         worldDataUboSize += 3*sizeof(float);
+         worldDataUboSize += 3 * sizeof(float);
          break;
       }
       case render_core::MaterialPropertyType::Vector4: {
-         const auto mod = worldDataUboSize % (4*sizeof(float));
+         const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {
-            auto padding = 4*sizeof(float) - mod;
+            auto padding = 4 * sizeof(float) - mod;
             worldDataUboSize += padding;
          }
-         worldDataUboSize += 4*sizeof(glm::vec4);
+         worldDataUboSize += 4 * sizeof(glm::vec4);
          break;
       }
       case render_core::MaterialPropertyType::Matrix4x4: {
-         const auto mod = worldDataUboSize % (4*sizeof(float));
+         const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {
-            auto padding = 4*sizeof(float) - mod;
+            auto padding = 4 * sizeof(float) - mod;
             worldDataUboSize += padding;
          }
-         worldDataUboSize += 16*sizeof(glm::vec4);
+         worldDataUboSize += 16 * sizeof(glm::vec4);
          break;
       }
       }

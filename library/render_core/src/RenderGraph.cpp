@@ -209,7 +209,7 @@ void RenderGraph::clean()
    }
 }
 
-void RenderGraph::set_flag(Name flag, const bool isEnabled)
+void RenderGraph::set_flag(const Name flag, const bool isEnabled)
 {
    for (auto& frameRes : m_frameResources) {
       frameRes.set_flag(flag, isEnabled);

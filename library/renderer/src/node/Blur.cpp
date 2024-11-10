@@ -15,7 +15,7 @@ constexpr u32 upper_div(const u32 nom, const u32 denom)
    return 1 + (nom / denom);
 }
 
-BlurResources::BlurResources(gapi::Device& device, bool isSingleChannel) :
+BlurResources::BlurResources(gapi::Device& device, const bool isSingleChannel) :
     m_device(device),
     m_isSingleChannel(isSingleChannel)
 {
@@ -48,8 +48,8 @@ gapi::TextureState BlurResources::texture_state()
    return graphics_api::TextureState::ShaderRead;
 }
 
-Blur::Blur(gapi::Device& device, resource::ResourceManager& resourceManager, const Name srcNode, const Name srcFramebuffer,
-           const Name srcAttachment, const bool isSingleChannel) :
+Blur::Blur(gapi::Device& device, resource::ResourceManager& resourceManager, const Name srcNode, const Name srcTexture,
+           const bool isSingleChannel) :
     m_device(device),
     m_pipeline(GAPI_CHECK(graphics_api::ComputePipelineBuilder(m_device)
                              .compute_shader(resourceManager.get(isSingleChannel ? "blur/sc.cshader"_rc : "blur.cshader"_rc))
@@ -58,8 +58,7 @@ Blur::Blur(gapi::Device& device, resource::ResourceManager& resourceManager, con
                              .use_push_descriptors(true)
                              .build())),
     m_srcNode(srcNode),
-    m_srcFramebuffer(srcFramebuffer),
-    m_srcAttachment(srcAttachment),
+    m_srcTexture(srcTexture),
     m_isSingleChannel(isSingleChannel)
 {
 }
@@ -77,8 +76,7 @@ gapi::WorkTypeFlags Blur::work_types() const
 void Blur::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
                            gapi::CommandList& cmdList)
 {
-   auto& framebuffer = frameResources.node(m_srcNode).framebuffer(m_srcFramebuffer);
-   gapi::Texture& inTexture = framebuffer.texture(m_srcAttachment);
+   gapi::Texture& inTexture = frameResources.node(m_srcNode).texture(m_srcTexture);
 
    auto& blurResources = dynamic_cast<BlurResources&>(resources);
    gapi::Texture& outTexture = blurResources.texture();
@@ -105,6 +103,12 @@ void Blur::record_commands(render_core::FrameResources& frameResources, render_c
       .mipLevelCount = 1,
    };
    cmdList.texture_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::FragmentShader, dstBarrierOut);
+}
+
+void Blur::set_source_texture(const Name srcNode, const Name srcTexture)
+{
+   m_srcNode = srcNode;
+   m_srcTexture = srcTexture;
 }
 
 }// namespace triglav::renderer::node

@@ -129,7 +129,7 @@ Status Buffer::write_indirect(const void* data, size_t size)
 
 VkDeviceAddress Buffer::vulkan_device_address() const
 {
-   VkBufferDeviceAddressInfo info{ VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO };
+   VkBufferDeviceAddressInfo info{VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
    info.buffer = *m_buffer;
    return vkGetBufferDeviceAddress(m_device.vulkan_device(), &info);
 }

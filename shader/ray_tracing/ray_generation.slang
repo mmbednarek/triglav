@@ -5,8 +5,8 @@ import ray_payload;
 uniform RaytracingAccelerationStructure topLevelAS : register(t0);
 
 [[vk::binding(1)]]
-[vk::image_format("rgba32f")]
-uniform RWTexture2D<float4> outImage : register(t1);
+[vk::image_format("r16f")]
+uniform RWTexture2D<float> outImage : register(t1);
 
 [[vk::binding(2)]]
 uniform ConstantBuffer<ray_tracing.ObjectTransform> transform;
@@ -39,5 +39,6 @@ void rgen_main()
         colorPayload
     );
 
-    outImage[DispatchRaysIndex().xy] = float4(colorPayload.hitValue, 1.0);
+    // outImage[DispatchRaysIndex().xy] = float4(float3(colorPayload.ambientOcclusionTerm * (0.2 + 0.8*colorPayload.shadowTerm)), 1.0);
+    outImage[DispatchRaysIndex().xy] = colorPayload.ambientOcclusionTerm;
 }
