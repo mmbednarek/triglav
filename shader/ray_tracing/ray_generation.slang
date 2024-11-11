@@ -6,9 +6,13 @@ uniform RaytracingAccelerationStructure topLevelAS : register(t0);
 
 [[vk::binding(1)]]
 [vk::image_format("r16f")]
-uniform RWTexture2D<float> outImage : register(t1);
+uniform RWTexture2D<float> outAmbientOcclusionImage : register(t1);
 
 [[vk::binding(2)]]
+[vk::image_format("r16f")]
+uniform RWTexture2D<float> outShadowsImage : register(t2);
+
+[[vk::binding(3)]]
 uniform ConstantBuffer<ray_tracing.ObjectTransform> transform;
 
 [shader("raygeneration")]
@@ -26,7 +30,7 @@ void rgen_main()
     rayDesc.TMin = 0.01;
     rayDesc.TMax = 1000.0;
 
-    ray_payload.Color colorPayload;
+    ray_payload.GeneralOutput outPayload;
 
     TraceRay(
         topLevelAS,
@@ -36,9 +40,9 @@ void rgen_main()
         0,
         0,
         rayDesc,
-        colorPayload
+        outPayload
     );
 
-    // outImage[DispatchRaysIndex().xy] = float4(float3(colorPayload.ambientOcclusionTerm * (0.2 + 0.8*colorPayload.shadowTerm)), 1.0);
-    outImage[DispatchRaysIndex().xy] = colorPayload.ambientOcclusionTerm;
+    outAmbientOcclusionImage[DispatchRaysIndex().xy] = outPayload.ambientOcclusionTerm;
+    outShadowsImage[DispatchRaysIndex().xy] = outPayload.shadowTerm;
 }

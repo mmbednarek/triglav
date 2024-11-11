@@ -89,7 +89,7 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
                               graphics_api::CommandList& cmdList)
 {
    cmdList.reset_timestamp_array(m_timestampArray, 0, 2);
-   cmdList.write_timestamp(graphics_api::PipelineStage::Entrypoint, m_timestampArray, 0);
+   cmdList.write_timestamp(PipelineStage::Entrypoint, m_timestampArray, 0);
 
    auto& gbuffer = frameResources.node("geometry"_name).framebuffer("gbuffer"_name);
    auto& framebuffer = resources.framebuffer("shading"_name);
@@ -109,7 +109,7 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
    shadowMats[2] = m_scene.shadow_map_camera(2).view_projection_matrix() * inverseViewMat;
    const auto lightPosition = m_scene.camera().view_matrix() * glm::vec4(-30, 0, -5, 1.0);
 
-   auto& shadingResources = static_cast<ShadingResources&>(resources);
+   auto& shadingResources = dynamic_cast<ShadingResources&>(resources);
 
    m_shadingRenderer.draw(frameResources, cmdList, glm::vec3(lightPosition), shadowMats, m_scene.camera().view_matrix(),
                           shadingResources.get_ubo());
@@ -129,7 +129,7 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
 
    cmdList.end_render_pass();
 
-   cmdList.write_timestamp(graphics_api::PipelineStage::End, m_timestampArray, 1);
+   cmdList.write_timestamp(PipelineStage::End, m_timestampArray, 1);
 }
 
 float Shading::gpu_time() const

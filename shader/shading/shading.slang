@@ -45,19 +45,22 @@ uniform Sampler2D<float4> texNormal;
 uniform Sampler2D<float> texAmbientOcclusion;
 [[vk::binding(4)]]
 uniform Sampler2D<float> texShadowMaps[3];
+[[vk::binding(5)]]
+uniform Sampler2D<float> texShadow;
 
 struct ShadingData
 {
     float4x4 viewMat;
     float4x4 shadowMapMats[3];
 }; 
-[[vk::binding(5)]]
+[[vk::binding(6)]]
 uniform ConstantBuffer<ShadingData> shadingData;
 
 struct PushConstants
 {
     float3 lightPosition;
     bool isAmbientOcclusionEnabled;
+    bool shouldSampleShadows;
 };
 [[vk::push_constant]]
 uniform ConstantBuffer<PushConstants> pushConstants;
@@ -70,6 +73,7 @@ static const float4x4 BIAS_MAT = float4x4(
 );
 
 static const float STATIC_AMBIENT_TERM = 0.5;
+static const float SHADOW_MAP_BIAS_TERM = 0.008;
 
 [shader("fragment")]
 FragOutput fs_main(FragInput fragInput)
@@ -94,19 +98,21 @@ FragOutput fs_main(FragInput fragInput)
     shadowUV /= shadowUV.w;
 
     float shadow;
-    if (common::shadow_map::test_bounds(shadowUV)) {
-        shadow = common::shadow_map::test_pcr(texShadowMaps[0], shadowUV, 0.006);
+    if (pushConstants.shouldSampleShadows) {
+        shadow = texShadow.Sample(fragInput.texCoord);
+    } else if (common::shadow_map::test_bounds(shadowUV)) {
+        shadow = common::shadow_map::test_pcr(texShadowMaps[0], shadowUV, SHADOW_MAP_BIAS_TERM);
 //        texColorSample.rgb *= float3(1.0, 0.1, 0.1);
     } else  {
         shadowUV = mul(mul(BIAS_MAT, shadingData.shadowMapMats[1]), float4(position, 1.0));
         shadowUV /= shadowUV.w;
         if (common::shadow_map::test_bounds(shadowUV)) {
-            shadow = common::shadow_map::test_pcr(texShadowMaps[1], shadowUV, 0.006);
+            shadow = common::shadow_map::test_pcr(texShadowMaps[1], shadowUV, SHADOW_MAP_BIAS_TERM);
 //            texColorSample.rgb *= float3(0.1, 1.0, 0.1);
         } else {
             shadowUV = mul(mul(BIAS_MAT, shadingData.shadowMapMats[2]), float4(position, 1.0));
             shadowUV /= shadowUV.w;
-            shadow = common::shadow_map::test_pcr(texShadowMaps[2], shadowUV, 0.006);
+            shadow = common::shadow_map::test_pcr(texShadowMaps[2], shadowUV, SHADOW_MAP_BIAS_TERM);
 //            texColorSample.rgb *= float3(0.1, 0.1, 1.0);
         }
     }

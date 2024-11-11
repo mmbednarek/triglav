@@ -53,6 +53,7 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader | gapi::PipelineStage::ClosestHitShader,
                                                  gapi::DescriptorType::AccelerationStructure)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::StorageImage)
+                             .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::StorageImage)
                              .descriptor_binding(gapi::PipelineStage::RayGenerationShader, gapi::DescriptorType::UniformBuffer)
                              .descriptor_binding(gapi::PipelineStage::ClosestHitShader, gapi::DescriptorType::StorageBuffer)
                              .push_constant(gapi::PipelineStage::ClosestHitShader, sizeof(RayTracingConstants))
@@ -71,30 +72,31 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
 {
 }
 
-void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture)
+void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_api::Texture& aoTexture,
+                             const graphics_api::Texture& shadowsTexture)
 {
    if (m_mustUpdateAccelerationStructures) {
       spdlog::info("Updating acceleration structures...");
       m_mustUpdateAccelerationStructures = false;
 
-      auto cmdList = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
+      auto asUpdateCmdList = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
 
-      GAPI_CHECK_STATUS(cmdList.begin(gapi::SubmitType::OneTime));
-      m_buildBLContext.build_acceleration_structures(cmdList);
-      GAPI_CHECK_STATUS(cmdList.finish());
+      GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
+      m_buildBLContext.build_acceleration_structures(asUpdateCmdList);
+      GAPI_CHECK_STATUS(asUpdateCmdList.finish());
 
-      GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(cmdList));
+      GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(asUpdateCmdList));
 
       m_instanceListBuffer.emplace(m_instanceBuilder.build_buffer());
 
       m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, m_objects.size());
       m_tlAccelerationStructure = m_buildTLContext.commit_instances();
 
-      GAPI_CHECK_STATUS(cmdList.begin(gapi::SubmitType::OneTime));
-      m_buildTLContext.build_acceleration_structures(cmdList);
-      GAPI_CHECK_STATUS(cmdList.finish());
+      GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
+      m_buildTLContext.build_acceleration_structures(asUpdateCmdList);
+      GAPI_CHECK_STATUS(asUpdateCmdList.finish());
 
-      GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(cmdList));
+      GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(asUpdateCmdList));
 
       GAPI_CHECK_STATUS(m_objectBuffer.write_indirect(m_objects.data(), m_objects.size() * sizeof(ObjectDesc)));
    }
@@ -110,12 +112,13 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
 
    cmdList.bind_pipeline(m_pipeline);
    cmdList.bind_acceleration_structure(0, *m_tlAccelerationStructure);
-   cmdList.bind_storage_image(1, texture);
-   cmdList.bind_uniform_buffer(2, m_ubo);
-   cmdList.bind_storage_buffer(3, m_objectBuffer);
+   cmdList.bind_storage_image(1, aoTexture);
+   cmdList.bind_storage_image(2, shadowsTexture);
+   cmdList.bind_uniform_buffer(3, m_ubo);
+   cmdList.bind_storage_buffer(4, m_objectBuffer);
    RayTracingConstants constants{.lightDir{m_scene.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)}};
    cmdList.push_constant(graphics_api::PipelineStage::ClosestHitShader, constants);
-   cmdList.trace_rays(m_bindingTable, {texture.width(), texture.height(), 1});
+   cmdList.trace_rays(m_bindingTable, {aoTexture.width(), aoTexture.height(), 1});
 }
 
 void RayTracingScene::on_object_added_to_scene(const SceneObject& object)

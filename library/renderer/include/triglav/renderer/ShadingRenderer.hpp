@@ -19,6 +19,7 @@ class ShadingRenderer
    {
       alignas(16) glm::vec3 lightPosition{};
       int enableSSAO{1};
+      int shouldSampleShadows{false};
    };
 
    struct UniformData

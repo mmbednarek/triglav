@@ -10,10 +10,9 @@ namespace ray_payload
     public struct AmbientOcclusion
     {
         public float distance;
-        public bool isOccluded;
     };
 
-    public struct Color
+    public struct GeneralOutput
     {
         public float shadowTerm;
         public float ambientOcclusionTerm;

@@ -48,7 +48,7 @@ class RayTracingScene
 
    explicit RayTracingScene(graphics_api::Device& device, resource::ResourceManager& resources, Scene& scene);
 
-   void render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture);
+   void render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture, const graphics_api::Texture& shadowsTexture);
 
    void on_object_added_to_scene(const SceneObject& object);
 

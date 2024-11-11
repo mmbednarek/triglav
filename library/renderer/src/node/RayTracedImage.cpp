@@ -14,14 +14,21 @@ using graphics_api::WorkType;
 
 RayTracedImageResources::RayTracedImageResources(graphics_api::Device& device) :
     m_device(device),
-    m_texture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {1600, 900}, TextureUsage::Sampled | TextureUsage::Storage)))
+    m_ambientOcclusionTexture(
+       GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {1600, 900}, TextureUsage::Sampled | TextureUsage::Storage))),
+    m_shadowsTexture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {1600, 900}, TextureUsage::Sampled | TextureUsage::Storage)))
 {
-   this->register_texture("ao"_name, m_texture);
+   this->register_texture("ao"_name, m_ambientOcclusionTexture);
+   this->register_texture("shadows"_name, m_shadowsTexture);
 }
 
-const graphics_api::Texture& RayTracedImageResources::texture() const
+const graphics_api::Texture& RayTracedImageResources::ao_texture() const
 {
-   return m_texture;
+   return m_ambientOcclusionTexture;
+}
+const graphics_api::Texture& RayTracedImageResources::shadows_texture() const
+{
+   return m_shadowsTexture;
 }
 
 TextureState RayTracedImageResources::in_texture_state()
@@ -34,9 +41,12 @@ TextureState RayTracedImageResources::in_texture_state()
 void RayTracedImageResources::update_resolution(const graphics_api::Resolution& resolution)
 {
    NodeFrameResources::update_resolution(resolution);
-   m_texture = GAPI_CHECK(m_device.create_texture(GAPI_FORMAT(R, Float16), {resolution.width, resolution.height},
-                                                  TextureUsage::Sampled | TextureUsage::Storage));
-   this->register_texture("ao"_name, m_texture);
+   m_ambientOcclusionTexture = GAPI_CHECK(m_device.create_texture(GAPI_FORMAT(R, Float16), {resolution.width, resolution.height},
+                                                                  TextureUsage::Sampled | TextureUsage::Storage));
+   m_shadowsTexture = GAPI_CHECK(m_device.create_texture(GAPI_FORMAT(R, Float16), {resolution.width, resolution.height},
+                                                         TextureUsage::Sampled | TextureUsage::Storage));
+   this->register_texture("ao"_name, m_ambientOcclusionTexture);
+   this->register_texture("shadows"_name, m_shadowsTexture);
 }
 
 // RayTracedImage
@@ -61,27 +71,47 @@ void RayTracedImage::record_commands(render_core::FrameResources& frameResources
    cmdList.write_timestamp(PipelineStage::Entrypoint, m_timestampArray, 0);
 
    auto& res = dynamic_cast<RayTracedImageResources&>(nodeResources);
-   auto& texture = res.texture();
+   auto& aoTexture = res.ao_texture();
+   auto& shadowsTexture = res.shadows_texture();
+   const auto texState = res.in_texture_state();
 
-   TextureBarrierInfo dstBarrierIn{
-      .texture = &texture,
-      .sourceState = res.in_texture_state(),
-      .targetState = TextureState::General,
-      .baseMipLevel = 0,
-      .mipLevelCount = 1,
+   std::array dstBarriersIn{
+      TextureBarrierInfo{
+         .texture = &aoTexture,
+         .sourceState = texState,
+         .targetState = TextureState::General,
+         .baseMipLevel = 0,
+         .mipLevelCount = 1,
+      },
+      TextureBarrierInfo{
+         .texture = &shadowsTexture,
+         .sourceState = texState,
+         .targetState = TextureState::General,
+         .baseMipLevel = 0,
+         .mipLevelCount = 1,
+      },
    };
-   cmdList.texture_barrier(PipelineStage::ComputeShader, PipelineStage::RayGenerationShader, dstBarrierIn);
+   cmdList.texture_barrier(PipelineStage::ComputeShader, PipelineStage::RayGenerationShader, dstBarriersIn);
 
-   m_rtScene.render(cmdList, texture);
+   m_rtScene.render(cmdList, aoTexture, shadowsTexture);
 
-   TextureBarrierInfo dstBarrierOut{
-      .texture = &texture,
-      .sourceState = TextureState::General,
-      .targetState = TextureState::ShaderRead,
-      .baseMipLevel = 0,
-      .mipLevelCount = 1,
+   std::array dstBarriersOut{
+      TextureBarrierInfo {
+         .texture = &aoTexture,
+         .sourceState = TextureState::General,
+         .targetState = TextureState::ShaderRead,
+         .baseMipLevel = 0,
+         .mipLevelCount = 1,
+      },
+      TextureBarrierInfo {
+         .texture = &shadowsTexture,
+         .sourceState = TextureState::General,
+         .targetState = TextureState::ShaderRead,
+         .baseMipLevel = 0,
+         .mipLevelCount = 1,
+      },
    };
-   cmdList.texture_barrier(PipelineStage::RayGenerationShader, PipelineStage::ComputeShader, dstBarrierOut);
+   cmdList.texture_barrier(PipelineStage::RayGenerationShader, PipelineStage::ComputeShader, dstBarriersOut);
 
    cmdList.write_timestamp(PipelineStage::End, m_timestampArray, 1);
 }

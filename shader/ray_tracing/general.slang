@@ -7,7 +7,7 @@ static constexpr float AMBIENT_OCCLUSION_DISTANCE = 4.0;
 [[vk::binding(0)]]
 uniform RaytracingAccelerationStructure topLevelAS : register(t0);
 
-[[vk::binding(3)]]
+[[vk::binding(4)]]
 StructuredBuffer<ray_tracing.ObjectData> objects;
 
 struct PushConstants
@@ -34,7 +34,7 @@ static const float3 PrimeVector = float3(74929, 54851, 85847);
 
 
 [shader("closesthit")]
-void chit_main(inout ray_payload.Color payload, in ray_tracing.Attributes attribs)
+void chit_main(inout ray_payload.GeneralOutput payload, in ray_tracing.Attributes attribs)
 {
     // Read object info
     let object = objects[InstanceIndex()];
@@ -113,7 +113,7 @@ void chit_main(inout ray_payload.Color payload, in ray_tracing.Attributes attrib
 }
 
 [shader("miss")]
-void miss_main(inout ray_payload.Color payload)
+void miss_main(inout ray_payload.GeneralOutput payload)
 {
     payload.shadowTerm = 1.0;
     payload.ambientOcclusionTerm = 1.0;

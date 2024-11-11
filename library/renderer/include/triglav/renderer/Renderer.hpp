@@ -72,6 +72,7 @@ class Renderer
    bool m_hideUI{false};
    bool m_smoothCamera{true};
    bool m_mustRecreateSwapchain{false};
+   bool m_rayTracedShadows{false};
    glm::vec3 m_position{};
    glm::vec3 m_motion{};
    glm::vec2 m_mouseOffset{};

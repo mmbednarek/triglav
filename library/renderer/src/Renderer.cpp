@@ -191,6 +191,7 @@ void Renderer::update_debug_info()
 
    m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(m_aoMethod));
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, m_rayTracedShadows ? "Ray Traced" : "Cascaded Shadow Maps");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, m_smoothCamera ? "On" : "Off");
@@ -231,6 +232,7 @@ void Renderer::on_render()
    m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
    m_renderGraph.set_flag("bloom"_name, m_bloomEnabled);
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
+   m_renderGraph.set_flag("ray_traced_shadows"_name, m_rayTracedShadows);
    this->update_debug_info();
 
    this->update_uniform_data(deltaTime);
@@ -317,6 +319,9 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::F8) {
       m_smoothCamera = not m_smoothCamera;
+   }
+   if (key == Key::F9) {
+      m_rayTracedShadows = not m_rayTracedShadows;
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -16.0f;

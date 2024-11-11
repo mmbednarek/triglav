@@ -12,13 +12,15 @@ class RayTracedImageResources : public render_core::NodeFrameResources
  public:
    explicit RayTracedImageResources(graphics_api::Device& device);
 
-   [[nodiscard]] const graphics_api::Texture& texture() const;
+   [[nodiscard]] const graphics_api::Texture& ao_texture() const;
+   [[nodiscard]] const graphics_api::Texture& shadows_texture() const;
    [[nodiscard]] graphics_api::TextureState in_texture_state();
    void update_resolution(const graphics_api::Resolution& resolution) override;
 
  private:
    graphics_api::Device& m_device;
-   graphics_api::Texture m_texture;
+   graphics_api::Texture m_ambientOcclusionTexture;
+   graphics_api::Texture m_shadowsTexture;
    bool m_initialLayout{true};
 };
 
