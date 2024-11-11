@@ -1,32 +1,22 @@
 #pragma once
 
 #include "AmbientOcclusionRenderer.hpp"
-#include "DebugLinesRenderer.hpp"
 #include "GlyphCache.hpp"
-#include "GroundRenderer.hpp"
 #include "InfoDialog.hpp"
-#include "PostProcessingRenderer.hpp"
 #include "RayTracingScene.hpp"
-#include "RectangleRenderer.hpp"
 #include "Renderer.hpp"
 #include "Scene.hpp"
-#include "ShadingRenderer.hpp"
-#include "SkyBox.hpp"
 #include "SpriteRenderer.hpp"
 
-#include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop/ISurfaceEventListener.hpp"
-#include "triglav/font/FontManager.h"
 #include "triglav/graphics_api/Device.hpp"
-#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/graphics_api/RenderTarget.hpp"
-#include "triglav/render_core/FrameResources.h"
 #include "triglav/render_core/GlyphAtlas.h"
-#include "triglav/render_core/Model.hpp"
-#include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/RenderGraph.h"
 #include "triglav/resource/ResourceManager.h"
 #include "triglav/ui_core/Viewport.h"
+
+#include <optional>
 
 namespace triglav::renderer {
 
@@ -58,6 +48,7 @@ class Renderer
    [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
    [[nodiscard]] graphics_api::Device& device() const;
+   [[nodiscard]] bool is_any_ray_tracing_feature_enabled() const;
 
  private:
    void recreate_swapchain(uint32_t width, uint32_t height);
@@ -93,7 +84,7 @@ class Renderer
    render_core::RenderGraph m_renderGraph;
    ui_core::Viewport m_uiViewport;
    InfoDialog m_infoDialog;
-   RayTracingScene m_rayTracingScene;
+   std::optional<RayTracingScene> m_rayTracingScene;
 };
 
 }// namespace triglav::renderer

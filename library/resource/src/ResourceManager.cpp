@@ -20,6 +20,8 @@
 
 namespace triglav::resource {
 
+using namespace name_literals;
+
 namespace {
 
 std::vector<ResourceStage> parse_asset_list(const io::Path& path)
@@ -94,6 +96,12 @@ void ResourceManager::load_next_stage()
    auto contentPath = PathManager::the().content_path();
 
    for (const auto& [nameStr, source, props] : stage.resourceList) {
+      if (props.get_bool("rt_only"_name) && !(m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing)) {
+         spdlog::info("Skipped asset {}, ray tracing is disabled", nameStr);
+         this->on_finished_loading_resource(make_rc_name(nameStr), true);
+         continue;
+      }
+
       auto resourcePath = buildPath.sub(source);
       if (not resourcePath.exists()) {
          resourcePath = contentPath.sub(source);
@@ -128,7 +136,7 @@ void ResourceManager::load_asset(const ResourceName assetName, const io::Path& p
       break;
    }
 
-   this->on_resource_is_loaded(assetName);
+   this->on_finished_loading_resource(assetName);
 }
 
 bool ResourceManager::is_name_registered(const ResourceName assetName) const
@@ -140,16 +148,18 @@ bool ResourceManager::is_name_registered(const ResourceName assetName) const
    return container->is_name_registered(assetName);
 }
 
-void ResourceManager::on_resource_is_loaded(ResourceName resourceName)
+void ResourceManager::on_finished_loading_resource(ResourceName resourceName, const bool skipped)
 {
    if (m_loadContext == nullptr) {
       spdlog::error("Cannot load stage: no asset loading in progress");
       return;
    }
 
-   spdlog::info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
-                m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
-   this->OnFinishedLoadingAsset.publish(resourceName, m_loadContext->total_loaded_assets(), m_loadContext->total_assets());
+   if (skipped == false) {
+      spdlog::info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
+                   m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
+      this->OnFinishedLoadingAsset.publish(resourceName, m_loadContext->total_loaded_assets(), m_loadContext->total_assets());
+   }
 
    const auto result = m_loadContext->finish_loading_asset();
 

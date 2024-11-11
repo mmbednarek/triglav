@@ -3,7 +3,6 @@
 #include "StatisticManager.hpp"
 #include "node/AmbientOcclusion.hpp"
 #include "node/Blur.hpp"
-#include "node/Downsample.hpp"
 #include "node/Geometry.hpp"
 #include "node/Particles.hpp"
 #include "node/PostProcessing.hpp"
@@ -16,13 +15,10 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/io/CommandLine.h"
-#include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
-#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
@@ -31,6 +27,7 @@
 using triglav::ResourceType;
 using triglav::desktop::Key;
 using triglav::graphics_api::AttachmentAttribute;
+using triglav::graphics_api::DeviceFeature;
 using triglav::graphics_api::SampleCount;
 using triglav::render_core::checkResult;
 using triglav::render_core::checkStatus;
@@ -72,7 +69,7 @@ std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::S
 
 graphics_api::PresentMode get_present_mode()
 {
-   auto presentModeStr = io::CommandLine::the().arg("presentMode"_name);
+   const auto presentModeStr = io::CommandLine::the().arg("presentMode"_name);
    if (not presentModeStr.has_value())
       return graphics_api::PresentMode::Fifo;
 
@@ -88,7 +85,7 @@ graphics_api::PresentMode get_present_mode()
 }// namespace
 
 Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device,
-                   resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
+                   ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
     m_desktopSurface(desktopSurface),
     m_surface(surface),
     m_device(device),
@@ -110,7 +107,8 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_context2D(m_device, m_renderTarget, m_resourceManager),
     m_renderGraph(m_device),
     m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache),
-    m_rayTracingScene(m_device, m_resourceManager, m_scene)
+    m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing) ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
+                                                                                : std::nullopt)
 {
    m_context2D.update_resolution(m_resolution);
 
@@ -126,7 +124,10 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
    m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "bloom"_name, false);
    m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, true);
-   m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, m_rayTracingScene, m_scene);
+
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+      m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, *m_rayTracingScene, m_scene);
+   }
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
    m_renderGraph.add_interframe_dependency("geometry"_name, "shading"_name);
@@ -135,7 +136,6 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.add_dependency("user_interface"_name, "process_glyphs"_name);
    m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
    m_renderGraph.add_dependency("blur_ao"_name, "ambient_occlusion"_name);
-   m_renderGraph.add_dependency("blur_ao"_name, "ray_tracing"_name);
    m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
    m_renderGraph.add_dependency("shading"_name, "blur_ao"_name);
    m_renderGraph.add_dependency("shading"_name, "particles"_name);
@@ -143,6 +143,10 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
    m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);
+
+   if (m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
+      m_renderGraph.add_dependency("blur_ao"_name, "ray_tracing"_name);
+   }
 
    m_renderGraph.bake("post_processing"_name);
    m_renderGraph.update_resolution(m_resolution);
@@ -179,8 +183,12 @@ void Renderer::update_debug_info()
    const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
    m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
 
-   const auto rtGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::RayTracingGpuTime));
-   m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, rtGpuTimeStr);
+   if (this->is_any_ray_tracing_feature_enabled()) {
+      const auto rtGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::RayTracingGpuTime));
+      m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, rtGpuTimeStr);
+   } else {
+      m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, "Disabled");
+   }
 
    const auto camPos = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
@@ -207,7 +215,10 @@ void Renderer::on_render()
       StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
       StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
       StatisticManager::the().push_accumulated(Stat::ShadingGpuTime, m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
-      StatisticManager::the().push_accumulated(Stat::RayTracingGpuTime, m_renderGraph.node<node::RayTracedImage>("ray_tracing"_name).gpu_time());
+      if (this->is_any_ray_tracing_feature_enabled()) {
+         StatisticManager::the().push_accumulated(Stat::RayTracingGpuTime,
+                                                  m_renderGraph.node<node::RayTracedImage>("ray_tracing"_name).gpu_time());
+      }
    } else {
       isFirstFrame = false;
    }
@@ -274,6 +285,7 @@ static Renderer::Moving map_direction(const Key key)
       return Renderer::Moving::Left;
    case Key::D:
       return Renderer::Moving::Right;
+   default: break;
       //   case Key::Q: return Renderer::Moving::Up;
       //   case Key::E: return Renderer::Moving::Down;
    }
@@ -296,7 +308,7 @@ void Renderer::on_key_pressed(const Key key)
          m_aoMethod = AmbientOcclusionMethod::ScreenSpace;
          break;
       case AmbientOcclusionMethod::ScreenSpace:
-         if (m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
+         if (m_device.enabled_features() & DeviceFeature::RayTracing) {
             m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ray_tracing"_name, "ao"_name);
             m_aoMethod = AmbientOcclusionMethod::RayTraced;
          } else {
@@ -321,14 +333,16 @@ void Renderer::on_key_pressed(const Key key)
       m_smoothCamera = not m_smoothCamera;
    }
    if (key == Key::F9) {
-      m_rayTracedShadows = not m_rayTracedShadows;
+      if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+         m_rayTracedShadows = not m_rayTracedShadows;
+      }
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -16.0f;
    }
 }
 
-void Renderer::on_key_released(const triglav::desktop::Key key)
+void Renderer::on_key_released(const Key key)
 {
    const auto dir = map_direction(key);
    if (m_moveDirection == dir) {
@@ -410,6 +424,13 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
 graphics_api::Device& Renderer::device() const
 {
    return m_device;
+}
+bool Renderer::is_any_ray_tracing_feature_enabled() const
+{
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+      return m_rayTracedShadows || m_aoMethod == AmbientOcclusionMethod::RayTraced;
+   }
+   return false;
 }
 
 constexpr auto g_movingSpeed = 10.0f;

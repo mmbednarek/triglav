@@ -76,7 +76,7 @@ class ResourceManager
       container<CResourceType>().iterate_resources(func);
    }
 
-   void on_resource_is_loaded(ResourceName resourceName);
+   void on_finished_loading_resource(ResourceName resourceName, bool skipped = false);
 
    std::optional<std::string> lookup_name(ResourceName resourceName) const;
 

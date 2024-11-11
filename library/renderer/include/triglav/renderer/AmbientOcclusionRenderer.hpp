@@ -30,6 +30,7 @@ inline std::string_view ambient_occlusion_method_to_string(const AmbientOcclusio
    case AmbientOcclusionMethod::RayTraced:
       return "Ray Traced";
    }
+   return "";
 }
 
 class AmbientOcclusionRenderer
