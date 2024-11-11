@@ -2,6 +2,7 @@ io_sources = files([
   'include/triglav/io/BufferedReader.h',
   'include/triglav/io/BufferWriter.h',
   'include/triglav/io/CommandLine.h',
+  'include/triglav/io/DynamicWriter.hpp',
   'include/triglav/io/File.h',
   'include/triglav/io/Path.h',
   'include/triglav/io/Result.h',
@@ -10,6 +11,7 @@ io_sources = files([
   'src/BufferWriter.cpp',
   'src/BufferedReader.cpp',
   'src/CommandLine.cpp',
+  'src/DynamicWriter.cpp',
   'src/File.cpp',
   'src/Path.cpp',
   'src/Serializer.cpp',
@@ -35,3 +37,5 @@ io = declare_dependency(
   link_with: io_lib,
   dependencies: io_deps,
 )
+
+subdir('test')

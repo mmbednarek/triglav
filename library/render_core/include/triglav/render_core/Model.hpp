@@ -4,7 +4,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/geometry/Mesh.h"
-#include "triglav/graphics_api/DescriptorArray.h"
+#include "triglav/graphics_api/DescriptorArray.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 
 #include "Material.hpp"

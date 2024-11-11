@@ -57,7 +57,7 @@ Result<MemorySize> WindowsFile::read(const std::span<u8> buffer)
    return static_cast<MemorySize>(bytesRead);
 }
 
-Result<MemorySize> WindowsFile::write(const std::span<u8> buffer)
+Result<MemorySize> WindowsFile::write(const std::span<const u8> buffer)
 {
    DWORD bytesWritten{};
    const auto res = WriteFile(reinterpret_cast<HANDLE>(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesWritten, nullptr);

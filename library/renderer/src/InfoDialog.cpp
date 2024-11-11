@@ -1,4 +1,4 @@
-#include "InfoDialog.h"
+#include "InfoDialog.hpp"
 
 #include "triglav/Name.hpp"
 
@@ -22,6 +22,7 @@ constexpr std::array g_metricsLabels{
    std::tuple{"info_dialog/metrics/gbuffer_gpu_time"_name, "info_dialog/metrics/gbuffer_gpu_time/value"_name, "GBuffer Render Time"sv},
    std::tuple{"info_dialog/metrics/shading_triangles"_name, "info_dialog/metrics/shading_triangles/value"_name, "Shading Triangles"sv},
    std::tuple{"info_dialog/metrics/shading_gpu_time"_name, "info_dialog/metrics/shading_gpu_time/value"_name, "Shading Render Time"sv},
+   std::tuple{"info_dialog/metrics/ray_tracing_gpu_time"_name, "info_dialog/metrics/ray_tracing_gpu_time/value"_name, "Ray Tracing Time"sv},
 };
 
 constexpr std::array g_locationLabels{
@@ -32,6 +33,7 @@ constexpr std::array g_locationLabels{
 constexpr std::array g_featureLabels{
    std::tuple{"info_dialog/features/ao"_name, "info_dialog/features/ao/value"_name, "Ambient Occlusion"sv},
    std::tuple{"info_dialog/features/aa"_name, "info_dialog/features/aa/value"_name, "Anti-Aliasing"sv},
+   std::tuple{"info_dialog/features/shadows"_name, "info_dialog/features/shadows/value"_name, "Shadows"sv},
    std::tuple{"info_dialog/features/bloom"_name, "info_dialog/features/bloom/value"_name, "Bloom"sv},
    std::tuple{"info_dialog/features/debug_lines"_name, "info_dialog/features/debug_lines/value"_name, "Debug Lines"sv},
    std::tuple{"info_dialog/features/smooth_camera"_name, "info_dialog/features/smooth_camera/value"_name, "Smooth Camera"sv},
@@ -52,7 +54,7 @@ InfoDialog::InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& r
 
 void InfoDialog::initialize()
 {
-   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 600.0f}});
+   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 680.0f}});
 
    m_position = {g_leftOffset, g_topOffset};
 

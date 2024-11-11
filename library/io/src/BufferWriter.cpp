@@ -10,7 +10,7 @@ BufferWriter::BufferWriter(std::span<u8> buffer) :
 {
 }
 
-Result<MemorySize> BufferWriter::write(const std::span<u8> buffer)
+Result<MemorySize> BufferWriter::write(const std::span<const u8> buffer)
 {
    if ((m_offset + buffer.size()) > m_buffer.size()) {
       return std::unexpected{Status::BufferTooSmall};

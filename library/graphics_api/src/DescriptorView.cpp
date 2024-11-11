@@ -1,4 +1,4 @@
-#include "DescriptorView.h"
+#include "DescriptorView.hpp"
 
 namespace triglav::graphics_api {
 

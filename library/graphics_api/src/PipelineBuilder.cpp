@@ -1,9 +1,9 @@
-#include "PipelineBuilder.h"
+#include "PipelineBuilder.hpp"
 
-#include "Device.h"
-#include "RenderTarget.h"
-#include "Shader.h"
-#include "vulkan/Util.h"
+#include "Device.hpp"
+#include "RenderTarget.hpp"
+#include "Shader.hpp"
+#include "vulkan/Util.hpp"
 
 namespace triglav::graphics_api {
 
@@ -16,32 +16,37 @@ PipelineBuilderBase::PipelineBuilderBase(Device& device) :
 {
 }
 
-void PipelineBuilderBase::add_shader(const Shader& shader)
+Index PipelineBuilderBase::add_shader(const Shader& shader)
 {
    VkPipelineShaderStageCreateInfo info{};
    info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
    info.module = *shader.vulkan_module();
    info.pName = shader.name().data();
    info.stage = vulkan::to_vulkan_shader_stage(shader.stage());
+
+   const auto index = m_shaderStageInfos.size();
+
    m_shaderStageInfos.emplace_back(info);
+
+   return index;
 }
 
-void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount)
+void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, PipelineStageFlags shaderStages, u32 descriptorCount)
 {
    VkDescriptorSetLayoutBinding layoutBinding{};
    layoutBinding.descriptorCount = descriptorCount;
    layoutBinding.binding = m_vulkanDescriptorBindings.size();
    layoutBinding.descriptorType = vulkan::to_vulkan_descriptor_type(descriptorType);
-   layoutBinding.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStage);
+   layoutBinding.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStages);
    m_vulkanDescriptorBindings.emplace_back(layoutBinding);
 }
 
-void PipelineBuilderBase::add_push_constant(PipelineStage shaderStage, size_t size, size_t offset)
+void PipelineBuilderBase::add_push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset)
 {
    VkPushConstantRange range;
    range.offset = offset;
    range.size = size;
-   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(PipelineStage::None | shaderStage);
+   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStages);
    m_pushConstantRanges.emplace_back(range);
 }
 

@@ -1,7 +1,7 @@
-#include "Geometry.h"
+#include "Geometry.hpp"
 
-#include "triglav/graphics_api/Framebuffer.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/Framebuffer.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/io/BufferWriter.h"
 #include "triglav/io/Serializer.h"
 #include "triglav/render_core/RenderGraph.h"
@@ -77,7 +77,8 @@ class GeometryResources : public IGeometryResources
       }
    }
 
-   void draw_model(graphics_api::CommandList& cmdList, const render_core::InstancedModel& instancedModel, render_core::NodeFrameResources& shadingRes)
+   void draw_model(graphics_api::CommandList& cmdList, const render_core::InstancedModel& instancedModel,
+                   render_core::NodeFrameResources& shadingRes)
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -119,7 +120,8 @@ class GeometryResources : public IGeometryResources
                   cmdList.bind_texture(binding, shadingRes.framebuffer("shading"_name).texture("depth"_name));
                   ++binding;
                   break;
-               default: break;
+               default:
+                  break;
                }
             }
 
@@ -174,15 +176,15 @@ class GeometryResources : public IGeometryResources
       io::Serializer serializer(writer);
 
       for (const auto& prop : templ.properties) {
-         switch (prop.source)
-         {
+         switch (prop.source) {
          case render_core::PropertySource::LastViewProjectionMatrix:
             serializer.write_mat4(m_scene.camera().view_projection_matrix());
             break;
          case render_core::PropertySource::ViewPosition:
             serializer.write_vec3(m_scene.camera().position());
             break;
-         default: break;
+         default:
+            break;
          }
       }
    }
@@ -216,7 +218,8 @@ class GeometryResources : public IGeometryResources
    TG_SINK(Scene, OnAddedBoundingBox);
 };
 
-Geometry::Geometry(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene, render_core::RenderGraph& renderGraph) :
+Geometry::Geometry(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene,
+                   render_core::RenderGraph& renderGraph) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_scene(scene),

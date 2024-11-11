@@ -1,6 +1,6 @@
-#include "Framebuffer.h"
+#include "Framebuffer.hpp"
 
-#include "Texture.h"
+#include "Texture.hpp"
 
 namespace triglav::graphics_api {
 

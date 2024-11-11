@@ -4,8 +4,8 @@
 #include "Resource.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/Shader.h"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/graphics_api/Shader.hpp"
 #include "triglav/io/Path.h"
 
 #include <string_view>
@@ -30,6 +30,30 @@ struct Loader<ResourceType::VertexShader>
 
 template<>
 struct Loader<ResourceType::ComputeShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
+};
+
+template<>
+struct Loader<ResourceType::RayGenShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
+};
+
+template<>
+struct Loader<ResourceType::RayClosestHitShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, const io::Path& path, const ResourceProperties& props);
+};
+
+template<>
+struct Loader<ResourceType::RayMissShader>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
 

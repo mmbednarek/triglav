@@ -1,6 +1,6 @@
 #include "ShaderLoader.h"
 
-#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Device.hpp"
 #include "triglav/io/File.h"
 
 namespace triglav::resource {
@@ -21,6 +21,24 @@ graphics_api::Shader Loader<ResourceType::ComputeShader>::load_gpu(graphics_api:
                                                                    const ResourceProperties& props)
 {
    return GAPI_CHECK(device.create_shader(graphics_api::PipelineStage::ComputeShader, "main", io::read_whole_file(path)));
+}
+
+graphics_api::Shader Loader<ResourceType::RayGenShader>::load_gpu(graphics_api::Device& device, const io::Path& path,
+                                                                  const ResourceProperties& props)
+{
+   return GAPI_CHECK(device.create_shader(graphics_api::PipelineStage::RayGenerationShader, "main", io::read_whole_file(path)));
+}
+
+graphics_api::Shader Loader<ResourceType::RayClosestHitShader>::load_gpu(graphics_api::Device& device, const io::Path& path,
+                                                                         const ResourceProperties& props)
+{
+   return GAPI_CHECK(device.create_shader(graphics_api::PipelineStage::ClosestHitShader, "main", io::read_whole_file(path)));
+}
+
+graphics_api::Shader Loader<ResourceType::RayMissShader>::load_gpu(graphics_api::Device& device, const io::Path& path,
+                                                                   const ResourceProperties& props)
+{
+   return GAPI_CHECK(device.create_shader(graphics_api::PipelineStage::MissShader, "main", io::read_whole_file(path)));
 }
 
 }// namespace triglav::resource

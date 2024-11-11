@@ -1,8 +1,8 @@
-#include "SamplerCache.h"
+#include "SamplerCache.hpp"
 
 #include <bit>
 
-#include "Device.h"
+#include "Device.hpp"
 
 namespace triglav::graphics_api {
 

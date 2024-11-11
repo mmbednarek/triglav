@@ -1,27 +1,24 @@
-#include "Renderer.h"
+#include "Renderer.hpp"
 
-#include "StatisticManager.h"
-#include "node/AmbientOcclusion.h"
-#include "node/Blur.h"
-#include "node/Downsample.h"
-#include "node/Geometry.h"
-#include "node/Particles.h"
-#include "node/PostProcessing.h"
-#include "node/ProcessGlyphs.h"
-#include "node/Shading.h"
-#include "node/ShadowMap.h"
-#include "node/SyncBuffers.h"
-#include "node/UserInterface.h"
+#include "StatisticManager.hpp"
+#include "node/AmbientOcclusion.hpp"
+#include "node/Blur.hpp"
+#include "node/Geometry.hpp"
+#include "node/Particles.hpp"
+#include "node/PostProcessing.hpp"
+#include "node/ProcessGlyphs.hpp"
+#include "node/RayTracedImage.hpp"
+#include "node/Shading.hpp"
+#include "node/ShadowMap.hpp"
+#include "node/SyncBuffers.hpp"
+#include "node/UserInterface.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/graphics_api/PipelineBuilder.h"
 #include "triglav/io/CommandLine.h"
-#include "triglav/render_core/GlyphAtlas.h"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.h"
 
-#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
@@ -30,6 +27,7 @@
 using triglav::ResourceType;
 using triglav::desktop::Key;
 using triglav::graphics_api::AttachmentAttribute;
+using triglav::graphics_api::DeviceFeature;
 using triglav::graphics_api::SampleCount;
 using triglav::render_core::checkResult;
 using triglav::render_core::checkStatus;
@@ -71,7 +69,7 @@ std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::S
 
 graphics_api::PresentMode get_present_mode()
 {
-   auto presentModeStr = io::CommandLine::the().arg("presentMode"_name);
+   const auto presentModeStr = io::CommandLine::the().arg("presentMode"_name);
    if (not presentModeStr.has_value())
       return graphics_api::PresentMode::Fifo;
 
@@ -87,7 +85,7 @@ graphics_api::PresentMode get_present_mode()
 }// namespace
 
 Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device,
-                   resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
+                   ResourceManager& resourceManager, const graphics_api::Resolution& resolution) :
     m_desktopSurface(desktopSurface),
     m_surface(surface),
     m_device(device),
@@ -108,7 +106,9 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_glyphCache(m_device, m_resourceManager),
     m_context2D(m_device, m_renderTarget, m_resourceManager),
     m_renderGraph(m_device),
-    m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache)
+    m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache),
+    m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing) ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
+                                                                                : std::nullopt)
 {
    m_context2D.update_resolution(m_resolution);
 
@@ -122,10 +122,12 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
    m_renderGraph.emplace_node<node::SyncBuffers>("sync_buffers"_name, m_scene);
    m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
-   m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "shading"_name, "bloom"_name,
-                                          false);
-   m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, "ao"_name,
-                                          true);
+   m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "bloom"_name, false);
+   m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, true);
+
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+      m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, *m_rayTracingScene, m_scene);
+   }
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
    m_renderGraph.add_interframe_dependency("geometry"_name, "shading"_name);
@@ -141,6 +143,10 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
    m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);
+
+   if (m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
+      m_renderGraph.add_dependency("blur_ao"_name, "ray_tracing"_name);
+   }
 
    m_renderGraph.bake("post_processing"_name);
    m_renderGraph.update_resolution(m_resolution);
@@ -177,6 +183,13 @@ void Renderer::update_debug_info()
    const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
    m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
 
+   if (this->is_any_ray_tracing_feature_enabled()) {
+      const auto rtGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::RayTracingGpuTime));
+      m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, rtGpuTimeStr);
+   } else {
+      m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, "Disabled");
+   }
+
    const auto camPos = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
    m_uiViewport.set_text_content("info_dialog/location/position/value"_name, positionStr);
@@ -184,8 +197,9 @@ void Renderer::update_debug_info()
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
    m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
 
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, m_ssaoEnabled ? "Screen-Space" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(m_aoMethod));
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, m_rayTracedShadows ? "Ray Traced" : "Cascaded Shadow Maps");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, m_smoothCamera ? "On" : "Off");
@@ -201,6 +215,10 @@ void Renderer::on_render()
       StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
       StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
       StatisticManager::the().push_accumulated(Stat::ShadingGpuTime, m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
+      if (this->is_any_ray_tracing_feature_enabled()) {
+         StatisticManager::the().push_accumulated(Stat::RayTracingGpuTime,
+                                                  m_renderGraph.node<node::RayTracedImage>("ray_tracing"_name).gpu_time());
+      }
    } else {
       isFirstFrame = false;
    }
@@ -221,10 +239,11 @@ void Renderer::on_render()
    }
 
    m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
-   m_renderGraph.set_flag("ssao"_name, m_ssaoEnabled);
+   m_renderGraph.set_option("ao_method"_name, m_aoMethod);
    m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
    m_renderGraph.set_flag("bloom"_name, m_bloomEnabled);
    m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
+   m_renderGraph.set_flag("ray_traced_shadows"_name, m_rayTracedShadows);
    this->update_debug_info();
 
    this->update_uniform_data(deltaTime);
@@ -259,13 +278,14 @@ static Renderer::Moving map_direction(const Key key)
 {
    switch (key) {
    case Key::W:
-      return Renderer::Moving::Foward;
+      return Renderer::Moving::Forward;
    case Key::S:
       return Renderer::Moving::Backwards;
    case Key::A:
       return Renderer::Moving::Left;
    case Key::D:
       return Renderer::Moving::Right;
+   default: break;
       //   case Key::Q: return Renderer::Moving::Up;
       //   case Key::E: return Renderer::Moving::Down;
    }
@@ -282,7 +302,23 @@ void Renderer::on_key_pressed(const Key key)
       m_showDebugLines = not m_showDebugLines;
    }
    if (key == Key::F4) {
-      m_ssaoEnabled = not m_ssaoEnabled;
+      switch (m_aoMethod) {
+      case AmbientOcclusionMethod::None:
+         m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ambient_occlusion"_name, "ao"_name);
+         m_aoMethod = AmbientOcclusionMethod::ScreenSpace;
+         break;
+      case AmbientOcclusionMethod::ScreenSpace:
+         if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+            m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ray_tracing"_name, "ao"_name);
+            m_aoMethod = AmbientOcclusionMethod::RayTraced;
+         } else {
+            m_aoMethod = AmbientOcclusionMethod::None;
+         }
+         break;
+      case AmbientOcclusionMethod::RayTraced:
+         m_aoMethod = AmbientOcclusionMethod::None;
+         break;
+      }
    }
    if (key == Key::F5) {
       m_fxaaEnabled = not m_fxaaEnabled;
@@ -296,12 +332,17 @@ void Renderer::on_key_pressed(const Key key)
    if (key == Key::F8) {
       m_smoothCamera = not m_smoothCamera;
    }
+   if (key == Key::F9) {
+      if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+         m_rayTracedShadows = not m_rayTracedShadows;
+      }
+   }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -16.0f;
    }
 }
 
-void Renderer::on_key_released(const triglav::desktop::Key key)
+void Renderer::on_key_released(const Key key)
 {
    const auto dir = map_direction(key);
    if (m_moveDirection == dir) {
@@ -337,7 +378,7 @@ glm::vec3 Renderer::moving_direction()
    switch (m_moveDirection) {
    case Moving::None:
       break;
-   case Moving::Foward:
+   case Moving::Forward:
       return m_scene.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
    case Moving::Backwards:
       return m_scene.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};
@@ -383,6 +424,13 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
 graphics_api::Device& Renderer::device() const
 {
    return m_device;
+}
+bool Renderer::is_any_ray_tracing_feature_enabled() const
+{
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+      return m_rayTracedShadows || m_aoMethod == AmbientOcclusionMethod::RayTraced;
+   }
+   return false;
 }
 
 constexpr auto g_movingSpeed = 10.0f;

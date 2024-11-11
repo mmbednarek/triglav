@@ -1,4 +1,4 @@
-#include "AmbientOcclusion.h"
+#include "AmbientOcclusion.hpp"
 
 #include <triglav/render_core/FrameResources.h>
 
@@ -34,7 +34,7 @@ graphics_api::WorkTypeFlags AmbientOcclusion::work_types() const
 void AmbientOcclusion::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
                                        graphics_api::CommandList& cmdList)
 {
-   if (not frameResources.has_flag("ssao"_name))
+   if (frameResources.get_option<AmbientOcclusionMethod>("ao_method"_name) != AmbientOcclusionMethod::ScreenSpace)
       return;
 
    std::array<graphics_api::ClearValue, 1> clearValues{

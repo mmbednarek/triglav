@@ -1,11 +1,11 @@
-#include "DescriptorWriter.h"
+#include "DescriptorWriter.hpp"
 
-#include "Buffer.h"
-#include "Sampler.h"
-#include "Texture.h"
-#include "vulkan/Util.h"
+#include "Buffer.hpp"
+#include "Sampler.hpp"
+#include "Texture.hpp"
+#include "vulkan/Util.hpp"
 
-#include <Device.h>
+#include <Device.hpp>
 
 namespace triglav::graphics_api {
 
@@ -32,7 +32,7 @@ void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.aquire_object();
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
    bufferInfo->offset = 0;
    bufferInfo->range = buffer.size();
    bufferInfo->buffer = buffer.vulkan_buffer();
@@ -43,7 +43,7 @@ void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.aquire_object();
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
    bufferInfo->offset = offset;
    bufferInfo->range = size;
    bufferInfo->buffer = buffer.vulkan_buffer();
@@ -54,7 +54,7 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.aquire_object();
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
    bufferInfo->offset = 0;
    bufferInfo->range = buffer.size();
    bufferInfo->buffer = buffer.vulkan_buffer();
@@ -77,7 +77,7 @@ void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-   auto imageInfo = m_descriptorImageInfoPool.aquire_object();
+   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
    imageInfo->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
    imageInfo->imageView = texture.vulkan_image_view();
    imageInfo->sampler = sampler.vulkan_sampler();
@@ -108,11 +108,23 @@ void DescriptorWriter::set_storage_image(uint32_t binding, const Texture& textur
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
-   auto imageInfo = m_descriptorImageInfoPool.aquire_object();
+   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
    imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
    imageInfo->imageView = texture.vulkan_image_view();
 
    writeDescriptorSet.pImageInfo = imageInfo;
+}
+
+void DescriptorWriter::set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct)
+{
+   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
+
+   auto asInfo = m_descriptorAccelerationStructurePool.acquire_object();
+   asInfo->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+   asInfo->accelerationStructureCount = 1;
+   asInfo->pAccelerationStructures = &accStruct.vulkan_acceleration_structure();
+
+   writeDescriptorSet.pNext = asInfo;
 }
 
 VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescriptorType descType)
@@ -125,6 +137,11 @@ VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescr
 
    auto& writeDescriptorSet = m_descriptorWrites[binding];
 
+   if (writeDescriptorSet.pNext != nullptr) {
+      m_descriptorAccelerationStructurePool.release_object(
+         static_cast<const VkWriteDescriptorSetAccelerationStructureKHR*>(writeDescriptorSet.pNext));
+      writeDescriptorSet.pNext = nullptr;
+   }
    if (writeDescriptorSet.pBufferInfo != nullptr) {
       m_descriptorBufferInfoPool.release_object(writeDescriptorSet.pBufferInfo);
       writeDescriptorSet.pBufferInfo = nullptr;

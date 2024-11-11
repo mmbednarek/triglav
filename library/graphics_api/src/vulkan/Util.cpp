@@ -1,4 +1,4 @@
-#include "Util.h"
+#include "Util.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -234,6 +234,12 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
       return VK_SHADER_STAGE_FRAGMENT_BIT;
    case PipelineStage::ComputeShader:
       return VK_SHADER_STAGE_COMPUTE_BIT;
+   case PipelineStage::RayGenerationShader:
+      return VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+   case PipelineStage::ClosestHitShader:
+      return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+   case PipelineStage::MissShader:
+      return VK_SHADER_STAGE_MISS_BIT_KHR;
    default:
       break;
    }
@@ -253,6 +259,15 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
    if (flags & PipelineStage::ComputeShader) {
       result |= VK_SHADER_STAGE_COMPUTE_BIT;
    }
+   if (flags & PipelineStage::RayGenerationShader) {
+      result |= VK_SHADER_STAGE_RAYGEN_BIT_KHR;
+   }
+   if (flags & PipelineStage::ClosestHitShader) {
+      result |= VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
+   }
+   if (flags & PipelineStage::MissShader) {
+      result |= VK_SHADER_STAGE_MISS_BIT_KHR;
+   }
    return result;
 }
 
@@ -269,6 +284,8 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
       return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    case PipelineStage::ComputeShader:
       return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+   case PipelineStage::RayGenerationShader:
+      return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    case PipelineStage::Transfer:
       return VK_PIPELINE_STAGE_TRANSFER_BIT;
    case PipelineStage::End:
@@ -297,6 +314,15 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    if (flags & PipelineStage::ComputeShader) {
       result |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    }
+   if (flags & PipelineStage::RayGenerationShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::MissShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::ClosestHitShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
    if (flags & PipelineStage::Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
@@ -316,6 +342,8 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
       return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
    case DescriptorType::StorageImage:
       return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+   case DescriptorType::AccelerationStructure:
+      return VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR;
    }
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
@@ -439,6 +467,10 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
 
    VkBufferUsageFlags result{};
 
+   if (!(usage & HostVisible)) {
+      result |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+   }
+
    if (usage & TransferSrc) {
       result |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
    }
@@ -456,6 +488,15 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
    }
    if (usage & StorageBuffer) {
       result |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+   }
+   if (usage & AccelerationStructure) {
+      result |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_STORAGE_BIT_KHR;
+   }
+   if (usage & AccelerationStructureRead) {
+      result |= VK_BUFFER_USAGE_ACCELERATION_STRUCTURE_BUILD_INPUT_READ_ONLY_BIT_KHR;
+   }
+   if (usage & ShaderBindingTable) {
+      result |= VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR;
    }
 
    return result;
@@ -500,6 +541,8 @@ VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
       return VK_PIPELINE_BIND_POINT_GRAPHICS;
    case PipelineType::Compute:
       return VK_PIPELINE_BIND_POINT_COMPUTE;
+   case PipelineType::RayTracing:
+      return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
    }
    return VK_PIPELINE_BIND_POINT_MAX_ENUM;
 }
@@ -533,6 +576,19 @@ VkPresentModeKHR to_vulkan_present_mode(const PresentMode presentMode)
    }
 
    return VK_PRESENT_MODE_MAX_ENUM_KHR;
+}
+
+VkAccelerationStructureTypeKHR to_vulkan_acceleration_structure_type(ray_tracing::AccelerationStructureType type)
+{
+   using enum ray_tracing::AccelerationStructureType;
+   switch (type) {
+   case TopLevel:
+      return VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR;
+   case BottomLevel:
+      return VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR;
+   }
+
+   return VK_ACCELERATION_STRUCTURE_TYPE_MAX_ENUM_KHR;
 }
 
 }// namespace triglav::graphics_api::vulkan

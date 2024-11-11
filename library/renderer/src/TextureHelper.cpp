@@ -1,6 +1,6 @@
-#include "TextureHelper.h"
+#include "TextureHelper.hpp"
 
-#include "triglav/graphics_api/Texture.h"
+#include "triglav/graphics_api/Texture.hpp"
 
 namespace triglav::graphics_api {
 

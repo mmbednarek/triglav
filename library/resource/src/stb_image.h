@@ -1343,8 +1343,8 @@ static void stbi__float_postprocess(float* result, int* x, int* y, int* comp, in
 STBI_EXTERN __declspec(dllimport) int __stdcall MultiByteToWideChar(unsigned int cp, unsigned long flags, const char* str, int cbmb,
                                                                     wchar_t* widestr, int cchwide);
 STBI_EXTERN
-   __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int cp, unsigned long flags, const wchar_t* widestr, int cchwide,
-                                                           char* str, int cbmb, const char* defchar, int* used_default);
+__declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int cp, unsigned long flags, const wchar_t* widestr, int cchwide,
+                                                        char* str, int cbmb, const char* defchar, int* used_default);
 #endif
 
 #if defined(_WIN32) && defined(STBI_WINDOWS_UTF8)

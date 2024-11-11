@@ -1,7 +1,7 @@
-#include "Buffer.h"
+#include "Buffer.hpp"
 
-#include "CommandList.h"
-#include "Device.h"
+#include "CommandList.hpp"
+#include "Device.hpp"
 #include "ReplicatedBuffer.hpp"
 
 #include <cstring>
@@ -125,6 +125,18 @@ Status Buffer::write_indirect(const void* data, size_t size)
       return res;
 
    return Status::Success;
+}
+
+VkDeviceAddress Buffer::vulkan_device_address() const
+{
+   VkBufferDeviceAddressInfo info{VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO};
+   info.buffer = *m_buffer;
+   return vkGetBufferDeviceAddress(m_device.vulkan_device(), &info);
+}
+
+BufferAddress Buffer::buffer_address() const
+{
+   return BufferAddress{this->vulkan_device_address()};
 }
 
 }// namespace triglav::graphics_api

@@ -1,4 +1,4 @@
-#include "GlyphCache.h"
+#include "GlyphCache.hpp"
 
 #include "triglav/font/Utf8StringView.h"
 

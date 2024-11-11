@@ -1,6 +1,6 @@
-#include "DescriptorArray.h"
+#include "DescriptorArray.hpp"
 
-#include "vulkan/Util.h"
+#include "vulkan/Util.hpp"
 
 #include <utility>
 

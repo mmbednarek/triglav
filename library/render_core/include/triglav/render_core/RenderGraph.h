@@ -4,7 +4,7 @@
 #include "IRenderNode.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/graphics_api/QueueManager.h"
+#include "triglav/graphics_api/QueueManager.hpp"
 
 #include <map>
 #include <memory>
@@ -49,6 +49,13 @@ class RenderGraph
    void change_active_frame();
 
    void clean();
+
+   void set_option(const Name optName, const FrameOption auto option)
+   {
+      for (auto& frameResources : m_frameResources) {
+         frameResources.set_option(optName, option);
+      }
+   }
 
 
  private:

@@ -31,7 +31,7 @@ class PoolBucket
    PoolBucket(PoolBucket&& other) noexcept = delete;
    PoolBucket& operator=(PoolBucket&& other) noexcept = delete;
 
-   [[nodiscard]] TObject* aquire_object()
+   [[nodiscard]] TObject* acquire_object()
    {
       if (m_head < 0 || m_head >= CBucketSize) {
          return nullptr;
@@ -119,17 +119,17 @@ class ObjectPool
    {
    }
 
-   TObject* aquire_object()
+   TObject* acquire_object()
    {
       if (m_bucketHead == Bucket::aquiredIndex) {
          m_bucketHead = m_buckets.size();
          auto& bucket = m_buckets.emplace_back(std::make_unique<Bucket>(m_objectFactory));
          m_bucketRanges[PointerRange{bucket->base_ptr()}] = m_bucketHead;
-         return bucket->aquire_object();
+         return bucket->acquire_object();
       }
 
       auto& bucket = m_buckets[m_bucketHead];
-      auto* result = bucket->aquire_object();
+      auto* result = bucket->acquire_object();
       if (bucket->is_full()) {
          m_bucketHead = bucket->m_chain;
          bucket->m_chain = Bucket::aquiredIndex;

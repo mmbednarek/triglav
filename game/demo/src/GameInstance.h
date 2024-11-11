@@ -5,9 +5,9 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/font/FontManager.h"
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/Instance.h"
-#include "triglav/renderer/Renderer.h"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/graphics_api/Instance.hpp"
+#include "triglav/renderer/Renderer.hpp"
 #include "triglav/resource/ResourceManager.h"
 
 #include <atomic>

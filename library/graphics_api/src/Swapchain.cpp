@@ -1,8 +1,8 @@
-#include "Swapchain.h"
+#include "Swapchain.hpp"
 
-#include "QueueManager.h"
-#include "Synchronization.h"
-#include "vulkan/Util.h"
+#include "QueueManager.hpp"
+#include "Synchronization.hpp"
+#include "vulkan/Util.hpp"
 
 namespace triglav::graphics_api {
 

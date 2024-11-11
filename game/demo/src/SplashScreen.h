@@ -1,12 +1,12 @@
 #pragma once
 
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/graphics_api/Device.h"
-#include "triglav/graphics_api/RenderTarget.h"
-#include "triglav/graphics_api/Swapchain.h"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/graphics_api/RenderTarget.hpp"
+#include "triglav/graphics_api/Swapchain.hpp"
 #include "triglav/render_core/RenderGraph.h"
-#include "triglav/renderer/RectangleRenderer.h"
-#include "triglav/renderer/TextRenderer.h"
+#include "triglav/renderer/RectangleRenderer.hpp"
+#include "triglav/renderer/TextRenderer.hpp"
 #include "triglav/resource/ResourceManager.h"
 
 #include <memory>

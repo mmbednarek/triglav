@@ -1,4 +1,4 @@
-#include "vulkan/Extensions.h"
+#include "vulkan/Extensions.hpp"
 
 VkResult vkCreateDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                         const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)

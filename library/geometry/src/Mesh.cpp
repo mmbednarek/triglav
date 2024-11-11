@@ -91,7 +91,7 @@ void Mesh::set_material(const Index meshGroup, const std::string_view material)
    m_mesh->set_material(meshGroup, material);
 }
 
-BoundingBox Mesh::calculate_bouding_box() const
+BoundingBox Mesh::calculate_bounding_box() const
 {
    assert(m_mesh != nullptr);
    return m_mesh->calculate_bouding_box();
@@ -104,10 +104,16 @@ void Mesh::reverse_orientation()
    m_mesh->reverse_orientation();
 }
 
-DeviceMesh Mesh::upload_to_device(graphics_api::Device& device) const
+DeviceMesh Mesh::upload_to_device(graphics_api::Device& device, const graphics_api::BufferUsageFlags usageFlags) const
 {
    assert(m_mesh != nullptr);
-   return m_mesh->upload_to_device(device);
+   return m_mesh->upload_to_device(device, usageFlags);
+}
+
+VertexData Mesh::to_vertex_data()
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->to_vertex_data();
 }
 
 Mesh Mesh::from_file(const io::Path& path)

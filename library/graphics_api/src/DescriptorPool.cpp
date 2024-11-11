@@ -1,4 +1,4 @@
-#include "DescriptorPool.h"
+#include "DescriptorPool.hpp"
 
 namespace triglav::graphics_api {
 

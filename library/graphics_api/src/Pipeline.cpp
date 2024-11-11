@@ -1,6 +1,6 @@
-#include "Pipeline.h"
+#include "Pipeline.hpp"
 
-#include "vulkan/Util.h"
+#include "vulkan/Util.hpp"
 
 namespace triglav::graphics_api {
 

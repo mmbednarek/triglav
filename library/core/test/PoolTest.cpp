@@ -17,7 +17,7 @@ TEST(PoolTest, Bucket_SingleItem)
    PoolBucket<TestObj, decltype(default_constructor<TestObj>), 8> bucket(default_constructor<TestObj>);
 
 
-   auto* obj = bucket.aquire_object();
+   auto* obj = bucket.acquire_object();
    ASSERT_NE(obj, nullptr);
    ASSERT_TRUE(bucket.release_object(obj));
 }
@@ -34,7 +34,7 @@ TEST(PoolTest, Bucket_AllItems)
    std::vector<TestObj*> objects;
 
    for (int i = 0; i < 8; ++i) {
-      auto* obj = bucket.aquire_object();
+      auto* obj = bucket.acquire_object();
       ASSERT_NE(obj, nullptr);
       objects.emplace_back(obj);
    }
@@ -42,7 +42,7 @@ TEST(PoolTest, Bucket_AllItems)
    std::mt19937 g(100);
    std::ranges::shuffle(objects, g);
 
-   ASSERT_EQ(bucket.aquire_object(), nullptr);
+   ASSERT_EQ(bucket.acquire_object(), nullptr);
 
    for (const auto* obj : objects) {
       ASSERT_TRUE(bucket.release_object(obj));
@@ -65,7 +65,7 @@ TEST(PoolTest, Bucket_AquireSomeRemoveSome)
    std::vector<TestObj*> objects;
 
    for (int i = 0; i < 6; ++i) {
-      auto* obj = bucket.aquire_object();
+      auto* obj = bucket.acquire_object();
       ASSERT_NE(obj, nullptr);
       objects.emplace_back(obj);
    }
@@ -80,7 +80,7 @@ TEST(PoolTest, Bucket_AquireSomeRemoveSome)
    }
 
    for (int i = 0; i < 6; ++i) {
-      auto* obj = bucket.aquire_object();
+      auto* obj = bucket.acquire_object();
       ASSERT_NE(obj, nullptr);
       objects.emplace_back(obj);
    }
@@ -99,7 +99,7 @@ TEST(PoolTest, Pool_SingleItem)
 
    ObjectPool<TestObj, decltype(default_constructor<TestObj>), 8> bucket(default_constructor<TestObj>);
 
-   auto* obj = bucket.aquire_object();
+   auto* obj = bucket.acquire_object();
    ASSERT_NE(obj, nullptr);
    ASSERT_TRUE(bucket.release_object(obj));
 }
@@ -116,7 +116,7 @@ TEST(PoolTest, Pool_AllocateThenRelease)
    std::vector<TestObj*> objects;
 
    for (int i = 0; i < 1000; ++i) {
-      auto* obj = bucket.aquire_object();
+      auto* obj = bucket.acquire_object();
       ASSERT_NE(obj, nullptr);
       objects.emplace_back(obj);
    }
@@ -144,7 +144,7 @@ TEST(PoolTest, Pool_AllocateReleaseSomeThenAllocate)
    std::vector<TestObj*> objects;
 
    for (int i = 0; i < 1000; ++i) {
-      auto* obj = bucket.aquire_object();
+      auto* obj = bucket.acquire_object();
       ASSERT_NE(obj, nullptr);
       objects.emplace_back(obj);
    }
@@ -159,7 +159,7 @@ TEST(PoolTest, Pool_AllocateReleaseSomeThenAllocate)
    }
 
    for (int i = 0; i < 600; ++i) {
-      auto* obj = bucket.aquire_object();
+      auto* obj = bucket.acquire_object();
       ASSERT_NE(obj, nullptr);
       objects.emplace_back(obj);
    }

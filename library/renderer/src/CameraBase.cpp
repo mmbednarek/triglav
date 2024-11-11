@@ -1,4 +1,4 @@
-#include "CameraBase.h"
+#include "CameraBase.hpp"
 
 namespace triglav::renderer {
 

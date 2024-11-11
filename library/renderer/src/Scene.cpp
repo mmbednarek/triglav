@@ -1,6 +1,6 @@
-#include "Scene.h"
+#include "Scene.hpp"
 
-#include "Renderer.h"
+#include "Renderer.hpp"
 
 #include "triglav/world/Level.h"
 
@@ -28,14 +28,14 @@ Scene::Scene(resource::ResourceManager& resourceManager) :
 void Scene::update(graphics_api::Resolution& resolution)
 {
    const auto [width, height] = resolution;
-   m_camera.set_viewport_size(width, height);
+   m_camera.set_viewport_size(static_cast<float>(width), static_cast<float>(height));
 
    event_OnViewportChange.publish(resolution);
 }
 
 void Scene::add_object(SceneObject object)
 {
-   auto& emplacedObj = m_objects.emplace_back(std::move(object));
+   auto& emplacedObj = m_objects.emplace_back(object);
    event_OnObjectAddedToScene.publish(emplacedObj);
 }
 
@@ -70,7 +70,7 @@ Camera& Scene::camera()
    return m_camera;
 }
 
-const OrthoCamera& Scene::shadow_map_camera(u32 index) const
+const OrthoCamera& Scene::shadow_map_camera(const u32 index) const
 {
    return m_directionalShadowMapCameras[index];
 }
@@ -113,11 +113,11 @@ void Scene::add_bounding_box(const geometry::BoundingBox& box)
 
 void Scene::update_shadow_maps()
 {
-   auto smProps1 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 32.0f, 96.0f);
+   auto smProps1 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 32.0f, 120.0f);
    m_directionalShadowMapCameras[0] = OrthoCamera::from_properties(smProps1);
    event_OnShadowMapChanged.publish(0, m_directionalShadowMapCameras[0]);
 
-   auto smProps2 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 64.0f, 192.0f);
+   auto smProps2 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 72.0f, 192.0f);
    m_directionalShadowMapCameras[1] = OrthoCamera::from_properties(smProps2);
    event_OnShadowMapChanged.publish(1, m_directionalShadowMapCameras[1]);
 

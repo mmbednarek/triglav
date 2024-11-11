@@ -1,6 +1,6 @@
-#include "Instance.h"
+#include "Instance.hpp"
 
-#include "vulkan/Util.h"
+#include "vulkan/Util.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -8,25 +8,54 @@ namespace triglav::graphics_api {
 
 namespace {
 
+DeviceFeatureFlags feature_flags_from_physical_device(const VkPhysicalDevice physicalDevice)
+{
+   VkPhysicalDeviceAccelerationStructureFeaturesKHR asPipelineFeatures{
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
 
-template<VkPhysicalDeviceType CType>
-bool physical_device_pick_predicate(VkPhysicalDevice physicalDevice)
+   VkPhysicalDeviceRayTracingPipelineFeaturesKHR rtPipelineFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
+   rtPipelineFeatures.pNext = &asPipelineFeatures;
+
+   VkPhysicalDeviceFeatures2 features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+   features.pNext = &rtPipelineFeatures;
+
+   vkGetPhysicalDeviceFeatures2(physicalDevice, &features);
+
+   DeviceFeatureFlags result{};
+
+   if (asPipelineFeatures.accelerationStructure && rtPipelineFeatures.rayTracingPipeline) {
+      result |= DeviceFeature::RayTracing;
+   }
+
+   return result;
+}
+
+bool physical_device_pick_predicate(const VkPhysicalDevice physicalDevice, const DevicePickStrategy strategy,
+                                    const DeviceFeatureFlags preferredFeatures)
 {
    VkPhysicalDeviceProperties props{};
    vkGetPhysicalDeviceProperties(physicalDevice, &props);
-   return props.deviceType == CType;
-}
 
-auto create_physical_device_pick_predicate(const DevicePickStrategy strategy)
-{
-   switch (strategy) {
-   case DevicePickStrategy::PreferDedicated:
-      return physical_device_pick_predicate<VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU>;
-   case DevicePickStrategy::PreferIntegrated:
-      return physical_device_pick_predicate<VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU>;
+   if (strategy != DevicePickStrategy::Any) {
+      VkPhysicalDeviceType preferredDeviceType{VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU};
+      if (strategy == DevicePickStrategy::PreferIntegrated) {
+         preferredDeviceType = VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+      }
+
+      if (props.deviceType != preferredDeviceType)
+         return false;
    }
 
-   return +[](VkPhysicalDevice /*physicalDevice*/) -> bool { return true; };
+   const DeviceFeatureFlags features = feature_flags_from_physical_device(physicalDevice);
+
+   return features & preferredFeatures;
+}
+
+auto create_physical_device_pick_predicate(const DevicePickStrategy strategy, const DeviceFeatureFlags preferredFeatures)
+{
+   return [=](const VkPhysicalDevice physicalDevice) -> bool {
+      return physical_device_pick_predicate(physicalDevice, strategy, preferredFeatures);
+   };
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -95,12 +124,22 @@ Result<Surface> Instance::create_surface(const desktop::ISurface& surface) const
    return Surface{std::move(vulkan_surface)};
 }
 
-Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DevicePickStrategy strategy) const
+Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DevicePickStrategy strategy,
+                                           const DeviceFeatureFlags enabledFeatures) const
 {
    auto physicalDevices = vulkan::get_physical_devices(*m_instance);
-   auto pickedDevice = std::find_if(physicalDevices.begin(), physicalDevices.end(), create_physical_device_pick_predicate(strategy));
+   if (physicalDevices.empty()) {
+      return std::unexpected{Status::NoSupportedDevicesFound};
+   }
+
+   const auto pickPredicate = create_physical_device_pick_predicate(strategy, enabledFeatures);
+   auto pickedDevice = std::ranges::find_if(physicalDevices, pickPredicate);
    if (pickedDevice == physicalDevices.end()) {
-      pickedDevice = physicalDevices.begin();
+      const auto pickPredicateAnyWithFeatures = create_physical_device_pick_predicate(DevicePickStrategy::Any, enabledFeatures);
+      pickedDevice = std::ranges::find_if(physicalDevices, pickPredicateAnyWithFeatures);
+      if (pickedDevice == physicalDevices.end()) {
+         return std::unexpected{Status::NoDeviceSupportsRequestedFeatures};
+      }
    }
 
    auto queueFamilies = vulkan::get_queue_family_properties(*pickedDevice);
@@ -150,11 +189,19 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
       ++deviceQueueCreateInfoIt;
    }
 
-   std::vector<const char*> vulkanDeviceExtensions{
+   std::vector vulkanDeviceExtensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
       "VK_KHR_shader_non_semantic_info",
    };
+
+   if (enabledFeatures & DeviceFeature::RayTracing) {
+      vulkanDeviceExtensions.push_back(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_RAY_QUERY_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME);
+      vulkanDeviceExtensions.push_back(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME);
+   }
 
    const auto extensionProperties = vulkan::get_device_extension_properties(*pickedDevice, nullptr);
    for (const auto& property : extensionProperties) {
@@ -165,16 +212,42 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
       }
    }
 
-   VkPhysicalDeviceHostQueryResetFeatures hostQueryResetFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES};
-   hostQueryResetFeatures.hostQueryReset = true;
-
    VkPhysicalDeviceFeatures2 deviceFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
-   deviceFeatures.pNext = &hostQueryResetFeatures;
    deviceFeatures.features.sampleRateShading = true;
    deviceFeatures.features.logicOp = true;
    deviceFeatures.features.fillModeNonSolid = true;
    deviceFeatures.features.wideLines = true;
    deviceFeatures.features.samplerAnisotropy = true;
+   deviceFeatures.features.shaderInt64 = true;
+
+   VkPhysicalDeviceVulkan12Features vulkan12Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
+   vulkan12Features.hostQueryReset = true;
+   vulkan12Features.scalarBlockLayout = true;
+   vulkan12Features.bufferDeviceAddress = true;
+   deviceFeatures.pNext = &vulkan12Features;
+
+   VkPhysicalDeviceVulkan11Features vulkan11Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
+   vulkan11Features.variablePointers = true;
+   vulkan11Features.variablePointersStorageBuffer = true;
+   vulkan12Features.pNext = &vulkan11Features;
+
+   void** lastFeaturesPtr = &vulkan11Features.pNext;
+
+   VkPhysicalDeviceAccelerationStructureFeaturesKHR accelerationStructureFeatures{
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
+   if (enabledFeatures & DeviceFeature::RayTracing) {
+      accelerationStructureFeatures.accelerationStructure = true;
+      *lastFeaturesPtr = &accelerationStructureFeatures;
+      lastFeaturesPtr = &accelerationStructureFeatures.pNext;
+   }
+
+   VkPhysicalDeviceRayTracingPipelineFeaturesKHR rayTracingPipelineFeatures{
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
+   if (enabledFeatures & DeviceFeature::RayTracing) {
+      rayTracingPipelineFeatures.rayTracingPipeline = true;
+      *lastFeaturesPtr = &rayTracingPipelineFeatures;
+      lastFeaturesPtr = &rayTracingPipelineFeatures.pNext;
+   }
 
    VkDeviceCreateInfo deviceInfo{};
    deviceInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -189,7 +262,17 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return std::make_unique<Device>(std::move(device), *pickedDevice, std::move(queueFamilyInfos));
+   return std::make_unique<Device>(std::move(device), *pickedDevice, std::move(queueFamilyInfos), enabledFeatures);
+}
+
+bool Instance::are_features_supported(const DeviceFeatureFlags enabledFeatures) const
+{
+   auto physicalDevices = vulkan::get_physical_devices(*m_instance);
+   if (physicalDevices.empty()) {
+      return false;
+   }
+
+   return std::ranges::any_of(physicalDevices, create_physical_device_pick_predicate(DevicePickStrategy::Any, enabledFeatures));
 }
 
 #if GAPI_ENABLE_VALIDATION

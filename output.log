@@ -1,0 +1,66 @@
+[2024-09-26 21:54:58.134] [info] content path: /home/ego/projects/cpp/triglav/game/demo/content
+[2024-09-26 21:54:58.134] [info] build path: /home/ego/projects/cpp/triglav/buildDir
+[2024-09-26 21:54:58.134] [info] initializing renderer
+[2024-09-26 21:54:58.263] [info] Loading 8 assets
+[2024-09-26 21:54:58.263] [info] Loading 8 assets in stage 0
+[2024-09-26 21:54:58.263] [info] [THREAD: 1] Loading asset cantarell.typeface
+[2024-09-26 21:54:58.263] [info] [THREAD: 3] Loading asset segoeui.typeface
+[2024-09-26 21:54:58.263] [info] [THREAD: 2] Loading asset cantarell/bold.typeface
+[2024-09-26 21:54:58.263] [info] [THREAD: 5] Loading asset text.vshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 4] Loading asset text.fshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 6] Loading asset text.cshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 7] Loading asset rectangle.fshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 8] Loading asset rectangle.vshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 1] [0/8] Successfully loaded cantarell.typeface
+[2024-09-26 21:54:58.263] [info] [THREAD: 3] [1/8] Successfully loaded segoeui.typeface
+[2024-09-26 21:54:58.263] [info] [THREAD: 2] [2/8] Successfully loaded cantarell/bold.typeface
+[2024-09-26 21:54:58.263] [info] [THREAD: 4] [3/8] Successfully loaded text.fshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 8] [4/8] Successfully loaded rectangle.vshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 5] [5/8] Successfully loaded text.vshader
+[2024-09-26 21:54:58.263] [info] [THREAD: 6] [5/8] Successfully loaded text.cshader
+[2024-09-26 21:54:58.264] [info] [THREAD: 7] [7/8] Successfully loaded rectangle.fshader
+[2024-09-26 21:54:58.264] [info] Loading assets DONE
+[2024-09-26 21:54:58.264] [info] Loading 89 assets
+[2024-09-26 21:54:58.264] [info] Loading 79 assets in stage 0
+[2024-09-26 21:54:58.264] [info] [THREAD: 1] Loading asset board.tex
+[2024-09-26 21:54:58.264] [info] [THREAD: 3] Loading asset brick/albedo.tex
+[2024-09-26 21:54:58.264] [info] [THREAD: 2] Loading asset brick/height_map.tex
+[2024-09-26 21:54:58.264] [info] [THREAD: 4] Loading asset brick/normal.tex
+[2024-09-26 21:54:58.264] [info] [THREAD: 8] Loading asset stone/albedo.tex
+[2024-09-26 21:54:58.264] [info] [THREAD: 5] Loading asset stone/height_map.tex
+[2024-09-26 21:54:58.264] [info] [THREAD: 6] Loading asset stone/normal.tex
+[2024-09-26 21:54:58.266] [info] [THREAD: 7] Loading asset earth.tex
+[2024-09-26 21:54:58.272] [info] [THREAD: 1] [0/89] Successfully loaded board.tex
+[2024-09-26 21:54:58.272] [info] [THREAD: 1] Loading asset skybox.tex
+[2024-09-26 21:54:58.376] [info] [THREAD: 5] [1/89] Successfully loaded stone/height_map.tex
+[2024-09-26 21:54:58.376] [info] [THREAD: 5] Loading asset bark.tex
+[2024-09-26 21:54:58.378] [info] [THREAD: 2] [2/89] Successfully loaded brick/height_map.tex
+[2024-09-26 21:54:58.378] [info] [THREAD: 2] Loading asset bark/normal.tex
+[2024-09-26 21:54:58.402] [info] [THREAD: 5] [3/89] Successfully loaded bark.tex
+[2024-09-26 21:54:58.402] [info] [THREAD: 5] Loading asset leaves.tex
+[2024-09-26 21:54:58.424] [info] [THREAD: 5] [4/89] Successfully loaded leaves.tex
+[2024-09-26 21:54:58.424] [info] [THREAD: 5] Loading asset gold.tex
+[2024-09-26 21:54:58.453] [info] [THREAD: 2] [5/89] Successfully loaded bark/normal.tex
+[2024-09-26 21:54:58.453] [info] [THREAD: 2] Loading asset gold/normal.tex
+[2024-09-26 21:54:58.474] [info] [THREAD: 4] [6/89] Successfully loaded brick/normal.tex
+[2024-09-26 21:54:58.474] [info] [THREAD: 4] Loading asset grass.tex
+[2024-09-26 21:54:58.480] [info] [THREAD: 8] [7/89] Successfully loaded stone/albedo.tex
+[2024-09-26 21:54:58.480] [info] [THREAD: 8] Loading asset grass/normal.tex
+[2024-09-26 21:54:58.535] [info] [THREAD: 1] [8/89] Successfully loaded skybox.tex
+[2024-09-26 21:54:58.535] [info] [THREAD: 1] Loading asset pine.tex
+[2024-09-26 21:54:58.638] [info] [THREAD: 6] [9/89] Successfully loaded stone/normal.tex
+[2024-09-26 21:54:58.638] [info] [THREAD: 6] Loading asset pine/normal.tex
+[2024-09-26 21:54:58.666] [info] [THREAD: 8] [10/89] Successfully loaded grass/normal.tex
+[2024-09-26 21:54:58.666] [info] [THREAD: 8] Loading asset quartz.tex
+[2024-09-26 21:54:58.679] [info] [THREAD: 4] [11/89] Successfully loaded grass.tex
+[2024-09-26 21:54:58.679] [info] [THREAD: 4] Loading asset quartz/normal.tex
+[2024-09-26 21:54:58.680] [info] [THREAD: 5] [12/89] Successfully loaded gold.tex
+[2024-09-26 21:54:58.680] [info] [THREAD: 5] Loading asset noise.tex
+[2024-09-26 21:54:58.707] [info] [THREAD: 2] [13/89] Successfully loaded gold/normal.tex
+[2024-09-26 21:54:58.707] [info] [THREAD: 2] Loading asset metal/albedo.tex
+[2024-09-26 21:54:58.719] [info] [THREAD: 7] [14/89] Successfully loaded earth.tex
+[2024-09-26 21:54:58.719] [info] [THREAD: 7] Loading asset metal/metallic.tex
+[2024-09-26 21:54:58.756] [info] [THREAD: 5] [15/89] Successfully loaded noise.tex
+[2024-09-26 21:54:58.756] [info] [THREAD: 5] Loading asset metal/normal.tex
+[2024-09-26 21:54:58.796] [info] [THREAD: 7] [16/89] Successfully loaded metal/metallic.tex
+[2024-09-26 21:54:58.797] [info] [THREAD: 7] Loading asset metal/roughness.tex

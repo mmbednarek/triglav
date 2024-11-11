@@ -1,4 +1,4 @@
-#include "TimestampArray.h"
+#include "TimestampArray.hpp"
 
 #include <algorithm>
 #include <ranges>

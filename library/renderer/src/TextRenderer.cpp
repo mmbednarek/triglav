@@ -1,6 +1,6 @@
-#include "TextRenderer.h"
+#include "TextRenderer.hpp"
 
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 #include <glm/vec3.hpp>
 #define GLM_ENABLE_EXPERIMENTAL

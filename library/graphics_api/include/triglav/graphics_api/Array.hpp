@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Buffer.h"
-#include "Device.h"
+#include "Buffer.hpp"
+#include "Device.hpp"
 
 namespace triglav::graphics_api {
 
@@ -9,9 +9,10 @@ template<BufferUsageFlags CBufferUsage, typename TValue>
 class Array
 {
  public:
-   Array(Device& device, const size_t element_count) :
+   Array(Device& device, const size_t element_count, BufferUsageFlags additionalFlags = 0) :
        m_device(device),
-       m_buffer(GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst, element_count * sizeof(TValue)))),
+       m_buffer(
+          GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst | additionalFlags, element_count * sizeof(TValue)))),
        m_elementCount(element_count)
    {
    }
@@ -43,10 +44,10 @@ class Array
       this->write(values.data(), values.size());
    }
 
-   void write(const TValue* source, const size_t count)
+   Status write(const TValue* source, const size_t count)
    {
       assert(count <= m_elementCount);
-      m_buffer.write_indirect(source, count * sizeof(TValue));
+      return m_buffer.write_indirect(source, count * sizeof(TValue));
    }
 
    [[nodiscard]] const Buffer& buffer() const

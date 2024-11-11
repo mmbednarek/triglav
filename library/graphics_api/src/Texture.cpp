@@ -1,7 +1,7 @@
-#include "Texture.h"
+#include "Texture.hpp"
 
-#include "CommandList.h"
-#include "Device.h"
+#include "CommandList.hpp"
+#include "Device.hpp"
 
 namespace triglav::graphics_api {
 

@@ -3,7 +3,7 @@
 #include "RenderCore.hpp"
 
 #include "triglav/font/Utf8StringView.h"
-#include "triglav/graphics_api/Device.h"
+#include "triglav/graphics_api/Device.hpp"
 
 #include <codecvt>
 #include <cstring>

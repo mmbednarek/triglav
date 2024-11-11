@@ -1,6 +1,6 @@
-#include "ShadowMap.h"
+#include "ShadowMap.hpp"
 
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 
 #include <memory>
 

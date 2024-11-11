@@ -1,22 +1,24 @@
-#include "ShadingRenderer.h"
+#include "ShadingRenderer.hpp"
 
 #include <cstring>
-#include <random>
 
-#include "triglav/graphics_api/CommandList.h"
-#include "triglav/graphics_api/DescriptorWriter.h"
-#include "triglav/graphics_api/Framebuffer.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "triglav/graphics_api/CommandList.hpp"
+#include "triglav/graphics_api/Framebuffer.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
-#include "node/Blur.h"
+#include "AmbientOcclusionRenderer.hpp"
+#include "node/Blur.hpp"
+#include "node/RayTracedImage.hpp"
 
-using namespace triglav::name_literals;
-using triglav::ResourceType;
-using triglav::render_core::checkResult;
-using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
+
+using namespace name_literals;
+using render_core::checkResult;
+using resource::ResourceManager;
+using graphics_api::TextureUsage;
+using graphics_api::TextureState;
 
 ShadingRenderer::ShadingRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, ResourceManager& resourceManager) :
     m_device(device),
@@ -29,18 +31,22 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device& device, graphics_api::Ren
                       .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                       .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                       .descriptor_binding_array(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader, 3)
+                      .descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader)
                       .descriptor_binding(graphics_api::DescriptorType::UniformBuffer, graphics_api::PipelineStage::FragmentShader)
                       .push_constant(graphics_api::PipelineStage::FragmentShader, sizeof(PushConstant))
                       .use_push_descriptors(true)
                       .enable_depth_test(false)
                       .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
-                      .build()))
+                      .build())),
+   m_placeholderTexture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {4, 4}, TextureUsage::Sampled | TextureUsage::TransferDst)))
 {
+   static constexpr std::array<u8, 32> data{};
+   m_placeholderTexture.write(m_device, data.data());
 }
 
 void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::vec3& lightPosition,
                            const std::array<glm::mat4, 3>& shadowMapMats, const glm::mat4& viewMat,
-                           graphics_api::UniformBuffer<UniformData>& ubo)
+                           const graphics_api::UniformBuffer<UniformData>& ubo) const
 {
    for (u32 i = 0; i < shadowMapMats.size(); ++i) {
       ubo->shadowMapMats[i] = shadowMapMats[i];
@@ -54,13 +60,21 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
    auto& smBuffer1 = resources.node("shadow_map"_name).framebuffer("sm1"_name);
    auto& smBuffer2 = resources.node("shadow_map"_name).framebuffer("sm2"_name);
    auto& smBuffer3 = resources.node("shadow_map"_name).framebuffer("sm3"_name);
+   const auto areRayTracedShadowsEnabled = resources.has_flag("ray_traced_shadows"_name);
 
-   std::array<graphics_api::Texture*, 3> shadowMaps{&smBuffer1.texture("sm"_name), &smBuffer2.texture("sm"_name),
-                                                    &smBuffer3.texture("sm"_name)};
+   const graphics_api::Texture* shadowsTexture;
+   if (areRayTracedShadowsEnabled) {
+      shadowsTexture = &dynamic_cast<node::RayTracedImageResources&>(resources.node("ray_tracing"_name)).shadows_texture();
+   } else {
+      shadowsTexture = &m_placeholderTexture;
+   }
+
+   std::array shadowMaps{&smBuffer1.texture("sm"_name), &smBuffer2.texture("sm"_name), &smBuffer3.texture("sm"_name)};
 
    PushConstant pushConstant{
       .lightPosition = lightPosition,
-      .enableSSAO = resources.has_flag("ssao"_name),
+      .enableSSAO = resources.get_option<AmbientOcclusionMethod>("ao_method"_name) != AmbientOcclusionMethod::None,
+      .shouldSampleShadows = areRayTracedShadowsEnabled,
    };
    cmdList.push_constant(graphics_api::PipelineStage::FragmentShader, pushConstant);
 
@@ -69,7 +83,8 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
    cmdList.bind_texture(2, gbuffer.texture("normal"_name));
    cmdList.bind_texture(3, aoTexture);
    cmdList.bind_texture_array(4, shadowMaps);
-   cmdList.bind_uniform_buffer(5, ubo);
+   cmdList.bind_texture(5, *shadowsTexture);
+   cmdList.bind_uniform_buffer(6, ubo);
 
    cmdList.draw_primitives(4, 0);
 }

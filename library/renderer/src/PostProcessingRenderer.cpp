@@ -1,10 +1,12 @@
-#include "PostProcessingRenderer.h"
+#include "PostProcessingRenderer.hpp"
 
-#include "src/node/Blur.h"
-#include "src/node/Downsample.h"
-#include "triglav/graphics_api/CommandList.h"
-#include "triglav/graphics_api/DescriptorWriter.h"
-#include "triglav/graphics_api/PipelineBuilder.h"
+#include "../../../../../../.conan2/p/b/boost1865a4bb9fd52/p/include/boost/mpl/back.hpp"
+#include "node/Blur.hpp"
+#include "node/Downsample.hpp"
+#include "node/RayTracedImage.hpp"
+#include "triglav/graphics_api/CommandList.hpp"
+#include "triglav/graphics_api/DescriptorWriter.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
 using namespace triglav::name_literals;
@@ -39,6 +41,8 @@ void PostProcessingRenderer::draw(render_core::FrameResources& resources, graphi
    cmdList.bind_pipeline(m_pipeline);
 
    auto& shading = resources.node("shading"_name).framebuffer("shading"_name);
+   // auto& ray_tracing_resources = dynamic_cast<node::RayTracedImageResources&>(resources.node("ray_traced_image"_name));
+
    auto& ui = resources.node("user_interface"_name).framebuffer("ui"_name);
    auto& bloomTexture = dynamic_cast<node::BlurResources&>(resources.node("blur_bloom"_name)).texture();
 

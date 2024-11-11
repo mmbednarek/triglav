@@ -1,4 +1,4 @@
-#include "Synchronization.h"
+#include "Synchronization.hpp"
 
 namespace triglav::graphics_api {
 

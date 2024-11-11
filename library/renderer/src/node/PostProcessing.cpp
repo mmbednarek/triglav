@@ -1,6 +1,6 @@
-#include "PostProcessing.h"
+#include "PostProcessing.hpp"
 
-#include "triglav/graphics_api/Framebuffer.h"
+#include "triglav/graphics_api/Framebuffer.hpp"
 
 namespace triglav::renderer::node {
 

@@ -16,6 +16,8 @@ namespace triglav::graphics_api {
 enum class Status
 {
    Success,
+   NoSupportedDevicesFound,
+   NoDeviceSupportsRequestedFeatures,
    UnsupportedDevice,
    UnsupportedFormat,
    UnsupportedColorSpace,
@@ -103,8 +105,16 @@ enum class PipelineStage : uint32_t
    FragmentShader = (1 << 2),
    AttachmentOutput = (1 << 3),
    ComputeShader = (1 << 4),
-   Transfer = (1 << 5),
-   End = (1 << 6),
+
+   RayGenerationShader = (1 << 5),
+   AnyHitShader = (1 << 6),
+   ClosestHitShader = (1 << 7),
+   MissShader = (1 << 8),
+   IntersectionShader = (1 << 9),
+   CallableShader = (1 << 10),
+
+   Transfer = (1 << 11),
+   End = (1 << 12),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -165,6 +175,7 @@ enum class DescriptorType
    Sampler,
    ImageSampler,
    StorageImage,
+   AccelerationStructure,
 };
 
 struct DescriptorBinding
@@ -317,6 +328,9 @@ enum class BufferUsage : u32
    VertexBuffer = (1 << 4),
    IndexBuffer = (1 << 5),
    StorageBuffer = (1 << 6),
+   AccelerationStructure = (1 << 7),
+   AccelerationStructureRead = (1 << 8),
+   ShaderBindingTable = (1 << 9),
 };
 
 TRIGLAV_DECL_FLAGS(BufferUsage)
@@ -331,7 +345,8 @@ enum class DepthTestMode
 enum class PipelineType
 {
    Graphics,
-   Compute
+   Compute,
+   RayTracing,
 };
 
 enum class PresentMode
@@ -345,7 +360,15 @@ enum class DevicePickStrategy
 {
    PreferDedicated,
    PreferIntegrated,
+   Any,
 };
+
+enum class DeviceFeature : u32
+{
+   RayTracing = (1 << 0),
+};
+
+TRIGLAV_DECL_FLAGS(DeviceFeature)
 
 template<typename T>
 using Result = std::expected<T, Status>;
@@ -353,19 +376,13 @@ using Result = std::expected<T, Status>;
 class Exception final : public std::exception
 {
  public:
+   Exception(Status status, std::string_view invoked_function);
+
+   [[nodiscard]] const char* what() const noexcept override;
+
+ private:
    Status status;
    std::string invoked_function;
-
-   Exception(const Status status, const std::string_view invoked_function) :
-       status(status),
-       invoked_function(std::string(invoked_function))
-   {
-   }
-
-   [[nodiscard]] const char* what() const noexcept override
-   {
-      return "graphics_api exception";
-   }
 };
 
 template<typename TResultValue>

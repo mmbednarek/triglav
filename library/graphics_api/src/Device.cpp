@@ -1,4 +1,4 @@
-#include "Device.h"
+#include "Device.hpp"
 
 #include <algorithm>
 #include <array>
@@ -8,9 +8,10 @@
 #include <shared_mutex>
 #include <vector>
 
-#include "CommandList.h"
-#include "Surface.h"
-#include "vulkan/Util.h"
+#include "CommandList.hpp"
+#include "Surface.hpp"
+#include "vulkan/DynamicProcedures.hpp"
+#include "vulkan/Util.hpp"
 
 #undef max
 
@@ -51,21 +52,24 @@ bool is_surface_format_supported(const VkPhysicalDevice physicalDevice, const Vk
 uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 {
    if (max == 0) {
-      return std::max(2u, min + 1);
+      return std::max(2u, min);
    }
 
-   return std::min(std::max(2u, min + 1), max);
+   return std::min(std::max(2u, min), max);
 }
 
 }// namespace
 
-Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos) :
+Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
+               const DeviceFeatureFlags enabledFeatures) :
     m_device(std::move(device)),
     m_physicalDevice(physicalDevice),
     m_queueFamilyInfos{std::move(queueFamilyInfos)},
+    m_enabledFeatures{enabledFeatures},
     m_queueManager(*this, m_queueFamilyInfos),
     m_samplerCache(*this)
 {
+   vulkan::DynamicProcedures::the().init(*m_device);
 }
 
 Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
@@ -187,10 +191,15 @@ Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_
    VkMemoryRequirements memRequirements;
    vkGetBufferMemoryRequirements(*m_device, *buffer, &memRequirements);
 
-   VkMemoryAllocateInfo allocateInfo{};
-   allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   VkMemoryAllocateInfo allocateInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
    allocateInfo.allocationSize = memRequirements.size;
    allocateInfo.memoryTypeIndex = this->find_memory_type(memRequirements.memoryTypeBits, vulkan::to_vulkan_memory_properties_flags(usage));
+
+   VkMemoryAllocateFlagsInfo allocateFlagsInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO};
+   if (!(usage & BufferUsage::HostVisible)) {
+      allocateFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+      allocateInfo.pNext = &allocateFlagsInfo;
+   }
 
    vulkan::DeviceMemory memory(*m_device);
    if (memory.construct(&allocateInfo) != VK_SUCCESS) {
@@ -431,6 +440,11 @@ VkDevice Device::vulkan_device() const
    return *m_device;
 }
 
+VkPhysicalDevice Device::vulkan_physical_device() const
+{
+   return m_physicalDevice;
+}
+
 QueueManager& Device::queue_manager()
 {
    return m_queueManager;
@@ -460,11 +474,34 @@ SamplerCache& Device::sampler_cache()
    return m_samplerCache;
 }
 
+DeviceFeatureFlags Device::enabled_features() const
+{
+   return m_enabledFeatures;
+}
+
 u32 Device::min_storage_buffer_alignment() const
 {
    VkPhysicalDeviceProperties props;
    vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
    return props.limits.minStorageBufferOffsetAlignment;
+}
+
+Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType structType,
+                                                                                 const Buffer& buffer, const MemorySize bufferOffset,
+                                                                                 const MemorySize bufferSize)
+{
+   VkAccelerationStructureCreateInfoKHR asInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR};
+   asInfo.buffer = buffer.vulkan_buffer();
+   asInfo.offset = bufferOffset;
+   asInfo.size = std::min(buffer.size() - bufferOffset, bufferSize);
+   asInfo.type = vulkan::to_vulkan_acceleration_structure_type(structType);
+
+   vulkan::AccelerationStructureKHR structure(*m_device);
+   if (structure.construct(&asInfo) != VK_SUCCESS) {
+      return std::unexpected{Status::UnsupportedDevice};
+   }
+
+   return ray_tracing::AccelerationStructure(std::move(structure));
 }
 
 }// namespace triglav::graphics_api
