@@ -179,6 +179,9 @@ void Renderer::update_debug_info()
    const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
    m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
 
+   const auto rtGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::RayTracingGpuTime));
+   m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, rtGpuTimeStr);
+
    const auto camPos = m_scene.camera().position();
    const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
    m_uiViewport.set_text_content("info_dialog/location/position/value"_name, positionStr);
@@ -203,6 +206,7 @@ void Renderer::on_render()
       StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
       StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
       StatisticManager::the().push_accumulated(Stat::ShadingGpuTime, m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
+      StatisticManager::the().push_accumulated(Stat::RayTracingGpuTime, m_renderGraph.node<node::RayTracedImage>("ray_tracing"_name).gpu_time());
    } else {
       isFirstFrame = false;
    }

@@ -30,11 +30,13 @@ class RayTracedImage : public render_core::IRenderNode
    void record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& nodeResources,
                         graphics_api::CommandList& cmdList) override;
    std::unique_ptr<render_core::NodeFrameResources> create_node_resources() override;
+   [[nodiscard]] float gpu_time() const;
 
  private:
    graphics_api::Device& m_device;
    RayTracingScene& m_rtScene;
    Scene& m_scene;
+   graphics_api::TimestampArray m_timestampArray;
 };
 
 }// namespace triglav::renderer::node

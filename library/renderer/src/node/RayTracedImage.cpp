@@ -44,7 +44,8 @@ void RayTracedImageResources::update_resolution(const graphics_api::Resolution& 
 RayTracedImage::RayTracedImage(graphics_api::Device& device, RayTracingScene& rtScene, Scene& scene) :
     m_device(device),
     m_rtScene(rtScene),
-    m_scene(scene)
+    m_scene(scene),
+    m_timestampArray(GAPI_CHECK(device.create_timestamp_array(2)))
 {
 }
 
@@ -56,6 +57,9 @@ graphics_api::WorkTypeFlags RayTracedImage::work_types() const
 void RayTracedImage::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& nodeResources,
                                      graphics_api::CommandList& cmdList)
 {
+   cmdList.reset_timestamp_array(m_timestampArray, 0, 2);
+   cmdList.write_timestamp(PipelineStage::Entrypoint, m_timestampArray, 0);
+
    auto& res = dynamic_cast<RayTracedImageResources&>(nodeResources);
    auto& texture = res.texture();
 
@@ -78,11 +82,18 @@ void RayTracedImage::record_commands(render_core::FrameResources& frameResources
       .mipLevelCount = 1,
    };
    cmdList.texture_barrier(PipelineStage::RayGenerationShader, PipelineStage::ComputeShader, dstBarrierOut);
+
+   cmdList.write_timestamp(PipelineStage::End, m_timestampArray, 1);
 }
 
 std::unique_ptr<render_core::NodeFrameResources> RayTracedImage::create_node_resources()
 {
    return std::make_unique<RayTracedImageResources>(m_device);
+}
+
+float RayTracedImage::gpu_time() const
+{
+   return m_timestampArray.get_difference(0, 1);
 }
 
 }// namespace triglav::renderer::node

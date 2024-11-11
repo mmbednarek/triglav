@@ -29,6 +29,7 @@ enum class Stat : u32
    FramesPerSecond,
    GBufferGpuTime,
    ShadingGpuTime,
+   RayTracingGpuTime,
    Count
 };
 
