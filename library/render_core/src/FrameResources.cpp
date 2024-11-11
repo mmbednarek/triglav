@@ -49,15 +49,9 @@ void NodeFrameResources::update_resolution(const graphics_api::Resolution& resol
 
       if (target->second.resolution.has_value()) {
          target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(*target->second.resolution)));
-         continue;
+      } else {
+         target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution)));
       }
-
-      target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution)));
-   }
-
-   for (auto& target : m_renderTargets) {
-      if (not target.has_value())
-         continue;
 
       for (const auto& attachment : target->second.renderTarget->attachments()) {
          this->register_texture(attachment.identifier, target->second.framebuffer->texture(attachment.identifier));
@@ -65,13 +59,14 @@ void NodeFrameResources::update_resolution(const graphics_api::Resolution& resol
    }
 }
 
-void NodeFrameResources::register_texture(Name name, graphics_api::Texture& texture)
+void NodeFrameResources::register_texture(const Name name, graphics_api::Texture& texture)
 {
-   m_registeredTextures.emplace(name, &texture);
+   m_registeredTextures[name] = &texture;
 }
 
 graphics_api::Texture& NodeFrameResources::texture(const Name name) const
 {
+   assert(m_registeredTextures.contains(name));
    return *m_registeredTextures.at(name);
 }
 

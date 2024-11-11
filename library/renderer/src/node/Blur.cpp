@@ -76,7 +76,7 @@ gapi::WorkTypeFlags Blur::work_types() const
 void Blur::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
                            gapi::CommandList& cmdList)
 {
-   gapi::Texture& inTexture = frameResources.node(m_srcNode).texture(m_srcTexture);
+   const gapi::Texture& inTexture = frameResources.node(m_srcNode).texture(m_srcTexture);
 
    auto& blurResources = dynamic_cast<BlurResources&>(resources);
    gapi::Texture& outTexture = blurResources.texture();

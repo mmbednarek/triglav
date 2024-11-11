@@ -52,10 +52,10 @@ bool is_surface_format_supported(const VkPhysicalDevice physicalDevice, const Vk
 uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 {
    if (max == 0) {
-      return std::max(2u, min + 1);
+      return std::max(2u, min);
    }
 
-   return std::min(std::max(2u, min + 1), max);
+   return std::min(std::max(2u, min), max);
 }
 
 }// namespace

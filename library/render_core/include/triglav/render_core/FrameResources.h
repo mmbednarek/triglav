@@ -87,6 +87,7 @@ class FrameResources
    template<typename TNode = NodeFrameResources>
    TNode& node(const Name identifier)
    {
+      assert(m_nodes.contains(identifier));
       return *dynamic_cast<TNode*>(m_nodes.at(identifier).get());
    }
 
