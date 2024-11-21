@@ -192,6 +192,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    std::vector vulkanDeviceExtensions{
       VK_KHR_SWAPCHAIN_EXTENSION_NAME,
       VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
+      VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME,
       "VK_KHR_shader_non_semantic_info",
    };
 

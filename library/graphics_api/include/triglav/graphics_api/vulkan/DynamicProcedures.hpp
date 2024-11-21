@@ -11,6 +11,7 @@
    TRIGLAV_HANDLE(vkGetAccelerationStructureDeviceAddressKHR) \
    TRIGLAV_HANDLE(vkCreateRayTracingPipelinesKHR)             \
    TRIGLAV_HANDLE(vkGetRayTracingShaderGroupHandlesKHR)       \
+   TRIGLAV_HANDLE(vkCmdDrawIndexedIndirectCount)              \
    TRIGLAV_HANDLE(vkCmdTraceRaysKHR)                          \
    TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)
 
@@ -68,5 +69,8 @@ void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddre
                        const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable,
                        const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable,
                        const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth);
+
+void vkCmdDrawIndexedIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer,
+                                   VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
 
 }// namespace triglav::graphics_api::vulkan

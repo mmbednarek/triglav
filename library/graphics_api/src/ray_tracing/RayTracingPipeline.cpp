@@ -148,7 +148,7 @@ Result<RayTracingPipeline> RayTracingPipelineBuilder::build()
    pipeline.take_ownership(vulkanPipeline);
 
    return RayTracingPipeline{std::move(layout),        std::move(pipeline), std::move(descSetLayout),
-                             PipelineType::RayTracing, m_shaderIndices,     m_shaderGroups.size()};
+                             PipelineType::RayTracing, m_shaderIndices,     static_cast<u32>(m_shaderGroups.size())};
 }
 
 RayTracingPipeline::RayTracingPipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline,

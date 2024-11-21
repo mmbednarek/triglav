@@ -327,6 +327,13 @@ void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer,
                                      static_cast<u32>(writes.size()), writes.data());
 }
 
+void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls, const u32 stride)
+{
+   this->handle_pending_descriptors(PipelineType::Graphics);
+   vulkan::vkCmdDrawIndexedIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls,
+                                         stride);
+}
+
 WorkTypeFlags CommandList::work_types() const
 {
    return m_workTypes;

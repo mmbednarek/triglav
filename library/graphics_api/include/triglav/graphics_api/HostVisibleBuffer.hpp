@@ -8,8 +8,8 @@ template<BufferUsage CAdditionalUsageFlags, typename TValue>
 class HostVisibleBuffer
 {
  public:
-   explicit HostVisibleBuffer(Device& device) :
-       m_buffer(GAPI_CHECK(device.create_buffer(BufferUsage::HostVisible | CAdditionalUsageFlags, sizeof(TValue)))),
+   explicit HostVisibleBuffer(Device& device, const BufferUsage runtimeFlags = BufferUsage::None) :
+       m_buffer(GAPI_CHECK(device.create_buffer(BufferUsage::HostVisible | CAdditionalUsageFlags | runtimeFlags, sizeof(TValue)))),
        m_mappedMemory(GAPI_CHECK(m_buffer.map_memory()))
    {
    }

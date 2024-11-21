@@ -6,7 +6,7 @@
 
 namespace triglav::threading {
 
-void ThreadPool::initialize(u32 count)
+void ThreadPool::initialize(const u32 count)
 {
    m_threads.reserve(count);
    std::generate_n(std::back_inserter(m_threads), count,
@@ -31,7 +31,7 @@ void ThreadPool::thread_routine()
    (*object)();
 }
 
-void ThreadPool::thread_entrypoint(ThreadID threadId)
+void ThreadPool::thread_entrypoint(const ThreadID threadId)
 {
    set_thread_id(threadId);
 

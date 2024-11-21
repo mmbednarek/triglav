@@ -9,7 +9,7 @@ template<BufferUsageFlags CBufferUsage, typename TValue>
 class Array
 {
  public:
-   Array(Device& device, const size_t element_count, BufferUsageFlags additionalFlags = 0) :
+   Array(Device& device, const size_t element_count, const BufferUsageFlags additionalFlags = 0) :
        m_device(device),
        m_buffer(
           GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst | additionalFlags, element_count * sizeof(TValue)))),
@@ -55,6 +55,11 @@ class Array
       return m_buffer;
    }
 
+   [[nodiscard]] Buffer& buffer()
+   {
+      return m_buffer;
+   }
+
    [[nodiscard]] size_t count() const
    {
       return m_elementCount;
@@ -68,6 +73,12 @@ class Array
 
 template<typename TVertex>
 using VertexArray = Array<BufferUsage::VertexBuffer, TVertex>;
+
+template<typename TObject>
+using StorageArray = Array<BufferUsage::StorageBuffer, TObject>;
+
+template<typename TObject>
+using StagingArray = Array<BufferUsage::StorageBuffer | BufferUsage::HostVisible | BufferUsage::TransferSrc, TObject>;
 
 using IndexArray = Array<BufferUsage::IndexBuffer, uint32_t>;
 

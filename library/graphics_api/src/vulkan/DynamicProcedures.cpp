@@ -75,4 +75,12 @@ void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddre
                                                             pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
 }
 
+void vkCmdDrawIndexedIndirectCount(const VkCommandBuffer commandBuffer, const VkBuffer buffer, const VkDeviceSize offset,
+                                   const VkBuffer countBuffer, const VkDeviceSize countBufferOffset, const uint32_t maxDrawCount,
+                                   const uint32_t stride)
+{
+   return DynamicProcedures::the().proc_vkCmdDrawIndexedIndirectCount()(commandBuffer, buffer, offset, countBuffer, countBufferOffset,
+                                                                        maxDrawCount, stride);
+}
+
 }// namespace triglav::graphics_api::vulkan

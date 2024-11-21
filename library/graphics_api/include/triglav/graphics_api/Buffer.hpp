@@ -29,6 +29,7 @@ class MappedMemory
    [[nodiscard]] void* operator*() const;
 
    void write(const void* source, size_t length) const;
+   void write_offset(const void* source, MemorySize length, MemorySize offset) const;
 
  private:
    void* m_pointer;

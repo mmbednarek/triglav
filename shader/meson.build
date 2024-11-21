@@ -9,6 +9,7 @@ compile_raymiss_cmds = [shader_compiler, '-fshader-stage=rmiss', '--target-env=v
 shader_targets = []
 
 subdir('ambient_occlusion')
+subdir('bindless_geometry')
 subdir('blur')
 subdir('debug_lines')
 subdir('ground')

@@ -70,6 +70,7 @@ class CommandList
    void reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const;
    void write_timestamp(PipelineStage stage, const TimestampArray& timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
+   void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
 
    void bind_raw_uniform_buffer(u32 binding, const Buffer& buffer);
    void bind_storage_buffer(u32 binding, const Buffer& buffer);

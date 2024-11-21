@@ -498,11 +498,14 @@ VkBufferUsageFlags to_vulkan_buffer_usage_flags(const BufferUsageFlags usage)
    if (usage & ShaderBindingTable) {
       result |= VK_BUFFER_USAGE_SHADER_BINDING_TABLE_BIT_KHR;
    }
+   if (usage & Indirect) {
+      result |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+   }
 
    return result;
 }
 
-VkMemoryPropertyFlags to_vulkan_memory_properties_flags(BufferUsageFlags usage)
+VkMemoryPropertyFlags to_vulkan_memory_properties_flags(const BufferUsageFlags usage)
 {
    using enum BufferUsage;
 

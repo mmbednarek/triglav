@@ -114,9 +114,9 @@ class FrameResources
    }
 
    void update_resolution(const graphics_api::Resolution& resolution);
-   void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore);
+   void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore) const;
    void initialize_command_list(Name nodeName, graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commandList,
-                                size_t inFrameWaitSemaphoreCount);
+                                size_t inFrameWaitSemaphoreCount) const;
    void clean(graphics_api::Device& device);
    void finalize();
 

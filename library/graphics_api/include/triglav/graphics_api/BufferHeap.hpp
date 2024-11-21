@@ -51,10 +51,15 @@ class BufferHeap
    Page& allocate_page();
    std::vector<Page>::iterator find_available_page(std::vector<Page>::iterator start, Index chunkCount);
 
+   // References
+   Device& m_device;
+
+   // Containers
+   std::vector<Page> m_pages;
+
+   // State
    BufferUsageFlags m_usageFlags;
    MemorySize m_chunkCount;
-   Device& m_device;
-   std::vector<Page> m_pages;
 };
 
 }// namespace triglav::graphics_api

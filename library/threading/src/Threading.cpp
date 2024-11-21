@@ -6,7 +6,7 @@ namespace triglav::threading {
 
 thread_local ThreadID g_threadID{};
 
-void set_thread_id(ThreadID id)
+void set_thread_id(const ThreadID id)
 {
    g_threadID = id;
 }

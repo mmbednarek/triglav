@@ -1,5 +1,6 @@
 renderer_sources = files([
   'include/triglav/renderer/AmbientOcclusionRenderer.hpp',
+  'include/triglav/renderer/BindlessScene.hpp',
   'include/triglav/renderer/Camera.hpp',
   'include/triglav/renderer/CameraBase.hpp',
   'include/triglav/renderer/DebugLinesRenderer.hpp',
@@ -21,6 +22,8 @@ renderer_sources = files([
   'include/triglav/renderer/TextureHelper.hpp',
   'src/node/AmbientOcclusion.cpp',
   'src/node/AmbientOcclusion.hpp',
+  'src/node/BindlessGeometry.cpp',
+  'src/node/BindlessGeometry.hpp',
   'src/node/Blur.cpp',
   'src/node/Blur.hpp',
   'src/node/Downsample.cpp',
@@ -44,6 +47,7 @@ renderer_sources = files([
   'src/node/UserInterface.cpp',
   'src/node/UserInterface.hpp',
   'src/AmbientOcclusionRenderer.cpp',
+  'src/BindlessScene.cpp',
   'src/Camera.cpp',
   'src/CameraBase.cpp',
   'src/DebugLinesRenderer.cpp',

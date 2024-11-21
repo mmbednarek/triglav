@@ -83,14 +83,14 @@ graphics_api::CommandList& NodeFrameResources::command_list()
    return *m_commandList;
 }
 
-void NodeFrameResources::add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore)
+void NodeFrameResources::add_signal_semaphore(const Name child, graphics_api::Semaphore&& semaphore)
 {
    m_signalSemaphores.add_semaphore(semaphore);
    NodeResourcesBase::add_signal_semaphore(child, std::move(semaphore));
 }
 
 void NodeFrameResources::initialize_command_list(graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commands,
-                                                 size_t inFrameWaitSemaphoreCount)
+                                                 const size_t inFrameWaitSemaphoreCount)
 {
    m_waitSemaphores.emplace(std::move(waitSemaphores));
    m_commandList.emplace(std::move(commands));
@@ -129,14 +129,14 @@ void FrameResources::update_resolution(const graphics_api::Resolution& resolutio
    }
 }
 
-void FrameResources::add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore)
+void FrameResources::add_signal_semaphore(const Name parent, const Name child, graphics_api::Semaphore&& semaphore) const
 {
    auto& node = m_nodes.at(parent);
    node->add_signal_semaphore(child, std::move(semaphore));
 }
 
-void FrameResources::initialize_command_list(Name nodeName, graphics_api::SemaphoreArray&& waitSemaphores,
-                                             graphics_api::CommandList&& commandList, size_t inFrameWaitSemaphoreCount)
+void FrameResources::initialize_command_list(const Name nodeName, graphics_api::SemaphoreArray&& waitSemaphores,
+                                             graphics_api::CommandList&& commandList, const size_t inFrameWaitSemaphoreCount) const
 {
    auto& node = m_nodes.at(nodeName);
    auto* frameNode = dynamic_cast<NodeFrameResources*>(node.get());
