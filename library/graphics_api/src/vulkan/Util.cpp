@@ -340,6 +340,8 @@ VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
       return VK_DESCRIPTOR_TYPE_SAMPLER;
    case DescriptorType::ImageSampler:
       return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+   case DescriptorType::ImageOnly:
+      return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
    case DescriptorType::StorageImage:
       return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
    case DescriptorType::AccelerationStructure:

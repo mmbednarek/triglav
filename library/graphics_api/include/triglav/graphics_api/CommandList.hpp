@@ -58,7 +58,8 @@ class CommandList
    void copy_buffer(const Buffer& source, const Buffer& dest) const;
    void copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const;
    void copy_buffer_to_texture(const Buffer& source, const Texture& destination, int mipLevel = 0) const;
-   void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState);
+   void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState, u32 srcMip = 0,
+                     u32 dstMip = 0) const;
    void push_constant_ptr(PipelineStage stage, const void* ptr, size_t size, size_t offset = 0) const;
 
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
@@ -71,6 +72,7 @@ class CommandList
    void write_timestamp(PipelineStage stage, const TimestampArray& timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
    void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
+   void update_buffer(const Buffer& buffer, u32 offset, u32 size, const void* data) const;
 
    void bind_raw_uniform_buffer(u32 binding, const Buffer& buffer);
    void bind_storage_buffer(u32 binding, const Buffer& buffer);
@@ -85,6 +87,7 @@ class CommandList
       this->bind_raw_uniform_buffer(binding, buffer.buffer());
    }
 
+   void bind_texture_image(u32 binding, const Texture& texture);
    void bind_texture(u32 binding, const Texture& texture);
    void bind_texture_array(u32 binding, std::span<Texture*> textures);
    void bind_storage_image(u32 binding, const Texture& texture);

@@ -15,10 +15,10 @@
 namespace triglav::renderer {
 
 using namespace name_literals;
+using graphics_api::TextureState;
+using graphics_api::TextureUsage;
 using render_core::checkResult;
 using resource::ResourceManager;
-using graphics_api::TextureUsage;
-using graphics_api::TextureState;
 
 ShadingRenderer::ShadingRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, ResourceManager& resourceManager) :
     m_device(device),
@@ -38,7 +38,8 @@ ShadingRenderer::ShadingRenderer(graphics_api::Device& device, graphics_api::Ren
                       .enable_depth_test(false)
                       .vertex_topology(graphics_api::VertexTopology::TriangleStrip)
                       .build())),
-   m_placeholderTexture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {4, 4}, TextureUsage::Sampled | TextureUsage::TransferDst)))
+    m_placeholderTexture(
+       GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float16), {4, 4}, TextureUsage::Sampled | TextureUsage::TransferDst)))
 {
    static constexpr std::array<u8, 32> data{};
    m_placeholderTexture.write(m_device, data.data());

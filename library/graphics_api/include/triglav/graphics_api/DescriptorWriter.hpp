@@ -48,6 +48,7 @@ class DescriptorWriter
    }
 
    void set_sampled_texture(uint32_t binding, const Texture& texture, const Sampler& sampler);
+   void set_texture_only(uint32_t binding, const Texture& texture);
    void set_texture_array(uint32_t binding, std::span<Texture*> textures);
    void set_storage_image(uint32_t binding, const Texture& texture);
    void reset_count();

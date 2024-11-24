@@ -67,7 +67,8 @@ graphics_api::WorkTypeFlags RayTracedImage::work_types() const
 void RayTracedImage::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& nodeResources,
                                      graphics_api::CommandList& cmdList)
 {
-   if (!frameResources.has_flag("ray_traced_shadows"_name) && frameResources.get_option<AmbientOcclusionMethod>("ao_method"_name) != AmbientOcclusionMethod::RayTraced)
+   if (!frameResources.has_flag("ray_traced_shadows"_name) &&
+       frameResources.get_option<AmbientOcclusionMethod>("ao_method"_name) != AmbientOcclusionMethod::RayTraced)
       return;
 
    cmdList.reset_timestamp_array(m_timestampArray, 0, 2);
@@ -99,14 +100,14 @@ void RayTracedImage::record_commands(render_core::FrameResources& frameResources
    m_rtScene.render(cmdList, aoTexture, shadowsTexture);
 
    std::array dstBarriersOut{
-      TextureBarrierInfo {
+      TextureBarrierInfo{
          .texture = &aoTexture,
          .sourceState = TextureState::General,
          .targetState = TextureState::ShaderRead,
          .baseMipLevel = 0,
          .mipLevelCount = 1,
       },
-      TextureBarrierInfo {
+      TextureBarrierInfo{
          .texture = &shadowsTexture,
          .sourceState = TextureState::General,
          .targetState = TextureState::ShaderRead,

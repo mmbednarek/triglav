@@ -230,6 +230,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    VkPhysicalDeviceVulkan11Features vulkan11Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
    vulkan11Features.variablePointers = true;
    vulkan11Features.variablePointersStorageBuffer = true;
+   vulkan11Features.shaderDrawParameters = true;
    vulkan12Features.pNext = &vulkan11Features;
 
    void** lastFeaturesPtr = &vulkan11Features.pNext;
@@ -296,7 +297,7 @@ Result<Instance> Instance::create_instance()
 
    const std::array g_vulkanInstanceExtensions{
       VK_KHR_SURFACE_EXTENSION_NAME,
-      triglav::desktop::vulkan_extension_name(),
+      desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
       VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif

@@ -45,7 +45,7 @@ void AmbientOcclusionRenderer::draw(render_core::FrameResources& resources, grap
 
    cmdList.bind_pipeline(m_pipeline);
 
-   auto& gbuffer = resources.node<render_core::NodeFrameResources>("geometry"_name).framebuffer("gbuffer"_name);
+   auto& gbuffer = resources.node("geometry"_name).framebuffer("gbuffer"_name);
 
    cmdList.bind_texture(0, gbuffer.texture("position"_name));
    cmdList.bind_texture(1, gbuffer.texture("normal"_name));

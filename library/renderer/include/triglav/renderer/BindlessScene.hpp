@@ -19,9 +19,10 @@ struct BindlessSceneObject
    u32 vertexOffset{};
    u32 instanceOffset{};
    u32 materialID{};
-   glm::mat4 transform{};
-   glm::vec3 boundingBoxMin{};
-   glm::vec3 boundingBoxMax{};
+   alignas(16) glm::mat4 transform{};
+   alignas(16) glm::mat4 normalTransform{};
+   alignas(16) glm::vec3 boundingBoxMin{};
+   alignas(16) glm::vec3 boundingBoxMax{};
 };
 
 struct BindlessMeshInfo
@@ -34,12 +35,29 @@ struct BindlessMeshInfo
    glm::vec3 boundingBoxMax{};
 };
 
-struct SolidColorProperties
+enum class BindlessValueSource
 {
-   glm::vec3 color;
-   float metalic;
-   float roughness;
+   TextureMap,
+   Scalar,
 };
+
+template<BindlessValueSource Source, typename TScalarType = float>
+using BindlessValueType = std::conditional_t<Source == BindlessValueSource::TextureMap, u32, TScalarType>;
+
+template<BindlessValueSource Albedo, BindlessValueSource Roughness, BindlessValueSource Metalic>
+struct BindlessMaterialProperties
+{
+   using enum BindlessValueSource;
+
+   BindlessValueType<Albedo, glm::vec3> albedo{};
+   BindlessValueType<Roughness> roughness{};
+   BindlessValueType<Metalic> metalic{};
+};
+
+using BindlessMaterialProps_AllScalar =
+   BindlessMaterialProperties<BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+using BindlessMaterialProps_AlbedoTex =
+   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
 
 class BindlessScene
 {
@@ -56,33 +74,39 @@ class BindlessScene
    [[nodiscard]] graphics_api::Buffer& scene_object_buffer();
    [[nodiscard]] graphics_api::Buffer& material_template_properties(u32 materialTemplateId);
    [[nodiscard]] const graphics_api::Buffer& count_buffer() const;
+   [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
 
  private:
    BindlessMeshInfo& get_mesh_info(const graphics_api::CommandList& cmdList, ModelName name);
+   u32 get_material_id(const graphics_api::CommandList& cmdList, const render_core::Material& material);
+   u32 get_texture_id(TextureName texture);
 
    // References
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
-   Scene &m_scene;
+   Scene& m_scene;
 
    // Caches and temporary buffers
    std::vector<SceneObject> m_pendingObjects;
    std::map<ModelName, BindlessMeshInfo> m_models;
+   std::map<TextureName, u32> m_textureIds;
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_sceneObjectStage;
    graphics_api::StorageArray<BindlessSceneObject> m_sceneObjects;
    graphics_api::VertexArray<geometry::Vertex> m_combinedVertexBuffer;
-   graphics_api::VertexArray<u32> m_combinedIndexBuffer;
+   graphics_api::IndexArray m_combinedIndexBuffer;
    graphics_api::UniformBuffer<u32> m_countBuffer;
-   graphics_api::StorageArray<SolidColorProperties> m_solidColorProps;
+   graphics_api::StorageArray<BindlessMaterialProps_AllScalar> m_materialPropsAllScalar;
+   graphics_api::StorageArray<BindlessMaterialProps_AlbedoTex> m_materialPropsAlbedoTex;
 
    // Buffer write counts
    MemorySize m_writtenSceneObjectCount{0};
    MemorySize m_writtenObjectCount{0};
    MemorySize m_writtenVertexCount{0};
    MemorySize m_writtenIndexCount{0};
+   MemorySize m_writtenMaterialProperty_AllScalar{0};
 
    // Sinks
    TG_SINK(Scene, OnObjectAddedToScene);

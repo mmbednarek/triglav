@@ -3,11 +3,21 @@
 namespace triglav::renderer {
 
 namespace gapi = graphics_api;
+using namespace name_literals;
 
 constexpr auto STAGING_BUFFER_ELEM_COUNT = 64;
 constexpr auto SCENE_ELEM_COUNT = 128;
 constexpr auto VERTEX_BUFFER_SIZE = 256000;
 constexpr auto INDEX_BUFFER_SIZE = 256000;
+
+namespace {
+
+constexpr auto encode_material_id(const u32 templateID, const u32 instanceID)
+{
+   return (templateID & 0b111) | (instanceID << 3);
+}
+
+}// namespace
 
 BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
     m_device(device),
@@ -18,14 +28,28 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_combinedVertexBuffer(device, VERTEX_BUFFER_SIZE),
     m_combinedIndexBuffer(device, INDEX_BUFFER_SIZE),
     m_countBuffer(device, gapi::BufferUsage::Indirect),
-    m_solidColorProps(device, 1),
+    m_materialPropsAllScalar(device, 3),
+    m_materialPropsAlbedoTex(device, 3),
     TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
-   SolidColorProperties properties{};
-   properties.color = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
-   properties.metalic = 0.5;
-   properties.roughness = 0.5;
-   m_solidColorProps.write(&properties, 1);
+   std::array<BindlessMaterialProps_AllScalar, 3> properties{
+      BindlessMaterialProps_AllScalar{
+         .albedo = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+         .roughness = 1.0,
+         .metalic = 0.0,
+      },
+      BindlessMaterialProps_AllScalar{
+         .albedo = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
+         .roughness = 1.0,
+         .metalic = 0.0,
+      },
+      BindlessMaterialProps_AllScalar{
+         .albedo = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
+         .roughness = 1.0,
+         .metalic = 0.0,
+      },
+   };
+   m_materialPropsAllScalar.write(properties.data(), properties.size());
 }
 
 void BindlessScene::on_object_added_to_scene(const SceneObject& object)
@@ -56,6 +80,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
          object.boundingBoxMax = meshInfo.boundingBoxMax;
          object.materialID = meshInfo.materialID;
          object.transform = pendingObject.model_matrix();
+         object.normalTransform = glm::transpose(glm::inverse(glm::mat3(pendingObject.model_matrix())));
 
          mapping.write_offset(&object, sizeof(BindlessSceneObject), m_writtenSceneObjectCount * sizeof(BindlessSceneObject));
          ++m_writtenSceneObjectCount;
@@ -66,6 +91,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
 
    cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0, m_writtenObjectCount * sizeof(BindlessSceneObject),
                        m_pendingObjects.size() * sizeof(BindlessSceneObject));
+
+   m_pendingObjects.clear();
 }
 
 gapi::Buffer& BindlessScene::combined_vertex_buffer()
@@ -85,12 +112,17 @@ gapi::Buffer& BindlessScene::scene_object_buffer()
 
 graphics_api::Buffer& BindlessScene::material_template_properties(const u32 materialTemplateId)
 {
-   return m_solidColorProps.buffer();
+   return m_materialPropsAllScalar.buffer();
 }
 
 const gapi::Buffer& BindlessScene::count_buffer() const
 {
    return m_countBuffer.buffer();
+}
+
+u32 BindlessScene::scene_object_count() const
+{
+   return m_writtenSceneObjectCount;
 }
 
 Scene& BindlessScene::scene() const
@@ -106,13 +138,16 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
 
    auto& model = m_resourceManager.get(name);
 
+   assert(!model.range.empty());
+   auto material = m_resourceManager.get(model.range[0].materialName);
+
    BindlessMeshInfo meshInfo;
    meshInfo.indexCount = model.mesh.indices.count();
    meshInfo.indexOffset = m_writtenIndexCount;
    meshInfo.vertexOffset = m_writtenVertexCount;
    meshInfo.boundingBoxMax = model.boundingBox.max;
    meshInfo.boundingBoxMin = model.boundingBox.min;
-   meshInfo.materialID = 0;// TODO: Add material ID
+   meshInfo.materialID = this->get_material_id(cmdList, material);
    auto [emplacedIt, ok] = m_models.emplace(name, meshInfo);
    assert(ok);
 
@@ -127,6 +162,28 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
    m_writtenIndexCount += model.mesh.indices.count();
 
    return emplacedIt->second;
+}
+
+u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, const render_core::Material& material)
+{
+   if (material.materialTemplate == "pbr/simple.mt"_rc) {
+      BindlessMaterialProps_AlbedoTex albedoTex;
+      albedoTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
+      albedoTex.roughness = std::get<float>(material.values[1]);
+      albedoTex.metalic = std::get<float>(material.values[2]);
+
+      // cmdList.copy_buffer()
+      // m_materialPropsAlbedoTex
+      // return encode_material_id(1, );
+   }
+   if (material.materialTemplate == "pbr/normal_map.mt"_rc)
+      return 2;
+   return 0;
+}
+
+u32 BindlessScene::get_texture_id(TextureName texture)
+{
+   return 0;
 }
 
 }// namespace triglav::renderer

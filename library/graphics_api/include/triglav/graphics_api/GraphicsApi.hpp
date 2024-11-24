@@ -174,6 +174,7 @@ enum class DescriptorType
    StorageBuffer,
    Sampler,
    ImageSampler,
+   ImageOnly,
    StorageImage,
    AccelerationStructure,
 };

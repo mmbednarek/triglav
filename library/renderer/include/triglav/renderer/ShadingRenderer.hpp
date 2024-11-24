@@ -31,7 +31,8 @@ class ShadingRenderer
    ShadingRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
    void draw(render_core::FrameResources& resources, graphics_api::CommandList& cmdList, const glm::vec3& lightPosition,
-             const std::array<glm::mat4, 3>& shadowMapMats, const glm::mat4& viewMat, const graphics_api::UniformBuffer<UniformData>& ubo) const;
+             const std::array<glm::mat4, 3>& shadowMapMats, const glm::mat4& viewMat,
+             const graphics_api::UniformBuffer<UniformData>& ubo) const;
 
  private:
    graphics_api::Device& m_device;

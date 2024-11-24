@@ -17,7 +17,7 @@ struct MaterialRange
 {
    size_t offset;
    size_t size;
-   ResourceName materialName;
+   MaterialName materialName;
 };
 
 struct Model

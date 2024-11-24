@@ -218,18 +218,19 @@ void CommandList::copy_buffer_to_texture(const Buffer& source, const Texture& de
                           &region);
 }
 
-void CommandList::copy_texture(const Texture& source, const TextureState srcState, const Texture& destination, const TextureState dstState)
+void CommandList::copy_texture(const Texture& source, const TextureState srcState, const Texture& destination, const TextureState dstState,
+                               const u32 srcMip, const u32 dstMip) const
 {
    VkImageCopy imageCopy{.srcSubresource{
                             .aspectMask = vulkan::to_vulkan_aspect_flags(source.usage_flags()),
-                            .mipLevel = 0,
+                            .mipLevel = srcMip,
                             .baseArrayLayer = 0,
                             .layerCount = 1,
                          },
                          .srcOffset{0, 0, 0},
                          .dstSubresource{
                             .aspectMask = vulkan::to_vulkan_aspect_flags(destination.usage_flags()),
-                            .mipLevel = 0,
+                            .mipLevel = dstMip,
                             .baseArrayLayer = 0,
                             .layerCount = 1,
                          },
@@ -327,11 +328,17 @@ void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer,
                                      static_cast<u32>(writes.size()), writes.data());
 }
 
-void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls, const u32 stride)
+void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
+                                           const u32 stride)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
    vulkan::vkCmdDrawIndexedIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls,
                                          stride);
+}
+
+void CommandList::update_buffer(const Buffer& buffer, const u32 offset, const u32 size, const void* data) const
+{
+   vkCmdUpdateBuffer(m_commandBuffer, buffer.vulkan_buffer(), offset, size, data);
 }
 
 WorkTypeFlags CommandList::work_types() const
@@ -368,6 +375,12 @@ void CommandList::bind_storage_buffer(const u32 binding, const Buffer& buffer, u
 void CommandList::bind_raw_uniform_buffer(const u32 binding, const Buffer& buffer)
 {
    m_descriptorWriter.set_raw_uniform_buffer(binding, buffer);
+   m_hasPendingDescriptors = true;
+}
+
+void CommandList::bind_texture_image(const u32 binding, const Texture& texture)
+{
+   m_descriptorWriter.set_texture_only(binding, texture);
    m_hasPendingDescriptors = true;
 }
 

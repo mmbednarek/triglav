@@ -16,12 +16,6 @@ namespace material
         public float3 bitangent : TANGENT1;
     };
 
-    public struct VSMeta
-    {
-        [[KnownBuiltin("DrawIndex")]]
-        public uint drawIndex;
-    };
-
     public struct FSInput
     {
         public float4 position : SV_POSITION;

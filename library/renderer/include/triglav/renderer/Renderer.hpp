@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AmbientOcclusionRenderer.hpp"
+#include "BindlessScene.hpp"
 #include "GlyphCache.hpp"
 #include "InfoDialog.hpp"
 #include "RayTracingScene.hpp"
@@ -75,6 +76,7 @@ class Renderer
 
    resource::ResourceManager& m_resourceManager;
    Scene m_scene;
+   BindlessScene m_bindlessScene;
    graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
    graphics_api::RenderTarget m_renderTarget;

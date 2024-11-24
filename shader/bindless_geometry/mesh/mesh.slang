@@ -11,6 +11,7 @@ namespace mesh
         public uint32_t instanceOffset;
         public uint32_t materialID;
         public float4x4 transform;
+        public float4x4 normalTransform;
         public float3   boundingBoxMin;
         public float3   boundingBoxMax;
     };

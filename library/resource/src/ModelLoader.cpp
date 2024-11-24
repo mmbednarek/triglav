@@ -14,7 +14,7 @@ render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& d
    objMesh.triangulate();
    objMesh.recalculate_tangents();
 
-   graphics_api::BufferUsageFlags additionalUsageFlags{};
+   graphics_api::BufferUsageFlags additionalUsageFlags{graphics_api::BufferUsage::TransferSrc};
    if (device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
       additionalUsageFlags |= graphics_api::BufferUsage::AccelerationStructureRead;
    }
@@ -22,9 +22,10 @@ render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& d
    auto deviceMesh = objMesh.upload_to_device(device, additionalUsageFlags);
 
    std::vector<render_core::MaterialRange> ranges{};
-   ranges.resize(deviceMesh.ranges.size());
-   std::transform(deviceMesh.ranges.begin(), deviceMesh.ranges.end(), ranges.begin(), [](const geometry::MaterialRange& range) {
-      return render_core::MaterialRange{range.offset, range.size, make_rc_name(std::format("{}.mat", range.materialName))};
+   ranges.reserve(deviceMesh.ranges.size());
+   std::ranges::transform(deviceMesh.ranges, std::back_inserter(ranges), [](const geometry::MaterialRange& range) {
+      return render_core::MaterialRange{range.offset, range.size,
+                                        make_rc_name(std::format("{}.mat", range.materialName)).operator MaterialName()};
    });
 
    return render_core::Model{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};

@@ -8,7 +8,7 @@ namespace triglav::renderer::node {
 namespace gapi = graphics_api;
 using namespace name_literals;
 
-constexpr u32 upper_div(const u32 nom, const u32 denom)
+static constexpr u32 upper_div(const u32 nom, const u32 denom)
 {
    if ((nom % denom) == 0)
       return nom / denom;

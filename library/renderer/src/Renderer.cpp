@@ -2,6 +2,7 @@
 
 #include "StatisticManager.hpp"
 #include "node/AmbientOcclusion.hpp"
+#include "node/BindlessGeometry.hpp"
 #include "node/Blur.hpp"
 #include "node/Geometry.hpp"
 #include "node/Particles.hpp"
@@ -91,6 +92,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_device(device),
     m_resourceManager(resourceManager),
     m_scene(m_resourceManager),
+    m_bindlessScene(m_device, m_resourceManager, m_scene),
     m_resolution(create_viewport_resolution(m_device, m_surface, resolution.width, resolution.height)),
     m_swapchain(
        checkResult(m_device.create_swapchain(m_surface, g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution, get_present_mode()))),
@@ -107,13 +109,15 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_context2D(m_device, m_renderTarget, m_resourceManager),
     m_renderGraph(m_device),
     m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache),
-    m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing) ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
-                                                                                : std::nullopt)
+    m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
+                         ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
+                         : std::nullopt)
 {
    m_context2D.update_resolution(m_resolution);
 
    m_renderGraph.add_external_node("frame_is_ready"_name);
-   m_renderGraph.emplace_node<node::Geometry>("geometry"_name, m_device, m_resourceManager, m_scene, m_renderGraph);
+   // m_renderGraph.emplace_node<node::Geometry>("geometry"_name, m_device, m_resourceManager, m_scene, m_renderGraph);
+   m_renderGraph.emplace_node<node::BindlessGeometry>("geometry"_name, m_device, m_bindlessScene, m_resourceManager);
    m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, m_device, m_resourceManager, m_scene);
    m_renderGraph.emplace_node<node::Shading>("shading"_name, m_device, m_resourceManager, m_scene);
@@ -213,7 +217,7 @@ void Renderer::on_render()
 
    if (not isFirstFrame) {
       StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
-      StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
+      // StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
       StatisticManager::the().push_accumulated(Stat::ShadingGpuTime, m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
       if (this->is_any_ray_tracing_feature_enabled()) {
          StatisticManager::the().push_accumulated(Stat::RayTracingGpuTime,
@@ -285,7 +289,8 @@ static Renderer::Moving map_direction(const Key key)
       return Renderer::Moving::Left;
    case Key::D:
       return Renderer::Moving::Right;
-   default: break;
+   default:
+      break;
       //   case Key::Q: return Renderer::Moving::Up;
       //   case Key::E: return Renderer::Moving::Down;
    }
