@@ -28,14 +28,17 @@ class BindlessGeometryResources final : public IGeometryResources
    graphics_api::UniformBuffer<UniformViewProperties>& view_properties();
 
    [[nodiscard]] GroundRenderer::UniformBuffer& ground_ubo() override;
+   void update_resolution(const graphics_api::Resolution& resolution) override;
 
  private:
+   graphics_api::Device& m_device;
    graphics_api::UniformBuffer<UniformViewProperties> m_uniformBuffer;
    GroundRenderer::UniformBuffer m_groundUniformBuffer;
    graphics_api::StorageArray<BindlessSceneObject> m_visibleObjects;
    graphics_api::Buffer m_countBuffer;
    graphics_api::Texture m_hiZBuffer;
-   graphics_api::Texture m_hiZBufferScratch;
+   std::vector<graphics_api::TextureView> m_hiZBufferMipViews;
+   u32 m_mipCount{9};
 };
 
 class BindlessGeometry final : public render_core::IRenderNode
@@ -59,6 +62,7 @@ class BindlessGeometry final : public render_core::IRenderNode
    graphics_api::Pipeline m_depthPrepassPipeline;
    graphics_api::Pipeline m_hiZBufferPipeline;
    graphics_api::Pipeline m_cullingPipeline;
+   graphics_api::TimestampArray m_tsArray;
 };
 
 }// namespace triglav::renderer::node

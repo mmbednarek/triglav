@@ -13,7 +13,7 @@ shader_targets += custom_target('shader_bindless_geometry_fragment',
 shader_targets += custom_target('shader_bindless_geometry_culling_compute',
                                 input : 'culling.slang',
                                 output : 'culling_comp.spv',
-                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O0', '-g', '-o', '@OUTPUT@'],
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O3', '-o', '@OUTPUT@'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_depth_prepass_vertex',
@@ -31,5 +31,5 @@ shader_targets += custom_target('shader_bindless_geometry_depth_prepass_fragment
 shader_targets += custom_target('shader_bindless_geometry_hi_z_compute',
                                 input : 'hi_zbuffer_construct.slang',
                                 output : 'hi_z_comp.spv',
-                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O0', '-g', '-o', '@OUTPUT@'],
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O3', '-o', '@OUTPUT@'],
 )

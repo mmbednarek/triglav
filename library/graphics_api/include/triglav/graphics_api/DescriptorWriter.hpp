@@ -13,6 +13,7 @@ namespace triglav::graphics_api {
 
 class Buffer;
 class Texture;
+class TextureView;
 class Sampler;
 class Device;
 class DescriptorView;
@@ -49,8 +50,10 @@ class DescriptorWriter
 
    void set_sampled_texture(uint32_t binding, const Texture& texture, const Sampler& sampler);
    void set_texture_only(uint32_t binding, const Texture& texture);
+   void set_texture_view_only(uint32_t binding, const TextureView& texture);
    void set_texture_array(uint32_t binding, std::span<Texture*> textures);
    void set_storage_image(uint32_t binding, const Texture& texture);
+   void set_storage_image_view(uint32_t binding, const TextureView& texture);
    void reset_count();
 
    [[nodiscard]] VkDescriptorSet vulkan_descriptor_set() const;

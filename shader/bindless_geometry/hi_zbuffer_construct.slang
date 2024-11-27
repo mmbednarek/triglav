@@ -1,4 +1,3 @@
-
 [[vk::binding(0)]]
 [[vk::image_format("r16")]]
 uniform Texture2D<float> InDepthPrepass;
@@ -6,14 +5,6 @@ uniform Texture2D<float> InDepthPrepass;
 [[vk::binding(1)]]
 [[vk::image_format("r16")]]
 uniform RWTexture2D<float> OutNextMip;
-
-struct PushConstant
-{
-    int MipLevel;
-};
-
-[[vk::push_constant]]
-ConstantBuffer<PushConstant> PC;
 
 [numthreads(32, 32, 1)]
 void cs_main(uint3 threadID : SV_DispatchThreadID)
@@ -26,7 +17,7 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
     if (sourcePos.x >= width || sourcePos.y >= height)
         return;
 
-    let coord = int3(sourcePos.xy, PC.MipLevel);
+    let coord = int3(sourcePos.xy, 0);
 
     float samples[4] = {0, 0, 0, 0};
     samples[0] = InDepthPrepass.Load(coord);

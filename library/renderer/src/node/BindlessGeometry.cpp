@@ -17,18 +17,28 @@ static constexpr u32 upper_div(const u32 nom, const u32 denom)
    return 1 + (nom / denom);
 }
 
+static constexpr u32 get_mip_count(const gapi::Resolution& resolution)
+{
+   return static_cast<int>(std::floor(std::log2(std::max(resolution.width, resolution.height)))) + 1;
+}
+
+constexpr auto HI_Z_FORMAT = GAPI_FORMAT(D, UNorm16);
+constexpr gapi::TextureUsageFlags HI_Z_TEX_USAGE = gapi::TextureUsage::Storage | gapi::TextureUsage::DepthStencilAttachment;
+
 BindlessGeometryResources::BindlessGeometryResources(graphics_api::Device& device) :
+    m_device(device),
     m_uniformBuffer(device),
     m_groundUniformBuffer(device),
     m_visibleObjects(device, 128, gapi::BufferUsage::Indirect),
     m_countBuffer(GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::Indirect | gapi::BufferUsage::TransferDst, sizeof(u32)))),
-    m_hiZBuffer(GAPI_CHECK(device.create_texture(GAPI_FORMAT(D, UNorm16), gapi::Resolution{960, 540},
-                                                 gapi::TextureUsage::Storage | gapi::TextureUsage::DepthStencilAttachment,
-                                                 gapi::TextureState::Undefined, gapi::SampleCount::Single, 9))),
-    m_hiZBufferScratch(GAPI_CHECK(device.create_texture(GAPI_FORMAT(D, UNorm16), gapi::Resolution{960, 540},
-                                                        gapi::TextureUsage::Storage | gapi::TextureUsage::DepthStencilAttachment)))
+    m_hiZBuffer(GAPI_CHECK(device.create_texture(HI_Z_FORMAT, gapi::Resolution{960, 540}, HI_Z_TEX_USAGE, gapi::TextureState::Undefined,
+                                                 gapi::SampleCount::Single, m_mipCount)))
 {
+   m_hiZBufferMipViews.reserve(m_mipCount);
+   for (const u32 i : std::views::iota(0u, m_mipCount)) {
+      m_hiZBufferMipViews.emplace_back(GAPI_CHECK(m_hiZBuffer.create_mip_view(device, i)));
+   }
 }
 
 graphics_api::UniformBuffer<UniformViewProperties>& BindlessGeometryResources::view_properties()
@@ -39,6 +49,21 @@ graphics_api::UniformBuffer<UniformViewProperties>& BindlessGeometryResources::v
 GroundRenderer::UniformBuffer& BindlessGeometryResources::ground_ubo()
 {
    return m_groundUniformBuffer;
+}
+
+void BindlessGeometryResources::update_resolution(const graphics_api::Resolution& resolution)
+{
+   IGeometryResources::update_resolution(resolution);
+
+   auto halfRes = resolution * 0.5f;
+   m_mipCount = get_mip_count(halfRes);
+   m_hiZBuffer = GAPI_CHECK(
+      m_device.create_texture(HI_Z_FORMAT, halfRes, HI_Z_TEX_USAGE, gapi::TextureState::Undefined, gapi::SampleCount::Single, m_mipCount));
+   m_hiZBufferMipViews.clear();
+   m_hiZBufferMipViews.reserve(m_mipCount);
+   for (const u32 i : std::views::iota(0u, m_mipCount)) {
+      m_hiZBufferMipViews.emplace_back(GAPI_CHECK(m_hiZBuffer.create_mip_view(m_device, i)));
+   }
 }
 
 BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& bindlessScene, resource::ResourceManager& resourceManager) :
@@ -117,8 +142,8 @@ BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& 
                                       .use_push_descriptors(true)
                                       .descriptor_binding(gapi::DescriptorType::ImageOnly)
                                       .descriptor_binding(gapi::DescriptorType::StorageImage)
-                                      .push_constant(gapi::PipelineStage::ComputeShader, sizeof(int))
-                                      .build()))
+                                      .build())),
+    m_tsArray(GAPI_CHECK(device.create_timestamp_array(2)))
 {
 }
 
@@ -159,92 +184,26 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
 
    cmdList.end_render_pass();
 
-   gapi::TextureBarrierInfo depthPrepassBarrier{
-      .texture = &bindlessGeoResources.m_hiZBufferScratch,
-      .sourceState = gapi::TextureState::Undefined,
-      .targetState = gapi::TextureState::General,
-      .baseMipLevel = 0,
-      .mipLevelCount = 1,
-   };
-   cmdList.texture_barrier(gapi::PipelineStage::FragmentShader, gapi::PipelineStage::ComputeShader, depthPrepassBarrier);
-
    // -- CONSTRUCT HI-ZBUFFER --
+
+   cmdList.copy_texture(nodeResources.texture("depth_prepass"_name), gapi::TextureState::General, bindlessGeoResources.m_hiZBuffer,
+                        gapi::TextureState::General, 0, 0);
 
    cmdList.bind_pipeline(m_hiZBufferPipeline);
 
-   cmdList.bind_texture_image(0, nodeResources.texture("depth_prepass"_name));
-   cmdList.bind_storage_image(1, bindlessGeoResources.m_hiZBufferScratch);
-
-   int mipLevel = 0;
-   cmdList.push_constant(gapi::PipelineStage::ComputeShader, mipLevel);
-
-   cmdList.dispatch(upper_div(960, 32), upper_div(540, 32), 1);
-
-   std::array depthPrepassBarrier2{gapi::TextureBarrierInfo{
-                                      .texture = &bindlessGeoResources.m_hiZBufferScratch,
-                                      .sourceState = gapi::TextureState::General,
-                                      .targetState = gapi::TextureState::TransferSrc,
-                                      .baseMipLevel = 0,
-                                      .mipLevelCount = 1,
-                                   },
-                                   gapi::TextureBarrierInfo{
-                                      .texture = &bindlessGeoResources.m_hiZBuffer,
-                                      .sourceState = gapi::TextureState::Undefined,
-                                      .targetState = gapi::TextureState::TransferDst,
-                                      .baseMipLevel = 1,
-                                      .mipLevelCount = 1,
-                                   }};
-   cmdList.texture_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::Transfer, depthPrepassBarrier2);
-
-   cmdList.copy_texture(bindlessGeoResources.m_hiZBufferScratch, gapi::TextureState::TransferSrc, bindlessGeoResources.m_hiZBuffer,
-                        gapi::TextureState::TransferDst, 0, 0);
+   cmdList.execution_barrier(gapi::PipelineStage::Transfer, gapi::PipelineStage::ComputeShader);
 
    int depthWidth = 480;
    int depthHeight = 270;
-   for (int mipLevel = 0; mipLevel < 8; ++mipLevel) {
-      std::array depthPrepassBarrier3{gapi::TextureBarrierInfo{
-                                         .texture = &bindlessGeoResources.m_hiZBufferScratch,
-                                         .sourceState = gapi::TextureState::TransferSrc,
-                                         .targetState = gapi::TextureState::General,
-                                         .baseMipLevel = 0,
-                                         .mipLevelCount = 1,
-                                      },
-                                      gapi::TextureBarrierInfo{
-                                         .texture = &bindlessGeoResources.m_hiZBuffer,
-                                         .sourceState = gapi::TextureState::TransferDst,
-                                         .targetState = gapi::TextureState::DepthStencilRead,
-                                         .baseMipLevel = mipLevel,
-                                         .mipLevelCount = 1,
-                                      }};
-      cmdList.texture_barrier(gapi::PipelineStage::Transfer, gapi::PipelineStage::ComputeShader, depthPrepassBarrier3);
-
-      cmdList.bind_texture_image(0, bindlessGeoResources.m_hiZBuffer);
-      cmdList.bind_storage_image(1, bindlessGeoResources.m_hiZBufferScratch);
-
-      cmdList.push_constant(gapi::PipelineStage::ComputeShader, mipLevel);
+   for (int mipLevel = 0; mipLevel < (bindlessGeoResources.m_mipCount - 1); ++mipLevel) {
+      cmdList.bind_texture_view_image(0, bindlessGeoResources.m_hiZBufferMipViews[mipLevel]);
+      cmdList.bind_storage_image_view(1, bindlessGeoResources.m_hiZBufferMipViews[mipLevel + 1]);
 
       cmdList.dispatch(upper_div(depthWidth, 32), upper_div(depthHeight, 32), 1);
       depthWidth /= 2;
       depthHeight /= 2;
 
-      std::array depthPrepassBarrier4{gapi::TextureBarrierInfo{
-                                         .texture = &bindlessGeoResources.m_hiZBufferScratch,
-                                         .sourceState = gapi::TextureState::General,
-                                         .targetState = gapi::TextureState::TransferSrc,
-                                         .baseMipLevel = 0,
-                                         .mipLevelCount = 1,
-                                      },
-                                      gapi::TextureBarrierInfo{
-                                         .texture = &bindlessGeoResources.m_hiZBuffer,
-                                         .sourceState = gapi::TextureState::Undefined,
-                                         .targetState = gapi::TextureState::TransferDst,
-                                         .baseMipLevel = mipLevel + 1,
-                                         .mipLevelCount = 1,
-                                      }};
-      cmdList.texture_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::Transfer, depthPrepassBarrier4);
-
-      cmdList.copy_texture(bindlessGeoResources.m_hiZBufferScratch, gapi::TextureState::TransferSrc, bindlessGeoResources.m_hiZBuffer,
-                           gapi::TextureState::TransferDst, 0, mipLevel + 1);
+      cmdList.execution_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::ComputeShader);
    }
 
    gapi::TextureBarrierInfo depthPrepassBarrier5{
@@ -252,7 +211,7 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
       .sourceState = gapi::TextureState::TransferDst,
       .targetState = gapi::TextureState::DepthStencilRead,
       .baseMipLevel = 0,
-      .mipLevelCount = 9,
+      .mipLevelCount = static_cast<int>(bindlessGeoResources.m_mipCount),
    };
    cmdList.texture_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::ComputeShader, depthPrepassBarrier5);
 
@@ -301,7 +260,7 @@ std::unique_ptr<render_core::NodeFrameResources> BindlessGeometry::create_node_r
 {
    auto resources = std::make_unique<BindlessGeometryResources>(m_device);
    resources->add_render_target("gbuffer"_name, m_renderTarget);
-   resources->add_render_target("depth_prepass"_name, m_depthPrepassRenderTarget);
+   resources->add_render_target_with_scale("depth_prepass"_name, m_depthPrepassRenderTarget, 0.5f);
    return resources;
 }
 

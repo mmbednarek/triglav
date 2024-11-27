@@ -7,29 +7,29 @@ namespace triglav {
 template<typename TEnum>
 struct EnumFlags
 {
-   using UnderlayingType = std::underlying_type_t<TEnum>;
+   using UnderlyingType = std::underlying_type_t<TEnum>;
    using EnumType = TEnum;
 
-   UnderlayingType value;
+   UnderlyingType value;
 
    constexpr EnumFlags() :
        value{0}
    {
    }
 
-   constexpr EnumFlags(const UnderlayingType value) :
+   constexpr EnumFlags(const UnderlyingType value) :
        value(value)
    {
    }
 
    constexpr EnumFlags(const TEnum value) :
-       value(static_cast<UnderlayingType>(value))
+       value(static_cast<UnderlyingType>(value))
    {
    }
 
    constexpr bool operator&(const TEnum rhs) const
    {
-      return (this->value & static_cast<UnderlayingType>(rhs)) != 0;
+      return (this->value & static_cast<UnderlyingType>(rhs)) != 0;
    }
 
    constexpr bool operator&(const EnumFlags rhs) const
@@ -39,7 +39,7 @@ struct EnumFlags
 
    constexpr EnumFlags operator|(TEnum rhs) const
    {
-      return EnumFlags{this->value | static_cast<UnderlayingType>(rhs)};
+      return EnumFlags{this->value | static_cast<UnderlyingType>(rhs)};
    }
 
    constexpr EnumFlags operator|(const EnumFlags rhs) const
@@ -49,7 +49,7 @@ struct EnumFlags
 
    constexpr EnumFlags& operator|=(TEnum rhs)
    {
-      this->value |= static_cast<UnderlayingType>(rhs);
+      this->value |= static_cast<UnderlyingType>(rhs);
       return *this;
    }
 

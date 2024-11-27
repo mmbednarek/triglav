@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Buffer.hpp"
+#include "TextureView.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
 namespace triglav::graphics_api {
 
-DECLARE_VLK_WRAPPED_CHILD_OBJECT(ImageView, Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(Image, Device)
 
 class CommandList;
@@ -25,6 +25,7 @@ class Texture
    [[nodiscard]] const SamplerProperties& sampler_properties() const;
    Status write(Device& device, const uint8_t* pixels) const;
    [[nodiscard]] Status generate_mip_maps(Device& device) const;
+   [[nodiscard]] Result<TextureView> create_mip_view(const Device& device, u32 mipLevel) const;
 
    void set_anisotropy_state(bool isEnabled);
    void set_lod(float min, float max);

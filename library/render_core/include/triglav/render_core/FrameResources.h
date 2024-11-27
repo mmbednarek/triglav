@@ -39,10 +39,11 @@ class NodeFrameResources : public NodeResourcesBase
    void add_render_target(Name identifier, graphics_api::RenderTarget& renderTarget);
    void add_render_target_with_resolution(Name identifier, graphics_api::RenderTarget& renderTarget,
                                           const graphics_api::Resolution& resolution);
+   void add_render_target_with_scale(Name identifier, graphics_api::RenderTarget& renderTarget, float scaleFactor);
    void update_resolution(const graphics_api::Resolution& resolution) override;
 
    void register_texture(Name name, graphics_api::Texture& texture);
-   graphics_api::Texture& texture(Name name) const;
+   [[nodiscard]] graphics_api::Texture& texture(Name name) const;
 
    [[nodiscard]] graphics_api::Framebuffer& framebuffer(Name identifier);
    [[nodiscard]] graphics_api::CommandList& command_list();
@@ -61,6 +62,7 @@ class NodeFrameResources : public NodeResourcesBase
       graphics_api::RenderTarget* renderTarget{};
       std::optional<graphics_api::Framebuffer> framebuffer{};
       std::optional<graphics_api::Resolution> resolution{};
+      float scaleFactor{1.0f};
    };
 
    Heap<Name, RenderTargetResource> m_renderTargets{};

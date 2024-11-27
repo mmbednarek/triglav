@@ -40,6 +40,12 @@ void NodeFrameResources::add_render_target_with_resolution(const Name identifier
    m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, resolution);
 }
 
+void NodeFrameResources::add_render_target_with_scale(const Name identifier, graphics_api::RenderTarget& renderTarget,
+                                                      const float scaleFactor)
+{
+   m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, std::nullopt, scaleFactor);
+}
+
 void NodeFrameResources::update_resolution(const graphics_api::Resolution& resolution)
 {
    // TODO: Change framebuffer when not used.
@@ -50,7 +56,8 @@ void NodeFrameResources::update_resolution(const graphics_api::Resolution& resol
       if (target->second.resolution.has_value()) {
          target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(*target->second.resolution)));
       } else {
-         target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution)));
+         target->second.framebuffer.emplace(
+            GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution * target->second.scaleFactor)));
       }
 
       for (const auto& attachment : target->second.renderTarget->attachments()) {

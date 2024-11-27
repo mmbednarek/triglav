@@ -384,6 +384,12 @@ void CommandList::bind_texture_image(const u32 binding, const Texture& texture)
    m_hasPendingDescriptors = true;
 }
 
+void CommandList::bind_texture_view_image(const u32 binding, const TextureView& texture)
+{
+   m_descriptorWriter.set_texture_view_only(binding, texture);
+   m_hasPendingDescriptors = true;
+}
+
 void CommandList::bind_texture(const u32 binding, const Texture& texture)
 {
    auto& sampler = m_device.sampler_cache().find_sampler(texture.sampler_properties());
@@ -400,6 +406,12 @@ void CommandList::bind_texture_array(const u32 binding, std::span<Texture*> text
 void CommandList::bind_storage_image(const u32 binding, const Texture& texture)
 {
    m_descriptorWriter.set_storage_image(binding, texture);
+   m_hasPendingDescriptors = true;
+}
+
+void CommandList::bind_storage_image_view(const u32 binding, const TextureView& texture)
+{
+   m_descriptorWriter.set_storage_image_view(binding, texture);
    m_hasPendingDescriptors = true;
 }
 

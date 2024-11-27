@@ -101,10 +101,11 @@ bool is_object_visible(in mesh::SceneMesh mesh)
         }
     }
 
+
    if (minPoint.x > 1.0f || maxPoint.x < -1.0f || minPoint.y > 1.0f || maxPoint.y < -1.0f || minPoint.z > 1.0f || maxPoint.z < 0.0f)
         return false;
 
-   printf("MIN(%f, %f, %f), MAX(%f, %f, %f)", minPoint.x, minPoint.y, minPoint.z, maxPoint.x, maxPoint.y, maxPoint.z);
+   // printf("MIN(%f, %f, %f), MAX(%f, %f, %f)", minPoint.x, minPoint.y, minPoint.z, maxPoint.x, maxPoint.y, maxPoint.z);
 
    // Do occlusion culling
 

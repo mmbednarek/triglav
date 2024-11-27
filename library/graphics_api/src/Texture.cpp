@@ -2,6 +2,7 @@
 
 #include "CommandList.hpp"
 #include "Device.hpp"
+#include "vulkan/Util.hpp"
 
 namespace triglav::graphics_api {
 
@@ -134,6 +135,30 @@ Status Texture::generate_mip_maps(Device& device) const
       return res;
 
    return Status::Success;
+}
+
+Result<TextureView> Texture::create_mip_view(const Device& device, const u32 mipLevel) const
+{
+   VkImageViewCreateInfo imageViewInfo{};
+   imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+   imageViewInfo.image = *m_image;
+   imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+   imageViewInfo.format = *vulkan::to_vulkan_color_format(m_colorFormat);
+   imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.subresourceRange.aspectMask = vulkan::to_vulkan_image_aspect_flags(m_usageFlags);
+   imageViewInfo.subresourceRange.baseMipLevel = mipLevel;
+   imageViewInfo.subresourceRange.levelCount = 1;
+   imageViewInfo.subresourceRange.baseArrayLayer = 0;
+   imageViewInfo.subresourceRange.layerCount = 1;
+
+   vulkan::ImageView imageView(device.vulkan_device());
+   if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
+      return std::unexpected(Status::UnsupportedDevice);
+
+   return TextureView(std::move(imageView), m_usageFlags);
 }
 
 void Texture::generate_mip_maps_internal(const CommandList& cmdList) const

@@ -88,9 +88,11 @@ class CommandList
    }
 
    void bind_texture_image(u32 binding, const Texture& texture);
+   void bind_texture_view_image(u32 binding, const TextureView& texture);
    void bind_texture(u32 binding, const Texture& texture);
    void bind_texture_array(u32 binding, std::span<Texture*> textures);
    void bind_storage_image(u32 binding, const Texture& texture);
+   void bind_storage_image_view(u32 binding, const TextureView& texture);
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray& array) const

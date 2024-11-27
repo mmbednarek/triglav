@@ -143,8 +143,13 @@ struct ColorFormat
 
 struct Resolution
 {
-   uint32_t width{};
-   uint32_t height{};
+   u32 width{};
+   u32 height{};
+
+   Resolution operator*(const float scale) const
+   {
+      return {static_cast<u32>(static_cast<float>(width) * scale), static_cast<u32>(static_cast<float>(height) * scale)};
+   }
 };
 
 struct Color

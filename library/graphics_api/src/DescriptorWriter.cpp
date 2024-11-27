@@ -96,6 +96,17 @@ void DescriptorWriter::set_texture_only(uint32_t binding, const Texture& texture
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
+void DescriptorWriter::set_texture_view_only(const uint32_t binding, const TextureView& texture)
+{
+   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+
+   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
+   imageInfo->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
+   imageInfo->imageView = texture.vulkan_image_view();
+
+   writeDescriptorSet.pImageInfo = imageInfo;
+}
+
 void DescriptorWriter::set_texture_array(uint32_t binding, const std::span<Texture*> textures)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
@@ -116,6 +127,17 @@ void DescriptorWriter::set_texture_array(uint32_t binding, const std::span<Textu
 }
 
 void DescriptorWriter::set_storage_image(uint32_t binding, const Texture& texture)
+{
+   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+
+   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
+   imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+   imageInfo->imageView = texture.vulkan_image_view();
+
+   writeDescriptorSet.pImageInfo = imageInfo;
+}
+
+void DescriptorWriter::set_storage_image_view(const uint32_t binding, const TextureView& texture)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
