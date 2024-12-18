@@ -21,7 +21,6 @@ struct UniformViewProperties
     float farPlane;
 };
 
-
 [[vk::binding(0)]]
 uniform ConstantBuffer<UniformViewProperties> UboViewProps;
 

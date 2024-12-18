@@ -66,6 +66,9 @@ using BindlessMaterialProps_AlbedoTex =
 using BindlessMaterialProps_AlbedoNormalTex =
    BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
 
+using BindlessMaterialProps_AllTex =
+   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::TextureMap>;
+
 class BindlessScene
 {
  public:
@@ -113,6 +116,7 @@ class BindlessScene
    graphics_api::StorageArray<BindlessMaterialProps_AllScalar> m_materialPropsAllScalar;
    graphics_api::StorageArray<BindlessMaterialProps_AlbedoTex> m_materialPropsAlbedoTex;
    graphics_api::StorageArray<BindlessMaterialProps_AlbedoNormalTex> m_materialPropsAlbedoNormalTex;
+   graphics_api::StorageArray<BindlessMaterialProps_AllTex> m_materialPropsAllTex;
 
    // Buffer write counts
    MemorySize m_writtenSceneObjectCount{0};
@@ -122,6 +126,7 @@ class BindlessScene
    MemorySize m_writtenMaterialProperty_AllScalar{0};
    MemorySize m_writtenMaterialProperty_AlbedoTex{0};
    MemorySize m_writtenMaterialProperty_AlbedoNormalTex{0};
+   MemorySize m_writtenMaterialProperty_AllTex{0};
 
    // Sinks
    TG_SINK(Scene, OnObjectAddedToScene);

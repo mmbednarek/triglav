@@ -6,8 +6,8 @@ namespace material
     {
         float4 color;
         float normal;
-        float metalic;
         float roughness;
+        float metalic;
     };
 
     [[vk::binding(3)]]
@@ -18,9 +18,9 @@ namespace material
         SolidColorProperties props = SolidColorPropertiesArray[matInstanceID];
 
         FSOutput output;
-        output.color = props.color;
-        output.normal = float4(input.normal, props.metalic);
-        output.position = float4(input.viewSpacePosition.xyz, props.roughness);
+        output.color = float4(props.color.xyz, props.roughness);
+        output.normal = float4(input.normal, 1.0);
+        output.position = float4(input.viewSpacePosition.xyz, props.metalic);
 
         return output;
     }

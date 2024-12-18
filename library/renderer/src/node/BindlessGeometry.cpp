@@ -301,6 +301,7 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
    cmdList.bind_storage_buffer(3, m_bindlessScene.material_template_properties(0));
    cmdList.bind_storage_buffer(4, m_bindlessScene.material_template_properties(1));
    cmdList.bind_storage_buffer(5, m_bindlessScene.material_template_properties(2));
+   cmdList.bind_storage_buffer(6, m_bindlessScene.material_template_properties(3));
 
    cmdList.draw_indirect_with_count(bindlessGeoResources.m_visibleObjects.buffer(), bindlessGeoResources.m_countBuffer, 100,
                                     sizeof(BindlessSceneObject));

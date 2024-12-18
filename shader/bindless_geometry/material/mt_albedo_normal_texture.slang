@@ -6,8 +6,8 @@ namespace material
     {
         uint albedoTextureID;
         uint normalTextureID;
-        float metalic;
         float roughness;
+        float metalic;
     };
 
     [[vk::binding(5)]]
@@ -23,9 +23,9 @@ namespace material
         let normalVec = 2 * MaterialTextures[props.normalTextureID].Sample(input.texCoord).xyz - float3(1, 1, 1);
 
         FSOutput output;
-        output.color = albedoColor;
-        output.normal = float4(normalize(mul(tangentSpaceMat, normalVec)), props.metalic);
-        output.position = float4(input.viewSpacePosition.xyz, props.roughness);
+        output.color = float4(albedoColor.xyz, props.roughness);
+        output.normal = float4(normalize(mul(tangentSpaceMat, normalVec)), 1.0);
+        output.position = float4(input.viewSpacePosition.xyz, props.metalic);
 
         return output;
     }

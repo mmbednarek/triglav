@@ -34,9 +34,10 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_materialPropsAllScalar(device, 3),
     m_materialPropsAlbedoTex(device, 10),
     m_materialPropsAlbedoNormalTex(device, 10),
+    m_materialPropsAllTex(device, 10),
     TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
-   std::array<BindlessMaterialProps_AllScalar, 3> properties{
+   std::array properties{
       BindlessMaterialProps_AllScalar{
          .albedo = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
          .roughness = 1.0,
@@ -121,8 +122,10 @@ graphics_api::Buffer& BindlessScene::material_template_properties(const u32 mate
       return m_materialPropsAllScalar.buffer();
    case 1:
       return m_materialPropsAlbedoTex.buffer();
-   default:
+   case 2:
       return m_materialPropsAlbedoNormalTex.buffer();
+   default:
+      return m_materialPropsAllTex.buffer();
    }
 }
 
@@ -175,6 +178,8 @@ graphics_api::Pipeline& BindlessScene::scene_pipeline(graphics_api::RenderTarget
                                         graphics_api::PipelineStage::FragmentShader)// 4 - MT_AlbedoTexture Props
                     .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
                                         graphics_api::PipelineStage::FragmentShader)// 5 - MT_AlbedoNormalTexture Props
+                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
+                                        graphics_api::PipelineStage::FragmentShader)// 6 - MT_AllTexture Props
                     .build()));
 
    m_shouldUpdatePSO = false;
@@ -238,8 +243,7 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       ++m_writtenMaterialProperty_AlbedoTex;
 
       return encode_material_id(1, outIndex);
-   }
-   if (material.materialTemplate == "pbr/normal_map.mt"_rc) {
+   } else if (material.materialTemplate == "pbr/normal_map.mt"_rc) {
       BindlessMaterialProps_AlbedoNormalTex albedoNormalTex;
       albedoNormalTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
       albedoNormalTex.normal = this->get_texture_id(std::get<TextureName>(material.values[1]));
@@ -255,6 +259,22 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       ++m_writtenMaterialProperty_AlbedoNormalTex;
 
       return encode_material_id(2, outIndex);
+   } else if (material.materialTemplate == "pbr/full.mt"_rc) {
+      BindlessMaterialProps_AllTex allTex;
+      allTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
+      allTex.normal = this->get_texture_id(std::get<TextureName>(material.values[1]));
+      allTex.roughness = this->get_texture_id(std::get<TextureName>(material.values[2]));
+      allTex.metalic = this->get_texture_id(std::get<TextureName>(material.values[3]));
+
+      const auto outIndex = m_writtenMaterialProperty_AllTex;
+
+      cmdList.update_buffer(m_materialPropsAllTex.buffer(),
+                            m_writtenMaterialProperty_AllTex * sizeof(BindlessMaterialProps_AllTex),
+                            sizeof(BindlessMaterialProps_AllTex), &allTex);
+
+      ++m_writtenMaterialProperty_AllTex;
+
+      return encode_material_id(3, outIndex);
    }
    return 0;
 }
