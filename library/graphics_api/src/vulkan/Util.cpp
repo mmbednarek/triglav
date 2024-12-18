@@ -194,6 +194,8 @@ Result<VkImageLayout> to_vulkan_image_layout(const AttachmentAttributeFlags type
    if (type & AttachmentAttribute::Presentable) {
       return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
    }
+   if (type & AttachmentAttribute::TransferSrc)
+      return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
    if (type & AttachmentAttribute::Depth) {
       if (type & AttachmentAttribute::StoreImage)
          return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
@@ -374,7 +376,7 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
    return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
+VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, const TextureState resourceState)
 {
    switch (resourceState) {
    case TextureState::Undefined:
@@ -390,7 +392,11 @@ VkAccessFlags to_vulkan_access_flags(const TextureState resourceState)
    case TextureState::DepthStencilRead:
       return VK_ACCESS_SHADER_READ_BIT;
    case TextureState::General:
-      return VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+      if (stage & PipelineStage::Transfer) {
+         return VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
+      } else {
+         return VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+      }
    case TextureState::GeneralWrite:
       return VK_ACCESS_SHADER_WRITE_BIT;
    }
@@ -558,11 +564,7 @@ VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags)
 
    if (usageFlags & TextureUsage::DepthStencilAttachment) {
       outFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
-   } else if (usageFlags & TextureUsage::Sampled) {
-      outFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
-   }
-
-   if (usageFlags & TextureUsage::ColorAttachment) {
+   } else if (usageFlags & TextureUsage::Sampled || usageFlags & TextureUsage::ColorAttachment || usageFlags & TextureUsage::Storage) {
       outFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
    }
 

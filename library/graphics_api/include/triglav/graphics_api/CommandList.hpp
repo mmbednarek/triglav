@@ -58,6 +58,7 @@ class CommandList
    void copy_buffer(const Buffer& source, const Buffer& dest) const;
    void copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const;
    void copy_buffer_to_texture(const Buffer& source, const Texture& destination, int mipLevel = 0) const;
+   void copy_texture_to_buffer(const Texture& source, const Buffer& destination, int mipLevel = 0, TextureState srcTextureState = TextureState::TransferSrc) const;
    void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState, u32 srcMip = 0,
                      u32 dstMip = 0) const;
    void push_constant_ptr(PipelineStage stage, const void* ptr, size_t size, size_t offset = 0) const;

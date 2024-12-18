@@ -5,6 +5,7 @@
 #include "triglav/Int.hpp"
 #include "triglav/geometry/Geometry.h"
 #include "triglav/graphics_api/Array.hpp"
+#include "triglav/graphics_api/Pipeline.hpp"
 
 #include <glm/vec3.hpp>
 #include <vector>
@@ -44,20 +45,26 @@ enum class BindlessValueSource
 template<BindlessValueSource Source, typename TScalarType = float>
 using BindlessValueType = std::conditional_t<Source == BindlessValueSource::TextureMap, u32, TScalarType>;
 
-template<BindlessValueSource Albedo, BindlessValueSource Roughness, BindlessValueSource Metalic>
+template<BindlessValueSource Albedo, BindlessValueSource Normal, BindlessValueSource Roughness, BindlessValueSource Metalic>
 struct BindlessMaterialProperties
 {
    using enum BindlessValueSource;
 
-   BindlessValueType<Albedo, glm::vec3> albedo{};
+   BindlessValueType<Albedo, glm::vec4> albedo{};
+   BindlessValueType<Normal> normal{};
    BindlessValueType<Roughness> roughness{};
    BindlessValueType<Metalic> metalic{};
 };
 
 using BindlessMaterialProps_AllScalar =
-   BindlessMaterialProperties<BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+   BindlessMaterialProperties<BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+
+static_assert(sizeof(BindlessMaterialProps_AllScalar) == sizeof(glm::vec4) + 3 * sizeof(float));
+
 using BindlessMaterialProps_AlbedoTex =
-   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+using BindlessMaterialProps_AlbedoNormalTex =
+   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
 
 class BindlessScene
 {
@@ -76,11 +83,13 @@ class BindlessScene
    [[nodiscard]] const graphics_api::Buffer& count_buffer() const;
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
+   [[nodiscard]] graphics_api::Pipeline& scene_pipeline(graphics_api::RenderTarget& renderTarget);
+   [[nodiscard]] std::vector<graphics_api::Texture*>& scene_textures();
 
  private:
    BindlessMeshInfo& get_mesh_info(const graphics_api::CommandList& cmdList, ModelName name);
    u32 get_material_id(const graphics_api::CommandList& cmdList, const render_core::Material& material);
-   u32 get_texture_id(TextureName texture);
+   u32 get_texture_id(TextureName textureName);
 
    // References
    graphics_api::Device& m_device;
@@ -91,6 +100,9 @@ class BindlessScene
    std::vector<SceneObject> m_pendingObjects;
    std::map<ModelName, BindlessMeshInfo> m_models;
    std::map<TextureName, u32> m_textureIds;
+   std::vector<graphics_api::Texture*> m_sceneTextures;
+   std::optional<graphics_api::Pipeline> m_scenePipeline;
+   bool m_shouldUpdatePSO{false};
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_sceneObjectStage;
@@ -100,6 +112,7 @@ class BindlessScene
    graphics_api::UniformBuffer<u32> m_countBuffer;
    graphics_api::StorageArray<BindlessMaterialProps_AllScalar> m_materialPropsAllScalar;
    graphics_api::StorageArray<BindlessMaterialProps_AlbedoTex> m_materialPropsAlbedoTex;
+   graphics_api::StorageArray<BindlessMaterialProps_AlbedoNormalTex> m_materialPropsAlbedoNormalTex;
 
    // Buffer write counts
    MemorySize m_writtenSceneObjectCount{0};
@@ -107,6 +120,8 @@ class BindlessScene
    MemorySize m_writtenVertexCount{0};
    MemorySize m_writtenIndexCount{0};
    MemorySize m_writtenMaterialProperty_AllScalar{0};
+   MemorySize m_writtenMaterialProperty_AlbedoTex{0};
+   MemorySize m_writtenMaterialProperty_AlbedoNormalTex{0};
 
    // Sinks
    TG_SINK(Scene, OnObjectAddedToScene);

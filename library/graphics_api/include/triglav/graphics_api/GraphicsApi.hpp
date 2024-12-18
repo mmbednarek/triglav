@@ -436,6 +436,12 @@ inline void check_status(const Status status, const std::string_view message)
 #define GAPI_CHECK(stmt) ::triglav::graphics_api::check_result(stmt, #stmt)
 #define GAPI_CHECK_STATUS(stmt) ::triglav::graphics_api::check_status(stmt, #stmt)
 
+#ifdef NDEBUG
+#define TG_SET_DEBUG_NAME(object, name)
+#else
+#define TG_SET_DEBUG_NAME(object, name) object.set_debug_name(name)
+#endif
+
 #ifdef _WIN32
 #define GAPI_PLATFORM_WINDOWS 1
 #elif __linux__

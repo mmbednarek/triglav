@@ -225,6 +225,8 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    vulkan12Features.hostQueryReset = true;
    vulkan12Features.scalarBlockLayout = true;
    vulkan12Features.bufferDeviceAddress = true;
+   vulkan12Features.drawIndirectCount = true;
+   vulkan12Features.runtimeDescriptorArray = true;
    deviceFeatures.pNext = &vulkan12Features;
 
    VkPhysicalDeviceVulkan11Features vulkan11Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
@@ -299,6 +301,7 @@ Result<Instance> Instance::create_instance()
       VK_KHR_SURFACE_EXTENSION_NAME,
       desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
+      VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
       VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
    };

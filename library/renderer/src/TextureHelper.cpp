@@ -13,14 +13,14 @@ void copy_texture(CommandList& cmdList, const Texture& src, const Texture& dst)
       expectedTextureState = TextureState::ShaderRead;
    }
 
-   const TextureBarrierInfo barrierSrcIn{
-      .texture = &src,
-      .sourceState = expectedTextureState,
-      .targetState = TextureState::TransferSrc,
-      .baseMipLevel = 0,
-      .mipLevelCount = 1,
-   };
-   cmdList.texture_barrier(PipelineStage::FragmentShader, PipelineStage::Transfer, barrierSrcIn);
+   // const TextureBarrierInfo barrierSrcIn{
+   //    .texture = &src,
+   //    .sourceState = expectedTextureState,
+   //    .targetState = TextureState::TransferSrc,
+   //    .baseMipLevel = 0,
+   //    .mipLevelCount = 1,
+   // };
+   // cmdList.texture_barrier(PipelineStage::FragmentShader, PipelineStage::Transfer, barrierSrcIn);
 
    const TextureBarrierInfo barrierDstIn{
       .texture = &dst,
@@ -42,14 +42,14 @@ void copy_texture(CommandList& cmdList, const Texture& src, const Texture& dst)
    };
    cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::FragmentShader, barrierDstOut);
 
-   const TextureBarrierInfo barrierSrcOut{
-      .texture = &src,
-      .sourceState = TextureState::TransferSrc,
-      .targetState = expectedTextureState,
-      .baseMipLevel = 0,
-      .mipLevelCount = 1,
-   };
-   cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::FragmentShader, barrierSrcOut);
+   // const TextureBarrierInfo barrierSrcOut{
+   //    .texture = &src,
+   //    .sourceState = TextureState::TransferSrc,
+   //    .targetState = expectedTextureState,
+   //    .baseMipLevel = 0,
+   //    .mipLevelCount = 1,
+   // };
+   // cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::FragmentShader, barrierSrcOut);
 }
 
 

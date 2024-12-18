@@ -14,6 +14,7 @@ class TextureView
 
    [[nodiscard]] VkImageView vulkan_image_view() const;
    [[nodiscard]] TextureUsageFlags usage_flags() const;
+   void set_debug_name(std::string_view name) const;
 
  private:
    vulkan::ImageView m_imageView;

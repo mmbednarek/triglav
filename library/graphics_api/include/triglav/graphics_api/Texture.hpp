@@ -29,7 +29,7 @@ class Texture
 
    void set_anisotropy_state(bool isEnabled);
    void set_lod(float min, float max);
-
+   void set_debug_name(std::string_view name);
 
  private:
    void generate_mip_maps_internal(const CommandList& cmdList) const;

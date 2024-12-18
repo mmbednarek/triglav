@@ -45,7 +45,7 @@ Shading::Shading(graphics_api::Device& device, resource::ResourceManager& resour
                                                     GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
                                         .attachment("bloom"_name,
                                                     AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                       AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
+                                                       AttachmentAttribute::StoreImage,
                                                     GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
                                         .attachment("depth"_name,
                                                     AttachmentAttribute::Depth | AttachmentAttribute::LoadImage |

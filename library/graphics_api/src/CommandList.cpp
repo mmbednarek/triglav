@@ -208,13 +208,29 @@ void CommandList::copy_buffer_to_texture(const Buffer& source, const Texture& de
    region.bufferOffset = 0;
    region.bufferRowLength = 0;
    region.bufferImageHeight = 0;
-   region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+   region.imageSubresource.aspectMask = vulkan::to_vulkan_aspect_flags(destination.usage_flags());
    region.imageSubresource.mipLevel = mipLevel;
    region.imageSubresource.baseArrayLayer = 0;
    region.imageSubresource.layerCount = 1;
    region.imageOffset = {0, 0, 0};
    region.imageExtent = {destination.width(), destination.height(), 1};
    vkCmdCopyBufferToImage(m_commandBuffer, source.vulkan_buffer(), destination.vulkan_image(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+                          &region);
+}
+
+void CommandList::copy_texture_to_buffer(const Texture& source, const Buffer& destination, const int mipLevel, const TextureState srcTextureState) const
+{
+   VkBufferImageCopy region{};
+   region.bufferOffset = 0;
+   region.bufferRowLength = 0;
+   region.bufferImageHeight = 0;
+   region.imageSubresource.aspectMask = vulkan::to_vulkan_aspect_flags(source.usage_flags());
+   region.imageSubresource.mipLevel = mipLevel;
+   region.imageSubresource.baseArrayLayer = 0;
+   region.imageSubresource.layerCount = 1;
+   region.imageOffset = {0, 0, 0};
+   region.imageExtent = {source.width(), source.height(), 1};
+   vkCmdCopyImageToBuffer(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(srcTextureState), destination.vulkan_buffer(), 1,
                           &region);
 }
 
@@ -270,8 +286,8 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
       barrier.subresourceRange.levelCount = info.mipLevelCount;
       barrier.subresourceRange.baseArrayLayer = 0;
       barrier.subresourceRange.layerCount = 1;
-      barrier.srcAccessMask = vulkan::to_vulkan_access_flags(info.sourceState);
-      barrier.dstAccessMask = vulkan::to_vulkan_access_flags(info.targetState);
+      barrier.srcAccessMask = vulkan::to_vulkan_access_flags(sourceStage, info.sourceState);
+      barrier.dstAccessMask = vulkan::to_vulkan_access_flags(targetStage, info.targetState);
    }
 
    vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
@@ -397,7 +413,7 @@ void CommandList::bind_texture(const u32 binding, const Texture& texture)
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_texture_array(const u32 binding, std::span<Texture*> textures)
+void CommandList::bind_texture_array(const u32 binding, const std::span<Texture*> textures)
 {
    m_descriptorWriter.set_texture_array(binding, textures);
    m_hasPendingDescriptors = true;

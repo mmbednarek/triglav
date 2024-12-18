@@ -178,7 +178,7 @@ void ResourceManager::on_finished_loading_resource(ResourceName resourceName, co
    }
 }
 
-std::optional<std::string> ResourceManager::lookup_name(ResourceName resourceName) const
+std::optional<std::string> ResourceManager::lookup_name(const ResourceName resourceName) const
 {
    return m_nameRegistry.lookup_resource_name(resourceName);
 }

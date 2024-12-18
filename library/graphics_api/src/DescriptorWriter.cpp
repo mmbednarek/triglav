@@ -182,6 +182,7 @@ VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescr
    if (writeDescriptorSet.pImageInfo != nullptr) {
       if (writeDescriptorSet.descriptorCount > 1) {
          delete[] writeDescriptorSet.pImageInfo;
+         writeDescriptorSet.pImageInfo = nullptr;
       } else {
          m_descriptorImageInfoPool.release_object(writeDescriptorSet.pImageInfo);
          writeDescriptorSet.pImageInfo = nullptr;

@@ -83,4 +83,9 @@ void vkCmdDrawIndexedIndirectCount(const VkCommandBuffer commandBuffer, const Vk
                                                                         maxDrawCount, stride);
 }
 
+VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo)
+{
+   return DynamicProcedures::the().proc_vkSetDebugUtilsObjectNameEXT()(device, pNameInfo);
+}
+
 }// namespace triglav::graphics_api::vulkan

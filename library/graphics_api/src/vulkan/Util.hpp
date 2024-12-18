@@ -26,7 +26,7 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(PipelineStage stage);
 VkPipelineStageFlags to_vulkan_pipeline_stage_flags(PipelineStageFlags flags);
 VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType);
 VkImageLayout to_vulkan_image_layout(TextureState resourceState);
-VkAccessFlags to_vulkan_access_flags(TextureState resourceState);
+VkAccessFlags to_vulkan_access_flags(PipelineStageFlags stage, TextureState resourceState);
 VkFilter to_vulkan_filter(FilterType filterType);
 VkSamplerAddressMode to_vulkan_sampler_address_mode(TextureAddressMode mode);
 VkImageUsageFlags to_vulkan_image_usage_flags(TextureUsageFlags usage);

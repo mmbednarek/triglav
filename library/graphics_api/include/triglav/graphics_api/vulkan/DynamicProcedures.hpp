@@ -13,7 +13,8 @@
    TRIGLAV_HANDLE(vkGetRayTracingShaderGroupHandlesKHR)       \
    TRIGLAV_HANDLE(vkCmdDrawIndexedIndirectCount)              \
    TRIGLAV_HANDLE(vkCmdTraceRaysKHR)                          \
-   TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)
+   TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)                  \
+   TRIGLAV_HANDLE(vkSetDebugUtilsObjectNameEXT)
 
 
 namespace triglav::graphics_api::vulkan {
@@ -72,5 +73,7 @@ void vkCmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddre
 
 void vkCmdDrawIndexedIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer,
                                    VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride);
+
+VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo);
 
 }// namespace triglav::graphics_api::vulkan

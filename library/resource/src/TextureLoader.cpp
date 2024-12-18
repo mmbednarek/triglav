@@ -2,6 +2,7 @@
 
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Texture.hpp"
+#include "triglav/NameResolution.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -13,7 +14,7 @@ using graphics_api::TextureUsage;
 
 using namespace name_literals;
 
-graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, const io::Path& path,
+graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, const TextureName name, const io::Path& path,
                                                               const ResourceProperties& props)
 {
    int texWidth, texHeight, texChannels;
@@ -24,6 +25,9 @@ graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Devi
       GAPI_CHECK(device.create_texture(GAPI_FORMAT(RGBA, sRGB), {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)},
                                        TextureUsage::Sampled | TextureUsage::TransferDst | TextureUsage::TransferSrc,
                                        TextureState::Undefined, SampleCount::Single, graphics_api::g_maxMipMaps));
+
+   TG_SET_DEBUG_NAME(texture, resolve_name(name.name()));
+
    GAPI_CHECK_STATUS(texture.write(device, pixels));
 
    stbi_image_free(pixels);

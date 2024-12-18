@@ -9,11 +9,13 @@ core_sources = files([
                     'include/triglav/Heap.hpp',
                     'include/triglav/Int.hpp',
                     'include/triglav/Name.hpp',
+                    'include/triglav/NameResolution.hpp',
                     'include/triglav/ObjectPool.hpp',
                     'include/triglav/ResourceType.hpp',
                     'include/triglav/Template.hpp',
                     'include/triglav/TypeMacroList.hpp',
-                    'src/Core.cpp'
+                    'src/Core.cpp',
+                    'src/NameResolution.cpp'
 ])
 
 core_deps = [glm, entt]

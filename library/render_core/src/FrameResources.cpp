@@ -1,11 +1,24 @@
 #include "FrameResources.h"
 
 #include "triglav/graphics_api/Device.hpp"
+#include "triglav/NameResolution.hpp"
 
 #include <ranges>
+#include <sstream>
 
 namespace triglav::render_core {
 using namespace name_literals;
+
+namespace {
+
+std::string construct_debug_name(const Name renderTargetName, const Name attachmentName)
+{
+   std::stringstream ss;
+   ss << "RT_" << resolve_name(renderTargetName) << "_" << resolve_name(attachmentName);
+   return ss.str();
+}
+
+}
 
 void NodeResourcesBase::add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore)
 {
@@ -61,7 +74,9 @@ void NodeFrameResources::update_resolution(const graphics_api::Resolution& resol
       }
 
       for (const auto& attachment : target->second.renderTarget->attachments()) {
-         this->register_texture(attachment.identifier, target->second.framebuffer->texture(attachment.identifier));
+         auto& attachmentTex = target->second.framebuffer->texture(attachment.identifier);
+         TG_SET_DEBUG_NAME(attachmentTex, construct_debug_name(target->first, attachment.identifier));
+         this->register_texture(attachment.identifier, attachmentTex);
       }
    }
 }

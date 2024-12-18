@@ -1,5 +1,8 @@
 #include "BindlessScene.hpp"
 
+#include "triglav/graphics_api/Pipeline.hpp"
+#include "triglav/graphics_api/PipelineBuilder.hpp"
+
 namespace triglav::renderer {
 
 namespace gapi = graphics_api;
@@ -29,7 +32,8 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_combinedIndexBuffer(device, INDEX_BUFFER_SIZE),
     m_countBuffer(device, gapi::BufferUsage::Indirect),
     m_materialPropsAllScalar(device, 3),
-    m_materialPropsAlbedoTex(device, 3),
+    m_materialPropsAlbedoTex(device, 10),
+    m_materialPropsAlbedoNormalTex(device, 10),
     TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
    std::array<BindlessMaterialProps_AllScalar, 3> properties{
@@ -112,7 +116,14 @@ gapi::Buffer& BindlessScene::scene_object_buffer()
 
 graphics_api::Buffer& BindlessScene::material_template_properties(const u32 materialTemplateId)
 {
-   return m_materialPropsAllScalar.buffer();
+   switch (materialTemplateId) {
+   case 0:
+      return m_materialPropsAllScalar.buffer();
+   case 1:
+      return m_materialPropsAlbedoTex.buffer();
+   default:
+      return m_materialPropsAlbedoNormalTex.buffer();
+   }
 }
 
 const gapi::Buffer& BindlessScene::count_buffer() const
@@ -128,6 +139,52 @@ u32 BindlessScene::scene_object_count() const
 Scene& BindlessScene::scene() const
 {
    return m_scene;
+}
+
+graphics_api::Pipeline& BindlessScene::scene_pipeline(graphics_api::RenderTarget& renderTarget)
+{
+   if (!m_shouldUpdatePSO && m_scenePipeline.has_value()) {
+      return *m_scenePipeline;
+   }
+
+   m_scenePipeline.emplace(
+      GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
+                    .fragment_shader(m_resourceManager.get("bindless_geometry.fshader"_rc))
+                    .vertex_shader(m_resourceManager.get("bindless_geometry.vshader"_rc))
+                    .enable_depth_test(true)
+                    .enable_blending(false)
+                    .use_push_descriptors(true)
+                    // Vertex description
+                    .begin_vertex_layout<geometry::Vertex>()
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
+                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
+                    .end_vertex_layout()
+                    // Descriptor layout
+                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
+                                        graphics_api::PipelineStage::VertexShader)// 0 - View Properties (Vertex)
+                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
+                                        graphics_api::PipelineStage::VertexShader)// 1 - Scene Meshes (Vertex)
+                    .descriptor_binding_array(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader,
+                                              m_sceneTextures.size())// 2 - Material Textures (Frag)
+                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
+                                        graphics_api::PipelineStage::FragmentShader)// 3 - MT_SolidColor Props
+                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
+                                        graphics_api::PipelineStage::FragmentShader)// 4 - MT_AlbedoTexture Props
+                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
+                                        graphics_api::PipelineStage::FragmentShader)// 5 - MT_AlbedoNormalTexture Props
+                    .build()));
+
+   m_shouldUpdatePSO = false;
+
+   return *m_scenePipeline;
+}
+
+std::vector<graphics_api::Texture*>& BindlessScene::scene_textures()
+{
+   return m_sceneTextures;
 }
 
 BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList, const ModelName name)
@@ -172,18 +229,51 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       albedoTex.roughness = std::get<float>(material.values[1]);
       albedoTex.metalic = std::get<float>(material.values[2]);
 
-      // cmdList.copy_buffer()
-      // m_materialPropsAlbedoTex
-      // return encode_material_id(1, );
+      const auto outIndex = m_writtenMaterialProperty_AlbedoTex;
+
+      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(),
+                            m_writtenMaterialProperty_AlbedoTex * sizeof(BindlessMaterialProps_AlbedoTex),
+                            sizeof(BindlessMaterialProps_AlbedoTex), &albedoTex);
+
+      ++m_writtenMaterialProperty_AlbedoTex;
+
+      return encode_material_id(1, outIndex);
    }
-   if (material.materialTemplate == "pbr/normal_map.mt"_rc)
-      return 2;
+   if (material.materialTemplate == "pbr/normal_map.mt"_rc) {
+      BindlessMaterialProps_AlbedoNormalTex albedoNormalTex;
+      albedoNormalTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
+      albedoNormalTex.normal = this->get_texture_id(std::get<TextureName>(material.values[1]));
+      albedoNormalTex.roughness = std::get<float>(material.values[2]);
+      albedoNormalTex.metalic = std::get<float>(material.values[3]);
+
+      const auto outIndex = m_writtenMaterialProperty_AlbedoNormalTex;
+
+      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(),
+                            m_writtenMaterialProperty_AlbedoNormalTex * sizeof(BindlessMaterialProps_AlbedoNormalTex),
+                            sizeof(BindlessMaterialProps_AlbedoNormalTex), &albedoNormalTex);
+
+      ++m_writtenMaterialProperty_AlbedoNormalTex;
+
+      return encode_material_id(2, outIndex);
+   }
    return 0;
 }
 
-u32 BindlessScene::get_texture_id(TextureName texture)
+u32 BindlessScene::get_texture_id(const TextureName textureName)
 {
-   return 0;
+   const auto it = m_textureIds.find(textureName);
+   if (it != m_textureIds.end()) {
+      return it->second;
+   }
+
+   m_shouldUpdatePSO = true;
+
+   auto& texture = m_resourceManager.get(textureName);
+   const auto textureId = m_sceneTextures.size();
+   m_sceneTextures.emplace_back(&texture);
+
+   m_textureIds.emplace(textureName, textureId);
+   return textureId;
 }
 
 }// namespace triglav::renderer

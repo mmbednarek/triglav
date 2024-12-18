@@ -222,4 +222,26 @@ void Texture::set_lod(const float min, const float max)
    m_samplerProperties.maxLod = max;
 }
 
+void Texture::set_debug_name(const std::string_view name)
+{
+   if (name.empty())
+      return;
+
+   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_image);
+   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_IMAGE;
+   debugUtilsObjectName.pObjectName = name.data();
+   const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_image.parent(), &debugUtilsObjectName);
+   assert(result == VK_SUCCESS);
+
+   std::string viewName{"VIEW_"};
+   viewName.append(name);
+
+   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_imageView);
+   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_IMAGE_VIEW;
+   debugUtilsObjectName.pObjectName = viewName.data();
+   const auto result2 = vulkan::vkSetDebugUtilsObjectNameEXT(m_imageView.parent(), &debugUtilsObjectName);
+   assert(result2 == VK_SUCCESS);
+}
+
 }// namespace triglav::graphics_api

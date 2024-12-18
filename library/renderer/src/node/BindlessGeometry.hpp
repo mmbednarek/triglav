@@ -29,6 +29,7 @@ class BindlessGeometryResources final : public IGeometryResources
 
    [[nodiscard]] GroundRenderer::UniformBuffer& ground_ubo() override;
    void update_resolution(const graphics_api::Resolution& resolution) override;
+   graphics_api::TextureState hi_z_initial_state();
 
  private:
    graphics_api::Device& m_device;
@@ -37,8 +38,10 @@ class BindlessGeometryResources final : public IGeometryResources
    graphics_api::StorageArray<BindlessSceneObject> m_visibleObjects;
    graphics_api::Buffer m_countBuffer;
    graphics_api::Texture m_hiZBuffer;
+   graphics_api::Buffer m_hiZStagingBuffer;
    std::vector<graphics_api::TextureView> m_hiZBufferMipViews;
-   u32 m_mipCount{9};
+   u32 m_mipCount;
+   graphics_api::TextureState m_hiZInitialState{graphics_api::TextureState::Undefined};
 };
 
 class BindlessGeometry final : public render_core::IRenderNode
@@ -58,7 +61,6 @@ class BindlessGeometry final : public render_core::IRenderNode
    BindlessScene& m_bindlessScene;
    graphics_api::RenderTarget m_renderTarget;
    graphics_api::RenderTarget m_depthPrepassRenderTarget;
-   graphics_api::Pipeline m_pipeline;
    graphics_api::Pipeline m_depthPrepassPipeline;
    graphics_api::Pipeline m_hiZBufferPipeline;
    graphics_api::Pipeline m_cullingPipeline;

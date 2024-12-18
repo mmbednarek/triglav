@@ -1,8 +1,11 @@
-//
-// Created by ego on 15.12.24.
-//
+#pragma once
 
-#ifndef NAMERESOLUTION_HPP
-#define NAMERESOLUTION_HPP
+#include "Name.hpp"
 
-#endif //NAMERESOLUTION_HPP
+#include <string_view>
+
+namespace triglav {
+
+std::string_view resolve_name(Name name);
+
+}

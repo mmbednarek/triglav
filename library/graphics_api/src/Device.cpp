@@ -254,7 +254,7 @@ Result<Texture> Device::create_texture(const ColorFormat& format, const Resoluti
           vkGetPhysicalDeviceImageFormatProperties(m_physicalDevice, vulkanColorFormat, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL,
                                                    vulkan::to_vulkan_image_usage_flags(usageFlags), 0, &formatProperties);
        res != VK_SUCCESS) {
-      return std::unexpected(Status::UnsupportedDevice);
+      return std::unexpected(Status::UnsupportedFormat);
    }
 
    if (mipCount > formatProperties.maxMipLevels) {

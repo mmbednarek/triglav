@@ -5,6 +5,7 @@ namespace material
     struct AlbedoTextureProperties
     {
         uint albedoTextureID;
+        float normal;
         float metalic;
         float roughness;
     };

@@ -22,8 +22,9 @@ static constexpr u32 get_mip_count(const gapi::Resolution& resolution)
    return static_cast<int>(std::floor(std::log2(std::max(resolution.width, resolution.height)))) + 1;
 }
 
-constexpr auto HI_Z_FORMAT = GAPI_FORMAT(D, UNorm16);
-constexpr gapi::TextureUsageFlags HI_Z_TEX_USAGE = gapi::TextureUsage::Storage | gapi::TextureUsage::DepthStencilAttachment;
+constexpr auto HI_Z_FORMAT = GAPI_FORMAT(R, UNorm16);
+constexpr gapi::TextureUsageFlags HI_Z_TEX_USAGE =
+   gapi::TextureUsage::Storage | gapi::TextureUsage::Sampled | gapi::TextureUsage::TransferDst;
 
 BindlessGeometryResources::BindlessGeometryResources(graphics_api::Device& device) :
     m_device(device),
@@ -33,11 +34,17 @@ BindlessGeometryResources::BindlessGeometryResources(graphics_api::Device& devic
     m_countBuffer(GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::Indirect | gapi::BufferUsage::TransferDst, sizeof(u32)))),
     m_hiZBuffer(GAPI_CHECK(device.create_texture(HI_Z_FORMAT, gapi::Resolution{960, 540}, HI_Z_TEX_USAGE, gapi::TextureState::Undefined,
-                                                 gapi::SampleCount::Single, m_mipCount)))
+                                                 gapi::SampleCount::Single, 0))),
+    m_hiZStagingBuffer(
+       GAPI_CHECK(device.create_buffer(gapi::BufferUsage::TransferSrc | gapi::BufferUsage::TransferDst, 960 * 540 * sizeof(u16)))),
+    m_mipCount{get_mip_count({960, 540})}
 {
+   TG_SET_DEBUG_NAME(m_hiZBuffer, "hierarchical_zbuffer");
    m_hiZBufferMipViews.reserve(m_mipCount);
    for (const u32 i : std::views::iota(0u, m_mipCount)) {
-      m_hiZBufferMipViews.emplace_back(GAPI_CHECK(m_hiZBuffer.create_mip_view(device, i)));
+      auto mipView = GAPI_CHECK(m_hiZBuffer.create_mip_view(device, i));
+      TG_SET_DEBUG_NAME(mipView, std::format("hierarchical_zbuffer_view_{}", i));
+      m_hiZBufferMipViews.emplace_back(std::move(mipView));
    }
 }
 
@@ -59,11 +66,29 @@ void BindlessGeometryResources::update_resolution(const graphics_api::Resolution
    m_mipCount = get_mip_count(halfRes);
    m_hiZBuffer = GAPI_CHECK(
       m_device.create_texture(HI_Z_FORMAT, halfRes, HI_Z_TEX_USAGE, gapi::TextureState::Undefined, gapi::SampleCount::Single, m_mipCount));
+   TG_SET_DEBUG_NAME(m_hiZBuffer, "hierarchical_zbuffer");
+   m_hiZStagingBuffer = GAPI_CHECK(m_device.create_buffer(gapi::BufferUsage::TransferSrc | gapi::BufferUsage::TransferDst,
+                                                          resolution.width * resolution.height * sizeof(u16)));
+
    m_hiZBufferMipViews.clear();
    m_hiZBufferMipViews.reserve(m_mipCount);
    for (const u32 i : std::views::iota(0u, m_mipCount)) {
-      m_hiZBufferMipViews.emplace_back(GAPI_CHECK(m_hiZBuffer.create_mip_view(m_device, i)));
+      auto mipView = GAPI_CHECK(m_hiZBuffer.create_mip_view(m_device, i));
+      TG_SET_DEBUG_NAME(mipView, std::format("hierarchical_zbuffer_view_{}", i));
+      m_hiZBufferMipViews.emplace_back(std::move(mipView));
    }
+
+   m_hiZInitialState = gapi::TextureState::Undefined;
+}
+
+graphics_api::TextureState BindlessGeometryResources::hi_z_initial_state()
+{
+   if (m_hiZInitialState == gapi::TextureState::Undefined) {
+      m_hiZInitialState = gapi::TextureState::ShaderRead;
+      return gapi::TextureState::Undefined;
+   }
+
+   return gapi::TextureState::ShaderRead;
 }
 
 BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& bindlessScene, resource::ResourceManager& resourceManager) :
@@ -88,30 +113,6 @@ BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& 
                                                             AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
                                                          GAPI_FORMAT(D, UNorm16))
                                              .build())),
-    m_pipeline(GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(device, m_renderTarget)
-                             .fragment_shader(resourceManager.get("bindless_geometry.fshader"_rc))
-                             .vertex_shader(resourceManager.get("bindless_geometry.vshader"_rc))
-                             .enable_depth_test(true)
-                             .enable_blending(false)
-                             .use_push_descriptors(true)
-                             // Vertex description
-                             .begin_vertex_layout<geometry::Vertex>()
-                             .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                             .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                             .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                             .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
-                             .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
-                             .end_vertex_layout()
-                             // Descriptor layout
-                             .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                                 graphics_api::PipelineStage::VertexShader)// 0 - View Properties (Vertex)
-                             .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                                 graphics_api::PipelineStage::VertexShader)// 1 - Scene Meshes (Vertex)
-                             // .descriptor_binding_array(graphics_api::DescriptorType::ImageSampler,
-                             // graphics_api::PipelineStage::FragmentShader, 1) // 2 - Material Textures (Frag)
-                             .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                                 graphics_api::PipelineStage::FragmentShader)// 3 - MT_SolidColor Props
-                             .build())),
     m_depthPrepassPipeline(GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(device, m_depthPrepassRenderTarget)
                                          .fragment_shader(resourceManager.get("bindless_geometry_depth_prepass.fshader"_rc))
                                          .vertex_shader(resourceManager.get("bindless_geometry_depth_prepass.vshader"_rc))
@@ -186,12 +187,57 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
 
    // -- CONSTRUCT HI-ZBUFFER --
 
-   cmdList.copy_texture(nodeResources.texture("depth_prepass"_name), gapi::TextureState::General, bindlessGeoResources.m_hiZBuffer,
-                        gapi::TextureState::General, 0, 0);
+   const auto hiZState = bindlessGeoResources.hi_z_initial_state();
+
+   cmdList.texture_barrier(
+      // Source stage
+      hiZState == gapi::TextureState::Undefined ? gapi::PipelineStage::Entrypoint : gapi::PipelineStage::ComputeShader,
+      // Target stage
+      gapi::PipelineStage::Transfer,
+      // Texture transition
+      gapi::TextureBarrierInfo{
+         .texture = &bindlessGeoResources.m_hiZBuffer,
+         .sourceState = hiZState,
+         .targetState = gapi::TextureState::TransferDst,
+         .baseMipLevel = 0,
+         .mipLevelCount = 1,
+      });
+
+   cmdList.texture_barrier(
+      // Source stage
+      hiZState == gapi::TextureState::Undefined ? gapi::PipelineStage::Entrypoint : gapi::PipelineStage::ComputeShader,
+      // Target stage
+      gapi::PipelineStage::ComputeShader,
+      // Texture transition
+      gapi::TextureBarrierInfo{
+         .texture = &bindlessGeoResources.m_hiZBuffer,
+         .sourceState = hiZState,
+         .targetState = gapi::TextureState::General,
+         .baseMipLevel = 1,
+         .mipLevelCount = static_cast<int>(bindlessGeoResources.m_mipCount - 1),
+      });
+
+   cmdList.copy_texture_to_buffer(nodeResources.texture("depth_prepass"_name), bindlessGeoResources.m_hiZStagingBuffer, 0);
+
+   cmdList.execution_barrier(gapi::PipelineStage::Transfer, gapi::PipelineStage::Transfer);
+
+   cmdList.copy_buffer_to_texture(bindlessGeoResources.m_hiZStagingBuffer, bindlessGeoResources.m_hiZBuffer, 0);
+
+   cmdList.texture_barrier(
+      // Source stage
+      gapi::PipelineStage::Transfer,
+      // Target stage
+      gapi::PipelineStage::ComputeShader,
+      // Texture transition
+      gapi::TextureBarrierInfo{
+         .texture = &bindlessGeoResources.m_hiZBuffer,
+         .sourceState = gapi::TextureState::TransferDst,
+         .targetState = gapi::TextureState::ShaderRead,
+         .baseMipLevel = 0,
+         .mipLevelCount = 1,
+      });
 
    cmdList.bind_pipeline(m_hiZBufferPipeline);
-
-   cmdList.execution_barrier(gapi::PipelineStage::Transfer, gapi::PipelineStage::ComputeShader);
 
    int depthWidth = 480;
    int depthHeight = 270;
@@ -203,17 +249,20 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
       depthWidth /= 2;
       depthHeight /= 2;
 
-      cmdList.execution_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::ComputeShader);
+      cmdList.texture_barrier(
+         // Source stage
+         gapi::PipelineStage::ComputeShader,
+         // Target stage
+         gapi::PipelineStage::ComputeShader,
+         // Texture transition
+         gapi::TextureBarrierInfo{
+            .texture = &bindlessGeoResources.m_hiZBuffer,
+            .sourceState = gapi::TextureState::General,
+            .targetState = gapi::TextureState::ShaderRead,
+            .baseMipLevel = mipLevel + 1,
+            .mipLevelCount = 1,
+         });
    }
-
-   gapi::TextureBarrierInfo depthPrepassBarrier5{
-      .texture = &bindlessGeoResources.m_hiZBuffer,
-      .sourceState = gapi::TextureState::TransferDst,
-      .targetState = gapi::TextureState::DepthStencilRead,
-      .baseMipLevel = 0,
-      .mipLevelCount = static_cast<int>(bindlessGeoResources.m_mipCount),
-   };
-   cmdList.texture_barrier(gapi::PipelineStage::ComputeShader, gapi::PipelineStage::ComputeShader, depthPrepassBarrier5);
 
    // -- CULL SCENE OBJECTS --
 
@@ -241,14 +290,17 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
    };
    cmdList.begin_render_pass(nodeResources.framebuffer("gbuffer"_name), clearValues);
 
-   cmdList.bind_pipeline(m_pipeline);
+   cmdList.bind_pipeline(m_bindlessScene.scene_pipeline(m_renderTarget));
 
    cmdList.bind_vertex_buffer(m_bindlessScene.combined_vertex_buffer(), 0);
    cmdList.bind_index_buffer(m_bindlessScene.combined_index_buffer());
 
    cmdList.bind_uniform_buffer(0, bindlessGeoResources.view_properties());
    cmdList.bind_storage_buffer(1, bindlessGeoResources.m_visibleObjects.buffer());
-   cmdList.bind_storage_buffer(2, m_bindlessScene.material_template_properties(0));
+   cmdList.bind_texture_array(2, m_bindlessScene.scene_textures());
+   cmdList.bind_storage_buffer(3, m_bindlessScene.material_template_properties(0));
+   cmdList.bind_storage_buffer(4, m_bindlessScene.material_template_properties(1));
+   cmdList.bind_storage_buffer(5, m_bindlessScene.material_template_properties(2));
 
    cmdList.draw_indirect_with_count(bindlessGeoResources.m_visibleObjects.buffer(), bindlessGeoResources.m_countBuffer, 100,
                                     sizeof(BindlessSceneObject));

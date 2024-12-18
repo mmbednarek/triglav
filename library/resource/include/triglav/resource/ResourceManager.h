@@ -11,7 +11,6 @@
 #include "triglav/font/FontManager.h"
 #include "triglav/io/Path.h"
 
-#include <atomic>
 #include <map>
 #include <memory>
 #include <string>
@@ -52,7 +51,7 @@ class ResourceManager
    void load_resource(TypedName<CResourceType> name, const io::Path& path, const ResourceProperties& props)
    {
       if constexpr (Loader<CResourceType>::type == ResourceLoadType::Graphics) {
-         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, path, props));
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, name, path, props));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::GraphicsDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(*this, m_device, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
