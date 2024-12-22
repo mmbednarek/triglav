@@ -42,6 +42,7 @@ class BindlessGeometryResources final : public IGeometryResources
    std::vector<graphics_api::TextureView> m_hiZBufferMipViews;
    u32 m_mipCount;
    graphics_api::TextureState m_hiZInitialState{graphics_api::TextureState::Undefined};
+   SkyBox::UniformBuffer m_skyboxUbo;
 };
 
 class BindlessGeometry final : public render_core::IRenderNode
@@ -61,6 +62,8 @@ class BindlessGeometry final : public render_core::IRenderNode
    BindlessScene& m_bindlessScene;
    graphics_api::RenderTarget m_renderTarget;
    graphics_api::RenderTarget m_depthPrepassRenderTarget;
+   SkyBox m_skybox;
+   GroundRenderer m_groundRenderer;
    graphics_api::Pipeline m_depthPrepassPipeline;
    graphics_api::Pipeline m_hiZBufferPipeline;
    graphics_api::Pipeline m_cullingPipeline;

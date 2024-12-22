@@ -37,7 +37,8 @@ BindlessGeometryResources::BindlessGeometryResources(graphics_api::Device& devic
                                                  gapi::SampleCount::Single, 0))),
     m_hiZStagingBuffer(
        GAPI_CHECK(device.create_buffer(gapi::BufferUsage::TransferSrc | gapi::BufferUsage::TransferDst, 960 * 540 * sizeof(u16)))),
-    m_mipCount{get_mip_count({960, 540})}
+    m_mipCount{get_mip_count({960, 540})},
+    m_skyboxUbo(m_device)
 {
    TG_SET_DEBUG_NAME(m_hiZBuffer, "hierarchical_zbuffer");
    m_hiZBufferMipViews.reserve(m_mipCount);
@@ -45,6 +46,11 @@ BindlessGeometryResources::BindlessGeometryResources(graphics_api::Device& devic
       auto mipView = GAPI_CHECK(m_hiZBuffer.create_mip_view(device, i));
       TG_SET_DEBUG_NAME(mipView, std::format("hierarchical_zbuffer_view_{}", i));
       m_hiZBufferMipViews.emplace_back(std::move(mipView));
+   }
+
+   {
+      auto lk = m_groundUniformBuffer.lock();
+      lk->model = glm::scale(glm::mat4(1), glm::vec3{200, 200, 200});
    }
 }
 
@@ -129,6 +135,8 @@ BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& 
                                          .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
                                                              graphics_api::PipelineStage::VertexShader)// 1 - Scene Meshes (Vertex)
                                          .build())),
+    m_skybox(m_device, resourceManager, m_renderTarget),
+    m_groundRenderer(m_device, m_renderTarget, resourceManager),
     m_cullingPipeline(GAPI_CHECK(graphics_api::ComputePipelineBuilder(device)
                                     .compute_shader(resourceManager.get("bindless_geometry_culling.cshader"_rc))
                                     .use_push_descriptors(true)
@@ -280,6 +288,8 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
 
    cmdList.execution_barrier(graphics_api::PipelineStage::ComputeShader, graphics_api::PipelineStage::VertexShader);
 
+   m_groundRenderer.prepare_resources(cmdList, bindlessGeoResources.m_groundUniformBuffer, m_bindlessScene.scene().camera());
+
    // -- RENDER GEOMETRY --
 
    std::array<graphics_api::ClearValue, 4> clearValues{
@@ -289,6 +299,10 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
       graphics_api::DepthStenctilValue{1.0f, 0},
    };
    cmdList.begin_render_pass(nodeResources.framebuffer("gbuffer"_name), clearValues);
+
+   const auto screenRes = nodeResources.framebuffer("gbuffer"_name).resolution();
+   m_skybox.on_render(cmdList, bindlessGeoResources.m_skyboxUbo, m_bindlessScene.scene().yaw(), m_bindlessScene.scene().pitch(), screenRes.width, screenRes.height);
+   m_groundRenderer.draw(cmdList, bindlessGeoResources.m_groundUniformBuffer);
 
    cmdList.bind_pipeline(m_bindlessScene.scene_pipeline(m_renderTarget));
 
