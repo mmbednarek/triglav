@@ -20,6 +20,7 @@ class DynamicWriter : public IWriter
    DynamicWriter& operator=(DynamicWriter&& other) noexcept;
 
    [[nodiscard]] Result<MemorySize> write(std::span<const u8> buffer) override;
+   [[nodiscard]] Result<MemorySize> align(MemorySize alignment);
 
    [[nodiscard]] std::span<u8> span() const;
    [[nodiscard]] u8* data() const;
@@ -27,6 +28,8 @@ class DynamicWriter : public IWriter
    [[nodiscard]] MemorySize capacity() const;
 
  private:
+  void set_position(MemorySize newPosition);
+
    std::allocator<u8> m_allocator;
 
    u8* m_buffer;

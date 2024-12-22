@@ -57,25 +57,18 @@ DynamicWriter& DynamicWriter::operator=(DynamicWriter&& other) noexcept
 
 Result<MemorySize> DynamicWriter::write(const std::span<const u8> buffer)
 {
-   const auto new_position = m_position + buffer.size();
-   if (new_position > m_currentCapacity) {
-      auto new_cap = std::max<MemorySize>(2 * m_currentCapacity, 128);
-      while (new_position > new_cap) {
-         new_cap *= 2;
-      }
-      auto* new_buff = m_allocator.allocate(new_cap);
-
-      std::memcpy(new_buff, m_buffer, m_position);
-
-      m_allocator.deallocate(m_buffer, m_currentCapacity);
-      m_buffer = new_buff;
-      m_currentCapacity = new_cap;
-   }
-
-   std::memcpy(m_buffer + m_position, buffer.data(), buffer.size());
-   m_position += buffer.size();
-
+   const auto prevPosition = m_position;
+   this->set_position(this->m_position + buffer.size());
+   std::memcpy(m_buffer + prevPosition, buffer.data(), buffer.size());
    return buffer.size();
+}
+
+Result<MemorySize> DynamicWriter::align(const MemorySize alignment)
+{
+   const auto mod = m_position % alignment;
+   const auto offset = mod == 0 ? 0 : alignment - mod;
+   this->set_position(this->m_position + offset);
+   return offset;
 }
 
 std::span<u8> DynamicWriter::span() const
@@ -96,6 +89,25 @@ MemorySize DynamicWriter::size() const
 MemorySize DynamicWriter::capacity() const
 {
    return m_currentCapacity;
+}
+
+void DynamicWriter::set_position(const MemorySize newPosition)
+{
+   if (newPosition > m_currentCapacity) {
+      auto new_cap = std::max<MemorySize>(2 * m_currentCapacity, 128);
+      while (newPosition > new_cap) {
+         new_cap *= 2;
+      }
+      auto* new_buff = m_allocator.allocate(new_cap);
+
+      std::memcpy(new_buff, m_buffer, m_position);
+
+      m_allocator.deallocate(m_buffer, m_currentCapacity);
+      m_buffer = new_buff;
+      m_currentCapacity = new_cap;
+   }
+
+   m_position = newPosition;
 }
 
 }// namespace triglav::io

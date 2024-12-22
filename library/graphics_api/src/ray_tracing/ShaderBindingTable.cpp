@@ -26,6 +26,8 @@ ShaderBindingTableBuilder::ShaderBindingTableBuilder(Device& device, RayTracingP
    vkGetPhysicalDeviceProperties2(device.vulkan_physical_device(), &props);
 
    m_handleSize = rayTracingProps.shaderGroupHandleSize;
+   m_handleAlignment = rayTracingProps.shaderGroupHandleAlignment;
+   m_groupAlignment = rayTracingProps.shaderGroupBaseAlignment;
 
    const auto bufferSize = m_handleSize * pipeline.shader_count();
    m_handleBuffer.resize(bufferSize);
@@ -34,10 +36,14 @@ ShaderBindingTableBuilder::ShaderBindingTableBuilder(Device& device, RayTracingP
    assert(getHandlesResult == VK_SUCCESS);
 }
 
-ShaderBindingTableBuilder& ShaderBindingTableBuilder::add_binding(Name name)
+ShaderBindingTableBuilder& ShaderBindingTableBuilder::add_binding(const Name name)
 {
+   assert(m_writer.align(m_handleAlignment).has_value());
+
    auto [index, stage] = m_pipeline.shader_index(name);
    if (stage != m_lastStage) {
+      assert(m_writer.align(m_groupAlignment).has_value());
+
       switch (stage) {
       case PipelineStage::RayGenerationShader:
          m_genRaysOffset = m_writer.size();
@@ -82,7 +88,7 @@ ShaderBindingTableBuilder& ShaderBindingTableBuilder::add_binding(Name name)
    return *this;
 }
 
-u8* ShaderBindingTableBuilder::handle(Index index)
+u8* ShaderBindingTableBuilder::handle(const Index index)
 {
    return m_handleBuffer.data() + m_handleSize * index;
 }

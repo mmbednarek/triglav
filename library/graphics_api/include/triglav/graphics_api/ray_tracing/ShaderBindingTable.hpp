@@ -30,6 +30,8 @@ class ShaderBindingTableBuilder
    RayTracingPipeline& m_pipeline;
    std::vector<u8> m_handleBuffer;
    MemorySize m_handleSize{};
+   MemorySize m_handleAlignment{};
+   MemorySize m_groupAlignment{};
    PipelineStage m_lastStage{PipelineStage::None};
 
    MemorySize m_genRaysOffset{};
