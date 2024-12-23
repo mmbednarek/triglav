@@ -1,7 +1,7 @@
-#include "FrameResources.h"
+#include "FrameResources.hpp"
 
-#include "triglav/graphics_api/Device.hpp"
 #include "triglav/NameResolution.hpp"
+#include "triglav/graphics_api/Device.hpp"
 
 #include <ranges>
 #include <sstream>
@@ -18,7 +18,7 @@ std::string construct_debug_name(const Name renderTargetName, const Name attachm
    return ss.str();
 }
 
-}
+}// namespace
 
 void NodeResourcesBase::add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore)
 {

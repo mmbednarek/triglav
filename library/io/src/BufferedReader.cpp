@@ -1,4 +1,4 @@
-#include "BufferedReader.h"
+#include "BufferedReader.hpp"
 
 namespace triglav::io {
 

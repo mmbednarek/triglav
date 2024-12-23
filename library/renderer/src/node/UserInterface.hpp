@@ -7,7 +7,7 @@
 #include "triglav/graphics_api/Texture.hpp"
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/renderer/TextRenderer.hpp"
-#include "triglav/ui_core/Viewport.h"
+#include "triglav/ui_core/Viewport.hpp"
 
 #include <map>
 #include <string_view>

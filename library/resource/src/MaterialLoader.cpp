@@ -1,6 +1,6 @@
-#include "MaterialLoader.h"
+#include "MaterialLoader.hpp"
 
-#include "triglav/io/File.h"
+#include "triglav/io/File.hpp"
 #include "triglav/render_core/Material.hpp"
 
 #include <glm/mat4x4.hpp>

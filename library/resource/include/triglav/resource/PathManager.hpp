@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/io/Path.h"
+#include "triglav/io/Path.hpp"
 #include "triglav/threading/SafeAccess.hpp"
 
 #include <optional>

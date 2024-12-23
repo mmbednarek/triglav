@@ -2,9 +2,9 @@
 
 #include "triglav/graphics_api/Framebuffer.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
-#include "triglav/io/BufferWriter.h"
-#include "triglav/io/Serializer.h"
-#include "triglav/render_core/RenderGraph.h"
+#include "triglav/io/BufferWriter.hpp"
+#include "triglav/io/Serializer.hpp"
+#include "triglav/render_core/RenderGraph.hpp"
 
 #include <ranges>
 

@@ -2,9 +2,9 @@
 
 #include "GlyphCache.hpp"
 
-#include "triglav/render_core/GlyphAtlas.h"
-#include "triglav/resource/ResourceManager.h"
-#include "triglav/ui_core/Viewport.h"
+#include "triglav/render_core/GlyphAtlas.hpp"
+#include "triglav/resource/ResourceManager.hpp"
+#include "triglav/ui_core/Viewport.hpp"
 
 namespace triglav::renderer {
 

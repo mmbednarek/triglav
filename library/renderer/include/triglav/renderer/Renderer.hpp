@@ -12,10 +12,10 @@
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/RenderTarget.hpp"
-#include "triglav/render_core/GlyphAtlas.h"
-#include "triglav/render_core/RenderGraph.h"
-#include "triglav/resource/ResourceManager.h"
-#include "triglav/ui_core/Viewport.h"
+#include "triglav/render_core/GlyphAtlas.hpp"
+#include "triglav/render_core/RenderGraph.hpp"
+#include "triglav/resource/ResourceManager.hpp"
+#include "triglav/ui_core/Viewport.hpp"
 
 #include <optional>
 

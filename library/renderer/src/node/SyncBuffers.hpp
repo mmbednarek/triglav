@@ -1,7 +1,7 @@
 #pragma once
 
 #include "triglav/render_core/IRenderNode.hpp"
-#include "triglav/render_core/RenderGraph.h"
+#include "triglav/render_core/RenderGraph.hpp"
 
 #include "Scene.hpp"
 

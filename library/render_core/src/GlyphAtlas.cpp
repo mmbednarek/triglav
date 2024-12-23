@@ -1,8 +1,8 @@
-#include "GlyphAtlas.h"
+#include "GlyphAtlas.hpp"
 
 #include "RenderCore.hpp"
 
-#include "triglav/font/Utf8StringView.h"
+#include "triglav/font/Utf8StringView.hpp"
 #include "triglav/graphics_api/Device.hpp"
 
 #include <codecvt>

@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 
-#include "Result.h"
+#include "Result.hpp"
 
 namespace triglav::io {
 

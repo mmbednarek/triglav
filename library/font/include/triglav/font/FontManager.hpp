@@ -1,9 +1,9 @@
 #pragma once
 
-#include "FreeTypeForwardDecl.h"
-#include "Typeface.h"
+#include "FreeTypeForwardDecl.hpp"
+#include "Typeface.hpp"
 
-#include "triglav/io/Path.h"
+#include "triglav/io/Path.hpp"
 
 #include <memory>
 #include <string_view>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FreeTypeForwardDecl.h"
+#include "FreeTypeForwardDecl.hpp"
 
 #include "triglav/Int.hpp"
 #include "triglav/threading/SafeAccess.hpp"

@@ -1,4 +1,4 @@
-#include "RenderGraph.h"
+#include "RenderGraph.hpp"
 
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Synchronization.hpp"

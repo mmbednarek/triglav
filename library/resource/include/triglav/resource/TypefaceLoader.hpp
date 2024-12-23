@@ -3,9 +3,9 @@
 #include "Loader.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/font/FontManager.h"
-#include "triglav/font/Typeface.h"
-#include "triglav/io/Path.h"
+#include "triglav/font/FontManager.hpp"
+#include "triglav/font/Typeface.hpp"
+#include "triglav/io/Path.hpp"
 
 #include <string_view>
 

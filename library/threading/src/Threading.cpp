@@ -1,6 +1,6 @@
-#include "Threading.h"
+#include "Threading.hpp"
 
-#include "ThreadPool.h"
+#include "ThreadPool.hpp"
 
 namespace triglav::threading {
 

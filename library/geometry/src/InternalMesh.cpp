@@ -1,8 +1,8 @@
-#include "InternalMesh.h"
+#include "InternalMesh.hpp"
 
-#include "Parser.h"
+#include "Parser.hpp"
 
-#include "triglav/io/File.h"
+#include "triglav/io/File.hpp"
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/Polygon_mesh_processing/orientation.h>

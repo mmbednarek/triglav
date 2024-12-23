@@ -3,8 +3,8 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
-#include "triglav/render_core/FrameResources.h"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/render_core/FrameResources.hpp"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <glm/mat4x4.hpp>
 #include <glm/vec3.hpp>

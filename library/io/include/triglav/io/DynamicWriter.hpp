@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Stream.h"
+#include "Stream.hpp"
 
 #include "triglav/Int.hpp"
 
@@ -28,7 +28,7 @@ class DynamicWriter : public IWriter
    [[nodiscard]] MemorySize capacity() const;
 
  private:
-  void set_position(MemorySize newPosition);
+   void set_position(MemorySize newPosition);
 
    std::allocator<u8> m_allocator;
 

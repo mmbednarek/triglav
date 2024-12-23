@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FrameResources.h"
+#include "FrameResources.hpp"
 
 #include "triglav/graphics_api/CommandList.hpp"
 

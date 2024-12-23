@@ -3,8 +3,8 @@
 #include "ProcessGlyphs.hpp"
 
 #include "triglav/graphics_api/PipelineBuilder.hpp"
-#include "triglav/render_core/GlyphAtlas.h"
-#include "triglav/ui_core/Viewport.h"
+#include "triglav/render_core/GlyphAtlas.hpp"
+#include "triglav/ui_core/Viewport.hpp"
 
 #include <ranges>
 #define GLM_ENABLE_EXPERIMENTAL

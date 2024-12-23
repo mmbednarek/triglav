@@ -1,9 +1,9 @@
 #include "Particles.hpp"
 
-#include "triglav/geometry/Geometry.h"
+#include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
-#include "triglav/render_core/RenderGraph.h"
+#include "triglav/render_core/RenderGraph.hpp"
 
 #include <glm/vec3.hpp>
 

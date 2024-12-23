@@ -3,7 +3,7 @@
 #include "Device.hpp"
 
 #include "triglav/Int.hpp"
-#include "triglav/threading/Threading.h"
+#include "triglav/threading/Threading.hpp"
 
 #include <stdexcept>
 

@@ -5,9 +5,9 @@
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
-#include "triglav/render_core/GlyphAtlas.h"
+#include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/render_core/RenderCore.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include "GlyphCache.hpp"
 

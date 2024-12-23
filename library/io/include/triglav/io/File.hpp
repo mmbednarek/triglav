@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Path.h"
-#include "Stream.h"
+#include "Path.hpp"
+#include "Stream.hpp"
 
 #include <memory>
 #include <string_view>

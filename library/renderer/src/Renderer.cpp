@@ -16,9 +16,9 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/io/CommandLine.h"
+#include "triglav/io/CommandLine.hpp"
 #include "triglav/render_core/RenderCore.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <chrono>
 #include <cmath>

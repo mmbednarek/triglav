@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Stream.h"
+#include "Stream.hpp"
 
 #include "triglav/Int.hpp"
 

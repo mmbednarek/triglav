@@ -2,9 +2,9 @@
 
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
-#include "triglav/io/CommandLine.h"
-#include "triglav/resource/PathManager.h"
-#include "triglav/threading/ThreadPool.h"
+#include "triglav/io/CommandLine.hpp"
+#include "triglav/resource/PathManager.hpp"
+#include "triglav/threading/ThreadPool.hpp"
 
 #include <spdlog/spdlog.h>
 

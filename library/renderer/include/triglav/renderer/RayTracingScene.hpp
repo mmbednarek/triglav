@@ -4,7 +4,7 @@
 #include "Camera.hpp"
 #include "Scene.hpp"
 
-#include "triglav/geometry/Mesh.h"
+#include "triglav/geometry/Mesh.hpp"
 #include "triglav/graphics_api/ReplicatedBuffer.hpp"
 #include "triglav/graphics_api/ray_tracing/AccelerationStructurePool.hpp"
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"

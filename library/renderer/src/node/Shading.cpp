@@ -38,20 +38,19 @@ class ShadingResources : public render_core::NodeFrameResources
 
 Shading::Shading(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
     m_device(device),
-    m_shadingRenderTarget(GAPI_CHECK(graphics_api::RenderTargetBuilder(device)
-                                        .attachment("shading"_name,
-                                                    AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                       AttachmentAttribute::StoreImage | AttachmentAttribute::Storage,
-                                                    GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
-                                        .attachment("bloom"_name,
-                                                    AttachmentAttribute::Color | AttachmentAttribute::ClearImage |
-                                                       AttachmentAttribute::StoreImage,
-                                                    GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
-                                        .attachment("depth"_name,
-                                                    AttachmentAttribute::Depth | AttachmentAttribute::LoadImage |
-                                                       AttachmentAttribute::StoreImage | AttachmentAttribute::TransferDst,
-                                                    GAPI_FORMAT(D, UNorm16))
-                                        .build())),
+    m_shadingRenderTarget(GAPI_CHECK(
+       graphics_api::RenderTargetBuilder(device)
+          .attachment("shading"_name,
+                      AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage |
+                         AttachmentAttribute::Storage,
+                      GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+          .attachment("bloom"_name, AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
+                      GAPI_FORMAT(RGBA, Float16), SampleCount::Single)
+          .attachment("depth"_name,
+                      AttachmentAttribute::Depth | AttachmentAttribute::LoadImage | AttachmentAttribute::StoreImage |
+                         AttachmentAttribute::TransferDst,
+                      GAPI_FORMAT(D, UNorm16))
+          .build())),
     m_shadingRenderer(device, m_shadingRenderTarget, resourceManager),
     m_scene(scene),
     m_particlesPipeline(

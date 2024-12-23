@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "triglav/Name.hpp"
-#include "triglav/geometry/Mesh.h"
+#include "triglav/geometry/Mesh.hpp"
 #include "triglav/graphics_api/DescriptorArray.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 

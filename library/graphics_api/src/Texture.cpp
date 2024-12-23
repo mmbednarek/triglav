@@ -227,7 +227,7 @@ void Texture::set_debug_name(const std::string_view name)
    if (name.empty())
       return;
 
-   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{ VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT };
+   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
    debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_image);
    debugUtilsObjectName.objectType = VK_OBJECT_TYPE_IMAGE;
    debugUtilsObjectName.pObjectName = name.data();

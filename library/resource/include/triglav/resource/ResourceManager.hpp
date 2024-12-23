@@ -2,14 +2,14 @@
 
 #include "Container.hpp"
 #include "Loader.hpp"
-#include "NameRegistry.h"
+#include "NameRegistry.hpp"
 #include "Resource.hpp"
 
-#include "LoadContext.h"
+#include "LoadContext.hpp"
 #include "triglav/Delegate.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/font/FontManager.h"
-#include "triglav/io/Path.h"
+#include "triglav/font/FontManager.hpp"
+#include "triglav/io/Path.hpp"
 
 #include <map>
 #include <memory>

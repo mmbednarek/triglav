@@ -1,16 +1,16 @@
-#include "ResourceManager.h"
+#include "ResourceManager.hpp"
 
-#include "LevelLoader.h"
-#include "MaterialLoader.h"
-#include "ModelLoader.h"
-#include "PathManager.h"
-#include "ShaderLoader.h"
-#include "TextureLoader.h"
-#include "TypefaceLoader.h"
+#include "LevelLoader.hpp"
+#include "MaterialLoader.hpp"
+#include "ModelLoader.hpp"
+#include "PathManager.hpp"
+#include "ShaderLoader.hpp"
+#include "TextureLoader.hpp"
+#include "TypefaceLoader.hpp"
 
 #include "triglav/TypeMacroList.hpp"
-#include "triglav/io/File.h"
-#include "triglav/threading/ThreadPool.h"
+#include "triglav/io/File.hpp"
+#include "triglav/threading/ThreadPool.hpp"
 
 #include <ryml.hpp>
 #include <spdlog/spdlog.h>

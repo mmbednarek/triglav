@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/geometry/Geometry.h"
+#include "triglav/geometry/Geometry.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 #include <glm/vec3.hpp>

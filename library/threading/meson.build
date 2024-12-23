@@ -1,8 +1,8 @@
 threading_sources = files([
   'include/triglav/threading/DoubleBufferQueue.hpp',
   'include/triglav/threading/SafeAccess.hpp',
-  'include/triglav/threading/Threading.h',
-  'include/triglav/threading/ThreadPool.h',
+  'include/triglav/threading/Threading.hpp',
+  'include/triglav/threading/ThreadPool.hpp',
   'src/ThreadPool.cpp',
   'src/Threading.cpp',
 ])

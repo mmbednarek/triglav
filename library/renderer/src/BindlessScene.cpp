@@ -268,8 +268,7 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
 
       const auto outIndex = m_writtenMaterialProperty_AllTex;
 
-      cmdList.update_buffer(m_materialPropsAllTex.buffer(),
-                            m_writtenMaterialProperty_AllTex * sizeof(BindlessMaterialProps_AllTex),
+      cmdList.update_buffer(m_materialPropsAllTex.buffer(), m_writtenMaterialProperty_AllTex * sizeof(BindlessMaterialProps_AllTex),
                             sizeof(BindlessMaterialProps_AllTex), &allTex);
 
       ++m_writtenMaterialProperty_AllTex;

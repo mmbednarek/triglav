@@ -1,4 +1,4 @@
-#include "BufferWriter.h"
+#include "BufferWriter.hpp"
 
 #include <cassert>
 #include <cstring>

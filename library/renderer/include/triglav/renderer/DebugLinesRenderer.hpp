@@ -5,7 +5,7 @@
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/render_core/Model.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include "Camera.hpp"
 

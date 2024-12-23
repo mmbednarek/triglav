@@ -1,6 +1,6 @@
-#include "PathManager.h"
+#include "PathManager.hpp"
 
-#include "triglav/io/CommandLine.h"
+#include "triglav/io/CommandLine.hpp"
 
 namespace triglav::resource {
 

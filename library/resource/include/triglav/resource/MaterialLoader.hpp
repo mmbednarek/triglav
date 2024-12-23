@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Loader.hpp"
-#include "ResourceManager.h"
+#include "ResourceManager.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/io/Path.h"
+#include "triglav/io/Path.hpp"
 #include "triglav/render_core/Material.hpp"
 
 #include <string_view>

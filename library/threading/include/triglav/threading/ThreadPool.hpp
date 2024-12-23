@@ -10,7 +10,7 @@
 #include "triglav/Int.hpp"
 
 #include "DoubleBufferQueue.hpp"
-#include "Threading.h"
+#include "Threading.hpp"
 
 namespace triglav::threading {
 

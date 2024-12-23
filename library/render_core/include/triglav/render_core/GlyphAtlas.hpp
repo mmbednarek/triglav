@@ -1,7 +1,7 @@
 #pragma once
 
-#include "triglav/font/Charset.h"
-#include "triglav/font/Typeface.h"
+#include "triglav/font/Charset.hpp"
+#include "triglav/font/Typeface.hpp"
 #include "triglav/graphics_api/Texture.hpp"
 
 #include <glm/vec2.hpp>

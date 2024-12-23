@@ -4,7 +4,7 @@
 
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/renderer/BindlessScene.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <glm/mat4x4.hpp>
 #include <triglav/graphics_api/HostVisibleBuffer.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Result.h"
+#include "Result.hpp"
 
 #include "triglav/Int.hpp"
 

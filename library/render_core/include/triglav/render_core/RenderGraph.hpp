@@ -1,6 +1,6 @@
 #pragma once
 
-#include "FrameResources.h"
+#include "FrameResources.hpp"
 #include "IRenderNode.hpp"
 
 #include "triglav/Name.hpp"

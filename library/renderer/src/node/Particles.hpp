@@ -1,7 +1,7 @@
 #pragma once
 
 #include "triglav/render_core/IRenderNode.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <glm/mat4x4.hpp>
 #include <random>

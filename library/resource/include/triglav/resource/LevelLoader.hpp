@@ -3,8 +3,8 @@
 #include "Loader.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/io/Path.h"
-#include "triglav/world/Level.h"
+#include "triglav/io/Path.hpp"
+#include "triglav/world/Level.hpp"
 
 #include <string_view>
 

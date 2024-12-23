@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "triglav/render_core/IRenderNode.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 namespace triglav::renderer::node {
 

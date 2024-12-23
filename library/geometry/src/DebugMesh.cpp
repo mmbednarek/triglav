@@ -1,6 +1,6 @@
-#include "DebugMesh.h"
+#include "DebugMesh.hpp"
 
-#include "InternalMesh.h"
+#include "InternalMesh.hpp"
 
 #include <cmath>
 

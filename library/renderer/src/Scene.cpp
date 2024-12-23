@@ -2,7 +2,7 @@
 
 #include "Renderer.hpp"
 
-#include "triglav/world/Level.h"
+#include "triglav/world/Level.hpp"
 
 #include <cmath>
 #include <glm/gtc/quaternion.hpp>

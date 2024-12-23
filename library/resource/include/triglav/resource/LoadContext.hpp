@@ -3,7 +3,7 @@
 #include "Resource.hpp"
 
 #include "triglav/Int.hpp"
-#include "triglav/io/Path.h"
+#include "triglav/io/Path.hpp"
 
 #include <memory>
 #include <shared_mutex>

@@ -1,10 +1,10 @@
 #include "MaterialManager.hpp"
 
-#include "triglav/geometry/Geometry.h"
+#include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
-#include "triglav/io/BufferWriter.h"
-#include "triglav/io/Serializer.h"
+#include "triglav/io/BufferWriter.hpp"
+#include "triglav/io/Serializer.hpp"
 #include "triglav/render_core/Material.hpp"
 #include "triglav/render_core/Model.hpp"
 

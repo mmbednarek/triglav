@@ -7,8 +7,8 @@
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/render_core/RenderCore.hpp"
-#include "triglav/resource/ResourceManager.h"
-#include "triglav/ui_core/Viewport.h"
+#include "triglav/resource/ResourceManager.hpp"
+#include "triglav/ui_core/Viewport.hpp"
 
 namespace triglav::renderer::node {
 

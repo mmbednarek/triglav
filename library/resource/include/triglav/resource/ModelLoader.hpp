@@ -4,7 +4,7 @@
 #include "Resource.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/io/Path.h"
+#include "triglav/io/Path.hpp"
 #include "triglav/render_core/Model.hpp"
 
 #include <string_view>

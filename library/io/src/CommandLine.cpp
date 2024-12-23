@@ -1,4 +1,4 @@
-#include "CommandLine.h"
+#include "CommandLine.hpp"
 
 namespace triglav::io {
 

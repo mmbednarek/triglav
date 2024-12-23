@@ -1,8 +1,8 @@
-#include "TextureLoader.h"
+#include "TextureLoader.hpp"
 
+#include "triglav/NameResolution.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Texture.hpp"
-#include "triglav/NameResolution.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 

@@ -4,11 +4,11 @@
 
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/font/FontManager.h"
+#include "triglav/font/FontManager.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/renderer/Renderer.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <atomic>
 #include <condition_variable>

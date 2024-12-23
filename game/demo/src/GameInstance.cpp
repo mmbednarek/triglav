@@ -1,7 +1,7 @@
 #include "GameInstance.h"
 
-#include "triglav/io/CommandLine.h"
-#include "triglav/resource/PathManager.h"
+#include "triglav/io/CommandLine.hpp"
+#include "triglav/resource/PathManager.hpp"
 
 namespace demo {
 

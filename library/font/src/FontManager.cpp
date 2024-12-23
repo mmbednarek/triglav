@@ -1,6 +1,6 @@
-#include "FontManager.h"
+#include "FontManager.hpp"
 
-#include "Charset.h"
+#include "Charset.hpp"
 
 #include <freetype/freetype.h>
 #include <stdexcept>

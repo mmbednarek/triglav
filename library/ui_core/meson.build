@@ -1,6 +1,6 @@
 ui_core_sources = files([
   'include/triglav/ui_core/Primitives.hpp',
-  'include/triglav/ui_core/Viewport.h',
+  'include/triglav/ui_core/Viewport.hpp',
   'src/Viewport.cpp',
 ])
 

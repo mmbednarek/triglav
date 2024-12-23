@@ -1,7 +1,11 @@
 geometry_sources = files([
+  'include/triglav/geometry/DebugMesh.hpp',
+  'include/triglav/geometry/Geometry.hpp',
+  'include/triglav/geometry/Mesh.hpp',
+  'include/triglav/geometry/Parser.hpp',
   'src/DebugMesh.cpp',
   'src/InternalMesh.cpp',
-  'src/InternalMesh.h',
+  'src/InternalMesh.hpp',
   'src/Mesh.cpp',
   'src/Parser.cpp',
 ])

@@ -301,7 +301,8 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
    cmdList.begin_render_pass(nodeResources.framebuffer("gbuffer"_name), clearValues);
 
    const auto screenRes = nodeResources.framebuffer("gbuffer"_name).resolution();
-   m_skybox.on_render(cmdList, bindlessGeoResources.m_skyboxUbo, m_bindlessScene.scene().yaw(), m_bindlessScene.scene().pitch(), screenRes.width, screenRes.height);
+   m_skybox.on_render(cmdList, bindlessGeoResources.m_skyboxUbo, m_bindlessScene.scene().yaw(), m_bindlessScene.scene().pitch(),
+                      screenRes.width, screenRes.height);
    m_groundRenderer.draw(cmdList, bindlessGeoResources.m_groundUniformBuffer);
 
    cmdList.bind_pipeline(m_bindlessScene.scene_pipeline(m_renderTarget));

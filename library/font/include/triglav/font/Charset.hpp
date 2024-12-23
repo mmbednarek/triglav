@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Typeface.h"
-#include "Utf8StringView.h"
+#include "Typeface.hpp"
+#include "Utf8StringView.hpp"
 
 #include <string_view>
 #include <vector>

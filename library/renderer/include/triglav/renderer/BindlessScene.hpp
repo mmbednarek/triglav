@@ -3,7 +3,7 @@
 #include "Scene.hpp"
 
 #include "triglav/Int.hpp"
-#include "triglav/geometry/Geometry.h"
+#include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Array.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 
@@ -56,18 +56,18 @@ struct BindlessMaterialProperties
    BindlessValueType<Metalic> metalic{};
 };
 
-using BindlessMaterialProps_AllScalar =
-   BindlessMaterialProperties<BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+using BindlessMaterialProps_AllScalar = BindlessMaterialProperties<BindlessValueSource::Scalar, BindlessValueSource::Scalar,
+                                                                   BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
 
 static_assert(sizeof(BindlessMaterialProps_AllScalar) == sizeof(glm::vec4) + 3 * sizeof(float));
 
-using BindlessMaterialProps_AlbedoTex =
-   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
-using BindlessMaterialProps_AlbedoNormalTex =
-   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+using BindlessMaterialProps_AlbedoTex = BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::Scalar,
+                                                                   BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+using BindlessMaterialProps_AlbedoNormalTex = BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap,
+                                                                         BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
 
-using BindlessMaterialProps_AllTex =
-   BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::TextureMap, BindlessValueSource::TextureMap>;
+using BindlessMaterialProps_AllTex = BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap,
+                                                                BindlessValueSource::TextureMap, BindlessValueSource::TextureMap>;
 
 class BindlessScene
 {

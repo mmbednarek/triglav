@@ -1,6 +1,6 @@
-#include "LevelLoader.h"
+#include "LevelLoader.hpp"
 
-#include "triglav/io/File.h"
+#include "triglav/io/File.hpp"
 
 #include <ryml.hpp>
 #include <string>

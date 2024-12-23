@@ -4,10 +4,10 @@
 #include <CGAL/Surface_mesh.h>
 #include <optional>
 
-#include "triglav/io/Path.h"
-#include "triglav/io/Stream.h"
+#include "triglav/io/Path.hpp"
+#include "triglav/io/Stream.hpp"
 
-#include "Geometry.h"
+#include "Geometry.hpp"
 
 namespace triglav::geometry {
 

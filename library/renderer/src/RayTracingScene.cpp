@@ -4,7 +4,7 @@
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/render_core/Model.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <spdlog/spdlog.h>
 

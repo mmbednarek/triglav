@@ -3,9 +3,9 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/graphics_api/Texture.hpp"
-#include "triglav/render_core/FrameResources.h"
+#include "triglav/render_core/FrameResources.hpp"
 
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 namespace triglav::renderer {
 

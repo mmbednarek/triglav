@@ -1,4 +1,4 @@
-#include "TypefaceLoader.h"
+#include "TypefaceLoader.hpp"
 
 namespace triglav::resource {
 

@@ -1,4 +1,4 @@
-#include "Path.h"
+#include "Path.hpp"
 
 #include <climits>
 #include <unistd.h>

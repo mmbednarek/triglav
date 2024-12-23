@@ -4,10 +4,10 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/graphics_api/Swapchain.hpp"
-#include "triglav/render_core/RenderGraph.h"
+#include "triglav/render_core/RenderGraph.hpp"
 #include "triglav/renderer/RectangleRenderer.hpp"
 #include "triglav/renderer/TextRenderer.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <memory>
 #include <set>

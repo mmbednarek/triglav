@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "triglav/io/BufferedReader.h"
+#include "triglav/io/BufferedReader.hpp"
 
 namespace triglav::geometry {
 

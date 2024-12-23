@@ -4,9 +4,9 @@
 #include <span>
 
 #include "triglav/graphics_api/Array.hpp"
-#include "triglav/io/Path.h"
+#include "triglav/io/Path.hpp"
 
-#include "Geometry.h"
+#include "Geometry.hpp"
 
 namespace triglav::geometry {
 

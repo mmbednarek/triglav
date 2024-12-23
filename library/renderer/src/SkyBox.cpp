@@ -1,7 +1,7 @@
 #include "SkyBox.hpp"
 
 #include "Renderer.hpp"
-#include "triglav/geometry/DebugMesh.h"
+#include "triglav/geometry/DebugMesh.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"
 
 #include <glm/ext/matrix_clip_space.hpp>

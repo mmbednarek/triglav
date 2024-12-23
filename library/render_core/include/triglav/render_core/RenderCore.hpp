@@ -3,7 +3,7 @@
 #include <glm/mat4x4.hpp>
 #include <stdexcept>
 
-#include "triglav/geometry/Geometry.h"
+#include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Array.hpp"
 
 namespace triglav::render_core {

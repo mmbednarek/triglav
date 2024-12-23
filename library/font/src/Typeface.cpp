@@ -1,4 +1,4 @@
-#include "Typeface.h"
+#include "Typeface.hpp"
 
 #include <cstring>
 #include <freetype/freetype.h>

@@ -1,4 +1,4 @@
-#include "NameRegistry.h"
+#include "NameRegistry.hpp"
 
 namespace triglav::resource {
 

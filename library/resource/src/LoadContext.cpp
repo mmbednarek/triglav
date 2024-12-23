@@ -1,6 +1,6 @@
-#include "LoadContext.h"
+#include "LoadContext.hpp"
 
-#include "triglav/io/File.h"
+#include "triglav/io/File.hpp"
 
 #include <ryml.hpp>
 

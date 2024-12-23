@@ -7,7 +7,7 @@
 #include "triglav/graphics_api/Buffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/graphics_api/RenderTarget.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 namespace triglav::renderer {
 

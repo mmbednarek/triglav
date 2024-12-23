@@ -5,7 +5,7 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/graphics_api/ReplicatedBuffer.hpp"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <glm/mat4x4.hpp>
 

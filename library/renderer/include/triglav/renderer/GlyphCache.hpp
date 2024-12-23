@@ -3,8 +3,8 @@
 #include "triglav/Int.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/Device.hpp"
-#include "triglav/render_core/GlyphAtlas.h"
-#include "triglav/resource/ResourceManager.h"
+#include "triglav/render_core/GlyphAtlas.hpp"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <map>
 

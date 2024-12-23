@@ -1,6 +1,6 @@
 #include "AmbientOcclusion.hpp"
 
-#include <triglav/render_core/FrameResources.h>
+#include "triglav/render_core/FrameResources.hpp"
 
 namespace triglav::renderer::node {
 
