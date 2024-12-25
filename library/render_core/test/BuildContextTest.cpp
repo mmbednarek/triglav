@@ -36,6 +36,33 @@ void execute_build_context(BuildContext& buildContext, const std::span<ResourceS
    fence.await();
 }
 
+[[nodiscard]] bool compare_stream_with_buffer(triglav::io::IReader& reader, const triglav::u8* buffData, const triglav::MemorySize buffSize)
+{
+   static constexpr triglav::MemorySize CHUNK_SIZE{1024};
+
+   std::array<triglav::u8, CHUNK_SIZE> chunk{};
+   triglav::MemorySize bufferOffset = 0;
+
+   while (true) {
+      const auto res = reader.read(chunk);
+      if (!res.has_value()) {
+         return false;
+      }
+
+      const auto cmpSize = std::min(buffSize - bufferOffset, *res);
+
+      if (std::memcmp(chunk.data(), buffData + bufferOffset, cmpSize) != 0) {
+         return false;
+      }
+
+      if (cmpSize != CHUNK_SIZE) {
+         return true;
+      }
+
+      bufferOffset += cmpSize;
+   }
+}
+
 }// namespace
 
 TEST(BuildContext, BasicCompute)
@@ -128,10 +155,5 @@ TEST(BuildContext, BasicGraphics)
       triglav::io::open_file(triglav::io::Path{"content/basic_graphics_expected_bitmap.dat"}, triglav::io::FileOpenMode::Read);
    ASSERT_TRUE(expectedBitmap.has_value());
 
-   static constexpr auto lineSize = sizeof(int) * 64;
-   std::array<triglav::u8, lineSize> line{};
-   for (const auto y : triglav::Range(0, 64)) {
-      ASSERT_TRUE((*expectedBitmap)->read(line).has_value());
-      ASSERT_TRUE(std::memcmp(line.data(), pixels + y * lineSize, lineSize) == 0);
-   }
+   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, 64 * 64 * sizeof(int)));
 }

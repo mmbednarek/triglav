@@ -37,37 +37,33 @@ BuildContext::BuildContext(graphics_api::Device& device, resource::ResourceManag
 {
 }
 
-void BuildContext::declare_texture(Name texName, Vector2i texDims, gapi::ColorFormat texFormat)
+void BuildContext::declare_texture(const Name texName, const Vector2i texDims, gapi::ColorFormat texFormat)
 {
-   m_declarations.emplace(texName, detail::Declaration{std::in_place_type_t<detail::decl::Texture>{}, texName, texDims, texFormat});
+   this->add_declaration<detail::decl::Texture>(texName, texDims, texFormat);
 }
 
-void BuildContext::declare_render_target(Name rtName, gapi::ColorFormat rtFormat)
+void BuildContext::declare_render_target(const Name rtName, gapi::ColorFormat rtFormat)
 {
-   gapi::ClearValue clearValue{.value = gapi::Color{0, 0, 0, 1}};
-   m_declarations.emplace(rtName, detail::Declaration{std::in_place_type_t<detail::decl::RenderTarget>{}, rtName, std::nullopt, rtFormat,
-                                                      clearValue, gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage,
-                                                      false, gapi::TextureUsage::ColorAttachment});
+   this->m_renderTargets.emplace(rtName, detail::RenderTarget{true, false, gapi::ClearValue::color(gapi::ColorPalette::Black),
+                                                              gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
+   this->add_declaration<detail::decl::Texture>(rtName, Vector2i{0, 0}, rtFormat, gapi::TextureUsage::ColorAttachment);
 }
 
-void BuildContext::declare_render_target_with_dims(Name rtName, Vector2i rtDims, gapi::ColorFormat rtFormat)
+void BuildContext::declare_render_target_with_dims(const Name rtName, const Vector2i rtDims, gapi::ColorFormat rtFormat)
 {
-   gapi::ClearValue clearValue{.value = gapi::Color{0, 0, 0, 1}};
-   m_declarations.emplace(rtName, detail::Declaration{std::in_place_type_t<detail::decl::RenderTarget>{}, rtName, rtDims, rtFormat,
-                                                      clearValue, gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage,
-                                                      false, gapi::TextureUsage::ColorAttachment});
+   this->m_renderTargets.emplace(rtName, detail::RenderTarget{false, false, gapi::ClearValue::color(gapi::ColorPalette::Black),
+                                                              gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
+   this->add_declaration<detail::decl::Texture>(rtName, rtDims, rtFormat, gapi::TextureUsage::ColorAttachment);
 }
 
-void BuildContext::declare_buffer(Name buffName, MemorySize size)
+void BuildContext::declare_buffer(const Name buffName, const MemorySize size)
 {
-   m_declarations.emplace(buffName,
-                          detail::Declaration{std::in_place_type_t<detail::decl::Buffer>{}, buffName, size, gapi::BufferUsage::None});
+   this->add_declaration<detail::decl::Buffer>(buffName, size, gapi::BufferUsage::None);
 }
 
-void BuildContext::declare_staging_buffer(Name buffName, MemorySize size)
+void BuildContext::declare_staging_buffer(const Name buffName, const MemorySize size)
 {
-   m_declarations.emplace(
-      buffName, detail::Declaration{std::in_place_type_t<detail::decl::Buffer>{}, buffName, size, gapi::BufferUsage::HostVisible});
+   this->add_declaration<detail::decl::Buffer>(buffName, size, gapi::BufferUsage::HostVisible);
 }
 
 void BuildContext::bind_vertex_shader(VertexShaderName vsName)
@@ -139,15 +135,16 @@ void BuildContext::bind_vertex_buffer(const Name buffName)
 void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Name> renderTargets)
 {
    for (const auto rtName : renderTargets) {
-      const auto& renderTarget = this->declaration<detail::decl::RenderTarget>(rtName);
+      const auto& rtTexture = this->declaration<detail::decl::Texture>(rtName);
+      const auto& renderTarget = m_renderTargets.at(rtName);
 
       const auto targetState = renderTarget.isDepthTarget ? gapi::TextureState::DepthTarget : gapi::TextureState::RenderTarget;
       this->setup_transition(rtName, targetState, gapi::PipelineStage::AttachmentOutput);
 
       if (renderTarget.isDepthTarget) {
-         m_graphicPipelineState.depthTargetFormat = renderTarget.rtFormat;
+         m_graphicPipelineState.depthTargetFormat = rtTexture.texFormat;
       } else {
-         m_graphicPipelineState.renderTargetFormats.emplace_back(renderTarget.rtFormat);
+         m_graphicPipelineState.renderTargetFormats.emplace_back(rtTexture.texFormat);
       }
    }
 
@@ -204,11 +201,7 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
 
 void BuildContext::add_texture_flag(const Name texName, const graphics_api::TextureUsage flag)
 {
-   if (this->is_render_target(texName)) {
-      this->declaration<detail::decl::RenderTarget>(texName).texUsageFlags |= flag;
-   } else {
-      this->declaration<detail::decl::Texture>(texName).texUsageFlags |= flag;
-   }
+   this->declaration<detail::decl::Texture>(texName).texUsageFlags |= flag;
 }
 
 void BuildContext::add_buffer_flag(const Name buffName, const graphics_api::BufferUsage flag)
@@ -231,21 +224,13 @@ bool BuildContext::is_buffer_in_transfer_state(const Name buffName) const
 void BuildContext::setup_transition(const Name texName, const graphics_api::TextureState targetState,
                                     graphics_api::PipelineStage targetStage)
 {
-   auto [lastUsedStage, currentState] = [this, texName] {
-      if (this->is_render_target(texName)) {
-         auto& rt = this->declaration<detail::decl::RenderTarget>(texName);
-         return std::pair<graphics_api::PipelineStage&, graphics_api::TextureState&>{rt.lastUsedStage, rt.currentState};
-      } else {
-         auto& tex = this->declaration<detail::decl::Texture>(texName);
-         return std::pair<graphics_api::PipelineStage&, graphics_api::TextureState&>{tex.lastUsedStage, tex.currentState};
-      }
-   }();
+   auto& tex = this->declaration<detail::decl::Texture>(texName);
 
-   m_commands.emplace_back(std::in_place_type_t<detail::cmd::TextureTransition>{}, texName, lastUsedStage, currentState, targetStage,
-                           targetState);
+   m_commands.emplace_back(std::in_place_type_t<detail::cmd::TextureTransition>{}, texName, tex.lastUsedStage, tex.currentState,
+                           targetStage, targetState);
 
-   lastUsedStage = targetStage;
-   currentState = targetState;
+   tex.lastUsedStage = targetStage;
+   tex.currentState = targetState;
 }
 
 void BuildContext::setup_buffer_barrier(const Name buffName, const graphics_api::PipelineStage targetStage)
@@ -264,21 +249,20 @@ void BuildContext::setup_buffer_barrier(const Name buffName, const graphics_api:
 gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass) const
 {
    gapi::RenderingInfo info{};
-
    gapi::Resolution resolution{};
 
    for (const auto rtName : beginRenderPass.renderTargets) {
-      const auto& decl = this->declaration<detail::decl::RenderTarget>(rtName);
+      const auto& renderTarget = m_renderTargets.at(rtName);
 
       gapi::RenderAttachment attachment{};
       attachment.texture = &storage.texture(rtName);
-      attachment.state = decl.isDepthTarget ? gapi::TextureState::DepthTarget : gapi::TextureState::RenderTarget;
-      attachment.clearValue = decl.clearValue;
-      attachment.flags = decl.flags;
+      attachment.state = renderTarget.isDepthTarget ? gapi::TextureState::DepthTarget : gapi::TextureState::RenderTarget;
+      attachment.clearValue = renderTarget.clearValue;
+      attachment.flags = renderTarget.flags;
 
       resolution = attachment.texture->resolution();
 
-      if (decl.isDepthTarget) {
+      if (renderTarget.isDepthTarget) {
          info.depthAttachment = attachment;
       } else {
          info.colorAttachments.emplace_back(attachment);
@@ -290,16 +274,6 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
    info.renderAreaExtent = {resolution.width, resolution.height};
 
    return info;
-}
-
-bool BuildContext::is_depth_target(const Name rtName) const
-{
-   return this->declaration<detail::decl::RenderTarget>(rtName).isDepthTarget;
-}
-
-bool BuildContext::is_render_target(const Name texName) const
-{
-   return std::holds_alternative<detail::decl::RenderTarget>(this->m_declarations.at(texName));
 }
 
 void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset)
@@ -442,11 +416,6 @@ void BuildContext::create_resources(ResourceStorage& storage)
                auto texture = GAPI_CHECK(m_device.create_texture(decl.texFormat, {decl.texDims.x, decl.texDims.y}, decl.texUsageFlags));
                TG_SET_DEBUG_NAME(texture, resolve_name(decl.texName));
                storage.register_texture(decl.texName, std::move(texture));
-            } else if constexpr (std::is_same_v<TDecl, detail::decl::RenderTarget>) {
-               assert(decl.rtDims.has_value());
-               auto texture = GAPI_CHECK(m_device.create_texture(decl.rtFormat, {decl.rtDims->x, decl.rtDims->y}, decl.texUsageFlags));
-               TG_SET_DEBUG_NAME(texture, resolve_name(decl.rtName));
-               storage.register_texture(decl.rtName, std::move(texture));
             } else if constexpr (std::is_same_v<TDecl, detail::decl::Buffer>) {
                auto buffer = GAPI_CHECK(m_device.create_buffer(decl.buffUsageFlags, decl.buffSize));
                TG_SET_DEBUG_NAME(buffer, resolve_name(decl.buffName));

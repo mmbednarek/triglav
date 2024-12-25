@@ -45,6 +45,14 @@ struct CombinedTexSampler
 
 using Descriptor = std::variant<descriptor::RWTexture, descriptor::CombinedTexSampler, descriptor::UniformBuffer>;
 
+struct RenderTarget
+{
+   bool isScreenSize{true};
+   bool isDepthTarget{false};
+   graphics_api::ClearValue clearValue{};
+   graphics_api::AttachmentAttributeFlags flags;
+};
+
 namespace decl {
 
 struct Texture
@@ -52,19 +60,6 @@ struct Texture
    Name texName{};
    Vector2i texDims{};
    graphics_api::ColorFormat texFormat{};
-   graphics_api::TextureUsageFlags texUsageFlags{};
-   graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
-   graphics_api::PipelineStage lastUsedStage{graphics_api::PipelineStage::Entrypoint};
-};
-
-struct RenderTarget
-{
-   Name rtName{};
-   std::optional<Vector2i> rtDims;
-   graphics_api::ColorFormat rtFormat{};
-   graphics_api::ClearValue clearValue{};
-   graphics_api::AttachmentAttributeFlags flags;
-   bool isDepthTarget{false};
    graphics_api::TextureUsageFlags texUsageFlags{};
    graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
    graphics_api::PipelineStage lastUsedStage{graphics_api::PipelineStage::Entrypoint};
@@ -81,7 +76,7 @@ struct Buffer
 
 }// namespace decl
 
-using Declaration = std::variant<decl::Texture, decl::RenderTarget, decl::Buffer>;
+using Declaration = std::variant<decl::Texture, decl::Buffer>;
 
 namespace cmd {
 
@@ -247,7 +242,6 @@ class BuildContext
    void setup_transition(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage);
    void setup_buffer_barrier(Name buffName, graphics_api::PipelineStage targetStage);
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass) const;
-   [[nodiscard]] bool is_depth_target(Name rtName) const;
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, TArgs&&... args)
@@ -265,6 +259,12 @@ class BuildContext
       m_commands.emplace_back(std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...);
    }
 
+   template<typename TDecl, typename... TArgs>
+   void add_declaration(Name declName, TArgs&&... args)
+   {
+      m_declarations.emplace(declName, detail::Declaration{std::in_place_type_t<TDecl>{}, declName, std::forward<TArgs>(args)...});
+   }
+
    template<typename TDecl>
    const TDecl& declaration(const Name name) const
    {
@@ -277,11 +277,10 @@ class BuildContext
       return std::get<TDecl>(m_declarations.at(name));
    }
 
-   [[nodiscard]] bool is_render_target(Name texName) const;
-
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
 
+   std::map<Name, detail::RenderTarget> m_renderTargets;
    std::map<Name, detail::Declaration> m_declarations;
    std::vector<detail::Command> m_commands;
 
