@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.h>
 
 #include "GraphicsApi.hpp"
+#include "Texture.hpp"
 
 namespace triglav::graphics_api::vulkan {
 Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
@@ -278,6 +279,8 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
    switch (stage) {
    case PipelineStage::Entrypoint:
       return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   case PipelineStage::VertexInput:
+      return VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
    case PipelineStage::VertexShader:
       return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
    case PipelineStage::FragmentShader:
@@ -303,6 +306,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    VkPipelineStageFlags result{};
    if (flags & PipelineStage::Entrypoint) {
       result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   }
+   if (flags & PipelineStage::VertexInput) {
+      result |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
    }
    if (flags & PipelineStage::VertexShader) {
       result |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
@@ -331,7 +337,7 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    return result;
 }
 
-VkDescriptorType to_vulkan_descriptor_type(DescriptorType descriptorType)
+VkDescriptorType to_vulkan_descriptor_type(const DescriptorType descriptorType)
 {
    switch (descriptorType) {
    case DescriptorType::UniformBuffer:
@@ -371,6 +377,10 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
       [[fallthrough]];
    case TextureState::GeneralWrite:
       return VK_IMAGE_LAYOUT_GENERAL;
+   case TextureState::RenderTarget:
+      return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+   case TextureState::DepthTarget:
+      return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
@@ -583,6 +593,40 @@ VkPresentModeKHR to_vulkan_present_mode(const PresentMode presentMode)
    }
 
    return VK_PRESENT_MODE_MAX_ENUM_KHR;
+}
+
+VkClearValue to_vulkan_clear_value(const ClearValue& clearValue)
+{
+   VkClearValue result;
+
+   std::visit(
+      [&result]<typename TClearValue>(const TClearValue& value) {
+         if constexpr (std::is_same_v<TClearValue, Color>) {
+            result.color.float32[0] = value.r;
+            result.color.float32[1] = value.g;
+            result.color.float32[2] = value.b;
+            result.color.float32[3] = value.a;
+         } else if constexpr (std::is_same_v<TClearValue, DepthStenctilValue>) {
+            result.depthStencil.depth = value.depthValue;
+            result.depthStencil.stencil = value.stencilValue;
+         }
+      },
+      clearValue.value);
+
+   return result;
+}
+
+VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttachment& attachment)
+{
+   VkRenderingAttachmentInfo result{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
+   result.imageView = attachment.texture->vulkan_image_view();
+   result.imageLayout = to_vulkan_image_layout(attachment.state);
+   result.resolveMode = VK_RESOLVE_MODE_NONE;
+   result.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+   result.resolveImageView = VK_NULL_HANDLE;
+   std::tie(result.loadOp, result.storeOp) = to_vulkan_load_store_ops(attachment.flags);
+   result.clearValue = to_vulkan_clear_value(attachment.clearValue);
+   return result;
 }
 
 VkAccelerationStructureTypeKHR to_vulkan_acceleration_structure_type(ray_tracing::AccelerationStructureType type)

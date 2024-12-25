@@ -173,6 +173,29 @@ Result<CommandList> Device::create_command_list(const WorkTypeFlags flags) const
    return m_queueManager.create_command_list(flags);
 }
 
+Result<DescriptorPool> Device::create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptorCounts,
+                                                      const u32 maxDescriptorCount)
+{
+   std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
+   descriptorPoolSizes.reserve(descriptorCounts.size());
+   for (const auto& [descType, count] : descriptorCounts) {
+      descriptorPoolSizes.emplace_back(vulkan::to_vulkan_descriptor_type(descType), count);
+   }
+
+   VkDescriptorPoolCreateInfo descriptorPoolInfo{};
+   descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+   descriptorPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+   descriptorPoolInfo.poolSizeCount = descriptorPoolSizes.size();
+   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
+   descriptorPoolInfo.maxSets = maxDescriptorCount;
+
+   vulkan::DescriptorPool descriptorPool{*m_device};
+   if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
+      return std::unexpected(Status::UnsupportedDevice);
+
+   return DescriptorPool(std::move(descriptorPool));
+}
+
 Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_t size)
 {
    assert(size != 0);

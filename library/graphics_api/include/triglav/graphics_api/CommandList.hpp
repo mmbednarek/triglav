@@ -48,7 +48,7 @@ class CommandList
    void begin_render_pass(const Framebuffer& framebuffer, std::span<ClearValue> clearValues) const;
    void end_render_pass() const;
    void bind_pipeline(const Pipeline& pipeline);
-   void bind_descriptor_set(const DescriptorView& descriptorSet) const;
+   void bind_descriptor_set(PipelineType pipelineType, const DescriptorView& descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset);
    void draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance);
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset);
@@ -75,6 +75,9 @@ class CommandList
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
    void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void update_buffer(const Buffer& buffer, u32 offset, u32 size, const void* data) const;
+
+   void begin_rendering(const RenderingInfo& info) const;
+   void end_rendering() const;
 
    void bind_raw_uniform_buffer(u32 binding, const Buffer& buffer);
    void bind_storage_buffer(u32 binding, const Buffer& buffer);

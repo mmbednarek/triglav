@@ -3,6 +3,7 @@
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
+#include "triglav/render_core/RenderCore.hpp"
 
 using namespace triglav::name_literals;
 using triglav::ResourceType;
@@ -10,6 +11,15 @@ using triglav::render_core::checkResult;
 using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
+
+namespace {
+
+constexpr std::array<std::pair<graphics_api::DescriptorType, u32>, 2> DESCRIPTOR_COUNTS{
+   std::pair{graphics_api::DescriptorType::UniformBuffer, 60},
+   std::pair{graphics_api::DescriptorType::ImageSampler, 60},
+};
+
+}
 
 DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
                                        ResourceManager& resourceManager) :
@@ -24,7 +34,7 @@ DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device& device, graphics_ap
                               .vertex_topology(graphics_api::VertexTopology::LineList)
                               .rasterization_method(graphics_api::RasterizationMethod::Line)
                               .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(60, 3, 60)))
+    m_descriptorPool(checkResult(m_device.create_descriptor_pool(DESCRIPTOR_COUNTS, 60)))
 {
 }
 
@@ -35,7 +45,9 @@ DebugLines DebugLinesRenderer::create_line_list(const std::span<glm::vec3> list)
 
    graphics_api::UniformBuffer<glm::mat4> ubo{m_device};
 
-   auto descriptors = checkResult(m_descriptorPool.allocate_array(1));
+   graphics_api::DescriptorLayoutArray layouts;
+   layouts.add_from_pipeline(m_pipeline);
+   auto descriptors = checkResult(m_descriptorPool.allocate_array(layouts));
 
    graphics_api::DescriptorWriter writer(m_device, descriptors[0]);
    writer.set_uniform_buffer(0, ubo);
@@ -95,7 +107,7 @@ void DebugLinesRenderer::draw(graphics_api::CommandList& cmdList, const DebugLin
 {
    *list.ubo = camera.view_projection_matrix() * list.model;
 
-   cmdList.bind_descriptor_set(list.descriptors[0]);
+   cmdList.bind_descriptor_set(graphics_api::PipelineType::Graphics, list.descriptors[0]);
    cmdList.bind_vertex_array(list.array);
    cmdList.draw_primitives(static_cast<int>(list.array.count()), 0);
 }

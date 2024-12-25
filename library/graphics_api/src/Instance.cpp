@@ -221,13 +221,17 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    deviceFeatures.features.samplerAnisotropy = true;
    deviceFeatures.features.shaderInt64 = true;
 
+   VkPhysicalDeviceVulkan13Features vulkan13Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
+   vulkan13Features.dynamicRendering = true;
+   deviceFeatures.pNext = &vulkan13Features;
+
    VkPhysicalDeviceVulkan12Features vulkan12Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES};
    vulkan12Features.hostQueryReset = true;
    vulkan12Features.scalarBlockLayout = true;
    vulkan12Features.bufferDeviceAddress = true;
    vulkan12Features.drawIndirectCount = true;
    vulkan12Features.runtimeDescriptorArray = true;
-   deviceFeatures.pNext = &vulkan12Features;
+   vulkan13Features.pNext = &vulkan12Features;
 
    VkPhysicalDeviceVulkan11Features vulkan11Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
    vulkan11Features.variablePointers = true;

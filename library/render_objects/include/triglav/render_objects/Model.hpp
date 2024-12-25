@@ -8,10 +8,9 @@
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 
 #include "Material.hpp"
-#include "RenderCore.hpp"
+#include "RenderObjects.hpp"
 
-
-namespace triglav::render_core {
+namespace triglav::render_objects {
 
 struct MaterialRange
 {
@@ -49,4 +48,4 @@ struct Sprite
    graphics_api::UniformBuffer<SpriteUBO> ubo;
 };
 
-}// namespace triglav::render_core
+}// namespace triglav::render_objects

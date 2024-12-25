@@ -19,6 +19,9 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
    case FileOpenMode::ReadWrite:
       flags = O_RDWR;
       break;
+   case FileOpenMode::Create:
+      flags = O_WRONLY | O_CREAT;
+      break;
    }
 
    const auto res = ::open(path.string().c_str(), flags, 0644);

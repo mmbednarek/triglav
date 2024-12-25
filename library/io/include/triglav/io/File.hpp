@@ -21,6 +21,7 @@ enum class FileOpenMode
 {
    Read,
    Write,
+   Create,
    ReadWrite,
 };
 

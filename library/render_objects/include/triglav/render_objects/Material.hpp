@@ -8,7 +8,7 @@
 #include <variant>
 #include <vector>
 
-namespace triglav::render_core {
+namespace triglav::render_objects {
 
 enum class MaterialPropertyType
 {
@@ -50,4 +50,4 @@ struct Material
    std::vector<MaterialPropertyValue> values{};
 };
 
-}// namespace triglav::render_core
+}// namespace triglav::render_objects

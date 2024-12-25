@@ -3,9 +3,10 @@
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
-#include "triglav/graphics_api/Texture.hpp"
-#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_objects/RenderObjects.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+
+#include <glm/mat4x4.hpp>
 
 namespace triglav::renderer {
 
@@ -28,7 +29,7 @@ class SkyBox
  private:
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
-   render_core::GpuMesh m_mesh;
+   render_objects::GpuMesh m_mesh;
    graphics_api::Pipeline m_pipeline;
    graphics_api::Texture& m_texture;
 };

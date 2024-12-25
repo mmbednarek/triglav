@@ -7,8 +7,8 @@
 
 namespace triglav::resource {
 
-render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& device, ModelName /*name*/, const io::Path& path,
-                                                         const ResourceProperties& props)
+render_objects::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& device, ModelName /*name*/, const io::Path& path,
+                                                            const ResourceProperties& props)
 {
    const auto objMesh = geometry::Mesh::from_file(path);
    objMesh.triangulate();
@@ -21,14 +21,14 @@ render_core::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& d
 
    auto deviceMesh = objMesh.upload_to_device(device, additionalUsageFlags);
 
-   std::vector<render_core::MaterialRange> ranges{};
+   std::vector<render_objects::MaterialRange> ranges{};
    ranges.reserve(deviceMesh.ranges.size());
    std::ranges::transform(deviceMesh.ranges, std::back_inserter(ranges), [](const geometry::MaterialRange& range) {
-      return render_core::MaterialRange{range.offset, range.size,
-                                        make_rc_name(std::format("{}.mat", range.materialName)).operator MaterialName()};
+      return render_objects::MaterialRange{range.offset, range.size,
+                                           make_rc_name(std::format("{}.mat", range.materialName)).operator MaterialName()};
    });
 
-   return render_core::Model{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};
+   return render_objects::Model{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};
 }
 
 }// namespace triglav::resource

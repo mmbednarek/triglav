@@ -226,7 +226,7 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
    return emplacedIt->second;
 }
 
-u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, const render_core::Material& material)
+u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, const render_objects::Material& material)
 {
    if (material.materialTemplate == "pbr/simple.mt"_rc) {
       BindlessMaterialProps_AlbedoTex albedoTex;

@@ -23,37 +23,14 @@ const vulkan::PipelineLayout& Pipeline::layout() const
    return m_layout;
 }
 
-Result<DescriptorPool> Pipeline::create_descriptor_pool(const uint32_t uniformBufferCount, const uint32_t sampledImageCount,
-                                                        const uint32_t maxDescriptorCount)
-{
-   const std::array descriptorPoolSizes{
-      VkDescriptorPoolSize{
-         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-         .descriptorCount = uniformBufferCount,
-      },
-      VkDescriptorPoolSize{
-         .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-         .descriptorCount = sampledImageCount,
-      },
-   };
-
-   VkDescriptorPoolCreateInfo descriptorPoolInfo{};
-   descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-   descriptorPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-   descriptorPoolInfo.poolSizeCount = descriptorPoolSizes.size();
-   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets = maxDescriptorCount;
-
-   vulkan::DescriptorPool descriptorPool{m_pipeline.parent()};
-   if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
-      return std::unexpected(Status::UnsupportedDevice);
-
-   return DescriptorPool(std::move(descriptorPool), *m_descriptorSetLayout);
-}
-
 PipelineType Pipeline::pipeline_type() const
 {
    return m_pipelineType;
+}
+
+VkDescriptorSetLayout Pipeline::vulkan_descriptor_set_layout() const
+{
+   return *m_descriptorSetLayout;
 }
 
 }// namespace triglav::graphics_api

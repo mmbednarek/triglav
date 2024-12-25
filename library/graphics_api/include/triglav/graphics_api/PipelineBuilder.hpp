@@ -16,11 +16,11 @@ class PipelineBuilderBase
  public:
    explicit PipelineBuilderBase(Device& device);
 
- protected:
    Index add_shader(const Shader& shader);
    void add_descriptor_binding(DescriptorType descriptorType, PipelineStageFlags shaderStages, u32 descriptorCount);
    void add_push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset = 0);
 
+ protected:
    [[nodiscard]] Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> build_pipeline_layout() const;
 
    Device& m_device;
@@ -47,6 +47,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
 {
  public:
    GraphicsPipelineBuilder(Device& device, RenderTarget& renderPass);
+   explicit GraphicsPipelineBuilder(Device& device);
 
    GraphicsPipelineBuilder& fragment_shader(const Shader& shader);
    GraphicsPipelineBuilder& vertex_shader(const Shader& shader);
@@ -62,22 +63,20 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& vertex_topology(VertexTopology topology);
    GraphicsPipelineBuilder& rasterization_method(RasterizationMethod method);
    GraphicsPipelineBuilder& culling(Culling cull);
+   GraphicsPipelineBuilder& begin_vertex_layout_raw(u32 strideSize);
+   GraphicsPipelineBuilder& color_attachment(ColorFormat format);
+   GraphicsPipelineBuilder& depth_attachment(ColorFormat format);
 
    [[nodiscard]] Result<Pipeline> build() const;
 
    template<typename TVertex>
    GraphicsPipelineBuilder& begin_vertex_layout()
    {
-      VkVertexInputBindingDescription binding{};
-      binding.binding = m_vertexBinding;
-      binding.stride = sizeof(TVertex);
-      binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-      m_bindings.emplace_back(binding);
-      return *this;
+      return this->begin_vertex_layout_raw(sizeof(TVertex));
    }
 
  private:
-   RenderTarget& m_renderTarget;
+   RenderTarget* m_renderTarget{};
 
    uint32_t m_vertexLocation{0};
    uint32_t m_vertexBinding{0};
@@ -87,6 +86,8 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    VkCullModeFlags m_cullMode = VK_CULL_MODE_FRONT_BIT;
    DepthTestMode m_depthTestMode{DepthTestMode::Disabled};
    bool m_blendingEnabled{true};
+   std::vector<ColorFormat> m_colorAttachmentFormats;
+   std::optional<ColorFormat> m_depthAttachmentFormat;
 
    std::vector<VkVertexInputBindingDescription> m_bindings{};
    std::vector<VkVertexInputAttributeDescription> m_attributes{};

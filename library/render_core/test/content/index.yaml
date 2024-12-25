@@ -1,0 +1,9 @@
+# Resource to be loaded for tests
+version: 1
+resources:
+  - name: "testing/basic_compute.cshader"
+    source: "basic_compute.spv"
+  - name: "testing/basic_graphics.vshader"
+    source: "basic_graphics_vs.spv"
+  - name: "testing/basic_graphics.fshader"
+    source: "basic_graphics_fs.spv"

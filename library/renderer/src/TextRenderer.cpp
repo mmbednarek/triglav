@@ -49,7 +49,7 @@ void TextRenderer::bind_pipeline(graphics_api::CommandList& cmdList)
 
 TextObject TextRenderer::create_text_object(TypefaceName typefaceName, int fontSize, std::string_view content)
 {
-   graphics_api::UniformBuffer<render_core::SpriteUBO> ubo(m_device);
+   graphics_api::UniformBuffer<render_objects::SpriteUBO> ubo(m_device);
 
    GlyphProperties glyphProperties{
       .typeface = typefaceName,

@@ -33,14 +33,14 @@ class ShadowMapResources : public render_core::NodeFrameResources
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(object.model);
 
-      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo1(m_device);
-      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo2(m_device);
-      graphics_api::UniformBuffer<render_core::ShadowMapUBO> shadowMapUbo3(m_device);
+      graphics_api::UniformBuffer<render_objects::ShadowMapUBO> shadowMapUbo1(m_device);
+      graphics_api::UniformBuffer<render_objects::ShadowMapUBO> shadowMapUbo2(m_device);
+      graphics_api::UniformBuffer<render_objects::ShadowMapUBO> shadowMapUbo3(m_device);
       m_models.emplace_back(
-         render_core::ModelShaderMapProperties{object.model,
-                                               model.boundingBox,
-                                               object.model_matrix(),
-                                               {std::move(shadowMapUbo1), std::move(shadowMapUbo2), std::move(shadowMapUbo3)}});
+         render_objects::ModelShaderMapProperties{object.model,
+                                                  model.boundingBox,
+                                                  object.model_matrix(),
+                                                  {std::move(shadowMapUbo1), std::move(shadowMapUbo2), std::move(shadowMapUbo3)}});
    }
 
    void on_viewport_change(const graphics_api::Resolution& /*resolution*/)
@@ -61,7 +61,7 @@ class ShadowMapResources : public render_core::NodeFrameResources
       }
    }
 
-   void draw_model(graphics_api::CommandList& cmdList, const u32 smIndex, const render_core::ModelShaderMapProperties& instancedModel)
+   void draw_model(graphics_api::CommandList& cmdList, const u32 smIndex, const render_objects::ModelShaderMapProperties& instancedModel)
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
 
@@ -94,7 +94,7 @@ class ShadowMapResources : public render_core::NodeFrameResources
    resource::ResourceManager& m_resourceManager;
    graphics_api::Pipeline& m_pipeline;
    Scene& m_scene;
-   std::vector<render_core::ModelShaderMapProperties> m_models;
+   std::vector<render_objects::ModelShaderMapProperties> m_models;
 
    TG_SINK(Scene, OnObjectAddedToScene);
    TG_SINK(Scene, OnViewportChange);

@@ -11,6 +11,15 @@ using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
 
+namespace {
+
+constexpr std::array<std::pair<graphics_api::DescriptorType, u32>, 2> DESCRIPTOR_COUNTS{
+   std::pair{graphics_api::DescriptorType::UniformBuffer, 20},
+   std::pair{graphics_api::DescriptorType::ImageSampler, 20},
+};
+
+}
+
 RectangleRenderer::RectangleRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
                                      ResourceManager& resourceManager) :
     m_device(device),
@@ -25,7 +34,7 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device& device, graphics_api:
                               .enable_depth_test(false)
                               .enable_blending(true)
                               .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(20, 1, 20)))
+    m_descriptorPool(checkResult(m_device.create_descriptor_pool(DESCRIPTOR_COUNTS, 20)))
 {
 }
 
@@ -46,7 +55,9 @@ Rectangle RectangleRenderer::create_rectangle(const glm::vec4 rect, glm::vec4 ba
       .backgroundColor = backgroundColor,
    };
 
-   auto descriptors = checkResult(m_descriptorPool.allocate_array(1));
+   graphics_api::DescriptorLayoutArray layouts;
+   layouts.add_from_pipeline(m_pipeline);
+   auto descriptors = checkResult(m_descriptorPool.allocate_array(layouts));
 
    graphics_api::DescriptorWriter writer(m_device, descriptors[0]);
    writer.set_uniform_buffer(0, vertexUbo);
@@ -80,7 +91,7 @@ void RectangleRenderer::draw(graphics_api::CommandList& cmdList, const Rectangle
    rect.vertexUBO->position = {rect.rect.x, rect.rect.y};
    rect.fragmentUBO->rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
 
-   cmdList.bind_descriptor_set(rect.descriptors[0]);
+   cmdList.bind_descriptor_set(graphics_api::PipelineType::Graphics, rect.descriptors[0]);
    cmdList.bind_vertex_array(rect.array);
    cmdList.draw_primitives(static_cast<int>(rect.array.count()), 0);
 }

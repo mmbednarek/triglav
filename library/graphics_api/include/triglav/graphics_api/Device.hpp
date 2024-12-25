@@ -16,8 +16,6 @@
 #include "vulkan/ObjectWrapper.hpp"
 
 #include <memory>
-#include <numeric>
-#include <optional>
 #include <span>
 #include <vector>
 
@@ -58,6 +56,8 @@ class Device
                                                     Swapchain* oldSwapchain = nullptr);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint, std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
+   [[nodiscard]] Result<DescriptorPool> create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptorCounts,
+                                                               u32 maxDescriptorCount);
    [[nodiscard]] Result<Buffer> create_buffer(BufferUsageFlags usage, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;

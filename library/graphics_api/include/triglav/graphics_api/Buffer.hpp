@@ -57,6 +57,8 @@ class Buffer
    [[nodiscard]] VkBuffer vulkan_buffer() const;
    [[nodiscard]] VkDeviceAddress vulkan_device_address() const;
 
+   void set_debug_name(std::string_view name);
+
    Result<MappedMemory> map_memory();
 
  private:

@@ -5,8 +5,8 @@
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/io/BufferWriter.hpp"
 #include "triglav/io/Serializer.hpp"
-#include "triglav/render_core/Material.hpp"
-#include "triglav/render_core/Model.hpp"
+#include "triglav/render_objects/Material.hpp"
+#include "triglav/render_objects/Model.hpp"
 
 namespace triglav::renderer {
 
@@ -19,15 +19,15 @@ MaterialManager::MaterialManager(graphics_api::Device& device, resource::Resourc
     m_renderTarget(renderTarget)
 {
    m_resourceManager.iterate_resources<ResourceType::MaterialTemplate>(
-      [this](MaterialTemplateName name, const render_core::MaterialTemplate& material) {
+      [this](MaterialTemplateName name, const render_objects::MaterialTemplate& material) {
          this->process_material_template(name, material);
       });
 
    m_resourceManager.iterate_resources<ResourceType::Material>(
-      [this](MaterialName name, const render_core::Material& material) { this->process_material(name, material); });
+      [this](MaterialName name, const render_objects::Material& material) { this->process_material(name, material); });
 }
 
-void MaterialManager::process_material(const MaterialName name, const render_core::Material& material)
+void MaterialManager::process_material(const MaterialName name, const render_objects::Material& material)
 {
    std::array<u8, 1024> buffer{};
    io::BufferWriter writer(buffer);
@@ -58,13 +58,13 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
    u32 worldDataUboSize = 0;
    auto& matTem = m_resourceManager.get(material.materialTemplate);
    for (const auto& prop : matTem.properties) {
-      if (prop.source == render_core::PropertySource::Constant)
+      if (prop.source == render_objects::PropertySource::Constant)
          continue;
 
       switch (prop.type) {
-      case render_core::MaterialPropertyType::Float32:
+      case render_objects::MaterialPropertyType::Float32:
          worldDataUboSize += sizeof(float);
-      case render_core::MaterialPropertyType::Vector3: {
+      case render_objects::MaterialPropertyType::Vector3: {
          const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {
             auto padding = 4 * sizeof(float) - mod;
@@ -73,7 +73,7 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
          worldDataUboSize += 3 * sizeof(float);
          break;
       }
-      case render_core::MaterialPropertyType::Vector4: {
+      case render_objects::MaterialPropertyType::Vector4: {
          const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {
             auto padding = 4 * sizeof(float) - mod;
@@ -82,7 +82,7 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
          worldDataUboSize += 4 * sizeof(glm::vec4);
          break;
       }
-      case render_core::MaterialPropertyType::Matrix4x4: {
+      case render_objects::MaterialPropertyType::Matrix4x4: {
          const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {
             auto padding = 4 * sizeof(float) - mod;
@@ -107,7 +107,7 @@ void MaterialManager::process_material(const MaterialName name, const render_cor
                              });
 }
 
-void MaterialManager::process_material_template(const MaterialTemplateName name, const render_core::MaterialTemplate& materialTemplate)
+void MaterialManager::process_material_template(const MaterialTemplateName name, const render_objects::MaterialTemplate& materialTemplate)
 {
    auto builder = graphics_api::GraphicsPipelineBuilder(m_device, m_renderTarget)
                      .fragment_shader(m_resourceManager.get(materialTemplate.fragmentShader))
@@ -130,17 +130,17 @@ void MaterialManager::process_material_template(const MaterialTemplateName name,
    bool hasWorldDataUbo = false;
    for (const auto& property : materialTemplate.properties) {
       switch (property.type) {
-      case render_core::MaterialPropertyType::Texture2D:
+      case render_objects::MaterialPropertyType::Texture2D:
          builder.descriptor_binding(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader);
          break;
-      case render_core::MaterialPropertyType::Float32:
+      case render_objects::MaterialPropertyType::Float32:
          [[fallthrough]];
-      case render_core::MaterialPropertyType::Vector3:
+      case render_objects::MaterialPropertyType::Vector3:
          [[fallthrough]];
-      case render_core::MaterialPropertyType::Vector4:
+      case render_objects::MaterialPropertyType::Vector4:
          [[fallthrough]];
-      case render_core::MaterialPropertyType::Matrix4x4:
-         if (property.source == render_core::PropertySource::Constant) {
+      case render_objects::MaterialPropertyType::Matrix4x4:
+         if (property.source == render_objects::PropertySource::Constant) {
             hasConstantsUbo = true;
          } else {
             hasWorldDataUbo = true;

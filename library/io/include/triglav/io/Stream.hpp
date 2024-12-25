@@ -5,7 +5,6 @@
 #include "triglav/Int.hpp"
 
 #include <span>
-#include <string_view>
 
 namespace triglav::io {
 

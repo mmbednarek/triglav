@@ -6,6 +6,8 @@
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
+#include <glm/vec4.hpp>
+
 namespace triglav::renderer {
 
 struct Rectangle
@@ -33,8 +35,7 @@ struct Rectangle
 class RectangleRenderer
 {
  public:
-   RectangleRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget,
-                     triglav::resource::ResourceManager& resourceManager);
+   RectangleRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
 
    [[nodiscard]] Rectangle create_rectangle(glm::vec4 rect, glm::vec4 backgroundColor);
    void update_rectangle(Rectangle& rectangle, glm::vec4 rectCoords, glm::vec4 backgroundColor);

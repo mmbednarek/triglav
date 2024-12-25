@@ -33,8 +33,8 @@ class MaterialManager
    [[nodiscard]] const MaterialTemplateResources& material_template_resources(MaterialTemplateName name) const;
 
  private:
-   void process_material(MaterialName name, const render_core::Material& material);
-   void process_material_template(MaterialTemplateName name, const render_core::MaterialTemplate& materialTemplate);
+   void process_material(MaterialName name, const render_objects::Material& material);
+   void process_material_template(MaterialTemplateName name, const render_objects::MaterialTemplate& materialTemplate);
 
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;

@@ -23,9 +23,8 @@ class Pipeline
 
    [[nodiscard]] VkPipeline vulkan_pipeline() const;
    [[nodiscard]] const vulkan::PipelineLayout& layout() const;
-   [[nodiscard]] Result<DescriptorPool> create_descriptor_pool(uint32_t uniformBufferCount, uint32_t sampledImageCount,
-                                                               uint32_t maxDescriptorCount);
    [[nodiscard]] PipelineType pipeline_type() const;
+   [[nodiscard]] VkDescriptorSetLayout vulkan_descriptor_set_layout() const;
 
  private:
    vulkan::PipelineLayout m_layout;

@@ -2,9 +2,9 @@
 
 touch tmp_names
 
-for line in $(grep -rohE '"[A-Za-z_/]*"_name' $(find game library -regextype posix-extended -regex '^.*\.(cpp|h|hpp)$'));
+for line in $(grep -rohE '"[A-Za-z_/.]*"_name' $(find game library -regextype posix-extended -regex '^.*\.(cpp|h|hpp)$'));
 do
-  if [[ $line =~ \"([A-Za-z_/]*)\"_name ]]; then
+  if [[ $line =~ \"([A-Za-z_/.]*)\"_name ]]; then
     echo "${BASH_REMATCH[1]}" >> tmp_names
   fi
 done
@@ -33,7 +33,7 @@ echo ''
 echo "std::map<Name, std::string_view> KnownNames {"
 
 for line in $(cat tmp_names | sort | uniq); do
-  echo "    {\"$line\"_name, \"$line\"sv},"
+  echo "   {\"$line\"_name, \"$line\"sv},"
 done
 
 echo '};'

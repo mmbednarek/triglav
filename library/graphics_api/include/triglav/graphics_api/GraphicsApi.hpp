@@ -1,15 +1,18 @@
 #pragma once
 
+#include "triglav/EnumFlags.hpp"
+#include "triglav/Int.hpp"
+#include "triglav/Math.hpp"
+
 #include <array>
 #include <cstdint>
 #include <expected>
 #include <glm/vec2.hpp>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
-
-#include "triglav/EnumFlags.hpp"
-#include "triglav/Int.hpp"
+#include <vector>
 
 namespace triglav::graphics_api {
 
@@ -101,20 +104,21 @@ enum class PipelineStage : uint32_t
 {
    None = 0,
    Entrypoint = (1 << 0),
-   VertexShader = (1 << 1),
-   FragmentShader = (1 << 2),
-   AttachmentOutput = (1 << 3),
-   ComputeShader = (1 << 4),
+   VertexInput = (1 << 1),
+   VertexShader = (1 << 2),
+   FragmentShader = (1 << 3),
+   AttachmentOutput = (1 << 4),
+   ComputeShader = (1 << 5),
 
-   RayGenerationShader = (1 << 5),
-   AnyHitShader = (1 << 6),
-   ClosestHitShader = (1 << 7),
-   MissShader = (1 << 8),
-   IntersectionShader = (1 << 9),
-   CallableShader = (1 << 10),
+   RayGenerationShader = (1 << 6),
+   AnyHitShader = (1 << 7),
+   ClosestHitShader = (1 << 8),
+   MissShader = (1 << 9),
+   IntersectionShader = (1 << 10),
+   CallableShader = (1 << 11),
 
-   Transfer = (1 << 11),
-   End = (1 << 12),
+   Transfer = (1 << 12),
+   End = (1 << 13),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -216,6 +220,8 @@ enum class TextureState
    General,
    GeneralRead,
    GeneralWrite,
+   RenderTarget,
+   DepthTarget,
 };
 
 class Texture;
@@ -372,10 +378,30 @@ enum class DevicePickStrategy
 
 enum class DeviceFeature : u32
 {
+   None = 0,
    RayTracing = (1 << 0),
 };
 
 TRIGLAV_DECL_FLAGS(DeviceFeature)
+
+struct RenderAttachment
+{
+   Texture* texture;
+   TextureState state;
+   AttachmentAttributeFlags flags;
+   ClearValue clearValue;
+};
+
+struct RenderingInfo
+{
+   Vector2i renderAreaOffset;
+   Vector2i renderAreaExtent;
+   u32 layerCount;
+   u32 viewMask;
+
+   std::vector<RenderAttachment> colorAttachments;
+   std::optional<RenderAttachment> depthAttachment;
+};
 
 template<typename T>
 using Result = std::expected<T, Status>;

@@ -6,7 +6,7 @@
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
-#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_objects/RenderObjects.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
 #include "GlyphCache.hpp"
@@ -19,7 +19,7 @@ struct TextObject
 {
    const render_core::GlyphAtlas* glyphAtlas;
    render_core::TextMetric metric;
-   graphics_api::UniformBuffer<triglav::render_core::SpriteUBO> ubo;
+   graphics_api::UniformBuffer<render_objects::SpriteUBO> ubo;
    graphics_api::VertexArray<render_core::GlyphVertex> vertices;
    u32 vertexCount;
 };

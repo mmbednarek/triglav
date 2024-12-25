@@ -10,6 +10,8 @@
 #include "vulkan/DynamicProcedures.hpp"
 #include "vulkan/Util.hpp"
 
+#include "triglav/Ranges.hpp"
+
 #include <cassert>
 
 namespace triglav::graphics_api {
@@ -138,13 +140,14 @@ void CommandList::bind_pipeline(const Pipeline& pipeline)
    m_boundPipelineLayout = *pipeline.layout();
 }
 
-void CommandList::bind_descriptor_set(const DescriptorView& descriptorSet) const
+void CommandList::bind_descriptor_set(const PipelineType pipelineType, const DescriptorView& descriptorSet) const
 {
    const auto vulkanDescriptorSet = descriptorSet.vulkan_descriptor_set();
-   vkCmdBindDescriptorSets(m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundPipelineLayout, 0, 1, &vulkanDescriptorSet, 0, nullptr);
+   vkCmdBindDescriptorSets(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipelineType), m_boundPipelineLayout, 0, 1,
+                           &vulkanDescriptorSet, 0, nullptr);
 }
 
-void CommandList::draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance)
+void CommandList::draw_primitives(const int vertexCount, const int vertexOffset, const int instanceCount, const int firstInstance)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
    m_triangleCount += instanceCount * (vertexCount / 3);
@@ -163,7 +166,7 @@ void CommandList::draw_indexed_primitives(const int indexCount, const int indexO
    vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
 }
 
-void CommandList::dispatch(u32 x, u32 y, u32 z)
+void CommandList::dispatch(const u32 x, const u32 y, const u32 z)
 {
    // For some reason I need that XDDD
    assert(x != 0 && y != 0 && z != 0);
@@ -356,6 +359,53 @@ void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const B
 void CommandList::update_buffer(const Buffer& buffer, const u32 offset, const u32 size, const void* data) const
 {
    vkCmdUpdateBuffer(m_commandBuffer, buffer.vulkan_buffer(), offset, size, data);
+}
+
+void CommandList::begin_rendering(const RenderingInfo& info) const
+{
+   std::vector<VkRenderingAttachmentInfo> colorAttachments;
+   colorAttachments.resize(info.colorAttachments.size());
+
+   for (const auto [index, attachment] : Enumerate(info.colorAttachments)) {
+      colorAttachments[index] = vulkan::to_vulkan_rendering_attachment_info(attachment);
+   }
+
+   VkRenderingInfo vulkanInfo{VK_STRUCTURE_TYPE_RENDERING_INFO};
+   vulkanInfo.renderArea.offset.x = info.renderAreaOffset.x;
+   vulkanInfo.renderArea.offset.y = info.renderAreaOffset.y;
+   vulkanInfo.renderArea.extent.width = info.renderAreaExtent.x;
+   vulkanInfo.renderArea.extent.height = info.renderAreaExtent.y;
+   vulkanInfo.layerCount = info.layerCount;
+   vulkanInfo.viewMask = info.viewMask;
+   vulkanInfo.colorAttachmentCount = colorAttachments.size();
+   vulkanInfo.pColorAttachments = colorAttachments.data();
+
+   VkRenderingAttachmentInfo depthAttachment;
+   if (info.depthAttachment.has_value()) {
+      depthAttachment = vulkan::to_vulkan_rendering_attachment_info(*info.depthAttachment);
+      vulkanInfo.pDepthAttachment = &depthAttachment;
+   }
+
+   vkCmdBeginRendering(m_commandBuffer, &vulkanInfo);
+
+   VkViewport viewport{};
+   viewport.x = 0.0f;
+   viewport.y = 0.0f;
+   viewport.width = static_cast<float>(info.renderAreaExtent.x);
+   viewport.height = static_cast<float>(info.renderAreaExtent.y);
+   viewport.minDepth = 0.0f;
+   viewport.maxDepth = 1.0f;
+   vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+
+   VkRect2D scissor{};
+   scissor.offset = {0, 0};
+   scissor.extent = VkExtent2D{static_cast<u32>(info.renderAreaExtent.x), static_cast<u32>(info.renderAreaExtent.y)};
+   vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
+}
+
+void CommandList::end_rendering() const
+{
+   vkCmdEndRendering(m_commandBuffer);
 }
 
 WorkTypeFlags CommandList::work_types() const

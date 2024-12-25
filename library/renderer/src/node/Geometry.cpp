@@ -38,13 +38,13 @@ class GeometryResources : public IGeometryResources
    void on_object_added_to_scene(const SceneObject& object)
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(object.model);
-      graphics_api::UniformBuffer<render_core::UniformBufferObject> ubo(m_device);
+      graphics_api::UniformBuffer<render_objects::UniformBufferObject> ubo(m_device);
 
       const auto modelMat = object.model_matrix();
       ubo->model = modelMat;
       ubo->normal = glm::transpose(glm::inverse(glm::mat3(modelMat)));
 
-      m_models.emplace_back(render_core::InstancedModel{
+      m_models.emplace_back(render_objects::InstancedModel{
          object.model,
          model.boundingBox,
          object.position,
@@ -77,7 +77,7 @@ class GeometryResources : public IGeometryResources
       }
    }
 
-   void draw_model(graphics_api::CommandList& cmdList, const render_core::InstancedModel& instancedModel,
+   void draw_model(graphics_api::CommandList& cmdList, const render_objects::InstancedModel& instancedModel,
                    render_core::NodeFrameResources& shadingRes)
    {
       const auto& model = m_resourceManager.get<ResourceType::Model>(instancedModel.modelName);
@@ -108,15 +108,15 @@ class GeometryResources : public IGeometryResources
             }
 
             for (const auto& prop : matTemplate.properties) {
-               if (prop.type != render_core::MaterialPropertyType::Texture2D)
+               if (prop.type != render_objects::MaterialPropertyType::Texture2D)
                   continue;
 
                switch (prop.source) {
-               case render_core::PropertySource::LastFrameColorOut:
+               case render_objects::PropertySource::LastFrameColorOut:
                   cmdList.bind_texture(binding, shadingRes.framebuffer("shading"_name).texture("shading"_name));
                   ++binding;
                   break;
-               case render_core::PropertySource::LastFrameDepthOut:
+               case render_objects::PropertySource::LastFrameDepthOut:
                   cmdList.bind_texture(binding, shadingRes.framebuffer("shading"_name).texture("depth"_name));
                   ++binding;
                   break;
@@ -168,7 +168,7 @@ class GeometryResources : public IGeometryResources
       }
    }
 
-   void write_world_data(const render_core::MaterialTemplate& templ, graphics_api::Buffer& buffer)
+   void write_world_data(const render_objects::MaterialTemplate& templ, graphics_api::Buffer& buffer)
    {
       auto mapping = GAPI_CHECK(buffer.map_memory());
 
@@ -177,10 +177,10 @@ class GeometryResources : public IGeometryResources
 
       for (const auto& prop : templ.properties) {
          switch (prop.source) {
-         case render_core::PropertySource::LastViewProjectionMatrix:
+         case render_objects::PropertySource::LastViewProjectionMatrix:
             serializer.write_mat4(m_scene.camera().view_projection_matrix());
             break;
-         case render_core::PropertySource::ViewPosition:
+         case render_objects::PropertySource::ViewPosition:
             serializer.write_vec3(m_scene.camera().position());
             break;
          default:
@@ -205,7 +205,7 @@ class GeometryResources : public IGeometryResources
    MaterialManager& m_materialManager;
    Scene& m_scene;
    DebugLinesRenderer& m_debugLinesRenderer;
-   std::vector<render_core::InstancedModel> m_models{};
+   std::vector<render_objects::InstancedModel> m_models{};
    std::vector<DebugLines> m_debugLines{};
    bool m_needsUpdate{false};
    GroundRenderer::UniformBuffer m_groundUniformBuffer;

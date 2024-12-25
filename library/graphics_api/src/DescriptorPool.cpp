@@ -1,10 +1,27 @@
 #include "DescriptorPool.hpp"
+#include "Pipeline.hpp"
+
+#include <DescriptorLayoutCache.hpp>
 
 namespace triglav::graphics_api {
 
-DescriptorPool::DescriptorPool(vulkan::DescriptorPool descriptorPool, const VkDescriptorSetLayout descriptorSetLayout) :
-    m_descriptorPool(std::move(descriptorPool)),
-    m_descriptorSetLayout(descriptorSetLayout)
+const std::vector<VkDescriptorSetLayout>& DescriptorLayoutArray::layouts() const
+{
+   return m_layouts;
+}
+
+void DescriptorLayoutArray::add_from_cache(DescriptorLayoutCache& cache, const std::span<DescriptorBinding> bindings)
+{
+   m_layouts.push_back(cache.find_layout(bindings));
+}
+
+void DescriptorLayoutArray::add_from_pipeline(const Pipeline& pipeline)
+{
+   m_layouts.push_back(pipeline.vulkan_descriptor_set_layout());
+}
+
+DescriptorPool::DescriptorPool(vulkan::DescriptorPool descriptorPool) :
+    m_descriptorPool(std::move(descriptorPool))
 {
 }
 
@@ -32,19 +49,16 @@ Status DescriptorPool::free_descriptors(const std::span<VkDescriptorSet> sets)
    return Status::Success;
 }
 
-Result<DescriptorArray> DescriptorPool::allocate_array(const size_t descriptorCount)
+Result<DescriptorArray> DescriptorPool::allocate_array(const DescriptorLayoutArray& descriptorLayouts)
 {
-   std::vector<VkDescriptorSetLayout> descriptorLayouts{};
-   descriptorLayouts.resize(descriptorCount, m_descriptorSetLayout);
-
    VkDescriptorSetAllocateInfo descriptorSetsInfo{};
    descriptorSetsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
    descriptorSetsInfo.descriptorPool = *m_descriptorPool;
-   descriptorSetsInfo.descriptorSetCount = descriptorLayouts.size();
-   descriptorSetsInfo.pSetLayouts = descriptorLayouts.data();
+   descriptorSetsInfo.descriptorSetCount = descriptorLayouts.layouts().size();
+   descriptorSetsInfo.pSetLayouts = descriptorLayouts.layouts().data();
 
    std::vector<VkDescriptorSet> descriptorSets{};
-   descriptorSets.resize(descriptorCount);
+   descriptorSets.resize(descriptorLayouts.layouts().size());
    if (const auto res = vkAllocateDescriptorSets(m_descriptorPool.parent(), &descriptorSetsInfo, descriptorSets.data());
        res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);

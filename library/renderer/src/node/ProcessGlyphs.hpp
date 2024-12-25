@@ -26,7 +26,7 @@ struct TextResources
    const ui_core::Text* textInfo;
 
    graphics_api::Buffer vertexBuffer;
-   graphics_api::UniformBuffer<render_core::SpriteUBO> ubo;
+   graphics_api::UniformBuffer<render_objects::SpriteUBO> ubo;
 
    u32 vertexCount;
 

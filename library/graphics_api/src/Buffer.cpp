@@ -139,6 +139,19 @@ VkDeviceAddress Buffer::vulkan_device_address() const
    return vkGetBufferDeviceAddress(m_device.vulkan_device(), &info);
 }
 
+void Buffer::set_debug_name(const std::string_view name)
+{
+   if (name.empty())
+      return;
+
+   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
+   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_buffer);
+   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_BUFFER;
+   debugUtilsObjectName.pObjectName = name.data();
+   const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_buffer.parent(), &debugUtilsObjectName);
+   assert(result == VK_SUCCESS);
+}
+
 BufferAddress Buffer::buffer_address() const
 {
    return BufferAddress{this->vulkan_device_address()};

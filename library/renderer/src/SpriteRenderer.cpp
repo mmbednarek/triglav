@@ -3,6 +3,8 @@
 #include "triglav/graphics_api/CommandList.hpp"
 #include "triglav/graphics_api/DescriptorWriter.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
+#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_objects/RenderObjects.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/matrix_transform_2d.hpp>
@@ -13,8 +15,8 @@ using namespace triglav::name_literals;
 using triglav::ResourceName;
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
-using triglav::render_core::Sprite;
-using triglav::render_core::SpriteUBO;
+using triglav::render_objects::Sprite;
+using triglav::render_objects::SpriteUBO;
 using triglav::resource::ResourceManager;
 
 namespace triglav::renderer {
@@ -23,6 +25,15 @@ struct Vertex2D
 {
    glm::vec3 location;
 };
+
+namespace {
+
+constexpr std::array<std::pair<graphics_api::DescriptorType, u32>, 2> DESCRIPTOR_COUNTS{
+   std::pair{graphics_api::DescriptorType::UniformBuffer, 40},
+   std::pair{graphics_api::DescriptorType::ImageSampler, 40},
+};
+
+}
 
 SpriteRenderer::SpriteRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, ResourceManager& resourceManager) :
     m_device(device),
@@ -38,7 +49,7 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device& device, graphics_api::Rende
                               .enable_depth_test(false)
                               .use_push_descriptors(true)
                               .build())),
-    m_descriptorPool(checkResult(m_pipeline.create_descriptor_pool(40, 40, 40)))
+    m_descriptorPool(checkResult(m_device.create_descriptor_pool(DESCRIPTOR_COUNTS, 40)))
 {
 }
 

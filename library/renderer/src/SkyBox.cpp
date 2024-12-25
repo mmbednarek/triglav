@@ -2,14 +2,15 @@
 
 #include "Renderer.hpp"
 #include "triglav/geometry/DebugMesh.hpp"
-#include "triglav/graphics_api/DescriptorWriter.hpp"
+#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_objects/RenderObjects.hpp"
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
 using triglav::ResourceType;
 using triglav::render_core::checkResult;
-using triglav::render_core::UniformBufferObject;
+using triglav::render_objects::UniformBufferObject;
 using namespace triglav::name_literals;
 
 namespace {

@@ -39,7 +39,7 @@ class UserInterface : public render_core::IRenderNode
    graphics_api::RenderTarget m_textureRenderTarget;
    TextRenderer m_textRenderer;
    RectangleRenderer m_rectangleRenderer;
-   graphics_api::UniformBuffer<triglav::render_core::SpriteUBO> m_ubo;
+   graphics_api::UniformBuffer<render_objects::SpriteUBO> m_ubo;
 };
 
 }// namespace triglav::renderer::node

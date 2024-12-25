@@ -25,4 +25,30 @@ using ClassOfMember = typename decltype(get_class_of_member(CMember))::Type;
 template<auto CMember>
 using TypeOfMember = typename decltype(get_type_of_member(CMember))::Type;
 
+namespace detail {
+
+template<typename T, size_t... Indices>
+std::array<T, sizeof...(Indices)> span_to_array_indices(const std::span<T> jobFrames)
+{
+   return std::array<T, sizeof...(Indices)>{std::forward<T>(jobFrames[Indices])...};
+}
+
+template<typename T, size_t Count, size_t Last, size_t... Indices>
+std::array<T, Count> span_to_array_internal(const std::span<T> jobFrames)
+{
+   if constexpr (sizeof...(Indices) == (Count - 1)) {
+      return span_to_array_indices<T, Indices..., Last>(jobFrames);
+   } else {
+      return span_to_array_internal<T, Count, Last + 1, Indices..., Last>(jobFrames);
+   }
+}
+
+}// namespace detail
+
+template<typename T, size_t Count>
+std::array<T, Count> span_to_array(const std::span<T> jobFrames)
+{
+   return detail::span_to_array_internal<T, Count, 0>(jobFrames);
+}
+
 }// namespace triglav

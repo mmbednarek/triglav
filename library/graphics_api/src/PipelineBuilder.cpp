@@ -31,7 +31,8 @@ Index PipelineBuilderBase::add_shader(const Shader& shader)
    return index;
 }
 
-void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, PipelineStageFlags shaderStages, u32 descriptorCount)
+void PipelineBuilderBase::add_descriptor_binding(const DescriptorType descriptorType, const PipelineStageFlags shaderStages,
+                                                 const u32 descriptorCount)
 {
    VkDescriptorSetLayoutBinding layoutBinding{};
    layoutBinding.descriptorCount = descriptorCount;
@@ -41,7 +42,7 @@ void PipelineBuilderBase::add_descriptor_binding(DescriptorType descriptorType, 
    m_vulkanDescriptorBindings.emplace_back(layoutBinding);
 }
 
-void PipelineBuilderBase::add_push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset)
+void PipelineBuilderBase::add_push_constant(const PipelineStageFlags shaderStages, const size_t size, const size_t offset)
 {
    VkPushConstantRange range;
    range.offset = offset;
@@ -148,7 +149,12 @@ ComputePipelineBuilder& ComputePipelineBuilder::use_push_descriptors(bool enable
 
 GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device& device, RenderTarget& renderPass) :
     PipelineBuilderBase(device),
-    m_renderTarget(renderPass)
+    m_renderTarget(&renderPass)
+{
+}
+
+GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device& device) :
+    PipelineBuilderBase(device)
 {
 }
 
@@ -284,6 +290,28 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::culling(const Culling cull)
    return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::begin_vertex_layout_raw(const u32 strideSize)
+{
+   VkVertexInputBindingDescription binding{};
+   binding.binding = m_vertexBinding;
+   binding.stride = strideSize;
+   binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+   m_bindings.emplace_back(binding);
+   return *this;
+}
+
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::color_attachment(ColorFormat format)
+{
+   m_colorAttachmentFormats.emplace_back(format);
+   return *this;
+}
+
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_attachment(ColorFormat format)
+{
+   m_depthAttachmentFormat.emplace(format);
+   return *this;
+}
+
 constexpr std::array g_dynamicStates{
    VK_DYNAMIC_STATE_VIEWPORT,
    VK_DYNAMIC_STATE_SCISSOR,
@@ -342,7 +370,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    rasterizationStateInfo.depthBiasClamp = 0.0f;
    rasterizationStateInfo.depthBiasSlopeFactor = 0.0f;
 
-   const auto sampleCount = m_renderTarget.sample_count();
+   const auto sampleCount = m_renderTarget != nullptr ? m_renderTarget->sample_count() : SampleCount::Single;
 
    VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
    multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -351,18 +379,34 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    multisamplingInfo.minSampleShading = 1.0f;
 
    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
-   for (int i = 0; i < m_renderTarget.color_attachment_count(); ++i) {
-      VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-      colorBlendAttachment.colorWriteMask =
-         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-      colorBlendAttachment.blendEnable = m_blendingEnabled;
-      colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-      colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-      colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-      colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-      colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
-      colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
-      colorBlendAttachments.emplace_back(colorBlendAttachment);
+   if (m_renderTarget != nullptr) {
+      for (int i = 0; i < m_renderTarget->color_attachment_count(); ++i) {
+         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+         colorBlendAttachment.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+         colorBlendAttachment.blendEnable = m_blendingEnabled;
+         colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+         colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+         colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+         colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
+         colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
+         colorBlendAttachments.emplace_back(colorBlendAttachment);
+      }
+   } else {
+      for (const auto& colorAttachment : m_colorAttachmentFormats) {
+         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+         colorBlendAttachment.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+         colorBlendAttachment.blendEnable = m_blendingEnabled;
+         colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+         colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+         colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+         colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
+         colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
+         colorBlendAttachments.emplace_back(colorBlendAttachment);
+      }
    }
 
    VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
@@ -390,6 +434,20 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    }
    auto&& [descriptorSetLayout, pipelineLayout] = *layouts;
 
+
+   VkPipelineRenderingCreateInfo renderingInfo{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
+
+   std::vector<VkFormat> colorAttachmentFormats;
+   for (const auto& colorFormat : m_colorAttachmentFormats) {
+      colorAttachmentFormats.emplace_back(GAPI_CHECK(vulkan::to_vulkan_color_format(colorFormat)));
+   }
+
+   renderingInfo.colorAttachmentCount = colorAttachmentFormats.size();
+   renderingInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
+   if (m_depthAttachmentFormat.has_value()) {
+      renderingInfo.depthAttachmentFormat = GAPI_CHECK(vulkan::to_vulkan_color_format(*m_depthAttachmentFormat));
+   }
+
    VkGraphicsPipelineCreateInfo pipelineInfo{};
    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
    pipelineInfo.layout = *pipelineLayout;
@@ -403,10 +461,13 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    pipelineInfo.pVertexInputState = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
    pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
-   pipelineInfo.renderPass = m_renderTarget.vulkan_render_pass();
+   pipelineInfo.renderPass = m_renderTarget != nullptr ? m_renderTarget->vulkan_render_pass() : nullptr;
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = nullptr;
    pipelineInfo.basePipelineIndex = -1;
+   if (!m_colorAttachmentFormats.empty() || m_depthAttachmentFormat.has_value()) {
+      pipelineInfo.pNext = &renderingInfo;
+   }
 
    vulkan::Pipeline pipeline(m_device.vulkan_device());
    if (const auto res = pipeline.construct(nullptr, 1, &pipelineInfo); res != VK_SUCCESS) {

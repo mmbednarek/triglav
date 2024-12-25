@@ -91,7 +91,7 @@ class BindlessScene
 
  private:
    BindlessMeshInfo& get_mesh_info(const graphics_api::CommandList& cmdList, ModelName name);
-   u32 get_material_id(const graphics_api::CommandList& cmdList, const render_core::Material& material);
+   u32 get_material_id(const graphics_api::CommandList& cmdList, const render_objects::Material& material);
    u32 get_texture_id(TextureName textureName);
 
    // References
