@@ -95,6 +95,7 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
       builder.depth_attachment(*state.depthTargetFormat);
       builder.enable_depth_test(true);
    }
+   builder.vertex_topology(state.vertexTopology);
 
    return GAPI_CHECK(builder.build());
 }

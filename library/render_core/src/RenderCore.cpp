@@ -89,6 +89,7 @@ PipelineHash GraphicPipelineState::hash() const
    if (depthTargetFormat.has_value()) {
       result += 23116759 * hash_color_format(*depthTargetFormat);
    }
+   result += 4276381 * static_cast<u32>(vertexTopology);
 
    return result;
 }

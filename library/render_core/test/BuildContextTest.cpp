@@ -73,7 +73,7 @@ void dump_buffer(const std::span<const triglav::u8> buffer)
 {
    const auto outFile = triglav::io::open_file(triglav::io::Path{"test_output.dat"}, triglav::io::FileOpenMode::Create);
    assert(outFile.has_value());
-   (*outFile)->write(buffer);
+   assert((*outFile)->write(buffer).has_value());
 }
 
 }// namespace
@@ -316,6 +316,52 @@ TEST(BuildContext, BasicTexture)
    const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
 
    const auto expectedBitmap = open_file(Path{"content/basic_texture_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expectedBitmap.has_value());
+
+   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+}
+
+TEST(BuildContext, MultiplePasses)
+{
+   using triglav::io::FileOpenMode;
+   using triglav::io::open_file;
+   using triglav::io::Path;
+
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+
+   static constexpr triglav::Vector2i dims{128, 128};
+   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+
+   // Declare resources
+   buildContext.declare_render_target_with_dims("test.multiple_passes.render_target.first"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
+   buildContext.declare_render_target_with_dims("test.multiple_passes.render_target.second"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   buildContext.declare_staging_buffer("test.multiple_passes.output_buffer"_name, bufferSize);
+
+   {
+      // First Pass
+      RenderPassScope scope(buildContext, "test.multiple_passes.render_pass.first"_name, "test.multiple_passes.render_target.first"_name);
+      buildContext.bind_fragment_shader("testing/multiple_passes_first.fshader"_rc);
+      buildContext.draw_full_screen_quad();
+   }
+   {
+      // Second pass
+      RenderPassScope scope(buildContext, "test.multiple_passes.render_pass.second"_name, "test.multiple_passes.render_target.second"_name);
+      buildContext.bind_fragment_shader("testing/multiple_passes_second.fshader"_rc);
+      buildContext.bind_samplable_texture(0, "test.multiple_passes.render_target.first"_name);
+      buildContext.draw_full_screen_quad();
+   }
+
+   // Copy the render target to staging buffer
+   buildContext.copy_texture_to_buffer("test.multiple_passes.render_target.second"_name, "test.multiple_passes.output_buffer"_name);
+
+   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   execute_build_context(buildContext, storage);
+
+   auto& outBuffer = storage[0].buffer("test.multiple_passes.output_buffer"_name);
+   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+
+   const auto expectedBitmap = open_file(Path{"content/multiple_passes_expected_bitmap.dat"}, FileOpenMode::Read);
    ASSERT_TRUE(expectedBitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));

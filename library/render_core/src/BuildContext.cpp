@@ -212,11 +212,17 @@ void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Na
    std::vector<Name> renderTargetNames(renderTargets.size());
    std::ranges::copy(renderTargets, renderTargetNames.begin());
    this->add_command<detail::cmd::BeginRenderPass>(passName, std::move(renderTargetNames));
+
+   m_isWithinRenderPass = true;
 }
 
 void BuildContext::end_render_pass()
 {
+   m_graphicPipelineState.depthTargetFormat.reset();
+   m_graphicPipelineState.renderTargetFormats.clear();
    this->add_command<detail::cmd::EndRenderPass>();
+
+   m_isWithinRenderPass = false;
 }
 
 void BuildContext::handle_descriptor_bindings()
@@ -298,8 +304,8 @@ void BuildContext::setup_transition(const Name texName, const graphics_api::Text
       return;
    }
 
-   m_commands.emplace_back(std::in_place_type_t<detail::cmd::TextureTransition>{}, texName, tex.lastUsedStage, tex.currentState,
-                           targetStage, targetState);
+   this->add_command_before_render_pass<detail::cmd::TextureTransition>(texName, tex.lastUsedStage, tex.currentState, targetStage,
+                                                                        targetState);
 
    tex.lastUsedStage = lastUsedStage.value_or(targetStage);
    tex.currentState = targetState;
@@ -387,6 +393,11 @@ void BuildContext::handle_pending_graphic_state()
    this->handle_descriptor_bindings();
 }
 
+void BuildContext::set_vertex_topology(const graphics_api::VertexTopology topology)
+{
+   m_graphicPipelineState.vertexTopology = topology;
+}
+
 void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset)
 {
    this->handle_pending_graphic_state();
@@ -403,6 +414,14 @@ void BuildContext::draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 
 {
    this->handle_pending_graphic_state();
    this->add_command<detail::cmd::DrawIndexedPrimitives>(indexCount, indexOffset, vertexOffset, instanceCount, instanceOffset);
+}
+
+void BuildContext::draw_full_screen_quad()
+{
+   using namespace name_literals;
+   this->bind_vertex_shader("common/full_screen.vshader"_rc);
+   this->set_vertex_topology(gapi::VertexTopology::TriangleFan);
+   this->draw_primitives(4, 0);
 }
 
 void BuildContext::dispatch(const Vector3i dims)

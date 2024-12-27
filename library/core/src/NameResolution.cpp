@@ -9,7 +9,7 @@ namespace {
 using namespace std::string_view_literals;
 using namespace name_literals;
 
-std::map<Name, std::string_view> KnownNames {
+std::map<Name, std::string_view> KnownNames{
    {"albedo"_name, "albedo"sv},
    {"ambient_occlusion"_name, "ambient_occlusion"sv},
    {"anisotropy"_name, "anisotropy"sv},
@@ -156,13 +156,12 @@ std::map<Name, std::string_view> KnownNames {
    {"width"_name, "width"sv},
 };
 
-} // namespace
+}// namespace
 
 std::string_view resolve_name(const Name name)
 {
-    const auto it = KnownNames.find(name);
-    return it == KnownNames.end() ? std::string_view{} : it->second;
+   const auto it = KnownNames.find(name);
+   return it == KnownNames.end() ? std::string_view{} : it->second;
 }
 
-} // namespace triglav
-
+}// namespace triglav

@@ -16,6 +16,12 @@ resources:
     source: "basic_depth_vs.spv"
   - name: "testing/basic_depth.fshader"
     source: "basic_depth_fs.spv"
+  - name: "common/full_screen.vshader"
+    source: "full_screen_vs.spv"
+  - name: "testing/multiple_passes_first.fshader"
+    source: "multiple_passes_first_fs.spv"
+  - name: "testing/multiple_passes_second.fshader"
+    source: "multiple_passes_second_fs.spv"
   # Example texture
   - name: "testing/sample.tex"
     source: "sample.png"

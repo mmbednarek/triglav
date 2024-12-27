@@ -229,9 +229,12 @@ class BuildContext
    }
 
    // Drawing
+   void set_vertex_topology(graphics_api::VertexTopology topology);
+
    void draw_primitives(u32 vertexCount, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset);
+   void draw_full_screen_quad();
 
    // Execution
    void dispatch(Vector3i dims);
@@ -293,6 +296,19 @@ class BuildContext
       m_commands.emplace_back(std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...);
    }
 
+   template<typename TCmd, typename... TArgs>
+   void add_command_before_render_pass(TArgs&&... args)
+   {
+      if (!m_isWithinRenderPass) {
+         this->add_command<TCmd>(std::forward<TArgs>(args)...);
+         return;
+      }
+
+      auto it = std::find_if(m_commands.rbegin(), m_commands.rend(),
+                             [](const auto& cmd) { return std::holds_alternative<detail::cmd::BeginRenderPass>(cmd); });
+      m_commands.emplace(it.base() - 1, std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...);
+   }
+
    template<typename TDecl, typename... TArgs>
    void add_declaration(Name declName, TArgs&&... args)
    {
@@ -324,6 +340,7 @@ class BuildContext
    DescriptorState m_descriptorState{};
    detail::DescriptorCounts m_descriptorCounts{};
    graphics_api::PipelineStage m_activePipelineStage{};
+   bool m_isWithinRenderPass{false};
 
    std::vector<std::optional<detail::Descriptor>> m_descriptors;
 

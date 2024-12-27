@@ -75,6 +75,7 @@ struct GraphicPipelineState
    DescriptorState descriptorState;
    std::vector<graphics_api::ColorFormat> renderTargetFormats;
    std::optional<graphics_api::ColorFormat> depthTargetFormat;
+   graphics_api::VertexTopology vertexTopology{graphics_api::VertexTopology::TriangleList};
 
    [[nodiscard]] PipelineHash hash() const;
 };
