@@ -17,7 +17,7 @@ void write_descriptor_state(graphics_api::PipelineBuilderBase& builder, const De
 {
    for (const auto i : Range(0u, state.descriptorCount)) {
       const auto& desc = state.descriptors[i];
-      builder.add_descriptor_binding(desc.descriptorType, desc.pipelineStages, 1);
+      builder.add_descriptor_binding(desc.descriptorType, desc.pipelineStages, desc.descriptorCount);
    }
 }
 
@@ -93,6 +93,7 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
    }
    if (state.depthTargetFormat.has_value()) {
       builder.depth_attachment(*state.depthTargetFormat);
+      builder.enable_depth_test(true);
    }
 
    return GAPI_CHECK(builder.build());

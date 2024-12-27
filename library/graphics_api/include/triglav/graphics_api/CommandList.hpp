@@ -51,7 +51,7 @@ class CommandList
    void bind_descriptor_set(PipelineType pipelineType, const DescriptorView& descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset);
    void draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance);
-   void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset);
+   void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset, int instanceCount = 1, int firstInstance = 0);
    void dispatch(u32 x, u32 y, u32 z);
    void bind_vertex_buffer(const Buffer& buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer& buffer) const;

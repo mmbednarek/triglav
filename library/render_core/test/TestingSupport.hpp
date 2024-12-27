@@ -1,5 +1,11 @@
 #pragma once
 
+#include "triglav/io/DynLibrary.hpp"
+
+#include <memory>
+
+struct RENDERDOC_API_1_6_0;
+
 namespace triglav::graphics_api {
 class Device;
 }
@@ -17,16 +23,15 @@ class TestingSupport
 
    graphics_api::Device* m_device;
    resource::ResourceManager* m_resourceManager;
+   std::unique_ptr<io::DynLibrary> m_library;
+   RENDERDOC_API_1_6_0* m_renderDocApi;
 
-   static graphics_api::Device& device()
-   {
-      return *the().m_device;
-   }
+   void initialize_render_doc();
+   void on_quit() const;
 
-   static resource::ResourceManager& resource_manager()
-   {
-      return *the().m_resourceManager;
-   }
+   static graphics_api::Device& device();
+   static resource::ResourceManager& resource_manager();
+   static RENDERDOC_API_1_6_0& render_doc();
 };
 
 }// namespace triglav::test

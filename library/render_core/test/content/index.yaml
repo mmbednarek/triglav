@@ -1,9 +1,21 @@
 # Resource to be loaded for tests
 version: 1
 resources:
+  # Shaders
   - name: "testing/basic_compute.cshader"
     source: "basic_compute.spv"
   - name: "testing/basic_graphics.vshader"
     source: "basic_graphics_vs.spv"
   - name: "testing/basic_graphics.fshader"
     source: "basic_graphics_fs.spv"
+  - name: "testing/basic_texture.vshader"
+    source: "basic_texture_vs.spv"
+  - name: "testing/basic_texture.fshader"
+    source: "basic_texture_fs.spv"
+  - name: "testing/basic_depth.vshader"
+    source: "basic_depth_vs.spv"
+  - name: "testing/basic_depth.fshader"
+    source: "basic_depth_fs.spv"
+  # Example texture
+  - name: "testing/sample.tex"
+    source: "sample.png"

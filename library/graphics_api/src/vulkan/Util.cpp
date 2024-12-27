@@ -285,6 +285,10 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
       return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
    case PipelineStage::FragmentShader:
       return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   case PipelineStage::EarlyZ:
+      return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+   case PipelineStage::LateZ:
+      return VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
    case PipelineStage::AttachmentOutput:
       return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    case PipelineStage::ComputeShader:
@@ -315,6 +319,12 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    }
    if (flags & PipelineStage::FragmentShader) {
       result |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+   }
+   if (flags & PipelineStage::EarlyZ) {
+      result |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+   }
+   if (flags & PipelineStage::LateZ) {
+      result |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
    }
    if (flags & PipelineStage::AttachmentOutput) {
       result |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -409,6 +419,10 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, const Textu
       }
    case TextureState::GeneralWrite:
       return VK_ACCESS_SHADER_WRITE_BIT;
+   case TextureState::RenderTarget:
+      return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+   case TextureState::DepthTarget:
+      return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
    }
 
    return 0;

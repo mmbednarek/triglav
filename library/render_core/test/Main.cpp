@@ -75,6 +75,8 @@ int triglav_main(InputArgs& args, IDisplay& display)
    ResourceManager resourceManager(*device, fontManager);
    triglav::test::TestingSupport::the().m_resourceManager = &resourceManager;
 
+   triglav::test::TestingSupport::the().initialize_render_doc();
+
    Awaiter awaiter(resourceManager);
 
    resourceManager.load_asset_list(triglav::io::Path("content/index.yaml"));
@@ -99,6 +101,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
       listener.shouldClose = true;
    }
 
+   triglav::test::TestingSupport::the().on_quit();
    triglav::threading::ThreadPool::the().quit();
 
    return status;

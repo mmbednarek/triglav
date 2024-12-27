@@ -107,18 +107,20 @@ enum class PipelineStage : uint32_t
    VertexInput = (1 << 1),
    VertexShader = (1 << 2),
    FragmentShader = (1 << 3),
-   AttachmentOutput = (1 << 4),
-   ComputeShader = (1 << 5),
+   EarlyZ = (1 << 4),
+   LateZ = (1 << 5),
+   AttachmentOutput = (1 << 6),
+   ComputeShader = (1 << 7),
 
-   RayGenerationShader = (1 << 6),
-   AnyHitShader = (1 << 7),
-   ClosestHitShader = (1 << 8),
-   MissShader = (1 << 9),
-   IntersectionShader = (1 << 10),
-   CallableShader = (1 << 11),
+   RayGenerationShader = (1 << 8),
+   AnyHitShader = (1 << 9),
+   ClosestHitShader = (1 << 10),
+   MissShader = (1 << 11),
+   IntersectionShader = (1 << 12),
+   CallableShader = (1 << 13),
 
-   Transfer = (1 << 12),
-   End = (1 << 13),
+   Transfer = (1 << 14),
+   End = (1 << 15),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -174,6 +176,11 @@ struct ClearValue
    static ClearValue color(const Color& color)
    {
       return ClearValue{.value = color};
+   }
+
+   static ClearValue depth_stencil(const float depth, const u32 stencil)
+   {
+      return ClearValue{.value = DepthStenctilValue{depth, stencil}};
    }
 };
 

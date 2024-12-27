@@ -5,6 +5,9 @@
 #include "Texture.hpp"
 #include "vulkan/Util.hpp"
 
+#include "triglav/Int.hpp"
+#include "triglav/Ranges.hpp"
+
 #include <Device.hpp>
 
 namespace triglav::graphics_api {
@@ -59,6 +62,20 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
    bufferInfo->range = buffer.size();
    bufferInfo->buffer = buffer.vulkan_buffer();
    writeDescriptorSet.pBufferInfo = bufferInfo;
+}
+
+void DescriptorWriter::set_uniform_buffer_array(const uint32_t binding, const std::span<const Buffer*> buffers)
+{
+   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+   writeDescriptorSet.descriptorCount = static_cast<uint32_t>(buffers.size());
+
+   auto* bufferInfos = new VkDescriptorBufferInfo[buffers.size()];
+   for (const auto [i, buffer] : Enumerate(buffers)) {
+      bufferInfos[i].offset = 0;
+      bufferInfos[i].range = buffer->size();
+      bufferInfos[i].buffer = buffer->vulkan_buffer();
+   }
+   writeDescriptorSet.pBufferInfo = bufferInfos;
 }
 
 namespace {
@@ -176,17 +193,20 @@ VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescr
       writeDescriptorSet.pNext = nullptr;
    }
    if (writeDescriptorSet.pBufferInfo != nullptr) {
-      m_descriptorBufferInfoPool.release_object(writeDescriptorSet.pBufferInfo);
+      if (writeDescriptorSet.descriptorCount > 1) {
+         delete[] writeDescriptorSet.pBufferInfo;
+      } else {
+         m_descriptorBufferInfoPool.release_object(writeDescriptorSet.pBufferInfo);
+      }
       writeDescriptorSet.pBufferInfo = nullptr;
    }
    if (writeDescriptorSet.pImageInfo != nullptr) {
       if (writeDescriptorSet.descriptorCount > 1) {
          delete[] writeDescriptorSet.pImageInfo;
-         writeDescriptorSet.pImageInfo = nullptr;
       } else {
          m_descriptorImageInfoPool.release_object(writeDescriptorSet.pImageInfo);
-         writeDescriptorSet.pImageInfo = nullptr;
       }
+      writeDescriptorSet.pImageInfo = nullptr;
    }
 
    writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;

@@ -45,15 +45,24 @@ void BuildContext::declare_texture(const Name texName, const Vector2i texDims, g
 void BuildContext::declare_render_target(const Name rtName, gapi::ColorFormat rtFormat)
 {
    this->m_renderTargets.emplace(rtName, detail::RenderTarget{true, false, gapi::ClearValue::color(gapi::ColorPalette::Black),
-                                                              gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
+                                                              gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage |
+                                                                 gapi::AttachmentAttribute::StoreImage});
    this->add_declaration<detail::decl::Texture>(rtName, Vector2i{0, 0}, rtFormat, gapi::TextureUsage::ColorAttachment);
 }
 
 void BuildContext::declare_render_target_with_dims(const Name rtName, const Vector2i rtDims, gapi::ColorFormat rtFormat)
 {
    this->m_renderTargets.emplace(rtName, detail::RenderTarget{false, false, gapi::ClearValue::color(gapi::ColorPalette::Black),
-                                                              gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
+                                                              gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage |
+                                                                 gapi::AttachmentAttribute::StoreImage});
    this->add_declaration<detail::decl::Texture>(rtName, rtDims, rtFormat, gapi::TextureUsage::ColorAttachment);
+}
+
+void BuildContext::declare_depth_target_with_dims(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat)
+{
+   this->m_renderTargets.emplace(dtName, detail::RenderTarget{false, true, gapi::ClearValue::depth_stencil(1.0f, 0),
+                                                              gapi::AttachmentAttribute::Depth | gapi::AttachmentAttribute::ClearImage});
+   this->add_declaration<detail::decl::Texture>(dtName, dtDims, rtFormat, gapi::TextureUsage::DepthStencilAttachment);
 }
 
 void BuildContext::declare_buffer(const Name buffName, const MemorySize size)
@@ -91,16 +100,34 @@ void BuildContext::bind_rw_texture(const BindingIndex index, const Name texName)
 {
    this->setup_transition(texName, gapi::TextureState::General, m_activePipelineStage);
 
-   ++m_descriptorCounts.storageImageCount;
+   ++m_descriptorCounts.storageTextureCount;
 
    this->add_texture_flag(texName, gapi::TextureUsage::Storage);
 
    DescriptorInfo descriptor;
    descriptor.pipelineStages = m_activePipelineStage;
    descriptor.descriptorType = gapi::DescriptorType::StorageImage;
-   this->write_descriptors(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
 
    this->set_descriptor<detail::descriptor::RWTexture>(index, texName);
+}
+
+void BuildContext::bind_samplable_texture(const BindingIndex index, const TextureRef texRef)
+{
+   if (std::holds_alternative<Name>(texRef)) {
+      const auto texName = std::get<Name>(texRef);
+      this->setup_transition(texName, gapi::TextureState::ShaderRead, m_activePipelineStage);
+      this->add_texture_flag(texName, gapi::TextureUsage::Sampled);
+   }
+
+   ++m_descriptorCounts.samplableTextureCount;
+
+   DescriptorInfo descriptor;
+   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.descriptorType = gapi::DescriptorType::ImageSampler;
+   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+
+   this->set_descriptor<detail::descriptor::SamplableTexture>(index, texRef);
 }
 
 void BuildContext::bind_uniform_buffer(const BindingIndex index, const Name buffName)
@@ -114,9 +141,33 @@ void BuildContext::bind_uniform_buffer(const BindingIndex index, const Name buff
    DescriptorInfo descriptor;
    descriptor.pipelineStages = m_activePipelineStage;
    descriptor.descriptorType = gapi::DescriptorType::UniformBuffer;
-   this->write_descriptors(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
 
    this->set_descriptor<detail::descriptor::UniformBuffer>(index, buffName);
+}
+
+void BuildContext::bind_uniform_buffers(const BindingIndex index, const std::span<const BufferRef> buffers)
+{
+   for (const auto& buffer : buffers) {
+      if (std::holds_alternative<Name>(buffer)) {
+         auto buffName = std::get<Name>(buffer);
+         this->setup_buffer_barrier(buffName, m_activePipelineStage);
+         this->add_buffer_flag(buffName, gapi::BufferUsage::UniformBuffer);
+      }
+   }
+
+   m_descriptorCounts.uniformBufferCount += buffers.size();
+
+   DescriptorInfo descriptor;
+   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.descriptorType = gapi::DescriptorType::UniformBuffer;
+   descriptor.descriptorCount = buffers.size();
+   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+
+   std::vector<BufferRef> bufferRefs;
+   bufferRefs.reserve(buffers.size());
+   std::ranges::copy(buffers, std::back_inserter(bufferRefs));
+   this->set_descriptor<detail::descriptor::UniformBufferArray>(index, std::move(bufferRefs));
 }
 
 void BuildContext::bind_vertex_layout(const VertexLayout& layout)
@@ -132,14 +183,24 @@ void BuildContext::bind_vertex_buffer(const Name buffName)
    this->add_command<detail::cmd::BindVertexBuffer>(buffName);
 }
 
+void BuildContext::bind_index_buffer(const Name buffName)
+{
+   this->setup_buffer_barrier(buffName, gapi::PipelineStage::VertexInput);
+
+   this->add_buffer_flag(buffName, gapi::BufferUsage::IndexBuffer);
+   this->add_command<detail::cmd::BindIndexBuffer>(buffName);
+}
+
 void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Name> renderTargets)
 {
    for (const auto rtName : renderTargets) {
       const auto& rtTexture = this->declaration<detail::decl::Texture>(rtName);
       const auto& renderTarget = m_renderTargets.at(rtName);
 
+      const auto targetStage = renderTarget.isDepthTarget ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
+      const auto lastUsedStage = renderTarget.isDepthTarget ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
       const auto targetState = renderTarget.isDepthTarget ? gapi::TextureState::DepthTarget : gapi::TextureState::RenderTarget;
-      this->setup_transition(rtName, targetState, gapi::PipelineStage::AttachmentOutput);
+      this->setup_transition(rtName, targetState, targetStage, lastUsedStage);
 
       if (renderTarget.isDepthTarget) {
          m_graphicPipelineState.depthTargetFormat = rtTexture.texFormat;
@@ -189,10 +250,17 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
          [this, index, &writer, &storage]<typename TDescriptor>(const TDescriptor& desc) {
             if constexpr (std::is_same_v<TDescriptor, detail::descriptor::RWTexture>) {
                writer.set_storage_image(index, storage.texture(desc.texName));
-            } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::CombinedTexSampler>) {
-               writer.set_texture_only(index, m_resourceManager.get(desc.texName));
+            } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SamplableTexture>) {
+               const gapi::Texture& texture = this->resolve_texture_ref(storage, desc.texRef);
+               writer.set_sampled_texture(index, texture, m_device.sampler_cache().find_sampler(texture.sampler_properties()));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBuffer>) {
                writer.set_raw_uniform_buffer(index, storage.buffer(desc.buffName));
+            } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferArray>) {
+               std::vector<const gapi::Buffer*> buffers;
+               for (const auto ref : desc.buffers) {
+                  buffers.emplace_back(&this->resolve_buffer_ref(storage, ref));
+               }
+               writer.set_uniform_buffer_array(index, buffers);
             }
          },
          *descVariant);
@@ -209,7 +277,7 @@ void BuildContext::add_buffer_flag(const Name buffName, const graphics_api::Buff
    std::get<detail::decl::Buffer>(m_declarations[buffName]).buffUsageFlags |= flag;
 }
 
-void BuildContext::set_buffer_in_transfer_state(const Name buffName, const bool value, graphics_api::PipelineStage pipelineStage)
+void BuildContext::set_buffer_in_transfer_state(const Name buffName, const bool value, const graphics_api::PipelineStage pipelineStage)
 {
    auto& buff = std::get<detail::decl::Buffer>(m_declarations[buffName]);
    buff.lastUsedStage = pipelineStage;
@@ -222,14 +290,18 @@ bool BuildContext::is_buffer_in_transfer_state(const Name buffName) const
 }
 
 void BuildContext::setup_transition(const Name texName, const graphics_api::TextureState targetState,
-                                    graphics_api::PipelineStage targetStage)
+                                    const graphics_api::PipelineStage targetStage,
+                                    const std::optional<graphics_api::PipelineStage> lastUsedStage)
 {
    auto& tex = this->declaration<detail::decl::Texture>(texName);
+   if (tex.currentState == targetState) {
+      return;
+   }
 
    m_commands.emplace_back(std::in_place_type_t<detail::cmd::TextureTransition>{}, texName, tex.lastUsedStage, tex.currentState,
                            targetStage, targetState);
 
-   tex.lastUsedStage = targetStage;
+   tex.lastUsedStage = lastUsedStage.value_or(targetStage);
    tex.currentState = targetState;
 }
 
@@ -276,16 +348,61 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
    return info;
 }
 
-void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset)
+gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, TextureRef texRef) const
 {
-   m_commands.emplace_back(std::in_place_type_t<detail::cmd::BindGraphicsPipeline>{}, m_graphicPipelineState);
+   return std::visit(
+      [this, &storage]<typename TVariant>(const TVariant& var) -> gapi::Texture& {
+         if constexpr (std::is_same_v<TVariant, Name>) {
+            return storage.texture(var);
+         } else if constexpr (std::is_same_v<TVariant, TextureName>) {
+            return m_resourceManager.get(var);
+         } else {
+            assert(0);
+         }
+      },
+      texRef);
+}
+
+graphics_api::Buffer& BuildContext::resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef) const
+{
+   return std::visit(
+      [this, &storage]<typename TVariant>(const TVariant& var) -> gapi::Buffer& {
+         if constexpr (std::is_same_v<TVariant, Name>) {
+            return storage.buffer(var);
+         } else if constexpr (std::is_same_v<TVariant, gapi::Buffer*>) {
+            return *var;
+         } else {
+            assert(0);
+         }
+      },
+      buffRef);
+}
+
+void BuildContext::handle_pending_graphic_state()
+{
+   this->add_command<detail::cmd::BindGraphicsPipeline>(m_graphicPipelineState);
    m_graphicPipelineState.descriptorState.descriptorCount = 0;
+   ++m_descriptorCounts.totalDescriptorSets;
 
    this->handle_descriptor_bindings();
+}
 
-   m_commands.emplace_back(std::in_place_type_t<detail::cmd::DrawPrimitives>{}, vertexCount, vertexOffset, 1, 0);
+void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset)
+{
+   this->handle_pending_graphic_state();
+   this->add_command<detail::cmd::DrawPrimitives>(vertexCount, vertexOffset, 1, 0);
+}
 
-   ++m_descriptorCounts.totalDescriptorSets;
+void BuildContext::draw_indexed_primitives(const u32 indexCount, const u32 indexOffset, const u32 vertexOffset)
+{
+   this->handle_pending_graphic_state();
+   this->add_command<detail::cmd::DrawIndexedPrimitives>(indexCount, indexOffset, vertexOffset, 1u, 0u);
+}
+
+void BuildContext::draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset)
+{
+   this->handle_pending_graphic_state();
+   this->add_command<detail::cmd::DrawIndexedPrimitives>(indexCount, indexOffset, vertexOffset, instanceCount, instanceOffset);
 }
 
 void BuildContext::dispatch(const Vector3i dims)
@@ -392,6 +509,8 @@ void BuildContext::write_commands(ResourceStorage& storage, DescriptorStorage& d
                cmdList.texture_barrier(cmd.srcStageFlags, cmd.dstStageFlags, info);
             } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindVertexBuffer>) {
                cmdList.bind_vertex_buffer(storage.buffer(cmd.buffName), 0);
+            } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindIndexBuffer>) {
+               cmdList.bind_index_buffer(storage.buffer(cmd.buffName));
             } else if constexpr (std::is_same_v<TCmd, detail::cmd::FillBuffer>) {
                cmdList.update_buffer(storage.buffer(cmd.buffName), 0, cmd.data.size(), cmd.data.data());
             } else if constexpr (std::is_same_v<TCmd, detail::cmd::BeginRenderPass>) {
@@ -401,6 +520,8 @@ void BuildContext::write_commands(ResourceStorage& storage, DescriptorStorage& d
                cmdList.end_rendering();
             } else if constexpr (std::is_same_v<TCmd, detail::cmd::DrawPrimitives>) {
                cmdList.draw_primitives(cmd.vertexCount, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
+            } else if constexpr (std::is_same_v<TCmd, detail::cmd::DrawIndexedPrimitives>) {
+               cmdList.draw_indexed_primitives(cmd.indexCount, cmd.indexOffset, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
             }
          },
          cmdVariant);
@@ -426,7 +547,8 @@ void BuildContext::create_resources(ResourceStorage& storage)
    }
 }
 
-void BuildContext::write_descriptors(const graphics_api::PipelineStageFlags stages, const BindingIndex index, const DescriptorInfo& info)
+void BuildContext::set_pipeline_state_descriptor(const graphics_api::PipelineStageFlags stages, const BindingIndex index,
+                                                 const DescriptorInfo& info)
 {
    assert(index < MAX_DESCRIPTOR_COUNT);
    if (stages & gapi::PipelineStage::FragmentShader || stages & gapi::PipelineStage::VertexShader) {
@@ -442,11 +564,14 @@ void BuildContext::write_descriptors(const graphics_api::PipelineStageFlags stag
 gapi::DescriptorPool BuildContext::create_descriptor_pool() const
 {
    std::vector<std::pair<gapi::DescriptorType, u32>> descriptorCounts;
-   if (m_descriptorCounts.storageImageCount != 0) {
-      descriptorCounts.emplace_back(gapi::DescriptorType::StorageImage, FRAMES_IN_FLIGHT_COUNT * m_descriptorCounts.storageImageCount);
+   if (m_descriptorCounts.storageTextureCount != 0) {
+      descriptorCounts.emplace_back(gapi::DescriptorType::StorageImage, FRAMES_IN_FLIGHT_COUNT * m_descriptorCounts.storageTextureCount);
    }
    if (m_descriptorCounts.uniformBufferCount != 0) {
       descriptorCounts.emplace_back(gapi::DescriptorType::UniformBuffer, FRAMES_IN_FLIGHT_COUNT * m_descriptorCounts.uniformBufferCount);
+   }
+   if (m_descriptorCounts.samplableTextureCount != 0) {
+      descriptorCounts.emplace_back(gapi::DescriptorType::ImageSampler, FRAMES_IN_FLIGHT_COUNT * m_descriptorCounts.samplableTextureCount);
    }
 
    return GAPI_CHECK(m_device.create_descriptor_pool(descriptorCounts, FRAMES_IN_FLIGHT_COUNT * m_descriptorCounts.totalDescriptorSets));

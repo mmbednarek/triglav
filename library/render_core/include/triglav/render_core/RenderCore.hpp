@@ -33,6 +33,7 @@ struct DescriptorInfo
 {
    graphics_api::PipelineStageFlags pipelineStages;
    graphics_api::DescriptorType descriptorType{graphics_api::DescriptorType::UniformBuffer};
+   u32 descriptorCount{1};
 
    [[nodiscard]] PipelineHash hash() const;
 };

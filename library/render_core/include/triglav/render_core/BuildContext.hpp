@@ -22,6 +22,9 @@ class Device;
 
 namespace triglav::render_core {
 
+using TextureRef = std::variant<TextureName, Name>;
+using BufferRef = std::variant<graphics_api::Buffer*, Name>;
+
 namespace detail {
 
 namespace descriptor {
@@ -31,19 +34,25 @@ struct RWTexture
    Name texName{};
 };
 
+struct SamplableTexture
+{
+   TextureRef texRef;
+};
+
 struct UniformBuffer
 {
    Name buffName{};
 };
 
-struct CombinedTexSampler
+struct UniformBufferArray
 {
-   TextureName texName;
+   std::vector<BufferRef> buffers{};
 };
 
 }// namespace descriptor
 
-using Descriptor = std::variant<descriptor::RWTexture, descriptor::CombinedTexSampler, descriptor::UniformBuffer>;
+using Descriptor =
+   std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::UniformBuffer, descriptor::UniformBufferArray>;
 
 struct RenderTarget
 {
@@ -100,6 +109,11 @@ struct BindVertexBuffer
    Name buffName{};
 };
 
+struct BindIndexBuffer
+{
+   Name buffName{};
+};
+
 struct TextureTransition
 {
    Name texName{};
@@ -118,6 +132,15 @@ struct ExecutionBarrier
 struct DrawPrimitives
 {
    u32 vertexCount{};
+   u32 vertexOffset{};
+   u32 instanceCount{};
+   u32 instanceOffset{};
+};
+
+struct DrawIndexedPrimitives
+{
+   u32 indexCount{};
+   u32 indexOffset{};
    u32 vertexOffset{};
    u32 instanceCount{};
    u32 instanceOffset{};
@@ -151,14 +174,15 @@ struct EndRenderPass
 
 }// namespace cmd
 
-using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::Dispatch, cmd::BindDescriptors,
-                             cmd::BindVertexBuffer, cmd::CopyTextureToBuffer, cmd::TextureTransition, cmd::ExecutionBarrier,
-                             cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass>;
+using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
+                             cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
+                             cmd::TextureTransition, cmd::ExecutionBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass>;
 
 struct DescriptorCounts
 {
-   u32 storageImageCount{};
+   u32 storageTextureCount{};
    u32 uniformBufferCount{};
+   u32 samplableTextureCount{};
    u32 totalDescriptorSets{};
 };
 
@@ -173,6 +197,7 @@ class BuildContext
    void declare_texture(Name texName, Vector2i texDims, graphics_api::ColorFormat texFormat = GAPI_FORMAT(RGBA, sRGB));
    void declare_render_target(Name rtName, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
    void declare_render_target_with_dims(Name rtName, Vector2i rtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
+   void declare_depth_target_with_dims(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(D, UNorm16));
    void declare_buffer(Name buffName, MemorySize size);
    void declare_staging_buffer(Name buffName, MemorySize size);
 
@@ -183,11 +208,14 @@ class BuildContext
 
    // Descriptor binding
    void bind_rw_texture(BindingIndex index, Name texName);
+   void bind_samplable_texture(BindingIndex index, TextureRef texRef);
    void bind_uniform_buffer(BindingIndex index, Name buffName);
+   void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
 
    // Vertex binding
    void bind_vertex_layout(const VertexLayout& layout);
    void bind_vertex_buffer(Name buffName);
+   void bind_index_buffer(Name buffName);
 
    // Render pass
    void begin_render_pass_raw(Name passName, std::span<Name> renderTargets);
@@ -202,6 +230,8 @@ class BuildContext
 
    // Drawing
    void draw_primitives(u32 vertexCount, u32 vertexOffset);
+   void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
+   void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset);
 
    // Execution
    void dispatch(Vector3i dims);
@@ -229,7 +259,7 @@ class BuildContext
    void write_commands();
 
  private:
-   void write_descriptors(graphics_api::PipelineStageFlags stages, BindingIndex index, const DescriptorInfo& info);
+   void set_pipeline_state_descriptor(graphics_api::PipelineStageFlags stages, BindingIndex index, const DescriptorInfo& info);
    void handle_descriptor_bindings();
    graphics_api::DescriptorArray& allocate_descriptors(DescriptorStorage& storage, graphics_api::DescriptorPool& pool) const;
    void write_descriptor(ResourceStorage& storage, const graphics_api::DescriptorView& descView,
@@ -239,9 +269,13 @@ class BuildContext
    void add_buffer_flag(Name buffName, graphics_api::BufferUsage flag);
    void set_buffer_in_transfer_state(Name buffName, bool value, graphics_api::PipelineStage pipelineStage);
    [[nodiscard]] bool is_buffer_in_transfer_state(Name buffName) const;
-   void setup_transition(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage);
+   void setup_transition(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
+                         std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
    void setup_buffer_barrier(Name buffName, graphics_api::PipelineStage targetStage);
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass) const;
+   graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef) const;
+   graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef) const;
+   void handle_pending_graphic_state();
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, TArgs&&... args)

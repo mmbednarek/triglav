@@ -30,7 +30,8 @@ PipelineHash hash_color_format(const graphics_api::ColorFormat& format)
 
 PipelineHash DescriptorInfo::hash() const
 {
-   return 193043 * static_cast<u32>(this->descriptorType) + 225349 * static_cast<u32>(this->pipelineStages.value);
+   return 193043 * static_cast<u32>(this->descriptorType) + 225349 * static_cast<u32>(this->pipelineStages.value) +
+          4411217 * this->descriptorCount;
 }
 
 PipelineHash DescriptorState::hash() const

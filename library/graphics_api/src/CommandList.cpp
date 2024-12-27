@@ -159,11 +159,12 @@ void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
    this->draw_primitives(vertexCount, vertexOffset, 1, 0);
 }
 
-void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset, const int vertexOffset)
+void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset, const int vertexOffset, const int instanceCount,
+                                          const int firstInstance)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
    m_triangleCount += indexCount / 3;
-   vkCmdDrawIndexed(m_commandBuffer, indexCount, 1, indexOffset, vertexOffset, 0);
+   vkCmdDrawIndexed(m_commandBuffer, indexCount, instanceCount, indexOffset, vertexOffset, firstInstance);
 }
 
 void CommandList::dispatch(const u32 x, const u32 y, const u32 z)

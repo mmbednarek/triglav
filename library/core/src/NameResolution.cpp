@@ -9,7 +9,7 @@ namespace {
 using namespace std::string_view_literals;
 using namespace name_literals;
 
-std::map<Name, std::string_view> KnownNames{
+std::map<Name, std::string_view> KnownNames {
    {"albedo"_name, "albedo"sv},
    {"ambient_occlusion"_name, "ambient_occlusion"sv},
    {"anisotropy"_name, "anisotropy"sv},
@@ -83,6 +83,7 @@ std::map<Name, std::string_view> KnownNames{
    {"info_dialog/metrics/shading_triangles"_name, "info_dialog/metrics/shading_triangles"sv},
    {"info_dialog/metrics/shading_triangles/value"_name, "info_dialog/metrics/shading_triangles/value"sv},
    {"info_dialog/title"_name, "info_dialog/title"sv},
+   {"location"_name, "location"sv},
    {"max_lod"_name, "max_lod"sv},
    {"noise"_name, "noise"sv},
    {"noRayTracing"_name, "noRayTracing"sv},
@@ -124,28 +125,44 @@ std::map<Name, std::string_view> KnownNames{
    {"sync_buffers"_name, "sync_buffers"sv},
    {"__TARGET__"_name, "__TARGET__"sv},
    {"teapot"_name, "teapot"sv},
+   {"test.basic_compute.output_buffer"_name, "test.basic_compute.output_buffer"sv},
+   {"test.basic_compute.pattern_texture"_name, "test.basic_compute.pattern_texture"sv},
+   {"test.basic_depth.depth_target"_name, "test.basic_depth.depth_target"sv},
+   {"test.basic_depth.index_buffer"_name, "test.basic_depth.index_buffer"sv},
+   {"test.basic_depth.output_buffer"_name, "test.basic_depth.output_buffer"sv},
+   {"test.basic_depth.render_pass"_name, "test.basic_depth.render_pass"sv},
+   {"test.basic_depth.render_target"_name, "test.basic_depth.render_target"sv},
+   {"test.basic_depth.uniform_buffer"_name, "test.basic_depth.uniform_buffer"sv},
+   {"test.basic_depth.vertex_buffer"_name, "test.basic_depth.vertex_buffer"sv},
+   {"test.basic_graphics.output_buffer"_name, "test.basic_graphics.output_buffer"sv},
+   {"test.basic_graphics.render_pass"_name, "test.basic_graphics.render_pass"sv},
+   {"test.basic_graphics.render_target"_name, "test.basic_graphics.render_target"sv},
+   {"test.basic_graphics.uniform_buffer"_name, "test.basic_graphics.uniform_buffer"sv},
+   {"test.basic_graphics.vertex_buffer"_name, "test.basic_graphics.vertex_buffer"sv},
+   {"test.basic_texture.output_buffer"_name, "test.basic_texture.output_buffer"sv},
+   {"test.basic_texture.render_pass"_name, "test.basic_texture.render_pass"sv},
+   {"test.basic_texture.render_target"_name, "test.basic_texture.render_target"sv},
+   {"test.basic_texture.vertex_buffer"_name, "test.basic_texture.vertex_buffer"sv},
    {"testing/basic_compute"_name, "testing/basic_compute"sv},
-   {"testing/basic_fragment"_name, "testing/basic_fragment"sv},
-   {"testing/basic_vertex"_name, "testing/basic_vertex"sv},
-   {"test.output_buffer"_name, "test.output_buffer"sv},
-   {"test.pattern_texture"_name, "test.pattern_texture"sv},
-   {"test.render_pass"_name, "test.render_pass"sv},
-   {"test.render_target"_name, "test.render_target"sv},
-   {"test.uniform_buffer"_name, "test.uniform_buffer"sv},
-   {"test.vertex_buffer"_name, "test.vertex_buffer"sv},
+   {"testing/basic_depth"_name, "testing/basic_depth"sv},
+   {"testing/basic_graphics"_name, "testing/basic_graphics"sv},
+   {"testing/basic_texture"_name, "testing/basic_texture"sv},
+   {"testing/sample"_name, "testing/sample"sv},
    {"text"_name, "text"sv},
    {"threadCount"_name, "threadCount"sv},
    {"ui"_name, "ui"sv},
    {"user_interface"_name, "user_interface"sv},
+   {"uv"_name, "uv"sv},
    {"width"_name, "width"sv},
 };
 
-}// namespace
+} // namespace
 
 std::string_view resolve_name(const Name name)
 {
-   const auto it = KnownNames.find(name);
-   return it == KnownNames.end() ? std::string_view{} : it->second;
+    const auto it = KnownNames.find(name);
+    return it == KnownNames.end() ? std::string_view{} : it->second;
 }
 
-}// namespace triglav
+} // namespace triglav
+
