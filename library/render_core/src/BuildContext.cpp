@@ -116,8 +116,17 @@ void BuildContext::bind_samplable_texture(const BindingIndex index, const Textur
 {
    if (std::holds_alternative<Name>(texRef)) {
       const auto texName = std::get<Name>(texRef);
-      this->setup_transition(texName, gapi::TextureState::ShaderRead, m_activePipelineStage);
+      const auto& texDecl = this->declaration<detail::decl::Texture>(texName);
+
+      const auto isDepth = texDecl.texUsageFlags & gapi::TextureUsage::DepthStencilAttachment;
+      const auto targetState = isDepth ? gapi::TextureState::DepthStencilRead : gapi::TextureState::ShaderRead;
+      this->setup_transition(texName, targetState, m_activePipelineStage);
       this->add_texture_flag(texName, gapi::TextureUsage::Sampled);
+
+      if (isDepth) {
+         auto& renderTarget = m_renderTargets.at(texName);
+         renderTarget.flags |= gapi::AttachmentAttribute::StoreImage;
+      }
    }
 
    ++m_descriptorCounts.samplableTextureCount;
@@ -388,6 +397,8 @@ void BuildContext::handle_pending_graphic_state()
 {
    this->add_command<detail::cmd::BindGraphicsPipeline>(m_graphicPipelineState);
    m_graphicPipelineState.descriptorState.descriptorCount = 0;
+   m_graphicPipelineState.vertexLayout.stride = 0;
+   m_graphicPipelineState.vertexLayout.attributes.clear();
    ++m_descriptorCounts.totalDescriptorSets;
 
    this->handle_descriptor_bindings();

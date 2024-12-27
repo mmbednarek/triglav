@@ -22,6 +22,12 @@ resources:
     source: "multiple_passes_first_fs.spv"
   - name: "testing/multiple_passes_second.fshader"
     source: "multiple_passes_second_fs.spv"
+  - name: "testing/depth_target_sample/draw.vshader"
+    source: "depth_target_sample_draw_vs.spv"
+  - name: "testing/depth_target_sample/draw.fshader"
+    source: "depth_target_sample_draw_fs.spv"
+  - name: "testing/depth_target_sample/sample.fshader"
+    source: "depth_target_sample_sample_fs.spv"
   # Example texture
   - name: "testing/sample.tex"
     source: "sample.png"

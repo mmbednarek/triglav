@@ -366,3 +366,82 @@ TEST(BuildContext, MultiplePasses)
 
    ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
 }
+
+TEST(BuildContext, DepthTargetSample)
+{
+   using triglav::io::FileOpenMode;
+   using triglav::io::open_file;
+   using triglav::io::Path;
+
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+
+   auto boxMesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
+   boxMesh.triangulate();
+   const auto boxMeshData = boxMesh.to_vertex_data();
+
+   const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
+   const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   const auto transform = perspective * view;
+
+   static constexpr triglav::Vector2i dims{256, 256};
+   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+
+   // Declare resources
+   buildContext.declare_depth_target_with_dims("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
+   buildContext.declare_render_target_with_dims("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   buildContext.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, bufferSize);
+   buildContext.declare_buffer("test.depth_target_sample.vertex_buffer"_name,
+                               boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
+   buildContext.declare_buffer("test.depth_target_sample.index_buffer"_name, boxMeshData.indices.size() * sizeof(triglav::u32));
+   buildContext.declare_buffer("test.depth_target_sample.uniform_buffer"_name, sizeof(triglav::Matrix4x4));
+
+   buildContext.fill_buffer_raw("test.depth_target_sample.vertex_buffer"_name, boxMeshData.vertices.data(),
+                                boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
+   buildContext.fill_buffer_raw("test.depth_target_sample.index_buffer"_name, boxMeshData.indices.data(),
+                                boxMeshData.indices.size() * sizeof(triglav::u32));
+   buildContext.fill_buffer("test.depth_target_sample.uniform_buffer"_name, transform);
+
+   {
+      // Define render pass
+      RenderPassScope scope(buildContext, "test.depth_target_sample.depth_pass"_name, "test.depth_target_sample.depth_target"_name);
+
+      // Define vertex shader, layout and input buffer
+      buildContext.bind_vertex_shader("testing/depth_target_sample/draw.vshader"_rc);
+
+      triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
+      layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
+      buildContext.bind_vertex_layout(layout);
+
+      buildContext.bind_vertex_buffer("test.depth_target_sample.vertex_buffer"_name);
+      buildContext.bind_index_buffer("test.depth_target_sample.index_buffer"_name);
+      buildContext.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
+
+      // Bind fragment shader and texture
+      buildContext.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
+
+      // Draw
+      buildContext.draw_indexed_primitives(boxMeshData.indices.size(), 0, 0, 1, 0);
+   }
+   {
+      // Second pass
+      RenderPassScope scope(buildContext, "test.depth_target_sample.render_pass"_name, "test.depth_target_sample.render_target"_name);
+      buildContext.bind_fragment_shader("testing/depth_target_sample/sample.fshader"_rc);
+      buildContext.bind_samplable_texture(0, "test.depth_target_sample.depth_target"_name);
+      buildContext.draw_full_screen_quad();
+   }
+
+   // Copy the render target to staging buffer
+   buildContext.copy_texture_to_buffer("test.depth_target_sample.render_target"_name, "test.depth_target_sample.output_buffer"_name);
+
+   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   execute_build_context(buildContext, storage);
+
+   auto& outBuffer = storage[0].buffer("test.depth_target_sample.output_buffer"_name);
+   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+
+   const auto expectedBitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expectedBitmap.has_value());
+
+   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+}
