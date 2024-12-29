@@ -67,6 +67,7 @@ class CommandList
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
    void execution_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage) const;
+   void buffer_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const BufferBarrier> barriers) const;
 
    void blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                      const TextureRegion& targetRegion) const;

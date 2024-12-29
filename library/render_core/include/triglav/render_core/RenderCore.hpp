@@ -88,11 +88,31 @@ struct ComputePipelineState
    [[nodiscard]] PipelineHash hash() const;
 };
 
-enum class BufferState
+using TextureRef = std::variant<TextureName, Name>;
+using BufferRef = std::variant<graphics_api::Buffer*, Name>;
+
+struct ExecutionBarrier
 {
-   Undefined,
-   Read,
-   Write,
+   graphics_api::PipelineStageFlags srcStageFlags{};
+   graphics_api::PipelineStageFlags dstStageFlags{};
+};
+
+struct BufferBarrier
+{
+   BufferRef bufferRef;
+   graphics_api::PipelineStageFlags srcStageFlags{};
+   graphics_api::PipelineStageFlags dstStageFlags{};
+   graphics_api::BufferAccessFlags srcBufferAccess{};
+   graphics_api::BufferAccessFlags dstBufferAccess{};
+};
+
+struct TextureBarrier
+{
+   TextureRef textureRef;
+   graphics_api::PipelineStageFlags srcStageFlags{};
+   graphics_api::PipelineStageFlags dstStageFlags{};
+   graphics_api::TextureState srcState{};
+   graphics_api::TextureState dstState{};
 };
 
 }// namespace triglav::render_core

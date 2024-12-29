@@ -125,6 +125,15 @@ enum class PipelineStage : uint32_t
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
 
+enum class MemoryAccess
+{
+   None = 0,
+   Read = (1 << 0),
+   Write = (1 << 1),
+};
+
+TRIGLAV_DECL_FLAGS(MemoryAccess)
+
 struct ColorFormat
 {
    ColorFormatOrder order;
@@ -249,10 +258,9 @@ enum class TextureState
    DepthTarget,
 };
 
-[[nodiscard]] constexpr bool is_write_state(const TextureState state)
+[[nodiscard]] constexpr MemoryAccess to_memory_access(const TextureState state)
 {
-   switch (state)
-   {
+   switch (state) {
    case TextureState::TransferDst:
       [[fallthrough]];
    case TextureState::General:
@@ -262,29 +270,18 @@ enum class TextureState
    case TextureState::RenderTarget:
       [[fallthrough]];
    case TextureState::DepthTarget:
-      return true;
-   default:
-      return false;
-   }
-}
-
-[[nodiscard]] constexpr bool is_read_state(const TextureState state)
-{
-   switch (state)
-   {
+      return MemoryAccess::Write;
    case TextureState::TransferSrc:
       [[fallthrough]];
    case TextureState::ShaderRead:
       [[fallthrough]];
    case TextureState::DepthStencilRead:
       [[fallthrough]];
-   case TextureState::General:
-      [[fallthrough]];
    case TextureState::GeneralRead:
       [[fallthrough]];
-      return true;
+      return MemoryAccess::Read;
    default:
-      return false;
+      return MemoryAccess::None;
    }
 }
 
@@ -448,6 +445,42 @@ enum class DeviceFeature : u32
 
 TRIGLAV_DECL_FLAGS(DeviceFeature)
 
+enum class BufferAccess
+{
+   None = 0,
+   TransferRead = (1 << 0),
+   TransferWrite = (1 << 1),
+   UniformRead = (1 << 2),
+   IndexRead = (1 << 3),
+   VertexRead = (1 << 4),
+   ShaderRead = (1 << 5),
+   ShaderWrite = (1 << 6),
+};
+
+[[nodiscard]] constexpr MemoryAccess to_memory_access(const BufferAccess access)
+{
+   switch (access) {
+   case BufferAccess::TransferWrite:
+      [[fallthrough]];
+   case BufferAccess::ShaderWrite:
+      return MemoryAccess::Write;
+   case BufferAccess::TransferRead:
+      [[fallthrough]];
+   case BufferAccess::UniformRead:
+      [[fallthrough]];
+   case BufferAccess::IndexRead:
+      [[fallthrough]];
+   case BufferAccess::VertexRead:
+      [[fallthrough]];
+   case BufferAccess::ShaderRead:
+      return MemoryAccess::Read;
+   default:
+      return MemoryAccess::None;
+   }
+}
+
+TRIGLAV_DECL_FLAGS(BufferAccess)
+
 struct RenderAttachment
 {
    Texture* texture;
@@ -465,6 +498,15 @@ struct RenderingInfo
 
    std::vector<RenderAttachment> colorAttachments;
    std::optional<RenderAttachment> depthAttachment;
+};
+
+class Buffer;
+
+struct BufferBarrier
+{
+   Buffer* buffer;
+   BufferAccessFlags srcAccess;
+   BufferAccessFlags dstAccess;
 };
 
 template<typename T>

@@ -97,7 +97,7 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
 
    std::array<graphics_api::ClearValue, 2> clearValues{
       graphics_api::ColorPalette::Black,
-      graphics_api::ColorPalette::Black,
+      graphics_api::Color{0, 0, 0, 0},
    };
    cmdList.begin_render_pass(framebuffer, clearValues);
 

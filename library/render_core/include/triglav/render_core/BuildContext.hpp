@@ -22,9 +22,6 @@ class Device;
 
 namespace triglav::render_core {
 
-using TextureRef = std::variant<TextureName, Name>;
-using BufferRef = std::variant<graphics_api::Buffer*, Name>;
-
 namespace detail {
 
 namespace descriptor {
@@ -89,25 +86,14 @@ struct BindIndexBuffer
    Name buffName{};
 };
 
-struct TextureTransition
+struct PlaceTextureBarrier
 {
-   Name texName{};
-   graphics_api::PipelineStageFlags srcStageFlags{};
-   graphics_api::TextureState srcState{};
-   graphics_api::PipelineStageFlags dstStageFlags{};
-   graphics_api::TextureState dstState{};
+   std::unique_ptr<TextureBarrier> barrier;
 };
 
-struct ExecutionBarrierData
+struct PlaceBufferBarrier
 {
-   graphics_api::PipelineStageFlags srcStageFlags{};
-   graphics_api::PipelineStageFlags dstStageFlags{};
-};
-
-struct ExecutionBarrier
-{
-   // hold the data in a unique ptr so it can be modified.
-   std::unique_ptr<ExecutionBarrierData> data;
+   std::unique_ptr<BufferBarrier> barrier;
 };
 
 struct DrawPrimitives
@@ -164,8 +150,8 @@ struct Texture
    graphics_api::ColorFormat texFormat{};
    graphics_api::TextureUsageFlags texUsageFlags{};
    graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
-   graphics_api::PipelineStage lastStage{graphics_api::PipelineStage::Entrypoint};
-   graphics_api::PipelineStage lastWriteStage{graphics_api::PipelineStage::Entrypoint};
+   graphics_api::PipelineStageFlags lastStages{graphics_api::PipelineStage::Entrypoint};
+   TextureBarrier* lastTextureBarrier{};
 };
 
 struct Buffer
@@ -174,9 +160,8 @@ struct Buffer
    MemorySize buffSize{};
    graphics_api::BufferUsageFlags buffUsageFlags{};
    graphics_api::PipelineStageFlags lastStages{};
-   graphics_api::PipelineStage lastWriteStage{graphics_api::PipelineStage::Entrypoint};
-   BufferState bufferState{BufferState::Undefined};
-   cmd::ExecutionBarrierData* executionBarrier{};
+   graphics_api::BufferAccess currentAccess{graphics_api::BufferAccess::None};
+   BufferBarrier* lastBufferBarrier{};
 };
 
 }// namespace decl
@@ -185,7 +170,7 @@ using Declaration = std::variant<decl::Texture, decl::Buffer>;
 
 using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
                              cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
-                             cmd::TextureTransition, cmd::ExecutionBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass>;
+                             cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass>;
 
 struct DescriptorCounts
 {
@@ -268,8 +253,6 @@ class BuildContext
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const;
 
-   void write_commands();
-
  private:
    void set_pipeline_state_descriptor(graphics_api::PipelineStageFlags stages, BindingIndex index, const DescriptorInfo& info);
    void handle_descriptor_bindings();
@@ -279,15 +262,17 @@ class BuildContext
 
    void add_texture_flag(Name texName, graphics_api::TextureUsage flag);
    void add_buffer_flag(Name buffName, graphics_api::BufferUsage flag);
-   void setup_transition(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
-                         std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
-   void setup_buffer_barrier(Name buffName, BufferState targetState, graphics_api::PipelineStage targetStage);
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass) const;
    graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef) const;
    graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef) const;
    void handle_pending_graphic_state();
+
+   // Barrier support
+   void setup_texture_barrier(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
+                              std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
+   void setup_buffer_barrier(Name buffName, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStage targetStage);
    void prepare_texture(Name texName, graphics_api::TextureState state, graphics_api::TextureUsage usage);
-   void prepare_buffer(Name buffName, BufferState bufferState, graphics_api::BufferUsage usage);
+   void prepare_buffer(Name buffName, graphics_api::BufferAccess access, graphics_api::BufferUsage usage);
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, TArgs&&... args)

@@ -311,6 +311,29 @@ void CommandList::execution_barrier(PipelineStageFlags sourceStage, PipelineStag
                         vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, 0, nullptr, 0, nullptr);
 }
 
+void CommandList::buffer_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
+                                 const std::span<const BufferBarrier> barriers) const
+{
+   std::vector<VkBufferMemoryBarrier> vkBarriers{};
+   vkBarriers.resize(barriers.size());
+
+   for (const auto [i, barrier] : Enumerate(barriers)) {
+      auto& vkBarrier = vkBarriers[i];
+      vkBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+      vkBarrier.srcAccessMask = vulkan::to_vulkan_access_flags(barrier.srcAccess);
+      vkBarrier.dstAccessMask = vulkan::to_vulkan_access_flags(barrier.dstAccess);
+      vkBarrier.buffer = barrier.buffer->vulkan_buffer();
+      vkBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      vkBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+      vkBarrier.offset = 0;
+      vkBarrier.size = VK_WHOLE_SIZE;
+   }
+
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
+                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, vkBarriers.size(), vkBarriers.data(), 0,
+                        nullptr);
+}
+
 void CommandList::blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                                const TextureRegion& targetRegion) const
 {

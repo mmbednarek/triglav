@@ -38,6 +38,7 @@ VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType);
 VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags);
 VkPresentModeKHR to_vulkan_present_mode(PresentMode presentMode);
 VkClearValue to_vulkan_clear_value(const ClearValue& clearValue);
+VkAccessFlags to_vulkan_access_flags(BufferAccessFlags accessFlags);
 
 VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttachment& attachment);
 

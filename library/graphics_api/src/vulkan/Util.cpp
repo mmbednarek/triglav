@@ -630,6 +630,36 @@ VkClearValue to_vulkan_clear_value(const ClearValue& clearValue)
    return result;
 }
 
+VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags inFlags)
+{
+   using enum BufferAccess;
+
+   VkAccessFlags outFlags{};
+   if (inFlags & TransferRead) {
+      outFlags |= VK_ACCESS_TRANSFER_READ_BIT;
+   }
+   if (inFlags & TransferWrite) {
+      outFlags |= VK_ACCESS_TRANSFER_WRITE_BIT;
+   }
+   if (inFlags & UniformRead) {
+      outFlags |= VK_ACCESS_UNIFORM_READ_BIT;
+   }
+   if (inFlags & IndexRead) {
+      outFlags |= VK_ACCESS_INDEX_READ_BIT;
+   }
+   if (inFlags & VertexRead) {
+      outFlags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+   }
+   if (inFlags & ShaderRead) {
+      outFlags |= VK_ACCESS_SHADER_READ_BIT;
+   }
+   if (inFlags & ShaderWrite) {
+      outFlags |= VK_ACCESS_SHADER_WRITE_BIT;
+   }
+
+   return outFlags;
+}
+
 VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttachment& attachment)
 {
    VkRenderingAttachmentInfo result{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};

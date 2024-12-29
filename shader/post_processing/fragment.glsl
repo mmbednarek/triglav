@@ -82,8 +82,8 @@ void main() {
         backColor = texture(texColor, fragTexCoord).rgb;
     }
 
+    vec4 bloomColor = texture(texBloom, fragTexCoord);
     if (pc.enableBloom) {
-        vec4 bloomColor = texture(texBloom, fragTexCoord);
         backColor = backColor*(1.0 - bloomColor.a) + bloomColor.rgb*bloomColor.a;
     }
 
