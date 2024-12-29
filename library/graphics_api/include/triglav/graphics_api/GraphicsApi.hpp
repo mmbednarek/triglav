@@ -145,6 +145,18 @@ struct ColorFormat
       }
       return result;
    }
+
+   [[nodiscard]] bool is_depth_format() const
+   {
+      switch (this->order) {
+      case ColorFormatOrder::DS:
+         [[fallthrough]];
+      case ColorFormatOrder::D:
+         return true;
+      default:
+         return false;
+      }
+   }
 };
 
 struct Resolution
@@ -236,6 +248,45 @@ enum class TextureState
    RenderTarget,
    DepthTarget,
 };
+
+[[nodiscard]] constexpr bool is_write_state(const TextureState state)
+{
+   switch (state)
+   {
+   case TextureState::TransferDst:
+      [[fallthrough]];
+   case TextureState::General:
+      [[fallthrough]];
+   case TextureState::GeneralWrite:
+      [[fallthrough]];
+   case TextureState::RenderTarget:
+      [[fallthrough]];
+   case TextureState::DepthTarget:
+      return true;
+   default:
+      return false;
+   }
+}
+
+[[nodiscard]] constexpr bool is_read_state(const TextureState state)
+{
+   switch (state)
+   {
+   case TextureState::TransferSrc:
+      [[fallthrough]];
+   case TextureState::ShaderRead:
+      [[fallthrough]];
+   case TextureState::DepthStencilRead:
+      [[fallthrough]];
+   case TextureState::General:
+      [[fallthrough]];
+   case TextureState::GeneralRead:
+      [[fallthrough]];
+      return true;
+   default:
+      return false;
+   }
+}
 
 class Texture;
 

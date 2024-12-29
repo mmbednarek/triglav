@@ -31,7 +31,7 @@ namespace descriptor {
 
 struct RWTexture
 {
-   Name texName{};
+   TextureRef texRef;
 };
 
 struct SamplableTexture
@@ -41,7 +41,7 @@ struct SamplableTexture
 
 struct UniformBuffer
 {
-   Name buffName{};
+   BufferRef buffRef{};
 };
 
 struct UniformBufferArray
@@ -61,31 +61,6 @@ struct RenderTarget
    graphics_api::ClearValue clearValue{};
    graphics_api::AttachmentAttributeFlags flags;
 };
-
-namespace decl {
-
-struct Texture
-{
-   Name texName{};
-   Vector2i texDims{};
-   graphics_api::ColorFormat texFormat{};
-   graphics_api::TextureUsageFlags texUsageFlags{};
-   graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
-   graphics_api::PipelineStage lastUsedStage{graphics_api::PipelineStage::Entrypoint};
-};
-
-struct Buffer
-{
-   Name buffName{};
-   MemorySize buffSize{};
-   graphics_api::BufferUsageFlags buffUsageFlags{};
-   graphics_api::PipelineStage lastUsedStage{graphics_api::PipelineStage::Entrypoint};
-   bool isInTransferState{false};
-};
-
-}// namespace decl
-
-using Declaration = std::variant<decl::Texture, decl::Buffer>;
 
 namespace cmd {
 
@@ -123,10 +98,16 @@ struct TextureTransition
    graphics_api::TextureState dstState{};
 };
 
-struct ExecutionBarrier
+struct ExecutionBarrierData
 {
    graphics_api::PipelineStageFlags srcStageFlags{};
    graphics_api::PipelineStageFlags dstStageFlags{};
+};
+
+struct ExecutionBarrier
+{
+   // hold the data in a unique ptr so it can be modified.
+   std::unique_ptr<ExecutionBarrierData> data;
 };
 
 struct DrawPrimitives
@@ -153,8 +134,8 @@ struct Dispatch
 
 struct CopyTextureToBuffer
 {
-   Name srcTexture;
-   Name dstBuffer;
+   TextureRef srcTexture;
+   BufferRef dstBuffer;
 };
 
 struct FillBuffer
@@ -173,6 +154,34 @@ struct EndRenderPass
 {};
 
 }// namespace cmd
+
+namespace decl {
+
+struct Texture
+{
+   Name texName{};
+   Vector2i texDims{};
+   graphics_api::ColorFormat texFormat{};
+   graphics_api::TextureUsageFlags texUsageFlags{};
+   graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
+   graphics_api::PipelineStage lastStage{graphics_api::PipelineStage::Entrypoint};
+   graphics_api::PipelineStage lastWriteStage{graphics_api::PipelineStage::Entrypoint};
+};
+
+struct Buffer
+{
+   Name buffName{};
+   MemorySize buffSize{};
+   graphics_api::BufferUsageFlags buffUsageFlags{};
+   graphics_api::PipelineStageFlags lastStages{};
+   graphics_api::PipelineStage lastWriteStage{graphics_api::PipelineStage::Entrypoint};
+   BufferState bufferState{BufferState::Undefined};
+   cmd::ExecutionBarrierData* executionBarrier{};
+};
+
+}// namespace decl
+
+using Declaration = std::variant<decl::Texture, decl::Buffer>;
 
 using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
                              cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
@@ -207,9 +216,9 @@ class BuildContext
    void bind_compute_shader(ComputeShaderName csName);
 
    // Descriptor binding
-   void bind_rw_texture(BindingIndex index, Name texName);
+   void bind_rw_texture(BindingIndex index, TextureRef texRef);
    void bind_samplable_texture(BindingIndex index, TextureRef texRef);
-   void bind_uniform_buffer(BindingIndex index, Name buffName);
+   void bind_uniform_buffer(BindingIndex index, BufferRef buffRef);
    void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
 
    // Vertex binding
@@ -241,7 +250,7 @@ class BuildContext
 
    // Transfer
    void fill_buffer_raw(Name buffName, const void* ptr, MemorySize size);
-   void copy_texture_to_buffer(Name srcTex, Name dstBuff);
+   void copy_texture_to_buffer(TextureRef srcTex, BufferRef dstBuff);
 
    template<typename TData>
    void fill_buffer(const Name buffName, const TData& data)
@@ -270,15 +279,15 @@ class BuildContext
 
    void add_texture_flag(Name texName, graphics_api::TextureUsage flag);
    void add_buffer_flag(Name buffName, graphics_api::BufferUsage flag);
-   void set_buffer_in_transfer_state(Name buffName, bool value, graphics_api::PipelineStage pipelineStage);
-   [[nodiscard]] bool is_buffer_in_transfer_state(Name buffName) const;
    void setup_transition(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
                          std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
-   void setup_buffer_barrier(Name buffName, graphics_api::PipelineStage targetStage);
+   void setup_buffer_barrier(Name buffName, BufferState targetState, graphics_api::PipelineStage targetStage);
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass) const;
    graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef) const;
    graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef) const;
    void handle_pending_graphic_state();
+   void prepare_texture(Name texName, graphics_api::TextureState state, graphics_api::TextureUsage usage);
+   void prepare_buffer(Name buffName, BufferState bufferState, graphics_api::BufferUsage usage);
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, TArgs&&... args)
@@ -291,22 +300,22 @@ class BuildContext
    }
 
    template<typename TCmd, typename... TArgs>
-   void add_command(TArgs&&... args)
+   TCmd& add_command(TArgs&&... args)
    {
       m_commands.emplace_back(std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...);
+      return std::get<TCmd>(m_commands.back());
    }
 
    template<typename TCmd, typename... TArgs>
-   void add_command_before_render_pass(TArgs&&... args)
+   TCmd& add_command_before_render_pass(TArgs&&... args)
    {
       if (!m_isWithinRenderPass) {
-         this->add_command<TCmd>(std::forward<TArgs>(args)...);
-         return;
+         return this->add_command<TCmd>(std::forward<TArgs>(args)...);
       }
 
       auto it = std::find_if(m_commands.rbegin(), m_commands.rend(),
                              [](const auto& cmd) { return std::holds_alternative<detail::cmd::BeginRenderPass>(cmd); });
-      m_commands.emplace(it.base() - 1, std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...);
+      return std::get<TCmd>(*m_commands.emplace(it.base() - 1, std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...));
    }
 
    template<typename TDecl, typename... TArgs>

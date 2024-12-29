@@ -88,4 +88,11 @@ struct ComputePipelineState
    [[nodiscard]] PipelineHash hash() const;
 };
 
+enum class BufferState
+{
+   Undefined,
+   Read,
+   Write,
+};
+
 }// namespace triglav::render_core
