@@ -26,6 +26,8 @@ namespace gapi = triglav::graphics_api;
 
 namespace {
 
+constexpr triglav::Vector2i DefaultSize{800, 600};
+
 void execute_build_context(BuildContext& buildContext, const std::span<ResourceStorage> storage)
 {
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
@@ -80,7 +82,7 @@ void dump_buffer(const std::span<const triglav::u8> buffer)
 
 TEST(BuildContext, BasicCompute)
 {
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    // Declare resources
    buildContext.declare_texture("test.basic_compute.pattern_texture"_name, {64, 64}, GAPI_FORMAT(RGBA, UNorm8));
@@ -116,13 +118,13 @@ TEST(BuildContext, BasicGraphics)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{64, 64};
    static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_render_target_with_dims("test.basic_graphics.render_target"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
+   buildContext.declare_sized_render_target("test.basic_graphics.render_target"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
    buildContext.declare_staging_buffer("test.basic_graphics.output_buffer"_name, bufferSize);
    buildContext.declare_buffer("test.basic_graphics.vertex_buffer"_name, 6 * sizeof(triglav::Vector4));
    buildContext.declare_buffer("test.basic_graphics.uniform_buffer"_name, sizeof(triglav::Vector4));
@@ -183,7 +185,7 @@ TEST(BuildContext, BasicDepth)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{256, 256};
    static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
@@ -198,8 +200,8 @@ TEST(BuildContext, BasicDepth)
    const auto offset = glm::translate(transform, triglav::Vector3{-2.0f, -2.0f, 1.3f});
 
    // Declare resources
-   buildContext.declare_render_target_with_dims("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
-   buildContext.declare_depth_target_with_dims("test.basic_depth.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
+   buildContext.declare_sized_render_target("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   buildContext.declare_sized_depth_target("test.basic_depth.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
    buildContext.declare_staging_buffer("test.basic_depth.output_buffer"_name, bufferSize);
    buildContext.declare_buffer("test.basic_depth.vertex_buffer"_name, boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
    buildContext.declare_buffer("test.basic_depth.index_buffer"_name, boxMeshData.indices.size() * sizeof(triglav::u32));
@@ -263,13 +265,13 @@ TEST(BuildContext, BasicTexture)
       triglav::Vector2 uv;
    };
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{128, 128};
    static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_render_target_with_dims("test.basic_texture.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   buildContext.declare_sized_render_target("test.basic_texture.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
    buildContext.declare_staging_buffer("test.basic_texture.output_buffer"_name, bufferSize);
    buildContext.declare_buffer("test.basic_texture.vertex_buffer"_name, 3 * sizeof(Vertex));
 
@@ -327,14 +329,14 @@ TEST(BuildContext, MultiplePasses)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{128, 128};
    static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_render_target_with_dims("test.multiple_passes.render_target.first"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
-   buildContext.declare_render_target_with_dims("test.multiple_passes.render_target.second"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   buildContext.declare_sized_render_target("test.multiple_passes.render_target.first"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
+   buildContext.declare_sized_render_target("test.multiple_passes.render_target.second"_name, dims, GAPI_FORMAT(RGBA, sRGB));
    buildContext.declare_staging_buffer("test.multiple_passes.output_buffer"_name, bufferSize);
 
    {
@@ -373,7 +375,7 @@ TEST(BuildContext, DepthTargetSample)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager());
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    auto boxMesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
    boxMesh.triangulate();
@@ -387,8 +389,8 @@ TEST(BuildContext, DepthTargetSample)
    static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_depth_target_with_dims("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
-   buildContext.declare_render_target_with_dims("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   buildContext.declare_sized_depth_target("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
+   buildContext.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
    buildContext.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, bufferSize);
    buildContext.declare_buffer("test.depth_target_sample.vertex_buffer"_name,
                                boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));

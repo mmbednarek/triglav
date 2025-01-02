@@ -292,7 +292,7 @@ Result<Texture> Device::create_texture(const ColorFormat& format, const Resoluti
    imageInfo.mipLevels = mipCount;
    imageInfo.arrayLayers = 1;
    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-   imageInfo.initialLayout = vulkan::to_vulkan_image_layout(initialTextureState);
+   imageInfo.initialLayout = vulkan::to_vulkan_image_layout(format, initialTextureState);
    imageInfo.samples = static_cast<VkSampleCountFlagBits>(sampleCount);
    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
    imageInfo.usage = vulkan::to_vulkan_image_usage_flags(usageFlags);

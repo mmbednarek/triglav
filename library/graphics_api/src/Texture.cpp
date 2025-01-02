@@ -55,6 +55,11 @@ Resolution Texture::resolution() const
    return {m_width, m_height};
 }
 
+ColorFormat Texture::format() const
+{
+   return m_colorFormat;
+}
+
 const SamplerProperties& Texture::sampler_properties() const
 {
    return m_samplerProperties;

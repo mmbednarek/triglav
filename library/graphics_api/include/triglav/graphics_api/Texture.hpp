@@ -22,6 +22,7 @@ class Texture
    [[nodiscard]] uint32_t width() const;
    [[nodiscard]] uint32_t height() const;
    [[nodiscard]] Resolution resolution() const;
+   [[nodiscard]] ColorFormat format() const;
    [[nodiscard]] const SamplerProperties& sampler_properties() const;
    Status write(Device& device, const uint8_t* pixels) const;
    [[nodiscard]] Status generate_mip_maps(Device& device) const;

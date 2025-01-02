@@ -368,7 +368,7 @@ VkDescriptorType to_vulkan_descriptor_type(const DescriptorType descriptorType)
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
+VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureState resourceState)
 {
    switch (resourceState) {
    case TextureState::Undefined:
@@ -378,9 +378,11 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
    case TextureState::TransferDst:
       return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
    case TextureState::ShaderRead:
-      return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-   case TextureState::DepthStencilRead:
-      return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+      if (format.is_depth_format()) {
+         return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+      } else {
+         return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+      }
    case TextureState::General:
       [[fallthrough]];
    case TextureState::GeneralRead:
@@ -388,15 +390,17 @@ VkImageLayout to_vulkan_image_layout(const TextureState resourceState)
    case TextureState::GeneralWrite:
       return VK_IMAGE_LAYOUT_GENERAL;
    case TextureState::RenderTarget:
-      return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-   case TextureState::DepthTarget:
-      return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+      if (format.is_depth_format()) {
+         return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+      } else {
+         return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      }
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, const TextureState resourceState)
+VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat format, const TextureState resourceState)
 {
    switch (resourceState) {
    case TextureState::Undefined:
@@ -408,8 +412,6 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, const Textu
    case TextureState::ShaderRead:
       [[fallthrough]];
    case TextureState::GeneralRead:
-      [[fallthrough]];
-   case TextureState::DepthStencilRead:
       return VK_ACCESS_SHADER_READ_BIT;
    case TextureState::General:
       if (stage & PipelineStage::Transfer) {
@@ -420,9 +422,11 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, const Textu
    case TextureState::GeneralWrite:
       return VK_ACCESS_SHADER_WRITE_BIT;
    case TextureState::RenderTarget:
-      return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-   case TextureState::DepthTarget:
-      return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      if (format.is_depth_format()) {
+         return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      } else {
+         return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      }
    }
 
    return 0;
@@ -664,7 +668,7 @@ VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttach
 {
    VkRenderingAttachmentInfo result{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};
    result.imageView = attachment.texture->vulkan_image_view();
-   result.imageLayout = to_vulkan_image_layout(attachment.state);
+   result.imageLayout = to_vulkan_image_layout(attachment.texture->format(), attachment.state);
    result.resolveMode = VK_RESOLVE_MODE_NONE;
    result.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    result.resolveImageView = VK_NULL_HANDLE;

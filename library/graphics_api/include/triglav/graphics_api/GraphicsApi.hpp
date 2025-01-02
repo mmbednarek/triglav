@@ -250,12 +250,10 @@ enum class TextureState
    TransferSrc,
    TransferDst,
    ShaderRead,
-   DepthStencilRead,
    General,
    GeneralRead,
    GeneralWrite,
    RenderTarget,
-   DepthTarget,
 };
 
 [[nodiscard]] constexpr MemoryAccess to_memory_access(const TextureState state)
@@ -268,14 +266,10 @@ enum class TextureState
    case TextureState::GeneralWrite:
       [[fallthrough]];
    case TextureState::RenderTarget:
-      [[fallthrough]];
-   case TextureState::DepthTarget:
       return MemoryAccess::Write;
    case TextureState::TransferSrc:
       [[fallthrough]];
    case TextureState::ShaderRead:
-      [[fallthrough]];
-   case TextureState::DepthStencilRead:
       [[fallthrough]];
    case TextureState::GeneralRead:
       [[fallthrough]];

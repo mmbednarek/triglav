@@ -53,8 +53,6 @@ using Descriptor =
 
 struct RenderTarget
 {
-   bool isScreenSize{true};
-   bool isDepthTarget{false};
    graphics_api::ClearValue clearValue{};
    graphics_api::AttachmentAttributeFlags flags;
 };
@@ -146,7 +144,7 @@ namespace decl {
 struct Texture
 {
    Name texName{};
-   Vector2i texDims{};
+   std::optional<Vector2i> texDims{}; // none means screen-size
    graphics_api::ColorFormat texFormat{};
    graphics_api::TextureUsageFlags texUsageFlags{};
    graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
@@ -185,13 +183,13 @@ struct DescriptorCounts
 class BuildContext
 {
  public:
-   BuildContext(graphics_api::Device& device, resource::ResourceManager& resourceManager);
+   BuildContext(graphics_api::Device& device, resource::ResourceManager& resourceManager, Vector2i screenSize);
 
    // Declarations
    void declare_texture(Name texName, Vector2i texDims, graphics_api::ColorFormat texFormat = GAPI_FORMAT(RGBA, sRGB));
    void declare_render_target(Name rtName, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
-   void declare_render_target_with_dims(Name rtName, Vector2i rtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
-   void declare_depth_target_with_dims(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(D, UNorm16));
+   void declare_sized_render_target(Name rtName, Vector2i rtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
+   void declare_sized_depth_target(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(D, UNorm16));
    void declare_buffer(Name buffName, MemorySize size);
    void declare_staging_buffer(Name buffName, MemorySize size);
 
@@ -335,6 +333,7 @@ class BuildContext
    detail::DescriptorCounts m_descriptorCounts{};
    graphics_api::PipelineStage m_activePipelineStage{};
    bool m_isWithinRenderPass{false};
+   Vector2i m_screenSize{};
 
    std::vector<std::optional<detail::Descriptor>> m_descriptors;
 

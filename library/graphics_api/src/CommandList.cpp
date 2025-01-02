@@ -235,7 +235,7 @@ void CommandList::copy_texture_to_buffer(const Texture& source, const Buffer& de
    region.imageSubresource.layerCount = 1;
    region.imageOffset = {0, 0, 0};
    region.imageExtent = {source.width(), source.height(), 1};
-   vkCmdCopyImageToBuffer(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(srcTextureState),
+   vkCmdCopyImageToBuffer(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcTextureState),
                           destination.vulkan_buffer(), 1, &region);
 }
 
@@ -257,8 +257,8 @@ void CommandList::copy_texture(const Texture& source, const TextureState srcStat
                          },
                          .dstOffset{0, 0, 0},
                          .extent{destination.width(), destination.height(), 1}};
-   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(srcState), destination.vulkan_image(),
-                  vulkan::to_vulkan_image_layout(dstState), 1, &imageCopy);
+   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcState), destination.vulkan_image(),
+                  vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
 }
 
 void CommandList::push_constant_ptr(const PipelineStage stage, const void* ptr, const size_t size, const size_t offset) const
@@ -281,8 +281,8 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
       assert(barrier.image == nullptr);
 
       barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-      barrier.oldLayout = vulkan::to_vulkan_image_layout(info.sourceState);
-      barrier.newLayout = vulkan::to_vulkan_image_layout(info.targetState);
+      barrier.oldLayout = vulkan::to_vulkan_image_layout(info.texture->format(), info.sourceState);
+      barrier.newLayout = vulkan::to_vulkan_image_layout(info.texture->format(), info.targetState);
       barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
       barrier.image = info.texture->vulkan_image();
@@ -291,8 +291,8 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
       barrier.subresourceRange.levelCount = info.mipLevelCount;
       barrier.subresourceRange.baseArrayLayer = 0;
       barrier.subresourceRange.layerCount = 1;
-      barrier.srcAccessMask = vulkan::to_vulkan_access_flags(sourceStage, info.sourceState);
-      barrier.dstAccessMask = vulkan::to_vulkan_access_flags(targetStage, info.targetState);
+      barrier.srcAccessMask = vulkan::to_vulkan_access_flags(sourceStage, info.texture->format(), info.sourceState);
+      barrier.dstAccessMask = vulkan::to_vulkan_access_flags(targetStage, info.texture->format(), info.targetState);
    }
 
    vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),

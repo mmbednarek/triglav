@@ -31,9 +31,10 @@ gapi::DescriptorType to_descriptor_type(const detail::Descriptor& desc)
 
 }// namespace
 
-BuildContext::BuildContext(graphics_api::Device& device, resource::ResourceManager& resourceManager) :
+BuildContext::BuildContext(graphics_api::Device& device, resource::ResourceManager& resourceManager, const Vector2i screenSize) :
     m_device(device),
-    m_resourceManager(resourceManager)
+    m_resourceManager(resourceManager),
+    m_screenSize(screenSize)
 {
 }
 
@@ -44,23 +45,23 @@ void BuildContext::declare_texture(const Name texName, const Vector2i texDims, g
 
 void BuildContext::declare_render_target(const Name rtName, gapi::ColorFormat rtFormat)
 {
-   this->m_renderTargets.emplace(rtName, detail::RenderTarget{true, false, gapi::ClearValue::color(gapi::ColorPalette::Black),
+   this->m_renderTargets.emplace(rtName, detail::RenderTarget{gapi::ClearValue::color(gapi::ColorPalette::Black),
                                                               gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage |
                                                                  gapi::AttachmentAttribute::StoreImage});
    this->add_declaration<detail::decl::Texture>(rtName, Vector2i{0, 0}, rtFormat, gapi::TextureUsage::ColorAttachment);
 }
 
-void BuildContext::declare_render_target_with_dims(const Name rtName, const Vector2i rtDims, gapi::ColorFormat rtFormat)
+void BuildContext::declare_sized_render_target(const Name rtName, const Vector2i rtDims, gapi::ColorFormat rtFormat)
 {
-   this->m_renderTargets.emplace(rtName, detail::RenderTarget{false, false, gapi::ClearValue::color(gapi::ColorPalette::Black),
+   this->m_renderTargets.emplace(rtName, detail::RenderTarget{gapi::ClearValue::color(gapi::ColorPalette::Black),
                                                               gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage |
                                                                  gapi::AttachmentAttribute::StoreImage});
    this->add_declaration<detail::decl::Texture>(rtName, rtDims, rtFormat, gapi::TextureUsage::ColorAttachment);
 }
 
-void BuildContext::declare_depth_target_with_dims(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat)
+void BuildContext::declare_sized_depth_target(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat)
 {
-   this->m_renderTargets.emplace(dtName, detail::RenderTarget{false, true, gapi::ClearValue::depth_stencil(1.0f, 0),
+   this->m_renderTargets.emplace(dtName, detail::RenderTarget{gapi::ClearValue::depth_stencil(1.0f, 0),
                                                               gapi::AttachmentAttribute::Depth | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(dtName, dtDims, rtFormat, gapi::TextureUsage::DepthStencilAttachment);
 }
@@ -116,13 +117,7 @@ void BuildContext::bind_rw_texture(const BindingIndex index, const TextureRef te
 void BuildContext::bind_samplable_texture(const BindingIndex index, const TextureRef texRef)
 {
    if (std::holds_alternative<Name>(texRef)) {
-      const auto texName = std::get<Name>(texRef);
-      const auto& texDecl = this->declaration<detail::decl::Texture>(texName);
-
-      const auto isDepth = texDecl.texFormat.is_depth_format();
-      const auto targetState = isDepth ? gapi::TextureState::DepthStencilRead : gapi::TextureState::ShaderRead;
-
-      this->prepare_texture(texName, targetState, gapi::TextureUsage::Sampled);
+      this->prepare_texture(std::get<Name>(texRef), gapi::TextureState::ShaderRead, gapi::TextureUsage::Sampled);
    }
 
    ++m_descriptorCounts.samplableTextureCount;
@@ -201,13 +196,13 @@ void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Na
    for (const auto rtName : renderTargets) {
       const auto& rtTexture = this->declaration<detail::decl::Texture>(rtName);
       const auto& renderTarget = m_renderTargets.at(rtName);
+      const auto isDepthTarget =  renderTarget.flags & gapi::AttachmentAttribute::Depth;
 
-      const auto targetStage = renderTarget.isDepthTarget ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
-      const auto lastUsedStage = renderTarget.isDepthTarget ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
-      const auto targetState = renderTarget.isDepthTarget ? gapi::TextureState::DepthTarget : gapi::TextureState::RenderTarget;
-      this->setup_texture_barrier(rtName, targetState, targetStage, lastUsedStage);
+      const auto targetStage = isDepthTarget ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
+      const auto lastUsedStage = isDepthTarget ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
+      this->setup_texture_barrier(rtName, gapi::TextureState::RenderTarget, targetStage, lastUsedStage);
 
-      if (renderTarget.isDepthTarget) {
+      if (isDepthTarget) {
          m_graphicPipelineState.depthTargetFormat = rtTexture.texFormat;
       } else {
          m_graphicPipelineState.renderTargetFormats.emplace_back(rtTexture.texFormat);
@@ -342,13 +337,13 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
 
       gapi::RenderAttachment attachment{};
       attachment.texture = &storage.texture(rtName);
-      attachment.state = renderTarget.isDepthTarget ? gapi::TextureState::DepthTarget : gapi::TextureState::RenderTarget;
+      attachment.state = gapi::TextureState::RenderTarget;
       attachment.clearValue = renderTarget.clearValue;
       attachment.flags = renderTarget.flags;
 
       resolution = attachment.texture->resolution();
 
-      if (renderTarget.isDepthTarget) {
+      if (renderTarget.flags & gapi::AttachmentAttribute::Depth) {
          info.depthAttachment = attachment;
       } else {
          info.colorAttachments.emplace_back(attachment);
@@ -591,7 +586,8 @@ void BuildContext::create_resources(ResourceStorage& storage)
       std::visit(
          [this, &storage]<typename TDecl>(const TDecl& decl) {
             if constexpr (std::is_same_v<TDecl, detail::decl::Texture>) {
-               auto texture = GAPI_CHECK(m_device.create_texture(decl.texFormat, {decl.texDims.x, decl.texDims.y}, decl.texUsageFlags));
+               const auto size = decl.texDims.value_or(m_screenSize);
+               auto texture = GAPI_CHECK(m_device.create_texture(decl.texFormat, {size.x, size.y}, decl.texUsageFlags));
                TG_SET_DEBUG_NAME(texture, resolve_name(decl.texName));
                storage.register_texture(decl.texName, std::move(texture));
             } else if constexpr (std::is_same_v<TDecl, detail::decl::Buffer>) {

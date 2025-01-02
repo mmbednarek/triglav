@@ -6,12 +6,7 @@ namespace triglav::graphics_api {
 
 void copy_texture(CommandList& cmdList, const Texture& src, const Texture& dst)
 {
-   TextureState expectedTextureState{};
-   if (src.usage_flags() & TextureUsage::DepthStencilAttachment) {
-      expectedTextureState = TextureState::DepthStencilRead;
-   } else {
-      expectedTextureState = TextureState::ShaderRead;
-   }
+   static constexpr auto expectedTextureState = TextureState::ShaderRead;
 
    // const TextureBarrierInfo barrierSrcIn{
    //    .texture = &src,
@@ -31,7 +26,7 @@ void copy_texture(CommandList& cmdList, const Texture& src, const Texture& dst)
    };
    cmdList.texture_barrier(PipelineStage::Transfer, PipelineStage::Transfer, barrierDstIn);
 
-   cmdList.copy_texture(src, graphics_api::TextureState::TransferSrc, dst, graphics_api::TextureState::TransferDst);
+   cmdList.copy_texture(src, TextureState::TransferSrc, dst, TextureState::TransferDst);
 
    const TextureBarrierInfo barrierDstOut{
       .texture = &dst,
