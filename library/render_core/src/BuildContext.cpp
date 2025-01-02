@@ -196,7 +196,7 @@ void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Na
    for (const auto rtName : renderTargets) {
       const auto& rtTexture = this->declaration<detail::decl::Texture>(rtName);
       const auto& renderTarget = m_renderTargets.at(rtName);
-      const auto isDepthTarget =  renderTarget.flags & gapi::AttachmentAttribute::Depth;
+      const auto isDepthTarget = renderTarget.flags & gapi::AttachmentAttribute::Depth;
 
       const auto targetStage = isDepthTarget ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
       const auto lastUsedStage = isDepthTarget ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
@@ -488,6 +488,42 @@ void BuildContext::copy_texture_to_buffer(TextureRef srcTex, BufferRef dstBuff)
    m_workTypes |= gapi::WorkType::Transfer;
 }
 
+void BuildContext::copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer)
+{
+   m_activePipelineStage = gapi::PipelineStage::Transfer;
+
+   if (std::holds_alternative<Name>(srcBuffer)) {
+      this->prepare_buffer(std::get<Name>(srcBuffer), gapi::BufferAccess::TransferRead, gapi::BufferUsage::TransferSrc);
+   }
+   if (std::holds_alternative<Name>(dstBuffer)) {
+      this->prepare_buffer(std::get<Name>(dstBuffer), gapi::BufferAccess::TransferWrite, gapi::BufferUsage::TransferDst);
+   }
+
+   this->add_command<detail::cmd::CopyBuffer>(srcBuffer, dstBuffer);
+
+   m_workTypes |= gapi::WorkType::Transfer;
+}
+
+void BuildContext::declare_flag(const Name flagName)
+{
+   m_flags.emplace_back(flagName);
+}
+
+void BuildContext::if_enabled(const Name flag)
+{
+   this->add_command<detail::cmd::IfEnabledCond>(flag);
+}
+
+void BuildContext::if_disabled(const Name flag)
+{
+   this->add_command<detail::cmd::IfDisabledCond>(flag);
+}
+
+void BuildContext::end_if()
+{
+   this->add_command<detail::cmd::EndIfCond>();
+}
+
 Job BuildContext::build_job(PipelineCache& pipelineCache, const std::span<ResourceStorage> storages)
 {
    assert(storages.size() >= FRAMES_IN_FLIGHT_COUNT);
@@ -497,83 +533,116 @@ Job BuildContext::build_job(PipelineCache& pipelineCache, const std::span<Resour
    std::vector<Job::Frame> frames;
    frames.reserve(FRAMES_IN_FLIGHT_COUNT);
 
+   const auto flagCount = 1u << m_flags.size();
+
    for (const auto frameIndex : Range(0, FRAMES_IN_FLIGHT_COUNT)) {
       this->create_resources(storages[frameIndex]);
 
-      auto commandList = GAPI_CHECK(m_device.create_command_list(m_workTypes));
-      GAPI_CHECK_STATUS(commandList.begin(gapi::SubmitType::Normal));
-
       DescriptorStorage descStorage;
+      std::vector<gapi::CommandList> commandLists;
 
-      this->write_commands(storages[frameIndex], descStorage, commandList, pipelineCache, pool);
+      for (const auto enabledFlags : Range(0u, flagCount)) {
+         auto commandList = GAPI_CHECK(m_device.create_command_list(m_workTypes));
+         GAPI_CHECK_STATUS(commandList.begin(gapi::SubmitType::Normal));
 
-      GAPI_CHECK_STATUS(commandList.finish());
+         this->write_commands(storages[frameIndex], descStorage, commandList, pipelineCache, pool.has_value() ? &(*pool) : nullptr,
+                              enabledFlags);
 
-      frames.emplace_back(std::move(descStorage), std::move(commandList));
+         GAPI_CHECK_STATUS(commandList.finish());
+
+         commandLists.emplace_back(std::move(commandList));
+      }
+
+      frames.emplace_back(std::move(descStorage), std::move(commandLists));
    }
 
-   return Job(m_device, std::move(pool), frames, m_workTypes);
+   return {m_device, std::move(pool), frames, m_workTypes, m_flags};
 }
 
 void BuildContext::write_commands(ResourceStorage& storage, DescriptorStorage& descStorage, gapi::CommandList& cmdList,
-                                  PipelineCache& cache, graphics_api::DescriptorPool& pool)
+                                  PipelineCache& cache, graphics_api::DescriptorPool* pool, const u32 enabledFlags)
 {
    m_currentPipeline = nullptr;
+
+   u32 requiredToBeEnabled = 0;
+   u32 requiredToBeDisabled = 0;
 
    for (const auto& cmdVariant : m_commands) {
       std::visit(
          [&]<typename TCmd>(const TCmd& cmd) {
-            if constexpr (std::is_same_v<TCmd, detail::cmd::BindComputePipeline>) {
-               auto* newPipeline = &cache.get_compute_pipeline(cmd.pso);
-               if (newPipeline != m_currentPipeline) {
-                  m_currentPipeline = newPipeline;
-                  cmdList.bind_pipeline(*m_currentPipeline);
+            if constexpr (std::is_same_v<TCmd, detail::cmd::IfEnabledCond>) {
+               const auto flag = 1 << (std::ranges::find(m_flags, cmd.flag) - m_flags.begin());
+               m_flagStack.emplace_front(flag, true);
+               requiredToBeEnabled |= flag;
+            } else if constexpr (std::is_same_v<TCmd, detail::cmd::IfDisabledCond>) {
+               const auto flag = 1 << (std::ranges::find(m_flags, cmd.flag) - m_flags.begin());
+               m_flagStack.emplace_front(flag, false);
+               requiredToBeDisabled |= flag;
+            } else if constexpr (std::is_same_v<TCmd, detail::cmd::EndIfCond>) {
+               const auto [flag, isEnabled] = m_flagStack.front();
+               m_flagStack.pop_front();
+               if (isEnabled) {
+                  requiredToBeEnabled &= ~flag;
+               } else {
+                  requiredToBeDisabled &= ~flag;
                }
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindGraphicsPipeline>) {
-               auto* newPipeline = &cache.get_graphics_pipeline(cmd.pso);
-               if (newPipeline != m_currentPipeline) {
-                  m_currentPipeline = newPipeline;
-                  cmdList.bind_pipeline(*m_currentPipeline);
+            } else if ((requiredToBeEnabled == 0 || (enabledFlags & requiredToBeEnabled) != 0) &&
+                       (requiredToBeDisabled == 0 || (enabledFlags & requiredToBeDisabled) == 0)) {
+               if constexpr (std::is_same_v<TCmd, detail::cmd::BindComputePipeline>) {
+                  auto* newPipeline = &cache.get_compute_pipeline(cmd.pso);
+                  if (newPipeline != m_currentPipeline) {
+                     m_currentPipeline = newPipeline;
+                     cmdList.bind_pipeline(*m_currentPipeline);
+                  }
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindGraphicsPipeline>) {
+                  auto* newPipeline = &cache.get_graphics_pipeline(cmd.pso);
+                  if (newPipeline != m_currentPipeline) {
+                     m_currentPipeline = newPipeline;
+                     cmdList.bind_pipeline(*m_currentPipeline);
+                  }
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindDescriptors>) {
+                  assert(cmd.descriptors.size() <= MAX_DESCRIPTOR_COUNT);
+                  assert(pool != nullptr);
+                  auto& descriptorArray = this->allocate_descriptors(descStorage, *pool);
+                  this->write_descriptor(storage, descriptorArray[0], cmd);
+                  cmdList.bind_descriptor_set(m_currentPipeline->pipeline_type(), descriptorArray[0]);
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::Dispatch>) {
+                  cmdList.dispatch(cmd.dims.x, cmd.dims.y, cmd.dims.z);
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::CopyTextureToBuffer>) {
+                  cmdList.copy_texture_to_buffer(this->resolve_texture_ref(storage, cmd.srcTexture),
+                                                 this->resolve_buffer_ref(storage, cmd.dstBuffer));
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::CopyBuffer>) {
+                  cmdList.copy_buffer(this->resolve_buffer_ref(storage, cmd.srcBuffer), this->resolve_buffer_ref(storage, cmd.dstBuffer));
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::PlaceBufferBarrier>) {
+                  gapi::BufferBarrier barrier{};
+                  barrier.buffer = &this->resolve_buffer_ref(storage, cmd.barrier->bufferRef);
+                  barrier.srcAccess = cmd.barrier->srcBufferAccess;
+                  barrier.dstAccess = cmd.barrier->dstBufferAccess;
+                  cmdList.buffer_barrier(cmd.barrier->srcStageFlags, cmd.barrier->dstStageFlags, std::array{barrier});
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::PlaceTextureBarrier>) {
+                  graphics_api::TextureBarrierInfo info{};
+                  info.texture = &this->resolve_texture_ref(storage, cmd.barrier->textureRef);
+                  info.sourceState = cmd.barrier->srcState;
+                  info.targetState = cmd.barrier->dstState;
+                  info.baseMipLevel = 0;
+                  info.mipLevelCount = 1;
+                  cmdList.texture_barrier(cmd.barrier->srcStageFlags, cmd.barrier->dstStageFlags, info);
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindVertexBuffer>) {
+                  cmdList.bind_vertex_buffer(storage.buffer(cmd.buffName), 0);
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindIndexBuffer>) {
+                  cmdList.bind_index_buffer(storage.buffer(cmd.buffName));
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::FillBuffer>) {
+                  cmdList.update_buffer(storage.buffer(cmd.buffName), 0, cmd.data.size(), cmd.data.data());
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::BeginRenderPass>) {
+                  auto renderingInfo = this->create_rendering_info(storage, cmd);
+                  cmdList.begin_rendering(renderingInfo);
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::EndRenderPass>) {
+                  cmdList.end_rendering();
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::DrawPrimitives>) {
+                  cmdList.draw_primitives(cmd.vertexCount, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
+               } else if constexpr (std::is_same_v<TCmd, detail::cmd::DrawIndexedPrimitives>) {
+                  cmdList.draw_indexed_primitives(cmd.indexCount, cmd.indexOffset, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
                }
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindDescriptors>) {
-               assert(cmd.descriptors.size() <= MAX_DESCRIPTOR_COUNT);
-               auto& descriptorArray = this->allocate_descriptors(descStorage, pool);
-               this->write_descriptor(storage, descriptorArray[0], cmd);
-               cmdList.bind_descriptor_set(m_currentPipeline->pipeline_type(), descriptorArray[0]);
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::Dispatch>) {
-               cmdList.dispatch(cmd.dims.x, cmd.dims.y, cmd.dims.z);
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::CopyTextureToBuffer>) {
-               cmdList.copy_texture_to_buffer(this->resolve_texture_ref(storage, cmd.srcTexture),
-                                              this->resolve_buffer_ref(storage, cmd.dstBuffer));
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::PlaceBufferBarrier>) {
-               gapi::BufferBarrier barrier{};
-               barrier.buffer = &this->resolve_buffer_ref(storage, cmd.barrier->bufferRef);
-               barrier.srcAccess = cmd.barrier->srcBufferAccess;
-               barrier.dstAccess = cmd.barrier->dstBufferAccess;
-               cmdList.buffer_barrier(cmd.barrier->srcStageFlags, cmd.barrier->dstStageFlags, std::array{barrier});
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::PlaceTextureBarrier>) {
-               graphics_api::TextureBarrierInfo info{};
-               info.texture = &this->resolve_texture_ref(storage, cmd.barrier->textureRef);
-               info.sourceState = cmd.barrier->srcState;
-               info.targetState = cmd.barrier->dstState;
-               info.baseMipLevel = 0;
-               info.mipLevelCount = 1;
-               cmdList.texture_barrier(cmd.barrier->srcStageFlags, cmd.barrier->dstStageFlags, info);
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindVertexBuffer>) {
-               cmdList.bind_vertex_buffer(storage.buffer(cmd.buffName), 0);
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::BindIndexBuffer>) {
-               cmdList.bind_index_buffer(storage.buffer(cmd.buffName));
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::FillBuffer>) {
-               cmdList.update_buffer(storage.buffer(cmd.buffName), 0, cmd.data.size(), cmd.data.data());
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::BeginRenderPass>) {
-               auto renderingInfo = this->create_rendering_info(storage, cmd);
-               cmdList.begin_rendering(renderingInfo);
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::EndRenderPass>) {
-               cmdList.end_rendering();
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::DrawPrimitives>) {
-               cmdList.draw_primitives(cmd.vertexCount, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
-            } else if constexpr (std::is_same_v<TCmd, detail::cmd::DrawIndexedPrimitives>) {
-               cmdList.draw_indexed_primitives(cmd.indexCount, cmd.indexOffset, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
             }
          },
          cmdVariant);
@@ -614,8 +683,12 @@ void BuildContext::set_pipeline_state_descriptor(const graphics_api::PipelineSta
    }
 }
 
-gapi::DescriptorPool BuildContext::create_descriptor_pool() const
+std::optional<gapi::DescriptorPool> BuildContext::create_descriptor_pool() const
 {
+   if (m_descriptorCounts.totalDescriptorSets == 0) {
+      return std::nullopt;
+   }
+
    std::vector<std::pair<gapi::DescriptorType, u32>> descriptorCounts;
    if (m_descriptorCounts.storageTextureCount != 0) {
       descriptorCounts.emplace_back(gapi::DescriptorType::StorageImage, FRAMES_IN_FLIGHT_COUNT * m_descriptorCounts.storageTextureCount);

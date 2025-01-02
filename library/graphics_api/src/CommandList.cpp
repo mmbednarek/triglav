@@ -257,8 +257,8 @@ void CommandList::copy_texture(const Texture& source, const TextureState srcStat
                          },
                          .dstOffset{0, 0, 0},
                          .extent{destination.width(), destination.height(), 1}};
-   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcState), destination.vulkan_image(),
-                  vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
+   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcState),
+                  destination.vulkan_image(), vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
 }
 
 void CommandList::push_constant_ptr(const PipelineStage stage, const void* ptr, const size_t size, const size_t offset) const

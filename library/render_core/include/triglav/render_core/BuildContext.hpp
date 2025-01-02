@@ -9,6 +9,7 @@
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/GraphicsApi.hpp"
 
+#include <deque>
 #include <map>
 #include <optional>
 #include <variant>
@@ -122,6 +123,12 @@ struct CopyTextureToBuffer
    BufferRef dstBuffer;
 };
 
+struct CopyBuffer
+{
+   BufferRef srcBuffer;
+   BufferRef dstBuffer;
+};
+
 struct FillBuffer
 {
    Name buffName{};
@@ -137,6 +144,19 @@ struct BeginRenderPass
 struct EndRenderPass
 {};
 
+struct IfEnabledCond
+{
+   Name flag;
+};
+
+struct IfDisabledCond
+{
+   Name flag;
+};
+
+struct EndIfCond
+{};
+
 }// namespace cmd
 
 namespace decl {
@@ -144,7 +164,7 @@ namespace decl {
 struct Texture
 {
    Name texName{};
-   std::optional<Vector2i> texDims{}; // none means screen-size
+   std::optional<Vector2i> texDims{};// none means screen-size
    graphics_api::ColorFormat texFormat{};
    graphics_api::TextureUsageFlags texUsageFlags{};
    graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
@@ -168,7 +188,8 @@ using Declaration = std::variant<decl::Texture, decl::Buffer>;
 
 using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
                              cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
-                             cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass>;
+                             cmd::CopyBuffer, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass,
+                             cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond>;
 
 struct DescriptorCounts
 {
@@ -234,6 +255,13 @@ class BuildContext
    // Transfer
    void fill_buffer_raw(Name buffName, const void* ptr, MemorySize size);
    void copy_texture_to_buffer(TextureRef srcTex, BufferRef dstBuff);
+   void copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer);
+
+   // Conditional commands
+   void declare_flag(Name flagName);
+   void if_enabled(Name flag);
+   void if_disabled(Name flag);
+   void end_if();
 
    template<typename TData>
    void fill_buffer(const Name buffName, const TData& data)
@@ -244,10 +272,10 @@ class BuildContext
    Job build_job(PipelineCache& pipelineCache, std::span<ResourceStorage> storages);
 
    void write_commands(ResourceStorage& storage, DescriptorStorage& descStorage, graphics_api::CommandList& cmdList, PipelineCache& cache,
-                       graphics_api::DescriptorPool& pool);
+                       graphics_api::DescriptorPool* pool, u32 enabledFlags);
 
    void create_resources(ResourceStorage& storage);
-   [[nodiscard]] graphics_api::DescriptorPool create_descriptor_pool() const;
+   [[nodiscard]] std::optional<graphics_api::DescriptorPool> create_descriptor_pool() const;
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const;
 
@@ -334,6 +362,8 @@ class BuildContext
    graphics_api::PipelineStage m_activePipelineStage{};
    bool m_isWithinRenderPass{false};
    Vector2i m_screenSize{};
+   std::vector<Name> m_flags;
+   std::deque<std::tuple<u32, bool>> m_flagStack;
 
    std::vector<std::optional<detail::Descriptor>> m_descriptors;
 

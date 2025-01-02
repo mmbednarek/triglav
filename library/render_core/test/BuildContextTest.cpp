@@ -70,6 +70,13 @@ void execute_build_context(BuildContext& buildContext, const std::span<ResourceS
    }
 }
 
+template<typename T>
+[[nodiscard]] T read_buffer(triglav::graphics_api::Buffer& buffer)
+{
+   const auto mem = GAPI_CHECK(buffer.map_memory());
+   return *static_cast<T*>(mem.operator*());
+}
+
 [[maybe_unused]]
 void dump_buffer(const std::span<const triglav::u8> buffer)
 {
@@ -446,4 +453,51 @@ TEST(BuildContext, DepthTargetSample)
    ASSERT_TRUE(expectedBitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+}
+
+TEST(BuildContext, Conditions)
+{
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+
+   buildContext.declare_flag("copy_from_alpha"_name);
+
+   buildContext.declare_buffer("test.conditions.alpha"_name, sizeof(int));
+   buildContext.declare_buffer("test.conditions.beta"_name, sizeof(int));
+   buildContext.declare_staging_buffer("test.conditions.dst"_name, sizeof(int));
+
+   buildContext.fill_buffer("test.conditions.alpha"_name, 7);
+   buildContext.fill_buffer("test.conditions.beta"_name, 13);
+
+   buildContext.if_enabled("copy_from_alpha"_name);
+   buildContext.copy_buffer("test.conditions.alpha"_name, "test.conditions.dst"_name);
+   buildContext.end_if();
+
+   buildContext.if_disabled("copy_from_alpha"_name);
+   buildContext.copy_buffer("test.conditions.beta"_name, "test.conditions.dst"_name);
+   buildContext.end_if();
+
+   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+
+   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+
+   auto job = buildContext.build_job(pipelineCache, storage);
+
+   const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   fence.await();
+
+   job.enable_flag("copy_from_alpha"_name);
+
+   const gapi::SemaphoreArray emptyList;
+   job.execute(0, emptyList, emptyList, &fence);
+
+   fence.await();
+
+   ASSERT_EQ(read_buffer<int>(storage[0].buffer("test.conditions.dst"_name)), 7);
+
+   job.disable_flag("copy_from_alpha"_name);
+   job.execute(1, emptyList, emptyList, &fence);
+
+   fence.await();
+
+   ASSERT_EQ(read_buffer<int>(storage[1].buffer("test.conditions.dst"_name)), 13);
 }
