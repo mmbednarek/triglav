@@ -28,6 +28,8 @@ resources:
     source: "depth_target_sample_draw_fs.spv"
   - name: "testing/depth_target_sample/sample.fshader"
     source: "depth_target_sample_sample_fs.spv"
+  - name: "testing/increase_number.cshader"
+    source: "increase_number.spv"
   # Example texture
   - name: "testing/sample.tex"
     source: "sample.png"

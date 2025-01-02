@@ -81,6 +81,12 @@ render_core_test_file_deps += custom_target('test_depth_target_sample_sample_fs'
                                             command : slang_compile_fs,
 )
 
+render_core_test_file_deps += custom_target('test_increase_number',
+                                            input : 'increase_number.slang',
+                                            output : 'increase_number.spv',
+                                            command : slang_compile_cs,
+)
+
 render_core_test_file_deps += fs.copyfile('index.yaml', 'index.yaml')
 render_core_test_file_deps += fs.copyfile('basic_graphics_expected_bitmap.dat', 'basic_graphics_expected_bitmap.dat')
 render_core_test_file_deps += fs.copyfile('basic_texture_expected_bitmap.dat', 'basic_texture_expected_bitmap.dat')

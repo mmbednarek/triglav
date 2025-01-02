@@ -28,7 +28,7 @@ namespace {
 
 constexpr triglav::Vector2i DefaultSize{800, 600};
 
-void execute_build_context(BuildContext& buildContext, const std::span<ResourceStorage> storage)
+void execute_build_context(BuildContext& buildContext, ResourceStorage& storage)
 {
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
 
@@ -74,7 +74,14 @@ template<typename T>
 [[nodiscard]] T read_buffer(triglav::graphics_api::Buffer& buffer)
 {
    const auto mem = GAPI_CHECK(buffer.map_memory());
-   return *static_cast<T*>(mem.operator*());
+   return *static_cast<T*>(*mem);
+}
+
+template<typename T>
+void write_buffer(triglav::graphics_api::Buffer& buffer, T value)
+{
+   const auto mem = GAPI_CHECK(buffer.map_memory());
+   *static_cast<T*>(*mem) = value;
 }
 
 [[maybe_unused]]
@@ -104,11 +111,11 @@ TEST(BuildContext, BasicCompute)
    buildContext.copy_texture_to_buffer("test.basic_compute.pattern_texture"_name, "test.basic_compute.output_buffer"_name);
 
    // Run commands
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
    execute_build_context(buildContext, storage);
 
    // Verify pixel values
-   auto& outBuffer = storage[0].buffer("test.basic_compute.output_buffer"_name);
+   auto& outBuffer = storage.buffer("test.basic_compute.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
    const auto* pixels = static_cast<int*>(*mappedMemory);
 
@@ -173,10 +180,10 @@ TEST(BuildContext, BasicGraphics)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_graphics.render_target"_name, "test.basic_graphics.output_buffer"_name);
 
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
    execute_build_context(buildContext, storage);
 
-   auto& outBuffer = storage[0].buffer("test.basic_graphics.output_buffer"_name);
+   auto& outBuffer = storage.buffer("test.basic_graphics.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
 
@@ -247,10 +254,10 @@ TEST(BuildContext, BasicDepth)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_depth.render_target"_name, "test.basic_depth.output_buffer"_name);
 
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
    execute_build_context(buildContext, storage);
 
-   auto& outBuffer = storage[0].buffer("test.basic_depth.output_buffer"_name);
+   auto& outBuffer = storage.buffer("test.basic_depth.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
 
@@ -317,10 +324,10 @@ TEST(BuildContext, BasicTexture)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_texture.render_target"_name, "test.basic_texture.output_buffer"_name);
 
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
    execute_build_context(buildContext, storage);
 
-   auto& outBuffer = storage[0].buffer("test.basic_texture.output_buffer"_name);
+   auto& outBuffer = storage.buffer("test.basic_texture.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
 
@@ -363,10 +370,10 @@ TEST(BuildContext, MultiplePasses)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.multiple_passes.render_target.second"_name, "test.multiple_passes.output_buffer"_name);
 
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
    execute_build_context(buildContext, storage);
 
-   auto& outBuffer = storage[0].buffer("test.multiple_passes.output_buffer"_name);
+   auto& outBuffer = storage.buffer("test.multiple_passes.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
 
@@ -442,10 +449,10 @@ TEST(BuildContext, DepthTargetSample)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.depth_target_sample.render_target"_name, "test.depth_target_sample.output_buffer"_name);
 
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
    execute_build_context(buildContext, storage);
 
-   auto& outBuffer = storage[0].buffer("test.depth_target_sample.output_buffer"_name);
+   auto& outBuffer = storage.buffer("test.depth_target_sample.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
 
@@ -478,7 +485,7 @@ TEST(BuildContext, Conditions)
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
 
-   std::array<ResourceStorage, triglav::render_core::FRAMES_IN_FLIGHT_COUNT> storage;
+   ResourceStorage storage;
 
    auto job = buildContext.build_job(pipelineCache, storage);
 
@@ -492,12 +499,87 @@ TEST(BuildContext, Conditions)
 
    fence.await();
 
-   ASSERT_EQ(read_buffer<int>(storage[0].buffer("test.conditions.dst"_name)), 7);
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditions.dst"_name, 0)), 7);
 
    job.disable_flag("copy_from_alpha"_name);
    job.execute(1, emptyList, emptyList, &fence);
 
    fence.await();
 
-   ASSERT_EQ(read_buffer<int>(storage[1].buffer("test.conditions.dst"_name)), 13);
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditions.dst"_name, 1)), 13);
+}
+
+TEST(BuildContext, CopyFromLastFrame)
+{
+   using namespace triglav::render_core::literals;
+
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+
+   buildContext.declare_flag("has_buffer_changed"_name);
+   buildContext.declare_flag("copy_to_user"_name);
+
+   buildContext.declare_staging_buffer("test.copy_from_last_frame.user_buffer"_name, sizeof(int));
+   buildContext.declare_buffer("test.copy_from_last_frame.data_buffer"_name, sizeof(int));
+
+   // If changed copy from the used buffer
+   buildContext.if_enabled("has_buffer_changed"_name);
+   buildContext.copy_buffer("test.copy_from_last_frame.user_buffer"_name, "test.copy_from_last_frame.data_buffer"_name);
+   buildContext.end_if();
+
+   // If not changed copy from the previous frame
+   buildContext.if_disabled("has_buffer_changed"_name);
+   buildContext.copy_buffer("test.copy_from_last_frame.data_buffer"_last_frame, "test.copy_from_last_frame.data_buffer"_name);
+   buildContext.end_if();
+
+   buildContext.bind_compute_shader("testing/increase_number.cshader"_rc);
+   buildContext.bind_storage_buffer(0, "test.copy_from_last_frame.data_buffer"_name);
+   buildContext.dispatch({1, 1, 1});
+
+   buildContext.if_enabled("copy_to_user"_name);
+   buildContext.copy_buffer("test.copy_from_last_frame.data_buffer"_name, "test.copy_from_last_frame.user_buffer"_name);
+   buildContext.end_if();
+
+   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   ResourceStorage storage;
+   auto job = buildContext.build_job(pipelineCache, storage);
+
+   write_buffer(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 0), 36);
+
+   const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   fence.await();
+
+   const gapi::SemaphoreArray emptyList;
+
+   const auto firstSem = GAPI_CHECK(TestingSupport::device().create_semaphore());
+   const auto secondSem = GAPI_CHECK(TestingSupport::device().create_semaphore());
+   const auto thirdSem = GAPI_CHECK(TestingSupport::device().create_semaphore());
+
+   gapi::SemaphoreArray listFirst;
+   listFirst.add_semaphore(firstSem);
+   gapi::SemaphoreArray listSecond;
+   listSecond.add_semaphore(secondSem);
+   gapi::SemaphoreArray listThird;
+   listThird.add_semaphore(thirdSem);
+
+   job.enable_flag("has_buffer_changed"_name);
+
+   job.execute(0, emptyList, listFirst, nullptr);
+
+   job.disable_flag("has_buffer_changed"_name);
+
+   for (const auto _ : triglav::Range(0, 10)) {
+      job.execute(1, listFirst, listSecond, nullptr);
+      job.execute(2, listSecond, listThird, nullptr);
+      job.execute(0, listThird, listFirst, &fence);
+
+      fence.await();
+   }
+
+   job.enable_flag("copy_to_user"_name);
+
+   job.execute(1, listFirst, emptyList, &fence);
+
+   fence.await();
+
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 1)), 36 + 2 + 10 * 3);
 }

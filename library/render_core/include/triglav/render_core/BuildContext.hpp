@@ -42,6 +42,11 @@ struct UniformBuffer
    BufferRef buffRef{};
 };
 
+struct StorageBuffer
+{
+   BufferRef buffRef{};
+};
+
 struct UniformBufferArray
 {
    std::vector<BufferRef> buffers{};
@@ -49,8 +54,8 @@ struct UniformBufferArray
 
 }// namespace descriptor
 
-using Descriptor =
-   std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::UniformBuffer, descriptor::UniformBufferArray>;
+using Descriptor = std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::UniformBuffer,
+                                descriptor::UniformBufferArray, descriptor::StorageBuffer>;
 
 struct RenderTarget
 {
@@ -195,6 +200,7 @@ struct DescriptorCounts
 {
    u32 storageTextureCount{};
    u32 uniformBufferCount{};
+   u32 storageBufferCount{};
    u32 samplableTextureCount{};
    u32 totalDescriptorSets{};
 };
@@ -224,6 +230,7 @@ class BuildContext
    void bind_samplable_texture(BindingIndex index, TextureRef texRef);
    void bind_uniform_buffer(BindingIndex index, BufferRef buffRef);
    void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
+   void bind_storage_buffer(BindingIndex index, BufferRef buffRef);
 
    // Vertex binding
    void bind_vertex_layout(const VertexLayout& layout);
@@ -269,10 +276,10 @@ class BuildContext
       this->fill_buffer_raw(buffName, reinterpret_cast<const void*>(&data), sizeof(data));
    }
 
-   Job build_job(PipelineCache& pipelineCache, std::span<ResourceStorage> storages);
+   Job build_job(PipelineCache& pipelineCache, ResourceStorage& storage);
 
    void write_commands(ResourceStorage& storage, DescriptorStorage& descStorage, graphics_api::CommandList& cmdList, PipelineCache& cache,
-                       graphics_api::DescriptorPool* pool, u32 enabledFlags);
+                       graphics_api::DescriptorPool* pool, u32 frameIndex, u32 enabledFlags);
 
    void create_resources(ResourceStorage& storage);
    [[nodiscard]] std::optional<graphics_api::DescriptorPool> create_descriptor_pool() const;
@@ -284,21 +291,23 @@ class BuildContext
    void handle_descriptor_bindings();
    graphics_api::DescriptorArray& allocate_descriptors(DescriptorStorage& storage, graphics_api::DescriptorPool& pool) const;
    void write_descriptor(ResourceStorage& storage, const graphics_api::DescriptorView& descView,
-                         const detail::cmd::BindDescriptors& descriptors) const;
+                         const detail::cmd::BindDescriptors& descriptors, u32 frameIndex) const;
 
    void add_texture_flag(Name texName, graphics_api::TextureUsage flag);
    void add_buffer_flag(Name buffName, graphics_api::BufferUsage flag);
-   graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass) const;
-   graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef) const;
-   graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef) const;
+   graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass,
+                                                     u32 frameIndex) const;
+   graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
+   graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef, u32 frameIndex) const;
    void handle_pending_graphic_state();
 
    // Barrier support
    void setup_texture_barrier(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
                               std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
    void setup_buffer_barrier(Name buffName, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStage targetStage);
-   void prepare_texture(Name texName, graphics_api::TextureState state, graphics_api::TextureUsage usage);
-   void prepare_buffer(Name buffName, graphics_api::BufferAccess access, graphics_api::BufferUsage usage);
+   void prepare_texture(TextureRef texRef, graphics_api::TextureState state, graphics_api::TextureUsage usage);
+   void prepare_buffer(BufferRef buffRef, graphics_api::BufferAccess access, graphics_api::BufferUsage usage);
+   [[nodiscard]] u32 flag_variation_count() const;
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, TArgs&&... args)

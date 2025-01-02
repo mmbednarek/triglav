@@ -17,18 +17,21 @@ class DescriptorStorage
    std::vector<graphics_api::DescriptorArray> m_descriptorArrays;
 };
 
+
 class ResourceStorage
 {
  public:
-   void register_texture(Name name, graphics_api::Texture&& texture);
-   graphics_api::Texture& texture(Name name);
+   using ResourceID = u64;
 
-   void register_buffer(Name name, graphics_api::Buffer&& buffer);
-   graphics_api::Buffer& buffer(Name name);
+   void register_texture(Name name, u32 frameIndex, graphics_api::Texture&& texture);
+   graphics_api::Texture& texture(Name name, u32 frameIndex);
+
+   void register_buffer(Name name, u32 frameIndex, graphics_api::Buffer&& buffer);
+   graphics_api::Buffer& buffer(Name name, u32 frameIndex);
 
  private:
-   std::unordered_map<Name, graphics_api::Texture> m_textures;
-   std::unordered_map<Name, graphics_api::Buffer> m_buffers;
+   std::unordered_map<ResourceID, graphics_api::Texture> m_textures;
+   std::unordered_map<ResourceID, graphics_api::Buffer> m_buffers;
 };
 
 }// namespace triglav::render_core

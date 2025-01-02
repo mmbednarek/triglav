@@ -88,8 +88,13 @@ struct ComputePipelineState
    [[nodiscard]] PipelineHash hash() const;
 };
 
-using TextureRef = std::variant<TextureName, Name>;
-using BufferRef = std::variant<graphics_api::Buffer*, Name>;
+struct FromLastFrame
+{
+   Name name;
+};
+
+using TextureRef = std::variant<TextureName, Name, FromLastFrame>;
+using BufferRef = std::variant<graphics_api::Buffer*, Name, FromLastFrame>;
 
 struct ExecutionBarrier
 {
@@ -114,5 +119,14 @@ struct TextureBarrier
    graphics_api::TextureState srcState{};
    graphics_api::TextureState dstState{};
 };
+
+namespace literals {
+
+constexpr FromLastFrame operator""_last_frame(const char* value, const std::size_t count)
+{
+   return FromLastFrame{detail::hash_string(std::string_view(value, count))};
+}
+
+}// namespace literals
 
 }// namespace triglav::render_core
