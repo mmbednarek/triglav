@@ -1,96 +1,63 @@
+compute_shaders = [
+    'basic_compute.slang',
+    'increase_number.slang',
+]
+
+vertex_shaders = [
+    'basic_graphics.slang',
+    'basic_texture.slang',
+    'basic_depth.slang',
+    'full_screen.slang',
+    'depth_target_sample_draw.slang',
+]
+
+fragment_shaders = [
+    'basic_graphics.slang',
+    'basic_texture.slang',
+    'basic_depth.slang',
+    'multiple_passes_first.slang',
+    'multiple_passes_second.slang',
+    'depth_target_sample_draw.slang',
+    'depth_target_sample_sample.slang',
+]
+
+files_to_copy = [
+    'index.yaml',
+    'basic_graphics_expected_bitmap.dat',
+    'basic_texture_expected_bitmap.dat',
+    'basic_depth_expected_bitmap.dat',
+    'multiple_passes_expected_bitmap.dat',
+    'depth_target_sample_expected_bitmap.dat',
+    'sample.png',
+]
 
 slang_compile_cs = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O3', '-o', '@OUTPUT@']
+
+foreach shader : compute_shaders
+    render_core_test_file_deps += custom_target(input   : shader,
+                                                output  : '@BASENAME@.spv',
+                                                command : slang_compile_cs,
+    )
+endforeach
+
 slang_compile_vs = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'vs_main', '-stage', 'vertex', '-O3', '-o', '@OUTPUT@']
+
+foreach shader : vertex_shaders
+    render_core_test_file_deps += custom_target(input   : shader,
+                                                output  : '@BASENAME@_vs.spv',
+                                                command : slang_compile_vs,
+    )
+endforeach
+
 slang_compile_fs = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-O3', '-o', '@OUTPUT@']
 
-render_core_test_file_deps += custom_target('test_basic_compute',
-                                   input : 'basic_compute.slang',
-                                   output : 'basic_compute.spv',
-                                   command : slang_compile_cs,
-)
+foreach shader : fragment_shaders
+    render_core_test_file_deps += custom_target(input   : shader,
+                                                output  : '@BASENAME@_fs.spv',
+                                                command : slang_compile_fs,
+    )
+endforeach
 
-render_core_test_file_deps += custom_target('test_basic_graphics_vs',
-                                   input : 'basic_graphics.slang',
-                                   output : 'basic_graphics_vs.spv',
-                                   command : slang_compile_vs,
-)
-
-render_core_test_file_deps += custom_target('test_basic_graphics_fs',
-                                       input : 'basic_graphics.slang',
-                                       output : 'basic_graphics_fs.spv',
-                                       command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_basic_texture_vs',
-                                            input : 'basic_texture.slang',
-                                            output : 'basic_texture_vs.spv',
-                                            command : slang_compile_vs,
-)
-
-render_core_test_file_deps += custom_target('test_basic_texture_fs',
-                                            input : 'basic_texture.slang',
-                                            output : 'basic_texture_fs.spv',
-                                            command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_basic_depth_vs',
-                                            input : 'basic_depth.slang',
-                                            output : 'basic_depth_vs.spv',
-                                            command : slang_compile_vs,
-)
-
-render_core_test_file_deps += custom_target('test_basic_depth_fs',
-                                            input : 'basic_depth.slang',
-                                            output : 'basic_depth_fs.spv',
-                                            command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_full_screen_vs',
-                                            input : 'full_screen_vs.slang',
-                                            output : 'full_screen_vs.spv',
-                                            command : slang_compile_vs,
-)
-
-render_core_test_file_deps += custom_target('test_multiple_passes_first_fs',
-                                            input : 'multiple_passes_first_fs.slang',
-                                            output : 'multiple_passes_first_fs.spv',
-                                            command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_multiple_passes_second_fs',
-                                            input : 'multiple_passes_second_fs.slang',
-                                            output : 'multiple_passes_second_fs.spv',
-                                            command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_depth_target_sample_draw_vs',
-                                            input : 'depth_target_sample_draw.slang',
-                                            output : 'depth_target_sample_draw_vs.spv',
-                                            command : slang_compile_vs,
-)
-
-render_core_test_file_deps += custom_target('test_depth_target_sample_draw_fs',
-                                            input : 'depth_target_sample_draw.slang',
-                                            output : 'depth_target_sample_draw_fs.spv',
-                                            command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_depth_target_sample_sample_fs',
-                                            input : 'depth_target_sample_sample.slang',
-                                            output : 'depth_target_sample_sample_fs.spv',
-                                            command : slang_compile_fs,
-)
-
-render_core_test_file_deps += custom_target('test_increase_number',
-                                            input : 'increase_number.slang',
-                                            output : 'increase_number.spv',
-                                            command : slang_compile_cs,
-)
-
-render_core_test_file_deps += fs.copyfile('index.yaml', 'index.yaml')
-render_core_test_file_deps += fs.copyfile('basic_graphics_expected_bitmap.dat', 'basic_graphics_expected_bitmap.dat')
-render_core_test_file_deps += fs.copyfile('basic_texture_expected_bitmap.dat', 'basic_texture_expected_bitmap.dat')
-render_core_test_file_deps += fs.copyfile('basic_depth_expected_bitmap.dat', 'basic_depth_expected_bitmap.dat')
-render_core_test_file_deps += fs.copyfile('multiple_passes_expected_bitmap.dat', 'multiple_passes_expected_bitmap.dat')
-render_core_test_file_deps += fs.copyfile('depth_target_sample_expected_bitmap.dat', 'depth_target_sample_expected_bitmap.dat')
-render_core_test_file_deps += fs.copyfile('sample.png', 'sample.png')
+foreach filename : files_to_copy
+    render_core_test_file_deps += fs.copyfile(filename, filename)
+endforeach

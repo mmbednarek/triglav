@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 
 #include "triglav/Int.hpp"
-#include "triglav/io/File.h"
-#include "triglav/io/Path.h"
+#include "triglav/io/File.hpp"
+#include "triglav/io/Path.hpp"
 
 #include <fstream>
-#include <iostream>
 #include <ryml.hpp>
 #include <tuple>
 #include <vector>

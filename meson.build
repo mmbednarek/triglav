@@ -2,7 +2,7 @@ project('vulkan_engine',
   ['cpp', 'c'],
   version: '0.0.1',
   license: 'GPL3',
-  meson_version: '>= 1.1',
+  meson_version: '>= 1.5',
   default_options: ['cpp_std=c++23'],
 )
 

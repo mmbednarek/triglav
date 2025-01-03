@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "triglav/threading/ThreadPool.h"
+#include "triglav/threading/ThreadPool.hpp"
 
 #include <atomic>
 
