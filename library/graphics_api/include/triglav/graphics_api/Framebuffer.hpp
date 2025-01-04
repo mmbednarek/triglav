@@ -3,8 +3,9 @@
 #include "GraphicsApi.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
-#include "triglav/Heap.hpp"
 #include "triglav/Name.hpp"
+
+#include <map>
 
 namespace triglav::graphics_api {
 
@@ -13,7 +14,7 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(Framebuffer, Device)
 class Framebuffer
 {
  public:
-   Framebuffer(Resolution resolution, VkRenderPass renderPass, vulkan::Framebuffer framebuffer, Heap<Name, Texture> textures);
+   Framebuffer(Resolution resolution, VkRenderPass renderPass, vulkan::Framebuffer framebuffer, std::map<Name, Texture> textures);
 
    [[nodiscard]] Resolution resolution() const;
    [[nodiscard]] VkFramebuffer vulkan_framebuffer() const;
@@ -25,7 +26,7 @@ class Framebuffer
    Resolution m_resolution;
    VkRenderPass m_renderPass;
    vulkan::Framebuffer m_framebuffer;
-   Heap<Name, Texture> m_textures;
+   std::map<Name, Texture> m_textures;
 };
 
 }// namespace triglav::graphics_api

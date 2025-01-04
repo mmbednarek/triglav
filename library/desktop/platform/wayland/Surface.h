@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Display.h"
+#include "ISurface.hpp"
 #include "api/XdgShell.h"
 
 #include <optional>
@@ -23,7 +24,6 @@ class Surface : public ISurface
    void lock_cursor() override;
    void unlock_cursor() override;
    void hide_cursor() const override;
-   void add_event_listener(ISurfaceEventListener* eventListener) override;
    void tick();
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
@@ -39,8 +39,6 @@ class Surface : public ISurface
    }
 
  private:
-   [[nodiscard]] ISurfaceEventListener& event_listener() const;
-
    Display& m_display;
    wl_surface* m_surface{};
    xdg_surface* m_xdgSurface{};
@@ -50,7 +48,6 @@ class Surface : public ISurface
    zwp_locked_pointer_v1* m_lockedPointer{};
    bool m_resizeReady = false;
 
-   ISurfaceEventListener* m_eventListener{};
    uint32_t m_pointerSerial{};
 
    Dimension m_dimension{};

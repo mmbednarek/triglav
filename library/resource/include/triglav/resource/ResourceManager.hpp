@@ -25,14 +25,9 @@ namespace triglav::resource {
 class ResourceManager
 {
  public:
-   using OnStartedLoadingAssetDel = Delegate<ResourceName>;
-   OnStartedLoadingAssetDel OnStartedLoadingAsset;
-
-   using OnFinishedLoadingAssetDel = Delegate<ResourceName, u32, u32>;
-   OnFinishedLoadingAssetDel OnFinishedLoadingAsset;
-
-   using OnLoadedAssetsDel = Delegate<>;
-   OnLoadedAssetsDel OnLoadedAssets;
+   TG_EVENT(OnStartedLoadingAsset, ResourceName)
+   TG_EVENT(OnFinishedLoadingAsset, ResourceName, u32, u32)
+   TG_EVENT(OnLoadedAssets)
 
    explicit ResourceManager(graphics_api::Device& device, font::FontManger& fontManager);
 

@@ -95,9 +95,9 @@ void Shading::record_commands(render_core::FrameResources& frameResources, rende
 
    copy_texture(cmdList, gbuffer.texture("depth"_name), framebuffer.texture("depth"_name));
 
-   std::array<graphics_api::ClearValue, 2> clearValues{
-      graphics_api::ColorPalette::Black,
-      graphics_api::Color{0, 0, 0, 0},
+   std::array clearValues{
+      graphics_api::ClearValue{graphics_api::ColorPalette::Black},
+      graphics_api::ClearValue{graphics_api::Color{0, 0, 0, 0}},
    };
    cmdList.begin_render_pass(framebuffer, clearValues);
 

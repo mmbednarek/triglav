@@ -13,7 +13,8 @@ namespace triglav::desktop::x11 {
 Display::Display() :
     m_display(XOpenDisplay(nullptr)),
     m_rootWindow(DefaultRootWindow(m_display)),
-    m_onMouseMoveSink(m_mouse.OnMouseMove.connect<&Display::on_mouse_move>(this))
+    m_onMouseMoveSink(m_mouse.OnMouseMove.connect<&Display::on_mouse_move>(this)),
+    m_wmDeleteAtom(XInternAtom(m_display, "WM_DELETE_WINDOW", true))
 {
 }
 
@@ -66,6 +67,14 @@ void Display::dispatch_messages()
          }
          break;
       }
+      case ClientMessage: {
+         if (event.xclient.data.l[0] == static_cast<int>(m_wmDeleteAtom)) {
+            auto surface = this->surface_by_window(event.xclient.window);
+            if (surface) {
+               surface->dispatch_close();
+            }
+         }
+      }
       }
    }
 
@@ -93,6 +102,7 @@ std::shared_ptr<ISurface> Display::create_surface(const int width, const int hei
    XSelectInput(m_display, window,
                 ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
                    LeaveNotify);
+   XSetWMProtocols(m_display, window, &m_wmDeleteAtom, 1);
 
    auto surface = std::make_shared<Surface>(m_display, window, Dimension{width, height});
    m_surfaces.emplace(window, surface);

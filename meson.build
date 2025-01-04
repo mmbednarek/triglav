@@ -9,6 +9,8 @@ project('vulkan_engine',
 if meson.get_compiler('cpp').get_id() == 'msvc'
   add_project_arguments('/std:c++latest', language : 'cpp')
   add_project_arguments('/Zc:preprocessor', language : 'cpp')
+else
+  add_project_arguments(['-Werror', '-Wall'], language : 'cpp')
 endif
 
 if host_machine.system() == 'windows' and meson.get_compiler('cpp').get_id() == 'gcc'
@@ -24,6 +26,10 @@ if meson.get_compiler('cpp').get_id() == 'clang'
     add_project_arguments('-fno-omit-frame-pointer', language: 'cpp')
     add_project_link_arguments('-fsanitize=address', language: 'cpp')
   endif
+endif
+
+if get_option('disable_debug_utils').enabled()
+  add_project_arguments('-DTG_DISABLE_DEBUG_UTILS=1', language: 'cpp')
 endif
 
 fs = import('fs')

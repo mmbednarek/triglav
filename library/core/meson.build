@@ -6,7 +6,6 @@ core_sources = files([
                     'include/triglav/Delegate.hpp',
                     'include/triglav/Entt.hpp',
                     'include/triglav/EnumFlags.hpp',
-                    'include/triglav/Heap.hpp',
                     'include/triglav/Int.hpp',
                     'include/triglav/Math.hpp',
                     'include/triglav/Name.hpp',

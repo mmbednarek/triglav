@@ -12,15 +12,14 @@ constexpr auto g_windowClassName = "TRIGLAV_WINDOW";
 class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
  public:
-   Surface(HINSTANCE instance, Dimension dimension, WindowAttributeFlags flags);
+   Surface(HINSTANCE instance, Vector2i dimension, WindowAttributeFlags flags);
    ~Surface() override;
 
    void lock_cursor() override;
    void unlock_cursor() override;
    void hide_cursor() const override;
-   void add_event_listener(ISurfaceEventListener* eventListener) override;
    [[nodiscard]] bool is_cursor_locked() const override;
-   [[nodiscard]] Dimension dimension() const override;
+   [[nodiscard]] Vector2i dimension() const override;
 
    [[nodiscard]] HINSTANCE winapi_instance() const;
    [[nodiscard]] HWND winapi_window_handle() const;
@@ -36,9 +35,8 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    void on_resize(short x, short y);
 
    HINSTANCE m_instance;
-   Dimension m_dimension;
+   Vector2i m_dimension;
    HWND m_windowHandle;
-   ISurfaceEventListener* m_eventListener{};
 };
 
 }// namespace triglav::desktop

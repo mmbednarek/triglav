@@ -14,49 +14,26 @@ using triglav::desktop::InputArgs;
 using triglav::desktop::WindowAttribute;
 using triglav::resource::ResourceManager;
 
-class EventListener final : public triglav::desktop::DefaultSurfaceEventListener
+class EventListener final
 {
  public:
-   void on_close() override
+   using Self = EventListener;
+
+   EventListener(triglav::desktop::ISurface& surface) :
+       TG_CONNECT(surface, OnClose, on_close)
+   {
+   }
+
+   void on_close()
    {
       this->shouldClose = true;
    }
 
    bool shouldClose = false;
+   TG_SINK(triglav::desktop::ISurface, OnClose);
 };
 
-class Awaiter
-{
- public:
-   using Self = Awaiter;
-
-   Awaiter(ResourceManager& resourceManager) :
-       sink_OnLoadedAssets(resourceManager.OnLoadedAssets.connect<&Awaiter::on_loaded_assets>(this))
-   {
-   }
-
-   void on_loaded_assets()
-   {
-      {
-         std::lock_guard guard(m_mutex);
-         m_ready = true;
-      }
-      m_cond.notify_one();
-   }
-
-   void await()
-   {
-      std::unique_lock lock(m_mutex);
-      m_cond.wait(lock, [this] { return m_ready; });
-   }
-
- private:
-   std::mutex m_mutex;
-   std::condition_variable m_cond;
-   bool m_ready = false;
-
-   ResourceManager::OnLoadedAssetsDel::Sink<Self> sink_OnLoadedAssets;
-};
+TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets)
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
@@ -77,7 +54,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    triglav::test::TestingSupport::the().initialize_render_doc();
 
-   Awaiter awaiter(resourceManager);
+   LoadAssetsAwaiter awaiter(resourceManager);
 
    resourceManager.load_asset_list(triglav::io::Path("content/index.yaml"));
 
@@ -87,8 +64,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    fmt::print("Finished loading resources\n");
 
-   EventListener listener;
-   surface->add_event_listener(&listener);
+   EventListener listener(*surface);
 
    int status = 0;
 

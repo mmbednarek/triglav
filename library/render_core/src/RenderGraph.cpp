@@ -118,7 +118,6 @@ bool RenderGraph::bake(Name targetNode)
 
    for (auto& frameRes : m_frameResources) {
       frameRes.add_signal_semaphore(targetNode, "__TARGET__"_name, GAPI_CHECK(m_device.create_semaphore()));
-      frameRes.finalize();
    }
 
    return true;

@@ -16,7 +16,6 @@ class Surface final : public ISurface
    void lock_cursor() override;
    void unlock_cursor() override;
    void hide_cursor() const override;
-   void add_event_listener(ISurfaceEventListener* eventListener) override;
    void internal_close();
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
@@ -27,6 +26,7 @@ class Surface final : public ISurface
    void dispatch_button_release(uint32_t code) const;
    void dispatch_mouse_move(int x, int y) const;
    void dispatch_mouse_relative_move(float x, float y) const;
+   void dispatch_close() const;
    void tick() const;
 
    [[nodiscard]] constexpr ::Display* display() const
@@ -43,7 +43,6 @@ class Surface final : public ISurface
    ::Display* m_display;
    Window m_window;
    Dimension m_dimension;
-   std::vector<ISurfaceEventListener*> m_listeners;
    bool m_isCursorLocked{false};
 };
 

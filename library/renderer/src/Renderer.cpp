@@ -108,7 +108,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_glyphCache(m_device, m_resourceManager),
     m_context2D(m_device, m_renderTarget, m_resourceManager),
     m_renderGraph(m_device),
-    m_infoDialog(m_uiViewport, m_resourceManager, m_glyphCache),
+    m_infoDialog(m_uiViewport, m_glyphCache),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
                          : std::nullopt)
@@ -130,7 +130,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, true);
 
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-      m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, *m_rayTracingScene, m_scene);
+      m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, *m_rayTracingScene);
    }
 
    m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
@@ -229,7 +229,7 @@ void Renderer::on_render()
 
    if (m_mustRecreateSwapchain) {
       auto dim = m_desktopSurface.dimension();
-      this->recreate_swapchain(dim.width, dim.height);
+      this->recreate_swapchain(dim.x, dim.y);
       m_mustRecreateSwapchain = false;
    }
 

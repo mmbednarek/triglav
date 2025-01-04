@@ -119,6 +119,8 @@ BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& 
                                                             AttachmentAttribute::StoreImage | AttachmentAttribute::TransferSrc,
                                                          GAPI_FORMAT(D, UNorm16))
                                              .build())),
+    m_skybox(m_device, resourceManager, m_renderTarget),
+    m_groundRenderer(m_device, m_renderTarget, resourceManager),
     m_depthPrepassPipeline(GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(device, m_depthPrepassRenderTarget)
                                          .fragment_shader(resourceManager.get("bindless_geometry_depth_prepass.fshader"_rc))
                                          .vertex_shader(resourceManager.get("bindless_geometry_depth_prepass.vshader"_rc))
@@ -135,8 +137,12 @@ BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& 
                                          .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
                                                              graphics_api::PipelineStage::VertexShader)// 1 - Scene Meshes (Vertex)
                                          .build())),
-    m_skybox(m_device, resourceManager, m_renderTarget),
-    m_groundRenderer(m_device, m_renderTarget, resourceManager),
+    m_hiZBufferPipeline(GAPI_CHECK(graphics_api::ComputePipelineBuilder(device)
+                                      .compute_shader(resourceManager.get("bindless_geometry_hi_zbuffer.cshader"_rc))
+                                      .use_push_descriptors(true)
+                                      .descriptor_binding(gapi::DescriptorType::ImageOnly)
+                                      .descriptor_binding(gapi::DescriptorType::StorageImage)
+                                      .build())),
     m_cullingPipeline(GAPI_CHECK(graphics_api::ComputePipelineBuilder(device)
                                     .compute_shader(resourceManager.get("bindless_geometry_culling.cshader"_rc))
                                     .use_push_descriptors(true)
@@ -146,12 +152,6 @@ BindlessGeometry::BindlessGeometry(graphics_api::Device& device, BindlessScene& 
                                     .descriptor_binding(gapi::DescriptorType::UniformBuffer)
                                     .descriptor_binding(gapi::DescriptorType::ImageOnly)
                                     .build())),
-    m_hiZBufferPipeline(GAPI_CHECK(graphics_api::ComputePipelineBuilder(device)
-                                      .compute_shader(resourceManager.get("bindless_geometry_hi_zbuffer.cshader"_rc))
-                                      .use_push_descriptors(true)
-                                      .descriptor_binding(gapi::DescriptorType::ImageOnly)
-                                      .descriptor_binding(gapi::DescriptorType::StorageImage)
-                                      .build())),
     m_tsArray(GAPI_CHECK(device.create_timestamp_array(2)))
 {
 }
@@ -176,8 +176,8 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
 
    // -- RENDER DEPTH PREPASS --
 
-   std::array<graphics_api::ClearValue, 1> depthPrepassClearValues{
-      graphics_api::DepthStenctilValue{1.0f, 0},
+   std::array depthPrepassClearValues{
+      graphics_api::ClearValue{graphics_api::DepthStenctilValue{1.0f, 0}},
    };
    cmdList.begin_render_pass(nodeResources.framebuffer("depth_prepass"_name), depthPrepassClearValues);
    cmdList.bind_pipeline(m_depthPrepassPipeline);
@@ -249,7 +249,7 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
 
    int depthWidth = 480;
    int depthHeight = 270;
-   for (int mipLevel = 0; mipLevel < (bindlessGeoResources.m_mipCount - 1); ++mipLevel) {
+   for (u32 mipLevel = 0; mipLevel < (bindlessGeoResources.m_mipCount - 1); ++mipLevel) {
       cmdList.bind_texture_view_image(0, bindlessGeoResources.m_hiZBufferMipViews[mipLevel]);
       cmdList.bind_storage_image_view(1, bindlessGeoResources.m_hiZBufferMipViews[mipLevel + 1]);
 
@@ -267,7 +267,7 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
             .texture = &bindlessGeoResources.m_hiZBuffer,
             .sourceState = gapi::TextureState::General,
             .targetState = gapi::TextureState::ShaderRead,
-            .baseMipLevel = mipLevel + 1,
+            .baseMipLevel = static_cast<int>(mipLevel + 1),
             .mipLevelCount = 1,
          });
    }
@@ -292,11 +292,11 @@ void BindlessGeometry::record_commands(render_core::FrameResources& frameResourc
 
    // -- RENDER GEOMETRY --
 
-   std::array<graphics_api::ClearValue, 4> clearValues{
-      graphics_api::ColorPalette::Black,
-      graphics_api::ColorPalette::Black,
-      graphics_api::ColorPalette::Black,
-      graphics_api::DepthStenctilValue{1.0f, 0},
+   std::array clearValues{
+      graphics_api::ClearValue{graphics_api::ColorPalette::Black},
+      graphics_api::ClearValue{graphics_api::ColorPalette::Black},
+      graphics_api::ClearValue{graphics_api::ColorPalette::Black},
+      graphics_api::ClearValue{graphics_api::DepthStenctilValue{1.0f, 0}},
    };
    cmdList.begin_render_pass(nodeResources.framebuffer("gbuffer"_name), clearValues);
 

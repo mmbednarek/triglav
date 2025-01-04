@@ -1,6 +1,7 @@
 #include "SharedMutex.hpp"
 
 #include <cassert>
+#include <errno.h>
 #include <pthread.h>
 
 namespace triglav::threading {
@@ -50,7 +51,7 @@ void SharedMutex::lock()
 
 bool SharedMutex::try_lock()
 {
-   assert(pthread_rwlock_trywrlock(&m_handle->lock) == 0);
+   return pthread_rwlock_trywrlock(&m_handle->lock) == 0;
 }
 
 void SharedMutex::unlock()

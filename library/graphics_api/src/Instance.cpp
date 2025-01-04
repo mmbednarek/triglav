@@ -58,9 +58,10 @@ auto create_physical_device_pick_predicate(const DevicePickStrategy strategy, co
    };
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                          VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                          const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
+[[maybe_unused]]
+VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(const VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                                          VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
+                                                          const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* /*pUserData*/)
 {
    spdlog::level::level_enum logLevel{spdlog::level::off};
 

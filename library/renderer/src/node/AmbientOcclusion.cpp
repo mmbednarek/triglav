@@ -37,8 +37,8 @@ void AmbientOcclusion::record_commands(render_core::FrameResources& frameResourc
    if (frameResources.get_option<AmbientOcclusionMethod>("ao_method"_name) != AmbientOcclusionMethod::ScreenSpace)
       return;
 
-   std::array<graphics_api::ClearValue, 1> clearValues{
-      graphics_api::ColorPalette::Black,
+   std::array clearValues{
+      graphics_api::ClearValue{graphics_api::ColorPalette::Black},
    };
 
    cmdList.begin_render_pass(resources.framebuffer("ao"_name), clearValues);

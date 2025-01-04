@@ -17,6 +17,8 @@ namespace demo {
 class SplashScreen
 {
  public:
+   using Self = SplashScreen;
+
    SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface, triglav::graphics_api::Device& device,
                 triglav::resource::ResourceManager& resourceManager);
 
@@ -53,8 +55,8 @@ class SplashScreen
    std::set<triglav::ResourceName> m_pendingResources;
    triglav::ResourceName m_displayedResource;
 
-   triglav::resource::ResourceManager::OnStartedLoadingAssetDel::Sink<SplashScreen> m_onStartedLoadingAssetSink;
-   triglav::resource::ResourceManager::OnFinishedLoadingAssetDel::Sink<SplashScreen> m_onFinishedLoadingAssetSink;
+   TG_SINK(triglav::resource::ResourceManager, OnStartedLoadingAsset);
+   TG_SINK(triglav::resource::ResourceManager, OnFinishedLoadingAsset);
 };
 
 }// namespace demo

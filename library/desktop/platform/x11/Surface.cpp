@@ -89,8 +89,8 @@ void Surface::lock_cursor()
    XGrabPointer(m_display, m_window, false,
                 ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | EnterWindowMask | LeaveWindowMask,
                 GrabModeAsync, GrabModeAsync, RootWindow(m_display, DefaultScreen(m_display)), 0L, CurrentTime);
-   Dimension center{m_dimension.width / 2, m_dimension.height / 2};
-   XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.width, center.height);
+   Dimension center{m_dimension.x / 2, m_dimension.y / 2};
+   XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.x, center.y);
    XSync(m_display, false);
 }
 
@@ -103,11 +103,6 @@ void Surface::unlock_cursor()
 void Surface::hide_cursor() const
 {
    // TODO: Implement
-}
-
-void Surface::add_event_listener(ISurfaceEventListener* eventListener)
-{
-   m_listeners.emplace_back(eventListener);
 }
 
 void Surface::internal_close()
@@ -131,54 +126,47 @@ Dimension Surface::dimension() const
 
 void Surface::dispatch_key_press(const KeyCode code) const
 {
-   for (ISurfaceEventListener* listener : m_listeners) {
-      listener->on_key_is_pressed(map_key(code));
-   }
+   event_OnKeyIsPressed.publish(map_key(code));
 }
 
 void Surface::dispatch_key_release(const KeyCode code) const
 {
-   for (ISurfaceEventListener* listener : m_listeners) {
-      listener->on_key_is_released(map_key(code));
-   }
+   event_OnKeyIsReleased.publish(map_key(code));
 }
 
 void Surface::dispatch_button_press(const uint32_t code) const
 {
-   for (ISurfaceEventListener* listener : m_listeners) {
-      listener->on_mouse_button_is_pressed(map_button(code));
-   }
+   event_OnMouseButtonIsPressed.publish(map_button(code));
 }
 
 void Surface::dispatch_button_release(const uint32_t code) const
 {
-   for (ISurfaceEventListener* listener : m_listeners) {
-      listener->on_mouse_button_is_released(map_button(code));
-   }
+   event_OnMouseButtonIsReleased.publish(map_button(code));
 }
 
 void Surface::dispatch_mouse_move(const int x, const int y) const
 {
-   for (ISurfaceEventListener* listener : m_listeners) {
-      listener->on_mouse_move(static_cast<float>(x), static_cast<float>(y));
-   }
+   event_OnMouseMove.publish(Vector2{static_cast<float>(x), static_cast<float>(y)});
 }
 
-void Surface::dispatch_mouse_relative_move(float x, float y) const
+void Surface::dispatch_mouse_relative_move(const float x, const float y) const
 {
    if (not m_isCursorLocked)
       return;
 
-   for (ISurfaceEventListener* listener : m_listeners) {
-      listener->on_mouse_relative_move(x, y);
-   }
+   event_OnMouseRelativeMove.publish(Vector2{static_cast<float>(x), static_cast<float>(y)});
+}
+
+void Surface::dispatch_close() const
+{
+   event_OnClose.publish();
 }
 
 void Surface::tick() const
 {
    if (m_isCursorLocked) {
-      Dimension center{m_dimension.width / 2, m_dimension.height / 2};
-      XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.width, center.height);
+      Dimension center{m_dimension.x / 2, m_dimension.y / 2};
+      XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.x, center.y);
       XSync(m_display, false);
    }
 }

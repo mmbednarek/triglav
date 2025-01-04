@@ -49,7 +49,7 @@ foreach shader : vertex_shaders
     )
 endforeach
 
-slang_compile_fs = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-O3', '-o', '@OUTPUT@']
+slang_compile_fs = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-O3', '-o', '@OUTPUT@']
 
 foreach shader : fragment_shaders
     render_core_test_file_deps += custom_target(input   : shader,

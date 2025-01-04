@@ -11,6 +11,7 @@ using namespace name_literals;
 
 namespace {
 
+[[maybe_unused]]
 std::string construct_debug_name(const Name renderTargetName, const Name attachmentName)
 {
    std::stringstream ss;
@@ -30,52 +31,44 @@ void NodeResourcesBase::clean(graphics_api::Device& device)
    m_ownedSemaphores.clear();
 }
 
-graphics_api::Semaphore& NodeResourcesBase::semaphore(Name child)
+graphics_api::Semaphore& NodeResourcesBase::semaphore(const Name child)
 {
-   return m_ownedSemaphores[child];
-}
-
-void NodeResourcesBase::finalize()
-{
-   m_ownedSemaphores.make_heap();
+   return m_ownedSemaphores.at(child);
 }
 
 void NodeResourcesBase::update_resolution(const graphics_api::Resolution& resolution) {}
 
 void NodeFrameResources::add_render_target(const Name identifier, graphics_api::RenderTarget& renderTarget)
 {
-   m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, std::nullopt);
+   m_renderTargets.emplace(identifier, RenderTargetResource{&renderTarget, std::nullopt, std::nullopt});
 }
 
 void NodeFrameResources::add_render_target_with_resolution(const Name identifier, graphics_api::RenderTarget& renderTarget,
                                                            const graphics_api::Resolution& resolution)
 {
-   m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, resolution);
+   m_renderTargets.emplace(identifier, RenderTargetResource{&renderTarget, std::nullopt, resolution});
 }
 
 void NodeFrameResources::add_render_target_with_scale(const Name identifier, graphics_api::RenderTarget& renderTarget,
                                                       const float scaleFactor)
 {
-   m_renderTargets.emplace(identifier, &renderTarget, std::nullopt, std::nullopt, scaleFactor);
+   m_renderTargets.emplace(identifier, RenderTargetResource{&renderTarget, std::nullopt, std::nullopt, scaleFactor});
 }
 
 void NodeFrameResources::update_resolution(const graphics_api::Resolution& resolution)
 {
    // TODO: Change framebuffer when not used.
-   for (auto& target : m_renderTargets) {
-      if (not target.has_value())
-         continue;
+   for ([[maybe_unused]] auto& [rtName, rtRes] : m_renderTargets) {
 
-      if (target->second.resolution.has_value()) {
-         target->second.framebuffer.emplace(GAPI_CHECK(target->second.renderTarget->create_framebuffer(*target->second.resolution)));
+      if (rtRes.resolution.has_value()) {
+         rtRes.framebuffer.emplace(GAPI_CHECK(rtRes.renderTarget->create_framebuffer(*rtRes.resolution)));
       } else {
-         target->second.framebuffer.emplace(
-            GAPI_CHECK(target->second.renderTarget->create_framebuffer(resolution * target->second.scaleFactor)));
+         rtRes.framebuffer.emplace(GAPI_CHECK(rtRes.renderTarget->create_framebuffer(resolution * rtRes.scaleFactor)));
       }
 
-      for (const auto& attachment : target->second.renderTarget->attachments()) {
-         auto& attachmentTex = target->second.framebuffer->texture(attachment.identifier);
-         TG_SET_DEBUG_NAME(attachmentTex, construct_debug_name(target->first, attachment.identifier));
+      for (const auto& attachment : rtRes.renderTarget->attachments()) {
+         auto& attachmentTex = rtRes.framebuffer->texture(attachment.identifier);
+         TG_SET_DEBUG_NAME(attachmentTex, construct_debug_name(rtName, attachment.identifier));
          this->register_texture(attachment.identifier, attachmentTex);
       }
    }
@@ -112,7 +105,7 @@ void NodeFrameResources::add_signal_semaphore(const Name child, graphics_api::Se
 }
 
 void NodeFrameResources::initialize_command_list(graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commands,
-                                                 const size_t inFrameWaitSemaphoreCount)
+                                                 const MemorySize inFrameWaitSemaphoreCount)
 {
    m_waitSemaphores.emplace(std::move(waitSemaphores));
    m_commandList.emplace(std::move(commands));
@@ -130,13 +123,7 @@ graphics_api::SemaphoreArray& NodeFrameResources::signal_semaphores()
    return m_signalSemaphores;
 }
 
-void NodeFrameResources::finalize()
-{
-   NodeResourcesBase::finalize();
-   m_renderTargets.make_heap();
-}
-
-size_t NodeFrameResources::in_frame_wait_semaphore_count()
+MemorySize NodeFrameResources::in_frame_wait_semaphore_count() const
 {
    return m_inFrameWaitSemaphoreCount;
 }
@@ -158,7 +145,7 @@ void FrameResources::add_signal_semaphore(const Name parent, const Name child, g
 }
 
 void FrameResources::initialize_command_list(const Name nodeName, graphics_api::SemaphoreArray&& waitSemaphores,
-                                             graphics_api::CommandList&& commandList, const size_t inFrameWaitSemaphoreCount) const
+                                             graphics_api::CommandList&& commandList, const MemorySize inFrameWaitSemaphoreCount) const
 {
    auto& node = m_nodes.at(nodeName);
    auto* frameNode = dynamic_cast<NodeFrameResources*>(node.get());
@@ -203,13 +190,6 @@ u32 FrameResources::get_option_raw(const Name optName) const
 void FrameResources::set_option_raw(const Name optName, const u32 option)
 {
    m_renderOptions[optName] = option;
-}
-
-void FrameResources::finalize()
-{
-   for (auto& node : m_nodes | std::views::values) {
-      node->finalize();
-   }
 }
 
 graphics_api::Semaphore& FrameResources::target_semaphore(Name targetNode)

@@ -4,15 +4,14 @@
 
 namespace triglav::graphics_api {
 
-Exception::Exception(const Status status, const std::string_view invoked_function) :
-    status(status),
-    invoked_function(std::string(invoked_function))
+Exception::Exception(Status status, const std::string_view invoked_function) :
+    m_message(fmt::format("graphics-api exception: function={}, status={}", invoked_function, static_cast<int>(status)))
 {
 }
 
 const char* Exception::what() const noexcept
 {
-   return "graphics_api exception";
+   return m_message.c_str();
 }
 
 }// namespace triglav::graphics_api

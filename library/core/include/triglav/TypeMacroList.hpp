@@ -19,7 +19,7 @@ class Typeface;
 }
 
 namespace world {
-struct Level;
+class Level;
 }// namespace world
 
 }// namespace triglav

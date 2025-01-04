@@ -55,12 +55,12 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    ui_core::Viewport::OnAddedRectangleDel::Sink<UserInterfaceResources> m_onAddedRectangleSink;
 };
 
+
 UserInterface::UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport,
                              GlyphCache& glyphCache) :
     m_device(device),
     m_resourceManager(resourceManager),
     m_viewport(viewport),
-    m_glyphCache(glyphCache),
     m_textureRenderTarget(GAPI_CHECK(
        graphics_api::RenderTargetBuilder(m_device)
           .attachment("user_interface"_name, AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage,
@@ -87,8 +87,8 @@ std::unique_ptr<render_core::NodeFrameResources> UserInterface::create_node_reso
 void UserInterface::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
                                     graphics_api::CommandList& cmdList)
 {
-   std::array<graphics_api::ClearValue, 1> clearValues{
-      graphics_api::Color{0, 0, 0, 0},
+   std::array clearValues{
+      graphics_api::ClearValue{graphics_api::Color{0, 0, 0, 0}},
    };
 
    auto& uiResources = dynamic_cast<UserInterfaceResources&>(resources);

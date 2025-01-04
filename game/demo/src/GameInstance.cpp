@@ -5,7 +5,6 @@
 
 namespace demo {
 
-using triglav::desktop::DefaultSurfaceEventListener;
 using triglav::desktop::ISurface;
 using triglav::desktop::Key;
 using triglav::desktop::MouseButton;
@@ -15,84 +14,84 @@ namespace gapi = triglav::graphics_api;
 
 using namespace triglav::name_literals;
 
-class EventListener final : public DefaultSurfaceEventListener
+EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& renderer) :
+    m_surface(surface),
+    m_renderer(renderer),
+    TG_CONNECT(surface, OnMouseRelativeMove, on_mouse_relative_move),
+    TG_CONNECT(surface, OnMouseLeave, on_mouse_leave),
+    TG_CONNECT(surface, OnMouseWheelTurn, on_mouse_wheel_turn),
+    TG_CONNECT(surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
+    TG_CONNECT(surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
+    TG_CONNECT(surface, OnResize, on_resize),
+    TG_CONNECT(surface, OnClose, on_close),
+    TG_CONNECT(surface, OnKeyIsPressed, on_key_is_pressed),
+    TG_CONNECT(surface, OnKeyIsReleased, on_key_is_released)
 {
- public:
-   EventListener(ISurface& surface, triglav::renderer::Renderer& renderer) :
-       m_surface(surface),
-       m_renderer(renderer)
-   {
+}
+
+void EventListener::on_mouse_relative_move(const triglav::Vector2 offset) const
+{
+   if (not m_surface.is_cursor_locked())
+      return;
+
+   m_renderer.on_mouse_relative_move(offset.x, offset.y);
+}
+
+void EventListener::on_mouse_leave() const
+{
+   m_surface.unlock_cursor();
+}
+
+void EventListener::on_mouse_wheel_turn(const float x) const
+{
+   m_renderer.on_mouse_wheel_turn(x);
+}
+
+void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
+{
+   if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
+      m_surface.lock_cursor();
+      m_surface.hide_cursor();
    }
+}
 
-   void on_mouse_relative_move(const float dx, const float dy) override
-   {
-      if (not m_surface.is_cursor_locked())
-         return;
-
-      m_renderer.on_mouse_relative_move(dx, dy);
-   }
-
-   void on_mouse_leave() override
-   {
+void EventListener::on_mouse_button_is_released(const MouseButton button) const
+{
+   if (m_surface.is_cursor_locked() && button == MouseButton::Middle) {
       m_surface.unlock_cursor();
    }
+}
 
-   void on_mouse_wheel_turn(const float x) override
-   {
-      m_renderer.on_mouse_wheel_turn(x);
-   }
+void EventListener::on_resize(const triglav::Vector2i resolution) const
+{
+   m_renderer.on_resize(resolution.x, resolution.y);
+}
 
-   void on_mouse_button_is_pressed(const MouseButton button) override
-   {
-      if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
-         m_surface.lock_cursor();
-         m_surface.hide_cursor();
-      }
-   }
+void EventListener::on_close()
+{
+   m_isRunning = false;
+}
 
-   void on_mouse_button_is_released(const MouseButton button) override
-   {
-      if (m_surface.is_cursor_locked() && button == MouseButton::Middle) {
-         m_surface.unlock_cursor();
-      }
-   }
+void EventListener::on_key_is_pressed(const Key key) const
+{
+   // W - 17
+   // A - 30
+   // S - 31
+   // S - 32
+   // std::cout << "pressed key: " << key << '\n';
+   m_renderer.on_key_pressed(key);
+}
 
-   void on_resize(const int width, const int height) override
-   {
-      m_renderer.on_resize(width, height);
-   }
+void EventListener::on_key_is_released(const Key key) const
+{
+   // std::cout << "released key: " << key << '\n';
+   m_renderer.on_key_released(key);
+}
 
-   void on_close() override
-   {
-      m_isRunning = false;
-   }
-
-   void on_key_is_pressed(const Key key) override
-   {
-      // W - 17
-      // A - 30
-      // S - 31
-      // S - 32
-      // std::cout << "pressed key: " << key << '\n';
-      m_renderer.on_key_pressed(key);
-   }
-
-   void on_key_is_released(const Key key) override
-   {
-      // std::cout << "released key: " << key << '\n';
-      m_renderer.on_key_released(key);
-   }
-
-   [[nodiscard]] bool is_running() const
-   {
-      return m_isRunning;
-   }
-
- private:
-   ISurface& m_surface;
-   triglav::renderer::Renderer& m_renderer;
-   bool m_isRunning{true};
-};
+[[nodiscard]] bool EventListener::is_running() const
+{
+   return m_isRunning;
+}
 
 namespace {
 
@@ -125,7 +124,7 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
     m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
     m_device(GAPI_CHECK(m_instance.create_device(*m_graphicsSplashScreenSurface, device_pick_strategy(), requested_features(m_instance)))),
     m_resourceManager(*m_device, m_fontManager),
-    m_onLoadedAssetsSink(m_resourceManager.OnLoadedAssets.connect<&GameInstance::on_loaded_assets>(this))
+    TG_CONNECT(m_resourceManager, OnLoadedAssets, on_loaded_assets)
 {
    m_state = State::LoadingBaseResources;
    m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index_base.yaml"));
@@ -177,8 +176,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
 
    m_renderer =
       std::make_unique<triglav::renderer::Renderer>(*m_demoSurface, *m_graphicsDemoSurface, *m_device, m_resourceManager, m_resolution);
-   m_eventListener = std::make_unique<EventListener>(*m_demoSurface, *m_renderer);
-   m_demoSurface->add_event_listener(m_eventListener.get());
+   m_eventListener.emplace(*m_demoSurface, *m_renderer);
 
    auto& eventListener = dynamic_cast<EventListener&>(*m_eventListener);
 

@@ -157,7 +157,7 @@ TEST(BuildContext, BasicCompute)
    // Verify pixel values
    auto& outBuffer = storage.buffer("test.basic_compute.output_buffer"_name, 0);
    const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<int*>(*mappedMemory);
+   const auto* pixels = static_cast<triglav::u32*>(*mappedMemory);
 
    for (const auto y : triglav::Range(0, 64)) {
       for (const auto x : triglav::Range(0, 64)) {

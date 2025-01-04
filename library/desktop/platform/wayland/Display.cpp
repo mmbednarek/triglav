@@ -294,7 +294,7 @@ void Display::on_pointer_enter(const uint32_t serial, wl_surface* surface, const
       return;
 
    m_pointerSurface->m_pointerSerial = serial;
-   m_pointerSurface->event_listener().on_mouse_enter(static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f);
+   m_pointerSurface->event_OnMouseEnter.publish(Vector2{static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f});
 }
 
 void Display::on_pointer_leave(uint32_t /*serial*/, wl_surface* surface)
@@ -307,7 +307,7 @@ void Display::on_pointer_leave(uint32_t /*serial*/, wl_surface* surface)
 
    assert(m_pointerSurface == m_surfaceMap.at(surface));
 
-   m_pointerSurface->event_listener().on_mouse_leave();
+   m_pointerSurface->event_OnMouseLeave.publish();
 
    m_pointerSurface = nullptr;
 }
@@ -317,7 +317,7 @@ void Display::on_pointer_motion(uint32_t /*time*/, const int32_t x, const int32_
    if (m_pointerSurface == nullptr)
       return;
 
-   m_pointerSurface->event_listener().on_mouse_move(static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f);
+   m_pointerSurface->event_OnMouseMove.publish(Vector2{static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f});
 }
 
 void Display::dispatch_messages()
@@ -343,14 +343,15 @@ void Display::on_pointer_relative_motion(uint32_t /*utime_hi*/, uint32_t /*utime
 {
    if (m_pointerSurface == nullptr)
       return;
-   m_pointerSurface->event_listener().on_mouse_relative_move(static_cast<float>(dx) / 256.0f, static_cast<float>(dy) / 256.0f);
+   m_pointerSurface->event_OnMouseRelativeMove.publish(Vector2{static_cast<float>(dx) / 256.0f, static_cast<float>(dy) / 256.0f});
 }
 
 void Display::on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const
 {
    if (m_pointerSurface == nullptr)
       return;
-   m_pointerSurface->event_listener().on_mouse_wheel_turn(static_cast<float>(value) / 2560.0f);
+
+   m_pointerSurface->event_OnMouseWheelTurn.publish(static_cast<float>(value) / 2560.0f);
 }
 
 void Display::on_pointer_button(uint32_t serial, uint32_t time, const uint32_t button, const uint32_t state) const
@@ -359,9 +360,9 @@ void Display::on_pointer_button(uint32_t serial, uint32_t time, const uint32_t b
       return;
 
    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-      m_pointerSurface->event_listener().on_mouse_button_is_pressed(map_button(button));
+      m_pointerSurface->event_OnMouseButtonIsPressed.publish(map_button(button));
    } else if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
-      m_pointerSurface->event_listener().on_mouse_button_is_released(map_button(button));
+      m_pointerSurface->event_OnMouseButtonIsReleased.publish(map_button(button));
    }
 }
 
@@ -393,9 +394,9 @@ void Display::on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t stat
       return;
 
    if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-      m_keyboardSurface->event_listener().on_key_is_pressed(map_key(key));
+      m_keyboardSurface->event_OnKeyIsPressed.publish(map_key(key));
    } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
-      m_keyboardSurface->event_listener().on_key_is_released(map_key(key));
+      m_keyboardSurface->event_OnKeyIsReleased.publish(map_key(key));
    }
 }
 

@@ -20,3 +20,5 @@ render_core_test = executable('render_core_test',
                        win_subsystem: 'windows',
                        link_whole: [desktop_main_lib],
 )
+
+test('Render Core Test', render_core_test, workdir: meson.current_build_dir())

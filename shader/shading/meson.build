@@ -7,5 +7,5 @@ shader_targets += custom_target('shader_shading_vertex',
 shader_targets += custom_target('shader_shading_fragment',
                                 input : 'shading.slang',
                                 output : 'fragment.spv',
-                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-o', '@OUTPUT@'],
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-o', '@OUTPUT@'],
 )

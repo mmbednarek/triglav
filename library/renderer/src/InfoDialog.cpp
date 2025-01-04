@@ -45,9 +45,8 @@ constexpr std::array g_labelGroups{
    std::tuple{"info_dialog/features"_name, "Features", std::span{g_featureLabels.data(), g_featureLabels.size()}},
 };
 
-InfoDialog::InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& resourceManager, GlyphCache& glyphCache) :
+InfoDialog::InfoDialog(ui_core::Viewport& viewport, GlyphCache& glyphCache) :
     m_viewport(viewport),
-    m_resourceManager(resourceManager),
     m_glyphCache(glyphCache)
 {
 }

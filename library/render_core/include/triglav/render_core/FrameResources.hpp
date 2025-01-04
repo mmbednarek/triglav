@@ -25,12 +25,11 @@ class NodeResourcesBase
 
    virtual void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore);
    virtual void clean(graphics_api::Device& device);
-   virtual void finalize();
    virtual void update_resolution(const graphics_api::Resolution& resolution);
    [[nodiscard]] virtual graphics_api::Semaphore& semaphore(Name child);
 
  private:
-   Heap<Name, graphics_api::Semaphore> m_ownedSemaphores{};
+   std::map<Name, graphics_api::Semaphore> m_ownedSemaphores{};
 };
 
 class NodeFrameResources : public NodeResourcesBase
@@ -49,12 +48,11 @@ class NodeFrameResources : public NodeResourcesBase
    [[nodiscard]] graphics_api::CommandList& command_list();
    void add_signal_semaphore(Name child, graphics_api::Semaphore&& semaphore) override;
    void initialize_command_list(graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commands,
-                                size_t inFrameWaitSemaphoreCount);
+                                MemorySize inFrameWaitSemaphoreCount);
    graphics_api::SemaphoreArray& wait_semaphores();
    graphics_api::SemaphoreArray& signal_semaphores();
-   void finalize() override;
 
-   size_t in_frame_wait_semaphore_count();
+   MemorySize in_frame_wait_semaphore_count() const;
 
  private:
    struct RenderTargetResource
@@ -65,12 +63,12 @@ class NodeFrameResources : public NodeResourcesBase
       float scaleFactor{1.0f};
    };
 
-   Heap<Name, RenderTargetResource> m_renderTargets{};
+   std::map<Name, RenderTargetResource> m_renderTargets{};
    std::map<Name, graphics_api::Texture*> m_registeredTextures{};
    graphics_api::SemaphoreArray m_signalSemaphores;
    std::optional<graphics_api::SemaphoreArray> m_waitSemaphores{};
    std::optional<graphics_api::CommandList> m_commandList{};
-   size_t m_inFrameWaitSemaphoreCount{};
+   MemorySize m_inFrameWaitSemaphoreCount{};
 };
 
 class FrameResources
@@ -118,9 +116,8 @@ class FrameResources
    void update_resolution(const graphics_api::Resolution& resolution);
    void add_signal_semaphore(Name parent, Name child, graphics_api::Semaphore&& semaphore) const;
    void initialize_command_list(Name nodeName, graphics_api::SemaphoreArray&& waitSemaphores, graphics_api::CommandList&& commandList,
-                                size_t inFrameWaitSemaphoreCount) const;
+                                MemorySize inFrameWaitSemaphoreCount) const;
    void clean(graphics_api::Device& device);
-   void finalize();
 
  private:
    std::map<Name, std::unique_ptr<NodeResourcesBase>> m_nodes;

@@ -27,7 +27,7 @@ class RayTracedImageResources : public render_core::NodeFrameResources
 class RayTracedImage : public render_core::IRenderNode
 {
  public:
-   RayTracedImage(graphics_api::Device& device, RayTracingScene& rtScene, Scene& scene);
+   RayTracedImage(graphics_api::Device& device, RayTracingScene& rtScene);
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const override;
    void record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& nodeResources,
                         graphics_api::CommandList& cmdList) override;
@@ -37,7 +37,6 @@ class RayTracedImage : public render_core::IRenderNode
  private:
    graphics_api::Device& m_device;
    RayTracingScene& m_rtScene;
-   Scene& m_scene;
    graphics_api::TimestampArray m_timestampArray;
 };
 

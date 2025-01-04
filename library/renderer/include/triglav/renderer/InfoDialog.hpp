@@ -11,7 +11,7 @@ namespace triglav::renderer {
 class InfoDialog
 {
  public:
-   InfoDialog(ui_core::Viewport& viewport, resource::ResourceManager& resourceManager, GlyphCache& glyphCache);
+   InfoDialog(ui_core::Viewport& viewport, GlyphCache& glyphCache);
 
    void initialize();
 
@@ -27,9 +27,7 @@ class InfoDialog
                  float offset);
 
    ui_core::Viewport& m_viewport;
-   resource::ResourceManager& m_resourceManager;
    GlyphCache& m_glyphCache;
-
    glm::vec2 m_position;
 };
 

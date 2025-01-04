@@ -83,7 +83,7 @@ int map_window_attributes_to_x_position(WindowAttributeFlags flags, const Dimens
 {
    if (flags & WindowAttribute::AlignCenter) {
       auto screenWidth = GetSystemMetrics(SM_CXSCREEN);
-      return screenWidth / 2 - dimension.width / 2;
+      return screenWidth / 2 - dimension.x / 2;
    }
    return CW_USEDEFAULT;
 }
@@ -92,20 +92,20 @@ int map_window_attributes_to_y_position(WindowAttributeFlags flags, const Dimens
 {
    if (flags & WindowAttribute::AlignCenter) {
       auto screenHeight = GetSystemMetrics(SM_CYSCREEN);
-      return screenHeight / 2 - dimension.height / 2;
+      return screenHeight / 2 - dimension.y / 2;
    }
    return CW_USEDEFAULT;
 }
 
 }// namespace
 
-Surface::Surface(const HINSTANCE instance, const Dimension dimension, WindowAttributeFlags flags) :
+Surface::Surface(const HINSTANCE instance, const Vector2i dimension, WindowAttributeFlags flags) :
     m_instance(instance),
     m_dimension(dimension),
     m_windowHandle(CreateWindowExA(map_window_attributes_to_ex_style(flags), g_windowClassName, "Triglav Engine",
                                    map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
-                                   map_window_attributes_to_y_position(flags, dimension), m_dimension.width, m_dimension.height, nullptr,
-                                   nullptr, m_instance, this))
+                                   map_window_attributes_to_y_position(flags, dimension), m_dimension.x, m_dimension.y, nullptr, nullptr,
+                                   m_instance, this))
 {
    ShowWindow(m_windowHandle, SW_NORMAL);
    UpdateWindow(m_windowHandle);
@@ -135,11 +135,6 @@ void Surface::hide_cursor() const
    ShowCursor(false);
 }
 
-void Surface::add_event_listener(ISurfaceEventListener* eventListener)
-{
-   m_eventListener = eventListener;
-}
-
 bool Surface::is_cursor_locked() const
 {
    return GetCapture() == m_windowHandle;
@@ -160,32 +155,24 @@ HWND Surface::winapi_window_handle() const
    return m_windowHandle;
 }
 
-void Surface::on_key_down(WPARAM keyCode) const
+void Surface::on_key_down(const WPARAM keyCode) const
 {
-   if (m_eventListener != nullptr) {
-      m_eventListener->on_key_is_pressed(translate_key(keyCode));
-   }
+   event_OnKeyIsPressed.publish(translate_key(keyCode));
 }
 
 void Surface::on_key_up(WPARAM keyCode) const
 {
-   if (m_eventListener != nullptr) {
-      m_eventListener->on_key_is_released(translate_key(keyCode));
-   }
+   event_OnKeyIsReleased.publish(translate_key(keyCode));
 }
 
 void Surface::on_button_down(MouseButton button) const
 {
-   if (m_eventListener != nullptr) {
-      m_eventListener->on_mouse_button_is_pressed(button);
-   }
+   event_OnMouseButtonIsPressed.publish(button);
 }
 
 void Surface::on_button_up(MouseButton button) const
 {
-   if (m_eventListener != nullptr) {
-      m_eventListener->on_mouse_button_is_released(button);
-   }
+   event_OnMouseButtonIsReleased.publish(button);
 }
 
 void Surface::on_mouse_move(const int x, const int y) const
@@ -204,29 +191,21 @@ void Surface::on_mouse_move(const int x, const int y) const
 
       SetCursorPos(originX, originY);
 
-      if (m_eventListener != nullptr) {
-         m_eventListener->on_mouse_relative_move(0.5f * static_cast<float>(diffX), 0.5f * static_cast<float>(diffY));
-      }
+      event_OnMouseRelativeMove.publish(Vector2{0.5f * static_cast<float>(diffX), 0.5f * static_cast<float>(diffY)});
    } else {
-      if (m_eventListener != nullptr) {
-         m_eventListener->on_mouse_move(static_cast<float>(x), static_cast<float>(y));
-      }
+      event_OnMouseMove.publish(Vector2{static_cast<float>(x), static_cast<float>(y)});
    }
 }
 
 void Surface::on_close() const
 {
-   if (m_eventListener != nullptr) {
-      m_eventListener->on_close();
-   }
+   event_OnClose.publish();
 }
 
 void Surface::on_resize(const short x, const short y)
 {
    m_dimension = Dimension{x, y};
-   if (m_eventListener != nullptr) {
-      m_eventListener->on_resize(x, y);
-   }
+   event_OnResize.publish(Vector2i{static_cast<float>(x), static_cast<float>(y)});
 }
 
 LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const LPARAM lParam)

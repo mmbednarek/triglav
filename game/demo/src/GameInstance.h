@@ -17,6 +17,41 @@
 
 namespace demo {
 
+class EventListener final
+{
+ public:
+   using Self = EventListener;
+
+   EventListener(triglav::desktop::ISurface& surface, triglav::renderer::Renderer& renderer);
+
+   void on_mouse_relative_move(triglav::Vector2 offset) const;
+   void on_mouse_leave() const;
+   void on_mouse_wheel_turn(float x) const;
+   void on_mouse_button_is_pressed(triglav::desktop::MouseButton button) const;
+   void on_mouse_button_is_released(triglav::desktop::MouseButton button) const;
+   void on_resize(triglav::Vector2i resolution) const;
+   void on_close();
+   void on_key_is_pressed(triglav::desktop::Key key) const;
+   void on_key_is_released(triglav::desktop::Key key) const;
+
+   [[nodiscard]] bool is_running() const;
+
+ private:
+   triglav::desktop::ISurface& m_surface;
+   triglav::renderer::Renderer& m_renderer;
+   bool m_isRunning{true};
+
+   TG_SINK(triglav::desktop::ISurface, OnMouseRelativeMove);
+   TG_SINK(triglav::desktop::ISurface, OnMouseLeave);
+   TG_SINK(triglav::desktop::ISurface, OnMouseWheelTurn);
+   TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsPressed);
+   TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsReleased);
+   TG_SINK(triglav::desktop::ISurface, OnResize);
+   TG_SINK(triglav::desktop::ISurface, OnClose);
+   TG_SINK(triglav::desktop::ISurface, OnKeyIsPressed);
+   TG_SINK(triglav::desktop::ISurface, OnKeyIsReleased);
+};
+
 class GameInstance
 {
  public:
@@ -27,6 +62,8 @@ class GameInstance
       LoadingResources,
       Ready
    };
+
+   using Self = GameInstance;
 
    GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution);
 
@@ -45,12 +82,12 @@ class GameInstance
    triglav::resource::ResourceManager m_resourceManager;
    std::unique_ptr<SplashScreen> m_splashScreen;
    std::unique_ptr<triglav::renderer::Renderer> m_renderer;
-   std::unique_ptr<triglav::desktop::ISurfaceEventListener> m_eventListener;
+   std::optional<EventListener> m_eventListener;
    std::mutex m_stateMtx;
    std::atomic<State> m_state{State::Uninitialized};
    std::condition_variable m_baseResourcesReadyCV;
 
-   triglav::resource::ResourceManager::OnLoadedAssetsDel::Sink<GameInstance> m_onLoadedAssetsSink;
+   TG_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
 };
 
 }// namespace demo

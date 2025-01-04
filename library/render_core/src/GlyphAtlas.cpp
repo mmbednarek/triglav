@@ -60,7 +60,7 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
                                                                {glyph->advanceX, glyph->advanceY},
                                                                {glyph->bitmapLeft, glyph->bitmapTop}}));
 
-      for (int y = 0; y < glyph->height; ++y) {
+      for (u32 y = 0; y < glyph->height; ++y) {
          std::memcpy(&atlasData[left + (top + y) * width], &glyph->data[y * glyph->width], glyph->width);
       }
 
@@ -144,10 +144,7 @@ TextMetric GlyphAtlas::measure_text(const std::string_view text) const
    float width = 0.0f;
    float height = 0.0f;
 
-   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-   const auto textUtf16 = converter.from_bytes(text.data());
-
-   for (const auto ch : textUtf16) {
+   for (const auto ch : font::Utf8StringView{text}) {
       if (not m_glyphInfos.contains(ch)) {
          width += m_glyphSize;
          continue;

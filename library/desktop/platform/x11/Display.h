@@ -29,6 +29,7 @@ class Display final : public IDisplay
    std::map<Window, std::weak_ptr<ISurface>> m_surfaces;
    Mouse m_mouse;
    Mouse::OnMouseMoveDel::Sink<Display> m_onMouseMoveSink;
+   Atom m_wmDeleteAtom;
 };
 
 }// namespace triglav::desktop::x11

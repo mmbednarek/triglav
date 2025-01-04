@@ -66,8 +66,8 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_statusBgRect(
        m_rectangleRenderer.create_rectangle({40.0f, 225.0f, g_splashScreenResolution.width - 40.0f, 275.0f}, {0.06f, 0.18f, 0.37f, 1.0f})),
     m_statusFgRect(m_rectangleRenderer.create_rectangle({40.0f, 225.0f, 50.0f, 275.0f}, {0.13f, 0.39f, 0.78f, 1.0f})),
-    m_onStartedLoadingAssetSink(m_resourceManager.OnStartedLoadingAsset.connect<&SplashScreen::on_started_loading_asset>(this)),
-    m_onFinishedLoadingAssetSink(m_resourceManager.OnFinishedLoadingAsset.connect<&SplashScreen::on_finished_loading_asset>(this))
+    TG_CONNECT(m_resourceManager, OnStartedLoadingAsset, on_started_loading_asset),
+    TG_CONNECT(m_resourceManager, OnFinishedLoadingAsset, on_finished_loading_asset)
 {
 }
 
@@ -98,8 +98,8 @@ void SplashScreen::update()
 
    GAPI_CHECK_STATUS(m_commandList.begin());
 
-   std::array<ClearValue, 1> clearValues{
-      {{Color{0, 0, 0, 0}}},
+   std::array clearValues{
+      ClearValue{Color{0, 0, 0, 0}},
    };
    m_commandList.begin_render_pass(framebuffer, clearValues);
 
@@ -131,7 +131,7 @@ void SplashScreen::update()
 
 void SplashScreen::on_close()
 {
-   m_onStartedLoadingAssetSink.disconnect();
+   sink_OnStartedLoadingAsset.disconnect();
 
    std::unique_lock lk{m_updateTextMutex};
    m_frameFinishedFence.await();
@@ -143,9 +143,9 @@ void SplashScreen::recreate_swapchain()
    m_device.await_all();
 
    const auto newDimension = m_surface.dimension();
-   m_resolution = {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)};
+   m_resolution = {static_cast<u32>(newDimension.x), static_cast<u32>(newDimension.y)};
    m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
-                                                      {static_cast<u32>(newDimension.width), static_cast<u32>(newDimension.height)},
+                                                      {static_cast<u32>(newDimension.x), static_cast<u32>(newDimension.y)},
                                                       PresentMode::Fifo, &m_swapchain));
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 }

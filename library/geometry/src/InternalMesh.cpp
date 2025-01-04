@@ -4,9 +4,18 @@
 
 #include "triglav/io/File.hpp"
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#endif
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/Polygon_mesh_processing/orientation.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
+
 #include <glm/geometric.hpp>
 #include <mikktspace/mikktspace.h>
 #include <unordered_map>
@@ -35,11 +44,6 @@ triglav::geometry::IndexedVertex parse_index(const std::string& index)
    const auto normal_id = static_cast<Index>(std::stoi(index.substr(it2 + 1)));
 
    return {vertex_id, uv_id, normal_id};
-}
-
-glm::vec3 to_glm_vec3(const triglav::geometry::InternalMesh::Point3& point)
-{
-   return glm::vec3{point.x(), point.y(), point.z()};
 }
 
 }// namespace
@@ -315,10 +319,10 @@ InternalMesh InternalMesh::from_obj_file(io::IReader& stream)
 
          int i = 0;
          for (const auto halfEdge : result.m_mesh.halfedges_around_face(result.m_mesh.halfedge(faceIndex))) {
-            if (indices[i].normal != -1)
+            if (indices[i].normal != ~0u)
                result.m_normals[halfEdge] = normalPalette[indices[i].normal - 1];
 
-            if (indices[i].uv != -1)
+            if (indices[i].uv != ~0u)
                result.m_uvs[halfEdge] = uvPalette[indices[i].uv - 1];
 
             ++i;

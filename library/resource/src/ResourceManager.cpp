@@ -22,43 +22,6 @@ namespace triglav::resource {
 
 using namespace name_literals;
 
-namespace {
-
-std::vector<ResourceStage> parse_asset_list(const io::Path& path)
-{
-   std::vector<ResourceStage> result{};
-   result.resize(loading_stage_count());
-
-   auto file = io::read_whole_file(path);
-   auto tree =
-      ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
-   auto resources = tree["resources"];
-
-   for (const auto node : resources) {
-      auto name = node["name"].val();
-      auto source = node["source"].val();
-
-      ResourceProperties properties;
-
-      if (node.has_child("properties")) {
-         auto propertiesNode = node["properties"];
-         for (const auto property : propertiesNode) {
-            auto key = property.key();
-            auto value = property.val();
-            properties.add(make_name_id({key.data(), key.size()}), std::string{value.data(), value.size()});
-         }
-      }
-
-      auto resourceName = make_rc_name(std::string{name.data(), name.size()});
-      result[resourceName.loading_stage()].resourceList.emplace_back(std::string{name.data(), name.size()},
-                                                                     std::string{source.data(), source.size()}, std::move(properties));
-   }
-
-   return result;
-}
-
-}// namespace
-
 ResourceManager::ResourceManager(graphics_api::Device& device, font::FontManger& fontManager) :
     m_device(device),
     m_fontManager(fontManager)
@@ -123,7 +86,7 @@ void ResourceManager::load_asset(const ResourceName assetName, const io::Path& p
    spdlog::info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
                 m_nameRegistry.lookup_resource_name(assetName).value_or("UNKNOWN"));
 
-   this->OnStartedLoadingAsset.publish(assetName);
+   this->event_OnStartedLoadingAsset.publish(assetName);
 
    switch (assetName.type()) {
 #define TG_RESOURCE_TYPE(name, extension, cppType, stage)              \
@@ -158,7 +121,7 @@ void ResourceManager::on_finished_loading_resource(ResourceName resourceName, co
    if (skipped == false) {
       spdlog::info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
                    m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
-      this->OnFinishedLoadingAsset.publish(resourceName, m_loadContext->total_loaded_assets(), m_loadContext->total_assets());
+      this->event_OnFinishedLoadingAsset.publish(resourceName, m_loadContext->total_loaded_assets(), m_loadContext->total_assets());
    }
 
    const auto result = m_loadContext->finish_loading_asset();
@@ -171,7 +134,7 @@ void ResourceManager::on_finished_loading_resource(ResourceName resourceName, co
    case FinishLoadingAssetResult::FinishedLoadingAssets:
       spdlog::info("Loading assets DONE");
       m_loadContext.reset();
-      this->OnLoadedAssets.publish();
+      this->event_OnLoadedAssets.publish();
       break;
    case FinishLoadingAssetResult::None:
       break;

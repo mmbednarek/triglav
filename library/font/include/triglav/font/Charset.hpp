@@ -30,7 +30,7 @@ class Charset
 
       Iterator(const Charset* charset, std::vector<RuneRange>::const_iterator rangeIt, Rune rune);
 
-      [[nodiscard]] Iterator& operator++();
+      Iterator& operator++();
       [[nodiscard]] Rune operator*() const;
       [[nodiscard]] bool operator!=(const Iterator& other) const;
 

@@ -51,10 +51,9 @@ void RayTracedImageResources::update_resolution(const graphics_api::Resolution& 
 
 // RayTracedImage
 
-RayTracedImage::RayTracedImage(graphics_api::Device& device, RayTracingScene& rtScene, Scene& scene) :
+RayTracedImage::RayTracedImage(graphics_api::Device& device, RayTracingScene& rtScene) :
     m_device(device),
     m_rtScene(rtScene),
-    m_scene(scene),
     m_timestampArray(GAPI_CHECK(device.create_timestamp_array(2)))
 {
 }

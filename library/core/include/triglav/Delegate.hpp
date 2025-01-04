@@ -2,6 +2,7 @@
 
 #include "Entt.hpp"
 
+#include <condition_variable>
 #include <mutex>
 #include <optional>
 
@@ -47,7 +48,7 @@ class Delegate
    using OptSink = std::optional<Sink<THandler>>;
 
    template<typename... TCallArgs>
-   void publish(TCallArgs&&... args)
+   void publish(TCallArgs&&... args) const
    {
       std::unique_lock lk{m_mutex};
       m_sigh.publish(std::forward<TCallArgs>(args)...);
@@ -69,7 +70,7 @@ class Delegate
       sink.emplace(this->template connect<CHandleFunction>(handler));
    }
 
-   std::mutex m_mutex;
+   mutable std::mutex m_mutex;
    Sigh m_sigh;
 };
 
@@ -82,3 +83,33 @@ class Delegate
 #define TG_SINK(sender, name) sender::name##Delegate::Sink<Self> sink_##name
 
 #define TG_CONNECT(obj, name, func) sink_##name(obj.event_##name.connect<&Self::func>(this))
+
+#define TG_DEFINE_AWAITER(awaiter_name, producer, event)  \
+   class awaiter_name                                     \
+   {                                                      \
+    public:                                               \
+      using Self = awaiter_name;                          \
+      explicit awaiter_name(producer& inProducer) :       \
+          TG_CONNECT(inProducer, event, callback_##event) \
+      {                                                   \
+      }                                                   \
+      void callback_##event()                             \
+      {                                                   \
+         {                                                \
+            std::lock_guard guard(m_mutex);               \
+            m_ready = true;                               \
+         }                                                \
+         m_cond.notify_one();                             \
+      }                                                   \
+      void await()                                        \
+      {                                                   \
+         std::unique_lock lock(m_mutex);                  \
+         m_cond.wait(lock, [this] { return m_ready; });   \
+      }                                                   \
+                                                          \
+    private:                                              \
+      std::mutex m_mutex;                                 \
+      std::condition_variable m_cond;                     \
+      bool m_ready = false;                               \
+      TG_SINK(producer, event);                           \
+   };

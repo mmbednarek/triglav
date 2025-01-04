@@ -91,6 +91,8 @@ void MaterialManager::process_material(const MaterialName name, const render_obj
          worldDataUboSize += 16 * sizeof(glm::vec4);
          break;
       }
+      default:
+         break;
       }
    }
 

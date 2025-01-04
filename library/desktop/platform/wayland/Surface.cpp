@@ -6,8 +6,6 @@
 
 namespace triglav::desktop {
 
-DefaultSurfaceEventListener g_defaultListener;
-
 Surface::Surface(Display& display, Dimension dimension) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
@@ -66,7 +64,7 @@ void Surface::on_toplevel_configure(const int32_t width, const int32_t height, w
    if (width == 0 || height == 0)
       return;
 
-   if (width == m_dimension.width && height == m_dimension.height)
+   if (width == m_dimension.x && height == m_dimension.y)
       return;
 
    m_pendingDimension = Dimension{width, height};
@@ -74,7 +72,7 @@ void Surface::on_toplevel_configure(const int32_t width, const int32_t height, w
 
 void Surface::on_toplevel_close() const
 {
-   this->event_listener().on_close();
+   event_OnClose.publish();
 }
 
 void Surface::lock_cursor()
@@ -98,11 +96,6 @@ void Surface::hide_cursor() const
    wl_pointer_set_cursor(m_display.pointer(), m_pointerSerial, nullptr, 0, 0);
 }
 
-void Surface::add_event_listener(ISurfaceEventListener* eventListener)
-{
-   m_eventListener = eventListener;
-}
-
 bool Surface::is_cursor_locked() const
 {
    return m_lockedPointer != nullptr;
@@ -113,22 +106,13 @@ Dimension Surface::dimension() const
    return m_dimension;
 }
 
-ISurfaceEventListener& Surface::event_listener() const
-{
-   if (m_eventListener != nullptr) {
-      return *m_eventListener;
-   }
-
-   return g_defaultListener;
-}
-
 void Surface::tick()
 {
    if (m_resizeReady) {
       m_dimension = *m_pendingDimension;
       m_pendingDimension.reset();
       m_resizeReady = false;
-      this->event_listener().on_resize(m_dimension.width, m_dimension.height);
+      event_OnResize.publish(Vector2i{m_dimension.x, m_dimension.y});
 
       wl_surface_commit(m_surface);
    }

@@ -19,5 +19,5 @@ shader_targets += custom_target('shader_ground_vertex',
 shader_targets += custom_target('shader_ground_fragment',
                                 input : 'ground.slang',
                                 output : 'fragment.spv',
-                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-o', '@OUTPUT@'],
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-o', '@OUTPUT@'],
 )

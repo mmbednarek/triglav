@@ -260,10 +260,10 @@ void Geometry::record_commands(render_core::FrameResources& frameResources, rend
    cmdList.write_timestamp(graphics_api::PipelineStage::Entrypoint, m_timestampArray, 0);
 
    std::array<graphics_api::ClearValue, 4> clearValues{
-      graphics_api::ColorPalette::Black,
-      graphics_api::ColorPalette::Black,
-      graphics_api::ColorPalette::Black,
-      graphics_api::DepthStenctilValue{1.0f, 0},
+      graphics_api::ClearValue{graphics_api::ColorPalette::Black},
+      {graphics_api::ColorPalette::Black},
+      {graphics_api::ColorPalette::Black},
+      {graphics_api::DepthStenctilValue{1.0f, 0}},
    };
 
    auto& framebuffer = resources.framebuffer("gbuffer"_name);

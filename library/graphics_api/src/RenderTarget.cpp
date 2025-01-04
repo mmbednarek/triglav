@@ -77,7 +77,7 @@ const std::vector<AttachmentInfo>& RenderTarget::attachments() const
 
 Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution& resolution) const
 {
-   Heap<Name, Texture> textures;
+   std::map<Name, Texture> textures;
    for (const auto& attachment : m_attachments) {
       auto texture = m_device.create_texture(attachment.format, resolution, to_texture_usage_flags(attachment.flags),
                                              TextureState::Undefined, attachment.sampleCount);
@@ -88,13 +88,11 @@ Result<Framebuffer> RenderTarget::create_framebuffer(const Resolution& resolutio
       textures.emplace(attachment.identifier, std::move(*texture));
    }
 
-   textures.make_heap();
-
    std::vector<VkImageView> attachmentImageViews;
    attachmentImageViews.resize(textures.size());
 
-   for (size_t i = 0; i < textures.size(); ++i) {
-      attachmentImageViews[i] = textures[m_attachments[i].identifier].vulkan_image_view();
+   for (MemorySize i = 0; i < textures.size(); ++i) {
+      attachmentImageViews[i] = textures.at(m_attachments[i].identifier).vulkan_image_view();
    }
 
    VkFramebufferCreateInfo framebufferInfo{};
@@ -128,7 +126,7 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain& 
    }
 
    index = 0;
-   Heap<Name, Texture> textures;
+   std::map<Name, Texture> textures;
    for (const auto& attachment : m_attachments) {
       if (index == swapchainAttachment) {
          ++index;
@@ -143,8 +141,6 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain& 
       textures.emplace(attachment.identifier, std::move(*texture));
    }
 
-   textures.make_heap();
-
    std::vector<VkImageView> attachmentImageViews;
    attachmentImageViews.resize(textures.size() + 1);
 
@@ -152,12 +148,12 @@ Result<Framebuffer> RenderTarget::create_swapchain_framebuffer(const Swapchain& 
       attachmentImageViews[swapchainAttachment] = swapchain.vulkan_image_view(frameIndex);
    } else {
       index = 0;
-      for (size_t i = 0; i < textures.size(); ++i) {
+      for (MemorySize i = 0; i < textures.size(); ++i) {
          if (index == swapchainAttachment) {
             attachmentImageViews[index] = swapchain.vulkan_image_view(frameIndex);
             ++index;
          }
-         attachmentImageViews[index] = textures[m_attachments[index].identifier].vulkan_image_view();
+         attachmentImageViews[index] = textures.at(m_attachments[index].identifier).vulkan_image_view();
          ++index;
       }
    }
@@ -239,7 +235,7 @@ std::vector<VkAttachmentDescription> RenderTargetBuilder::vulkan_attachments()
    std::vector<VkAttachmentDescription> result{};
    result.resize(m_attachments.size());
 
-   for (size_t i = 0; i < m_attachments.size(); ++i) {
+   for (MemorySize i = 0; i < m_attachments.size(); ++i) {
       const auto [name, attachmentFlags, attachmentFormat, sampleCount] = m_attachments[i];
       const auto [vulkanLoadOp, vulkanStoreOp] = vulkan::to_vulkan_load_store_ops(attachmentFlags);
 

@@ -13,6 +13,8 @@ UINT map_file_open_style(const FileOpenMode mode)
       return OF_READ;
    case FileOpenMode::Write:
       return OF_WRITE;
+   case FileOpenMode::ReadWrite:
+      return OF_READ | OF_WRITE;
    case FileOpenMode::Create:
       return OF_WRITE | OF_CREATE;
    }

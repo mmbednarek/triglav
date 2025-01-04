@@ -19,10 +19,10 @@
 #include <span>
 #include <vector>
 
-#if NDEBUG
+#if defined(NDEBUG) || defined(TG_DISABLE_DEBUG_UTILS)
 #define GAPI_ENABLE_VALIDATION 0
 #else
-#define GAPI_ENABLE_VALIDATION 0
+#define GAPI_ENABLE_VALIDATION 1
 #endif
 
 namespace triglav::desktop {

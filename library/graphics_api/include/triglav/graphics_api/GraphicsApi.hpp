@@ -513,8 +513,7 @@ class Exception final : public std::exception
    [[nodiscard]] const char* what() const noexcept override;
 
  private:
-   Status status;
-   std::string invoked_function;
+   std::string m_message;
 };
 
 template<typename TResultValue>
@@ -561,11 +560,10 @@ inline void check_status(const Status status, const std::string_view message)
 #define GAPI_CHECK(stmt) ::triglav::graphics_api::check_result(stmt, #stmt)
 #define GAPI_CHECK_STATUS(stmt) ::triglav::graphics_api::check_status(stmt, #stmt)
 
-#ifdef NDEBUG
+#if defined(NDEBUG) || defined(TG_DISABLE_DEBUG_UTILS)
 #define TG_SET_DEBUG_NAME(object, name)
 #else
-#define TG_SET_DEBUG_NAME(object, name)
-// #define TG_SET_DEBUG_NAME(object, name) object.set_debug_name(name)
+#define TG_SET_DEBUG_NAME(object, name) object.set_debug_name(name)
 #endif
 
 #ifdef _WIN32
