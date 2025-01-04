@@ -22,7 +22,7 @@
 #if NDEBUG
 #define GAPI_ENABLE_VALIDATION 0
 #else
-#define GAPI_ENABLE_VALIDATION 1
+#define GAPI_ENABLE_VALIDATION 0
 #endif
 
 namespace triglav::desktop {

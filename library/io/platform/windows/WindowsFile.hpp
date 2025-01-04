@@ -1,8 +1,8 @@
 #pragma once
 
-#include "File.h"
+#include "File.hpp"
 
-#include <Windows.h>
+#include <windows.h>
 
 namespace triglav::io::windows {
 

@@ -3,12 +3,12 @@
 #include "GraphicsApi.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
-#include "triglav/desktop/VulkanSurface.h"
+#include "triglav/desktop/VulkanSurface.hpp"
 
 namespace triglav::graphics_api {
 
 namespace vulkan {
-using SurfaceKHR = WrappedObject<VkSurfaceKHR, triglav::desktop::create_vulkan_surface, vkDestroySurfaceKHR, VkInstance>;
+using SurfaceKHR = WrappedObject<VkSurfaceKHR, desktop::create_vulkan_surface, vkDestroySurfaceKHR, VkInstance>;
 }
 
 class Surface

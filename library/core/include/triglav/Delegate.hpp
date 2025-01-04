@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Entt.hpp"
-#include "Template.hpp"
 
 #include <mutex>
 #include <optional>
-#include <shared_mutex>
 
 namespace triglav {
 
@@ -51,7 +49,7 @@ class Delegate
    template<typename... TCallArgs>
    void publish(TCallArgs&&... args)
    {
-      std::shared_lock lk{m_mutex};
+      std::unique_lock lk{m_mutex};
       m_sigh.publish(std::forward<TCallArgs>(args)...);
    }
 
@@ -71,7 +69,7 @@ class Delegate
       sink.emplace(this->template connect<CHandleFunction>(handler));
    }
 
-   std::shared_mutex m_mutex;
+   std::mutex m_mutex;
    Sigh m_sigh;
 };
 

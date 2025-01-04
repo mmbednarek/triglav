@@ -14,23 +14,6 @@ namespace triglav::render_core {
 
 namespace gapi = graphics_api;
 
-namespace {
-
-gapi::DescriptorType to_descriptor_type(const detail::Descriptor& desc)
-{
-   switch (desc.index()) {
-   case 0:
-      return gapi::DescriptorType::StorageImage;
-   case 1:
-      return gapi::DescriptorType::ImageSampler;
-   default:
-      assert(false);
-      return gapi::DescriptorType{};
-   }
-}
-
-}// namespace
-
 BuildContext::BuildContext(graphics_api::Device& device, resource::ResourceManager& resourceManager, const Vector2i screenSize) :
     m_device(device),
     m_resourceManager(resourceManager),
@@ -266,6 +249,7 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
                writer.set_raw_uniform_buffer(index, this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferArray>) {
                std::vector<const gapi::Buffer*> buffers;
+               buffers.reserve(desc.buffers.size());
                for (const auto ref : desc.buffers) {
                   buffers.emplace_back(&this->resolve_buffer_ref(storage, ref, frameIndex));
                }
@@ -383,7 +367,7 @@ gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, Textu
 graphics_api::Buffer& BuildContext::resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef, u32 frameIndex) const
 {
    return std::visit(
-      [this, frameIndex, &storage]<typename TVariant>(const TVariant& var) -> gapi::Buffer& {
+      [frameIndex, &storage]<typename TVariant>(const TVariant& var) -> gapi::Buffer& {
          if constexpr (std::is_same_v<TVariant, Name>) {
             return storage.buffer(var, frameIndex);
          } else if constexpr (std::is_same_v<TVariant, FromLastFrame>) {
@@ -683,7 +667,8 @@ void BuildContext::create_resources(ResourceStorage& storage)
             [this, frameIndex, &storage]<typename TDecl>(const TDecl& decl) {
                if constexpr (std::is_same_v<TDecl, detail::decl::Texture>) {
                   const auto size = decl.texDims.value_or(m_screenSize);
-                  auto texture = GAPI_CHECK(m_device.create_texture(decl.texFormat, {size.x, size.y}, decl.texUsageFlags));
+                  auto texture = GAPI_CHECK(
+                     m_device.create_texture(decl.texFormat, {static_cast<u32>(size.x), static_cast<u32>(size.y)}, decl.texUsageFlags));
                   TG_SET_DEBUG_NAME(texture, resolve_name(decl.texName));
                   storage.register_texture(decl.texName, frameIndex, std::move(texture));
                } else if constexpr (std::is_same_v<TDecl, detail::decl::Buffer>) {

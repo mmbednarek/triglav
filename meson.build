@@ -6,9 +6,13 @@ project('vulkan_engine',
   default_options: ['cpp_std=c++23'],
 )
 
-if build_machine.system() == 'windows'
+if meson.get_compiler('cpp').get_id() == 'msvc'
   add_project_arguments('/std:c++latest', language : 'cpp')
   add_project_arguments('/Zc:preprocessor', language : 'cpp')
+endif
+
+if host_machine.system() == 'windows' and meson.get_compiler('cpp').get_id() == 'gcc'
+  add_project_arguments('-Wa,-mbig-obj', language : 'cpp')
 endif
 
 if meson.get_compiler('cpp').get_id() == 'clang'
@@ -35,7 +39,7 @@ rapidyaml = dependency('rapidyaml', method:'pkg-config')
 spdlog = dependency('spdlog', method:'pkg-config')
 entt = dependency('entt', method:'pkg-config')
 
-if build_machine.system() == 'linux'
+if host_machine.system() == 'linux'
   xlib = dependency('x11')
   xkb_common = dependency('xkbcommon')
   wayland_client = dependency('wayland-client')

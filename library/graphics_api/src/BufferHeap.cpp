@@ -19,8 +19,8 @@ ChunkCount memory_size_to_chunk_count(const MemorySize size)
 
 BufferHeap::BufferHeap(Device& device, const BufferUsageFlags usageFlags, const MemorySize chunkCountPerPage) :
     m_device(device),
-    m_chunkCount(chunkCountPerPage),
-    m_usageFlags(usageFlags)
+    m_usageFlags(usageFlags),
+    m_chunkCount(chunkCountPerPage)
 {
 }
 

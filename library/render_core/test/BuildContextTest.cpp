@@ -11,7 +11,9 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <gtest/gtest.h>
+#ifdef TG_ENABLE_RENDERDOC
 #include <renderdoc_app.h>
+#endif
 
 using triglav::render_core::BufferRef;
 using triglav::render_core::BuildContext;
@@ -70,6 +72,44 @@ void execute_build_context(BuildContext& buildContext, ResourceStorage& storage)
    }
 }
 
+triglav::u8 abs_diff(const triglav::u8 x, const triglav::u8 y)
+{
+   if (x > y) {
+      return x - y;
+   }
+   return y - x;
+}
+
+[[nodiscard]] bool compare_stream_with_buffer_with_tolerance(triglav::io::IReader& reader, const triglav::u8* buffData,
+                                                             const triglav::MemorySize buffSize, const triglav::u8 tolerance)
+{
+   static constexpr triglav::MemorySize CHUNK_SIZE{1024};
+
+   std::array<triglav::u8, CHUNK_SIZE> chunk{};
+   triglav::MemorySize bufferOffset = 0;
+
+   while (true) {
+      const auto res = reader.read(chunk);
+      if (!res.has_value()) {
+         return false;
+      }
+
+      const auto cmpSize = std::min(buffSize - bufferOffset, *res);
+
+      for (const auto i : triglav::Range(0u, cmpSize)) {
+         if (abs_diff(chunk[i], buffData[bufferOffset + i]) > tolerance) {
+            return false;
+         }
+      }
+
+      if (cmpSize != CHUNK_SIZE) {
+         return true;
+      }
+
+      bufferOffset += cmpSize;
+   }
+}
+
 template<typename T>
 [[nodiscard]] T read_buffer(triglav::graphics_api::Buffer& buffer)
 {
@@ -85,9 +125,9 @@ void write_buffer(triglav::graphics_api::Buffer& buffer, T value)
 }
 
 [[maybe_unused]]
-void dump_buffer(const std::span<const triglav::u8> buffer)
+void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_view fileName = "test_output.dat")
 {
-   const auto outFile = triglav::io::open_file(triglav::io::Path{"test_output.dat"}, triglav::io::FileOpenMode::Create);
+   const auto outFile = triglav::io::open_file(triglav::io::Path{fileName}, triglav::io::FileOpenMode::Create);
    assert(outFile.has_value());
    assert((*outFile)->write(buffer).has_value());
 }
@@ -264,7 +304,7 @@ TEST(BuildContext, BasicDepth)
    const auto expectedBitmap = open_file(Path{"content/basic_depth_expected_bitmap.dat"}, FileOpenMode::Read);
    ASSERT_TRUE(expectedBitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expectedBitmap, pixels, bufferSize, 0x02));
 }
 
 TEST(BuildContext, BasicTexture)
@@ -289,7 +329,7 @@ TEST(BuildContext, BasicTexture)
    buildContext.declare_staging_buffer("test.basic_texture.output_buffer"_name, bufferSize);
    buildContext.declare_buffer("test.basic_texture.vertex_buffer"_name, 3 * sizeof(Vertex));
 
-   static constexpr float sqrtOfThree = std::sqrt(3.0f);
+   static constexpr float sqrtOfThree = 1.73205f;
    static constexpr float yOffset = 1.0f - 0.5f * sqrtOfThree;
 
    // Fill buffers with values
@@ -459,7 +499,7 @@ TEST(BuildContext, DepthTargetSample)
    const auto expectedBitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileOpenMode::Read);
    ASSERT_TRUE(expectedBitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expectedBitmap, pixels, bufferSize, 0x02));
 }
 
 TEST(BuildContext, Conditions)

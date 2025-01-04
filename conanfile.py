@@ -6,7 +6,7 @@ from conan.tools.gnu import PkgConfigDeps
 class TriglavEngine(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     requires = (
-        "cgal/5.6",
+        "cgal/6.0.1",
         "entt/3.13.0",
         "freetype/2.13.2",
         "fmt/10.2.1",
@@ -17,12 +17,15 @@ class TriglavEngine(ConanFile):
     )
     # We should use system vulkan
 
+    def configure(self):
+        self.options["boost"].without_test = True
+
     def generate(self):
         pc = PkgConfigDeps(self)
         pc.generate()
 
         backend = 'ninja'
-        if self.settings.os == "Windows":
+        if self.settings.os == "Windows" and self.settings.compiler == "msvc":
             backend = 'vs2022'
 
         tc = MesonToolchain(self, backend=backend)

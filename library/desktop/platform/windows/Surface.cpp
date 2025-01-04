@@ -1,7 +1,7 @@
-#include "Surface.h"
+#include "Surface.hpp"
 
-#include <Windowsx.h>
 #include <spdlog/spdlog.h>
+#include <windowsx.h>
 
 namespace triglav::desktop {
 

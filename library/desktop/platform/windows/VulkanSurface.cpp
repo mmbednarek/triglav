@@ -1,6 +1,6 @@
-#include "VulkanSurface.h"
+#include "VulkanSurface.hpp"
 
-#include "Surface.h"
+#include "Surface.hpp"
 
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_win32.h>

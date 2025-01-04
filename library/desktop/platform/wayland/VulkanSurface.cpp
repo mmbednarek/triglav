@@ -1,4 +1,4 @@
-#include "VulkanSurface.h"
+#include "VulkanSurface.hpp"
 
 #include <vulkan/vulkan_wayland.h>
 

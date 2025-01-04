@@ -272,7 +272,6 @@ enum class TextureState
    case TextureState::ShaderRead:
       [[fallthrough]];
    case TextureState::GeneralRead:
-      [[fallthrough]];
       return MemoryAccess::Read;
    default:
       return MemoryAccess::None;
@@ -565,7 +564,8 @@ inline void check_status(const Status status, const std::string_view message)
 #ifdef NDEBUG
 #define TG_SET_DEBUG_NAME(object, name)
 #else
-#define TG_SET_DEBUG_NAME(object, name) object.set_debug_name(name)
+#define TG_SET_DEBUG_NAME(object, name)
+// #define TG_SET_DEBUG_NAME(object, name) object.set_debug_name(name)
 #endif
 
 #ifdef _WIN32

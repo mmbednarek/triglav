@@ -11,11 +11,12 @@ subdir('content')
 render_core_test_deps = [render_core,
                          gtest,
                          desktop,
-                         desktop_main,
 ]
 
 render_core_test = executable('render_core_test',
                        sources : render_core_test_sources,
                        dependencies : render_core_test_deps,
                        link_depends: render_core_test_file_deps,
+                       win_subsystem: 'windows',
+                       link_whole: [desktop_main_lib],
 )

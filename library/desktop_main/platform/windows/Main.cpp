@@ -1,7 +1,8 @@
-#include <Windows.h>
-
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
+
+#include <spdlog/spdlog.h>
+#include <windows.h>
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -61,5 +62,13 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*
    InputArgs inputArgs{construct_input_args()};
 
    auto display = triglav::desktop::get_display();
-   return triglav_main(inputArgs, *display);
+   try {
+      return triglav_main(inputArgs, *display);
+   } catch (const std::exception& e) {
+      spdlog::error("desktop-main: exception occurred: {}, exiting...", e.what());
+      return EXIT_FAILURE;
+   } catch (...) {
+      spdlog::error("desktop-main: unknown exception occurred, exiting...");
+      return EXIT_FAILURE;
+   }
 }

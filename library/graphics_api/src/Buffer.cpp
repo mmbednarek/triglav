@@ -53,7 +53,7 @@ void MappedMemory::write(const void* source, const size_t length) const
 
 void MappedMemory::write_offset(const void* source, const MemorySize length, const MemorySize offset) const
 {
-   std::memcpy(m_pointer + offset, source, length);
+   std::memcpy(static_cast<u8*>(m_pointer) + offset, source, length);
 }
 
 Buffer::Buffer(Device& device, VkDeviceSize size, vulkan::Buffer buffer, vulkan::DeviceMemory memory) :

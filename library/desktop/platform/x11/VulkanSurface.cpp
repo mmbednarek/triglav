@@ -1,4 +1,4 @@
-#include "VulkanSurface.h"
+#include "VulkanSurface.hpp"
 
 #include <X11/Xlib.h>
 #include <vulkan/vulkan_xlib.h>

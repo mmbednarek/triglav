@@ -1,6 +1,6 @@
 #include "DynamicWriter.hpp"
 
-#include <cmath>
+#include <algorithm>
 #include <cstring>
 #include <utility>
 

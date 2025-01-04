@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <iostream>
 
 #include "triglav/threading/ThreadPool.hpp"
 
@@ -49,6 +50,7 @@ TEST(ThreadPool, CanIssueJobsInside)
    int counter{0};
    auto job = [&] {
       std::unique_lock lk{mtx};
+
       if (counter == 5) {
          pool.issue_job([&] {
             std::unique_lock lk{mtx};
@@ -59,6 +61,7 @@ TEST(ThreadPool, CanIssueJobsInside)
       } else {
          ++counter;
       }
+
       lk.unlock();
       cv.notify_one();
    };

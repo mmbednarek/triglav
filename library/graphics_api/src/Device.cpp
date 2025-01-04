@@ -280,8 +280,8 @@ Result<Texture> Device::create_texture(const ColorFormat& format, const Resoluti
       return std::unexpected(Status::UnsupportedFormat);
    }
 
-   if (mipCount > formatProperties.maxMipLevels) {
-      mipCount = formatProperties.maxMipLevels;
+   if (mipCount > static_cast<int>(formatProperties.maxMipLevels)) {
+      mipCount = static_cast<int>(formatProperties.maxMipLevels);
    }
 
    VkImageCreateInfo imageInfo{};

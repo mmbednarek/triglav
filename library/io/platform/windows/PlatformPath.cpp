@@ -1,6 +1,6 @@
-#include "Path.h"
+#include "Path.hpp"
 
-#include <Windows.h>
+#include <windows.h>
 
 namespace triglav::io {
 

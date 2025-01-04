@@ -89,7 +89,7 @@ void CommandList::begin_render_pass(const Framebuffer& framebuffer, std::span<Cl
    static constexpr auto maxClearValues{6};
 
    std::array<VkClearValue, maxClearValues> vulkanClearValues{};
-   for (auto i = 0; i < clearValues.size(); ++i) {
+   for (auto i = 0u; i < clearValues.size(); ++i) {
       if (std::holds_alternative<Color>(clearValues[i].value)) {
          const auto [r, g, b, a] = std::get<Color>(clearValues[i].value);
          vulkanClearValues[i].color = {{r, g, b, a}};
@@ -312,7 +312,7 @@ void CommandList::execution_barrier(PipelineStageFlags sourceStage, PipelineStag
 }
 
 void CommandList::buffer_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
-                                 const std::span<const BufferBarrier> barriers) const
+                                 std::span<const BufferBarrier> barriers) const
 {
    std::vector<VkBufferMemoryBarrier> vkBarriers{};
    vkBarriers.resize(barriers.size());

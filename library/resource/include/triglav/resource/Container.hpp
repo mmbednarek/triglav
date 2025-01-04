@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/Name.hpp"
+#include "triglav/threading/SharedMutex.hpp"
 
 #include <map>
 #include <mutex>
@@ -63,7 +64,7 @@ class Container final : public IContainer
 
  private:
    std::map<ResName, ValueType> m_map{};
-   mutable std::shared_mutex m_mutex;
+   mutable threading::SharedMutex m_mutex;
 };
 
 }// namespace triglav::resource

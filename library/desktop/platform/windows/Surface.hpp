@@ -2,8 +2,8 @@
 
 #include "ISurface.hpp"
 
-#include <Windows.h>
 #include <memory>
+#include <windows.h>
 
 namespace triglav::desktop {
 

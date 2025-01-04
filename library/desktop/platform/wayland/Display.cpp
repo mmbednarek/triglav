@@ -3,7 +3,7 @@
 #include "Surface.h"
 #include "api/RelativePointer.h"
 
-#include "VulkanSurface.h"
+#include "VulkanSurface.hpp"
 
 #include <cassert>
 #include <format>

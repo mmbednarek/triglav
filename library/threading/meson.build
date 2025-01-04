@@ -1,13 +1,20 @@
 threading_sources = files([
   'include/triglav/threading/DoubleBufferQueue.hpp',
   'include/triglav/threading/SafeAccess.hpp',
+  'include/triglav/threading/SharedMutex.hpp',
   'include/triglav/threading/Threading.hpp',
   'include/triglav/threading/ThreadPool.hpp',
   'src/ThreadPool.cpp',
   'src/Threading.cpp',
 ])
 
-threading_deps = [core]
+if host_machine.system() == 'linux'
+    subdir('platform/linux')
+elif host_machine.system() == 'windows'
+    subdir('platform/windows')
+endif
+
+threading_deps = [core, spdlog]
 threading_incl = include_directories(['include', 'include/triglav/threading'])
 
 threading_lib = static_library('threading',

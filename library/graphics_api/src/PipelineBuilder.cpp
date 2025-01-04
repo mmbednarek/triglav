@@ -394,7 +394,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
          colorBlendAttachments.emplace_back(colorBlendAttachment);
       }
    } else {
-      for (const auto& colorAttachment : m_colorAttachmentFormats) {
+      for (const auto& _ : m_colorAttachmentFormats) {
          VkPipelineColorBlendAttachmentState colorBlendAttachment{};
          colorBlendAttachment.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;

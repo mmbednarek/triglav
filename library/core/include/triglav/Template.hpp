@@ -1,5 +1,7 @@
 #pragma once
 
+#include <span>
+
 namespace triglav {
 
 template<typename TClass>

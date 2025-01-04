@@ -3,6 +3,7 @@
 #include "SafeAccess.hpp"
 
 #include <algorithm>
+#include <spdlog/spdlog.h>
 
 namespace triglav::threading {
 
@@ -23,9 +24,15 @@ void ThreadPool::thread_routine()
 {
    std::unique_lock lk{m_jobIsReadyMutex};
    m_jobIsReadyCV.wait(lk, [this] { return this->has_jobs_or_is_quitting(); });
+
+   // ignore the job if quitting
+   if (m_state.load() == State::Quitting)
+      return;
+
    auto object = m_queue.pop();
    if (not object.has_value())
       return;
+
    lk.unlock();
 
    (*object)();
@@ -35,8 +42,16 @@ void ThreadPool::thread_entrypoint(const ThreadID threadId)
 {
    set_thread_id(threadId);
 
-   while (m_state.load() != State::Quitting) {
-      this->thread_routine();
+   try {
+      while (m_state.load() != State::Quitting) {
+         this->thread_routine();
+      }
+   } catch (std::exception& e) {
+      spdlog::error("thread-pool: exception occurred: {}, exiting...", e.what());
+      std::exit(EXIT_FAILURE);
+   } catch (...) {
+      spdlog::error("thread-pool: unknown exception occurred, exiting...");
+      std::exit(EXIT_FAILURE);
    }
 }
 
@@ -47,7 +62,9 @@ bool ThreadPool::has_jobs_or_is_quitting()
 
    if (not m_queue.is_empty())
       return true;
+
    m_queue.swap();
+
    return not m_queue.is_empty();
 }
 
@@ -55,7 +72,11 @@ void ThreadPool::quit()
 {
    m_state.store(State::Quitting);
    m_jobIsReadyCV.notify_all();
+
+   std::this_thread::sleep_for(std::chrono::milliseconds(32));
+
    for (auto& thread : m_threads) {
+      m_jobIsReadyCV.notify_all();
       thread.join();
    }
    m_threads.clear();

@@ -1,6 +1,6 @@
-#include "Display.h"
+#include "Display.hpp"
 
-#include "Surface.h"
+#include "Surface.hpp"
 
 namespace triglav::desktop {
 namespace {

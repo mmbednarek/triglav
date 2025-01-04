@@ -6,6 +6,8 @@ buildDir
 buildDir-rel
 buildDir-clang
 buildDir-clang-rel
+buildDir-mingw
+buildDir-mingw-rel
 .cache
 compile_commands.json
 .docker-grpc

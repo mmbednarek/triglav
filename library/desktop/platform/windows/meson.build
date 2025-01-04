@@ -1,7 +1,7 @@
 desktop_sources += files([
                          'Display.cpp',
-                         'Display.h',
+                         'Display.hpp',
                          'Surface.cpp',
-                         'Surface.h',
+                         'Surface.hpp',
                          'VulkanSurface.cpp',
                      ])
