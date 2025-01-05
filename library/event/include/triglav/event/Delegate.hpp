@@ -2,9 +2,11 @@
 
 #include "Entt.hpp"
 
+#include "triglav/threading/SharedMutex.hpp"
+
 #include <condition_variable>
-#include <mutex>
 #include <optional>
+#include <shared_mutex>
 
 namespace triglav::event {
 
@@ -50,7 +52,7 @@ class Delegate
    template<typename... TCallArgs>
    void publish(TCallArgs&&... args) const
    {
-      std::unique_lock lk{m_mutex};
+      std::shared_lock lk{m_mutex};
       m_sigh.publish(std::forward<TCallArgs>(args)...);
    }
 
@@ -70,7 +72,7 @@ class Delegate
       sink.emplace(this->template connect<CHandleFunction>(handler));
    }
 
-   mutable std::mutex m_mutex;
+   mutable threading::SharedMutex m_mutex;
    Sigh m_sigh;
 };
 

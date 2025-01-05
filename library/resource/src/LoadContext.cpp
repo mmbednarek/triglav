@@ -5,6 +5,7 @@
 #include <ryml.hpp>
 
 #include <mutex>
+#include <shared_mutex>
 
 namespace triglav::resource {
 

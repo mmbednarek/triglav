@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SharedMutex.hpp"
+
 #include <mutex>
 #include <shared_mutex>
 #include <utility>
@@ -70,10 +72,10 @@ class SafeAccess
 };
 
 template<typename TObject>
-class SafeReadWriteAccess : public SafeAccess<TObject, std::shared_mutex>
+class SafeReadWriteAccess : public SafeAccess<TObject, SharedMutex>
 {
  public:
-   using Parent = SafeAccess<TObject, std::shared_mutex>;
+   using Parent = SafeAccess<TObject, SharedMutex>;
 
    template<typename... TArgs>
    explicit SafeReadWriteAccess(TArgs&&... args) :
@@ -81,9 +83,9 @@ class SafeReadWriteAccess : public SafeAccess<TObject, std::shared_mutex>
    {
    }
 
-   SafeAccessor<const TObject, std::shared_lock<std::shared_mutex>> read_access() const
+   SafeAccessor<const TObject, std::shared_lock<SharedMutex>> read_access() const
    {
-      return SafeAccessor<const TObject, std::shared_lock<std::shared_mutex>>{Parent::m_object, Parent::m_mutex};
+      return SafeAccessor<const TObject, std::shared_lock<SharedMutex>>{Parent::m_object, Parent::m_mutex};
    }
 };
 

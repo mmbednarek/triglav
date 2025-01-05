@@ -4,9 +4,9 @@
 
 #include "triglav/Int.hpp"
 #include "triglav/io/Path.hpp"
+#include "triglav/threading/SharedMutex.hpp"
 
 #include <memory>
-#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -51,7 +51,7 @@ class LoadContext
    u32 m_totalLoadedAssets{};
    u32 m_currentStageId{};
    std::vector<ResourceStage> m_loadingStages{};
-   mutable std::shared_mutex m_mutex;
+   mutable threading::SharedMutex m_mutex;
 };
 
 }// namespace triglav::resource

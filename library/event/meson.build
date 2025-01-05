@@ -4,7 +4,7 @@ event_sources = files([
                           'src/Event.cpp',
                       ])
 
-event_deps = [core]
+event_deps = [core, threading]
 event_incl = include_directories(['include', 'include/triglav/event'])
 
 event_lib = static_library('event',
