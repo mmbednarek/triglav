@@ -161,7 +161,7 @@ gapi::WorkTypeFlags BindlessGeometry::work_types() const
    return gapi::WorkType::Graphics;
 }
 
-void BindlessGeometry::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& nodeResources,
+void BindlessGeometry::record_commands(render_core::FrameResources& /*frameResources*/, render_core::NodeFrameResources& nodeResources,
                                        gapi::CommandList& cmdList)
 {
    m_bindlessScene.on_update_scene(cmdList);

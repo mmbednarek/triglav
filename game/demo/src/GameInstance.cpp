@@ -19,7 +19,6 @@ EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& ren
     m_renderer(renderer),
     TG_CONNECT(surface, OnMouseRelativeMove, on_mouse_relative_move),
     TG_CONNECT(surface, OnMouseLeave, on_mouse_leave),
-    TG_CONNECT(surface, OnMouseWheelTurn, on_mouse_wheel_turn),
     TG_CONNECT(surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
     TG_CONNECT(surface, OnResize, on_resize),
@@ -40,11 +39,6 @@ void EventListener::on_mouse_relative_move(const triglav::Vector2 offset) const
 void EventListener::on_mouse_leave() const
 {
    m_surface.unlock_cursor();
-}
-
-void EventListener::on_mouse_wheel_turn(const float x) const
-{
-   m_renderer.on_mouse_wheel_turn(x);
 }
 
 void EventListener::on_mouse_button_is_pressed(const MouseButton button) const

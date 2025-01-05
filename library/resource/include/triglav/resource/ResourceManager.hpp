@@ -6,8 +6,8 @@
 #include "Resource.hpp"
 
 #include "LoadContext.hpp"
-#include "triglav/Delegate.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/event/Delegate.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/Path.hpp"
 

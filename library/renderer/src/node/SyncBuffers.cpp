@@ -17,7 +17,7 @@ gapi::WorkTypeFlags SyncBuffers::work_types() const
    return gapi::WorkType::Transfer;
 }
 
-void SyncBuffers::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
+void SyncBuffers::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& /*resources*/,
                                   graphics_api::CommandList& cmdList)
 {
    auto& geometryResources = dynamic_cast<IGeometryResources&>(frameResources.node("geometry"_name));

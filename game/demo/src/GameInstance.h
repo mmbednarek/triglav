@@ -26,7 +26,6 @@ class EventListener final
 
    void on_mouse_relative_move(triglav::Vector2 offset) const;
    void on_mouse_leave() const;
-   void on_mouse_wheel_turn(float x) const;
    void on_mouse_button_is_pressed(triglav::desktop::MouseButton button) const;
    void on_mouse_button_is_released(triglav::desktop::MouseButton button) const;
    void on_resize(triglav::Vector2i resolution) const;
@@ -43,7 +42,6 @@ class EventListener final
 
    TG_SINK(triglav::desktop::ISurface, OnMouseRelativeMove);
    TG_SINK(triglav::desktop::ISurface, OnMouseLeave);
-   TG_SINK(triglav::desktop::ISurface, OnMouseWheelTurn);
    TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsPressed);
    TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsReleased);
    TG_SINK(triglav::desktop::ISurface, OnResize);

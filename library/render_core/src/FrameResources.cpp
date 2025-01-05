@@ -26,7 +26,7 @@ void NodeResourcesBase::add_signal_semaphore(Name child, graphics_api::Semaphore
    m_ownedSemaphores.emplace(child, std::move(semaphore));
 }
 
-void NodeResourcesBase::clean(graphics_api::Device& device)
+void NodeResourcesBase::clean(graphics_api::Device& /*device*/)
 {
    m_ownedSemaphores.clear();
 }
@@ -36,7 +36,7 @@ graphics_api::Semaphore& NodeResourcesBase::semaphore(const Name child)
    return m_ownedSemaphores.at(child);
 }
 
-void NodeResourcesBase::update_resolution(const graphics_api::Resolution& resolution) {}
+void NodeResourcesBase::update_resolution(const graphics_api::Resolution& /*resolution*/) {}
 
 void NodeFrameResources::add_render_target(const Name identifier, graphics_api::RenderTarget& renderTarget)
 {

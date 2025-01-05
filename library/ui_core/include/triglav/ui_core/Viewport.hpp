@@ -2,7 +2,7 @@
 
 #include "Primitives.hpp"
 
-#include "triglav/Delegate.hpp"
+#include "triglav/event/Delegate.hpp"
 
 #include <map>
 
@@ -11,13 +11,9 @@ namespace triglav::ui_core {
 class Viewport
 {
  public:
-   using OnAddedTextDel = Delegate<Name, const Text&>;
-   using OnTextChangeContentDel = Delegate<Name, const Text&>;
-   using OnAddedRectangleDel = Delegate<Name, const Rectangle&>;
-
-   OnAddedTextDel OnAddedText;
-   OnTextChangeContentDel OnTextChangeContent;
-   OnAddedRectangleDel OnAddedRectangle;
+   TG_EVENT(OnAddedText, Name, const Text&)
+   TG_EVENT(OnTextChangeContent, Name, const Text&)
+   TG_EVENT(OnAddedRectangle, Name, const Rectangle&)
 
    void add_text(Name name, Text&& text);
    void set_text_content(Name name, std::string_view content);

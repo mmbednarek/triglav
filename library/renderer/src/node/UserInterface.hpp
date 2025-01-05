@@ -2,7 +2,7 @@
 
 #include "RectangleRenderer.hpp"
 
-#include "triglav/Delegate.hpp"
+#include "triglav/event/Delegate.hpp"
 #include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/graphics_api/Texture.hpp"
 #include "triglav/render_core/IRenderNode.hpp"
@@ -17,11 +17,8 @@ namespace triglav::renderer::node {
 class UserInterface : public render_core::IRenderNode
 {
  public:
-   using OnAddedLabelGroupDel = Delegate<Name, std::string_view>;
-   using OnAddedLabelDel = Delegate<Name, Name, std::string_view>;
-
-   OnAddedLabelGroupDel OnAddedLabelGroup;
-   OnAddedLabelDel OnAddedLabel;
+   TG_EVENT(OnAddedLabelGroup, Name, std::string_view)
+   TG_EVENT(OnAddedLabel, Name, Name, std::string_view)
 
    UserInterface(graphics_api::Device& device, resource::ResourceManager& resourceManager, ui_core::Viewport& viewport,
                  GlyphCache& glyphCache);

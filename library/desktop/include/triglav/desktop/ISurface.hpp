@@ -2,10 +2,10 @@
 
 #include "ISurfaceEventListener.hpp"
 
-#include "triglav/Delegate.hpp"
 #include "triglav/EnumFlags.hpp"
 #include "triglav/Int.hpp"
 #include "triglav/Math.hpp"
+#include "triglav/event/Delegate.hpp"
 
 #include <memory>
 

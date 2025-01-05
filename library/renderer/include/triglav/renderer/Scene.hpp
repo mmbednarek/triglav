@@ -4,8 +4,8 @@
 #include "DebugLinesRenderer.hpp"
 #include "OrthoCamera.hpp"
 
-#include "triglav/Delegate.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/event/Delegate.hpp"
 #include "triglav/render_objects/Model.hpp"
 
 #include <glm/gtc/quaternion.hpp>

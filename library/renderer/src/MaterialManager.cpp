@@ -64,6 +64,7 @@ void MaterialManager::process_material(const MaterialName name, const render_obj
       switch (prop.type) {
       case render_objects::MaterialPropertyType::Float32:
          worldDataUboSize += sizeof(float);
+         break;
       case render_objects::MaterialPropertyType::Vector3: {
          const auto mod = worldDataUboSize % (4 * sizeof(float));
          if (mod != 0) {

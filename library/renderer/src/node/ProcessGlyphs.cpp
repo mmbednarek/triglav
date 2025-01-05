@@ -60,8 +60,8 @@ ProcessGlyphsResources::ProcessGlyphsResources(gapi::Device& device, gapi::Pipel
                                        sizeof(u32) * g_charactersInStagingBuffer))),
     m_textBuffer(GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, sizeof(u32) * g_charactersInStagingBuffer))),
-    m_onAddedTextSink(viewport.OnAddedText.connect<&ProcessGlyphsResources::on_added_text>(this)),
-    m_onTextChangeContentSink(viewport.OnTextChangeContent.connect<&ProcessGlyphsResources::on_added_text>(this))
+    TG_CONNECT(viewport, OnAddedText, on_added_text),
+    TG_CONNECT(viewport, OnTextChangeContent, on_added_text)
 {
 }
 
@@ -162,7 +162,7 @@ gapi::WorkTypeFlags ProcessGlyphs::work_types() const
    return gapi::WorkType::Compute;
 }
 
-void ProcessGlyphs::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
+void ProcessGlyphs::record_commands(render_core::FrameResources& /*frameResources*/, render_core::NodeFrameResources& resources,
                                     graphics_api::CommandList& cmdList)
 {
    auto& glyphResources = dynamic_cast<ProcessGlyphsResources&>(resources);

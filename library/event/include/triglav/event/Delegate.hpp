@@ -6,7 +6,7 @@
 #include <mutex>
 #include <optional>
 
-namespace triglav {
+namespace triglav::event {
 
 template<typename... TArgs>
 class Delegate
@@ -74,10 +74,10 @@ class Delegate
    Sigh m_sigh;
 };
 
-}// namespace triglav
+}// namespace triglav::event
 
-#define TG_EVENT(name, ...)                                 \
-   using name##Delegate = ::triglav::Delegate<__VA_ARGS__>; \
+#define TG_EVENT(name, ...)                                        \
+   using name##Delegate = ::triglav::event::Delegate<__VA_ARGS__>; \
    name##Delegate event_##name;
 
 #define TG_SINK(sender, name) sender::name##Delegate::Sink<Self> sink_##name

@@ -3,14 +3,18 @@ project('vulkan_engine',
   version: '0.0.1',
   license: 'GPL3',
   meson_version: '>= 1.5',
-  default_options: ['cpp_std=c++23'],
+  default_options: [
+    'cpp_std=c++23',
+    'werror=true',
+    'warning_level=3'
+  ],
 )
 
 if meson.get_compiler('cpp').get_id() == 'msvc'
   add_project_arguments('/std:c++latest', language : 'cpp')
   add_project_arguments('/Zc:preprocessor', language : 'cpp')
 else
-  add_project_arguments(['-Werror', '-Wall'], language : 'cpp')
+  add_project_arguments('-Wno-missing-field-initializers', language : 'cpp')
 endif
 
 if host_machine.system() == 'windows' and meson.get_compiler('cpp').get_id() == 'gcc'
@@ -59,6 +63,7 @@ subdir('library/core')
 subdir('library/io')
 
 subdir('library/world')
+subdir('library/event')
 subdir('library/desktop')
 subdir('library/desktop_main')
 subdir('library/threading')

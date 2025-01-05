@@ -19,7 +19,7 @@ graphics_api::WorkTypeFlags PostProcessing::work_types() const
    return graphics_api::WorkType::Graphics;
 }
 
-void PostProcessing::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
+void PostProcessing::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& /*resources*/,
                                      graphics_api::CommandList& cmdList)
 {
    std::array<graphics_api::ClearValue, 2> clearValues{

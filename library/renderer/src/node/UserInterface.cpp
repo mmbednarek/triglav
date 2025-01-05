@@ -26,9 +26,11 @@ struct TextColorConstant
 class UserInterfaceResources : public render_core::NodeFrameResources
 {
  public:
+   using Self = UserInterfaceResources;
+
    UserInterfaceResources(ui_core::Viewport& viewport, RectangleRenderer& rectangleRenderer) :
        m_rectangleRenderer(rectangleRenderer),
-       m_onAddedRectangleSink(viewport.OnAddedRectangle.connect<&UserInterfaceResources::on_added_rectangle>(this))
+       TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle)
    {
    }
 
@@ -52,7 +54,7 @@ class UserInterfaceResources : public render_core::NodeFrameResources
    std::vector<Name> m_textChanges{};
    std::map<Name, Rectangle> m_rectangleResources;
 
-   ui_core::Viewport::OnAddedRectangleDel::Sink<UserInterfaceResources> m_onAddedRectangleSink;
+   TG_SINK(ui_core::Viewport, OnAddedRectangle);
 };
 
 

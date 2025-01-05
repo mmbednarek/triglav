@@ -33,7 +33,7 @@ class PoolBucket
 
    [[nodiscard]] TObject* acquire_object()
    {
-      if (m_head < 0 || m_head >= CBucketSize) {
+      if (m_head >= CBucketSize) {
          return nullptr;
       }
 

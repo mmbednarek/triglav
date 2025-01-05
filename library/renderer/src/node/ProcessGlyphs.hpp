@@ -3,7 +3,7 @@
 #include "GlyphCache.hpp"
 #include "TextRenderer.hpp"
 
-#include "triglav/Delegate.hpp"
+#include "triglav/event/Delegate.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/render_core/IRenderNode.hpp"
 #include "triglav/render_core/RenderCore.hpp"
@@ -34,7 +34,7 @@ struct TextResources
    void update_size(graphics_api::Device& device, u32 vertexCount);
 };
 
-class ProcessGlyphsResources : public render_core::NodeFrameResources
+class ProcessGlyphsResources final : public render_core::NodeFrameResources
 {
  public:
    using Self = ProcessGlyphsResources;
@@ -57,8 +57,8 @@ class ProcessGlyphsResources : public render_core::NodeFrameResources
    std::vector<PendingTextUpdate> m_pendingUpdates;
    std::map<Name, TextResources> m_textResources;
 
-   ui_core::Viewport::OnAddedTextDel::Sink<Self> m_onAddedTextSink;
-   ui_core::Viewport::OnTextChangeContentDel::Sink<Self> m_onTextChangeContentSink;
+   TG_SINK(ui_core::Viewport, OnAddedText);
+   TG_SINK(ui_core::Viewport, OnTextChangeContent);
 };
 
 class ProcessGlyphs : public render_core::IRenderNode

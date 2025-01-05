@@ -14,8 +14,8 @@ using graphics_api::TextureUsage;
 
 using namespace name_literals;
 
-graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, const TextureName name, const io::Path& path,
-                                                              const ResourceProperties& props)
+graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, [[maybe_unused]] const TextureName name,
+                                                              const io::Path& path, const ResourceProperties& props)
 {
    int texWidth, texHeight, texChannels;
    stbi_uc* pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);

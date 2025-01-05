@@ -355,8 +355,6 @@ void Renderer::on_key_released(const Key key)
    }
 }
 
-void Renderer::on_mouse_wheel_turn(const float x) {}
-
 ResourceManager& Renderer::resource_manager() const
 {
    return m_resourceManager;

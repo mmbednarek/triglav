@@ -98,7 +98,7 @@ void Particles::set_delta_time(float value)
    m_deltaTime = value;
 }
 
-void Particles::record_commands(render_core::FrameResources& frameResources, render_core::NodeFrameResources& resources,
+void Particles::record_commands(render_core::FrameResources& /*frameResources*/, render_core::NodeFrameResources& resources,
                                 graphics_api::CommandList& cmdList)
 {
    auto& currentResources = dynamic_cast<ParticlesResources&>(resources);

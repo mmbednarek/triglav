@@ -15,6 +15,12 @@ class TriglavEngine(ConanFile):
         "rapidyaml/0.5.0",
         "spdlog/1.13.0"
     )
+    options = {
+        "disable_debug_utils": [False, True]
+    }
+    default_options = {
+        "disable_debug_utils": False
+    }
     # We should use system vulkan
 
     def configure(self):
@@ -29,6 +35,7 @@ class TriglavEngine(ConanFile):
             backend = 'vs2022'
 
         tc = MesonToolchain(self, backend=backend)
+        tc.project_options["disable_debug_utils"] = "enabled" if self.options["disable_debug_utils"] else "disabled"
         tc.generate()
 
     def build(self):

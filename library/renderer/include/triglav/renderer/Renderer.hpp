@@ -45,7 +45,6 @@ class Renderer
    void on_mouse_relative_move(float dx, float dy);
    void on_key_pressed(desktop::Key key);
    void on_key_released(desktop::Key key);
-   void on_mouse_wheel_turn(float x);
    [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
    [[nodiscard]] graphics_api::Device& device() const;

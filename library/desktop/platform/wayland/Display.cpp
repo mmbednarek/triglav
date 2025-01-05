@@ -236,8 +236,6 @@ Display::~Display()
 
 void Display::on_register_global(const uint32_t name, const std::string_view interface, uint32_t /*version*/)
 {
-   std::cout << interface << '\n';
-
    if (interface == wl_compositor_interface.name) {
       m_compositor = static_cast<wl_compositor*>(wl_registry_bind(m_registry, name, &wl_compositor_interface, 4));
       return;
