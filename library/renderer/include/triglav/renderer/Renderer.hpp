@@ -4,20 +4,30 @@
 #include "BindlessScene.hpp"
 #include "GlyphCache.hpp"
 #include "InfoDialog.hpp"
+#include "OcclusionCulling.hpp"
 #include "RayTracingScene.hpp"
 #include "Renderer.hpp"
+#include "RenderingJob.hpp"
 #include "Scene.hpp"
 #include "SpriteRenderer.hpp"
+#include "UpdateViewParamsJob.hpp"
 
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
+#include "triglav/render_core/JobGraph.hpp"
+#include "triglav/render_core/PipelineCache.hpp"
 #include "triglav/render_core/RenderGraph.hpp"
+#include "triglav/render_core/ResourceStorage.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
 #include <optional>
+
+namespace triglav::render_core {
+class ResourceStorage;
+}
 
 namespace triglav::renderer {
 
@@ -40,6 +50,7 @@ class Renderer
 
    void update_debug_info();
    void on_render();
+   void on_render_new();
    void on_resize(uint32_t width, uint32_t height);
    void on_close();
    void on_mouse_relative_move(float dx, float dy);
@@ -55,6 +66,8 @@ class Renderer
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    glm::vec3 moving_direction();
+
+   void prepare_pre_present_commands(render_core::ResourceStorage& resources);
 
    bool m_showDebugLines{false};
    AmbientOcclusionMethod m_aoMethod{AmbientOcclusionMethod::ScreenSpace};
@@ -86,6 +99,16 @@ class Renderer
    ui_core::Viewport m_uiViewport;
    InfoDialog m_infoDialog;
    std::optional<RayTracingScene> m_rayTracingScene;
+   std::vector<graphics_api::CommandList> m_prePresentCommands;
+
+   render_core::ResourceStorage m_resourceStorage;
+   render_core::PipelineCache m_pipelineCache;
+   render_core::JobGraph m_jobGraph;
+   UpdateViewParamsJob m_updateViewParamsJob;
+   OcclusionCulling m_occlusionCulling;
+   RenderingJob m_renderingJob;
+   u32 m_frameIndex{0};
+   std::array<graphics_api::Fence, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameFences;
 };
 
 }// namespace triglav::renderer

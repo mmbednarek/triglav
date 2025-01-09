@@ -300,7 +300,7 @@ Result<Instance> Instance::create_instance()
    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
    appInfo.pEngineName = "TRIGLAV Engine";
    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-   appInfo.apiVersion = VK_API_VERSION_1_3;
+   appInfo.apiVersion = VK_API_VERSION_1_4;
 
    const std::array g_vulkanInstanceExtensions{
       VK_KHR_SURFACE_EXTENSION_NAME,
@@ -314,8 +314,6 @@ Result<Instance> Instance::create_instance()
    VkInstanceCreateInfo instanceInfo{};
    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
    instanceInfo.pApplicationInfo = &appInfo;
-   instanceInfo.enabledLayerCount = 0;
-   instanceInfo.ppEnabledLayerNames = nullptr;
    instanceInfo.enabledExtensionCount = g_vulkanInstanceExtensions.size();
    instanceInfo.ppEnabledExtensionNames = g_vulkanInstanceExtensions.data();
    instanceInfo.enabledLayerCount = g_vulkanInstanceLayers.size();

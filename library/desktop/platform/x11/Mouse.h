@@ -1,14 +1,13 @@
 #pragma once
 
-#include "triglav/Delegate.hpp"
+#include "triglav/event/Delegate.hpp"
 
 namespace triglav::desktop::x11 {
 
 class Mouse
 {
  public:
-   using OnMouseMoveDel = Delegate<float, float>;
-   OnMouseMoveDel OnMouseMove;
+   TG_EVENT(OnMouseMove, float, float);
 
    Mouse();
 

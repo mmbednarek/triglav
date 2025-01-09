@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Int.hpp"
+
 namespace triglav {
 
 using Vector2i = glm::ivec2;
@@ -16,5 +18,12 @@ using Vector3 = glm::vec3;
 using Vector4 = glm::vec4;
 
 using Matrix4x4 = glm::mat4x4;
+
+[[nodiscard]] constexpr u32 divide_rounded_up(const u32 nominator, const u32 denominator)
+{
+   if ((nominator % denominator) == 0)
+      return nominator / denominator;
+   return 1 + (nominator / denominator);
+}
 
 }// namespace triglav

@@ -95,7 +95,7 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
    swapchainInfo.presentMode = vulkan::to_vulkan_present_mode(presentMode);
    swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
    swapchainInfo.imageFormat = *vulkanColorFormat;
-   swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+   swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
    if (oldSwapchain != nullptr) {
       swapchainInfo.oldSwapchain = oldSwapchain->vulkan_swapchain();
    }
@@ -123,10 +123,17 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
       return std::unexpected(Status::UnsupportedFormat);
    }
 
-   std::vector<vulkan::ImageView> swapchainImageViews;
 
    const auto images = vulkan::get_swapchain_images(*m_device, *swapchain);
+
+   std::vector<TextureView> swapchainImageViews;
+   swapchainImageViews.reserve(images.size());
+   std::vector<SwapchainTexture> swapchainTextures;
+   swapchainTextures.reserve(images.size());
+
    for (const auto image : images) {
+      swapchainTextures.emplace_back(image, colorFormat, Vector2i{resolution.width, resolution.height});
+
       VkImageViewCreateInfo imageViewInfo{};
       imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
       imageViewInfo.image = image;
@@ -147,10 +154,11 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
          return std::unexpected(Status::UnsupportedDevice);
       }
 
-      swapchainImageViews.emplace_back(std::move(imageView));
+      swapchainImageViews.emplace_back(std::move(imageView), TextureUsage::ColorAttachment);
    }
 
-   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchain), colorFormat);
+   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchainTextures), std::move(swapchain),
+                    colorFormat);
 }
 
 Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint, const std::span<const char> code)
@@ -396,7 +404,7 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Su
 }
 
 Status Device::submit_command_list(const CommandList& commandList, const SemaphoreArrayView waitSemaphores,
-                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes)
+                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, const WorkTypeFlags workTypes)
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

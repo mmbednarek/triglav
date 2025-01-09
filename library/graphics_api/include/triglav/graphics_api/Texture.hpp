@@ -27,6 +27,8 @@ class Texture
    Status write(Device& device, const uint8_t* pixels) const;
    [[nodiscard]] Status generate_mip_maps(Device& device) const;
    [[nodiscard]] Result<TextureView> create_mip_view(const Device& device, u32 mipLevel) const;
+   [[nodiscard]] u32 mip_count() const;
+   [[nodiscard]] TextureView& view();
 
    void set_anisotropy_state(bool isEnabled);
    void set_lod(float min, float max);
@@ -41,9 +43,25 @@ class Texture
    TextureUsageFlags m_usageFlags;
    vulkan::Image m_image;
    vulkan::DeviceMemory m_memory;
-   vulkan::ImageView m_imageView;
+   TextureView m_textureView;
    int m_mipCount;
    SamplerProperties m_samplerProperties;
+};
+
+class SwapchainTexture
+{
+ public:
+   explicit SwapchainTexture(VkImage image, ColorFormat format, Vector2i resolution);
+
+   [[nodiscard]] ColorFormat format() const;
+   [[nodiscard]] Vector2i resolution() const;
+
+   [[nodiscard]] VkImage vulkan_image() const;
+
+ private:
+   VkImage m_image;
+   ColorFormat m_format;
+   Vector2i m_resolution;
 };
 
 }// namespace triglav::graphics_api

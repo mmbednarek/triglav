@@ -17,7 +17,6 @@ class DescriptorStorage
    std::vector<graphics_api::DescriptorArray> m_descriptorArrays;
 };
 
-
 class ResourceStorage
 {
  public:
@@ -26,11 +25,15 @@ class ResourceStorage
    void register_texture(Name name, u32 frameIndex, graphics_api::Texture&& texture);
    graphics_api::Texture& texture(Name name, u32 frameIndex);
 
+   void register_texture_mip_view(Name name, u32 mipIndex, u32 frameIndex, graphics_api::TextureView&& textureView);
+   graphics_api::TextureView& texture_mip_view(Name name, u32 mipIndex, u32 frameIndex);
+
    void register_buffer(Name name, u32 frameIndex, graphics_api::Buffer&& buffer);
    graphics_api::Buffer& buffer(Name name, u32 frameIndex);
 
  private:
    std::unordered_map<ResourceID, graphics_api::Texture> m_textures;
+   std::unordered_map<ResourceID, graphics_api::TextureView> m_textureMipViews;
    std::unordered_map<ResourceID, graphics_api::Buffer> m_buffers;
 };
 

@@ -90,6 +90,7 @@ PipelineHash GraphicPipelineState::hash() const
       result += 23116759 * hash_color_format(*depthTargetFormat);
    }
    result += 4276381 * static_cast<u32>(vertexTopology);
+   result += 2723521 * static_cast<u32>(depthTestMode);
 
    return result;
 }

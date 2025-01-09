@@ -13,8 +13,8 @@ namespace triglav::desktop::x11 {
 Display::Display() :
     m_display(XOpenDisplay(nullptr)),
     m_rootWindow(DefaultRootWindow(m_display)),
-    m_onMouseMoveSink(m_mouse.OnMouseMove.connect<&Display::on_mouse_move>(this)),
-    m_wmDeleteAtom(XInternAtom(m_display, "WM_DELETE_WINDOW", true))
+    m_wmDeleteAtom(XInternAtom(m_display, "WM_DELETE_WINDOW", true)),
+    TG_CONNECT(m_mouse, OnMouseMove, on_mouse_move)
 {
 }
 

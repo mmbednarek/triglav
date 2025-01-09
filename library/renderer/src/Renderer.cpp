@@ -4,7 +4,6 @@
 #include "node/AmbientOcclusion.hpp"
 #include "node/BindlessGeometry.hpp"
 #include "node/Blur.hpp"
-#include "node/Geometry.hpp"
 #include "node/Particles.hpp"
 #include "node/PostProcessing.hpp"
 #include "node/ProcessGlyphs.hpp"
@@ -13,8 +12,10 @@
 #include "node/ShadowMap.hpp"
 #include "node/SyncBuffers.hpp"
 #include "node/UserInterface.hpp"
+#include "stage/GBufferStage.hpp"
 
 #include "triglav/Name.hpp"
+#include "triglav/Ranges.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/render_core/RenderCore.hpp"
@@ -24,6 +25,7 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
+#include <triglav/render_core/ResourceStorage.hpp>
 
 using triglav::ResourceType;
 using triglav::desktop::Key;
@@ -111,7 +113,16 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_infoDialog(m_uiViewport, m_glyphCache),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
-                         : std::nullopt)
+                         : std::nullopt),
+    m_pipelineCache(m_device, m_resourceManager),
+    m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage, {resolution.width, resolution.height}),
+    m_updateViewParamsJob(m_scene),
+    m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
+    m_frameFences{
+       GAPI_CHECK(m_device.create_fence()),
+       GAPI_CHECK(m_device.create_fence()),
+       GAPI_CHECK(m_device.create_fence()),
+    }
 {
    m_context2D.update_resolution(m_resolution);
 
@@ -148,7 +159,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
    m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);
 
-   if (m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
       m_renderGraph.add_dependency("blur_ao"_name, "ray_tracing"_name);
    }
 
@@ -157,6 +168,48 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
 
    m_infoDialog.initialize();
    m_scene.load_level("demo.level"_rc);
+
+   {
+      // quickly copy visible sceen objects
+      auto copyObjectsCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+      GAPI_CHECK_STATUS(copyObjectsCmdList.begin());
+
+      m_bindlessScene.on_update_scene(copyObjectsCmdList);
+
+      GAPI_CHECK_STATUS(copyObjectsCmdList.finish());
+
+      auto fence = GAPI_CHECK(m_device.create_fence());
+
+      fence.await();
+
+      graphics_api::SemaphoreArray empty;
+      GAPI_CHECK_STATUS(m_device.submit_command_list(copyObjectsCmdList, empty, empty, &fence, graphics_api::WorkType::Transfer));
+
+      fence.await();
+   }
+
+   m_renderingJob.emplace_stage<stage::GBufferStage>(m_device);
+
+   auto& updateViewParamsCtx = m_jobGraph.add_job(UpdateViewParamsJob::JobName);
+   m_updateViewParamsJob.build_job(updateViewParamsCtx);
+
+   auto& renderingCtx = m_jobGraph.add_job(RenderingJob::JobName);
+   m_renderingJob.build_job(renderingCtx);
+
+   m_jobGraph.add_external_job("job.acquire_swapchain_image"_name);
+   m_jobGraph.add_external_job("job.copy_present_image"_name);
+   m_jobGraph.add_external_job("job.present_swapchain_image"_name);
+
+   m_jobGraph.add_dependency_to_previous_frame(UpdateViewParamsJob::JobName, UpdateViewParamsJob::JobName);
+   m_jobGraph.add_dependency(RenderingJob::JobName, UpdateViewParamsJob::JobName);
+
+   m_jobGraph.add_dependency(RenderingJob::JobName, "job.acquire_swapchain_image"_name);
+   m_jobGraph.add_dependency("job.copy_present_image"_name, RenderingJob::JobName);
+   m_jobGraph.add_dependency("job.present_swapchain_image"_name, "job.copy_present_image"_name);
+
+   m_jobGraph.build_jobs();
+
+   this->prepare_pre_present_commands(m_resourceStorage);
 
    StatisticManager::the().initialize();
 
@@ -265,6 +318,52 @@ void Renderer::on_render()
    }
 
    StatisticManager::the().tick();
+}
+
+
+void Renderer::on_render_new()
+{
+   const auto deltaTime = calculate_frame_duration();
+
+   this->update_uniform_data(deltaTime);
+
+   if (m_mustRecreateSwapchain) {
+      auto dim = m_desktopSurface.dimension();
+      this->recreate_swapchain(dim.x, dim.y);
+      m_mustRecreateSwapchain = false;
+   }
+
+   m_frameFences[m_frameIndex].await();
+
+   m_updateViewParamsJob.prepare_frame(m_jobGraph, m_frameIndex);
+
+   m_jobGraph.build_semaphores();
+
+   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(
+      m_swapchain.get_available_framebuffer(m_jobGraph.semaphore(RenderingJob::JobName, "job.acquire_swapchain_image"_name, m_frameIndex)));
+
+   m_jobGraph.execute(RenderingJob::JobName, m_frameIndex, &m_frameFences[m_frameIndex]);
+
+   if (mustRecreate) {
+      m_mustRecreateSwapchain = true;
+   }
+
+   GAPI_CHECK_STATUS(m_device.submit_command_list(
+      m_prePresentCommands[framebufferIndex * render_core::FRAMES_IN_FLIGHT_COUNT + m_frameIndex],
+      m_jobGraph.wait_semaphores("job.copy_present_image"_name, m_frameIndex),
+      m_jobGraph.signal_semaphores("job.copy_present_image"_name, m_frameIndex), nullptr, graphics_api::WorkType::Transfer));
+
+   auto status = m_swapchain.present(m_jobGraph.semaphore("job.present_swapchain_image"_name, "job.copy_present_image"_name, m_frameIndex),
+                                     framebufferIndex);
+   if (status == graphics_api::Status::OutOfDateSwapchain) {
+      m_mustRecreateSwapchain = true;
+   } else {
+      GAPI_CHECK_STATUS(status);
+   }
+
+   StatisticManager::the().tick();
+
+   m_frameIndex = (m_frameIndex + 1) % render_core::FRAMES_IN_FLIGHT_COUNT;
 }
 
 void Renderer::on_close()
@@ -398,6 +497,32 @@ glm::vec3 Renderer::moving_direction()
    return glm::vec3{0.0f, 0.0f, 0.0f};
 }
 
+void Renderer::prepare_pre_present_commands(render_core::ResourceStorage& resources)
+{
+   m_prePresentCommands.clear();
+   m_prePresentCommands.reserve(m_swapchain.textures().size() * render_core::FRAMES_IN_FLIGHT_COUNT);
+
+   for (const auto& swapchainTexture : m_swapchain.textures()) {
+      for (const u32 frameIndex : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
+         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+         GAPI_CHECK_STATUS(cmdList.begin());
+
+         cmdList.swapchain_texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer, swapchainTexture,
+                                           graphics_api::TextureState::Undefined, graphics_api::TextureState::TransferDst);
+
+         cmdList.copy_texture(resources.texture("core.color_out"_name, frameIndex), graphics_api::TextureState::TransferSrc,
+                              swapchainTexture, graphics_api::TextureState::TransferDst);
+
+         cmdList.swapchain_texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::End, swapchainTexture,
+                                           graphics_api::TextureState::TransferDst, graphics_api::TextureState::Present);
+
+         GAPI_CHECK_STATUS(cmdList.finish());
+
+         m_prePresentCommands.emplace_back(std::move(cmdList));
+      }
+   }
+}
+
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
    if (m_resolution.width == width && m_resolution.height == height)
@@ -422,6 +547,8 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
    m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};
+
+   this->prepare_pre_present_commands(m_resourceStorage);
 }
 
 graphics_api::Device& Renderer::device() const
@@ -474,6 +601,7 @@ void Renderer::update_uniform_data(const float deltaTime)
 
    if (updated) {
       m_scene.update_shadow_maps();
+      m_scene.send_view_changed();
    }
 }
 

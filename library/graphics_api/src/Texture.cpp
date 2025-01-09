@@ -14,7 +14,7 @@ Texture::Texture(vulkan::Image image, vulkan::DeviceMemory memory, vulkan::Image
     m_usageFlags(usageFlags),
     m_image(std::move(image)),
     m_memory(std::move(memory)),
-    m_imageView(std::move(imageView)),
+    m_textureView(std::move(imageView), usageFlags),
     m_mipCount{mipCount},
     m_samplerProperties{
        FilterType::Linear,
@@ -144,6 +144,8 @@ Status Texture::generate_mip_maps(Device& device) const
 
 Result<TextureView> Texture::create_mip_view(const Device& device, const u32 mipLevel) const
 {
+   assert(mipLevel < m_mipCount);
+
    VkImageViewCreateInfo imageViewInfo{};
    imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
    imageViewInfo.image = *m_image;
@@ -164,6 +166,16 @@ Result<TextureView> Texture::create_mip_view(const Device& device, const u32 mip
       return std::unexpected(Status::UnsupportedDevice);
 
    return TextureView(std::move(imageView), m_usageFlags);
+}
+
+u32 Texture::mip_count() const
+{
+   return m_mipCount;
+}
+
+TextureView& Texture::view()
+{
+   return m_textureView;
 }
 
 void Texture::generate_mip_maps_internal(const CommandList& cmdList) const
@@ -213,7 +225,7 @@ void Texture::generate_mip_maps_internal(const CommandList& cmdList) const
 
 VkImageView Texture::vulkan_image_view() const
 {
-   return *m_imageView;
+   return m_textureView.vulkan_image_view();
 }
 
 void Texture::set_anisotropy_state(const bool isEnabled)
@@ -242,11 +254,35 @@ void Texture::set_debug_name(const std::string_view name)
    std::string viewName{"VIEW_"};
    viewName.append(name);
 
-   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_imageView);
+   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(m_textureView.vulkan_image_view());
    debugUtilsObjectName.objectType = VK_OBJECT_TYPE_IMAGE_VIEW;
    debugUtilsObjectName.pObjectName = viewName.data();
-   const auto result2 = vulkan::vkSetDebugUtilsObjectNameEXT(m_imageView.parent(), &debugUtilsObjectName);
+   const auto result2 = vulkan::vkSetDebugUtilsObjectNameEXT(m_image.parent(), &debugUtilsObjectName);
    assert(result2 == VK_SUCCESS);
+}
+
+// Swapchain texture
+
+SwapchainTexture::SwapchainTexture(const VkImage image, const ColorFormat format, const Vector2i resolution) :
+    m_image(image),
+    m_format(format),
+    m_resolution(resolution)
+{
+}
+
+ColorFormat SwapchainTexture::format() const
+{
+   return m_format;
+}
+
+Vector2i SwapchainTexture::resolution() const
+{
+   return m_resolution;
+}
+
+VkImage SwapchainTexture::vulkan_image() const
+{
+   return m_image;
 }
 
 }// namespace triglav::graphics_api

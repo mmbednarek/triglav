@@ -17,6 +17,7 @@ class Framebuffer;
 class RenderTarget;
 class TimestampArray;
 class DescriptorWriter;
+class SwapchainTexture;
 
 namespace ray_tracing {
 class ShaderBindingTable;
@@ -62,10 +63,13 @@ class CommandList
                                TextureState srcTextureState = TextureState::TransferSrc) const;
    void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState, u32 srcMip = 0,
                      u32 dstMip = 0) const;
+   void copy_texture(const Texture& source, TextureState srcState, const SwapchainTexture& destination, TextureState dstState) const;
    void push_constant_ptr(PipelineStage stage, const void* ptr, size_t size, size_t offset = 0) const;
 
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
+   void swapchain_texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const SwapchainTexture& texture,
+                                  TextureState sourceState, TextureState targetState) const;
    void execution_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage) const;
    void buffer_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const BufferBarrier> barriers) const;
 

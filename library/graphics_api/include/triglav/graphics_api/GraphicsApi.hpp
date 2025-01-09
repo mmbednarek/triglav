@@ -254,6 +254,7 @@ enum class TextureState
    GeneralRead,
    GeneralWrite,
    RenderTarget,
+   Present,
 };
 
 [[nodiscard]] constexpr MemoryAccess to_memory_access(const TextureState state)
@@ -272,6 +273,8 @@ enum class TextureState
    case TextureState::ShaderRead:
       [[fallthrough]];
    case TextureState::GeneralRead:
+      return MemoryAccess::Read;
+   case TextureState::Present:
       return MemoryAccess::Read;
    default:
       return MemoryAccess::None;
@@ -497,7 +500,7 @@ class Buffer;
 
 struct BufferBarrier
 {
-   Buffer* buffer;
+   const Buffer* buffer;
    BufferAccessFlags srcAccess;
    BufferAccessFlags dstAccess;
 };

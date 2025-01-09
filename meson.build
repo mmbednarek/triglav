@@ -1,6 +1,6 @@
-project('vulkan_engine',
+project('triglav_engine',
   ['cpp', 'c'],
-  version: '0.0.1',
+  version: '0.1.0',
   license: 'GPL3',
   meson_version: '>= 1.5',
   default_options: [

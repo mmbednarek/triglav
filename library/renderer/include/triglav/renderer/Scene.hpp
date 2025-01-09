@@ -33,6 +33,7 @@ class Scene
    TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
+   TG_EVENT(OnViewUpdated, const Camera&)
 
    explicit Scene(resource::ResourceManager& resourceManager);
 
@@ -41,6 +42,7 @@ class Scene
    void load_level(LevelName name);
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
+   void send_view_changed();
 
    [[nodiscard]] const Camera& camera() const;
    [[nodiscard]] Camera& camera();

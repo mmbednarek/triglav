@@ -12,9 +12,11 @@ struct VSOutput
 
 struct GroundUBO
 {
-    float4x4 model;
     float4x4 view;
     float4x4 proj;
+    float4x4 orient;
+    float nearPlane;
+    float farPlane;
 };
 
 [[vk::binding(0)]]
@@ -34,11 +36,12 @@ static float4 g_positions[4] =
 [shader("vertex")]
 VSOutput vs_main(uint vertexIndex : SV_VertexID)
 {
-    float4 position = g_positions[vertexIndex];
+    float4 position = g_positions[vertexIndex] * 200.0;
+    position.w = 1;
 
     VSOutput output;
 
-    output.worldPos = mul(ubo.model, position);
+    output.worldPos = position;
     output.viewPos = mul(ubo.view, output.worldPos);
     output.normal = mul(float3x3(ubo.view), float3(0, 0, -1));
     output.position  = mul(ubo.proj, output.viewPos);

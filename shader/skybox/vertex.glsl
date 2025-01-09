@@ -7,6 +7,9 @@ layout(location = 2) in vec3 inNormal;
 layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
+    mat4 orient;
+    float nearPlane;
+    float farPlane;
 } ubo;
 
 layout(location = 0) out vec2 fragTexCoord;
@@ -15,5 +18,5 @@ layout(location = 1) out vec3 fragPosition;
 void main() {
     fragTexCoord = inTexCoord;
     fragPosition = inPosition;
-    gl_Position = ubo.proj * ubo.view * vec4(inPosition, 1.0);
+    gl_Position = ubo.proj * ubo.orient * vec4(inPosition, 1.0);
 }

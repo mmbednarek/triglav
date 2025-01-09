@@ -6,11 +6,12 @@
 
 namespace triglav::graphics_api {
 
-Swapchain::Swapchain(QueueManager& queueManager, const Resolution& resolution, std::vector<vulkan::ImageView> imageViews,
-                     vulkan::SwapchainKHR swapchain, const ColorFormat& colorFormat) :
+Swapchain::Swapchain(QueueManager& queueManager, const Resolution& resolution, std::vector<TextureView> imageViews,
+                     std::vector<SwapchainTexture> textures, vulkan::SwapchainKHR swapchain, const ColorFormat& colorFormat) :
     m_queueManager(queueManager),
     m_resolution(resolution),
-    m_imageViews(std::move(imageViews)),
+    m_textureViews(std::move(imageViews)),
+    m_textures(std::move(textures)),
     m_swapchain(std::move(swapchain)),
     m_colorFormat(colorFormat)
 {
@@ -70,17 +71,27 @@ Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebuffer
 
 VkImageView Swapchain::vulkan_image_view(const u32 frameIndex) const
 {
-   return *m_imageViews[frameIndex];
+   return m_textureViews[frameIndex].vulkan_image_view();
 }
 
 u32 Swapchain::frame_count() const
 {
-   return m_imageViews.size();
+   return m_textureViews.size();
 }
 
 ColorFormat Swapchain::color_format() const
 {
    return m_colorFormat;
+}
+
+const std::vector<TextureView>& Swapchain::texture_views() const
+{
+   return m_textureViews;
+}
+
+const std::vector<SwapchainTexture>& Swapchain::textures() const
+{
+   return m_textures;
 }
 
 }// namespace triglav::graphics_api

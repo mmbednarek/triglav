@@ -261,6 +261,29 @@ void CommandList::copy_texture(const Texture& source, const TextureState srcStat
                   destination.vulkan_image(), vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
 }
 
+void CommandList::copy_texture(const Texture& source, const TextureState srcState, const SwapchainTexture& destination,
+                               const TextureState dstState) const
+{
+   VkImageCopy imageCopy{.srcSubresource{
+                            .aspectMask = vulkan::to_vulkan_aspect_flags(source.usage_flags()),
+                            .mipLevel = 0,
+                            .baseArrayLayer = 0,
+                            .layerCount = 1,
+                         },
+                         .srcOffset{0, 0, 0},
+                         .dstSubresource{
+                            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                            .mipLevel = 0,
+                            .baseArrayLayer = 0,
+                            .layerCount = 1,
+                         },
+                         .dstOffset{0, 0, 0},
+                         .extent{static_cast<u32>(destination.resolution().x), static_cast<u32>(destination.resolution().y), 1}};
+
+   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcState),
+                  destination.vulkan_image(), vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
+}
+
 void CommandList::push_constant_ptr(const PipelineStage stage, const void* ptr, const size_t size, const size_t offset) const
 {
    assert(m_boundPipelineLayout != nullptr);
@@ -293,16 +316,47 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
       barrier.subresourceRange.layerCount = 1;
       barrier.srcAccessMask = vulkan::to_vulkan_access_flags(sourceStage, info.texture->format(), info.sourceState);
       barrier.dstAccessMask = vulkan::to_vulkan_access_flags(targetStage, info.texture->format(), info.targetState);
+
+      assert(barrier.dstAccessMask != 0);
    }
 
-   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
-                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
+   const auto dstStageMask = vulkan::to_vulkan_pipeline_stage_flags(targetStage);
+   assert(dstStageMask != 0);
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage), dstStageMask, 0, 0, nullptr, 0, nullptr,
+                        barriers.size(), barriers.data());
 }
 
 void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
                                   const TextureBarrierInfo& info) const
 {
    this->texture_barrier(sourceStage, targetStage, std::span(&info, &info + 1));
+}
+
+void CommandList::swapchain_texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
+                                            const SwapchainTexture& texture, const TextureState sourceState,
+                                            const TextureState targetState) const
+{
+   VkImageMemoryBarrier barrier{VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+
+   barrier.oldLayout = vulkan::to_vulkan_image_layout(texture.format(), sourceState);
+   barrier.newLayout = vulkan::to_vulkan_image_layout(texture.format(), targetState);
+   barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+   barrier.image = texture.vulkan_image();
+   barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+   barrier.subresourceRange.baseMipLevel = 0;
+   barrier.subresourceRange.levelCount = 1;
+   barrier.subresourceRange.baseArrayLayer = 0;
+   barrier.subresourceRange.layerCount = 1;
+   barrier.srcAccessMask = vulkan::to_vulkan_access_flags(sourceStage, texture.format(), sourceState);
+   barrier.dstAccessMask = vulkan::to_vulkan_access_flags(targetStage, texture.format(), targetState);
+
+   // assert(barrier.dstAccessMask != 0);
+
+   const auto dstStageMask = vulkan::to_vulkan_pipeline_stage_flags(targetStage);
+   assert(dstStageMask != 0);
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage), dstStageMask, 0, 0, nullptr, 0, nullptr, 1,
+                        &barrier);
 }
 
 void CommandList::execution_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage) const

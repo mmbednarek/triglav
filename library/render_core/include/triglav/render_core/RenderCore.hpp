@@ -76,6 +76,7 @@ struct GraphicPipelineState
    std::vector<graphics_api::ColorFormat> renderTargetFormats;
    std::optional<graphics_api::ColorFormat> depthTargetFormat;
    graphics_api::VertexTopology vertexTopology{graphics_api::VertexTopology::TriangleList};
+   graphics_api::DepthTestMode depthTestMode{graphics_api::DepthTestMode::Enabled};
 
    [[nodiscard]] PipelineHash hash() const;
 };
@@ -93,8 +94,19 @@ struct FromLastFrame
    Name name;
 };
 
-using TextureRef = std::variant<TextureName, Name, FromLastFrame>;
-using BufferRef = std::variant<graphics_api::Buffer*, Name, FromLastFrame>;
+struct External
+{
+   Name name;
+};
+
+struct TextureMip
+{
+   Name name;
+   u32 mipLevel;
+};
+
+using TextureRef = std::variant<TextureName, Name, FromLastFrame, External, TextureMip>;
+using BufferRef = std::variant<const graphics_api::Buffer*, Name, FromLastFrame, External>;
 
 struct ExecutionBarrier
 {
@@ -118,13 +130,25 @@ struct TextureBarrier
    graphics_api::PipelineStageFlags dstStageFlags{};
    graphics_api::TextureState srcState{};
    graphics_api::TextureState dstState{};
+   u32 baseMipLevel{0};
+   u32 mipLevelCount{1};
 };
+
+static constexpr u32 calculate_mip_count(const Vector2i& dims)
+{
+   return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;
+}
 
 namespace literals {
 
 constexpr FromLastFrame operator""_last_frame(const char* value, const std::size_t count)
 {
    return FromLastFrame{detail::hash_string(std::string_view(value, count))};
+}
+
+constexpr External operator""_external(const char* value, const std::size_t count)
+{
+   return External{detail::hash_string(std::string_view(value, count))};
 }
 
 }// namespace literals

@@ -14,6 +14,8 @@ class Surface;
 class Display final : public IDisplay
 {
  public:
+   using Self = Display;
+
    Display();
    ~Display() override;
 
@@ -28,8 +30,9 @@ class Display final : public IDisplay
    Window m_rootWindow{};
    std::map<Window, std::weak_ptr<ISurface>> m_surfaces;
    Mouse m_mouse;
-   Mouse::OnMouseMoveDel::Sink<Display> m_onMouseMoveSink;
    Atom m_wmDeleteAtom;
+
+   TG_SINK(Mouse, OnMouseMove);
 };
 
 }// namespace triglav::desktop::x11

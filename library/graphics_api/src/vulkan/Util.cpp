@@ -344,6 +344,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    if (flags & PipelineStage::Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
+   if (flags & PipelineStage::End) {
+      result |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+   }
    return result;
 }
 
@@ -395,6 +398,8 @@ VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureStat
       } else {
          return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       }
+   case TextureState::Present:
+      return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
@@ -404,7 +409,7 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
 {
    switch (resourceState) {
    case TextureState::Undefined:
-      return 0;
+      return VK_ACCESS_NONE;
    case TextureState::TransferSrc:
       return VK_ACCESS_TRANSFER_READ_BIT;
    case TextureState::TransferDst:
@@ -427,6 +432,8 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
       } else {
          return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
       }
+   case TextureState::Present:
+      return VK_ACCESS_MEMORY_READ_BIT;
    }
 
    return 0;

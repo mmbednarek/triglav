@@ -276,13 +276,14 @@ TEST(BuildContext, BasicDepth)
       // Define vertex shader, layout and input buffer
       buildContext.bind_vertex_shader("testing/basic_depth.vshader"_rc);
 
+      buildContext.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
+
       triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
       layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
       buildContext.bind_vertex_layout(layout);
 
       buildContext.bind_vertex_buffer("test.basic_depth.vertex_buffer"_name);
       buildContext.bind_index_buffer("test.basic_depth.index_buffer"_name);
-      buildContext.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
 
       // Bind fragment shader and texture
       buildContext.bind_fragment_shader("testing/basic_depth.fshader"_rc);
@@ -464,13 +465,14 @@ TEST(BuildContext, DepthTargetSample)
       // Define vertex shader, layout and input buffer
       buildContext.bind_vertex_shader("testing/depth_target_sample/draw.vshader"_rc);
 
+      buildContext.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
+
       triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
       layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
       buildContext.bind_vertex_layout(layout);
 
       buildContext.bind_vertex_buffer("test.depth_target_sample.vertex_buffer"_name);
       buildContext.bind_index_buffer("test.depth_target_sample.index_buffer"_name);
-      buildContext.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
 
       // Bind fragment shader and texture
       buildContext.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
@@ -622,4 +624,41 @@ TEST(BuildContext, CopyFromLastFrame)
    fence.await();
 
    ASSERT_EQ(read_buffer<int>(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 1)), 36 + 2 + 10 * 3);
+}
+
+TEST(BuildContext, ConditionalBarrier)
+{
+   using namespace triglav::render_core::literals;
+
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+
+   buildContext.declare_flag("increase_number"_name);
+   buildContext.init_buffer("test.conditional_barrier.data"_name, 5);
+
+   buildContext.if_enabled("increase_number"_name);
+   buildContext.bind_compute_shader("testing/increase_number.cshader"_rc);
+   buildContext.bind_storage_buffer(0, "test.conditional_barrier.data"_name);
+   buildContext.dispatch({1, 1, 1});
+   buildContext.end_if();
+
+   buildContext.declare_staging_buffer("test.conditional_barrier.user"_name, sizeof(int));
+   buildContext.copy_buffer("test.conditional_barrier.data"_name, "test.conditional_barrier.user"_name);
+
+   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   ResourceStorage storage;
+   auto job = buildContext.build_job(pipelineCache, storage);
+
+   const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   fence.await();
+
+   const gapi::SemaphoreArray emptyList;
+
+   job.execute(0, emptyList, emptyList, &fence);
+   fence.await();
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditional_barrier.user"_name, 0)), 5);
+
+   job.enable_flag("increase_number"_name);
+   job.execute(0, emptyList, emptyList, &fence);
+   fence.await();
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditional_barrier.user"_name, 0)), 6);
 }

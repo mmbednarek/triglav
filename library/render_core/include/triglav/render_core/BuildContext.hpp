@@ -37,6 +37,11 @@ struct SamplableTexture
    TextureRef texRef;
 };
 
+struct Texture
+{
+   TextureRef texRef;
+};
+
 struct UniformBuffer
 {
    BufferRef buffRef{};
@@ -54,7 +59,7 @@ struct UniformBufferArray
 
 }// namespace descriptor
 
-using Descriptor = std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::UniformBuffer,
+using Descriptor = std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::Texture, descriptor::UniformBuffer,
                                 descriptor::UniformBufferArray, descriptor::StorageBuffer>;
 
 struct RenderTarget
@@ -82,12 +87,12 @@ struct BindDescriptors
 
 struct BindVertexBuffer
 {
-   Name buffName{};
+   BufferRef buffRef{};
 };
 
 struct BindIndexBuffer
 {
-   Name buffName{};
+   BufferRef buffRef{};
 };
 
 struct PlaceTextureBarrier
@@ -117,6 +122,14 @@ struct DrawIndexedPrimitives
    u32 instanceOffset{};
 };
 
+struct DrawIndirectWithCount
+{
+   BufferRef drawCallBuffer{};
+   BufferRef countBuffer{};
+   u32 maxDrawCalls{};
+   u32 stride{};
+};
+
 struct Dispatch
 {
    Vector3i dims;
@@ -126,6 +139,12 @@ struct CopyTextureToBuffer
 {
    TextureRef srcTexture;
    BufferRef dstBuffer;
+};
+
+struct CopyBufferToTexture
+{
+   BufferRef srcBuffer;
+   TextureRef dstTexture;
 };
 
 struct CopyBuffer
@@ -172,9 +191,20 @@ struct Texture
    std::optional<Vector2i> texDims{};// none means screen-size
    graphics_api::ColorFormat texFormat{};
    graphics_api::TextureUsageFlags texUsageFlags{};
+   bool createMipLevels{false};
+   std::optional<float> scaling{};
    graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
    graphics_api::PipelineStageFlags lastStages{graphics_api::PipelineStage::Entrypoint};
    TextureBarrier* lastTextureBarrier{};
+
+   [[nodiscard]] Vector2i dimensions(const Vector2i& screenDim) const
+   {
+      auto size = this->texDims.value_or(screenDim);
+      if (this->scaling.has_value()) {
+         size = Vector2i(Vector2(size) * this->scaling.value());
+      }
+      return size;
+   }
 };
 
 struct Buffer
@@ -182,6 +212,7 @@ struct Buffer
    Name buffName{};
    MemorySize buffSize{};
    graphics_api::BufferUsageFlags buffUsageFlags{};
+   std::optional<float> scale{};
    graphics_api::PipelineStageFlags lastStages{};
    graphics_api::BufferAccess currentAccess{graphics_api::BufferAccess::None};
    BufferBarrier* lastBufferBarrier{};
@@ -191,10 +222,11 @@ struct Buffer
 
 using Declaration = std::variant<decl::Texture, decl::Buffer>;
 
-using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
-                             cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
-                             cmd::CopyBuffer, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass,
-                             cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond>;
+using Command =
+   std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
+                cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
+                cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
+                cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond>;
 
 struct DescriptorCounts
 {
@@ -202,6 +234,7 @@ struct DescriptorCounts
    u32 uniformBufferCount{};
    u32 storageBufferCount{};
    u32 samplableTextureCount{};
+   u32 textureCount{};
    u32 totalDescriptorSets{};
 };
 
@@ -214,11 +247,16 @@ class BuildContext
 
    // Declarations
    void declare_texture(Name texName, Vector2i texDims, graphics_api::ColorFormat texFormat = GAPI_FORMAT(RGBA, sRGB));
+   void declare_proportional_texture(Name texName, graphics_api::ColorFormat texFormat, float scale,
+                                     bool createMipLevels);// texture as a proportion of screen size
    void declare_render_target(Name rtName, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
+   void declare_depth_target(Name dtName, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
+   void declare_proportional_depth_target(Name dtName, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8), float scale = 1.0f);
    void declare_sized_render_target(Name rtName, Vector2i rtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
    void declare_sized_depth_target(Name dtName, Vector2i dtDims, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(D, UNorm16));
    void declare_buffer(Name buffName, MemorySize size);
    void declare_staging_buffer(Name buffName, MemorySize size);
+   void declare_proportional_buffer(Name buffName, float scale, MemorySize stride);
 
    // Shader binding
    void bind_vertex_shader(VertexShaderName vsName);
@@ -228,14 +266,15 @@ class BuildContext
    // Descriptor binding
    void bind_rw_texture(BindingIndex index, TextureRef texRef);
    void bind_samplable_texture(BindingIndex index, TextureRef texRef);
+   void bind_texture(BindingIndex index, TextureRef texRef);
    void bind_uniform_buffer(BindingIndex index, BufferRef buffRef);
    void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
    void bind_storage_buffer(BindingIndex index, BufferRef buffRef);
 
    // Vertex binding
    void bind_vertex_layout(const VertexLayout& layout);
-   void bind_vertex_buffer(Name buffName);
-   void bind_index_buffer(Name buffName);
+   void bind_vertex_buffer(BufferRef buffRef);
+   void bind_index_buffer(BufferRef buffRef);
 
    // Render pass
    void begin_render_pass_raw(Name passName, std::span<Name> renderTargets);
@@ -250,10 +289,12 @@ class BuildContext
 
    // Drawing
    void set_vertex_topology(graphics_api::VertexTopology topology);
+   void set_depth_test_mode(graphics_api::DepthTestMode mode);
 
    void draw_primitives(u32 vertexCount, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset);
+   void draw_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_full_screen_quad();
 
    // Execution
@@ -262,6 +303,7 @@ class BuildContext
    // Transfer
    void fill_buffer_raw(Name buffName, const void* ptr, MemorySize size);
    void copy_texture_to_buffer(TextureRef srcTex, BufferRef dstBuff);
+   void copy_buffer_to_texture(BufferRef srcBuff, TextureRef dstTex);
    void copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer);
 
    // Conditional commands
@@ -276,6 +318,13 @@ class BuildContext
       this->fill_buffer_raw(buffName, reinterpret_cast<const void*>(&data), sizeof(data));
    }
 
+   template<typename TData>
+   void init_buffer(const Name buffName, const TData& data)
+   {
+      this->declare_buffer(buffName, sizeof(TData));
+      this->fill_buffer(buffName, data);
+   }
+
    Job build_job(PipelineCache& pipelineCache, ResourceStorage& storage);
 
    void write_commands(ResourceStorage& storage, DescriptorStorage& descStorage, graphics_api::CommandList& cmdList, PipelineCache& cache,
@@ -285,6 +334,20 @@ class BuildContext
    [[nodiscard]] std::optional<graphics_api::DescriptorPool> create_descriptor_pool() const;
 
    [[nodiscard]] graphics_api::WorkTypeFlags work_types() const;
+   [[nodiscard]] Vector2i screen_size() const;
+
+   void export_texture(Name texName, graphics_api::PipelineStage pipelineStage, graphics_api::TextureState state,
+                       graphics_api::TextureUsageFlags flags);
+   void export_buffer(Name buffName, graphics_api::BufferUsageFlags flags);
+
+   template<typename TVertex>
+   void draw_mesh(const graphics_api::Mesh<TVertex>& mesh)
+   {
+      this->bind_vertex_buffer(&mesh.vertices.buffer());
+      this->bind_index_buffer(&mesh.indices.buffer());
+      this->draw_indexed_primitives(mesh.indices.count(), 0, 0);
+   }
+
 
  private:
    void set_pipeline_state_descriptor(graphics_api::PipelineStageFlags stages, BindingIndex index, const DescriptorInfo& info);
@@ -293,21 +356,24 @@ class BuildContext
    void write_descriptor(ResourceStorage& storage, const graphics_api::DescriptorView& descView,
                          const detail::cmd::BindDescriptors& descriptors, u32 frameIndex) const;
 
-   void add_texture_flag(Name texName, graphics_api::TextureUsage flag);
-   void add_buffer_flag(Name buffName, graphics_api::BufferUsage flag);
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass,
                                                      u32 frameIndex) const;
    graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
-   graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef, u32 frameIndex) const;
+   graphics_api::TextureView& resolve_texture_view_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
+   const graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef, u32 frameIndex) const;
    void handle_pending_graphic_state();
 
    // Barrier support
    void setup_texture_barrier(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
-                              std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
+                              std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt, u32 baseMip = 0, u32 mipCount = 1);
    void setup_buffer_barrier(Name buffName, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStage targetStage);
-   void prepare_texture(TextureRef texRef, graphics_api::TextureState state, graphics_api::TextureUsage usage);
+   void prepare_texture(TextureRef texRef, graphics_api::TextureState state, graphics_api::TextureUsageFlags usage);
    void prepare_buffer(BufferRef buffRef, graphics_api::BufferAccess access, graphics_api::BufferUsage usage);
    [[nodiscard]] u32 flag_variation_count() const;
+   void reset_resource_states();
+
+   void add_texture_usage(Name texName, graphics_api::TextureUsageFlags flags);
+   void add_buffer_usage(Name buffName, graphics_api::BufferUsageFlags flags);
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, TArgs&&... args)

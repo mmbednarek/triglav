@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <ranges>
 
 #include "Int.hpp"
@@ -8,6 +9,7 @@ namespace triglav {
 
 constexpr auto Range = std::ranges::views::iota;
 constexpr auto Values = std::ranges::views::values;
+constexpr auto Keys = std::ranges::views::keys;
 
 #ifdef __cpp_lib_ranges_enumerate
 constexpr auto Enumerate = std::ranges::views::enumerate;
@@ -95,5 +97,29 @@ struct Enumerate
 };
 
 #endif// __cpp_lib_ranges_enumerate
+
+template<typename TIterator>
+struct ItRange
+{
+   TIterator m_begin;
+   TIterator m_end;
+
+   TIterator begin() const
+   {
+      return m_begin;
+   }
+
+   TIterator end() const
+   {
+      return m_end;
+   }
+};
+
+template<typename TMultiMap, typename TValue>
+auto equal_range(TMultiMap& multi_map, TValue&& value)
+{
+   auto [beg, end] = multi_map.equal_range(std::forward<TValue>(value));
+   return Values(ItRange<typename TMultiMap::iterator>{beg, end});
+}
 
 }// namespace triglav

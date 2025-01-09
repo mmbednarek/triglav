@@ -11,3 +11,4 @@ buildDir-mingw-rel
 .cache
 compile_commands.json
 .docker-grpc
+debug
