@@ -573,6 +573,20 @@ void CommandList::trace_rays(const ray_tracing::ShaderBindingTable& binding_tabl
                              &binding_table.callable_region(), extent.x, extent.y, extent.z);
 }
 
+void CommandList::set_debug_name(const std::string_view name) const
+{
+   if (name.empty())
+      return;
+
+   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
+   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(m_commandBuffer);
+   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_COMMAND_BUFFER;
+   debugUtilsObjectName.pObjectName = name.data();
+   const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_device.vulkan_device(), &debugUtilsObjectName);
+
+   assert(result == VK_SUCCESS);
+}
+
 void CommandList::handle_pending_descriptors(const PipelineType pipelineType)
 {
    if (!m_hasPendingDescriptors)

@@ -53,7 +53,7 @@ void JobGraph::disable_flag(const Name job, const Name flag)
 void JobGraph::build_jobs()
 {
    for (auto& [name, ctx] : m_contexts) {
-      m_jobs.emplace(name, ctx.build_job(m_pipelineCache, m_resourceStorage));
+      m_jobs.emplace(name, ctx.build_job(m_pipelineCache, m_resourceStorage, name));
       m_jobSemaphores.emplace(name, JobSemaphores{});
    }
    for (const Name jobName : m_externalJobs) {

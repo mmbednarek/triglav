@@ -188,7 +188,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
       fence.await();
    }
 
-   m_renderingJob.emplace_stage<stage::GBufferStage>(m_device);
+   m_renderingJob.emplace_stage<stage::GBufferStage>(m_device, m_bindlessScene);
 
    auto& updateViewParamsCtx = m_jobGraph.add_job(UpdateViewParamsJob::JobName);
    m_updateViewParamsJob.build_job(updateViewParamsCtx);

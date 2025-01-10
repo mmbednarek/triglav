@@ -210,6 +210,8 @@ std::map<Name, std::string_view> KnownNames{
    {"user_interface"_name, "user_interface"sv},
    {"uv"_name, "uv"sv},
    {"width"_name, "width"sv},
+   {"job.rendering"_name, "job.rendering"sv},
+   {"job.update_view_properties"_name, "job.update_view_properties"sv},
 };
 
 }// namespace

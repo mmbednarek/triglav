@@ -55,6 +55,12 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
       },
    };
    m_materialPropsAllScalar.write(properties.data(), properties.size());
+
+   TG_SET_DEBUG_NAME(m_sceneObjects.buffer(), "bindless_scene.scene_objects");
+   TG_SET_DEBUG_NAME(m_sceneObjectStage.buffer(), "bindless_scene.scene_objects.staging");
+   TG_SET_DEBUG_NAME(m_countBuffer.buffer(), "bindless_scene.count_buffer");
+   TG_SET_DEBUG_NAME(m_combinedIndexBuffer.buffer(), "bindless_scene.combined_index_buffer");
+   TG_SET_DEBUG_NAME(m_combinedVertexBuffer.buffer(), "bindless_scene.combined_vertex_buffer");
 }
 
 void BindlessScene::on_object_added_to_scene(const SceneObject& object)
@@ -192,6 +198,11 @@ std::vector<graphics_api::Texture*>& BindlessScene::scene_textures()
    return m_sceneTextures;
 }
 
+std::vector<render_core::TextureRef>& BindlessScene::scene_texture_refs()
+{
+   return m_sceneTextureRefs;
+}
+
 BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList, const ModelName name)
 {
    if (const auto it = m_models.find(name); it != m_models.end()) {
@@ -290,6 +301,7 @@ u32 BindlessScene::get_texture_id(const TextureName textureName)
    auto& texture = m_resourceManager.get(textureName);
    const auto textureId = m_sceneTextures.size();
    m_sceneTextures.emplace_back(&texture);
+   m_sceneTextureRefs.emplace_back(textureName);
 
    m_textureIds.emplace(textureName, textureId);
    return textureId;

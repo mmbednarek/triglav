@@ -4,6 +4,9 @@
 #include "PipelineCache.hpp"
 #include "RenderCore.hpp"
 #include "ResourceStorage.hpp"
+#include "detail/Commands.hpp"
+#include "detail/Declarations.hpp"
+#include "detail/Descriptors.hpp"
 
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
@@ -25,215 +28,19 @@ namespace triglav::render_core {
 
 namespace detail {
 
-namespace descriptor {
-
-struct RWTexture
-{
-   TextureRef texRef;
-};
-
-struct SamplableTexture
-{
-   TextureRef texRef;
-};
-
-struct Texture
-{
-   TextureRef texRef;
-};
-
-struct UniformBuffer
-{
-   BufferRef buffRef{};
-};
-
-struct StorageBuffer
-{
-   BufferRef buffRef{};
-};
-
-struct UniformBufferArray
-{
-   std::vector<BufferRef> buffers{};
-};
-
-}// namespace descriptor
-
-using Descriptor = std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::Texture, descriptor::UniformBuffer,
-                                descriptor::UniformBufferArray, descriptor::StorageBuffer>;
-
 struct RenderTarget
 {
    graphics_api::ClearValue clearValue{};
    graphics_api::AttachmentAttributeFlags flags;
 };
 
-namespace cmd {
-
-struct BindGraphicsPipeline
-{
-   GraphicPipelineState pso;
-};
-
-struct BindComputePipeline
-{
-   ComputePipelineState pso;
-};
-
-struct BindDescriptors
-{
-   std::vector<std::optional<Descriptor>> descriptors{};
-};
-
-struct BindVertexBuffer
-{
-   BufferRef buffRef{};
-};
-
-struct BindIndexBuffer
-{
-   BufferRef buffRef{};
-};
-
-struct PlaceTextureBarrier
-{
-   std::unique_ptr<TextureBarrier> barrier;
-};
-
-struct PlaceBufferBarrier
-{
-   std::unique_ptr<BufferBarrier> barrier;
-};
-
-struct DrawPrimitives
-{
-   u32 vertexCount{};
-   u32 vertexOffset{};
-   u32 instanceCount{};
-   u32 instanceOffset{};
-};
-
-struct DrawIndexedPrimitives
-{
-   u32 indexCount{};
-   u32 indexOffset{};
-   u32 vertexOffset{};
-   u32 instanceCount{};
-   u32 instanceOffset{};
-};
-
-struct DrawIndirectWithCount
-{
-   BufferRef drawCallBuffer{};
-   BufferRef countBuffer{};
-   u32 maxDrawCalls{};
-   u32 stride{};
-};
-
-struct Dispatch
-{
-   Vector3i dims;
-};
-
-struct CopyTextureToBuffer
-{
-   TextureRef srcTexture;
-   BufferRef dstBuffer;
-};
-
-struct CopyBufferToTexture
-{
-   BufferRef srcBuffer;
-   TextureRef dstTexture;
-};
-
-struct CopyBuffer
-{
-   BufferRef srcBuffer;
-   BufferRef dstBuffer;
-};
-
-struct FillBuffer
-{
-   Name buffName{};
-   std::vector<u8> data{};
-};
-
-struct BeginRenderPass
-{
-   Name passName;
-   std::vector<Name> renderTargets;
-};
-
-struct EndRenderPass
-{};
-
-struct IfEnabledCond
-{
-   Name flag;
-};
-
-struct IfDisabledCond
-{
-   Name flag;
-};
-
-struct EndIfCond
-{};
-
-}// namespace cmd
-
-namespace decl {
-
-struct Texture
-{
-   Name texName{};
-   std::optional<Vector2i> texDims{};// none means screen-size
-   graphics_api::ColorFormat texFormat{};
-   graphics_api::TextureUsageFlags texUsageFlags{};
-   bool createMipLevels{false};
-   std::optional<float> scaling{};
-   graphics_api::TextureState currentState{graphics_api::TextureState::Undefined};
-   graphics_api::PipelineStageFlags lastStages{graphics_api::PipelineStage::Entrypoint};
-   TextureBarrier* lastTextureBarrier{};
-
-   [[nodiscard]] Vector2i dimensions(const Vector2i& screenDim) const
-   {
-      auto size = this->texDims.value_or(screenDim);
-      if (this->scaling.has_value()) {
-         size = Vector2i(Vector2(size) * this->scaling.value());
-      }
-      return size;
-   }
-};
-
-struct Buffer
-{
-   Name buffName{};
-   MemorySize buffSize{};
-   graphics_api::BufferUsageFlags buffUsageFlags{};
-   std::optional<float> scale{};
-   graphics_api::PipelineStageFlags lastStages{};
-   graphics_api::BufferAccess currentAccess{graphics_api::BufferAccess::None};
-   BufferBarrier* lastBufferBarrier{};
-};
-
-}// namespace decl
-
-using Declaration = std::variant<decl::Texture, decl::Buffer>;
-
-using Command =
-   std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
-                cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
-                cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
-                cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond>;
 
 struct DescriptorCounts
 {
    u32 storageTextureCount{};
    u32 uniformBufferCount{};
    u32 storageBufferCount{};
-   u32 samplableTextureCount{};
+   u32 sampledTextureCount{};
    u32 textureCount{};
    u32 totalDescriptorSets{};
 };
@@ -242,6 +49,9 @@ struct DescriptorCounts
 
 class BuildContext
 {
+   friend class GenerateCommandListPass;
+   friend class BarrierInsertionPass;
+
  public:
    BuildContext(graphics_api::Device& device, resource::ResourceManager& resourceManager, Vector2i screenSize);
 
@@ -267,6 +77,7 @@ class BuildContext
    void bind_rw_texture(BindingIndex index, TextureRef texRef);
    void bind_samplable_texture(BindingIndex index, TextureRef texRef);
    void bind_texture(BindingIndex index, TextureRef texRef);
+   void bind_sampled_texture_array(BindingIndex index, std::span<const TextureRef> texRefs);
    void bind_uniform_buffer(BindingIndex index, BufferRef buffRef);
    void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
    void bind_storage_buffer(BindingIndex index, BufferRef buffRef);
@@ -325,7 +136,7 @@ class BuildContext
       this->fill_buffer(buffName, data);
    }
 
-   Job build_job(PipelineCache& pipelineCache, ResourceStorage& storage);
+   Job build_job(PipelineCache& pipelineCache, ResourceStorage& storage, Name jobName = {});
 
    void write_commands(ResourceStorage& storage, DescriptorStorage& descStorage, graphics_api::CommandList& cmdList, PipelineCache& cache,
                        graphics_api::DescriptorPool* pool, u32 frameIndex, u32 enabledFlags);
@@ -352,7 +163,8 @@ class BuildContext
  private:
    void set_pipeline_state_descriptor(graphics_api::PipelineStageFlags stages, BindingIndex index, const DescriptorInfo& info);
    void handle_descriptor_bindings();
-   graphics_api::DescriptorArray& allocate_descriptors(DescriptorStorage& storage, graphics_api::DescriptorPool& pool) const;
+   graphics_api::DescriptorArray& allocate_descriptors(DescriptorStorage& storage, graphics_api::DescriptorPool& pool,
+                                                       graphics_api::Pipeline& pipeline) const;
    void write_descriptor(ResourceStorage& storage, const graphics_api::DescriptorView& descView,
                          const detail::cmd::BindDescriptors& descriptors, u32 frameIndex) const;
 
@@ -364,11 +176,8 @@ class BuildContext
    void handle_pending_graphic_state();
 
    // Barrier support
-   void setup_texture_barrier(Name texName, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
-                              std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt, u32 baseMip = 0, u32 mipCount = 1);
-   void setup_buffer_barrier(Name buffName, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStage targetStage);
    void prepare_texture(TextureRef texRef, graphics_api::TextureState state, graphics_api::TextureUsageFlags usage);
-   void prepare_buffer(BufferRef buffRef, graphics_api::BufferAccess access, graphics_api::BufferUsage usage);
+   void prepare_buffer(BufferRef buffRef, graphics_api::BufferUsage usage);
    [[nodiscard]] u32 flag_variation_count() const;
    void reset_resource_states();
 
@@ -376,13 +185,14 @@ class BuildContext
    void add_buffer_usage(Name buffName, graphics_api::BufferUsageFlags flags);
 
    template<typename TDesc, typename... TArgs>
-   void set_descriptor(const BindingIndex index, TArgs&&... args)
+   void set_descriptor(const BindingIndex index, graphics_api::PipelineStage stage, TArgs&&... args)
    {
       if (m_descriptors.size() <= index) {
          m_descriptors.resize(index + 1);
       }
 
-      m_descriptors[index].emplace(std::in_place_type_t<TDesc>{}, std::forward<TArgs>(args)...);
+      m_descriptors[index].emplace(
+         detail::DescriptorAndStage{detail::Descriptor{std::in_place_type_t<TDesc>{}, std::forward<TArgs>(args)...}, stage});
    }
 
    template<typename TCmd, typename... TArgs>
@@ -440,9 +250,9 @@ class BuildContext
    std::vector<Name> m_flags;
    std::deque<std::tuple<u32, bool>> m_flagStack;
 
-   std::vector<std::optional<detail::Descriptor>> m_descriptors;
+   std::vector<std::optional<detail::DescriptorAndStage>> m_descriptors;
 
-   graphics_api::Pipeline* m_currentPipeline{};
+   // graphics_api::Pipeline* m_currentPipeline{};
 };
 
 class RenderPassScope
@@ -468,5 +278,24 @@ class RenderPassScope
  private:
    BuildContext& m_buildContext;
 };
+
+template<typename TVisitor, typename TCommand>
+concept HasOverrideForCommand = requires(TVisitor visitor, TCommand command) {
+   { visitor.visit(command) };
+};
+
+template<typename TVisitor>
+void visit_command(TVisitor& visitor, const detail::Command& cmdVariant)
+{
+   std::visit(
+      [&visitor, &cmdVariant]<typename TCommand>(TCommand& cmd) {
+         if constexpr (HasOverrideForCommand<TVisitor, TCommand>) {
+            visitor.visit(cmd);
+         } else {
+            visitor.default_visit(cmdVariant);
+         }
+      },
+      cmdVariant);
+}
 
 }// namespace triglav::render_core

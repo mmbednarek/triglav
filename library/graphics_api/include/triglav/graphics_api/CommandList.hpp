@@ -138,6 +138,8 @@ class CommandList
       return m_device;
    }
 
+   void set_debug_name(std::string_view name) const;
+
  private:
    void handle_pending_descriptors(PipelineType pipelineType);
 

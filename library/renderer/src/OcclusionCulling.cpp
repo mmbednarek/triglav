@@ -40,10 +40,18 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       render_core::RenderPassScope rtScope(ctx, "occlusion_culling.depth_prepass"_name, "occlusion_culling.depth_prepass_target"_name);
 
       ctx.bind_vertex_shader("bindless_geometry_depth_prepass.vshader"_rc);
+
+      render_core::VertexLayout layout(sizeof(geometry::Vertex));
+      layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
+      ctx.bind_vertex_layout(layout);
+
       ctx.bind_uniform_buffer(0, "core.view_properties"_name);
       ctx.bind_storage_buffer(1, &m_bindlessScene.scene_object_buffer());
 
       ctx.bind_fragment_shader("bindless_geometry_depth_prepass.fshader"_rc);
+
+      ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
+      ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
 
       ctx.draw_indirect_with_count(&m_bindlessScene.scene_object_buffer(), &m_bindlessScene.count_buffer(), g_bindlessObjectLimit,
                                    sizeof(BindlessSceneObject));

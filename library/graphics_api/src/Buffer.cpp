@@ -139,7 +139,7 @@ VkDeviceAddress Buffer::vulkan_device_address() const
    return vkGetBufferDeviceAddress(m_device.vulkan_device(), &info);
 }
 
-void Buffer::set_debug_name(const std::string_view name)
+void Buffer::set_debug_name(const std::string_view name) const
 {
    if (name.empty())
       return;
