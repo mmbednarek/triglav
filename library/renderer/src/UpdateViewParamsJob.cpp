@@ -37,7 +37,8 @@ void UpdateViewParamsJob::build_job(render_core::BuildContext& ctx) const
       ctx.end_if();
    }
 
-   ctx.export_buffer("core.view_properties"_name, gapi::BufferUsage::UniformBuffer);
+   ctx.export_buffer("core.view_properties"_name, gapi::PipelineStage::VertexShader, gapi::BufferAccess::UniformRead,
+                     gapi::BufferUsage::UniformBuffer);
 
    event_OnFinalize.publish(ctx);
 }
@@ -53,6 +54,8 @@ void UpdateViewParamsJob::prepare_frame(render_core::JobGraph& graph, const u32 
 
    const auto viewPropertiesMem = GAPI_CHECK(graph.resources().buffer("core.view_properties.staging"_name, frameIndex).map_memory());
    viewPropertiesMem.write(&m_viewProperties, sizeof(ViewProperties));
+
+   event_OnPrepareFrame.publish(graph, frameIndex);
 
    m_updatedViewProperties = false;
 }

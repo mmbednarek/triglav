@@ -32,21 +32,18 @@ GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless
 
 void GBufferStage::build_stage(render_core::BuildContext& ctx) const
 {
-   ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target("gbuffer.albedo"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_render_target("gbuffer.position"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_render_target("gbuffer.normal"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_depth_target("gbuffer.depth"_name, GAPI_FORMAT(D, UNorm16));
 
-   ctx.begin_render_pass("gbuffer"_name, "core.color_out"_name, "gbuffer.position"_name, "gbuffer.normal"_name, "gbuffer.depth"_name);
+   ctx.begin_render_pass("gbuffer"_name, "gbuffer.albedo"_name, "gbuffer.position"_name, "gbuffer.normal"_name, "gbuffer.depth"_name);
 
    this->build_skybox(ctx);
    this->build_ground(ctx);
    this->build_geometry(ctx);
 
    ctx.end_render_pass();
-
-   ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
-                      graphics_api::TextureUsage::TransferSrc);
 }
 
 void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
@@ -66,6 +63,8 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
    ctx.bind_samplable_texture(1, "skybox.tex"_rc);
 
    ctx.set_depth_test_mode(graphics_api::DepthTestMode::Disabled);
+   ctx.set_is_blending_enabled(false);
+
    ctx.draw_mesh(m_mesh);
 }
 
@@ -79,7 +78,9 @@ void GBufferStage::build_ground(render_core::BuildContext& ctx) const
 
    ctx.bind_samplable_texture(1, "board.tex"_rc);
 
+   ctx.set_depth_test_mode(graphics_api::DepthTestMode::Disabled);
    ctx.set_vertex_topology(graphics_api::VertexTopology::TriangleStrip);
+   ctx.set_is_blending_enabled(false);
 
    ctx.draw_primitives(4, 0);
 }
@@ -109,6 +110,8 @@ void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 
    ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
+
+   ctx.set_is_blending_enabled(false);
 
    ctx.draw_indirect_with_count("occlusion_culling.visible_objects"_external, "occlusion_culling.count_buffer"_external, 128,
                                 sizeof(BindlessSceneObject));

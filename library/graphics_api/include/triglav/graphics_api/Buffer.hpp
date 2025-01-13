@@ -28,6 +28,12 @@ class MappedMemory
 
    [[nodiscard]] void* operator*() const;
 
+   template<typename T>
+   [[nodiscard]] T& cast() const
+   {
+      return *static_cast<T*>(m_pointer);
+   }
+
    void write(const void* source, size_t length) const;
    void write_offset(const void* source, MemorySize length, MemorySize offset) const;
 

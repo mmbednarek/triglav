@@ -28,4 +28,10 @@ subdir('sprite')
 subdir('ssr')
 subdir('text')
 
+shader_targets += custom_target('shader_full_screen',
+                                input : 'full_screen_vs.slang',
+                                output : 'full_screen_vs.spv',
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'vs_main', '-stage', 'vertex', '-o', '@OUTPUT@'],
+)
+
 shaders = declare_dependency(sources: [shader_targets])

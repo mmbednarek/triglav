@@ -169,12 +169,25 @@ struct ExportTexture
    graphics_api::TextureState state;
 };
 
+struct ExportBuffer
+{
+   Name buffName;
+   graphics_api::PipelineStage pipelineStage;
+   graphics_api::BufferAccess access;
+};
+
+struct PushConstant
+{
+   graphics_api::PipelineStageFlags stageFlags;
+   std::vector<u8> data;
+};
+
 }// namespace cmd
 
 using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
                              cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
                              cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::PlaceTextureBarrier,
                              cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond,
-                             cmd::IfDisabledCond, cmd::EndIfCond, cmd::ExportTexture>;
+                             cmd::IfDisabledCond, cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant>;
 
 }// namespace triglav::render_core::detail

@@ -33,6 +33,7 @@ class UpdateViewParamsJob
    TG_EVENT(OnViewPropertiesChanged, render_core::BuildContext&)
    TG_EVENT(OnViewPropertiesNotChanged, render_core::BuildContext&)
    TG_EVENT(OnFinalize, render_core::BuildContext&)
+   TG_EVENT(OnPrepareFrame, render_core::JobGraph&, u32)
 
    static constexpr auto JobName = make_name_id("job.update_view_properties");
 

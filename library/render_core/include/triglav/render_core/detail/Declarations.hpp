@@ -17,6 +17,17 @@ struct Texture
    std::array<graphics_api::TextureState, 24> currentStatePerMip;
    std::array<graphics_api::PipelineStageFlags, 24> lastStages;
    TextureBarrier* lastTextureBarrier{};
+   graphics_api::SamplerProperties samplerProperties{
+      graphics_api::FilterType::Linear,
+      graphics_api::FilterType::Linear,
+      graphics_api::TextureAddressMode::Repeat,
+      graphics_api::TextureAddressMode::Repeat,
+      graphics_api::TextureAddressMode::Repeat,
+      true,
+      0.0f,
+      0.0f,
+      0.0f,
+   };
 
    [[nodiscard]] Vector2i dimensions(const Vector2i& screenDim) const
    {

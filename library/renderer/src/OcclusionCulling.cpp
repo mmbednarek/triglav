@@ -104,8 +104,10 @@ void OcclusionCulling::on_view_properties_not_changed(render_core::BuildContext&
 
 void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
 {
-   ctx.export_buffer("occlusion_culling.visible_objects"_name, graphics_api::BufferUsage::Indirect);
-   ctx.export_buffer("occlusion_culling.count_buffer"_name, graphics_api::BufferUsage::Indirect);
+   ctx.export_buffer("occlusion_culling.visible_objects"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
+   ctx.export_buffer("occlusion_culling.count_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
 }
 
 }// namespace triglav::renderer

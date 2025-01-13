@@ -48,17 +48,27 @@ uniform Sampler2D<float> texShadowMaps[3];
 [[vk::binding(5)]]
 uniform Sampler2D<float> texShadow;
 
-struct ShadingData
+struct UniformViewProperties
 {
-    float4x4 viewMat;
-    float4x4 shadowMapMats[3];
-}; 
+    float4x4 view;
+    float4x4 proj;
+    float4x4 orient;
+    float nearPlane;
+    float farPlane;
+};
 [[vk::binding(6)]]
-uniform ConstantBuffer<ShadingData> shadingData;
+uniform ConstantBuffer<UniformViewProperties> viewProperties;
+
+struct ShadowMapMatrices
+{
+    float4x4 matrix[3];
+};
+[[vk::binding(7)]]
+uniform ConstantBuffer<ShadowMapMatrices> shadowMapMatrices;
 
 struct PushConstants
 {
-    float3 lightPosition;
+    float4 lightPosition;
     bool isAmbientOcclusionEnabled;
     bool shouldSampleShadows;
 };
@@ -71,6 +81,7 @@ static const float4x4 BIAS_MAT = float4x4(
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0
 );
+
 
 static const float STATIC_AMBIENT_TERM = 0.5;
 static const float SHADOW_MAP_BIAS_TERM = 0.008;
@@ -94,7 +105,7 @@ FragOutput fs_main(FragInput fragInput)
     float4 texPositionSample = texPosition.Sample(fragInput.texCoord);
     float3 position = texPositionSample.xyz;
 
-    float4 shadowUV = mul(mul(BIAS_MAT, shadingData.shadowMapMats[0]), float4(position, 1.0));
+    float4 shadowUV = mul(mul(BIAS_MAT, shadowMapMatrices.matrix[0]), float4(position, 1.0));
     shadowUV /= shadowUV.w;
 
     float shadow;
@@ -102,18 +113,18 @@ FragOutput fs_main(FragInput fragInput)
         shadow = texShadow.Sample(fragInput.texCoord);
     } else if (common::shadow_map::test_bounds(shadowUV)) {
         shadow = common::shadow_map::test_pcr(texShadowMaps[0], shadowUV, SHADOW_MAP_BIAS_TERM);
-//        texColorSample.rgb *= float3(1.0, 0.1, 0.1);
-    } else  {
-        shadowUV = mul(mul(BIAS_MAT, shadingData.shadowMapMats[1]), float4(position, 1.0));
+        // texColorSample.rgb *= float3(1.0, 0.1, 0.1);
+    } else {
+        shadowUV = mul(mul(BIAS_MAT, shadowMapMatrices.matrix[1]), float4(position, 1.0));
         shadowUV /= shadowUV.w;
         if (common::shadow_map::test_bounds(shadowUV)) {
             shadow = common::shadow_map::test_pcr(texShadowMaps[1], shadowUV, SHADOW_MAP_BIAS_TERM);
-//            texColorSample.rgb *= float3(0.1, 1.0, 0.1);
+            // texColorSample.rgb *= float3(0.1, 1.0, 0.1);
         } else {
-            shadowUV = mul(mul(BIAS_MAT, shadingData.shadowMapMats[2]), float4(position, 1.0));
+            shadowUV = mul(mul(BIAS_MAT, shadowMapMatrices.matrix[2]), float4(position, 1.0));
             shadowUV /= shadowUV.w;
             shadow = common::shadow_map::test_pcr(texShadowMaps[2], shadowUV, SHADOW_MAP_BIAS_TERM);
-//            texColorSample.rgb *= float3(0.1, 0.1, 1.0);
+            // texColorSample.rgb *= float3(0.1, 0.1, 1.0);
         }
     }
 
@@ -141,10 +152,10 @@ FragOutput fs_main(FragInput fragInput)
 
     float3 Lo = float3(0);
 
-    float3 lightDir = normalize(mul(float3x3(shadingData.viewMat), float3(-1, 0.0, -0.4)));
+    float3 lightDir = normalize(mul(float3x3(viewProperties.view), float3(-1, 0.0, -0.4)));
     Lo += shadingInfo.calculate_directional_light(lightDir);
 
-    Lo += shadingInfo.calculate_point_light(pushConstants.lightPosition, float3(1, 0.6, 0.05), 24.0);
+    Lo += shadingInfo.calculate_point_light(mul(viewProperties.view, pushConstants.lightPosition).xyz, float3(1, 0.6, 0.05), 24.0);
 
     float3 ambient = albedo * ambientValue;
     float3 color = 0.5 * ambient + 1.2 * shadow * Lo;

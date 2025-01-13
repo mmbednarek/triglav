@@ -34,7 +34,6 @@ struct RenderTarget
    graphics_api::AttachmentAttributeFlags flags;
 };
 
-
 struct DescriptorCounts
 {
    u32 storageTextureCount{};
@@ -57,6 +56,7 @@ class BuildContext
 
    // Declarations
    void declare_texture(Name texName, Vector2i texDims, graphics_api::ColorFormat texFormat = GAPI_FORMAT(RGBA, sRGB));
+   void declare_screen_size_texture(Name texName, graphics_api::ColorFormat texFormat = GAPI_FORMAT(RGBA, sRGB));
    void declare_proportional_texture(Name texName, graphics_api::ColorFormat texFormat, float scale,
                                      bool createMipLevels);// texture as a proportion of screen size
    void declare_render_target(Name rtName, graphics_api::ColorFormat rtFormat = GAPI_FORMAT(RGBA, UNorm8));
@@ -82,6 +82,15 @@ class BuildContext
    void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
    void bind_storage_buffer(BindingIndex index, BufferRef buffRef);
 
+   // Push constant
+   void push_constant_span(std::span<const u8> buffer);
+
+   template<typename T>
+   void push_constant(const T& value)
+   {
+      this->push_constant_span({reinterpret_cast<const u8*>(&value), sizeof(T)});
+   }
+
    // Vertex binding
    void bind_vertex_layout(const VertexLayout& layout);
    void bind_vertex_buffer(BufferRef buffRef);
@@ -90,6 +99,7 @@ class BuildContext
    // Render pass
    void begin_render_pass_raw(Name passName, std::span<Name> renderTargets);
    void end_render_pass();
+   void clear_color(Name targetName, Vector4 color);
 
    template<typename... TArgs>
    void begin_render_pass(Name passName, TArgs... args)
@@ -101,6 +111,7 @@ class BuildContext
    // Drawing
    void set_vertex_topology(graphics_api::VertexTopology topology);
    void set_depth_test_mode(graphics_api::DepthTestMode mode);
+   void set_is_blending_enabled(bool enabled);
 
    void draw_primitives(u32 vertexCount, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
@@ -149,7 +160,10 @@ class BuildContext
 
    void export_texture(Name texName, graphics_api::PipelineStage pipelineStage, graphics_api::TextureState state,
                        graphics_api::TextureUsageFlags flags);
-   void export_buffer(Name buffName, graphics_api::BufferUsageFlags flags);
+   void export_buffer(Name buffName, graphics_api::PipelineStage pipelineStage, graphics_api::BufferAccess access,
+                      graphics_api::BufferUsageFlags flags);
+
+   [[nodiscard]] graphics_api::SamplerProperties& texture_sampler_properties(Name name);
 
    template<typename TVertex>
    void draw_mesh(const graphics_api::Mesh<TVertex>& mesh)
@@ -249,6 +263,7 @@ class BuildContext
    Vector2i m_screenSize{};
    std::vector<Name> m_flags;
    std::deque<std::tuple<u32, bool>> m_flagStack;
+   std::vector<detail::cmd::PushConstant> m_pendingPushConstants;
 
    std::vector<std::optional<detail::DescriptorAndStage>> m_descriptors;
 

@@ -206,9 +206,10 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding_array(Descr
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::push_constant(const PipelineStage shaderStage, const size_t size, const size_t offset)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::push_constant(const PipelineStageFlags shaderStages, const size_t size,
+                                                                const size_t offset)
 {
-   this->add_push_constant(shaderStage, size, offset);
+   this->add_push_constant(shaderStages, size, offset);
    return *this;
 }
 
@@ -218,7 +219,7 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::enable_depth_test(const bool e
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_test_mode(DepthTestMode mode)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_test_mode(const DepthTestMode mode)
 {
    m_depthTestMode = mode;
    return *this;

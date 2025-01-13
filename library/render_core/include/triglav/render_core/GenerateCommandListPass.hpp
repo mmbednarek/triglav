@@ -40,6 +40,7 @@ class GenerateCommandListPass
    void visit(const detail::cmd::FillBuffer& cmd) const;
    void visit(const detail::cmd::BeginRenderPass& cmd) const;
    void visit(const detail::cmd::EndRenderPass& cmd) const;
+   void visit(const detail::cmd::PushConstant& cmd) const;
 
    void default_visit(const detail::Command&) const;
 

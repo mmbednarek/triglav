@@ -126,14 +126,10 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
 
    const auto images = vulkan::get_swapchain_images(*m_device, *swapchain);
 
-   std::vector<TextureView> swapchainImageViews;
-   swapchainImageViews.reserve(images.size());
-   std::vector<SwapchainTexture> swapchainTextures;
+   std::vector<Texture> swapchainTextures;
    swapchainTextures.reserve(images.size());
 
    for (const auto image : images) {
-      swapchainTextures.emplace_back(image, colorFormat, Vector2i{resolution.width, resolution.height});
-
       VkImageViewCreateInfo imageViewInfo{};
       imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
       imageViewInfo.image = image;
@@ -154,11 +150,11 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
          return std::unexpected(Status::UnsupportedDevice);
       }
 
-      swapchainImageViews.emplace_back(std::move(imageView), TextureUsage::ColorAttachment);
+      swapchainTextures.emplace_back(image, std::move(imageView), colorFormat, TextureUsage::ColorAttachment | TextureUsage::TransferDst,
+                                     resolution.width, resolution.height, 1);
    }
 
-   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchainTextures), std::move(swapchain),
-                    colorFormat);
+   return Swapchain(m_queueManager, resolution, std::move(swapchainTextures), std::move(swapchain), colorFormat);
 }
 
 Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint, const std::span<const char> code)
@@ -411,7 +407,8 @@ Status Device::submit_command_list(const CommandList& commandList, const Semapho
 
    std::vector<VkPipelineStageFlags> waitStages{};
    waitStages.resize(waitSemaphores.semaphore_count());
-   std::ranges::fill(waitStages, vulkan::to_vulkan_wait_pipeline_stage(workTypes));
+   // std::ranges::fill(waitStages, vulkan::to_vulkan_wait_pipeline_stage(workTypes));
+   std::ranges::fill(waitStages, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
    const std::array commandBuffers{commandList.vulkan_command_buffer()};
 
    submitInfo.waitSemaphoreCount = waitSemaphores.semaphore_count();

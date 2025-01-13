@@ -63,7 +63,16 @@ struct VertexLayout
    VertexLayout() = default;
    explicit VertexLayout(u32 stride);
 
-   void add(Name name, const graphics_api::ColorFormat& format, u32 offset);
+   VertexLayout& add(Name name, const graphics_api::ColorFormat& format, u32 offset);
+
+   [[nodiscard]] PipelineHash hash() const;
+};
+
+struct PushConstantDesc
+{
+   graphics_api::PipelineStageFlags flags;
+   u32 size;
+
    [[nodiscard]] PipelineHash hash() const;
 };
 
@@ -77,6 +86,8 @@ struct GraphicPipelineState
    std::optional<graphics_api::ColorFormat> depthTargetFormat;
    graphics_api::VertexTopology vertexTopology{graphics_api::VertexTopology::TriangleList};
    graphics_api::DepthTestMode depthTestMode{graphics_api::DepthTestMode::Enabled};
+   std::vector<PushConstantDesc> pushConstants;
+   bool isBlendingEnabled{true};
 
    [[nodiscard]] PipelineHash hash() const;
 };

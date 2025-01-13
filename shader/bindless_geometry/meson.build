@@ -28,6 +28,18 @@ shader_targets += custom_target('shader_bindless_geometry_depth_prepass_fragment
                                 command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-o', '@OUTPUT@'],
 )
 
+shader_targets += custom_target('shader_bindless_geometry_shadow_map_vertex',
+                                input : 'shadow_map.slang',
+                                output : 'shadow_map_vertex.spv',
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'vs_main', '-stage', 'vertex', '-o', '@OUTPUT@'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_shadow_map_fragment',
+                                input : 'shadow_map.slang',
+                                output : 'shadow_map_fragment.spv',
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-o', '@OUTPUT@'],
+)
+
 shader_targets += custom_target('shader_bindless_geometry_hi_z_compute',
                                 input : 'hi_zbuffer_construct.slang',
                                 output : 'hi_z_comp.spv',

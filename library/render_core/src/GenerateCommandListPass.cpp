@@ -130,9 +130,14 @@ void GenerateCommandListPass::visit(const detail::cmd::BeginRenderPass& cmd) con
    m_commandList.begin_rendering(renderingInfo);
 }
 
-void GenerateCommandListPass::visit(const detail::cmd::EndRenderPass& cmd) const
+void GenerateCommandListPass::visit(const detail::cmd::EndRenderPass& /*cmd*/) const
 {
    m_commandList.end_rendering();
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::PushConstant& cmd) const
+{
+   m_commandList.push_constant_ptr(cmd.stageFlags, cmd.data.data(), cmd.data.size(), 0);
 }
 
 void GenerateCommandListPass::default_visit(const detail::Command&) const

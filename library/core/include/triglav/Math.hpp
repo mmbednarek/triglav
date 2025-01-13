@@ -17,6 +17,11 @@ using Vector2 = glm::vec2;
 using Vector3 = glm::vec3;
 using Vector4 = glm::vec4;
 
+struct Vector3_Aligned16B
+{
+   alignas(16) Vector3 value{};
+};
+
 using Matrix4x4 = glm::mat4x4;
 
 [[nodiscard]] constexpr u32 divide_rounded_up(const u32 nominator, const u32 denominator)

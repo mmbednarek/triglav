@@ -55,7 +55,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& end_vertex_layout();
    GraphicsPipelineBuilder& descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
    GraphicsPipelineBuilder& descriptor_binding_array(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount);
-   GraphicsPipelineBuilder& push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
+   GraphicsPipelineBuilder& push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset = 0);
    GraphicsPipelineBuilder& enable_depth_test(bool enabled);
    GraphicsPipelineBuilder& depth_test_mode(DepthTestMode mode);
    GraphicsPipelineBuilder& enable_blending(bool enabled);

@@ -6,11 +6,10 @@
 
 namespace triglav::graphics_api {
 
-Swapchain::Swapchain(QueueManager& queueManager, const Resolution& resolution, std::vector<TextureView> imageViews,
-                     std::vector<SwapchainTexture> textures, vulkan::SwapchainKHR swapchain, const ColorFormat& colorFormat) :
+Swapchain::Swapchain(QueueManager& queueManager, const Resolution& resolution, std::vector<Texture> textures,
+                     vulkan::SwapchainKHR swapchain, const ColorFormat& colorFormat) :
     m_queueManager(queueManager),
     m_resolution(resolution),
-    m_textureViews(std::move(imageViews)),
     m_textures(std::move(textures)),
     m_swapchain(std::move(swapchain)),
     m_colorFormat(colorFormat)
@@ -41,16 +40,15 @@ Resolution Swapchain::resolution() const
    return m_resolution;
 }
 
-Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebufferIndex)
+Status Swapchain::present(const SemaphoreArrayView& waitSemaphores, const uint32_t framebufferIndex)
 {
-   const std::array waitSemaphores{semaphore.vulkan_semaphore()};
    const std::array swapchains{*m_swapchain};
    const std::array imageIndices{framebufferIndex};
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-   presentInfo.waitSemaphoreCount = waitSemaphores.size();
-   presentInfo.pWaitSemaphores = waitSemaphores.data();
+   presentInfo.waitSemaphoreCount = waitSemaphores.semaphore_count();
+   presentInfo.pWaitSemaphores = waitSemaphores.vulkan_semaphores();
    presentInfo.swapchainCount = swapchains.size();
    presentInfo.pSwapchains = swapchains.data();
    presentInfo.pImageIndices = imageIndices.data();
@@ -71,12 +69,12 @@ Status Swapchain::present(const Semaphore& semaphore, const uint32_t framebuffer
 
 VkImageView Swapchain::vulkan_image_view(const u32 frameIndex) const
 {
-   return m_textureViews[frameIndex].vulkan_image_view();
+   return m_textures[frameIndex].vulkan_image_view();
 }
 
 u32 Swapchain::frame_count() const
 {
-   return m_textureViews.size();
+   return m_textures.size();
 }
 
 ColorFormat Swapchain::color_format() const
@@ -84,12 +82,7 @@ ColorFormat Swapchain::color_format() const
    return m_colorFormat;
 }
 
-const std::vector<TextureView>& Swapchain::texture_views() const
-{
-   return m_textureViews;
-}
-
-const std::vector<SwapchainTexture>& Swapchain::textures() const
+const std::vector<Texture>& Swapchain::textures() const
 {
    return m_textures;
 }

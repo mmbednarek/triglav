@@ -20,7 +20,7 @@ namespace gapi = graphics_api;
 
 namespace {
 
-std::string create_command_list_name(const Name jobName, const u32 frameIndex, const u32 enabledFlags)
+[[maybe_unused]] std::string create_command_list_name(const Name jobName, const u32 frameIndex, const u32 enabledFlags)
 {
    if (jobName == 0)
       return {};
@@ -29,7 +29,19 @@ std::string create_command_list_name(const Name jobName, const u32 frameIndex, c
    if (resolvedName.empty())
       return {};
 
-   return std::format("{}.index{}.flags{}", resolvedName, frameIndex, enabledFlags);
+   return std::format("{}.frame{}.flags{}", resolvedName, frameIndex, enabledFlags);
+}
+
+[[maybe_unused]] std::string create_object_name(const Name jobName, const u32 frameIndex)
+{
+   if (jobName == 0)
+      return {};
+
+   const auto resolvedName = resolve_name(jobName);
+   if (resolvedName.empty())
+      return {};
+
+   return std::format("{}.frame{}", resolvedName, frameIndex);
 }
 
 }// namespace
@@ -44,6 +56,11 @@ BuildContext::BuildContext(graphics_api::Device& device, resource::ResourceManag
 void BuildContext::declare_texture(const Name texName, const Vector2i texDims, gapi::ColorFormat texFormat)
 {
    this->add_declaration<detail::decl::Texture>(texName, texDims, texFormat);
+}
+
+void BuildContext::declare_screen_size_texture(const Name texName, const gapi::ColorFormat texFormat)
+{
+   this->add_declaration<detail::decl::Texture>(texName, std::nullopt, texFormat);
 }
 
 void BuildContext::declare_proportional_texture(const Name texName, const graphics_api::ColorFormat texFormat, const float scale,
@@ -235,6 +252,16 @@ void BuildContext::bind_storage_buffer(const BindingIndex index, const BufferRef
    this->set_descriptor<detail::descriptor::StorageBuffer>(index, m_activePipelineStage, buffRef);
 }
 
+void BuildContext::push_constant_span(const std::span<const u8> buffer)
+{
+   if (m_activePipelineStage == gapi::PipelineStage::FragmentShader || m_activePipelineStage == gapi::PipelineStage::VertexShader) {
+      m_graphicPipelineState.pushConstants.emplace_back(m_activePipelineStage, buffer.size());
+   }
+
+   std::vector data(buffer.begin(), buffer.end());
+   m_pendingPushConstants.emplace_back(m_activePipelineStage, std::move(data));
+}
+
 void BuildContext::bind_vertex_layout(const VertexLayout& layout)
 {
    m_graphicPipelineState.vertexLayout = layout;
@@ -285,6 +312,11 @@ void BuildContext::end_render_pass()
    this->add_command<detail::cmd::EndRenderPass>();
 
    m_isWithinRenderPass = false;
+}
+
+void BuildContext::clear_color(const Name targetName, const Vector4 color)
+{
+   m_renderTargets.at(targetName).clearValue.value.emplace<gapi::Color>(color.x, color.y, color.z, color.w);
 }
 
 void BuildContext::handle_descriptor_bindings()
@@ -366,9 +398,16 @@ void BuildContext::export_texture(const Name texName, const graphics_api::Pipeli
    this->add_command<detail::cmd::ExportTexture>(texName, pipelineStage, state);
 }
 
-void BuildContext::export_buffer(const Name buffName, const graphics_api::BufferUsageFlags flags)
+void BuildContext::export_buffer(const Name buffName, const graphics_api::PipelineStage pipelineStage,
+                                 const graphics_api::BufferAccess access, const graphics_api::BufferUsageFlags flags)
 {
    this->add_buffer_usage(buffName, flags);
+   this->add_command<detail::cmd::ExportBuffer>(buffName, pipelineStage, access);
+}
+
+graphics_api::SamplerProperties& BuildContext::texture_sampler_properties(const Name name)
+{
+   return this->declaration<detail::decl::Texture>(name).samplerProperties;
 }
 
 gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass,
@@ -456,11 +495,20 @@ const graphics_api::Buffer& BuildContext::resolve_buffer_ref(ResourceStorage& st
 void BuildContext::handle_pending_graphic_state()
 {
    this->add_command<detail::cmd::BindGraphicsPipeline>(m_graphicPipelineState);
+
+   for (auto&& pushConstant : m_pendingPushConstants) {
+      this->add_command<detail::cmd::PushConstant>(std::move(pushConstant));
+   }
+   m_pendingPushConstants.clear();
+
    m_graphicPipelineState.descriptorState.descriptorCount = 0;
    m_graphicPipelineState.vertexLayout.stride = 0;
    m_graphicPipelineState.vertexLayout.attributes.clear();
    m_graphicPipelineState.vertexTopology = graphics_api::VertexTopology::TriangleList;
    m_graphicPipelineState.depthTestMode = graphics_api::DepthTestMode::Enabled;
+   m_graphicPipelineState.pushConstants.clear();
+   m_graphicPipelineState.isBlendingEnabled = true;
+
    ++m_descriptorCounts.totalDescriptorSets;
 
    this->handle_descriptor_bindings();
@@ -525,9 +573,14 @@ void BuildContext::set_vertex_topology(const graphics_api::VertexTopology topolo
    m_graphicPipelineState.vertexTopology = topology;
 }
 
-void BuildContext::set_depth_test_mode(graphics_api::DepthTestMode mode)
+void BuildContext::set_depth_test_mode(const graphics_api::DepthTestMode mode)
 {
    m_graphicPipelineState.depthTestMode = mode;
+}
+
+void BuildContext::set_is_blending_enabled(const bool enabled)
+{
+   m_graphicPipelineState.isBlendingEnabled = enabled;
 }
 
 void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset)
@@ -552,6 +605,9 @@ void BuildContext::draw_indexed_primitives(const u32 indexCount, const u32 index
 void BuildContext::draw_indirect_with_count(const BufferRef drawCallBuffer, const BufferRef countBuffer, const u32 maxDrawCalls,
                                             const u32 stride)
 {
+   this->prepare_buffer(drawCallBuffer, gapi::BufferUsage::Indirect);
+   this->prepare_buffer(countBuffer, gapi::BufferUsage::Indirect);
+
    this->handle_pending_graphic_state();
    this->add_command<detail::cmd::DrawIndirectWithCount>(drawCallBuffer, countBuffer, maxDrawCalls, stride);
 }
@@ -718,7 +774,12 @@ void BuildContext::create_resources(ResourceStorage& storage)
                   auto texture = GAPI_CHECK(m_device.create_texture(decl.texFormat, {static_cast<u32>(size.x), static_cast<u32>(size.y)},
                                                                     decl.texUsageFlags, gapi::TextureState::Undefined,
                                                                     gapi::SampleCount::Single, decl.createMipLevels ? 0 : 1));
-                  TG_SET_DEBUG_NAME(texture, resolve_name(decl.texName));
+                  TG_SET_DEBUG_NAME(texture, create_object_name(decl.texName, frameIndex));
+
+                  texture.sampler_properties() = decl.samplerProperties;
+                  if (texture.sampler_properties().maxLod == 0.0f) {
+                     texture.sampler_properties().maxLod = static_cast<float>(texture.mip_count());
+                  }
 
                   if (decl.createMipLevels) {
                      for (const u32 mipLevel : Range(0u, texture.mip_count())) {
@@ -734,7 +795,7 @@ void BuildContext::create_resources(ResourceStorage& storage)
                      buffSize = m_screenSize.x * m_screenSize.y * decl.scale.value() * buffSize;
                   }
                   auto buffer = GAPI_CHECK(m_device.create_buffer(decl.buffUsageFlags, buffSize));
-                  TG_SET_DEBUG_NAME(buffer, resolve_name(decl.buffName));
+                  TG_SET_DEBUG_NAME(buffer, create_object_name(decl.buffName, frameIndex));
                   storage.register_buffer(decl.buffName, frameIndex, std::move(buffer));
                }
             },

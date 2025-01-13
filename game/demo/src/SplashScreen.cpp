@@ -121,7 +121,9 @@ void SplashScreen::update()
 
    GAPI_CHECK_STATUS(m_device.submit_command_list(m_commandList, m_frameReadySemaphore, m_targetSemaphore, m_frameFinishedFence));
 
-   const auto status = m_swapchain.present(m_targetSemaphore, framebufferIndex);
+   triglav::graphics_api::SemaphoreArray swapchainWaitSemaphores;
+   swapchainWaitSemaphores.add_semaphore(m_targetSemaphore);
+   const auto status = m_swapchain.present(swapchainWaitSemaphores, framebufferIndex);
    if (status == Status::OutOfDateSwapchain) {
       this->recreate_swapchain();
    } else {

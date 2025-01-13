@@ -12,7 +12,10 @@
 #include "node/ShadowMap.hpp"
 #include "node/SyncBuffers.hpp"
 #include "node/UserInterface.hpp"
+#include "stage/AmbientOcclusionStage.hpp"
 #include "stage/GBufferStage.hpp"
+#include "stage/ShadingStage.hpp"
+#include "stage/ShadowMapStage.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/Ranges.hpp"
@@ -126,46 +129,6 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
 {
    m_context2D.update_resolution(m_resolution);
 
-   m_renderGraph.add_external_node("frame_is_ready"_name);
-   // m_renderGraph.emplace_node<node::Geometry>("geometry"_name, m_device, m_resourceManager, m_scene, m_renderGraph);
-   m_renderGraph.emplace_node<node::BindlessGeometry>("geometry"_name, m_device, m_bindlessScene, m_resourceManager);
-   m_renderGraph.emplace_node<node::ShadowMap>("shadow_map"_name, m_device, m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::AmbientOcclusion>("ambient_occlusion"_name, m_device, m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::Shading>("shading"_name, m_device, m_resourceManager, m_scene);
-   m_renderGraph.emplace_node<node::UserInterface>("user_interface"_name, m_device, m_resourceManager, m_uiViewport, m_glyphCache);
-   m_renderGraph.emplace_node<node::PostProcessing>("post_processing"_name, m_device, m_resourceManager, m_renderTarget, m_framebuffers);
-   m_renderGraph.emplace_node<node::Particles>("particles"_name, m_device, m_resourceManager, m_renderGraph);
-   m_renderGraph.emplace_node<node::SyncBuffers>("sync_buffers"_name, m_scene);
-   m_renderGraph.emplace_node<node::ProcessGlyphs>("process_glyphs"_name, m_device, m_resourceManager, m_glyphCache, m_uiViewport);
-   m_renderGraph.emplace_node<node::Blur>("blur_bloom"_name, m_device, m_resourceManager, "shading"_name, "bloom"_name, false);
-   m_renderGraph.emplace_node<node::Blur>("blur_ao"_name, m_device, m_resourceManager, "ambient_occlusion"_name, "ao"_name, true);
-
-   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-      m_renderGraph.emplace_node<node::RayTracedImage>("ray_tracing"_name, m_device, *m_rayTracingScene);
-   }
-
-   m_renderGraph.add_interframe_dependency("particles"_name, "particles"_name);
-   m_renderGraph.add_interframe_dependency("geometry"_name, "shading"_name);
-
-   m_renderGraph.add_dependency("geometry"_name, "sync_buffers"_name);
-   m_renderGraph.add_dependency("user_interface"_name, "process_glyphs"_name);
-   m_renderGraph.add_dependency("ambient_occlusion"_name, "geometry"_name);
-   m_renderGraph.add_dependency("blur_ao"_name, "ambient_occlusion"_name);
-   m_renderGraph.add_dependency("shading"_name, "shadow_map"_name);
-   m_renderGraph.add_dependency("shading"_name, "blur_ao"_name);
-   m_renderGraph.add_dependency("shading"_name, "particles"_name);
-   m_renderGraph.add_dependency("blur_bloom"_name, "shading"_name);
-   m_renderGraph.add_dependency("post_processing"_name, "frame_is_ready"_name);
-   m_renderGraph.add_dependency("post_processing"_name, "user_interface"_name);
-   m_renderGraph.add_dependency("post_processing"_name, "blur_bloom"_name);
-
-   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-      m_renderGraph.add_dependency("blur_ao"_name, "ray_tracing"_name);
-   }
-
-   m_renderGraph.bake("post_processing"_name);
-   m_renderGraph.update_resolution(m_resolution);
-
    m_infoDialog.initialize();
    m_scene.load_level("demo.level"_rc);
 
@@ -179,7 +142,6 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
       GAPI_CHECK_STATUS(copyObjectsCmdList.finish());
 
       auto fence = GAPI_CHECK(m_device.create_fence());
-
       fence.await();
 
       graphics_api::SemaphoreArray empty;
@@ -189,6 +151,9 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    }
 
    m_renderingJob.emplace_stage<stage::GBufferStage>(m_device, m_bindlessScene);
+   m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
+   m_renderingJob.emplace_stage<stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
+   m_renderingJob.emplace_stage<stage::ShadingStage>();
 
    auto& updateViewParamsCtx = m_jobGraph.add_job(UpdateViewParamsJob::JobName);
    m_updateViewParamsJob.build_job(updateViewParamsCtx);
@@ -203,7 +168,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_jobGraph.add_dependency_to_previous_frame(UpdateViewParamsJob::JobName, UpdateViewParamsJob::JobName);
    m_jobGraph.add_dependency(RenderingJob::JobName, UpdateViewParamsJob::JobName);
 
-   m_jobGraph.add_dependency(RenderingJob::JobName, "job.acquire_swapchain_image"_name);
+   m_jobGraph.add_dependency("job.copy_present_image"_name, "job.acquire_swapchain_image"_name);
    m_jobGraph.add_dependency("job.copy_present_image"_name, RenderingJob::JobName);
    m_jobGraph.add_dependency("job.present_swapchain_image"_name, "job.copy_present_image"_name);
 
@@ -309,13 +274,13 @@ void Renderer::on_render()
    m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(framebufferIndex);
    m_renderGraph.record_command_lists();
 
-   GAPI_CHECK_STATUS(m_renderGraph.execute());
-   auto status = m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex);
-   if (status == graphics_api::Status::OutOfDateSwapchain) {
-      m_mustRecreateSwapchain = true;
-   } else {
-      GAPI_CHECK_STATUS(status);
-   }
+   // GAPI_CHECK_STATUS(m_renderGraph.execute());
+   // auto status = m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex);
+   // if (status == graphics_api::Status::OutOfDateSwapchain) {
+   //    m_mustRecreateSwapchain = true;
+   // } else {
+   //    GAPI_CHECK_STATUS(status);
+   // }
 
    StatisticManager::the().tick();
 }
@@ -339,22 +304,22 @@ void Renderer::on_render_new()
 
    m_jobGraph.build_semaphores();
 
-   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(
-      m_swapchain.get_available_framebuffer(m_jobGraph.semaphore(RenderingJob::JobName, "job.acquire_swapchain_image"_name, m_frameIndex)));
+   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(
+      m_jobGraph.semaphore("job.copy_present_image"_name, "job.acquire_swapchain_image"_name, m_frameIndex)));
 
-   m_jobGraph.execute(RenderingJob::JobName, m_frameIndex, &m_frameFences[m_frameIndex]);
+   m_jobGraph.execute(RenderingJob::JobName, m_frameIndex, nullptr);
 
    if (mustRecreate) {
       m_mustRecreateSwapchain = true;
    }
 
-   GAPI_CHECK_STATUS(m_device.submit_command_list(
-      m_prePresentCommands[framebufferIndex * render_core::FRAMES_IN_FLIGHT_COUNT + m_frameIndex],
-      m_jobGraph.wait_semaphores("job.copy_present_image"_name, m_frameIndex),
-      m_jobGraph.signal_semaphores("job.copy_present_image"_name, m_frameIndex), nullptr, graphics_api::WorkType::Transfer));
+   GAPI_CHECK_STATUS(
+      m_device.submit_command_list(m_prePresentCommands[framebufferIndex * render_core::FRAMES_IN_FLIGHT_COUNT + m_frameIndex],
+                                   m_jobGraph.wait_semaphores("job.copy_present_image"_name, m_frameIndex),
+                                   m_jobGraph.signal_semaphores("job.copy_present_image"_name, m_frameIndex), &m_frameFences[m_frameIndex],
+                                   graphics_api::WorkType::Presentation));
 
-   auto status = m_swapchain.present(m_jobGraph.semaphore("job.present_swapchain_image"_name, "job.copy_present_image"_name, m_frameIndex),
-                                     framebufferIndex);
+   const auto status = m_swapchain.present(m_jobGraph.wait_semaphores("job.present_swapchain_image"_name, m_frameIndex), framebufferIndex);
    if (status == graphics_api::Status::OutOfDateSwapchain) {
       m_mustRecreateSwapchain = true;
    } else {
@@ -443,6 +408,7 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -16.0f;
+      m_onGround = false;
    }
 }
 
@@ -504,17 +470,27 @@ void Renderer::prepare_pre_present_commands(render_core::ResourceStorage& resour
 
    for (const auto& swapchainTexture : m_swapchain.textures()) {
       for (const u32 frameIndex : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
-         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Compute | graphics_api::WorkType::Transfer));
          GAPI_CHECK_STATUS(cmdList.begin());
 
-         cmdList.swapchain_texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer, swapchainTexture,
-                                           graphics_api::TextureState::Undefined, graphics_api::TextureState::TransferDst);
+         graphics_api::TextureBarrierInfo inBarrier{};
+         inBarrier.texture = &swapchainTexture;
+         inBarrier.sourceState = graphics_api::TextureState::Undefined;
+         inBarrier.targetState = graphics_api::TextureState::TransferDst;
+         inBarrier.baseMipLevel = 0;
+         inBarrier.mipLevelCount = 1;
+         cmdList.texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer, inBarrier);
 
          cmdList.copy_texture(resources.texture("core.color_out"_name, frameIndex), graphics_api::TextureState::TransferSrc,
                               swapchainTexture, graphics_api::TextureState::TransferDst);
 
-         cmdList.swapchain_texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::End, swapchainTexture,
-                                           graphics_api::TextureState::TransferDst, graphics_api::TextureState::Present);
+         graphics_api::TextureBarrierInfo outBarrier{};
+         outBarrier.texture = &swapchainTexture;
+         outBarrier.sourceState = graphics_api::TextureState::TransferDst;
+         outBarrier.targetState = graphics_api::TextureState::Present;
+         outBarrier.baseMipLevel = 0;
+         outBarrier.mipLevelCount = 1;
+         cmdList.texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::End, outBarrier);
 
          GAPI_CHECK_STATUS(cmdList.finish());
 
@@ -579,19 +555,23 @@ void Renderer::update_uniform_data(const float deltaTime)
       updated = true;
    }
 
-   if (m_scene.camera().position().z >= -5.0f) {
+   if (m_scene.camera().position().z > -5.0f) {
       m_motion = glm::vec3{0.0f};
       glm::vec3 camPos{m_scene.camera().position()};
       camPos.z = -5.0f;
       m_scene.camera().set_position(camPos);
+      m_onGround = true;
       updated = true;
-   } else {
+   } else if (!m_onGround) {
       m_motion.z += 30.0f * deltaTime;
    }
 
    if (m_smoothCamera) {
       m_scene.update_orientation(m_mouseOffset.x * deltaTime, m_mouseOffset.y * deltaTime);
       m_mouseOffset += m_mouseOffset * (static_cast<float>(pow(0.5f, 50.0f * deltaTime)) - 1.0f);
+      if (m_mouseOffset.x < 0.0001f && m_mouseOffset.y < 0.0001f) {
+         m_mouseOffset = glm::vec2{0.0f};
+      }
    } else {
       m_scene.update_orientation(0.05f * m_mouseOffset.x, 0.05f * m_mouseOffset.y);
       m_mouseOffset = {0.0f, 0.0f};

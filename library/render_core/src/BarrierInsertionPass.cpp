@@ -103,9 +103,22 @@ void BarrierInsertionPass::visit(const detail::cmd::EndRenderPass& cmd)
    this->default_visit(cmd);
 }
 
+void BarrierInsertionPass::visit(const detail::cmd::DrawIndirectWithCount& cmd)
+{
+   this->setup_buffer_barrier(cmd.drawCallBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.countBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->default_visit(cmd);
+}
+
 void BarrierInsertionPass::visit(const detail::cmd::ExportTexture& cmd)
 {
    this->setup_texture_barrier(cmd.texName, cmd.state, cmd.pipelineStage);
+   // no need to default visit
+}
+
+void BarrierInsertionPass::visit(const detail::cmd::ExportBuffer& cmd)
+{
+   this->setup_buffer_barrier(cmd.buffName, cmd.access, cmd.pipelineStage);
    // no need to default visit
 }
 
@@ -197,7 +210,7 @@ void BarrierInsertionPass::setup_buffer_barrier(const BufferRef buffRef, const g
    if (to_memory_access(targetAccess) == gapi::MemoryAccess::Write || to_memory_access(buffer.currentAccess) == gapi::MemoryAccess::Write ||
        buffer.lastBufferBarrier == nullptr) {
       if (buffer.lastStages != 0) {
-         auto barrier = std::make_unique<BufferBarrier>(buffName, buffer.lastStages, targetStage, buffer.currentAccess, targetAccess);
+         auto barrier = std::make_unique<BufferBarrier>(buffRef, buffer.lastStages, targetStage, buffer.currentAccess, targetAccess);
          buffer.lastBufferBarrier = this->add_command_before_render_pass<detail::cmd::PlaceBufferBarrier>(std::move(barrier)).barrier.get();
       }
       buffer.lastStages = targetStage;

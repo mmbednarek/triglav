@@ -23,7 +23,9 @@ class BarrierInsertionPass
    void visit(const detail::cmd::FillBuffer& cmd);
    void visit(const detail::cmd::BeginRenderPass& cmd);
    void visit(const detail::cmd::EndRenderPass& cmd);
+   void visit(const detail::cmd::DrawIndirectWithCount& cmd);
    void visit(const detail::cmd::ExportTexture& cmd);
+   void visit(const detail::cmd::ExportBuffer& cmd);
 
    void default_visit(const detail::Command& cmd);
 

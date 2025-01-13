@@ -80,6 +80,7 @@ class Renderer
    glm::vec3 m_position{};
    glm::vec3 m_motion{};
    glm::vec2 m_mouseOffset{};
+   bool m_onGround{false};
    Moving m_moveDirection{Moving::None};
 
    desktop::ISurface& m_desktopSurface;

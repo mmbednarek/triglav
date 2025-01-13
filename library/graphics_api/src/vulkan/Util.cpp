@@ -279,6 +279,8 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
    switch (stage) {
    case PipelineStage::Entrypoint:
       return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   case PipelineStage::DrawIndirect:
+      return VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
    case PipelineStage::VertexInput:
       return VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
    case PipelineStage::VertexShader:
@@ -310,6 +312,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    VkPipelineStageFlags result{};
    if (flags & PipelineStage::Entrypoint) {
       result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   }
+   if (flags & PipelineStage::DrawIndirect) {
+      result |= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
    }
    if (flags & PipelineStage::VertexInput) {
       result |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
@@ -433,7 +438,7 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
          return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
       }
    case TextureState::Present:
-      return VK_ACCESS_MEMORY_READ_BIT;
+      return VK_ACCESS_NONE;
    }
 
    return 0;
@@ -576,6 +581,9 @@ VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags workTypes
    if (workTypes & Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
+   if (workTypes & Presentation) {
+      result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   }
 
    return result;
 }
@@ -666,6 +674,9 @@ VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags inFlags)
    }
    if (inFlags & ShaderWrite) {
       outFlags |= VK_ACCESS_SHADER_WRITE_BIT;
+   }
+   if (inFlags & IndirectCmdRead) {
+      outFlags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
    }
 
    return outFlags;

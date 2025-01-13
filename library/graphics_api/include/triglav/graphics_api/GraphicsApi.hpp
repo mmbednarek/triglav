@@ -104,23 +104,24 @@ enum class PipelineStage : uint32_t
 {
    None = 0,
    Entrypoint = (1 << 0),
-   VertexInput = (1 << 1),
-   VertexShader = (1 << 2),
-   FragmentShader = (1 << 3),
-   EarlyZ = (1 << 4),
-   LateZ = (1 << 5),
-   AttachmentOutput = (1 << 6),
-   ComputeShader = (1 << 7),
+   DrawIndirect = (1 << 1),
+   VertexInput = (1 << 2),
+   VertexShader = (1 << 3),
+   FragmentShader = (1 << 4),
+   EarlyZ = (1 << 5),
+   LateZ = (1 << 6),
+   AttachmentOutput = (1 << 7),
+   ComputeShader = (1 << 8),
 
-   RayGenerationShader = (1 << 8),
-   AnyHitShader = (1 << 9),
-   ClosestHitShader = (1 << 10),
-   MissShader = (1 << 11),
-   IntersectionShader = (1 << 12),
-   CallableShader = (1 << 13),
+   RayGenerationShader = (1 << 9),
+   AnyHitShader = (1 << 10),
+   ClosestHitShader = (1 << 11),
+   MissShader = (1 << 12),
+   IntersectionShader = (1 << 13),
+   CallableShader = (1 << 14),
 
-   Transfer = (1 << 14),
-   End = (1 << 15),
+   Transfer = (1 << 15),
+   End = (1 << 16),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -451,6 +452,7 @@ enum class BufferAccess
    VertexRead = (1 << 4),
    ShaderRead = (1 << 5),
    ShaderWrite = (1 << 6),
+   IndirectCmdRead = (1 << 7),
 };
 
 [[nodiscard]] constexpr MemoryAccess to_memory_access(const BufferAccess access)
@@ -460,6 +462,8 @@ enum class BufferAccess
       [[fallthrough]];
    case BufferAccess::ShaderWrite:
       return MemoryAccess::Write;
+   case BufferAccess::IndirectCmdRead:
+      [[fallthrough]];
    case BufferAccess::TransferRead:
       [[fallthrough]];
    case BufferAccess::UniformRead:

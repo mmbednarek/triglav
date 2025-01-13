@@ -1,11 +1,5 @@
-shader_targets += custom_target('shader_ambient_occlusion_vertex',
-                                input : 'vertex.glsl',
-                                output : '@BASENAME@.spv',
-                                command : compile_vertex_cmds,
-)
-
 shader_targets += custom_target('shader_ambient_occlusion_fragment',
-                                input : 'fragment.glsl',
-                                output : '@BASENAME@.spv',
-                                command : compile_fragment_cmds,
+                                input : 'ambient_occlusion.slang',
+                                output : 'fragment.spv',
+                                command : ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-O3', '-o', '@OUTPUT@'],
 )

@@ -19,6 +19,11 @@ constexpr std::array<PipelineHash, 16> RENDER_TARGET_PRIMES = {
    575591, 266909, 477149, 320759, 138323, 180811, 280411, 759637, 620869, 364303, 291377, 229037, 202931, 226663, 901529, 862777,
 };
 
+constexpr std::array<PipelineHash, 16> PUSH_CONSTANT_PRIMES = {
+   5660561, 6982051, 2132797, 9986183, 2804227, 6939677, 9608461, 8126431,
+   2447399, 3563953, 2897371, 6209569, 8146571, 1354267, 9918409, 1721689,
+};
+
 PipelineHash hash_color_format(const graphics_api::ColorFormat& format)
 {
    return 76037261 * static_cast<PipelineHash>(format.order) + 25809323 * static_cast<PipelineHash>(format.parts[0]) +
@@ -55,9 +60,10 @@ VertexLayout::VertexLayout(const u32 stride) :
 {
 }
 
-void VertexLayout::add(const Name name, const graphics_api::ColorFormat& format, const u32 offset)
+VertexLayout& VertexLayout::add(const Name name, const graphics_api::ColorFormat& format, const u32 offset)
 {
    attributes.emplace_back(name, format, offset);
+   return *this;
 }
 
 PipelineHash VertexLayout::hash() const
@@ -68,6 +74,11 @@ PipelineHash VertexLayout::hash() const
       result += VERTEX_ATTRIBUTE_PRIMES[index] * attribute.hash();
    }
    return result;
+}
+
+PipelineHash PushConstantDesc::hash() const
+{
+   return 72142307 * this->flags.value + 28790857 * this->size;
 }
 
 PipelineHash GraphicPipelineState::hash() const
@@ -91,6 +102,11 @@ PipelineHash GraphicPipelineState::hash() const
    }
    result += 4276381 * static_cast<u32>(vertexTopology);
    result += 2723521 * static_cast<u32>(depthTestMode);
+   result += 6378731 * static_cast<u32>(isBlendingEnabled);
+
+   for (const auto [index, pushConstant] : Enumerate(this->pushConstants)) {
+      result += PUSH_CONSTANT_PRIMES[index] * pushConstant.hash();
+   }
 
    return result;
 }
