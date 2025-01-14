@@ -7,9 +7,9 @@ namespace triglav::renderer::stage {
 using namespace name_literals;
 using namespace render_core::literals;
 
-struct PushConstants
+struct ShadingPushConstants
 {
-   Vector4 lightPosition;
+   alignas(16) Vector4 lightPosition;
    int isAmbientOcclusionEnabled;
    int shouldSampleShadows;
 };
@@ -29,7 +29,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    ctx.bind_samplable_texture(0, "gbuffer.albedo"_name);
    ctx.bind_samplable_texture(1, "gbuffer.position"_name);
    ctx.bind_samplable_texture(2, "gbuffer.normal"_name);
-   ctx.bind_samplable_texture(3, "ambient_occlusion.target"_name);
+   ctx.bind_samplable_texture(3, "ambient_occlusion.blurred"_name);
 
    std::array<render_core::TextureRef, 3> shadowTextures{"shadow_map.cascade0"_name, "shadow_map.cascade1"_name,
                                                          "shadow_map.cascade2"_name};
@@ -39,10 +39,10 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    ctx.bind_uniform_buffer(6, "core.view_properties"_external);
    ctx.bind_uniform_buffer(7, "shadow_map.matrices"_external);
 
-   ctx.push_constant(PushConstants{
-      glm::vec4(-30, 0, -5, 1.0),
-      true,
-      false,
+   ctx.push_constant(ShadingPushConstants{
+      Vector4(-30, 0, -5, 1.0),
+      1,
+      0,
    });
 
    ctx.set_is_blending_enabled(false);

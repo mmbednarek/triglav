@@ -82,7 +82,6 @@ static const float4x4 BIAS_MAT = float4x4(
     0.0, 0.0, 0.0, 1.0
 );
 
-
 static const float STATIC_AMBIENT_TERM = 0.5;
 static const float SHADOW_MAP_BIAS_TERM = 0.008;
 

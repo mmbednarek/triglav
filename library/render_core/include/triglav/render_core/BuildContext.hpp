@@ -88,7 +88,7 @@ class BuildContext
    template<typename T>
    void push_constant(const T& value)
    {
-      this->push_constant_span({reinterpret_cast<const u8*>(&value), sizeof(T)});
+      this->push_constant_span({reinterpret_cast<const u8*>(&value), sizeof(std::decay_t<T>)});
    }
 
    // Vertex binding

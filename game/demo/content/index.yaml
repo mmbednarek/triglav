@@ -135,8 +135,6 @@ resources:
     source: "shader/debug_lines/vertex.spv"
   - name: "post_processing.fshader"
     source: "shader/post_processing/fragment.spv"
-  - name: "post_processing.vshader"
-    source: "shader/post_processing/vertex.spv"
   - name: "ground.fshader"
     source: "shader/ground/fragment.spv"
   - name: "ground.vshader"

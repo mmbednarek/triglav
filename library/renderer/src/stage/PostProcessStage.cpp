@@ -4,7 +4,7 @@
 
 namespace triglav::renderer::stage {
 
-struct PushConstants
+struct PostProcessingPushConstants
 {
    int enableFXAA{};
    int hideUI{};
@@ -27,12 +27,11 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx) const
 
    ctx.bind_fragment_shader("post_processing.fshader"_rc);
 
-   constexpr PushConstants constants{
+   ctx.push_constant(PostProcessingPushConstants{
       .enableFXAA = 1,
       .hideUI = 0,
       .bloomEnabled = 1,
-   };
-   ctx.push_constant(constants);
+   });
 
    ctx.bind_samplable_texture(0, "shading.color"_name);
    ctx.bind_samplable_texture(1, "shading.bloom"_name);
