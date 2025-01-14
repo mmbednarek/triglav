@@ -34,14 +34,14 @@ static const float radius = 1.2;
 struct FragOut
 {
     [[vk::location(0)]]
-    float4 screenCoord : SV_Target0;
+    float4 outValue : SV_Target0;
 };
 
 FragOut fs_main(const FragIn fragIn)
 {
     float3 normal = texNormal.Sample(fragIn.screenCoord).xyz;
     if (all(normal == float3(0.0))) {
-        return FragOut(1);
+        return FragOut(float4(1.0, 1.0, 1.0, 1.0));
     }
 
     normal = normalize(normal);

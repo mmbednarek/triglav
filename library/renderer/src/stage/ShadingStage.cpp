@@ -1,5 +1,7 @@
 #include "stage/ShadingStage.hpp"
 
+#include "Util.hpp"
+
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
@@ -37,9 +39,9 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, UNorm16));
 
-   ctx.copy_texture("gbuffer.depth"_name, "shading.depth"_name);
-
    this->prepare_particles(ctx);
+
+   ctx.copy_texture("gbuffer.depth"_name, "shading.depth"_name);
 
    ctx.begin_render_pass("shading"_name, "shading.color"_name, "shading.bloom"_name, "shading.depth"_name);
 
@@ -72,6 +74,8 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    this->render_particles(ctx);
 
    ctx.end_render_pass();
+
+   blur_texture(ctx, "shading.bloom"_name, "shading.blurred_bloom"_name, GAPI_FORMAT(RGBA, Float16));
 }
 
 void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const

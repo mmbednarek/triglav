@@ -1,5 +1,7 @@
 #include "stage/AmbientOcclusionStage.hpp"
 
+#include "Util.hpp"
+
 #include "triglav/render_core/BuildContext.hpp"
 
 #include <random>
@@ -37,15 +39,7 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx) const
 
    ctx.end_render_pass();
 
-   ctx.declare_screen_size_texture("ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
-
-   // Blur the target
-   ctx.bind_compute_shader("blur/sc.cshader"_rc);
-
-   ctx.bind_samplable_texture(0, "ambient_occlusion.target"_name);
-   ctx.bind_rw_texture(1, "ambient_occlusion.blurred"_name);
-
-   ctx.dispatch({divide_rounded_up(ctx.screen_size().x, 16), divide_rounded_up(ctx.screen_size().y, 16), 1});
+   blur_texture(ctx, "ambient_occlusion.target"_name, "ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
 }
 
 void AmbientOcclusionStage::fill_sample_buffer()

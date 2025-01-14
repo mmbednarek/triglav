@@ -29,6 +29,7 @@ renderer_sources = files([
   'include/triglav/renderer/TextRenderer.hpp',
   'include/triglav/renderer/TextureHelper.hpp',
   'include/triglav/renderer/UpdateViewParamsJob.hpp',
+  'include/triglav/renderer/Util.hpp',
   'src/node/AmbientOcclusion.cpp',
   'src/node/AmbientOcclusion.hpp',
   'src/node/BindlessGeometry.cpp',
@@ -84,6 +85,7 @@ renderer_sources = files([
   'src/TextRenderer.cpp',
   'src/TextureHelper.cpp',
   'src/UpdateViewParamsJob.cpp',
+  'src/Util.cpp',
 ])
 
 

@@ -155,6 +155,7 @@ std::map<Name, std::string_view> KnownNames{
    {"segoeui/bold"_name, "segoeui/bold"sv},
    {"shading"_name, "shading"sv},
    {"shading.bloom"_name, "shading.bloom"sv},
+   {"shading.blurred_bloom"_name, "shading.blurred_bloom"sv},
    {"shading.color"_name, "shading.color"sv},
    {"shading.depth"_name, "shading.depth"sv},
    {"shadow_map"_name, "shadow_map"sv},

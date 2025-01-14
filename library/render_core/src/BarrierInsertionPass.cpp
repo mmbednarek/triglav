@@ -94,10 +94,14 @@ void BarrierInsertionPass::visit(const detail::cmd::BeginRenderPass& cmd)
       const auto& renderTarget = m_context.m_renderTargets.at(target);
 
       const auto isDepthTarget = renderTarget.flags & gapi::AttachmentAttribute::Depth;
+      const auto isImageLoaded = renderTarget.flags & gapi::AttachmentAttribute::LoadImage;
+      const auto isImageStored = renderTarget.flags & gapi::AttachmentAttribute::StoreImage;
       const auto targetStage = isDepthTarget ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
       const auto lastUsedStage = isDepthTarget ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
+      const auto textureState =
+         (isImageLoaded && !isImageStored) ? gapi::TextureState::ReadOnlyRenderTarget : gapi::TextureState::RenderTarget;
 
-      this->setup_texture_barrier(target, gapi::TextureState::RenderTarget, targetStage, lastUsedStage);
+      this->setup_texture_barrier(target, textureState, targetStage, lastUsedStage);
    }
 
    m_isWithinRenderPass = true;

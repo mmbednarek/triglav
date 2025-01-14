@@ -167,6 +167,28 @@ struct ColorFormat
          return false;
       }
    }
+
+   [[nodiscard]] i32 channel_count() const
+   {
+      switch (this->order) {
+      case ColorFormatOrder::RGB:
+         return 3;
+      case ColorFormatOrder::RG:
+         return 2;
+      case ColorFormatOrder::R:
+         return 1;
+      case ColorFormatOrder::RGBA:
+         return 4;
+      case ColorFormatOrder::BGRA:
+         return 4;
+      case ColorFormatOrder::DS:
+         return 2;
+      case ColorFormatOrder::D:
+         return 1;
+      default:
+         return false;
+      }
+   }
 };
 
 struct Resolution
@@ -255,6 +277,7 @@ enum class TextureState
    GeneralRead,
    GeneralWrite,
    RenderTarget,
+   ReadOnlyRenderTarget,
    Present,
 };
 
@@ -273,8 +296,10 @@ enum class TextureState
       [[fallthrough]];
    case TextureState::ShaderRead:
       [[fallthrough]];
+   case TextureState::ReadOnlyRenderTarget:
+      [[fallthrough]];
    case TextureState::GeneralRead:
-      return MemoryAccess::Read;
+      [[fallthrough]];
    case TextureState::Present:
       return MemoryAccess::Read;
    default:

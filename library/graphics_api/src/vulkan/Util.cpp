@@ -403,6 +403,12 @@ VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureStat
       } else {
          return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       }
+   case TextureState::ReadOnlyRenderTarget:
+      if (format.is_depth_format()) {
+         return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+      } else {
+         return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      }
    case TextureState::Present:
       return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
    }
@@ -436,6 +442,12 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
          return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
       } else {
          return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      }
+   case TextureState::ReadOnlyRenderTarget:
+      if (format.is_depth_format()) {
+         return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+      } else {
+         return VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
       }
    case TextureState::Present:
       return VK_ACCESS_NONE;
