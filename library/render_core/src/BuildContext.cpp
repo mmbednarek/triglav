@@ -531,6 +531,11 @@ void BuildContext::prepare_texture(const TextureRef texRef, const gapi::TextureS
       auto& renderTarget = m_renderTargets.at(texName);
       renderTarget.flags |= gapi::AttachmentAttribute::StoreImage;
    }
+   if (gapi::to_memory_access(state) == gapi::MemoryAccess::Write && m_renderTargets.contains(texName)) {
+      auto& renderTarget = m_renderTargets.at(texName);
+      renderTarget.flags |= gapi::AttachmentAttribute::LoadImage;
+      renderTarget.flags.remove_flag(gapi::AttachmentAttribute::ClearImage);
+   }
 }
 
 void BuildContext::prepare_buffer(const BufferRef buffRef, const gapi::BufferUsage usage)
@@ -583,10 +588,10 @@ void BuildContext::set_is_blending_enabled(const bool enabled)
    m_graphicPipelineState.isBlendingEnabled = enabled;
 }
 
-void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset)
+void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset, u32 instanceCount, u32 instanceOffset)
 {
    this->handle_pending_graphic_state();
-   this->add_command<detail::cmd::DrawPrimitives>(vertexCount, vertexOffset, 1, 0);
+   this->add_command<detail::cmd::DrawPrimitives>(vertexCount, vertexOffset, instanceCount, instanceOffset);
 }
 
 void BuildContext::draw_indexed_primitives(const u32 indexCount, const u32 indexOffset, const u32 vertexOffset)
@@ -680,6 +685,18 @@ void BuildContext::copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer)
    this->prepare_buffer(dstBuffer, gapi::BufferUsage::TransferDst);
 
    this->add_command<detail::cmd::CopyBuffer>(srcBuffer, dstBuffer);
+
+   m_workTypes |= gapi::WorkType::Transfer;
+}
+
+void BuildContext::copy_texture(TextureRef srcTex, TextureRef dstTex)
+{
+   m_activePipelineStage = gapi::PipelineStage::Transfer;
+
+   this->prepare_texture(srcTex, gapi::TextureState::TransferSrc, gapi::TextureUsage::TransferSrc);
+   this->prepare_texture(dstTex, gapi::TextureState::TransferDst, gapi::TextureUsage::TransferDst);
+
+   this->add_command<detail::cmd::CopyTexture>(srcTex, dstTex);
 
    m_workTypes |= gapi::WorkType::Transfer;
 }

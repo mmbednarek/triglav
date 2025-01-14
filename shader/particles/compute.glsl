@@ -12,7 +12,7 @@ layout(std430, binding = 1) buffer ParticleSSBOOut {
     Particle particlesOut[];
 };
 
-layout(push_constant) uniform Constants
+layout(binding = 2) uniform Constants
 {
     float deltaTime;
     uint randomValue;

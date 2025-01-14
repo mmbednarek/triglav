@@ -177,6 +177,8 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
 
    this->prepare_pre_present_commands(m_resourceStorage);
 
+   stage::ShadingStage::initialize_particles(m_jobGraph);
+
    StatisticManager::the().initialize();
 
    m_scene.update_shadow_maps();
@@ -301,7 +303,7 @@ void Renderer::on_render_new()
 
    m_frameFences[m_frameIndex].await();
 
-   m_updateViewParamsJob.prepare_frame(m_jobGraph, m_frameIndex);
+   m_updateViewParamsJob.prepare_frame(m_jobGraph, m_frameIndex, deltaTime);
 
    m_jobGraph.build_semaphores();
 

@@ -31,4 +31,6 @@ using Matrix4x4 = glm::mat4x4;
    return 1 + (nominator / denominator);
 }
 
+constexpr auto g_pi = 3.14159265358979323846f;
+
 }// namespace triglav

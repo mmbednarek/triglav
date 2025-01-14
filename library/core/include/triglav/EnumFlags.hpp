@@ -59,6 +59,12 @@ struct EnumFlags
       return *this;
    }
 
+   constexpr EnumFlags& remove_flag(const TEnum flag)
+   {
+      this->value &= ~static_cast<UnderlyingType>(flag);
+      return *this;
+   }
+
    constexpr bool operator==(const EnumFlags rhs)
    {
       return this->value == rhs.value;

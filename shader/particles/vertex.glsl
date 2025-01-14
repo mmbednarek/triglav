@@ -8,6 +8,9 @@ layout(location = 1) out float fragAnimation;
 layout(binding = 0) uniform UniformBufferObject {
     mat4 view;
     mat4 proj;
+    mat4 orient;
+    float nearPlane;
+    float farPlane;
 } ubo;
 
 layout(std140, binding = 1) readonly buffer Particles {

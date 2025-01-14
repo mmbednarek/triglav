@@ -99,6 +99,13 @@ void GenerateCommandListPass::visit(const detail::cmd::CopyBuffer& cmd) const
                              m_context.resolve_buffer_ref(m_resourceStorage, cmd.dstBuffer, m_frameIndex));
 }
 
+void GenerateCommandListPass::visit(const detail::cmd::CopyTexture& cmd) const
+{
+   m_commandList.copy_texture(
+      m_context.resolve_texture_ref(m_resourceStorage, cmd.srcTexture, m_frameIndex), graphics_api::TextureState::TransferSrc,
+      m_context.resolve_texture_ref(m_resourceStorage, cmd.dstTexture, m_frameIndex), graphics_api::TextureState::TransferSrc);
+}
+
 void GenerateCommandListPass::visit(const detail::cmd::PlaceTextureBarrier& cmd) const
 {
    graphics_api::TextureBarrierInfo info{};

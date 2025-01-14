@@ -1,11 +1,26 @@
 #include "stage/ShadingStage.hpp"
 
 #include "triglav/render_core/BuildContext.hpp"
+#include "triglav/render_core/JobGraph.hpp"
+
+#include <random>
 
 namespace triglav::renderer::stage {
 
 using namespace name_literals;
 using namespace render_core::literals;
+
+struct Particle
+{
+   alignas(16) glm::vec3 position;
+   alignas(16) glm::vec3 velocity;
+   float animation;
+   float rotation;
+   float angularVelocity;
+   float scale;
+};
+
+constexpr auto g_particleCount = 256;
 
 struct ShadingPushConstants
 {
@@ -21,6 +36,10 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    ctx.declare_render_target("shading.color"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, UNorm16));
+
+   ctx.copy_texture("gbuffer.depth"_name, "shading.depth"_name);
+
+   this->prepare_particles(ctx);
 
    ctx.begin_render_pass("shading"_name, "shading.color"_name, "shading.bloom"_name, "shading.depth"_name);
 
@@ -46,10 +65,67 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    });
 
    ctx.set_is_blending_enabled(false);
+   ctx.set_depth_test_mode(graphics_api::DepthTestMode::Disabled);
 
    ctx.draw_full_screen_quad();
 
+   this->render_particles(ctx);
+
    ctx.end_render_pass();
+}
+
+void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const
+{
+   ctx.declare_buffer("particles"_name, sizeof(Particle) * g_particleCount);
+
+   ctx.bind_compute_shader("particles.cshader"_rc);
+
+   ctx.bind_storage_buffer(0, "particles"_last_frame);
+   ctx.bind_storage_buffer(1, "particles"_name);
+   ctx.bind_uniform_buffer(2, "core.frame_params"_external);
+
+   ctx.dispatch({1, 1, 1});
+}
+
+void ShadingStage::render_particles(render_core::BuildContext& ctx) const
+{
+   ctx.bind_vertex_shader("particles.vshader"_rc);
+
+   ctx.bind_uniform_buffer(0, "core.view_properties"_external);
+   ctx.bind_storage_buffer(1, "particles"_name);
+
+   ctx.bind_fragment_shader("particles.fshader"_rc);
+
+   ctx.bind_samplable_texture(2, "particle.tex"_rc);
+
+   ctx.set_vertex_topology(graphics_api::VertexTopology::TriangleStrip);
+   ctx.set_depth_test_mode(graphics_api::DepthTestMode::ReadOnly);
+
+   ctx.draw_primitives(4, 0, 256, 0);
+}
+
+void ShadingStage::initialize_particles(render_core::JobGraph& ctx)
+{
+   Vector3 center{-30, 0, -4};
+   Vector3 range{2, 2, 2};
+
+   std::vector<Particle> particles;
+   particles.resize(g_particleCount);
+
+   std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+   std::default_random_engine generator{};
+
+   for (auto& particle : particles) {
+      auto offset = glm::vec3(dist(generator), dist(generator), dist(generator));
+      particle.position = center + range * glm::normalize(offset);
+      particle.velocity = 0.01f * glm::vec3(dist(generator), dist(generator), dist(generator));
+      particle.animation = 0.5f * (1.0f + dist(generator));
+      particle.rotation = 2.0f * g_pi * dist(generator);
+      particle.angularVelocity = dist(generator);
+      particle.scale = 0.5f + (1.0f + dist(generator));
+   }
+
+   GAPI_CHECK_STATUS(ctx.resources().buffer("particles"_name, 2).write_indirect(particles.data(), particles.size() * sizeof(Particle)));
 }
 
 }// namespace triglav::renderer::stage

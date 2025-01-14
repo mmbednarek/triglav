@@ -20,6 +20,7 @@ class BarrierInsertionPass
    void visit(const detail::cmd::CopyTextureToBuffer& cmd);
    void visit(const detail::cmd::CopyBufferToTexture& cmd);
    void visit(const detail::cmd::CopyBuffer& cmd);
+   void visit(const detail::cmd::CopyTexture& cmd);
    void visit(const detail::cmd::FillBuffer& cmd);
    void visit(const detail::cmd::BeginRenderPass& cmd);
    void visit(const detail::cmd::EndRenderPass& cmd);

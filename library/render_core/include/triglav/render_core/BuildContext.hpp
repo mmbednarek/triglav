@@ -113,7 +113,7 @@ class BuildContext
    void set_depth_test_mode(graphics_api::DepthTestMode mode);
    void set_is_blending_enabled(bool enabled);
 
-   void draw_primitives(u32 vertexCount, u32 vertexOffset);
+   void draw_primitives(u32 vertexCount, u32 vertexOffset, u32 instanceCount = 1, u32 instanceOffset = 0);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset);
    void draw_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride);
@@ -127,6 +127,7 @@ class BuildContext
    void copy_texture_to_buffer(TextureRef srcTex, BufferRef dstBuff);
    void copy_buffer_to_texture(BufferRef srcBuff, TextureRef dstTex);
    void copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer);
+   void copy_texture(TextureRef srcTex, TextureRef dstTex);
 
    // Conditional commands
    void declare_flag(Name flagName);

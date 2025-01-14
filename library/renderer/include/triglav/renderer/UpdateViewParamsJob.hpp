@@ -40,7 +40,7 @@ class UpdateViewParamsJob
    explicit UpdateViewParamsJob(Scene& scene);
 
    void build_job(render_core::BuildContext& ctx) const;
-   void prepare_frame(render_core::JobGraph& graph, u32 frameIndex);
+   void prepare_frame(render_core::JobGraph& graph, u32 frameIndex, float deltaTime);
    void on_updated(const Camera& camera);
 
  private:

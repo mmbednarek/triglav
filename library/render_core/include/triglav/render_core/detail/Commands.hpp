@@ -134,6 +134,12 @@ struct CopyBuffer
    BufferRef dstBuffer;
 };
 
+struct CopyTexture
+{
+   TextureRef srcTexture;
+   TextureRef dstTexture;
+};
+
 struct FillBuffer
 {
    Name buffName{};
@@ -184,10 +190,11 @@ struct PushConstant
 
 }// namespace cmd
 
-using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
-                             cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
-                             cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::PlaceTextureBarrier,
-                             cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond,
-                             cmd::IfDisabledCond, cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant>;
+using Command =
+   std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
+                cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
+                cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier,
+                cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond,
+                cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant>;
 
 }// namespace triglav::render_core::detail
