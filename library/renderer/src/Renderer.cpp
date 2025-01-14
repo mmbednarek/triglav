@@ -9,11 +9,11 @@
 #include "node/ProcessGlyphs.hpp"
 #include "node/RayTracedImage.hpp"
 #include "node/Shading.hpp"
-#include "node/ShadowMap.hpp"
 #include "node/SyncBuffers.hpp"
 #include "node/UserInterface.hpp"
 #include "stage/AmbientOcclusionStage.hpp"
 #include "stage/GBufferStage.hpp"
+#include "stage/PostProcessStage.hpp"
 #include "stage/ShadingStage.hpp"
 #include "stage/ShadowMapStage.hpp"
 
@@ -154,6 +154,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
    m_renderingJob.emplace_stage<stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
    m_renderingJob.emplace_stage<stage::ShadingStage>();
+   m_renderingJob.emplace_stage<stage::PostProcessStage>();
 
    auto& updateViewParamsCtx = m_jobGraph.add_job(UpdateViewParamsJob::JobName);
    m_updateViewParamsJob.build_job(updateViewParamsCtx);
