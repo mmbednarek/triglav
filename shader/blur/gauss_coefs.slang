@@ -1,8 +1,6 @@
-#version 450
+module gauss_coefs;
 
-#include "../common/util.glsl"
-
-const float GAUSS_COEFS[] = {
+public const static float g_gaussCoefficients[] = {
     0.0003017204601892108,
     0.0004982212074564017,
     0.000761604114671245,
@@ -229,67 +227,3 @@ const float GAUSS_COEFS[] = {
     0.0004982212074564017,
     0.0003017204601892108
 };
-
-#ifdef SINGLE_CHANNEL
-#define PIXEL_TYPE float
-#define SUFFIX .r
-#define OUTPUT(result) vec4(result, 0, 0, 0)
-#define FORMAT r16f
-#else
-#define PIXEL_TYPE vec4
-#define SUFFIX
-#define OUTPUT(result) result
-#define FORMAT rgba16f
-#endif
-
-layout(binding = 0) uniform sampler2D inputImage;
-
-layout(binding = 1, FORMAT) uniform image2D outputImage;
-
-layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
-
-shared PIXEL_TYPE localPixel[1024];
-
-PIXEL_TYPE read_pixel(const ivec2 globalPosition, const ivec2 size, const ivec2 localIndex, const ivec2 offset)
-{
-    ivec2 globalDisplaced = clamp(globalPosition + offset, ivec2(0), ivec2(size.x-1, size.y-1));
-    ivec2 localPos = localIndex + (globalDisplaced - globalPosition);
-    return localPixel[32 * localPos.y + localPos.x];
-}
-
-void main() {
-    const ivec2 size = textureSize(inputImage, 0);
-    uvec2 localIndex = gl_LocalInvocationID.xy;
-    uvec2 globalPosition = 16*gl_WorkGroupID.xy + localIndex;
-
-    if (globalPosition.x >= size.x || globalPosition.y >= size.y)
-        return;
-
-    PIXEL_TYPE pixel = texelFetch(inputImage, ivec2(globalPosition), 0) SUFFIX;
-    localPixel[32 * localIndex.y + localIndex.x] = pixel;
-
-    barrier();
-
-    const ivec2 dimSize = ivec2(size.x - 8, size.y - 8);
-
-    if (((globalPosition.x >= 8) && (localIndex.x < 8)) ||
-        ((globalPosition.y >= 8) && (localIndex.y < 8)) ||
-        ((globalPosition.x < dimSize.x) && (localIndex.x >= 24)) ||
-        ((globalPosition.y < dimSize.y) && (localIndex.y >= 24)))
-    {
-        return;
-    }
-
-    int coefIndex = 0;
-    PIXEL_TYPE result = PIXEL_TYPE(0);
-    for (int y = -7; y <= 7; ++y) {
-        for (int x = -7; x <= 7; ++x) {
-            float coef = GAUSS_COEFS[coefIndex];
-            PIXEL_TYPE pix = read_pixel(ivec2(globalPosition), size, ivec2(localIndex), ivec2(x, y));
-            result += coef * pix;
-            ++coefIndex;
-        }
-    }
-
-    imageStore(outputImage, ivec2(globalPosition), OUTPUT(result));
-}
