@@ -54,8 +54,6 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
 
    render_core::VertexLayout layout(sizeof(geometry::Vertex));
    layout.add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location));
-   layout.add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv));
-   layout.add("normal"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal));
    ctx.bind_vertex_layout(layout);
 
    ctx.bind_fragment_shader("skybox.fshader"_rc);

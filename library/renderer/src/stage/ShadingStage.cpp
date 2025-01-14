@@ -82,6 +82,8 @@ void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const
 {
    ctx.declare_buffer("particles"_name, sizeof(Particle) * g_particleCount);
 
+   ctx.add_buffer_usage("particles"_name, graphics_api::BufferUsage::TransferDst);// Initially this buffer is filled from host
+
    ctx.bind_compute_shader("particles.cshader"_rc);
 
    ctx.bind_storage_buffer(0, "particles"_last_frame);

@@ -174,6 +174,9 @@ class BuildContext
       this->draw_indexed_primitives(mesh.indices.count(), 0, 0);
    }
 
+   void add_texture_usage(Name texName, graphics_api::TextureUsageFlags flags);
+   void add_buffer_usage(Name buffName, graphics_api::BufferUsageFlags flags);
+
 
  private:
    void set_pipeline_state_descriptor(graphics_api::PipelineStageFlags stages, BindingIndex index, const DescriptorInfo& info);
@@ -195,9 +198,6 @@ class BuildContext
    void prepare_buffer(BufferRef buffRef, graphics_api::BufferUsage usage);
    [[nodiscard]] u32 flag_variation_count() const;
    void reset_resource_states();
-
-   void add_texture_usage(Name texName, graphics_api::TextureUsageFlags flags);
-   void add_buffer_usage(Name buffName, graphics_api::BufferUsageFlags flags);
 
    template<typename TDesc, typename... TArgs>
    void set_descriptor(const BindingIndex index, graphics_api::PipelineStage stage, TArgs&&... args)
