@@ -325,7 +325,7 @@ void BuildContext::handle_descriptor_bindings()
       return;
    }
 
-   for (const auto& descriptor : m_descriptors) {
+   for ([[maybe_unused]] const auto& descriptor : m_descriptors) {
       assert(descriptor.has_value());
    }
 
@@ -721,7 +721,7 @@ void BuildContext::end_if()
    this->add_command<detail::cmd::EndIfCond>();
 }
 
-Job BuildContext::build_job(PipelineCache& pipelineCache, ResourceStorage& storage, const Name jobName)
+Job BuildContext::build_job(PipelineCache& pipelineCache, ResourceStorage& storage, [[maybe_unused]] const Name jobName)
 {
    auto pool = this->create_descriptor_pool();
 

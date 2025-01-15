@@ -8,7 +8,9 @@
 #include <iostream>
 
 using triglav::Vector2i;
+using triglav::graphics_api::BufferAccess;
 using triglav::graphics_api::BufferUsage;
+using triglav::graphics_api::PipelineStage;
 using triglav::render_core::JobGraph;
 using triglav::render_core::PipelineCache;
 using triglav::render_core::ResourceStorage;
@@ -48,7 +50,8 @@ TEST(JobGraphTest, BasicDependency)
    graph.add_dependency("basic_dependency.third"_name, "basic_dependency.second"_name);
 
    firstCtx.init_buffer("basic_dependency.data"_name, 5);
-   firstCtx.export_buffer("basic_dependency.data"_name, BufferUsage::TransferSrc | BufferUsage::StorageBuffer);
+   firstCtx.export_buffer("basic_dependency.data"_name, PipelineStage::ComputeShader, BufferAccess::ShaderRead,
+                          BufferUsage::TransferSrc | BufferUsage::StorageBuffer);
 
    secondCtx.bind_compute_shader("testing/increase_number.cshader"_rc);
    secondCtx.bind_storage_buffer(0, "basic_dependency.data"_external);

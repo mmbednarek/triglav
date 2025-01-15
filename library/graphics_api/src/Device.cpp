@@ -400,7 +400,7 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Su
 }
 
 Status Device::submit_command_list(const CommandList& commandList, const SemaphoreArrayView waitSemaphores,
-                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, const WorkTypeFlags workTypes)
+                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, const WorkTypeFlags /*workTypes*/)
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

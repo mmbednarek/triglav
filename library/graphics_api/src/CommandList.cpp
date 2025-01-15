@@ -532,7 +532,7 @@ void CommandList::set_debug_name(const std::string_view name) const
    debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(m_commandBuffer);
    debugUtilsObjectName.objectType = VK_OBJECT_TYPE_COMMAND_BUFFER;
    debugUtilsObjectName.pObjectName = name.data();
-   const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_device.vulkan_device(), &debugUtilsObjectName);
+   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_device.vulkan_device(), &debugUtilsObjectName);
 
    assert(result == VK_SUCCESS);
 }

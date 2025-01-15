@@ -129,7 +129,8 @@ void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_vi
 {
    const auto outFile = triglav::io::open_file(triglav::io::Path{fileName}, triglav::io::FileOpenMode::Create);
    assert(outFile.has_value());
-   assert((*outFile)->write(buffer).has_value());
+   const auto write_res = (*outFile)->write(buffer);
+   assert(write_res.has_value());
 }
 
 }// namespace

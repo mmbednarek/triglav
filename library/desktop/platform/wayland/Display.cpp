@@ -84,7 +84,7 @@ Display::Display() :
     m_registry(wl_display_get_registry(m_display)),
     m_xkbContext(xkb_context_new(XKB_CONTEXT_NO_FLAGS))
 {
-   m_registryListener.global = [](void* data, wl_registry* wl_registry, const uint32_t name, const char* interface,
+   m_registryListener.global = [](void* data, [[maybe_unused]] wl_registry* wl_registry, const uint32_t name, const char* interface,
                                   const uint32_t version) {
       auto* display = static_cast<Display*>(data);
       assert(display->m_registry == wl_registry);
@@ -93,13 +93,13 @@ Display::Display() :
 
    m_registryListener.global_remove = [](void* /*data*/, struct wl_registry* /*wl_registry*/, uint32_t /*name*/) {};
 
-   m_wmBaseListener.ping = [](void* data, xdg_wm_base* xdg_wm_base, const uint32_t serial) {
+   m_wmBaseListener.ping = [](void* data, [[maybe_unused]] xdg_wm_base* xdg_wm_base, const uint32_t serial) {
       const auto* display = static_cast<Display*>(data);
       assert(display->m_wmBase == xdg_wm_base);
       display->on_xdg_ping(serial);
    };
 
-   m_seatListener.capabilities = [](void* data, wl_seat* seat, const uint32_t capabilities) {
+   m_seatListener.capabilities = [](void* data, [[maybe_unused]] wl_seat* seat, const uint32_t capabilities) {
       auto* display = static_cast<Display*>(data);
       assert(display->m_seat == seat);
       display->on_seat_capabilities(capabilities);
@@ -107,101 +107,105 @@ Display::Display() :
 
    m_seatListener.name = [](void*, wl_seat*, const char*) {};
 
-   m_pointerListener.enter = [](void* data, wl_pointer* wl_pointer, uint32_t serial, wl_surface* surface, wl_fixed_t surface_x,
-                                wl_fixed_t surface_y) {
+   m_pointerListener.enter = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t serial, wl_surface* surface,
+                                wl_fixed_t surface_x, wl_fixed_t surface_y) {
       auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_enter(serial, surface, surface_x, surface_y);
    };
 
-   m_pointerListener.leave = [](void* data, wl_pointer* wl_pointer, uint32_t serial, wl_surface* surface) {
+   m_pointerListener.leave = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t serial, wl_surface* surface) {
       auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_leave(serial, surface);
    };
 
-   m_pointerListener.motion = [](void* data, struct wl_pointer* wl_pointer, uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y) {
+   m_pointerListener.motion = [](void* data, [[maybe_unused]] struct wl_pointer* wl_pointer, uint32_t time, wl_fixed_t surface_x,
+                                 wl_fixed_t surface_y) {
       const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_motion(time, surface_x, surface_y);
    };
 
-   m_pointerListener.button = [](void* data, wl_pointer* wl_pointer, uint32_t serial, uint32_t time, uint32_t button, uint32_t state) {
+   m_pointerListener.button = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t serial, uint32_t time, uint32_t button,
+                                 uint32_t state) {
       const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_button(serial, time, button, state);
    };
 
-   m_pointerListener.axis = [](void* data, wl_pointer* wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
+   m_pointerListener.axis = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t time, uint32_t axis, wl_fixed_t value) {
       const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_axis(time, axis, value);
    };
 
-   m_pointerListener.frame = [](void* data, struct wl_pointer* wl_pointer) {
-      const auto* display = static_cast<Display*>(data);
+   m_pointerListener.frame = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer) {
+      [[maybe_unused]] const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_pointerListener.axis_source = [](void* data, wl_pointer* wl_pointer, uint32_t axis_source) {
-      const auto* display = static_cast<Display*>(data);
+   m_pointerListener.axis_source = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t /*axis_source*/) {
+      [[maybe_unused]] const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_pointerListener.axis_stop = [](void* data, wl_pointer* wl_pointer, uint32_t time, uint32_t axis) {
-      const auto* display = static_cast<Display*>(data);
+   m_pointerListener.axis_stop = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t /*time*/, uint32_t /*axis*/) {
+      [[maybe_unused]] const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_pointerListener.axis_discrete = [](void* data, wl_pointer* wl_pointer, uint32_t axis, int32_t discrete) {
-      const auto* display = static_cast<Display*>(data);
+   m_pointerListener.axis_discrete = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t /*axis*/, int32_t /*discrete*/) {
+      [[maybe_unused]] const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_pointerListener.axis_value120 = [](void* data, wl_pointer* wl_pointer, uint32_t axis, int32_t value120) {
-      const auto* display = static_cast<Display*>(data);
+   m_pointerListener.axis_value120 = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t /*axis*/, int32_t /*value120*/) {
+      [[maybe_unused]] const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_pointerListener.axis_relative_direction = [](void* data, struct wl_pointer* wl_pointer, uint32_t axis, uint32_t direction) {
-      const auto* display = static_cast<Display*>(data);
+   m_pointerListener.axis_relative_direction = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, uint32_t /*axis*/,
+                                                  uint32_t /*direction*/) {
+      [[maybe_unused]] const auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
    };
 
-   m_relativePointerListener.relative_motion = [](void* data, zwp_relative_pointer_v1* zwp_relative_pointer_v1, uint32_t utime_hi,
-                                                  uint32_t utime_lo, wl_fixed_t dx, wl_fixed_t dy, wl_fixed_t dx_unaccel,
+   m_relativePointerListener.relative_motion = [](void* data, [[maybe_unused]] zwp_relative_pointer_v1* zwp_relative_pointer_v1,
+                                                  uint32_t utime_hi, uint32_t utime_lo, wl_fixed_t dx, wl_fixed_t dy, wl_fixed_t dx_unaccel,
                                                   wl_fixed_t dy_unaccel) {
       const auto* display = static_cast<Display*>(data);
       assert(display->m_relativePointer == zwp_relative_pointer_v1);
       display->on_pointer_relative_motion(utime_hi, utime_lo, dx, dy, dx_unaccel, dy_unaccel);
    };
 
-   m_keyboardListener.keymap = [](void* data, struct wl_keyboard* wl_keyboard, uint32_t format, int32_t fd, uint32_t size) {
+   m_keyboardListener.keymap = [](void* data, [[maybe_unused]] wl_keyboard* /*wl_keyboard*/, uint32_t format, int32_t fd, uint32_t size) {
       auto* display = static_cast<Display*>(data);
       display->on_keymap(format, fd, size);
    };
 
-   m_keyboardListener.enter = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, wl_surface* surface, wl_array* keys) {
+   m_keyboardListener.enter = [](void* data, wl_keyboard* /*wl_keyboard*/, uint32_t serial, wl_surface* surface, wl_array* keys) {
       auto* display = static_cast<Display*>(data);
       display->on_keyboard_enter(serial, surface, keys);
    };
 
-   m_keyboardListener.leave = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, wl_surface* surface) {
+   m_keyboardListener.leave = [](void* /*data*/, wl_keyboard* /*wl_keyboard*/, uint32_t /*serial*/, wl_surface* /*surface*/) {
       // TODO: Handle
    };
 
-   m_keyboardListener.key = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
+   m_keyboardListener.key = [](void* data, [[maybe_unused]] wl_keyboard* wl_keyboard, uint32_t serial, uint32_t time, uint32_t key,
+                               uint32_t state) {
       const auto* display = static_cast<Display*>(data);
       display->on_key(serial, time, key, state);
    };
 
-   m_keyboardListener.modifiers = [](void* data, wl_keyboard* wl_keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched,
-                                     uint32_t mods_locked, uint32_t group) {
+   m_keyboardListener.modifiers = [](void* /*data*/, wl_keyboard* /*wl_keyboard*/, uint32_t /*serial*/, uint32_t /*mods_depressed*/,
+                                     uint32_t /*mods_latched*/, uint32_t /*mods_locked*/, uint32_t /*group*/) {
       // TODO: Handle
       std::cout << "modifiers state changes\n";
    };
 
-   m_keyboardListener.repeat_info = [](void* data, wl_keyboard* wl_keyboard, int32_t rate, int32_t delay) {
+   m_keyboardListener.repeat_info = [](void* /*data*/, wl_keyboard* /*wl_keyboard*/, int32_t /*rate*/, int32_t /*delay*/) {
       // TODO: Handle
    };
 
@@ -326,7 +330,7 @@ void Display::dispatch_messages()
    wl_display_dispatch_pending(m_display);
 }
 
-std::shared_ptr<ISurface> Display::create_surface(int width, int height, WindowAttributeFlags flags)
+std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, const WindowAttributeFlags /*flags*/)
 {
    return std::make_shared<Surface>(*this, Dimension{width, height});
 }
@@ -344,7 +348,7 @@ void Display::on_pointer_relative_motion(uint32_t /*utime_hi*/, uint32_t /*utime
    m_pointerSurface->event_OnMouseRelativeMove.publish(Vector2{static_cast<float>(dx) / 256.0f, static_cast<float>(dy) / 256.0f});
 }
 
-void Display::on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const
+void Display::on_pointer_axis(uint32_t /*time*/, uint32_t /*axis*/, int32_t value) const
 {
    if (m_pointerSurface == nullptr)
       return;
@@ -352,7 +356,7 @@ void Display::on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const
    m_pointerSurface->event_OnMouseWheelTurn.publish(static_cast<float>(value) / 2560.0f);
 }
 
-void Display::on_pointer_button(uint32_t serial, uint32_t time, const uint32_t button, const uint32_t state) const
+void Display::on_pointer_button(const uint32_t /*serial*/, const uint32_t /*time*/, const uint32_t button, const uint32_t state) const
 {
    if (m_pointerSurface == nullptr)
       return;
@@ -364,7 +368,7 @@ void Display::on_pointer_button(uint32_t serial, uint32_t time, const uint32_t b
    }
 }
 
-void Display::on_keyboard_enter(uint32_t serial, wl_surface* surface, wl_array* wls)
+void Display::on_keyboard_enter(const uint32_t /*serial*/, wl_surface* surface, wl_array* /*wls*/)
 {
    if (not m_surfaceMap.contains(surface))
       return;
@@ -386,7 +390,7 @@ void Display::on_keymap(const uint32_t format, const int32_t fd, const uint32_t 
    close(fd);
 }
 
-void Display::on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const
+void Display::on_key(const uint32_t /*serial*/, const uint32_t /*time*/, const uint32_t key, const uint32_t state) const
 {
    if (m_keyboardSurface == nullptr)
       return;

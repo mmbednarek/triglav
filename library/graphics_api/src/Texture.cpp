@@ -283,7 +283,7 @@ void Texture::set_debug_name(const std::string_view name)
    debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*image);
    debugUtilsObjectName.objectType = VK_OBJECT_TYPE_IMAGE;
    debugUtilsObjectName.pObjectName = name.data();
-   const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(image.parent(), &debugUtilsObjectName);
+   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(image.parent(), &debugUtilsObjectName);
    assert(result == VK_SUCCESS);
 
    std::string viewName{name};
@@ -292,7 +292,7 @@ void Texture::set_debug_name(const std::string_view name)
    debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(m_textureView.vulkan_image_view());
    debugUtilsObjectName.objectType = VK_OBJECT_TYPE_IMAGE_VIEW;
    debugUtilsObjectName.pObjectName = viewName.data();
-   const auto result2 = vulkan::vkSetDebugUtilsObjectNameEXT(image.parent(), &debugUtilsObjectName);
+   [[maybe_unused]] const auto result2 = vulkan::vkSetDebugUtilsObjectNameEXT(image.parent(), &debugUtilsObjectName);
    assert(result2 == VK_SUCCESS);
 }
 
