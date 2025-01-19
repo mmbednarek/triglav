@@ -70,7 +70,8 @@ void ShadingRenderer::draw(render_core::FrameResources& resources, graphics_api:
       shadowsTexture = &m_placeholderTexture;
    }
 
-   std::array shadowMaps{&smBuffer1.texture("sm"_name), &smBuffer2.texture("sm"_name), &smBuffer3.texture("sm"_name)};
+   std::array<const graphics_api::Texture*, 3> shadowMaps{&smBuffer1.texture("sm"_name), &smBuffer2.texture("sm"_name),
+                                                          &smBuffer3.texture("sm"_name)};
 
    PushConstant pushConstant{
       .lightPosition = lightPosition,

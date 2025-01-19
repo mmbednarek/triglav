@@ -49,15 +49,28 @@ void GenerateCommandListPass::visit(const detail::cmd::DrawIndexedPrimitives& cm
    m_commandList.draw_indexed_primitives(cmd.indexCount, cmd.indexOffset, cmd.vertexOffset, cmd.instanceCount, cmd.instanceOffset);
 }
 
+void GenerateCommandListPass::visit(const detail::cmd::DrawIndexedIndirectWithCount& cmd) const
+{
+   m_commandList.draw_indexed_indirect_with_count(m_context.resolve_buffer_ref(m_resourceStorage, cmd.drawCallBuffer, m_frameIndex),
+                                                  m_context.resolve_buffer_ref(m_resourceStorage, cmd.countBuffer, m_frameIndex),
+                                                  cmd.maxDrawCalls, cmd.stride);
+}
+
 void GenerateCommandListPass::visit(const detail::cmd::DrawIndirectWithCount& cmd) const
 {
    m_commandList.draw_indirect_with_count(m_context.resolve_buffer_ref(m_resourceStorage, cmd.drawCallBuffer, m_frameIndex),
                                           m_context.resolve_buffer_ref(m_resourceStorage, cmd.countBuffer, m_frameIndex), cmd.maxDrawCalls,
                                           cmd.stride);
 }
+
 void GenerateCommandListPass::visit(const detail::cmd::Dispatch& cmd) const
 {
    m_commandList.dispatch(cmd.dims.x, cmd.dims.y, cmd.dims.z);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::DispatchIndirect& cmd) const
+{
+   m_commandList.dispatch_indirect(m_context.resolve_buffer_ref(m_resourceStorage, cmd.indirectBuffer, m_frameIndex));
 }
 
 void GenerateCommandListPass::visit(const detail::cmd::BindDescriptors& cmd) const

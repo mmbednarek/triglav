@@ -88,7 +88,7 @@ class BindlessScene
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
    [[nodiscard]] graphics_api::Pipeline& scene_pipeline(graphics_api::RenderTarget& renderTarget);
-   [[nodiscard]] std::vector<graphics_api::Texture*>& scene_textures();
+   [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
 
  private:
@@ -105,7 +105,7 @@ class BindlessScene
    std::vector<SceneObject> m_pendingObjects;
    std::map<ModelName, BindlessMeshInfo> m_models;
    std::map<TextureName, u32> m_textureIds;
-   std::vector<graphics_api::Texture*> m_sceneTextures;
+   std::vector<const graphics_api::Texture*> m_sceneTextures;
    std::vector<render_core::TextureRef> m_sceneTextureRefs;
    std::optional<graphics_api::Pipeline> m_scenePipeline;
    bool m_shouldUpdatePSO{false};

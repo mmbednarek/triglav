@@ -28,6 +28,7 @@ renderer_sources = files([
   'include/triglav/renderer/StatisticManager.hpp',
   'include/triglav/renderer/TextRenderer.hpp',
   'include/triglav/renderer/TextureHelper.hpp',
+  'include/triglav/renderer/UpdateUserInterfaceJob.hpp',
   'include/triglav/renderer/UpdateViewParamsJob.hpp',
   'include/triglav/renderer/Util.hpp',
   'src/node/AmbientOcclusion.cpp',
@@ -84,6 +85,7 @@ renderer_sources = files([
   'src/SpriteRenderer.cpp',
   'src/TextRenderer.cpp',
   'src/TextureHelper.cpp',
+  'src/UpdateUserInterfaceJob.cpp',
   'src/UpdateViewParamsJob.cpp',
   'src/Util.cpp',
 ])

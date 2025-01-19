@@ -116,7 +116,7 @@ struct TextureMip
    u32 mipLevel;
 };
 
-using TextureRef = std::variant<TextureName, Name, FromLastFrame, External, TextureMip>;
+using TextureRef = std::variant<TextureName, Name, FromLastFrame, External, TextureMip, const graphics_api::Texture*>;
 using BufferRef = std::variant<const graphics_api::Buffer*, Name, FromLastFrame, External>;
 
 struct ExecutionBarrier

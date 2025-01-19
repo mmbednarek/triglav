@@ -48,7 +48,7 @@ Charset& Charset::add_range(Rune from, Rune to)
    return *this;
 }
 
-std::vector<u32> Charset::encode_string(std::string_view str) const
+std::vector<u32> Charset::encode_string(const std::string_view str) const
 {
    std::vector<u32> result;
    result.reserve(str.size());

@@ -188,8 +188,8 @@ void BindlessGeometry::record_commands(render_core::FrameResources& /*frameResou
    cmdList.bind_uniform_buffer(0, bindlessGeoResources.view_properties());
    cmdList.bind_storage_buffer(1, m_bindlessScene.scene_object_buffer());
 
-   cmdList.draw_indirect_with_count(m_bindlessScene.scene_object_buffer(), m_bindlessScene.count_buffer(), 100,
-                                    sizeof(BindlessSceneObject));
+   cmdList.draw_indexed_indirect_with_count(m_bindlessScene.scene_object_buffer(), m_bindlessScene.count_buffer(), 100,
+                                            sizeof(BindlessSceneObject));
 
    cmdList.end_render_pass();
 
@@ -318,8 +318,8 @@ void BindlessGeometry::record_commands(render_core::FrameResources& /*frameResou
    cmdList.bind_storage_buffer(5, m_bindlessScene.material_template_properties(2));
    cmdList.bind_storage_buffer(6, m_bindlessScene.material_template_properties(3));
 
-   cmdList.draw_indirect_with_count(bindlessGeoResources.m_visibleObjects.buffer(), bindlessGeoResources.m_countBuffer, 100,
-                                    sizeof(BindlessSceneObject));
+   cmdList.draw_indexed_indirect_with_count(bindlessGeoResources.m_visibleObjects.buffer(), bindlessGeoResources.m_countBuffer, 100,
+                                            sizeof(BindlessSceneObject));
 
    cmdList.end_render_pass();
 }

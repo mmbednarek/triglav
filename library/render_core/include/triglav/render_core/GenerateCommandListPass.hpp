@@ -27,8 +27,10 @@ class GenerateCommandListPass
    void visit(const detail::cmd::BindComputePipeline& cmd);
    void visit(const detail::cmd::DrawPrimitives& cmd) const;
    void visit(const detail::cmd::DrawIndexedPrimitives& cmd) const;
+   void visit(const detail::cmd::DrawIndexedIndirectWithCount& cmd) const;
    void visit(const detail::cmd::DrawIndirectWithCount& cmd) const;
    void visit(const detail::cmd::Dispatch& cmd) const;
+   void visit(const detail::cmd::DispatchIndirect& cmd) const;
    void visit(const detail::cmd::BindDescriptors& cmd) const;
    void visit(const detail::cmd::BindVertexBuffer& cmd) const;
    void visit(const detail::cmd::BindIndexBuffer& cmd) const;

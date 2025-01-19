@@ -114,10 +114,23 @@ void BarrierInsertionPass::visit(const detail::cmd::EndRenderPass& cmd)
    this->default_visit(cmd);
 }
 
+void BarrierInsertionPass::visit(const detail::cmd::DrawIndexedIndirectWithCount& cmd)
+{
+   this->setup_buffer_barrier(cmd.drawCallBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.countBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->default_visit(cmd);
+}
+
 void BarrierInsertionPass::visit(const detail::cmd::DrawIndirectWithCount& cmd)
 {
    this->setup_buffer_barrier(cmd.drawCallBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
    this->setup_buffer_barrier(cmd.countBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->default_visit(cmd);
+}
+
+void BarrierInsertionPass::visit(const detail::cmd::DispatchIndirect& cmd)
+{
+   this->setup_buffer_barrier(cmd.indirectBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
    this->default_visit(cmd);
 }
 

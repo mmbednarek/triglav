@@ -203,6 +203,7 @@ Result<DescriptorPool> Device::create_descriptor_pool(std::span<const std::pair<
 Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_t size)
 {
    assert(size != 0);
+   assert(usage != BufferUsage::None);
 
    VkBufferCreateInfo bufferInfo{};
    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;

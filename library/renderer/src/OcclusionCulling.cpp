@@ -53,8 +53,8 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
       ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
 
-      ctx.draw_indirect_with_count(&m_bindlessScene.scene_object_buffer(), &m_bindlessScene.count_buffer(), g_bindlessObjectLimit,
-                                   sizeof(BindlessSceneObject));
+      ctx.draw_indexed_indirect_with_count(&m_bindlessScene.scene_object_buffer(), &m_bindlessScene.count_buffer(), g_bindlessObjectLimit,
+                                           sizeof(BindlessSceneObject));
    }
 
    // Copy depth buffer to the highest mip of Hi-Z

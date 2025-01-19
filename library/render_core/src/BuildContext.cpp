@@ -355,7 +355,7 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
                const gapi::Texture& texture = this->resolve_texture_ref(storage, desc.texRef, frameIndex);
                writer.set_sampled_texture(index, texture, m_device.sampler_cache().find_sampler(texture.sampler_properties()));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SampledTextureArray>) {
-               std::vector<gapi::Texture*> textures;
+               std::vector<const gapi::Texture*> textures;
                textures.reserve(desc.texRefs.size());
                for (const auto& texRef : desc.texRefs) {
                   textures.push_back(&this->resolve_texture_ref(storage, texRef, frameIndex));
@@ -410,6 +410,11 @@ graphics_api::SamplerProperties& BuildContext::texture_sampler_properties(const 
    return this->declaration<detail::decl::Texture>(name).samplerProperties;
 }
 
+void BuildContext::set_sampler_properties(const Name name, const graphics_api::SamplerProperties& samplerProps)
+{
+   this->texture_sampler_properties(name) = samplerProps;
+}
+
 gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass,
                                                         const u32 frameIndex) const
 {
@@ -441,10 +446,10 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
    return info;
 }
 
-gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const
+const gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const
 {
    return std::visit(
-      [this, frameIndex, &storage]<typename TVariant>(const TVariant& var) -> gapi::Texture& {
+      [this, frameIndex, &storage]<typename TVariant>(const TVariant& var) -> const gapi::Texture& {
          if constexpr (std::is_same_v<TVariant, Name>) {
             return storage.texture(var, frameIndex);
          } else if constexpr (std::is_same_v<TVariant, External>) {
@@ -455,6 +460,8 @@ gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, Textu
             return storage.texture(var.name, (FRAMES_IN_FLIGHT_COUNT + frameIndex - 1) % FRAMES_IN_FLIGHT_COUNT);
          } else if constexpr (std::is_same_v<TVariant, TextureName>) {
             return m_resourceManager.get(var);
+         } else if constexpr (std::is_same_v<TVariant, const graphics_api::Texture*>) {
+            return *var;
          } else {
             assert(0);
          }
@@ -462,8 +469,8 @@ gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, Textu
       texRef);
 }
 
-graphics_api::TextureView& BuildContext::resolve_texture_view_ref(ResourceStorage& storage, const TextureRef texRef,
-                                                                  const u32 frameIndex) const
+const graphics_api::TextureView& BuildContext::resolve_texture_view_ref(ResourceStorage& storage, const TextureRef texRef,
+                                                                        const u32 frameIndex) const
 {
    if (std::holds_alternative<TextureMip>(texRef)) {
       const auto& textureMip = std::get<TextureMip>(texRef);
@@ -607,8 +614,17 @@ void BuildContext::draw_indexed_primitives(const u32 indexCount, const u32 index
    this->add_command<detail::cmd::DrawIndexedPrimitives>(indexCount, indexOffset, vertexOffset, instanceCount, instanceOffset);
 }
 
-void BuildContext::draw_indirect_with_count(const BufferRef drawCallBuffer, const BufferRef countBuffer, const u32 maxDrawCalls,
-                                            const u32 stride)
+void BuildContext::draw_indexed_indirect_with_count(const BufferRef drawCallBuffer, const BufferRef countBuffer, const u32 maxDrawCalls,
+                                                    const u32 stride)
+{
+   this->prepare_buffer(drawCallBuffer, gapi::BufferUsage::Indirect);
+   this->prepare_buffer(countBuffer, gapi::BufferUsage::Indirect);
+
+   this->handle_pending_graphic_state();
+   this->add_command<detail::cmd::DrawIndexedIndirectWithCount>(drawCallBuffer, countBuffer, maxDrawCalls, stride);
+}
+
+void BuildContext::draw_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride)
 {
    this->prepare_buffer(drawCallBuffer, gapi::BufferUsage::Indirect);
    this->prepare_buffer(countBuffer, gapi::BufferUsage::Indirect);
@@ -635,6 +651,20 @@ void BuildContext::dispatch(const Vector3i dims)
    this->handle_descriptor_bindings();
 
    this->add_command<detail::cmd::Dispatch>(dims);
+
+   ++m_descriptorCounts.totalDescriptorSets;
+}
+
+void BuildContext::dispatch_indirect(const BufferRef indirectBuffer)
+{
+   this->prepare_buffer(indirectBuffer, gapi::BufferUsage::Indirect);
+
+   this->add_command<detail::cmd::BindComputePipeline>(m_computePipelineState);
+   m_computePipelineState.descriptorState.descriptorCount = 0;
+
+   this->handle_descriptor_bindings();
+
+   this->add_command<detail::cmd::DispatchIndirect>(indirectBuffer);
 
    ++m_descriptorCounts.totalDescriptorSets;
 }

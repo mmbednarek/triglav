@@ -1,5 +1,7 @@
 #include "stage/PostProcessStage.hpp"
 
+#include "UpdateUserInterfaceJob.hpp"
+
 #include "triglav/render_core/BuildContext.hpp"
 
 namespace triglav::renderer::stage {
@@ -12,6 +14,11 @@ struct PostProcessingPushConstants
 };
 
 using namespace name_literals;
+
+PostProcessStage::PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJob) :
+    m_updateUserInterfaceJob(updateUserInterfaceJob)
+{
+}
 
 void PostProcessStage::build_stage(render_core::BuildContext& ctx) const
 {
@@ -40,6 +47,8 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx) const
    ctx.set_is_blending_enabled(false);
 
    ctx.draw_full_screen_quad();
+
+   m_updateUserInterfaceJob.render_ui(ctx);
 
    ctx.end_render_pass();
 

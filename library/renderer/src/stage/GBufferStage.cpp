@@ -111,8 +111,8 @@ void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 
    ctx.set_is_blending_enabled(false);
 
-   ctx.draw_indirect_with_count("occlusion_culling.visible_objects"_external, "occlusion_culling.count_buffer"_external, 128,
-                                sizeof(BindlessSceneObject));
+   ctx.draw_indexed_indirect_with_count("occlusion_culling.visible_objects"_external, "occlusion_culling.count_buffer"_external, 128,
+                                        sizeof(BindlessSceneObject));
 }
 
 }// namespace triglav::renderer::stage

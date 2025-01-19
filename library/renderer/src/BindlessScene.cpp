@@ -193,7 +193,7 @@ graphics_api::Pipeline& BindlessScene::scene_pipeline(graphics_api::RenderTarget
    return *m_scenePipeline;
 }
 
-std::vector<graphics_api::Texture*>& BindlessScene::scene_textures()
+std::vector<const graphics_api::Texture*>& BindlessScene::scene_textures()
 {
    return m_sceneTextures;
 }

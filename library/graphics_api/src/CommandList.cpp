@@ -176,7 +176,12 @@ void CommandList::dispatch(const u32 x, const u32 y, const u32 z)
    vkCmdDispatch(m_commandBuffer, x, y, z);
 }
 
-void CommandList::bind_vertex_buffer(const Buffer& buffer, uint32_t layoutIndex) const
+void CommandList::dispatch_indirect(const Buffer& indirectBuffer) const
+{
+   vkCmdDispatchIndirect(m_commandBuffer, indirectBuffer.vulkan_buffer(), 0);
+}
+
+void CommandList::bind_vertex_buffer(const Buffer& buffer, const u32 layoutIndex) const
 {
    const std::array buffers{buffer.vulkan_buffer()};
    constexpr std::array<VkDeviceSize, 1> offsets{0};
@@ -195,7 +200,7 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
 }
 
-void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const
+void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, const u32 srcOffset, const u32 dstOffset, const u32 size) const
 {
    assert(size > 0);
 
@@ -376,12 +381,19 @@ void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer,
                                      static_cast<u32>(writes.size()), writes.data());
 }
 
-void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
-                                           const u32 stride)
+void CommandList::draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
+                                                   const u32 stride)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
    vulkan::vkCmdDrawIndexedIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls,
                                          stride);
+}
+
+void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
+                                           const u32 stride)
+{
+   this->handle_pending_descriptors(PipelineType::Graphics);
+   vkCmdDrawIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls, stride);
 }
 
 void CommandList::update_buffer(const Buffer& buffer, const u32 offset, const u32 size, const void* data) const
@@ -492,7 +504,7 @@ void CommandList::bind_texture(const u32 binding, const Texture& texture)
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_texture_array(const u32 binding, const std::span<Texture*> textures)
+void CommandList::bind_texture_array(const u32 binding, const std::span<const Texture*> textures)
 {
    m_descriptorWriter.set_texture_array(binding, textures);
    m_hasPendingDescriptors = true;

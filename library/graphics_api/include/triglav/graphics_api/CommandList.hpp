@@ -52,6 +52,7 @@ class CommandList
    void draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance);
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset, int instanceCount = 1, int firstInstance = 0);
    void dispatch(u32 x, u32 y, u32 z);
+   void dispatch_indirect(const Buffer& indirectBuffer) const;
    void bind_vertex_buffer(const Buffer& buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer& buffer) const;
    void copy_buffer(const Buffer& source, const Buffer& dest) const;
@@ -73,6 +74,7 @@ class CommandList
    void reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const;
    void write_timestamp(PipelineStage stage, const TimestampArray& timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
+   void draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void update_buffer(const Buffer& buffer, u32 offset, u32 size, const void* data) const;
 
@@ -95,7 +97,7 @@ class CommandList
    void bind_texture_image(u32 binding, const Texture& texture);
    void bind_texture_view_image(u32 binding, const TextureView& texture);
    void bind_texture(u32 binding, const Texture& texture);
-   void bind_texture_array(u32 binding, std::span<Texture*> textures);
+   void bind_texture_array(u32 binding, std::span<const Texture*> textures);
    void bind_storage_image(u32 binding, const Texture& texture);
    void bind_storage_image_view(u32 binding, const TextureView& texture);
 

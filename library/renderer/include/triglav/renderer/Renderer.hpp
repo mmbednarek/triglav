@@ -10,6 +10,7 @@
 #include "RenderingJob.hpp"
 #include "Scene.hpp"
 #include "SpriteRenderer.hpp"
+#include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
 
 #include "triglav/desktop/ISurfaceEventListener.hpp"
@@ -106,6 +107,7 @@ class Renderer
    render_core::PipelineCache m_pipelineCache;
    render_core::JobGraph m_jobGraph;
    UpdateViewParamsJob m_updateViewParamsJob;
+   UpdateUserInterfaceJob m_updateUserInterfaceJob;
    OcclusionCulling m_occlusionCulling;
    RenderingJob m_renderingJob;
    u32 m_frameIndex{0};

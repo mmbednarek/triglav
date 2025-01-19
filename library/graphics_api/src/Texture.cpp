@@ -209,6 +209,11 @@ TextureView& Texture::view()
    return m_textureView;
 }
 
+const TextureView& Texture::view() const
+{
+   return m_textureView;
+}
+
 void Texture::generate_mip_maps_internal(const CommandList& cmdList) const
 {
    TextureBarrierInfo barrier{

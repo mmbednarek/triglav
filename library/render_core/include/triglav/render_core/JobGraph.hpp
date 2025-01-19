@@ -45,7 +45,7 @@ class JobGraph
 
    void add_dependency(Name target, Name dependency);
    void add_dependency_to_previous_frame(Name target, Name dependency);
-   void build_jobs();
+   void build_jobs(Name targetJob);
    [[nodiscard]] graphics_api::Semaphore& semaphore(Name waitJob, Name signalJob, u32 frameIndex);
    [[nodiscard]] graphics_api::SemaphoreArrayView wait_semaphores(Name waitJob, u32 frameIndex);
    [[nodiscard]] graphics_api::SemaphoreArrayView signal_semaphores(Name signalJob, u32 frameIndex);

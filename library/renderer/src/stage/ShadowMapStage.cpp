@@ -16,6 +16,18 @@ namespace gapi = graphics_api;
 static render_core::VertexLayout g_vertexLayout =
    render_core::VertexLayout(sizeof(geometry::Vertex)).add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
 
+constexpr graphics_api::SamplerProperties g_shadowMapProps{
+   .minFilter = graphics_api::FilterType::Linear,
+   .magFilter = graphics_api::FilterType::Linear,
+   .addressU = graphics_api::TextureAddressMode::Clamp,
+   .addressV = graphics_api::TextureAddressMode::Clamp,
+   .addressW = graphics_api::TextureAddressMode::Clamp,
+   .enableAnisotropy = false,
+   .maxLod = 1.0f,
+};
+
+constexpr Vector2i g_shadowMapSize{4096, 4096};
+
 ShadowMapStage::ShadowMapStage(Scene& scene, BindlessScene& bindlessScene, UpdateViewParamsJob& updateViewParamsJob) :
     m_scene(scene),
     m_bindlessScene(bindlessScene),
@@ -29,21 +41,13 @@ ShadowMapStage::ShadowMapStage(Scene& scene, BindlessScene& bindlessScene, Updat
 
 void ShadowMapStage::build_stage(render_core::BuildContext& ctx) const
 {
-   ctx.declare_sized_depth_target("shadow_map.cascade0"_name, {4096, 4096}, GAPI_FORMAT(D, UNorm16));
-   ctx.declare_sized_depth_target("shadow_map.cascade1"_name, {4096, 4096}, GAPI_FORMAT(D, UNorm16));
-   ctx.declare_sized_depth_target("shadow_map.cascade2"_name, {4096, 4096}, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_sized_depth_target("shadow_map.cascade0"_name, g_shadowMapSize, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_sized_depth_target("shadow_map.cascade1"_name, g_shadowMapSize, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_sized_depth_target("shadow_map.cascade2"_name, g_shadowMapSize, GAPI_FORMAT(D, UNorm16));
 
-   graphics_api::SamplerProperties shadowMapProps{};
-   shadowMapProps.minFilter = graphics_api::FilterType::Linear;
-   shadowMapProps.magFilter = graphics_api::FilterType::Linear;
-   shadowMapProps.addressU = graphics_api::TextureAddressMode::Clamp;
-   shadowMapProps.addressV = graphics_api::TextureAddressMode::Clamp;
-   shadowMapProps.addressW = graphics_api::TextureAddressMode::Clamp;
-   shadowMapProps.enableAnisotropy = false;
-   shadowMapProps.maxLod = 1.0f;
-   ctx.texture_sampler_properties("shadow_map.cascade0"_name) = shadowMapProps;
-   ctx.texture_sampler_properties("shadow_map.cascade1"_name) = shadowMapProps;
-   ctx.texture_sampler_properties("shadow_map.cascade2"_name) = shadowMapProps;
+   ctx.set_sampler_properties("shadow_map.cascade0"_name, g_shadowMapProps);
+   ctx.set_sampler_properties("shadow_map.cascade1"_name, g_shadowMapProps);
+   ctx.set_sampler_properties("shadow_map.cascade2"_name, g_shadowMapProps);
 
    this->render_cascade(ctx, "shadow_map.pass.cascade0"_name, "shadow_map.cascade0"_name, "shadow_map.view_properties.cascade0"_external);
    this->render_cascade(ctx, "shadow_map.pass.cascade1"_name, "shadow_map.cascade1"_name, "shadow_map.view_properties.cascade1"_external);
@@ -67,7 +71,8 @@ void ShadowMapStage::render_cascade(render_core::BuildContext& ctx, const Name p
    ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
 
-   ctx.draw_indirect_with_count(&m_bindlessScene.scene_object_buffer(), &m_bindlessScene.count_buffer(), 128, sizeof(BindlessSceneObject));
+   ctx.draw_indexed_indirect_with_count(&m_bindlessScene.scene_object_buffer(), &m_bindlessScene.count_buffer(), 128,
+                                        sizeof(BindlessSceneObject));
 }
 
 void ShadowMapStage::on_resource_definition(render_core::BuildContext& ctx) const
@@ -82,6 +87,7 @@ void ShadowMapStage::on_resource_definition(render_core::BuildContext& ctx) cons
    ctx.declare_buffer("shadow_map.view_properties.cascade2"_name, sizeof(Matrix4x4));
    ctx.declare_staging_buffer("shadow_map.view_properties.cascade2.staging"_name, sizeof(Matrix4x4));
 }
+
 void ShadowMapStage::on_view_properties_changed(render_core::BuildContext& ctx) const
 {
    ctx.copy_buffer("shadow_map.matrices.staging"_name, "shadow_map.matrices"_name);

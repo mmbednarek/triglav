@@ -161,6 +161,12 @@ resources:
     source: "shader/bindless_geometry/hi_z_comp.spv"
   - name: "common/full_screen.vshader"
     source: "shader/full_screen_vs.spv"
+  - name: "text/generate_geometry.cshader"
+    source: "shader/text/generate_geometry.spv"
+  - name: "text/render.vshader"
+    source: "shader/text/render_vs.spv"
+  - name: "text/render.fshader"
+    source: "shader/text/render_fs.spv"
   - name: "rt_general.rgenshader"
     source: "shader/ray_tracing/ray_generation.spv"
     properties:

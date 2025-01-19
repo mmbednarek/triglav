@@ -36,6 +36,7 @@ class Texture
    [[nodiscard]] Result<TextureView> create_mip_view(const Device& device, u32 mipLevel) const;
    [[nodiscard]] u32 mip_count() const;
    [[nodiscard]] TextureView& view();
+   [[nodiscard]] const TextureView& view() const;
 
    void set_anisotropy_state(bool isEnabled);
    void set_lod(float min, float max);

@@ -116,11 +116,13 @@ class BuildContext
    void draw_primitives(u32 vertexCount, u32 vertexOffset, u32 instanceCount = 1, u32 instanceOffset = 0);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset);
+   void draw_indexed_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_full_screen_quad();
 
    // Execution
    void dispatch(Vector3i dims);
+   void dispatch_indirect(BufferRef indirectBuffer);
 
    // Transfer
    void fill_buffer_raw(Name buffName, const void* ptr, MemorySize size);
@@ -165,6 +167,7 @@ class BuildContext
                       graphics_api::BufferUsageFlags flags);
 
    [[nodiscard]] graphics_api::SamplerProperties& texture_sampler_properties(Name name);
+   void set_sampler_properties(Name name, const graphics_api::SamplerProperties& samplerProps);
 
    template<typename TVertex>
    void draw_mesh(const graphics_api::Mesh<TVertex>& mesh)
@@ -188,8 +191,8 @@ class BuildContext
 
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& beginRenderPass,
                                                      u32 frameIndex) const;
-   graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
-   graphics_api::TextureView& resolve_texture_view_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
+   const graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
+   const graphics_api::TextureView& resolve_texture_view_ref(ResourceStorage& storage, TextureRef texRef, u32 frameIndex) const;
    const graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buffRef, u32 frameIndex) const;
    void handle_pending_graphic_state();
 

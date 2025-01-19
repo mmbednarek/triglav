@@ -103,6 +103,14 @@ struct DrawIndexedPrimitives
    u32 instanceOffset{};
 };
 
+struct DrawIndexedIndirectWithCount
+{
+   BufferRef drawCallBuffer{};
+   BufferRef countBuffer{};
+   u32 maxDrawCalls{};
+   u32 stride{};
+};
+
 struct DrawIndirectWithCount
 {
    BufferRef drawCallBuffer{};
@@ -114,6 +122,11 @@ struct DrawIndirectWithCount
 struct Dispatch
 {
    Vector3i dims;
+};
+
+struct DispatchIndirect
+{
+   BufferRef indirectBuffer{};
 };
 
 struct CopyTextureToBuffer
@@ -190,11 +203,11 @@ struct PushConstant
 
 }// namespace cmd
 
-using Command =
-   std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
-                cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
-                cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier,
-                cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond,
-                cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant>;
+using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
+                             cmd::DrawIndexedIndirectWithCount, cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::DispatchIndirect,
+                             cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
+                             cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
+                             cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond,
+                             cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant>;
 
 }// namespace triglav::render_core::detail

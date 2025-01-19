@@ -34,7 +34,7 @@ class TextRenderer
    TextObject create_text_object(TypefaceName typefaceName, int fontSize, std::string_view content);
    void draw_text(graphics_api::CommandList& cmdList, const TextObject& textObject, const glm::vec2& viewportSize,
                   const glm::vec2& position, const glm::vec4& color) const;
-   void update_text(TextObject& textObject, std::string_view content);
+   void update_text(TextObject& textObject, std::string_view content) const;
 
    [[nodiscard]] const graphics_api::Pipeline& pipeline() const;
 

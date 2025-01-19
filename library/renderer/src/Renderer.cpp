@@ -22,13 +22,13 @@
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_core/ResourceStorage.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
 #include <spdlog/spdlog.h>
-#include <triglav/render_core/ResourceStorage.hpp>
 
 using triglav::ResourceType;
 using triglav::desktop::Key;
@@ -120,6 +120,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_pipelineCache(m_device, m_resourceManager),
     m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage, {resolution.width, resolution.height}),
     m_updateViewParamsJob(m_scene),
+    m_updateUserInterfaceJob(m_device, m_glyphCache, m_uiViewport),
     m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
     m_frameFences{
        GAPI_CHECK(m_device.create_fence()),
@@ -154,10 +155,13 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
    m_renderingJob.emplace_stage<stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
    m_renderingJob.emplace_stage<stage::ShadingStage>();
-   m_renderingJob.emplace_stage<stage::PostProcessStage>();
+   m_renderingJob.emplace_stage<stage::PostProcessStage>(m_updateUserInterfaceJob);
 
    auto& updateViewParamsCtx = m_jobGraph.add_job(UpdateViewParamsJob::JobName);
    m_updateViewParamsJob.build_job(updateViewParamsCtx);
+
+   auto& updateUserInterfaceCtx = m_jobGraph.add_job(UpdateUserInterfaceJob::JobName);
+   m_updateUserInterfaceJob.build_job(updateUserInterfaceCtx);
 
    auto& renderingCtx = m_jobGraph.add_job(RenderingJob::JobName);
    m_renderingJob.build_job(renderingCtx);
@@ -167,13 +171,15 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_jobGraph.add_external_job("job.present_swapchain_image"_name);
 
    m_jobGraph.add_dependency_to_previous_frame(UpdateViewParamsJob::JobName, UpdateViewParamsJob::JobName);
+   m_jobGraph.add_dependency_to_previous_frame(UpdateUserInterfaceJob::JobName, UpdateUserInterfaceJob::JobName);
    m_jobGraph.add_dependency(RenderingJob::JobName, UpdateViewParamsJob::JobName);
+   m_jobGraph.add_dependency(RenderingJob::JobName, UpdateUserInterfaceJob::JobName);
 
    m_jobGraph.add_dependency("job.copy_present_image"_name, "job.acquire_swapchain_image"_name);
    m_jobGraph.add_dependency("job.copy_present_image"_name, RenderingJob::JobName);
    m_jobGraph.add_dependency("job.present_swapchain_image"_name, "job.copy_present_image"_name);
 
-   m_jobGraph.build_jobs();
+   m_jobGraph.build_jobs(RenderingJob::JobName);
 
    this->prepare_pre_present_commands(m_resourceStorage);
 
@@ -198,10 +204,10 @@ void Renderer::update_debug_info()
    const auto framerateAvgStr = std::format("{:.1f}", StatisticManager::the().average(Stat::FramesPerSecond));
    m_uiViewport.set_text_content("info_dialog/metrics/fps_avg/value"_name, framerateAvgStr);
 
-   const auto gBufferTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
-   m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_triangles/value"_name, gBufferTriangleCountStr);
-   const auto shadingTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("shading"_name));
-   m_uiViewport.set_text_content("info_dialog/metrics/shading_triangles/value"_name, shadingTriangleCountStr);
+   // const auto gBufferTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
+   // m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_triangles/value"_name, gBufferTriangleCountStr);
+   // const auto shadingTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("shading"_name));
+   // m_uiViewport.set_text_content("info_dialog/metrics/shading_triangles/value"_name, shadingTriangleCountStr);
 
    const auto gBufferGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::GBufferGpuTime));
    m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_gpu_time/value"_name, gBufferGpuTimeStr);
@@ -291,8 +297,17 @@ void Renderer::on_render()
 
 void Renderer::on_render_new()
 {
+   static bool isFirstFrame = true;
+
    const auto deltaTime = calculate_frame_duration();
 
+   if (not isFirstFrame) {
+      StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
+   } else {
+      isFirstFrame = false;
+   }
+
+   this->update_debug_info();
    this->update_uniform_data(deltaTime);
 
    if (m_mustRecreateSwapchain) {
@@ -304,6 +319,7 @@ void Renderer::on_render_new()
    m_frameFences[m_frameIndex].await();
 
    m_updateViewParamsJob.prepare_frame(m_jobGraph, m_frameIndex, deltaTime);
+   m_updateUserInterfaceJob.prepare_frame(m_jobGraph, m_frameIndex);
 
    m_jobGraph.build_semaphores();
 

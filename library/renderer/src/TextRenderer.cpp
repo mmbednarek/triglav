@@ -1,5 +1,6 @@
 #include "TextRenderer.hpp"
 
+#include "triglav/font/Charset.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 
 #include <glm/vec3.hpp>
@@ -80,7 +81,7 @@ void TextRenderer::draw_text(graphics_api::CommandList& cmdList, const TextObjec
    cmdList.draw_primitives(static_cast<int>(textObject.vertexCount), 0);
 }
 
-void TextRenderer::update_text(TextObject& textObject, std::string_view content)
+void TextRenderer::update_text(TextObject& textObject, const std::string_view content) const
 {
    const auto vertices = textObject.glyphAtlas->create_glyph_vertices(content, &textObject.metric);
    if (vertices.size() > textObject.vertices.count()) {

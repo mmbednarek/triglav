@@ -50,9 +50,15 @@ void JobGraph::disable_flag(const Name job, const Name flag)
    m_jobs.at(job).disable_flag(flag);
 }
 
-void JobGraph::build_jobs()
+void JobGraph::build_jobs(const Name targetJob)
 {
-   for (auto& [name, ctx] : m_contexts) {
+   this->deduce_job_order(targetJob);
+
+   for (auto& name : m_jobOrder) {
+      if (!m_contexts.contains(name))
+         continue;
+
+      auto& ctx = m_contexts.at(name);
       m_jobs.emplace(name, ctx.build_job(m_pipelineCache, m_resourceStorage, name));
       m_jobSemaphores.emplace(name, JobSemaphores{});
    }

@@ -14,6 +14,8 @@ struct GlyphProperties
 {
    TypefaceName typeface;
    int fontSize;
+
+   [[nodiscard]] u64 hash() const;
 };
 
 class GlyphCache
