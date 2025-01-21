@@ -304,8 +304,6 @@ VertexBufferSection UpdateUserInterfaceJob::allocate_vertex_section(const Name t
    }
 
    assert(offset + vertexCount <= g_maxTextVertices);
-   spdlog::info("ui-update-job: allocated vertices: {}", offset + vertexCount);
-   spdlog::info("ui-update-job: unused space: {}", unusedSpace);
 
    m_vertexSections.emplace_back(text, offset, vertexCount);
    return m_vertexSections.back();

@@ -87,8 +87,7 @@ Status UnixFile::seek(const SeekPosition position, const MemoryOffset offset)
 
 Result<MemorySize> UnixFile::file_size()
 {
-   struct ::stat fileStat
-   {};
+   struct ::stat fileStat{};
 
    const auto res = ::stat(m_filePath.c_str(), &fileStat);
    if (res < 0) {

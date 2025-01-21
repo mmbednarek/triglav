@@ -20,7 +20,7 @@ shader_targets += custom_target('text_generate_geometry_cs',
     input: 'generate_geometry.slang',
     output: '@BASENAME@.spv',
     depend_files: ['text_processing.slang'],
-    command: ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O0', '-g', '-o', '@OUTPUT@'],
+    command: ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O3', '-o', '@OUTPUT@'],
 )
 
 shader_targets += custom_target('text_render_vs',

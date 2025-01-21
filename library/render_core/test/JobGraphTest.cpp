@@ -60,7 +60,7 @@ TEST(JobGraphTest, BasicDependency)
    thirdCtx.declare_staging_buffer("basic_dependency.user"_name, sizeof(int));
    thirdCtx.copy_buffer("basic_dependency.data"_external, "basic_dependency.user"_name);
 
-   graph.build_jobs();
+   graph.build_jobs("basic_dependency.third"_name);
 
    auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
@@ -102,7 +102,7 @@ TEST(JobGraphTest, BasicInterframeDependency)
    buildContext.copy_buffer("basic_interframe_dependency.data"_name, "basic_interframe_dependency.user"_name);
    buildContext.end_if();
 
-   graph.build_jobs();
+   graph.build_jobs("basic_interframe_dependency"_name);
 
    auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
