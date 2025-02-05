@@ -107,8 +107,9 @@ void UpdateUserInterfaceJob::build_job(render_core::BuildContext& ctx) const
 
    ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
 
-   ctx.export_buffer("user_interface.text_draw_call_buffer"_name, graphics_api::PipelineStage::VertexShader,
-                     graphics_api::BufferAccess::ShaderRead, graphics_api::BufferUsage::StorageBuffer);
+   ctx.export_buffer("user_interface.text_draw_call_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead,
+                     graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::Indirect);
    ctx.export_buffer("user_interface.text_vertex_buffer"_name, graphics_api::PipelineStage::VertexInput,
                      graphics_api::BufferAccess::VertexRead, graphics_api::BufferUsage::VertexBuffer);
    ctx.export_buffer("user_interface.text_draw_call_count"_name, graphics_api::PipelineStage::DrawIndirect,

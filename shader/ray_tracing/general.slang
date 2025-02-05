@@ -116,5 +116,5 @@ void chit_main(inout ray_payload.GeneralOutput payload, in ray_tracing.Attribute
 void miss_main(inout ray_payload.GeneralOutput payload)
 {
     payload.shadowTerm = 1.0;
-    payload.ambientOcclusionTerm = 1.0;
+    payload.ambientOcclusionTerm = 0.0;
 }

@@ -24,6 +24,21 @@ constexpr std::array<PipelineHash, 16> PUSH_CONSTANT_PRIMES = {
    2447399, 3563953, 2897371, 6209569, 8146571, 1354267, 9918409, 1721689,
 };
 
+constexpr std::array<PipelineHash, 16> RAY_CLOSEST_HIT_PRIMES = {
+   28437797, 20944817, 91184309, 22773103, 53008649, 83805661, 25533763, 27557219,
+   84381529, 65679151, 40842881, 15755609, 87173981, 54957989, 29610533, 53679599,
+};
+
+constexpr std::array<PipelineHash, 16> RAY_MISS_PRIMES = {
+   60386867, 14597347, 88038959, 20446493, 74318963, 63180391, 70454897, 25012079,
+   58513783, 60817397, 43172621, 91417979, 59783069, 26571007, 95041489, 49736153,
+};
+
+constexpr std::array<PipelineHash, 16> RAY_SHADER_GROUP_PRIMES = {
+   11959853, 31284833, 84292073, 46503707, 82198463, 22559489, 44030387, 58136597,
+   42053233, 99472067, 58265849, 11079947, 32325577, 64498283, 88087333, 86433041,
+};
+
 PipelineHash hash_color_format(const graphics_api::ColorFormat& format)
 {
    return 76037261 * static_cast<PipelineHash>(format.order) + 25809323 * static_cast<PipelineHash>(format.parts[0]) +
@@ -120,6 +135,69 @@ PipelineHash ComputePipelineState::hash() const
    }
 
    result += 733777621 * this->descriptorState.hash();
+
+   return result;
+}
+
+PipelineHash RayTracingShaderGroup::hash() const
+{
+   PipelineHash result = 625888457 * static_cast<u32>(type);
+   if (generalShader.has_value()) {
+      result += 469726181 * generalShader->name();
+   }
+   if (closestHitShader.has_value()) {
+      result += 290082467 * closestHitShader->name();
+   }
+   return result;
+}
+
+void RayTracingPipelineState::reset()
+{
+   this->descriptorState.descriptorCount = 0;
+   this->maxRecursion = 4;
+   this->pushConstants.clear();
+   this->shaderGroups.clear();
+   this->rayGenShader.reset();
+   this->rayMissShaders.clear();
+   this->rayClosestHitShaders.clear();
+}
+
+std::vector<Name> RayTracingPipelineState::shader_bindings() const
+{
+   std::vector<Name> result;
+   if (this->rayGenShader.has_value()) {
+      result.emplace_back(make_rt_shader_name(*this->rayGenShader));
+   }
+   for (const auto shader : this->rayMissShaders) {
+      result.emplace_back(make_rt_shader_name(shader));
+   }
+   for (const auto shader : this->rayClosestHitShaders) {
+      result.emplace_back(make_rt_shader_name(shader));
+   }
+   return result;
+}
+
+PipelineHash RayTracingPipelineState::hash() const
+{
+   PipelineHash result{};
+
+   if (rayGenShader.has_value()) {
+      result += 46410383 * rayGenShader->name();
+   }
+   for (const auto [index, shader] : Enumerate(rayClosestHitShaders)) {
+      result += RAY_CLOSEST_HIT_PRIMES[index] * rayGenShader->name();
+   }
+   for (const auto [index, shader] : Enumerate(rayMissShaders)) {
+      result += RAY_MISS_PRIMES[index] * rayGenShader->name();
+   }
+   result += 612708209 * descriptorState.hash();
+   for (const auto [index, pushConstant] : Enumerate(pushConstants)) {
+      result += PUSH_CONSTANT_PRIMES[index] * pushConstant.hash();
+   }
+   result += 795496733 * maxRecursion;
+   for (const auto [index, shaderGroup] : Enumerate(shaderGroups)) {
+      result += RAY_SHADER_GROUP_PRIMES[index] * shaderGroup.hash();
+   }
 
    return result;
 }

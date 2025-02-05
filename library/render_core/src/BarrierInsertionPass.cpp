@@ -6,6 +6,43 @@ namespace triglav::render_core {
 
 namespace gapi = graphics_api;
 
+namespace {
+gapi::BufferAccess adjust_buffer_access_to_work_type(const gapi::BufferAccess access, const gapi::WorkTypeFlags work_types)
+{
+   using enum gapi::WorkType;
+   using gapi::BufferAccess;
+   // assuming every queue has transport bit
+
+   switch (access) {
+   case BufferAccess::UniformRead:
+      [[fallthrough]];
+   case BufferAccess::IndirectCmdRead:
+      if (!(work_types & Compute) && !(work_types & Graphics)) {
+         return BufferAccess::MemoryRead;
+      }
+      break;
+   case BufferAccess::IndexRead:
+      [[fallthrough]];
+   case BufferAccess::VertexRead:
+      [[fallthrough]];
+   case BufferAccess::ShaderRead:
+      if (!(work_types & Graphics)) {
+         return BufferAccess::MemoryRead;
+      }
+      break;
+   case BufferAccess::ShaderWrite:
+      if (!(work_types & Graphics)) {
+         return BufferAccess::MemoryWrite;
+      }
+      break;
+   default:
+      break;
+   }
+
+   return access;
+}
+}// namespace
+
 BarrierInsertionPass::BarrierInsertionPass(BuildContext& context) :
     m_context(context)
 {
@@ -15,7 +52,7 @@ void BarrierInsertionPass::visit(const detail::cmd::BindDescriptors& cmd)
 {
    for (const auto& descriptor : cmd.descriptors) {
       std::visit(
-         [this, stageFlags = descriptor->stage]<typename TDescriptor>(const TDescriptor& desc) {
+         [this, stageFlags = descriptor->stages]<typename TDescriptor>(const TDescriptor& desc) {
             if constexpr (std::is_same_v<TDescriptor, detail::descriptor::RWTexture>) {
                this->setup_texture_barrier(desc.texRef, gapi::TextureState::General, stageFlags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SamplableTexture>) {
@@ -142,7 +179,8 @@ void BarrierInsertionPass::visit(const detail::cmd::ExportTexture& cmd)
 
 void BarrierInsertionPass::visit(const detail::cmd::ExportBuffer& cmd)
 {
-   this->setup_buffer_barrier(cmd.buffName, cmd.access, cmd.pipelineStage);
+   this->setup_buffer_barrier(cmd.buffName, adjust_buffer_access_to_work_type(cmd.access, m_context.work_types()),
+                              gapi::PipelineStage::End);
    // no need to default visit
 }
 
@@ -157,7 +195,7 @@ std::vector<detail::Command>& BarrierInsertionPass::commands()
 }
 
 void BarrierInsertionPass::setup_texture_barrier(const TextureRef texRef, const graphics_api::TextureState targetState,
-                                                 const graphics_api::PipelineStage targetStage,
+                                                 const graphics_api::PipelineStageFlags targetStages,
                                                  const std::optional<graphics_api::PipelineStage> lastUsedStage)
 {
    if (!std::holds_alternative<Name>(texRef) && !std::holds_alternative<FromLastFrame>(texRef) &&
@@ -182,7 +220,10 @@ void BarrierInsertionPass::setup_texture_barrier(const TextureRef texRef, const 
 
    auto& tex = m_context.declaration<detail::decl::Texture>(texName);
 
-   const auto lateStage = lastUsedStage.value_or(targetStage);
+   auto lateStage = targetStages;
+   if (lastUsedStage.has_value()) {
+      lateStage = *lastUsedStage;
+   }
    const auto targetMemAccess = gapi::to_memory_access(targetState);
 
    u32 localCount = 1;
@@ -198,7 +239,7 @@ void BarrierInsertionPass::setup_texture_barrier(const TextureRef texRef, const 
           tex.lastTextureBarrier->mipLevelCount != mipCount) {
          if (tex.lastStages[mipLevel] != 0) {
             auto barrier =
-               std::make_unique<TextureBarrier>(texName, tex.lastStages[mipLevel], targetStage, tex.currentStatePerMip[mipLevel],
+               std::make_unique<TextureBarrier>(texName, tex.lastStages[mipLevel], targetStages, tex.currentStatePerMip[mipLevel],
                                                 targetState, mipLevel - localCount + 1, localCount);
             tex.lastTextureBarrier =
                this->add_command_before_render_pass<detail::cmd::PlaceTextureBarrier>(std::move(barrier)).barrier.get();
@@ -208,7 +249,7 @@ void BarrierInsertionPass::setup_texture_barrier(const TextureRef texRef, const 
             tex.lastStages[mipLevel - localCount + 1 + level] = lateStage;
          }
       } else if (tex.lastTextureBarrier != nullptr) {
-         tex.lastTextureBarrier->dstStageFlags |= targetStage;
+         tex.lastTextureBarrier->dstStageFlags |= targetStages;
          for (u32 level = 0; level < localCount; ++level) {
             tex.lastStages[mipLevel - localCount + 1 + level] |= lateStage;
          }
@@ -222,7 +263,7 @@ void BarrierInsertionPass::setup_texture_barrier(const TextureRef texRef, const 
 }
 
 void BarrierInsertionPass::setup_buffer_barrier(const BufferRef buffRef, const graphics_api::BufferAccess targetAccess,
-                                                const graphics_api::PipelineStage targetStage)
+                                                const graphics_api::PipelineStageFlags targetStages)
 {
    if (!std::holds_alternative<Name>(buffRef) && !std::holds_alternative<FromLastFrame>(buffRef)) {
       return;
@@ -234,14 +275,14 @@ void BarrierInsertionPass::setup_buffer_barrier(const BufferRef buffRef, const g
    if (to_memory_access(targetAccess) == gapi::MemoryAccess::Write || to_memory_access(buffer.currentAccess) == gapi::MemoryAccess::Write ||
        buffer.lastBufferBarrier == nullptr) {
       if (buffer.lastStages != 0) {
-         auto barrier = std::make_unique<BufferBarrier>(buffRef, buffer.lastStages, targetStage, buffer.currentAccess, targetAccess);
+         auto barrier = std::make_unique<BufferBarrier>(buffRef, buffer.lastStages, targetStages, buffer.currentAccess, targetAccess);
          buffer.lastBufferBarrier = this->add_command_before_render_pass<detail::cmd::PlaceBufferBarrier>(std::move(barrier)).barrier.get();
       }
-      buffer.lastStages = targetStage;
+      buffer.lastStages = targetStages;
    } else if (buffer.lastBufferBarrier != nullptr) {
-      buffer.lastBufferBarrier->dstStageFlags |= targetStage;
+      buffer.lastBufferBarrier->dstStageFlags |= targetStages;
       buffer.lastBufferBarrier->dstBufferAccess |= targetAccess;
-      buffer.lastStages |= targetStage;
+      buffer.lastStages |= targetStages;
    }
 
    buffer.currentAccess = targetAccess;

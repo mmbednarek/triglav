@@ -30,6 +30,12 @@ resources:
     source: "depth_target_sample_sample_fs.spv"
   - name: "testing/increase_number.cshader"
     source: "increase_number.spv"
+  - name: "testing/rt/basic_rgen.rgenshader"
+    source: "basic_ray_tracing_rgen.spv"
+  - name: "testing/rt/basic_rmiss.rmissshader"
+    source: "basic_ray_tracing_rmiss.spv"
+  - name: "testing/rt/basic_rchit.rchitshader"
+    source: "basic_ray_tracing_rchit.spv"
   # Example texture
   - name: "testing/sample.tex"
     source: "sample.png"

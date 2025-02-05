@@ -165,7 +165,7 @@ void DescriptorWriter::set_storage_image_view(const uint32_t binding, const Text
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
-void DescriptorWriter::set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct)
+void DescriptorWriter::set_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStruct)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
 

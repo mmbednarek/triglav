@@ -14,6 +14,7 @@
 #include "stage/AmbientOcclusionStage.hpp"
 #include "stage/GBufferStage.hpp"
 #include "stage/PostProcessStage.hpp"
+#include "stage/RayTracingStage.hpp"
 #include "stage/ShadingStage.hpp"
 #include "stage/ShadowMapStage.hpp"
 
@@ -151,9 +152,20 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
       fence.await();
    }
 
+   if (m_rayTracingScene.has_value()) {
+      m_rayTracingScene->build_acceleration_structures();
+   }
+
+   m_scene.update_shadow_maps();
+
    m_renderingJob.emplace_stage<stage::GBufferStage>(m_device, m_bindlessScene);
-   m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
+   if (!(m_device.enabled_features() & DeviceFeature::RayTracing)) {
+      m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
+   }
    m_renderingJob.emplace_stage<stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+      m_renderingJob.emplace_stage<stage::RayTracingStage>(*m_rayTracingScene);
+   }
    m_renderingJob.emplace_stage<stage::ShadingStage>();
    m_renderingJob.emplace_stage<stage::PostProcessStage>(m_updateUserInterfaceJob);
 
@@ -307,6 +319,9 @@ void Renderer::on_render_new()
       isFirstFrame = false;
    }
 
+   if (m_rayTracingScene.has_value()) {
+      m_rayTracingScene->build_acceleration_structures();
+   }
    this->update_debug_info();
    this->update_uniform_data(deltaTime);
 

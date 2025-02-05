@@ -16,10 +16,12 @@ class TriglavEngine(ConanFile):
         "spdlog/1.13.0"
     )
     options = {
-        "disable_debug_utils": [False, True]
+        "disable_debug_utils": [False, True],
+        "wayland": [False, True]
     }
     default_options = {
-        "disable_debug_utils": False
+        "disable_debug_utils": False,
+        "wayland": False,
     }
     # We should use system vulkan
 
@@ -36,6 +38,7 @@ class TriglavEngine(ConanFile):
 
         tc = MesonToolchain(self, backend=backend)
         tc.project_options["disable_debug_utils"] = "enabled" if self.options["disable_debug_utils"] else "disabled"
+        # tc.project_options["wayland"] = "enabled" if self.options["wayland"] else "disabled"
         tc.generate()
 
     def build(self):

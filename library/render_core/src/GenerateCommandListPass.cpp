@@ -4,6 +4,8 @@
 #include "PipelineCache.hpp"
 #include "ResourceStorage.hpp"
 
+#include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
+
 namespace triglav::render_core {
 
 namespace gapi = graphics_api;
@@ -33,6 +35,15 @@ void GenerateCommandListPass::visit(const detail::cmd::BindGraphicsPipeline& cmd
 void GenerateCommandListPass::visit(const detail::cmd::BindComputePipeline& cmd)
 {
    auto* newPipeline = &m_pipelineCache.get_compute_pipeline(cmd.pso);
+   if (newPipeline != m_currentPipeline) {
+      m_currentPipeline = newPipeline;
+      m_commandList.bind_pipeline(*m_currentPipeline);
+   }
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::BindRayTracingPipeline& cmd)
+{
+   auto* newPipeline = &m_pipelineCache.get_ray_tracing_pso(cmd.pso);
    if (newPipeline != m_currentPipeline) {
       m_currentPipeline = newPipeline;
       m_commandList.bind_pipeline(*m_currentPipeline);
@@ -158,6 +169,11 @@ void GenerateCommandListPass::visit(const detail::cmd::EndRenderPass& /*cmd*/) c
 void GenerateCommandListPass::visit(const detail::cmd::PushConstant& cmd) const
 {
    m_commandList.push_constant_ptr(cmd.stageFlags, cmd.data.data(), cmd.data.size(), 0);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::TraceRays& cmd) const
+{
+   m_commandList.trace_rays(this->m_pipelineCache.get_shader_binding_table(cmd.state), cmd.dimensions);
 }
 
 void GenerateCommandListPass::default_visit(const detail::Command&) const

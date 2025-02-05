@@ -478,12 +478,16 @@ enum class BufferAccess
    ShaderRead = (1 << 5),
    ShaderWrite = (1 << 6),
    IndirectCmdRead = (1 << 7),
+   MemoryRead = (1 << 8),
+   MemoryWrite = (1 << 9),
 };
 
 [[nodiscard]] constexpr MemoryAccess to_memory_access(const BufferAccess access)
 {
    switch (access) {
    case BufferAccess::TransferWrite:
+      [[fallthrough]];
+   case BufferAccess::MemoryWrite:
       [[fallthrough]];
    case BufferAccess::ShaderWrite:
       return MemoryAccess::Write;
@@ -496,6 +500,8 @@ enum class BufferAccess
    case BufferAccess::IndexRead:
       [[fallthrough]];
    case BufferAccess::VertexRead:
+      [[fallthrough]];
+   case BufferAccess::MemoryRead:
       [[fallthrough]];
    case BufferAccess::ShaderRead:
       return MemoryAccess::Read;

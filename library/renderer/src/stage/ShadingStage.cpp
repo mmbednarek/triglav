@@ -33,7 +33,10 @@ struct ShadingPushConstants
 
 void ShadingStage::build_stage(render_core::BuildContext& ctx) const
 {
-   ctx.declare_screen_size_texture("ray_tracing.shadow_texture"_name, GAPI_FORMAT(R, UNorm8));
+   if (!ctx.is_ray_tracing_supported()) {
+      // declare dummy shadows texture
+      ctx.declare_screen_size_texture("ray_tracing.shadows"_name, GAPI_FORMAT(R, UNorm8));
+   }
 
    ctx.declare_render_target("shading.color"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, Float16));
@@ -50,20 +53,24 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    ctx.bind_samplable_texture(0, "gbuffer.albedo"_name);
    ctx.bind_samplable_texture(1, "gbuffer.position"_name);
    ctx.bind_samplable_texture(2, "gbuffer.normal"_name);
-   ctx.bind_samplable_texture(3, "ambient_occlusion.blurred"_name);
+   if (ctx.is_ray_tracing_supported()) {
+      ctx.bind_samplable_texture(3, "ray_tracing.ambient_occlusion.blurred"_name);
+   } else {
+      ctx.bind_samplable_texture(3, "ambient_occlusion.blurred"_name);
+   }
 
    std::array<render_core::TextureRef, 3> shadowTextures{"shadow_map.cascade0"_name, "shadow_map.cascade1"_name,
                                                          "shadow_map.cascade2"_name};
    ctx.bind_sampled_texture_array(4, shadowTextures);
 
-   ctx.bind_samplable_texture(5, "ray_tracing.shadow_texture"_name);
+   ctx.bind_samplable_texture(5, "ray_tracing.shadows"_name);
    ctx.bind_uniform_buffer(6, "core.view_properties"_external);
    ctx.bind_uniform_buffer(7, "shadow_map.matrices"_external);
 
    ctx.push_constant(ShadingPushConstants{
       Vector4(-30, 0, -5, 1.0),
       1,
-      0,
+      ctx.is_ray_tracing_supported(),
    });
 
    ctx.set_is_blending_enabled(false);

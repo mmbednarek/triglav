@@ -321,7 +321,7 @@ Result<Instance> Instance::create_instance()
    instanceInfo.enabledLayerCount = g_vulkanInstanceLayers.size();
    instanceInfo.ppEnabledLayerNames = g_vulkanInstanceLayers.data();
 
-#ifdef TG_ENABLE_SYNC_VALIDATION
+#if TG_ENABLE_SYNC_VALIDATION
    VkValidationFeaturesEXT validationFeatures{VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT};
    constexpr std::array<VkValidationFeatureEnableEXT, 1> enabledFeatures{VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT};
    validationFeatures.enabledValidationFeatureCount = enabledFeatures.size();

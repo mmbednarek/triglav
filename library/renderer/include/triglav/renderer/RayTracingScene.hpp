@@ -23,6 +23,10 @@ namespace triglav::renderer {
 
 constexpr auto AO_POINT_COUNT = 64;
 
+namespace stage {
+class RayTracingStage;
+}
+
 struct RayGenerationUboData
 {
    glm::mat4 viewInverse;
@@ -38,6 +42,8 @@ struct ObjectDesc
 
 class RayTracingScene
 {
+   friend stage::RayTracingStage;
+
  public:
    using Self = RayTracingScene;
 
@@ -49,6 +55,8 @@ class RayTracingScene
    explicit RayTracingScene(graphics_api::Device& device, resource::ResourceManager& resources, Scene& scene);
 
    void render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture, const graphics_api::Texture& shadowsTexture);
+
+   void build_acceleration_structures();
 
    void on_object_added_to_scene(const SceneObject& object);
 

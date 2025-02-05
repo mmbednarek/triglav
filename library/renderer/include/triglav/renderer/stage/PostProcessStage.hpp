@@ -15,7 +15,7 @@ namespace triglav::renderer::stage {
 class PostProcessStage final : public IStage
 {
  public:
-   PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJob);
+   explicit PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJob);
 
    void build_stage(render_core::BuildContext& ctx) const override;
 

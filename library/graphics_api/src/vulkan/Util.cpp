@@ -243,6 +243,10 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
       return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
    case PipelineStage::MissShader:
       return VK_SHADER_STAGE_MISS_BIT_KHR;
+   case PipelineStage::AnyHitShader:
+      return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+   case PipelineStage::CallableShader:
+      return VK_SHADER_STAGE_CALLABLE_BIT_KHR;
    default:
       break;
    }
@@ -271,6 +275,12 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
    if (flags & PipelineStage::MissShader) {
       result |= VK_SHADER_STAGE_MISS_BIT_KHR;
    }
+   if (flags & PipelineStage::AnyHitShader) {
+      result |= VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+   }
+   if (flags & PipelineStage::CallableShader) {
+      result |= VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+   }
    return result;
 }
 
@@ -296,6 +306,14 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
    case PipelineStage::ComputeShader:
       return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    case PipelineStage::RayGenerationShader:
+      [[fallthrough]];
+   case PipelineStage::ClosestHitShader:
+      [[fallthrough]];
+   case PipelineStage::AnyHitShader:
+      [[fallthrough]];
+   case PipelineStage::CallableShader:
+      [[fallthrough]];
+   case PipelineStage::MissShader:
       return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    case PipelineStage::Transfer:
       return VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -344,6 +362,12 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
       result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    }
    if (flags & PipelineStage::ClosestHitShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::AnyHitShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::CallableShader) {
       result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    }
    if (flags & PipelineStage::Transfer) {
@@ -689,6 +713,12 @@ VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags inFlags)
    }
    if (inFlags & IndirectCmdRead) {
       outFlags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+   }
+   if (inFlags & MemoryRead) {
+      outFlags |= VK_ACCESS_MEMORY_READ_BIT;
+   }
+   if (inFlags & MemoryWrite) {
+      outFlags |= VK_ACCESS_MEMORY_WRITE_BIT;
    }
 
    return outFlags;

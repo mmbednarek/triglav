@@ -41,6 +41,7 @@ struct DescriptorCounts
    u32 storageBufferCount{};
    u32 sampledTextureCount{};
    u32 textureCount{};
+   u32 accelerationStructureCount{};
    u32 totalDescriptorSets{};
 };
 
@@ -137,6 +138,15 @@ class BuildContext
    void if_disabled(Name flag);
    void end_if();
 
+   // Ray tracing
+   void bind_rt_generation_shader(RayGenShaderName rayGenShader);
+   void bind_rt_closest_hit_shader(RayClosestHitShaderName rayClosestHitShader);
+   void bind_rt_miss_shader(RayMissShaderName rayMissShader);
+   void bind_rt_shader_group(RayTracingShaderGroup group);
+   void set_rt_max_recursion_depth(u32 maxRecursionDepth);
+   void bind_acceleration_structure(u32 index, graphics_api::ray_tracing::AccelerationStructure& accelerationStructure);
+   void trace_rays(Vector3i dimensions);
+
    template<typename TData>
    void fill_buffer(const Name buffName, const TData& data)
    {
@@ -179,6 +189,8 @@ class BuildContext
 
    void add_texture_usage(Name texName, graphics_api::TextureUsageFlags flags);
    void add_buffer_usage(Name buffName, graphics_api::BufferUsageFlags flags);
+   void set_bind_stages(graphics_api::PipelineStageFlags stages);
+   [[nodiscard]] bool is_ray_tracing_supported() const;
 
 
  private:
@@ -203,14 +215,14 @@ class BuildContext
    void reset_resource_states();
 
    template<typename TDesc, typename... TArgs>
-   void set_descriptor(const BindingIndex index, graphics_api::PipelineStage stage, TArgs&&... args)
+   void set_descriptor(const BindingIndex index, const graphics_api::PipelineStageFlags stages, TArgs&&... args)
    {
       if (m_descriptors.size() <= index) {
          m_descriptors.resize(index + 1);
       }
 
       m_descriptors[index].emplace(
-         detail::DescriptorAndStage{detail::Descriptor{std::in_place_type_t<TDesc>{}, std::forward<TArgs>(args)...}, stage});
+         detail::DescriptorAndStage{detail::Descriptor{std::in_place_type_t<TDesc>{}, std::forward<TArgs>(args)...}, stages});
    }
 
    template<typename TCmd, typename... TArgs>
@@ -218,18 +230,6 @@ class BuildContext
    {
       m_commands.emplace_back(std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...);
       return std::get<TCmd>(m_commands.back());
-   }
-
-   template<typename TCmd, typename... TArgs>
-   TCmd& add_command_before_render_pass(TArgs&&... args)
-   {
-      if (!m_isWithinRenderPass) {
-         return this->add_command<TCmd>(std::forward<TArgs>(args)...);
-      }
-
-      auto it = std::find_if(m_commands.rbegin(), m_commands.rend(),
-                             [](const auto& cmd) { return std::holds_alternative<detail::cmd::BeginRenderPass>(cmd); });
-      return std::get<TCmd>(*m_commands.emplace(it.base() - 1, std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...));
    }
 
    template<typename TDecl, typename... TArgs>
@@ -260,18 +260,16 @@ class BuildContext
    graphics_api::WorkTypeFlags m_workTypes{};
    GraphicPipelineState m_graphicPipelineState{};
    ComputePipelineState m_computePipelineState{};
+   RayTracingPipelineState m_rayTracingPipelineState{};
    DescriptorState m_descriptorState{};
    detail::DescriptorCounts m_descriptorCounts{};
-   graphics_api::PipelineStage m_activePipelineStage{};
-   bool m_isWithinRenderPass{false};
+   graphics_api::PipelineStageFlags m_activePipelineStages{};
    Vector2i m_screenSize{};
    std::vector<Name> m_flags;
    std::deque<std::tuple<u32, bool>> m_flagStack;
    std::vector<detail::cmd::PushConstant> m_pendingPushConstants;
 
    std::vector<std::optional<detail::DescriptorAndStage>> m_descriptors;
-
-   // graphics_api::Pipeline* m_currentPipeline{};
 };
 
 class RenderPassScope

@@ -125,21 +125,21 @@ void BuildContext::bind_vertex_shader(VertexShaderName vsName)
 {
    m_workTypes |= gapi::WorkType::Graphics;
    m_graphicPipelineState.vertexShader = vsName;
-   m_activePipelineStage = gapi::PipelineStage::VertexShader;
+   m_activePipelineStages = gapi::PipelineStage::VertexShader;
 }
 
 void BuildContext::bind_fragment_shader(FragmentShaderName fsName)
 {
    m_workTypes |= gapi::WorkType::Graphics;
    m_graphicPipelineState.fragmentShader = fsName;
-   m_activePipelineStage = gapi::PipelineStage::FragmentShader;
+   m_activePipelineStages = gapi::PipelineStage::FragmentShader;
 }
 
 void BuildContext::bind_compute_shader(ComputeShaderName csName)
 {
    m_workTypes |= gapi::WorkType::Compute;
    m_computePipelineState.computeShader = csName;
-   m_activePipelineStage = gapi::PipelineStage::ComputeShader;
+   m_activePipelineStages = gapi::PipelineStage::ComputeShader;
 }
 
 void BuildContext::bind_rw_texture(const BindingIndex index, const TextureRef texRef)
@@ -149,11 +149,11 @@ void BuildContext::bind_rw_texture(const BindingIndex index, const TextureRef te
    ++m_descriptorCounts.storageTextureCount;
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::StorageImage;
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
-   this->set_descriptor<detail::descriptor::RWTexture>(index, m_activePipelineStage, texRef);
+   this->set_descriptor<detail::descriptor::RWTexture>(index, m_activePipelineStages, texRef);
 }
 
 void BuildContext::bind_samplable_texture(const BindingIndex index, const TextureRef texRef)
@@ -163,11 +163,11 @@ void BuildContext::bind_samplable_texture(const BindingIndex index, const Textur
    ++m_descriptorCounts.sampledTextureCount;
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::ImageSampler;
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
-   this->set_descriptor<detail::descriptor::SamplableTexture>(index, m_activePipelineStage, texRef);
+   this->set_descriptor<detail::descriptor::SamplableTexture>(index, m_activePipelineStages, texRef);
 }
 
 void BuildContext::bind_texture(const BindingIndex index, const TextureRef texRef)
@@ -177,11 +177,11 @@ void BuildContext::bind_texture(const BindingIndex index, const TextureRef texRe
    ++m_descriptorCounts.textureCount;
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::ImageOnly;
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
-   this->set_descriptor<detail::descriptor::Texture>(index, m_activePipelineStage, texRef);
+   this->set_descriptor<detail::descriptor::Texture>(index, m_activePipelineStages, texRef);
 }
 
 void BuildContext::bind_sampled_texture_array(const BindingIndex index, std::span<const TextureRef> texRefs)
@@ -193,15 +193,15 @@ void BuildContext::bind_sampled_texture_array(const BindingIndex index, std::spa
    m_descriptorCounts.sampledTextureCount += texRefs.size();
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::ImageSampler;
    descriptor.descriptorCount = texRefs.size();
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
    std::vector<TextureRef> textureRefs;
    textureRefs.reserve(texRefs.size());
    std::ranges::copy(texRefs, std::back_inserter(textureRefs));
-   this->set_descriptor<detail::descriptor::SampledTextureArray>(index, m_activePipelineStage, std::move(textureRefs));
+   this->set_descriptor<detail::descriptor::SampledTextureArray>(index, m_activePipelineStages, std::move(textureRefs));
 }
 
 void BuildContext::bind_uniform_buffer(const BindingIndex index, const BufferRef buffRef)
@@ -211,11 +211,11 @@ void BuildContext::bind_uniform_buffer(const BindingIndex index, const BufferRef
    ++m_descriptorCounts.uniformBufferCount;
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::UniformBuffer;
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
-   this->set_descriptor<detail::descriptor::UniformBuffer>(index, m_activePipelineStage, buffRef);
+   this->set_descriptor<detail::descriptor::UniformBuffer>(index, m_activePipelineStages, buffRef);
 }
 
 void BuildContext::bind_uniform_buffers(const BindingIndex index, const std::span<const BufferRef> buffers)
@@ -227,15 +227,15 @@ void BuildContext::bind_uniform_buffers(const BindingIndex index, const std::spa
    m_descriptorCounts.uniformBufferCount += buffers.size();
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::UniformBuffer;
    descriptor.descriptorCount = buffers.size();
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
    std::vector<BufferRef> bufferRefs;
    bufferRefs.reserve(buffers.size());
    std::ranges::copy(buffers, std::back_inserter(bufferRefs));
-   this->set_descriptor<detail::descriptor::UniformBufferArray>(index, m_activePipelineStage, std::move(bufferRefs));
+   this->set_descriptor<detail::descriptor::UniformBufferArray>(index, m_activePipelineStages, std::move(bufferRefs));
 }
 
 void BuildContext::bind_storage_buffer(const BindingIndex index, const BufferRef buffRef)
@@ -245,21 +245,24 @@ void BuildContext::bind_storage_buffer(const BindingIndex index, const BufferRef
    ++m_descriptorCounts.storageBufferCount;
 
    DescriptorInfo descriptor;
-   descriptor.pipelineStages = m_activePipelineStage;
+   descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::StorageBuffer;
-   this->set_pipeline_state_descriptor(m_activePipelineStage, index, descriptor);
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
-   this->set_descriptor<detail::descriptor::StorageBuffer>(index, m_activePipelineStage, buffRef);
+   this->set_descriptor<detail::descriptor::StorageBuffer>(index, m_activePipelineStages, buffRef);
 }
 
 void BuildContext::push_constant_span(const std::span<const u8> buffer)
 {
-   if (m_activePipelineStage == gapi::PipelineStage::FragmentShader || m_activePipelineStage == gapi::PipelineStage::VertexShader) {
-      m_graphicPipelineState.pushConstants.emplace_back(m_activePipelineStage, buffer.size());
+   if (m_activePipelineStages == gapi::PipelineStage::FragmentShader || m_activePipelineStages == gapi::PipelineStage::VertexShader) {
+      m_graphicPipelineState.pushConstants.emplace_back(m_activePipelineStages, buffer.size());
+   } else if (m_activePipelineStages & gapi::PipelineStage::RayGenerationShader ||
+              m_activePipelineStages & gapi::PipelineStage::MissShader || m_activePipelineStages & gapi::PipelineStage::ClosestHitShader) {
+      m_rayTracingPipelineState.pushConstants.emplace_back(m_activePipelineStages, buffer.size());
    }
 
    std::vector data(buffer.begin(), buffer.end());
-   m_pendingPushConstants.emplace_back(m_activePipelineStage, std::move(data));
+   m_pendingPushConstants.emplace_back(m_activePipelineStages, std::move(data));
 }
 
 void BuildContext::bind_vertex_layout(const VertexLayout& layout)
@@ -269,7 +272,7 @@ void BuildContext::bind_vertex_layout(const VertexLayout& layout)
 
 void BuildContext::bind_vertex_buffer(const BufferRef buffRef)
 {
-   m_activePipelineStage = gapi::PipelineStage::VertexInput;
+   m_activePipelineStages = gapi::PipelineStage::VertexInput;
 
    this->prepare_buffer(buffRef, gapi::BufferUsage::VertexBuffer);
 
@@ -278,7 +281,7 @@ void BuildContext::bind_vertex_buffer(const BufferRef buffRef)
 
 void BuildContext::bind_index_buffer(const BufferRef buffRef)
 {
-   m_activePipelineStage = gapi::PipelineStage::VertexInput;
+   m_activePipelineStages = gapi::PipelineStage::VertexInput;
 
    this->prepare_buffer(buffRef, gapi::BufferUsage::IndexBuffer);
 
@@ -301,8 +304,6 @@ void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Na
    std::vector<Name> renderTargetNames(renderTargets.size());
    std::ranges::copy(renderTargets, renderTargetNames.begin());
    this->add_command<detail::cmd::BeginRenderPass>(passName, std::move(renderTargetNames));
-
-   m_isWithinRenderPass = true;
 }
 
 void BuildContext::end_render_pass()
@@ -310,8 +311,6 @@ void BuildContext::end_render_pass()
    m_graphicPipelineState.depthTargetFormat.reset();
    m_graphicPipelineState.renderTargetFormats.clear();
    this->add_command<detail::cmd::EndRenderPass>();
-
-   m_isWithinRenderPass = false;
 }
 
 void BuildContext::clear_color(const Name targetName, const Vector4 color)
@@ -374,6 +373,8 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
                writer.set_uniform_buffer_array(index, buffers);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::StorageBuffer>) {
                writer.set_storage_buffer(index, this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
+            } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::AccelerationStructure>) {
+               writer.set_acceleration_structure(index, *desc.accelerationStructure);
             }
          },
          descVariant->descriptor);
@@ -390,10 +391,20 @@ void BuildContext::add_buffer_usage(const Name buffName, const graphics_api::Buf
    this->declaration<detail::decl::Buffer>(buffName).buffUsageFlags |= flags;
 }
 
+void BuildContext::set_bind_stages(graphics_api::PipelineStageFlags stages)
+{
+   m_activePipelineStages = stages;
+}
+
+bool BuildContext::is_ray_tracing_supported() const
+{
+   return m_device.enabled_features() & gapi::DeviceFeature::RayTracing;
+}
+
 void BuildContext::export_texture(const Name texName, const graphics_api::PipelineStage pipelineStage,
                                   const graphics_api::TextureState state, const graphics_api::TextureUsageFlags flags)
 {
-   m_activePipelineStage = pipelineStage;
+   m_activePipelineStages = pipelineStage;
    this->prepare_texture(texName, state, flags);
    this->add_command<detail::cmd::ExportTexture>(texName, pipelineStage, state);
 }
@@ -671,7 +682,7 @@ void BuildContext::dispatch_indirect(const BufferRef indirectBuffer)
 
 void BuildContext::fill_buffer_raw(const Name buffName, const void* ptr, const MemorySize size)
 {
-   m_activePipelineStage = gapi::PipelineStage::Transfer;
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
 
    this->prepare_buffer(buffName, gapi::BufferUsage::TransferDst);
 
@@ -685,7 +696,7 @@ void BuildContext::fill_buffer_raw(const Name buffName, const void* ptr, const M
 
 void BuildContext::copy_texture_to_buffer(const TextureRef srcTex, const BufferRef dstBuff)
 {
-   m_activePipelineStage = gapi::PipelineStage::Transfer;
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
 
    this->prepare_texture(srcTex, gapi::TextureState::TransferSrc, gapi::TextureUsage::TransferSrc);
    this->prepare_buffer(dstBuff, gapi::BufferUsage::TransferDst);
@@ -697,7 +708,7 @@ void BuildContext::copy_texture_to_buffer(const TextureRef srcTex, const BufferR
 
 void BuildContext::copy_buffer_to_texture(const BufferRef srcBuff, const TextureRef dstTex)
 {
-   m_activePipelineStage = gapi::PipelineStage::Transfer;
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
 
    this->prepare_buffer(srcBuff, gapi::BufferUsage::TransferSrc);
    this->prepare_texture(dstTex, gapi::TextureState::TransferDst, gapi::TextureUsage::TransferDst);
@@ -709,7 +720,7 @@ void BuildContext::copy_buffer_to_texture(const BufferRef srcBuff, const Texture
 
 void BuildContext::copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer)
 {
-   m_activePipelineStage = gapi::PipelineStage::Transfer;
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
 
    this->prepare_buffer(srcBuffer, gapi::BufferUsage::TransferSrc);
    this->prepare_buffer(dstBuffer, gapi::BufferUsage::TransferDst);
@@ -721,7 +732,7 @@ void BuildContext::copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer)
 
 void BuildContext::copy_texture(TextureRef srcTex, TextureRef dstTex)
 {
-   m_activePipelineStage = gapi::PipelineStage::Transfer;
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
 
    this->prepare_texture(srcTex, gapi::TextureState::TransferSrc, gapi::TextureUsage::TransferSrc);
    this->prepare_texture(dstTex, gapi::TextureState::TransferDst, gapi::TextureUsage::TransferDst);
@@ -749,6 +760,66 @@ void BuildContext::if_disabled(const Name flag)
 void BuildContext::end_if()
 {
    this->add_command<detail::cmd::EndIfCond>();
+}
+
+void BuildContext::bind_rt_generation_shader(RayGenShaderName rayGenShader)
+{
+   m_workTypes |= gapi::WorkType::Graphics;
+   m_rayTracingPipelineState.rayGenShader.emplace(rayGenShader);
+   m_activePipelineStages = gapi::PipelineStage::RayGenerationShader;
+}
+
+void BuildContext::bind_rt_closest_hit_shader(RayClosestHitShaderName rayClosestHitShader)
+{
+   m_workTypes |= gapi::WorkType::Graphics;
+   m_rayTracingPipelineState.rayClosestHitShaders.emplace_back(rayClosestHitShader);
+   m_activePipelineStages = gapi::PipelineStage::ClosestHitShader;
+}
+
+void BuildContext::bind_rt_miss_shader(RayMissShaderName rayMissShader)
+{
+   m_workTypes |= gapi::WorkType::Graphics;
+   m_rayTracingPipelineState.rayMissShaders.emplace_back(rayMissShader);
+   m_activePipelineStages = gapi::PipelineStage::MissShader;
+}
+
+void BuildContext::bind_rt_shader_group(RayTracingShaderGroup group)
+{
+   m_rayTracingPipelineState.shaderGroups.emplace_back(group);
+}
+
+void BuildContext::set_rt_max_recursion_depth(const u32 maxRecursionDepth)
+{
+   m_rayTracingPipelineState.maxRecursion = maxRecursionDepth;
+}
+
+void BuildContext::bind_acceleration_structure(const u32 index, graphics_api::ray_tracing::AccelerationStructure& accelerationStructure)
+{
+   ++m_descriptorCounts.accelerationStructureCount;
+
+   DescriptorInfo descriptor;
+   descriptor.pipelineStages = m_activePipelineStages;
+   descriptor.descriptorType = gapi::DescriptorType::AccelerationStructure;
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
+
+   this->set_descriptor<detail::descriptor::AccelerationStructure>(index, m_activePipelineStages, &accelerationStructure);
+}
+
+void BuildContext::trace_rays(const Vector3i dimensions)
+{
+   this->add_command<detail::cmd::BindRayTracingPipeline>(m_rayTracingPipelineState);
+
+   this->handle_descriptor_bindings();
+
+   for (auto&& pushConstant : m_pendingPushConstants) {
+      this->add_command<detail::cmd::PushConstant>(std::move(pushConstant));
+   }
+   m_pendingPushConstants.clear();
+
+   this->add_command<detail::cmd::TraceRays>(m_rayTracingPipelineState, dimensions);
+
+   m_rayTracingPipelineState.reset();
+   ++m_descriptorCounts.totalDescriptorSets;
 }
 
 Job BuildContext::build_job(PipelineCache& pipelineCache, ResourceStorage& storage, [[maybe_unused]] const Name jobName)
@@ -863,6 +934,13 @@ void BuildContext::set_pipeline_state_descriptor(const graphics_api::PipelineSta
       m_computePipelineState.descriptorState.descriptors[index] = info;
       m_computePipelineState.descriptorState.descriptorCount = std::max(m_computePipelineState.descriptorState.descriptorCount, index + 1);
    }
+   if (stages & gapi::PipelineStage::RayGenerationShader || stages & gapi::PipelineStage::ClosestHitShader ||
+       stages & gapi::PipelineStage::MissShader || stages & gapi::PipelineStage::AnyHitShader ||
+       stages & gapi::PipelineStage::IntersectionShader || stages & gapi::PipelineStage::CallableShader) {
+      m_rayTracingPipelineState.descriptorState.descriptors[index] = info;
+      m_rayTracingPipelineState.descriptorState.descriptorCount =
+         std::max(m_rayTracingPipelineState.descriptorState.descriptorCount, index + 1);
+   }
 }
 
 std::optional<gapi::DescriptorPool> BuildContext::create_descriptor_pool() const
@@ -888,6 +966,10 @@ std::optional<gapi::DescriptorPool> BuildContext::create_descriptor_pool() const
    }
    if (m_descriptorCounts.storageBufferCount != 0) {
       descriptorCounts.emplace_back(gapi::DescriptorType::StorageBuffer, multiplier * m_descriptorCounts.storageBufferCount);
+   }
+   if (m_descriptorCounts.accelerationStructureCount != 0) {
+      descriptorCounts.emplace_back(gapi::DescriptorType::AccelerationStructure,
+                                    multiplier * m_descriptorCounts.accelerationStructureCount);
    }
 
    return GAPI_CHECK(m_device.create_descriptor_pool(descriptorCounts, multiplier * m_descriptorCounts.totalDescriptorSets));

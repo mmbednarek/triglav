@@ -54,10 +54,10 @@ class BarrierInsertionPass
       return std::get<TCmd>(*m_commands.emplace(it.base() - 1, std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...));
    }
 
-   void setup_texture_barrier(TextureRef texRef, graphics_api::TextureState targetState, graphics_api::PipelineStage targetStage,
+   void setup_texture_barrier(TextureRef texRef, graphics_api::TextureState targetState, graphics_api::PipelineStageFlags targetStageFlags,
                               std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
 
-   void setup_buffer_barrier(BufferRef buffRef, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStage targetStage);
+   void setup_buffer_barrier(BufferRef buffRef, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStageFlags targetStages);
 
    BuildContext& m_context;
    std::vector<detail::Command> m_commands;

@@ -13,6 +13,8 @@ struct ViewProperties
 {
     float4x4 view;
     float4x4 proj;
+    float4x4 invView;
+    float4x4 invProj;
     float4x4 orient;
     float nearPlane;
     float farPlane;

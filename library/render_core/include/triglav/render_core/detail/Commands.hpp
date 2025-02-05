@@ -17,6 +17,11 @@ struct BindComputePipeline
    ComputePipelineState pso;
 };
 
+struct BindRayTracingPipeline
+{
+   RayTracingPipelineState pso;
+};
+
 struct BindDescriptors
 {
    std::vector<std::optional<DescriptorAndStage>> descriptors{};
@@ -201,13 +206,20 @@ struct PushConstant
    std::vector<u8> data;
 };
 
+struct TraceRays
+{
+   RayTracingPipelineState state;
+   Vector3i dimensions;
+};
+
 }// namespace cmd
 
-using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::DrawPrimitives, cmd::DrawIndexedPrimitives,
-                             cmd::DrawIndexedIndirectWithCount, cmd::DrawIndirectWithCount, cmd::Dispatch, cmd::DispatchIndirect,
-                             cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
-                             cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
-                             cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond,
-                             cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant>;
+using Command =
+   std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::BindRayTracingPipeline, cmd::DrawPrimitives,
+                cmd::DrawIndexedPrimitives, cmd::DrawIndexedIndirectWithCount, cmd::DrawIndirectWithCount, cmd::Dispatch,
+                cmd::DispatchIndirect, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
+                cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
+                cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond,
+                cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant, cmd::TraceRays>;
 
 }// namespace triglav::render_core::detail

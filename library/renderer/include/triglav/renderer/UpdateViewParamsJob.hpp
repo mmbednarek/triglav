@@ -19,6 +19,8 @@ struct ViewProperties
 {
    alignas(16) Matrix4x4 view;
    alignas(16) Matrix4x4 projection;
+   alignas(16) Matrix4x4 invertedView;
+   alignas(16) Matrix4x4 invertedProjection;
    alignas(16) Matrix4x4 orientation;
    float nearPlane;
    float farPlane;

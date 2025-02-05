@@ -121,6 +121,37 @@ void RayTracingScene::render(graphics_api::CommandList& cmdList, const graphics_
    cmdList.trace_rays(m_bindingTable, {aoTexture.width(), aoTexture.height(), 1});
 }
 
+void RayTracingScene::build_acceleration_structures()
+{
+   if (!m_mustUpdateAccelerationStructures) {
+      return;
+   }
+
+   spdlog::info("Updating acceleration structures...");
+   m_mustUpdateAccelerationStructures = false;
+
+   auto asUpdateCmdList = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
+
+   GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
+   m_buildBLContext.build_acceleration_structures(asUpdateCmdList);
+   GAPI_CHECK_STATUS(asUpdateCmdList.finish());
+
+   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(asUpdateCmdList));
+
+   m_instanceListBuffer.emplace(m_instanceBuilder.build_buffer());
+
+   m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, m_objects.size());
+   m_tlAccelerationStructure = m_buildTLContext.commit_instances();
+
+   GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
+   m_buildTLContext.build_acceleration_structures(asUpdateCmdList);
+   GAPI_CHECK_STATUS(asUpdateCmdList.finish());
+
+   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(asUpdateCmdList));
+
+   GAPI_CHECK_STATUS(m_objectBuffer.write_indirect(m_objects.data(), m_objects.size() * sizeof(ObjectDesc)));
+}
+
 void RayTracingScene::on_object_added_to_scene(const SceneObject& object)
 {
    m_mustUpdateAccelerationStructures = true;

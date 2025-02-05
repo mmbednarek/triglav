@@ -100,6 +100,37 @@ struct ComputePipelineState
    [[nodiscard]] PipelineHash hash() const;
 };
 
+enum class RayTracingShaderGroupType
+{
+   General,
+   Triangles,
+   Procedural,
+};
+
+struct RayTracingShaderGroup
+{
+   RayTracingShaderGroupType type;
+   std::optional<ResourceName> generalShader;
+   std::optional<RayClosestHitShaderName> closestHitShader;
+
+   [[nodiscard]] PipelineHash hash() const;
+};
+
+struct RayTracingPipelineState
+{
+   std::optional<RayGenShaderName> rayGenShader;
+   std::vector<RayClosestHitShaderName> rayClosestHitShaders;
+   std::vector<RayMissShaderName> rayMissShaders;
+   DescriptorState descriptorState;
+   std::vector<PushConstantDesc> pushConstants;
+   u32 maxRecursion{1};
+   std::vector<RayTracingShaderGroup> shaderGroups;
+
+   void reset();
+   [[nodiscard]] std::vector<Name> shader_bindings() const;
+   [[nodiscard]] PipelineHash hash() const;
+};
+
 struct FromLastFrame
 {
    Name name;
@@ -145,9 +176,14 @@ struct TextureBarrier
    u32 mipLevelCount{1};
 };
 
-static constexpr u32 calculate_mip_count(const Vector2i& dims)
+constexpr u32 calculate_mip_count(const Vector2i& dims)
 {
    return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;
+}
+
+constexpr Name make_rt_shader_name(const ResourceName resName)
+{
+   return resName.name() * static_cast<u64>(resName.type());
 }
 
 namespace literals {

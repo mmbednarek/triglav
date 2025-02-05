@@ -76,6 +76,11 @@ class ResourceName
       return g_resourceStage[static_cast<int>(m_type)];
    }
 
+   [[nodiscard]] constexpr Name name() const
+   {
+      return m_name;
+   }
+
    constexpr auto operator<=>(const ResourceName& other) const
    {
       if (m_name == other.m_name && m_type != other.m_type)

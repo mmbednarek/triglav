@@ -25,6 +25,7 @@ class GenerateCommandListPass
 
    void visit(const detail::cmd::BindGraphicsPipeline& cmd);
    void visit(const detail::cmd::BindComputePipeline& cmd);
+   void visit(const detail::cmd::BindRayTracingPipeline& cmd);
    void visit(const detail::cmd::DrawPrimitives& cmd) const;
    void visit(const detail::cmd::DrawIndexedPrimitives& cmd) const;
    void visit(const detail::cmd::DrawIndexedIndirectWithCount& cmd) const;
@@ -44,6 +45,7 @@ class GenerateCommandListPass
    void visit(const detail::cmd::BeginRenderPass& cmd) const;
    void visit(const detail::cmd::EndRenderPass& cmd) const;
    void visit(const detail::cmd::PushConstant& cmd) const;
+   void visit(const detail::cmd::TraceRays& cmd) const;
 
    void default_visit(const detail::Command&) const;
 
