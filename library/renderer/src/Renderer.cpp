@@ -1,16 +1,6 @@
 #include "Renderer.hpp"
 
 #include "StatisticManager.hpp"
-#include "node/AmbientOcclusion.hpp"
-#include "node/BindlessGeometry.hpp"
-#include "node/Blur.hpp"
-#include "node/Particles.hpp"
-#include "node/PostProcessing.hpp"
-#include "node/ProcessGlyphs.hpp"
-#include "node/RayTracedImage.hpp"
-#include "node/Shading.hpp"
-#include "node/SyncBuffers.hpp"
-#include "node/UserInterface.hpp"
 #include "stage/AmbientOcclusionStage.hpp"
 #include "stage/GBufferStage.hpp"
 #include "stage/PostProcessStage.hpp"
@@ -63,17 +53,6 @@ graphics_api::Resolution create_viewport_resolution(const graphics_api::Device& 
    return resolution;
 }
 
-std::vector<graphics_api::Framebuffer> create_framebuffers(const graphics_api::Swapchain& swapchain,
-                                                           const graphics_api::RenderTarget& renderTarget)
-{
-   std::vector<graphics_api::Framebuffer> result{};
-   const auto frameCount = swapchain.frame_count();
-   for (u32 i = 0; i < frameCount; ++i) {
-      result.emplace_back(GAPI_CHECK(renderTarget.create_swapchain_framebuffer(swapchain, i)));
-   }
-   return result;
-}
-
 graphics_api::PresentMode get_present_mode()
 {
    const auto presentModeStr = io::CommandLine::the().arg("presentMode"_name);
@@ -102,18 +81,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_resolution(create_viewport_resolution(m_device, m_surface, resolution.width, resolution.height)),
     m_swapchain(
        checkResult(m_device.create_swapchain(m_surface, g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution, get_present_mode()))),
-    m_renderTarget(
-       checkResult(graphics_api::RenderTargetBuilder(m_device)
-                      .attachment("output"_name,
-                                  AttachmentAttribute::Color | AttachmentAttribute::ClearImage | AttachmentAttribute::StoreImage |
-                                     AttachmentAttribute::Presentable,
-                                  g_colorFormat)
-                      .attachment("output/zbuffer"_name, AttachmentAttribute::Depth | AttachmentAttribute::ClearImage, g_depthFormat)
-                      .build())),
-    m_framebuffers(create_framebuffers(m_swapchain, m_renderTarget)),
     m_glyphCache(m_device, m_resourceManager),
-    m_context2D(m_device, m_renderTarget, m_resourceManager),
-    m_renderGraph(m_device),
     m_infoDialog(m_uiViewport, m_glyphCache),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
@@ -129,8 +97,6 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
        GAPI_CHECK(m_device.create_fence()),
     }
 {
-   m_context2D.update_resolution(m_resolution);
-
    m_infoDialog.initialize();
    m_scene.load_level("demo.level"_rc);
 
@@ -216,11 +182,6 @@ void Renderer::update_debug_info()
    const auto framerateAvgStr = std::format("{:.1f}", StatisticManager::the().average(Stat::FramesPerSecond));
    m_uiViewport.set_text_content("info_dialog/metrics/fps_avg/value"_name, framerateAvgStr);
 
-   // const auto gBufferTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("geometry"_name));
-   // m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_triangles/value"_name, gBufferTriangleCountStr);
-   // const auto shadingTriangleCountStr = std::format("{}", m_renderGraph.triangle_count("shading"_name));
-   // m_uiViewport.set_text_content("info_dialog/metrics/shading_triangles/value"_name, shadingTriangleCountStr);
-
    const auto gBufferGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::GBufferGpuTime));
    m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_gpu_time/value"_name, gBufferGpuTimeStr);
    const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
@@ -240,7 +201,8 @@ void Renderer::update_debug_info()
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
    m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
 
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(m_aoMethod));
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name,
+                                 m_device.enabled_features() & DeviceFeature::RayTracing ? "RTAO" : "SSO");
    m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
    m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, m_rayTracedShadows ? "Ray Traced" : "Cascaded Shadow Maps");
    m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
@@ -249,65 +211,6 @@ void Renderer::update_debug_info()
 }
 
 void Renderer::on_render()
-{
-   static bool isFirstFrame = true;
-
-   const auto deltaTime = calculate_frame_duration();
-
-   if (not isFirstFrame) {
-      StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
-      // StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_renderGraph.node<node::Geometry>("geometry"_name).gpu_time());
-      StatisticManager::the().push_accumulated(Stat::ShadingGpuTime, m_renderGraph.node<node::Shading>("shading"_name).gpu_time());
-      if (this->is_any_ray_tracing_feature_enabled()) {
-         StatisticManager::the().push_accumulated(Stat::RayTracingGpuTime,
-                                                  m_renderGraph.node<node::RayTracedImage>("ray_tracing"_name).gpu_time());
-      }
-   } else {
-      isFirstFrame = false;
-   }
-
-   if (m_mustRecreateSwapchain) {
-      auto dim = m_desktopSurface.dimension();
-      this->recreate_swapchain(dim.x, dim.y);
-      m_mustRecreateSwapchain = false;
-   }
-
-   m_renderGraph.change_active_frame();
-   m_renderGraph.await();
-
-   auto& frameReadySemaphore = m_renderGraph.semaphore("frame_is_ready"_name, "post_processing"_name);
-   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(frameReadySemaphore));
-   if (mustRecreate) {
-      m_mustRecreateSwapchain = true;
-   }
-
-   m_renderGraph.set_flag("debug_lines"_name, m_showDebugLines);
-   m_renderGraph.set_option("ao_method"_name, m_aoMethod);
-   m_renderGraph.set_flag("fxaa"_name, m_fxaaEnabled);
-   m_renderGraph.set_flag("bloom"_name, m_bloomEnabled);
-   m_renderGraph.set_flag("hide_ui"_name, m_hideUI);
-   m_renderGraph.set_flag("ray_traced_shadows"_name, m_rayTracedShadows);
-   this->update_debug_info();
-
-   this->update_uniform_data(deltaTime);
-
-   m_renderGraph.node<node::Particles>("particles"_name).set_delta_time(deltaTime);
-   m_renderGraph.node<node::PostProcessing>("post_processing"_name).set_index(framebufferIndex);
-   m_renderGraph.record_command_lists();
-
-   // GAPI_CHECK_STATUS(m_renderGraph.execute());
-   // auto status = m_swapchain.present(m_renderGraph.target_semaphore(), framebufferIndex);
-   // if (status == graphics_api::Status::OutOfDateSwapchain) {
-   //    m_mustRecreateSwapchain = true;
-   // } else {
-   //    GAPI_CHECK_STATUS(status);
-   // }
-
-   StatisticManager::the().tick();
-}
-
-
-void Renderer::on_render_new()
 {
    static bool isFirstFrame = true;
 
@@ -367,7 +270,6 @@ void Renderer::on_render_new()
 
 void Renderer::on_close()
 {
-   m_renderGraph.await();
    m_device.await_all();
 }
 
@@ -407,12 +309,10 @@ void Renderer::on_key_pressed(const Key key)
    if (key == Key::F4) {
       switch (m_aoMethod) {
       case AmbientOcclusionMethod::None:
-         m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ambient_occlusion"_name, "ao"_name);
          m_aoMethod = AmbientOcclusionMethod::ScreenSpace;
          break;
       case AmbientOcclusionMethod::ScreenSpace:
          if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-            m_renderGraph.node<node::Blur>("blur_ao"_name).set_source_texture("ray_tracing"_name, "ao"_name);
             m_aoMethod = AmbientOcclusionMethod::RayTraced;
          } else {
             m_aoMethod = AmbientOcclusionMethod::None;
@@ -546,15 +446,8 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
    const graphics_api::Resolution resolution{width, height};
 
    m_device.await_all();
-
-   m_context2D.update_resolution(resolution);
-   m_renderGraph.update_resolution(resolution);
-
-   m_framebuffers.clear();
-
    m_swapchain = checkResult(m_device.create_swapchain(m_surface, m_swapchain.color_format(), graphics_api::ColorSpace::sRGB, resolution,
                                                        get_present_mode(), &m_swapchain));
-   m_framebuffers = create_framebuffers(m_swapchain, m_renderTarget);
 
    m_resolution = {width, height};
 

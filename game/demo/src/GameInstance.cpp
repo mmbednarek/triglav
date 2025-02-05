@@ -176,7 +176,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
 
    while (eventListener.is_running()) {
       // m_renderer->on_render();
-      m_renderer->on_render_new();
+      m_renderer->on_render();
       display.dispatch_messages();
    }
 

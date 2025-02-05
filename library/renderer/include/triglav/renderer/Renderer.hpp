@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AmbientOcclusionRenderer.hpp"
 #include "BindlessScene.hpp"
 #include "GlyphCache.hpp"
 #include "InfoDialog.hpp"
@@ -9,7 +8,6 @@
 #include "Renderer.hpp"
 #include "RenderingJob.hpp"
 #include "Scene.hpp"
-#include "SpriteRenderer.hpp"
 #include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
 
@@ -19,7 +17,6 @@
 #include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/render_core/PipelineCache.hpp"
-#include "triglav/render_core/RenderGraph.hpp"
 #include "triglav/render_core/ResourceStorage.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/ui_core/Viewport.hpp"
@@ -31,6 +28,13 @@ class ResourceStorage;
 }
 
 namespace triglav::renderer {
+
+enum class AmbientOcclusionMethod
+{
+   None,
+   RayTraced,
+   ScreenSpace,
+};
 
 class Renderer
 {
@@ -51,7 +55,6 @@ class Renderer
 
    void update_debug_info();
    void on_render();
-   void on_render_new();
    void on_resize(uint32_t width, uint32_t height);
    void on_close();
    void on_mouse_relative_move(float dx, float dy);
@@ -93,11 +96,7 @@ class Renderer
    BindlessScene m_bindlessScene;
    graphics_api::Resolution m_resolution;
    graphics_api::Swapchain m_swapchain;
-   graphics_api::RenderTarget m_renderTarget;
-   std::vector<graphics_api::Framebuffer> m_framebuffers;
    GlyphCache m_glyphCache;
-   SpriteRenderer m_context2D;
-   render_core::RenderGraph m_renderGraph;
    ui_core::Viewport m_uiViewport;
    InfoDialog m_infoDialog;
    std::optional<RayTracingScene> m_rayTracingScene;

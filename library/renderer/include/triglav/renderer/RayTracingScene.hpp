@@ -1,6 +1,5 @@
 #pragma once
 
-#include "AmbientOcclusionRenderer.hpp"
 #include "Camera.hpp"
 #include "Scene.hpp"
 
@@ -73,9 +72,6 @@ class RayTracingScene
    graphics_api::ray_tracing::AccelerationStructurePool m_asPool;
    graphics_api::ray_tracing::GeometryBuildContext m_buildBLContext;
    graphics_api::ray_tracing::GeometryBuildContext m_buildTLContext;
-   graphics_api::ray_tracing::RayTracingPipeline m_pipeline;
-   graphics_api::ray_tracing::ShaderBindingTable m_bindingTable;
-   RayGenerationUbo m_ubo;
    bool m_mustUpdateAccelerationStructures{false};
    std::vector<ObjectDesc> m_objects;
 

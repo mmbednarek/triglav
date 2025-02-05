@@ -7,7 +7,7 @@ namespace triglav::render_core {
 namespace gapi = graphics_api;
 
 namespace {
-gapi::BufferAccess adjust_buffer_access_to_work_type(const gapi::BufferAccess access, const gapi::WorkTypeFlags work_types)
+[[maybe_unused]] gapi::BufferAccess adjust_buffer_access_to_work_type(const gapi::BufferAccess access, const gapi::WorkTypeFlags work_types)
 {
    using enum gapi::WorkType;
    using gapi::BufferAccess;
