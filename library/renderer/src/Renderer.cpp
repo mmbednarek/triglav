@@ -504,7 +504,7 @@ void Renderer::prepare_pre_present_commands(render_core::ResourceStorage& resour
 
    for (const auto& swapchainTexture : m_swapchain.textures()) {
       for (const u32 frameIndex : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
-         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Compute | graphics_api::WorkType::Transfer));
+         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics | graphics_api::WorkType::Transfer));
          GAPI_CHECK_STATUS(cmdList.begin());
 
          graphics_api::TextureBarrierInfo inBarrier{};

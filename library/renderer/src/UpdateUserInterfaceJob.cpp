@@ -242,13 +242,14 @@ void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
 
    ctx.bind_vertex_shader("text/render.vshader"_rc);
 
+   ctx.push_constant(ctx.screen_size());
+
    ctx.bind_storage_buffer(0, "user_interface.text_draw_call_buffer"_external);
 
    ctx.bind_fragment_shader("text/render.fshader"_rc);
 
    ctx.bind_sampled_texture_array(1, m_atlases);
 
-   ctx.push_constant(ctx.screen_size());
 
    render_core::VertexLayout layout(sizeof(TextVertex));
    layout.add("position"_name, GAPI_FORMAT(RG, Float32), offsetof(TextVertex, position));

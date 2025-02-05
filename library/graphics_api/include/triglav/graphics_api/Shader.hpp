@@ -17,6 +17,8 @@ class Shader
    [[nodiscard]] std::string_view name() const;
    [[nodiscard]] PipelineStage stage() const;
 
+   void set_debug_name(std::string_view name);
+
  private:
    std::string m_name;
    PipelineStage m_stage;
