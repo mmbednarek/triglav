@@ -1,21 +1,13 @@
+import "../common/common.slang";
+
 struct VertexIn
 {
     [[vk::location(0)]]
     float3 position : POSITION0;
 };
 
-struct ViewProperties {
-    float4x4 view;
-    float4x4 proj;
-    float4x4 invView;
-    float4x4 invProj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
-
 [[vk::binding(0)]]
-uniform ConstantBuffer<ViewProperties> viewProps;
+uniform ConstantBuffer<common::ViewProperties> viewProps;
 
 struct FragIn
 {

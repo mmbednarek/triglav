@@ -1,4 +1,5 @@
 import mesh.mesh;
+import "../common/common.slang";
 
 [[vk::binding(0)]]
 StructuredBuffer<mesh::SceneMesh> SceneMeshes;
@@ -9,28 +10,12 @@ RWStructuredBuffer<mesh::SceneMesh> DrawCalls;
 [[vk::binding(2)]]
 RWStructuredBuffer<uint32_t> Count;
 
-struct ViewProperties
-{
-    float4x4 view;
-    float4x4 proj;
-    float4x4 invView;
-    float4x4 invProj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
-
 [[vk::binding(3)]]
-ConstantBuffer<ViewProperties> ViewProps;
+ConstantBuffer<common::ViewProperties> ViewProps;
 
 [[vk::binding(4)]]
 [[vk::image_format("r16")]]
 Texture2D<float> HiZBuffer;
-
-float to_linear_depth(const float depth)
-{
-   return (2.0f * ViewProps.nearPlane) / (ViewProps.farPlane + ViewProps.nearPlane - depth * (ViewProps.farPlane - ViewProps.nearPlane));
-}
 
 uint2 to_texture_space(float2 screenSpace, float2 texRes)
 {
@@ -80,7 +65,7 @@ bool is_object_visible(in mesh::SceneMesh mesh)
     for (int i = 0; i < 8; ++i)
     {
         let projectedPoint = mul(mat, float4(points[i], 1));
-        let linearZ = to_linear_depth(projectedPoint.z / projectedPoint.w);
+        let linearZ = ViewProps.to_linear_depth(projectedPoint.z / projectedPoint.w);
 
         let hmPoint = projectedPoint / abs(projectedPoint.w);
 
@@ -129,10 +114,10 @@ bool is_object_visible(in mesh::SceneMesh mesh)
    uint2 maxTexSpaceMip = clamp(translate_coord_to_mip(maxTexSpace, mipLevel), uint2(0, 0), uint2(mipWidth-1, mipHeight-1));
 
    float depthSamples[4];
-   depthSamples[0] = to_linear_depth(HiZBuffer.Load(int3(minTexSpaceMip, mipLevel)));
-   depthSamples[1] = to_linear_depth(HiZBuffer.Load(int3(minTexSpaceMip.x, maxTexSpaceMip.y, mipLevel)));
-   depthSamples[2] = to_linear_depth(HiZBuffer.Load(int3(maxTexSpaceMip.x, minTexSpaceMip.y, mipLevel)));
-   depthSamples[3] = to_linear_depth(HiZBuffer.Load(int3(maxTexSpaceMip, mipLevel)));
+   depthSamples[0] = ViewProps.to_linear_depth(HiZBuffer.Load(int3(minTexSpaceMip, mipLevel)));
+   depthSamples[1] = ViewProps.to_linear_depth(HiZBuffer.Load(int3(minTexSpaceMip.x, maxTexSpaceMip.y, mipLevel)));
+   depthSamples[2] = ViewProps.to_linear_depth(HiZBuffer.Load(int3(maxTexSpaceMip.x, minTexSpaceMip.y, mipLevel)));
+   depthSamples[3] = ViewProps.to_linear_depth(HiZBuffer.Load(int3(maxTexSpaceMip, mipLevel)));
 
    [unroll]
    for (int i = 0; i < 4; ++i)

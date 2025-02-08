@@ -48,18 +48,8 @@ uniform Sampler2D<float> texShadowMaps[3];
 [[vk::binding(5)]]
 uniform Sampler2D<float> texShadow;
 
-struct UniformViewProperties
-{
-    float4x4 view;
-    float4x4 proj;
-    float4x4 invView;
-    float4x4 invProj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
 [[vk::binding(6)]]
-uniform ConstantBuffer<UniformViewProperties> viewProperties;
+uniform ConstantBuffer<common::ViewProperties> viewProperties;
 
 struct ShadowMapMatrices
 {

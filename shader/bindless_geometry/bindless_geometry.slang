@@ -1,3 +1,4 @@
+import "../common/common.slang";
 import material.material;
 import mesh.mesh;
 
@@ -13,19 +14,8 @@ BINDING LAYOUT
 
 */
 
-struct UniformViewProperties
-{
-    float4x4 view;
-    float4x4 proj;
-    float4x4 invView;
-    float4x4 invProj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
-
 [[vk::binding(0)]]
-uniform ConstantBuffer<UniformViewProperties> UboViewProps;
+uniform ConstantBuffer<common::ViewProperties> UboViewProps;
 
 [[vk::binding(1)]]
 uniform StructuredBuffer<mesh::SceneMesh> SceneMeshes;

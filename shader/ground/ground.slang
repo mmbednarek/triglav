@@ -1,3 +1,5 @@
+import "../common/common.slang";
+
 struct VSOutput
 {
     float4 position : SV_POSITION;
@@ -10,20 +12,8 @@ struct VSOutput
     float4 viewPos : POSITION1;
 };
 
-struct GroundUBO
-{
-    float4x4 view;
-    float4x4 proj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
-
 [[vk::binding(0)]]
-cbuffer ubo
-{
-    GroundUBO ubo;
-};
+ConstantBuffer<common::ViewProperties> ubo;
 
 static float4 g_positions[4] =
 {

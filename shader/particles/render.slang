@@ -1,16 +1,8 @@
 import particle;
-
-struct ViewProperties
-{
-    float4x4 view;
-    float4x4 proj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
+import "../common/common.slang";
 
 [[vk::binding(0)]]
-ConstantBuffer<ViewProperties> ubo;
+ConstantBuffer<common::ViewProperties> ubo;
 
 [[vk::binding(1)]]
 StructuredBuffer<Particle> particlesIn;

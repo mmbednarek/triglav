@@ -5,17 +5,6 @@ namespace ray_tracing
 
 public typedef BuiltInTriangleIntersectionAttributes Attributes;
 
-public struct ObjectTransform
-{
-    public float4x4 view;
-    public float4x4 proj;
-    public float4x4 viewInverse;
-    public float4x4 projInverse;
-    public float4x4 orient;
-    public float nearPlane;
-    public float farPlane;
-};
-
 public struct VertexData
 {
     public float3 position;

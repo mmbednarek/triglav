@@ -1,11 +1,4 @@
-struct ViewPropsBuffer
-{
-    float4x4 view;
-    float4x4 proj;
-    float4x4 orient;
-    float nearPlane;
-    float farPlane;
-};
+import "../common/common.slang";
 
 struct SamplesBuffer
 {
@@ -25,7 +18,7 @@ uniform Sampler2D<float4> texNormal;
 [[vk::binding(2)]]
 uniform Sampler2D<float4> texNoise;
 [[vk::binding(3)]]
-uniform ConstantBuffer<ViewPropsBuffer> viewProps;
+uniform ConstantBuffer<common::ViewProperties> viewProps;
 [[vk::binding(4)]]
 uniform ConstantBuffer<SamplesBuffer> samples;
 
