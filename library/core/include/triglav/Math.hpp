@@ -33,4 +33,9 @@ using Matrix4x4 = glm::mat4x4;
 
 constexpr auto g_pi = 3.14159265358979323846f;
 
+[[nodiscard]] constexpr float lerp(const float a, const float b, const float t)
+{
+   return a + (b - a) * t;
+}
+
 }// namespace triglav

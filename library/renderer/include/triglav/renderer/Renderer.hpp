@@ -65,13 +65,14 @@ class Renderer
    [[nodiscard]] graphics_api::Device& device() const;
    [[nodiscard]] bool is_any_ray_tracing_feature_enabled() const;
 
+   static void prepare_pre_present_commands(const graphics_api::Device& device, const graphics_api::Swapchain& swapchain,
+                                            render_core::ResourceStorage& resources, std::vector<graphics_api::CommandList>& outCmdLists);
+
  private:
    void recreate_swapchain(uint32_t width, uint32_t height);
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    glm::vec3 moving_direction();
-
-   void prepare_pre_present_commands(render_core::ResourceStorage& resources);
 
    bool m_showDebugLines{false};
    AmbientOcclusionMethod m_aoMethod{AmbientOcclusionMethod::ScreenSpace};

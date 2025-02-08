@@ -8,6 +8,7 @@
 #include "GlyphCache.hpp"
 
 #include <map>
+#include <mutex>
 #include <vector>
 
 namespace triglav::render_core {
@@ -67,6 +68,7 @@ class UpdateUserInterfaceJob
    void on_added_text(Name name, const ui_core::Text& text);
    void on_text_change_content(Name name, const ui_core::Text& text);
    void on_added_rectangle(Name name, const ui_core::Rectangle& rect);
+   void on_rectangle_change_dims(Name name, const ui_core::Rectangle& rect);
 
    void render_ui(render_core::BuildContext& ctx);
 
@@ -77,6 +79,7 @@ class UpdateUserInterfaceJob
 
    graphics_api::Device& m_device;
    GlyphCache& m_glyphCache;
+   ui_core::Viewport& m_viewport;
    std::vector<Name> m_pendingTextUpdates;
    std::map<Name, TextInfo> m_textInfos;
    graphics_api::Buffer m_combinedGlyphBuffer;
@@ -85,11 +88,14 @@ class UpdateUserInterfaceJob
    std::map<u64, TypefaceInfo> m_typefaceInfos;
    std::vector<render_core::TextureRef> m_atlases;
    std::vector<VertexBufferSection> m_vertexSections;
-   std::vector<RectangleData> m_rectangles;
+   std::map<Name, RectangleData> m_rectangles;
+   std::mutex m_textUpdateMtx;
+   std::mutex m_rectUpdateMtx;
 
    TG_SINK(ui_core::Viewport, OnAddedText);
    TG_SINK(ui_core::Viewport, OnTextChangeContent);
    TG_SINK(ui_core::Viewport, OnAddedRectangle);
+   TG_SINK(ui_core::Viewport, OnRectangleChangeDims);
 };
 
 }// namespace triglav::renderer

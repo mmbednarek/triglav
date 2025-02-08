@@ -82,6 +82,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_swapchain(
        checkResult(m_device.create_swapchain(m_surface, g_colorFormat, graphics_api::ColorSpace::sRGB, m_resolution, get_present_mode()))),
     m_glyphCache(m_device, m_resourceManager),
+    m_uiViewport({resolution.width, resolution.height}),
     m_infoDialog(m_uiViewport, m_glyphCache),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
@@ -159,7 +160,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
 
    m_jobGraph.build_jobs(RenderingJob::JobName);
 
-   this->prepare_pre_present_commands(m_resourceStorage);
+   Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
 
    stage::ShadingStage::initialize_particles(m_jobGraph);
 
@@ -397,14 +398,15 @@ glm::vec3 Renderer::moving_direction()
    return glm::vec3{0.0f, 0.0f, 0.0f};
 }
 
-void Renderer::prepare_pre_present_commands(render_core::ResourceStorage& resources)
+void Renderer::prepare_pre_present_commands(const graphics_api::Device& device, const graphics_api::Swapchain& swapchain,
+                                            render_core::ResourceStorage& resources, std::vector<graphics_api::CommandList>& outCmdLists)
 {
-   m_prePresentCommands.clear();
-   m_prePresentCommands.reserve(m_swapchain.textures().size() * render_core::FRAMES_IN_FLIGHT_COUNT);
+   outCmdLists.clear();
+   outCmdLists.reserve(swapchain.textures().size() * render_core::FRAMES_IN_FLIGHT_COUNT);
 
-   for (const auto& swapchainTexture : m_swapchain.textures()) {
+   for (const auto& swapchainTexture : swapchain.textures()) {
       for (const u32 frameIndex : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
-         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics | graphics_api::WorkType::Transfer));
+         auto cmdList = GAPI_CHECK(device.create_command_list(graphics_api::WorkType::Graphics | graphics_api::WorkType::Transfer));
          GAPI_CHECK_STATUS(cmdList.begin());
 
          graphics_api::TextureBarrierInfo inBarrier{};
@@ -428,7 +430,7 @@ void Renderer::prepare_pre_present_commands(render_core::ResourceStorage& resour
 
          GAPI_CHECK_STATUS(cmdList.finish());
 
-         m_prePresentCommands.emplace_back(std::move(cmdList));
+         outCmdLists.emplace_back(std::move(cmdList));
       }
    }
 }
@@ -451,7 +453,7 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
 
    m_resolution = {width, height};
 
-   this->prepare_pre_present_commands(m_resourceStorage);
+   Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
 }
 
 graphics_api::Device& Renderer::device() const

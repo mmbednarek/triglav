@@ -65,11 +65,13 @@ constexpr u32 g_vertexCountPerChar = 6;
 UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, GlyphCache& glyphCache, ui_core::Viewport& viewport) :
     m_device(device),
     m_glyphCache(glyphCache),
+    m_viewport(viewport),
     m_combinedGlyphBuffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
                                                           g_maxCombinedGlyphBufferSize))),
     TG_CONNECT(viewport, OnAddedText, on_added_text),
     TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
-    TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle)
+    TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
+    TG_CONNECT(viewport, OnRectangleChangeDims, on_rectangle_change_dims)
 {
 }
 
@@ -118,6 +120,8 @@ void UpdateUserInterfaceJob::build_job(render_core::BuildContext& ctx) const
 
 void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u32 frameIndex)
 {
+   std::scoped_lock lk{m_textUpdateMtx, m_rectUpdateMtx};
+
    const auto textUpdateMem =
       GAPI_CHECK(graph.resources().buffer("user_interface.text_update_buffer.staging"_name, frameIndex).map_memory());
    auto& textUpdates = textUpdateMem.cast<std::array<TextUpdateInfo, g_maxTextUpdateCount>>();
@@ -158,6 +162,8 @@ void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u
 
 void UpdateUserInterfaceJob::on_added_text(const Name name, const ui_core::Text& text)
 {
+   std::unique_lock lk{m_textUpdateMtx};
+
    const auto& typefaceInfo = this->get_typeface_info({text.typefaceName, text.fontSize});
    const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
 
@@ -170,6 +176,8 @@ void UpdateUserInterfaceJob::on_added_text(const Name name, const ui_core::Text&
 
 void UpdateUserInterfaceJob::on_text_change_content(const Name name, const ui_core::Text& text)
 {
+   std::unique_lock lk{m_textUpdateMtx};
+
    this->free_vertex_section(name);
    const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
 
@@ -181,8 +189,10 @@ void UpdateUserInterfaceJob::on_text_change_content(const Name name, const ui_co
    m_pendingTextUpdates.emplace_back(name);
 }
 
-void UpdateUserInterfaceJob::on_added_rectangle(const Name /*name*/, const ui_core::Rectangle& rect)
+void UpdateUserInterfaceJob::on_added_rectangle(const Name name, const ui_core::Rectangle& rect)
 {
+   std::unique_lock lk{m_rectUpdateMtx};
+
    const std::array vertices{
       Vector2{rect.rect.x, rect.rect.y}, Vector2{rect.rect.x, rect.rect.w}, Vector2{rect.rect.z, rect.rect.y},
       Vector2{rect.rect.z, rect.rect.y}, Vector2{rect.rect.x, rect.rect.w}, Vector2{rect.rect.z, rect.rect.w},
@@ -198,7 +208,7 @@ void UpdateUserInterfaceJob::on_added_rectangle(const Name /*name*/, const ui_co
       Vector2 viewportSize;
    } vsUbo{};
    vsUbo.position = {rect.rect.x, rect.rect.y};
-   vsUbo.viewportSize = {1920, 1080};
+   vsUbo.viewportSize = m_viewport.dimensions();
 
    auto vsUboBuffer = GAPI_CHECK(
       m_device.create_buffer(graphics_api::BufferUsage::UniformBuffer | graphics_api::BufferUsage::TransferDst, sizeof(VertUBO)));
@@ -211,21 +221,57 @@ void UpdateUserInterfaceJob::on_added_rectangle(const Name /*name*/, const ui_co
       Vector2 rectSize;
    } fsUbo{};
    fsUbo.borderRadius = {10, 10, 10, 10};
-   fsUbo.backgroundColor = {0, 0, 0, 0.8f};
+   fsUbo.backgroundColor = rect.color;
    fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
 
    auto fsUboBuffer = GAPI_CHECK(
       m_device.create_buffer(graphics_api::BufferUsage::UniformBuffer | graphics_api::BufferUsage::TransferDst, sizeof(FragUBO)));
    GAPI_CHECK_STATUS(fsUboBuffer.write_indirect(&fsUbo, sizeof(FragUBO)));
 
-   m_rectangles.emplace_back(std::move(vsUboBuffer), std::move(fsUboBuffer), std::move(vertexBuffer));
+   m_rectangles.emplace(name, RectangleData{std::move(vsUboBuffer), std::move(fsUboBuffer), std::move(vertexBuffer)});
+}
+
+void UpdateUserInterfaceJob::on_rectangle_change_dims(const Name name, const ui_core::Rectangle& rect)
+{
+   std::unique_lock lk{m_rectUpdateMtx};
+
+   auto& dstRect = m_rectangles.at(name);
+
+   const std::array vertices{
+      Vector2{rect.rect.x, rect.rect.y}, Vector2{rect.rect.x, rect.rect.w}, Vector2{rect.rect.z, rect.rect.y},
+      Vector2{rect.rect.z, rect.rect.y}, Vector2{rect.rect.x, rect.rect.w}, Vector2{rect.rect.z, rect.rect.w},
+   };
+
+   GAPI_CHECK_STATUS(dstRect.vertexBuffer.write_indirect(vertices.data(), sizeof(vertices)));
+
+   struct VertUBO
+   {
+      Vector2 position;
+      Vector2 viewportSize;
+   } vsUbo{};
+   vsUbo.position = {rect.rect.x, rect.rect.y};
+   vsUbo.viewportSize = m_viewport.dimensions();
+
+   GAPI_CHECK_STATUS(dstRect.vsUbo.write_indirect(&vsUbo, sizeof(VertUBO)));
+
+   struct FragUBO
+   {
+      Vector4 borderRadius;
+      Vector4 backgroundColor;
+      Vector2 rectSize;
+   } fsUbo{};
+   fsUbo.borderRadius = {10, 10, 10, 10};
+   fsUbo.backgroundColor = rect.color;
+   fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
+
+   GAPI_CHECK_STATUS(dstRect.fsUbo.write_indirect(&fsUbo, sizeof(FragUBO)));
 }
 
 static const auto g_rectangleLayout = render_core::VertexLayout(sizeof(Vector2)).add("position"_name, GAPI_FORMAT(RG, Float32), 0);
 
 void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
 {
-   for (const auto& rectangle : m_rectangles) {
+   for (const auto& rectangle : std::views::values(m_rectangles)) {
       ctx.bind_vertex_shader("rectangle.vshader"_rc);
 
       ctx.bind_uniform_buffer(0, &rectangle.vsUbo);

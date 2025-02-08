@@ -53,7 +53,7 @@ InfoDialog::InfoDialog(ui_core::Viewport& viewport, GlyphCache& glyphCache) :
 
 void InfoDialog::initialize()
 {
-   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 680.0f}});
+   m_viewport.add_rectangle("info_dialog/bg"_name, ui_core::Rectangle{.rect{5.0f, 5.0f, 380.0f, 680.0f}, .color{0.0, 0.0f, 0.0f, 0.75f}});
 
    m_position = {g_leftOffset, g_topOffset};
 

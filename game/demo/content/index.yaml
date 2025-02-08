@@ -196,6 +196,8 @@ resources:
     properties:
       rt_only: on
 # TYPEFACES
+  - name: "segoeui.typeface"
+    source: "fonts/segoeui.ttf"
   - name: "segoeui/bold.typeface"
     source: "fonts/segoeuib.ttf"
 # MATERIALS
