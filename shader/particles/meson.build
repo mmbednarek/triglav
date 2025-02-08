@@ -1,17 +1,17 @@
 shader_targets += custom_target('shader_particles_compute',
-                                input: 'compute.glsl',
-                                output: '@BASENAME@.spv',
-                                command: compile_compute_cmds,
+                                input: 'update_position.slang',
+                                output: 'compute.spv',
+                                command: ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'cs_main', '-stage', 'compute', '-O3', '-o', '@OUTPUT@'],
 )
 
 shader_targets += custom_target('shader_particles_vertex',
-                                input: 'vertex.glsl',
-                                output: '@BASENAME@.spv',
-                                command: compile_vertex_cmds,
+                                input: 'render.slang',
+                                output: 'vertex.spv',
+                                command: ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6', '@INPUT@', '-entry', 'vs_main', '-stage', 'vertex', '-O3', '-o', '@OUTPUT@'],
 )
 
 shader_targets += custom_target('shader_particles_fragment',
-                                input: 'fragment.glsl',
-                                output: '@BASENAME@.spv',
-                                command: compile_fragment_cmds,
+                                input: 'render.slang',
+                                output: 'fragment.spv',
+                                command: ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'fs_main', '-stage', 'fragment', '-O3', '-o', '@OUTPUT@'],
 )
