@@ -1,5 +1,6 @@
 #version 450
 
+
 struct FragIn
 {
     [[vk::location(0)]]

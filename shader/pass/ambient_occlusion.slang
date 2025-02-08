@@ -30,6 +30,7 @@ struct FragOut
     float4 outValue : SV_Target0;
 };
 
+
 FragOut fs_main(const FragIn fragIn)
 {
     float3 normal = texNormal.Sample(fragIn.screenCoord).xyz;

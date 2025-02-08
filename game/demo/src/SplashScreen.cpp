@@ -156,6 +156,9 @@ void SplashScreen::build_rendering_job(triglav::render_core::BuildContext& ctx)
    m_updateUiJob.render_ui(ctx);
 
    ctx.end_render_pass();
+
+   ctx.export_texture("core.color_out"_name, triglav::graphics_api::PipelineStage::Transfer,
+                      triglav::graphics_api::TextureState::TransferSrc, triglav::graphics_api::TextureUsage::TransferSrc);
 }
 
 void SplashScreen::on_started_loading_asset(const triglav::ResourceName resourceName)

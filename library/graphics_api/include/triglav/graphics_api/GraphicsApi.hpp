@@ -555,7 +555,7 @@ class Exception final : public std::exception
 };
 
 template<typename TResultValue>
-TResultValue check_result(Result<TResultValue> result, const std::string_view message)
+TResultValue check_result(Result<TResultValue>&& result, const std::string_view message)
 {
    if (not result.has_value()) {
       throw Exception(result.error(), message);
