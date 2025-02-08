@@ -87,7 +87,6 @@ class BindlessScene
    [[nodiscard]] const graphics_api::Buffer& count_buffer() const;
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
-   [[nodiscard]] graphics_api::Pipeline& scene_pipeline(graphics_api::RenderTarget& renderTarget);
    [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
 

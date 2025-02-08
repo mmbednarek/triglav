@@ -13,7 +13,6 @@
 
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/graphics_api/Device.hpp"
-#include "triglav/graphics_api/RenderTarget.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/render_core/PipelineCache.hpp"

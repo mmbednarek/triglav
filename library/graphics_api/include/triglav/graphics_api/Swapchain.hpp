@@ -7,7 +7,6 @@
 
 namespace triglav::graphics_api {
 
-class RenderTarget;
 class Semaphore;
 class SemaphoreArrayView;
 class QueueManager;

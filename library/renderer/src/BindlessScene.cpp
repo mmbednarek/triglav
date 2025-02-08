@@ -150,49 +150,6 @@ Scene& BindlessScene::scene() const
    return m_scene;
 }
 
-graphics_api::Pipeline& BindlessScene::scene_pipeline(graphics_api::RenderTarget& renderTarget)
-{
-   if (!m_shouldUpdatePSO && m_scenePipeline.has_value()) {
-      return *m_scenePipeline;
-   }
-
-   m_scenePipeline.emplace(
-      GAPI_CHECK(graphics_api::GraphicsPipelineBuilder(m_device, renderTarget)
-                    .fragment_shader(m_resourceManager.get("bindless_geometry.fshader"_rc))
-                    .vertex_shader(m_resourceManager.get("bindless_geometry.vshader"_rc))
-                    .enable_depth_test(true)
-                    .enable_blending(false)
-                    .use_push_descriptors(true)
-                    // Vertex description
-                    .begin_vertex_layout<geometry::Vertex>()
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                    .vertex_attribute(GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
-                    .vertex_attribute(GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent))
-                    .end_vertex_layout()
-                    // Descriptor layout
-                    .descriptor_binding(graphics_api::DescriptorType::UniformBuffer,
-                                        graphics_api::PipelineStage::VertexShader)// 0 - View Properties (Vertex)
-                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                        graphics_api::PipelineStage::VertexShader)// 1 - Scene Meshes (Vertex)
-                    .descriptor_binding_array(graphics_api::DescriptorType::ImageSampler, graphics_api::PipelineStage::FragmentShader,
-                                              m_sceneTextures.size())// 2 - Material Textures (Frag)
-                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                        graphics_api::PipelineStage::FragmentShader)// 3 - MT_SolidColor Props
-                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                        graphics_api::PipelineStage::FragmentShader)// 4 - MT_AlbedoTexture Props
-                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                        graphics_api::PipelineStage::FragmentShader)// 5 - MT_AlbedoNormalTexture Props
-                    .descriptor_binding(graphics_api::DescriptorType::StorageBuffer,
-                                        graphics_api::PipelineStage::FragmentShader)// 6 - MT_AllTexture Props
-                    .build()));
-
-   m_shouldUpdatePSO = false;
-
-   return *m_scenePipeline;
-}
-
 std::vector<const graphics_api::Texture*>& BindlessScene::scene_textures()
 {
    return m_sceneTextures;

@@ -5,7 +5,6 @@
 #include "triglav/graphics_api/Swapchain.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
-#include "triglav/renderer/TextRenderer.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 

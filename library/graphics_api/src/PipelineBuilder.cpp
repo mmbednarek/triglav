@@ -1,7 +1,6 @@
 #include "PipelineBuilder.hpp"
 
 #include "Device.hpp"
-#include "RenderTarget.hpp"
 #include "Shader.hpp"
 #include "vulkan/Util.hpp"
 
@@ -146,12 +145,6 @@ ComputePipelineBuilder& ComputePipelineBuilder::use_push_descriptors(bool enable
 // -------------------------
 // GRAPHICS PIPELINE BUILDER
 // -------------------------
-
-GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device& device, RenderTarget& renderPass) :
-    PipelineBuilderBase(device),
-    m_renderTarget(&renderPass)
-{
-}
 
 GraphicsPipelineBuilder::GraphicsPipelineBuilder(Device& device) :
     PipelineBuilderBase(device)
@@ -371,43 +364,25 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    rasterizationStateInfo.depthBiasClamp = 0.0f;
    rasterizationStateInfo.depthBiasSlopeFactor = 0.0f;
 
-   const auto sampleCount = m_renderTarget != nullptr ? m_renderTarget->sample_count() : SampleCount::Single;
-
    VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
    multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisamplingInfo.sampleShadingEnable = sampleCount != SampleCount::Single;
-   multisamplingInfo.rasterizationSamples = static_cast<VkSampleCountFlagBits>(sampleCount);
+   multisamplingInfo.sampleShadingEnable = false;
+   multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
    multisamplingInfo.minSampleShading = 1.0f;
 
    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
-   if (m_renderTarget != nullptr) {
-      for (int i = 0; i < m_renderTarget->color_attachment_count(); ++i) {
-         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-         colorBlendAttachment.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-         colorBlendAttachment.blendEnable = m_blendingEnabled;
-         colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-         colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-         colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-         colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
-         colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
-         colorBlendAttachments.emplace_back(colorBlendAttachment);
-      }
-   } else {
-      for (const auto& _ : m_colorAttachmentFormats) {
-         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-         colorBlendAttachment.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-         colorBlendAttachment.blendEnable = m_blendingEnabled;
-         colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-         colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-         colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-         colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
-         colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
-         colorBlendAttachments.emplace_back(colorBlendAttachment);
-      }
+   for (const auto& _ : m_colorAttachmentFormats) {
+      VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+      colorBlendAttachment.colorWriteMask =
+         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+      colorBlendAttachment.blendEnable = m_blendingEnabled;
+      colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+      colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+      colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+      colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+      colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
+      colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
+      colorBlendAttachments.emplace_back(colorBlendAttachment);
    }
 
    VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
@@ -462,7 +437,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    pipelineInfo.pVertexInputState = &vertexInputInfo;
    pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
    pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
-   pipelineInfo.renderPass = m_renderTarget != nullptr ? m_renderTarget->vulkan_render_pass() : nullptr;
+   pipelineInfo.renderPass = nullptr;
    pipelineInfo.subpass = 0;
    pipelineInfo.basePipelineHandle = nullptr;
    pipelineInfo.basePipelineIndex = -1;

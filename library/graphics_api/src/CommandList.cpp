@@ -2,7 +2,6 @@
 
 #include "DescriptorWriter.hpp"
 #include "Device.hpp"
-#include "Framebuffer.hpp"
 #include "Pipeline.hpp"
 #include "Texture.hpp"
 #include "TimestampArray.hpp"
@@ -82,56 +81,6 @@ Status CommandList::finish() const
 VkCommandBuffer CommandList::vulkan_command_buffer() const
 {
    return m_commandBuffer;
-}
-
-void CommandList::begin_render_pass(const Framebuffer& framebuffer, std::span<ClearValue> clearValues) const
-{
-   static constexpr auto maxClearValues{6};
-
-   std::array<VkClearValue, maxClearValues> vulkanClearValues{};
-   for (auto i = 0u; i < clearValues.size(); ++i) {
-      if (std::holds_alternative<Color>(clearValues[i].value)) {
-         const auto [r, g, b, a] = std::get<Color>(clearValues[i].value);
-         vulkanClearValues[i].color = {{r, g, b, a}};
-      } else if (std::holds_alternative<DepthStenctilValue>(clearValues[i].value)) {
-         const auto [depthValue, stencilValue] = std::get<DepthStenctilValue>(clearValues[i].value);
-         vulkanClearValues[i].depthStencil.depth = depthValue;
-         vulkanClearValues[i].depthStencil.stencil = stencilValue;
-      }
-   }
-
-   const auto [width, height] = framebuffer.resolution();
-
-   VkRenderPassBeginInfo renderPassInfo{};
-   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-   renderPassInfo.renderPass = framebuffer.vulkan_render_pass();
-   renderPassInfo.framebuffer = framebuffer.vulkan_framebuffer();
-   renderPassInfo.renderArea.offset = {0, 0};
-   renderPassInfo.renderArea.extent.width = width;
-   renderPassInfo.renderArea.extent.height = height;
-   renderPassInfo.clearValueCount = clearValues.size();
-   renderPassInfo.pClearValues = vulkanClearValues.data();
-
-   vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-   VkViewport viewport{};
-   viewport.x = 0.0f;
-   viewport.y = 0.0f;
-   viewport.width = static_cast<float>(width);
-   viewport.height = static_cast<float>(height);
-   viewport.minDepth = 0.0f;
-   viewport.maxDepth = 1.0f;
-   vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
-
-   VkRect2D scissor{};
-   scissor.offset = {0, 0};
-   scissor.extent = VkExtent2D{width, height};
-   vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
-}
-
-void CommandList::end_render_pass() const
-{
-   vkCmdEndRenderPass(m_commandBuffer);
 }
 
 void CommandList::bind_pipeline(const Pipeline& pipeline)

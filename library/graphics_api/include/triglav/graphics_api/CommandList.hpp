@@ -12,8 +12,6 @@ namespace triglav::graphics_api {
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
 
 class Pipeline;
-class Framebuffer;
-class RenderTarget;
 class TimestampArray;
 class DescriptorWriter;
 
@@ -44,8 +42,6 @@ class CommandList
 
    [[nodiscard]] VkCommandBuffer vulkan_command_buffer() const;
 
-   void begin_render_pass(const Framebuffer& framebuffer, std::span<ClearValue> clearValues) const;
-   void end_render_pass() const;
    void bind_pipeline(const Pipeline& pipeline);
    void bind_descriptor_set(PipelineType pipelineType, const DescriptorView& descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset);
