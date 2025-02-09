@@ -4,6 +4,10 @@ namespace triglav::render_core {
 class BuildContext;
 }
 
+namespace triglav::renderer {
+class Config;
+}
+
 namespace triglav::renderer::stage {
 
 class IStage
@@ -11,7 +15,7 @@ class IStage
  public:
    virtual ~IStage() = default;
 
-   virtual void build_stage(render_core::BuildContext& ctx) const = 0;
+   virtual void build_stage(render_core::BuildContext& ctx, const Config& config) const = 0;
 };
 
 }// namespace triglav::renderer::stage

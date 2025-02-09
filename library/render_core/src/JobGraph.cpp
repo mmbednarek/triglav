@@ -25,9 +25,20 @@ BuildContext& JobGraph::add_job(const Name jobName)
    return buildCtx->second;
 }
 
+BuildContext& JobGraph::replace_job(const Name jobName)
+{
+   m_contexts.erase(jobName);
+   return this->add_job(jobName);
+}
+
 void JobGraph::add_external_job(Name jobName)
 {
    m_externalJobs.emplace_back(jobName);
+}
+
+void JobGraph::set_screen_size(const Vector2i screenSize)
+{
+   m_screenSize = screenSize;
 }
 
 void JobGraph::add_dependency(const Name target, const Name dependency)
@@ -65,6 +76,13 @@ void JobGraph::build_jobs(const Name targetJob)
    for (const Name jobName : m_externalJobs) {
       m_jobSemaphores.emplace(jobName, JobSemaphores{});
    }
+}
+
+void JobGraph::rebuild_job(const Name job)
+{
+   auto& ctx = m_contexts.at(job);
+   m_jobs.erase(job);
+   m_jobs.emplace(job, ctx.build_job(m_pipelineCache, m_resourceStorage, job));
 }
 
 graphics_api::Semaphore& JobGraph::semaphore(const Name waitJob, const Name signalJob, const u32 frameIndex)

@@ -19,7 +19,7 @@ class ShadowMapStage final : public IStage
 
    ShadowMapStage(Scene& scene, BindlessScene& bindlessScene, UpdateViewParamsJob& updateViewParamsJob);
 
-   void build_stage(render_core::BuildContext& ctx) const override;
+   void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
    void render_cascade(render_core::BuildContext& ctx, Name passName, Name targetName, render_core::BufferRef viewProps) const;
 
    void on_resource_definition(render_core::BuildContext& ctx) const;

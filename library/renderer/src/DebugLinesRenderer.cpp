@@ -21,8 +21,7 @@ constexpr std::array<std::pair<graphics_api::DescriptorType, u32>, 2> DESCRIPTOR
 
 }
 
-DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device& device,
-                                       ResourceManager& resourceManager) :
+DebugLinesRenderer::DebugLinesRenderer(graphics_api::Device& device, ResourceManager& resourceManager) :
     m_device(device),
     m_pipeline(checkResult(graphics_api::GraphicsPipelineBuilder(device)
                               .fragment_shader(resourceManager.get("debug_lines.fshader"_rc))

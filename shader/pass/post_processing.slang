@@ -17,8 +17,6 @@ struct FragOut
 uniform Sampler2D texColor;
 [[vk::binding(1)]]
 uniform Sampler2D texBloom;
-[[vk::binding(2)]]
-uniform Sampler2D texOverlay;
 
 const static float3 g_luma = float3(0.299, 0.587, 0.114);
 
@@ -35,7 +33,6 @@ const static float g_fxaaSubpixelShift = 1.0/4.0;
 struct PushConstants
 {
     bool enableFXAA;
-    bool hideUI;
     bool enableBloom;
 };
 
@@ -96,7 +93,8 @@ vec3 calculate_fxaa(float2 texCoord)
     return rgbB;
 }
 
-FragOut fs_main(FragIn fragIn) {
+FragOut fs_main(FragIn fragIn)
+{
     float3 backColor;
     if (pc.enableFXAA) {
         backColor = calculate_fxaa(fragIn.texCoord);
@@ -110,12 +108,6 @@ FragOut fs_main(FragIn fragIn) {
     }
 
     FragOut output;
-    if (pc.hideUI) {
-        output.color = float4(backColor, 1.0);
-    } else {
-        float4 overlayColor = texOverlay.Sample(fragIn.texCoord);
-        output.color = float4(overlayColor.rgb * overlayColor.a + backColor * (1 - overlayColor.a), 1.0);
-    }
-
+    output.color = float4(backColor, 1.0);
     return output;
 }

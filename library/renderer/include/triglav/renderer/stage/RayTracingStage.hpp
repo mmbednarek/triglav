@@ -12,7 +12,7 @@ class RayTracingStage : public IStage
 {
  public:
    explicit RayTracingStage(RayTracingScene& rtScene);
-   void build_stage(render_core::BuildContext& ctx) const override;
+   void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
  private:
    RayTracingScene& m_rtScene;

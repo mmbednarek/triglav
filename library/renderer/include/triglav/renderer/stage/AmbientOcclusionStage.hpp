@@ -11,7 +11,7 @@ class AmbientOcclusionStage final : public IStage
  public:
    explicit AmbientOcclusionStage(graphics_api::Device& device);
 
-   void build_stage(render_core::BuildContext& ctx) const override;
+   void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
    void fill_sample_buffer();
 

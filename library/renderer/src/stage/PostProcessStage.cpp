@@ -4,12 +4,13 @@
 
 #include "triglav/render_core/BuildContext.hpp"
 
+#include <Config.hpp>
+
 namespace triglav::renderer::stage {
 
 struct PostProcessingPushConstants
 {
    int enableFXAA{};
-   int hideUI{};
    int bloomEnabled{};
 };
 
@@ -20,14 +21,8 @@ PostProcessStage::PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJo
 {
 }
 
-void PostProcessStage::build_stage(render_core::BuildContext& ctx) const
+void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
-   ctx.declare_render_target("ui.target"_name);
-
-   ctx.begin_render_pass("ui.pass"_name, "ui.target"_name);
-   ctx.clear_color("ui.target"_name, {0, 0, 0, 0});
-   ctx.end_render_pass();
-
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
 
    ctx.begin_render_pass("post_processing"_name, "core.color_out"_name);
@@ -35,20 +30,20 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx) const
    ctx.bind_fragment_shader("post_processing.fshader"_rc);
 
    ctx.push_constant(PostProcessingPushConstants{
-      .enableFXAA = 1,
-      .hideUI = 0,
-      .bloomEnabled = 1,
+      .enableFXAA = config.antialiasing == AntialiasingMethod::FastApproximate,
+      .bloomEnabled = config.isBloomEnabled,
    });
 
    ctx.bind_samplable_texture(0, "shading.color"_name);
    ctx.bind_samplable_texture(1, "shading.blurred_bloom"_name);
-   ctx.bind_samplable_texture(2, "ui.target"_name);
 
    ctx.set_is_blending_enabled(false);
 
    ctx.draw_full_screen_quad();
 
-   m_updateUserInterfaceJob.render_ui(ctx);
+   if (!config.isUIHidden) {
+      m_updateUserInterfaceJob.render_ui(ctx);
+   }
 
    ctx.end_render_pass();
 

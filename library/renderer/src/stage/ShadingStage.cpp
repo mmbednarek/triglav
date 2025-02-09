@@ -5,6 +5,7 @@
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
+#include <Config.hpp>
 #include <random>
 
 namespace triglav::renderer::stage {
@@ -31,7 +32,7 @@ struct ShadingPushConstants
    int shouldSampleShadows;
 };
 
-void ShadingStage::build_stage(render_core::BuildContext& ctx) const
+void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
    if (!ctx.is_ray_tracing_supported()) {
       // declare dummy shadows texture
@@ -53,7 +54,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
    ctx.bind_samplable_texture(0, "gbuffer.albedo"_name);
    ctx.bind_samplable_texture(1, "gbuffer.position"_name);
    ctx.bind_samplable_texture(2, "gbuffer.normal"_name);
-   if (ctx.is_ray_tracing_supported()) {
+   if (config.ambientOcclusion == AmbientOcclusionMethod::RayTraced) {
       ctx.bind_samplable_texture(3, "ray_tracing.ambient_occlusion.blurred"_name);
    } else {
       ctx.bind_samplable_texture(3, "ambient_occlusion.blurred"_name);
@@ -69,8 +70,8 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx) const
 
    ctx.push_constant(ShadingPushConstants{
       Vector4(-30, 0, -5, 1.0),
-      1,
-      ctx.is_ray_tracing_supported(),
+      config.ambientOcclusion != AmbientOcclusionMethod::Disabled,
+      config.shadowCasting == ShadowCastingMethod::RayTracing,
    });
 
    ctx.set_is_blending_enabled(false);

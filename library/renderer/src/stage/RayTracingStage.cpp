@@ -5,6 +5,8 @@
 
 #include "triglav/render_core/BuildContext.hpp"
 
+#include <Config.hpp>
+
 
 namespace triglav::renderer::stage {
 
@@ -18,10 +20,14 @@ RayTracingStage::RayTracingStage(RayTracingScene& rtScene) :
 {
 }
 
-void RayTracingStage::build_stage(render_core::BuildContext& ctx) const
+void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
    ctx.declare_screen_size_texture("ray_tracing.ambient_occlusion"_name, GAPI_FORMAT(R, UNorm8));
    ctx.declare_screen_size_texture("ray_tracing.shadows"_name, GAPI_FORMAT(R, UNorm8));
+
+   if (!config.is_any_rt_feature_enabled()) {
+      return;
+   }
 
    ctx.set_bind_stages(gapi::PipelineStage::RayGenerationShader | gapi::PipelineStage::ClosestHitShader);
 

@@ -11,7 +11,7 @@ namespace triglav::renderer::stage {
 class ShadingStage final : public IStage
 {
  public:
-   void build_stage(render_core::BuildContext& ctx) const override;
+   void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
    void prepare_particles(render_core::BuildContext& ctx) const;
    void render_particles(render_core::BuildContext& ctx) const;

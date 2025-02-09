@@ -4,6 +4,8 @@
 
 #include "triglav/render_core/BuildContext.hpp"
 
+#include <Config.hpp>
+#include <Renderer.hpp>
 #include <random>
 
 namespace triglav::renderer::stage {
@@ -21,9 +23,13 @@ AmbientOcclusionStage::AmbientOcclusionStage(gapi::Device& device) :
    this->fill_sample_buffer();
 }
 
-void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx) const
+void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
    ctx.declare_render_target("ambient_occlusion.target"_name, GAPI_FORMAT(R, Float16));
+   if (config.ambientOcclusion != AmbientOcclusionMethod::ScreenSpace) {
+      ctx.declare_render_target("ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
+      return;
+   }
 
    ctx.begin_render_pass("ambient_occlusion"_name, "ambient_occlusion.target"_name);
 

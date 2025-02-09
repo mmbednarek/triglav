@@ -17,7 +17,7 @@ class PostProcessStage final : public IStage
  public:
    explicit PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJob);
 
-   void build_stage(render_core::BuildContext& ctx) const override;
+   void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
  private:
    UpdateUserInterfaceJob& m_updateUserInterfaceJob;

@@ -30,7 +30,7 @@ GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless
 {
 }
 
-void GBufferStage::build_stage(render_core::BuildContext& ctx) const
+void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
    ctx.declare_render_target("gbuffer.albedo"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_render_target("gbuffer.position"_name, GAPI_FORMAT(RGBA, Float16));

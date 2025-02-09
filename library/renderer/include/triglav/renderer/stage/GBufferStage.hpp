@@ -19,7 +19,7 @@ class GBufferStage final : public IStage
  public:
    GBufferStage(graphics_api::Device& device, BindlessScene& bindlessScene);
 
-   void build_stage(render_core::BuildContext& ctx) const override;
+   void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
    void build_skybox(render_core::BuildContext& ctx) const;
    void build_ground(render_core::BuildContext& ctx) const;

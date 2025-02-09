@@ -39,7 +39,7 @@ ShadowMapStage::ShadowMapStage(Scene& scene, BindlessScene& bindlessScene, Updat
 {
 }
 
-void ShadowMapStage::build_stage(render_core::BuildContext& ctx) const
+void ShadowMapStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
    ctx.declare_sized_depth_target("shadow_map.cascade0"_name, g_shadowMapSize, GAPI_FORMAT(D, UNorm16));
    ctx.declare_sized_depth_target("shadow_map.cascade1"_name, g_shadowMapSize, GAPI_FORMAT(D, UNorm16));

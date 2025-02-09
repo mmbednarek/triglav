@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BindlessScene.hpp"
+#include "Config.hpp"
 #include "GlyphCache.hpp"
 #include "InfoDialog.hpp"
 #include "OcclusionCulling.hpp"
@@ -28,13 +29,6 @@ class ResourceStorage;
 
 namespace triglav::renderer {
 
-enum class AmbientOcclusionMethod
-{
-   None,
-   RayTraced,
-   ScreenSpace,
-};
-
 class Renderer
 {
  public:
@@ -48,6 +42,7 @@ class Renderer
       Up,
       Down
    };
+   using Self = Renderer;
 
    Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device,
             resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
@@ -62,7 +57,7 @@ class Renderer
    [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
    [[nodiscard]] graphics_api::Device& device() const;
-   [[nodiscard]] bool is_any_ray_tracing_feature_enabled() const;
+   void on_config_property_changed(ConfigProperty property, const Config& config);
 
    static void prepare_pre_present_commands(const graphics_api::Device& device, const graphics_api::Swapchain& swapchain,
                                             render_core::ResourceStorage& resources, std::vector<graphics_api::CommandList>& outCmdLists);
@@ -72,15 +67,11 @@ class Renderer
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    glm::vec3 moving_direction();
+   void recreate_jobs();
 
+   bool m_mustRecreateJobs{false};
    bool m_showDebugLines{false};
-   AmbientOcclusionMethod m_aoMethod{AmbientOcclusionMethod::ScreenSpace};
-   bool m_fxaaEnabled{true};
-   bool m_bloomEnabled{true};
-   bool m_hideUI{false};
-   bool m_smoothCamera{true};
    bool m_mustRecreateSwapchain{false};
-   bool m_rayTracedShadows{false};
    glm::vec3 m_position{};
    glm::vec3 m_motion{};
    glm::vec2 m_mouseOffset{};
@@ -90,8 +81,9 @@ class Renderer
    desktop::ISurface& m_desktopSurface;
    graphics_api::Surface& m_surface;
    graphics_api::Device& m_device;
-
    resource::ResourceManager& m_resourceManager;
+
+   ConfigManager m_configManager;
    Scene m_scene;
    BindlessScene m_bindlessScene;
    graphics_api::Resolution m_resolution;
@@ -111,6 +103,8 @@ class Renderer
    RenderingJob m_renderingJob;
    u32 m_frameIndex{0};
    std::array<graphics_api::Fence, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameFences;
+
+   TG_SINK(ConfigManager, OnPropertyChanged);
 };
 
 }// namespace triglav::renderer

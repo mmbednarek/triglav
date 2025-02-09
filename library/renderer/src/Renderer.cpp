@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 
+#include "Config.hpp"
 #include "StatisticManager.hpp"
 #include "stage/AmbientOcclusionStage.hpp"
 #include "stage/GBufferStage.hpp"
@@ -76,6 +77,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_surface(surface),
     m_device(device),
     m_resourceManager(resourceManager),
+    m_configManager(m_device),
     m_scene(m_resourceManager),
     m_bindlessScene(m_device, m_resourceManager, m_scene),
     m_resolution(create_viewport_resolution(m_device, m_surface, resolution.width, resolution.height)),
@@ -92,11 +94,13 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_updateViewParamsJob(m_scene),
     m_updateUserInterfaceJob(m_device, m_glyphCache, m_uiViewport),
     m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
+    m_renderingJob(m_configManager.config()),
     m_frameFences{
        GAPI_CHECK(m_device.create_fence()),
        GAPI_CHECK(m_device.create_fence()),
        GAPI_CHECK(m_device.create_fence()),
-    }
+    },
+    TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
    m_infoDialog.initialize();
    m_scene.load_level("demo.level"_rc);
@@ -188,7 +192,7 @@ void Renderer::update_debug_info()
    const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
    m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
 
-   if (this->is_any_ray_tracing_feature_enabled()) {
+   if (m_configManager.config().is_any_rt_feature_enabled()) {
       const auto rtGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::RayTracingGpuTime));
       m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, rtGpuTimeStr);
    } else {
@@ -201,14 +205,6 @@ void Renderer::update_debug_info()
 
    const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
    m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
-
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name,
-                                 m_device.enabled_features() & DeviceFeature::RayTracing ? "RTAO" : "SSO");
-   m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, m_fxaaEnabled ? "FXAA" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, m_rayTracedShadows ? "Ray Traced" : "Cascaded Shadow Maps");
-   m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, m_bloomEnabled ? "On" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/debug_lines/value"_name, m_showDebugLines ? "On" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, m_smoothCamera ? "On" : "Off");
 }
 
 void Renderer::on_render()
@@ -223,17 +219,20 @@ void Renderer::on_render()
       isFirstFrame = false;
    }
 
+   if (m_mustRecreateSwapchain) {
+      auto dim = m_desktopSurface.dimension();
+      this->recreate_swapchain(dim.x, dim.y);
+   }
+
+   if (m_mustRecreateJobs) {
+      this->recreate_jobs();
+   }
+
    if (m_rayTracingScene.has_value()) {
       m_rayTracingScene->build_acceleration_structures();
    }
    this->update_debug_info();
    this->update_uniform_data(deltaTime);
-
-   if (m_mustRecreateSwapchain) {
-      auto dim = m_desktopSurface.dimension();
-      this->recreate_swapchain(dim.x, dim.y);
-      m_mustRecreateSwapchain = false;
-   }
 
    m_frameFences[m_frameIndex].await();
 
@@ -308,38 +307,22 @@ void Renderer::on_key_pressed(const Key key)
       m_showDebugLines = not m_showDebugLines;
    }
    if (key == Key::F4) {
-      switch (m_aoMethod) {
-      case AmbientOcclusionMethod::None:
-         m_aoMethod = AmbientOcclusionMethod::ScreenSpace;
-         break;
-      case AmbientOcclusionMethod::ScreenSpace:
-         if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-            m_aoMethod = AmbientOcclusionMethod::RayTraced;
-         } else {
-            m_aoMethod = AmbientOcclusionMethod::None;
-         }
-         break;
-      case AmbientOcclusionMethod::RayTraced:
-         m_aoMethod = AmbientOcclusionMethod::None;
-         break;
-      }
+      m_configManager.toggle_ambient_occlusion();
    }
    if (key == Key::F5) {
-      m_fxaaEnabled = not m_fxaaEnabled;
+      m_configManager.toggle_antialiasing();
    }
    if (key == Key::F6) {
-      m_hideUI = not m_hideUI;
+      m_configManager.toggle_ui_hidden();
    }
    if (key == Key::F7) {
-      m_bloomEnabled = not m_bloomEnabled;
+      m_configManager.toggle_bloom();
    }
    if (key == Key::F8) {
-      m_smoothCamera = not m_smoothCamera;
+      m_configManager.toggle_smooth_camera();
    }
    if (key == Key::F9) {
-      if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-         m_rayTracedShadows = not m_rayTracedShadows;
-      }
+      m_configManager.toggle_shadow_casting();
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -16.0f;
@@ -398,6 +381,21 @@ glm::vec3 Renderer::moving_direction()
    return glm::vec3{0.0f, 0.0f, 0.0f};
 }
 
+void Renderer::recreate_jobs()
+{
+   m_device.await_all();
+
+   spdlog::info("Recreating jobs...");
+
+   auto& renderingCtx = m_jobGraph.replace_job(RenderingJob::JobName);
+
+   m_renderingJob.build_job(renderingCtx);
+
+   m_jobGraph.rebuild_job(RenderingJob::JobName);
+
+   m_mustRecreateJobs = false;
+}
+
 void Renderer::prepare_pre_present_commands(const graphics_api::Device& device, const graphics_api::Swapchain& swapchain,
                                             render_core::ResourceStorage& resources, std::vector<graphics_api::CommandList>& outCmdLists)
 {
@@ -445,6 +443,10 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
 
 void Renderer::recreate_swapchain(const u32 width, const u32 height)
 {
+   if (m_resolution.width != width || m_resolution.height != height) {
+      m_mustRecreateJobs = true;
+   }
+
    const graphics_api::Resolution resolution{width, height};
 
    m_device.await_all();
@@ -454,18 +456,39 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
    m_resolution = {width, height};
 
    Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
+
+   m_mustRecreateSwapchain = false;
 }
 
 graphics_api::Device& Renderer::device() const
 {
    return m_device;
 }
-bool Renderer::is_any_ray_tracing_feature_enabled() const
+
+void Renderer::on_config_property_changed(const ConfigProperty property, const Config& config)
 {
-   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-      return m_rayTracedShadows || m_aoMethod == AmbientOcclusionMethod::RayTraced;
+   m_mustRecreateJobs = true;
+   m_renderingJob.set_config(config);
+
+   switch (property) {
+   case ConfigProperty::AmbientOcclusion:
+      m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(config.ambientOcclusion));
+      break;
+   case ConfigProperty::Antialiasing:
+      m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, antialiasing_method_to_string(config.antialiasing));
+      break;
+   case ConfigProperty::ShadowCasting:
+      m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, shadow_casting_method_to_string(config.shadowCasting));
+      break;
+   case ConfigProperty::IsBloomEnabled:
+      m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, config.isBloomEnabled ? "On" : "Off");
+      break;
+   case ConfigProperty::IsSmoothCameraEnabled:
+      m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, config.isSmoothCameraEnabled ? "On" : "Off");
+      break;
+   default:
+      break;
    }
-   return false;
 }
 
 constexpr auto g_movingSpeed = 10.0f;
@@ -495,7 +518,7 @@ void Renderer::update_uniform_data(const float deltaTime)
       m_motion.z += 30.0f * deltaTime;
    }
 
-   if (m_smoothCamera) {
+   if (m_configManager.config().isSmoothCameraEnabled) {
       m_scene.update_orientation(m_mouseOffset.x * deltaTime, m_mouseOffset.y * deltaTime);
       m_mouseOffset += m_mouseOffset * (static_cast<float>(pow(0.5f, 50.0f * deltaTime)) - 1.0f);
       if (m_mouseOffset.x < 0.0001f && m_mouseOffset.y < 0.0001f) {
