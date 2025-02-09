@@ -58,6 +58,7 @@ class Renderer
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
    [[nodiscard]] graphics_api::Device& device() const;
    void on_config_property_changed(ConfigProperty property, const Config& config);
+   void init_config_labels();
 
    static void prepare_pre_present_commands(const graphics_api::Device& device, const graphics_api::Swapchain& swapchain,
                                             render_core::ResourceStorage& resources, std::vector<graphics_api::CommandList>& outCmdLists);

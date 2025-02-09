@@ -177,7 +177,7 @@ void BarrierInsertionPass::visit(const detail::cmd::ExportTexture& cmd)
    // no need to default visit
 }
 
-void BarrierInsertionPass::visit(const detail::cmd::ExportBuffer& cmd)
+void BarrierInsertionPass::visit(const detail::cmd::ExportBuffer& /*cmd*/)
 {
    // this->setup_buffer_barrier(cmd.buffName, adjust_buffer_access_to_work_type(cmd.access, m_context.work_types()),
    //                            cmd.pipelineStage);

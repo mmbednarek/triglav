@@ -130,9 +130,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_scene.update_shadow_maps();
 
    m_renderingJob.emplace_stage<stage::GBufferStage>(m_device, m_bindlessScene);
-   if (!(m_device.enabled_features() & DeviceFeature::RayTracing)) {
-      m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
-   }
+   m_renderingJob.emplace_stage<stage::AmbientOcclusionStage>(m_device);
    m_renderingJob.emplace_stage<stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
       m_renderingJob.emplace_stage<stage::RayTracingStage>(*m_rayTracingScene);
@@ -171,6 +169,8 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    StatisticManager::the().initialize();
 
    m_scene.update_shadow_maps();
+
+   this->init_config_labels();
 }
 
 void Renderer::update_debug_info()
@@ -385,13 +385,15 @@ void Renderer::recreate_jobs()
 {
    m_device.await_all();
 
-   spdlog::info("Recreating jobs...");
+   spdlog::info("Recreating rendering job...");
 
    auto& renderingCtx = m_jobGraph.replace_job(RenderingJob::JobName);
 
    m_renderingJob.build_job(renderingCtx);
 
    m_jobGraph.rebuild_job(RenderingJob::JobName);
+
+   Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
 
    m_mustRecreateJobs = false;
 }
@@ -455,7 +457,9 @@ void Renderer::recreate_swapchain(const u32 width, const u32 height)
 
    m_resolution = {width, height};
 
-   Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
+   if (!m_mustRecreateJobs) {
+      Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
+   }
 
    m_mustRecreateSwapchain = false;
 }
@@ -489,6 +493,16 @@ void Renderer::on_config_property_changed(const ConfigProperty property, const C
    default:
       break;
    }
+}
+
+void Renderer::init_config_labels()
+{
+   const auto& config = m_configManager.config();
+   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(config.ambientOcclusion));
+   m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, antialiasing_method_to_string(config.antialiasing));
+   m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, shadow_casting_method_to_string(config.shadowCasting));
+   m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, config.isBloomEnabled ? "On" : "Off");
+   m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, config.isSmoothCameraEnabled ? "On" : "Off");
 }
 
 constexpr auto g_movingSpeed = 10.0f;

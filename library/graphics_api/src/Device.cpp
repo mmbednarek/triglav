@@ -269,8 +269,10 @@ Result<Semaphore> Device::create_semaphore() const
 }
 
 Result<Texture> Device::create_texture(const ColorFormat& format, const Resolution& imageSize, const TextureUsageFlags usageFlags,
-                                       TextureState initialTextureState, SampleCount sampleCount, int mipCount) const
+                                       const TextureState initialTextureState, const SampleCount sampleCount, int mipCount) const
 {
+   assert(usageFlags != TextureUsage::None);
+
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
    if (mipCount == 0) {

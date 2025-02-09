@@ -23,6 +23,10 @@ graphics_api::DescriptorArray& DescriptorStorage::store_descriptor_array(graphic
 
 void ResourceStorage::register_texture(const Name name, const u32 frameIndex, graphics_api::Texture&& texture)
 {
+   const auto resName = to_resource_id(name, frameIndex);
+   if (m_textures.contains(resName)) {
+      m_textures.erase(resName);
+   }
    m_textures.emplace(to_resource_id(name, frameIndex), std::move(texture));
 }
 
@@ -34,7 +38,11 @@ graphics_api::Texture& ResourceStorage::texture(const Name name, const u32 frame
 void ResourceStorage::register_texture_mip_view(const Name name, const u32 mipIndex, const u32 frameIndex,
                                                 graphics_api::TextureView&& textureView)
 {
-   m_textureMipViews.emplace(to_resource_id(name, mipIndex, frameIndex), std::move(textureView));
+   const auto resName = to_resource_id(name, mipIndex, frameIndex);
+   if (m_textureMipViews.contains(resName)) {
+      m_textureMipViews.erase(resName);
+   }
+   m_textureMipViews.emplace(resName, std::move(textureView));
 }
 
 graphics_api::TextureView& ResourceStorage::texture_mip_view(const Name name, const u32 mipIndex, const u32 frameIndex)
@@ -44,7 +52,11 @@ graphics_api::TextureView& ResourceStorage::texture_mip_view(const Name name, co
 
 void ResourceStorage::register_buffer(const Name name, const u32 frameIndex, graphics_api::Buffer&& buffer)
 {
-   m_buffers.emplace(to_resource_id(name, frameIndex), std::move(buffer));
+   const auto resName = to_resource_id(name, frameIndex);
+   if (m_buffers.contains(resName)) {
+      m_buffers.erase(resName);
+   }
+   m_buffers.emplace(resName, std::move(buffer));
 }
 
 graphics_api::Buffer& ResourceStorage::buffer(const Name name, const u32 frameIndex)
