@@ -471,6 +471,16 @@ void CommandList::bind_storage_image_view(const u32 binding, const TextureView& 
    m_hasPendingDescriptors = true;
 }
 
+void CommandList::begin_query(const QueryPool& queryPool, const u32 queryIndex) const
+{
+   vkCmdBeginQuery(m_commandBuffer, queryPool.vulkan_query_pool(), queryIndex, 0);
+}
+
+void CommandList::end_query(const QueryPool& queryPool, const u32 queryIndex) const
+{
+   vkCmdEndQuery(m_commandBuffer, queryPool.vulkan_query_pool(), queryIndex);
+}
+
 void CommandList::bind_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStructure)
 {
    m_descriptorWriter.set_acceleration_structure(binding, accStructure);

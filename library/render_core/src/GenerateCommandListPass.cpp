@@ -178,13 +178,27 @@ void GenerateCommandListPass::visit(const detail::cmd::TraceRays& cmd) const
 
 void GenerateCommandListPass::visit(const detail::cmd::ResetQueries& cmd) const
 {
-   m_commandList.reset_timestamp_array(m_resourceStorage.timestamps(), cmd.offset, cmd.count);
+   if (cmd.shouldResetTimestampQueryPool) {
+      m_commandList.reset_timestamp_array(m_resourceStorage.timestamps(), cmd.offset, cmd.count);
+   } else {
+      m_commandList.reset_timestamp_array(m_resourceStorage.pipeline_stats(), cmd.offset, cmd.count);
+   }
 }
 
 void GenerateCommandListPass::visit(const detail::cmd::QueryTimestamp& cmd) const
 {
    m_commandList.write_timestamp(cmd.isClosing ? gapi::PipelineStage::End : gapi::PipelineStage::Entrypoint, m_resourceStorage.timestamps(),
                                  cmd.index);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::BeginQuery& cmd) const
+{
+   m_commandList.begin_query(m_resourceStorage.pipeline_stats(), cmd.index);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::EndQuery& cmd) const
+{
+   m_commandList.end_query(m_resourceStorage.pipeline_stats(), cmd.index);
 }
 
 void GenerateCommandListPass::default_visit(const detail::Command&) const

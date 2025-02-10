@@ -35,12 +35,14 @@ class ResourceStorage
    graphics_api::Buffer& buffer(Name name, u32 frameIndex);
 
    [[nodiscard]] graphics_api::QueryPool& timestamps();
+   [[nodiscard]] graphics_api::QueryPool& pipeline_stats();
 
  private:
    std::unordered_map<ResourceID, graphics_api::Texture> m_textures;
    std::unordered_map<ResourceID, graphics_api::TextureView> m_textureMipViews;
    std::unordered_map<ResourceID, graphics_api::Buffer> m_buffers;
    graphics_api::QueryPool m_timestamps;
+   graphics_api::QueryPool m_pipelineStats;
 };
 
 }// namespace triglav::render_core

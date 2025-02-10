@@ -48,6 +48,8 @@ class GenerateCommandListPass
    void visit(const detail::cmd::TraceRays& cmd) const;
    void visit(const detail::cmd::ResetQueries& cmd) const;
    void visit(const detail::cmd::QueryTimestamp& cmd) const;
+   void visit(const detail::cmd::BeginQuery& cmd) const;
+   void visit(const detail::cmd::EndQuery& cmd) const;
 
    void default_visit(const detail::Command&) const;
 

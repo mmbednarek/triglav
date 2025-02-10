@@ -216,6 +216,7 @@ struct ResetQueries
 {
    u32 offset;
    u32 count;
+   bool shouldResetTimestampQueryPool;
 };
 
 struct QueryTimestamp
@@ -224,14 +225,24 @@ struct QueryTimestamp
    bool isClosing;
 };
 
+struct BeginQuery
+{
+   u32 index;
+};
+
+struct EndQuery
+{
+   u32 index;
+};
+
 }// namespace cmd
 
-using Command =
-   std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::BindRayTracingPipeline, cmd::DrawPrimitives,
-                cmd::DrawIndexedPrimitives, cmd::DrawIndexedIndirectWithCount, cmd::DrawIndirectWithCount, cmd::Dispatch,
-                cmd::DispatchIndirect, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
-                cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
-                cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond,
-                cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant, cmd::TraceRays, cmd::ResetQueries, cmd::QueryTimestamp>;
+using Command = std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::BindRayTracingPipeline, cmd::DrawPrimitives,
+                             cmd::DrawIndexedPrimitives, cmd::DrawIndexedIndirectWithCount, cmd::DrawIndirectWithCount, cmd::Dispatch,
+                             cmd::DispatchIndirect, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer,
+                             cmd::CopyTextureToBuffer, cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture,
+                             cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass,
+                             cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer,
+                             cmd::PushConstant, cmd::TraceRays, cmd::ResetQueries, cmd::QueryTimestamp, cmd::BeginQuery, cmd::EndQuery>;
 
 }// namespace triglav::render_core::detail

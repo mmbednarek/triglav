@@ -40,7 +40,7 @@ void write_buffer(triglav::graphics_api::Buffer& buffer, T value)
 TEST(JobGraphTest, BasicDependency)
 {
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    JobGraph graph(TestingSupport::device(), TestingSupport::resource_manager(), pipelineCache, storage, Vector2i{800, 600});
 
    auto& firstCtx = graph.add_job("basic_dependency.first"_name);
@@ -75,7 +75,7 @@ TEST(JobGraphTest, BasicDependency)
 TEST(JobGraphTest, BasicInterframeDependency)
 {
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    JobGraph graph(TestingSupport::device(), TestingSupport::resource_manager(), pipelineCache, storage, Vector2i{800, 600});
 
    auto& buildContext = graph.add_job("basic_interframe_dependency"_name);

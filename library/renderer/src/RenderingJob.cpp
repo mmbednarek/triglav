@@ -13,12 +13,17 @@ RenderingJob::RenderingJob(const Config config) :
 
 void RenderingJob::build_job(render_core::BuildContext& ctx) const
 {
-   ctx.reset_queries(0, 2);
+   ctx.reset_timestamp_queries(0, 2);
    ctx.query_timestamp(0, false);
+
+   ctx.reset_pipeline_queries(0, 1);
+   ctx.begin_query(0);
 
    for (auto& stage : m_stages) {
       stage->build_stage(ctx, m_config);
    }
+
+   ctx.end_query(0);
 
    ctx.query_timestamp(1, true);
 }

@@ -174,7 +174,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    this->init_config_labels();
 }
 
-void Renderer::update_debug_info()
+void Renderer::update_debug_info(const bool isFirstFrame)
 {
    const auto framerateStr = std::format("{:.1f}", StatisticManager::the().value(Stat::FramesPerSecond));
    m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name, framerateStr);
@@ -189,15 +189,11 @@ void Renderer::update_debug_info()
    m_uiViewport.set_text_content("info_dialog/metrics/fps_avg/value"_name, framerateAvgStr);
 
    const auto gBufferGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::GBufferGpuTime));
-   m_uiViewport.set_text_content("info_dialog/metrics/gbuffer_gpu_time/value"_name, gBufferGpuTimeStr);
-   const auto shadingGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::ShadingGpuTime));
-   m_uiViewport.set_text_content("info_dialog/metrics/shading_gpu_time/value"_name, shadingGpuTimeStr);
+   m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name, gBufferGpuTimeStr);
 
-   if (m_configManager.config().is_any_rt_feature_enabled()) {
-      const auto rtGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::RayTracingGpuTime));
-      m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, rtGpuTimeStr);
-   } else {
-      m_uiViewport.set_text_content("info_dialog/metrics/ray_tracing_gpu_time/value"_name, "Disabled");
+   if (!isFirstFrame) {
+      const auto primitiveCountStr = std::format("{}", m_resourceStorage.pipeline_stats().get_int(0));
+      m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name, primitiveCountStr);
    }
 
    const auto camPos = m_scene.camera().position();
@@ -214,13 +210,6 @@ void Renderer::on_render()
 
    const auto deltaTime = calculate_frame_duration();
 
-   if (not isFirstFrame) {
-      StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
-      StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_resourceStorage.timestamps().get_difference(0, 1));
-   } else {
-      isFirstFrame = false;
-   }
-
    if (m_mustRecreateSwapchain) {
       auto dim = m_desktopSurface.dimension();
       this->recreate_swapchain(dim.x, dim.y);
@@ -233,8 +222,15 @@ void Renderer::on_render()
    if (m_rayTracingScene.has_value()) {
       m_rayTracingScene->build_acceleration_structures();
    }
-   this->update_debug_info();
+   this->update_debug_info(isFirstFrame);
    this->update_uniform_data(deltaTime);
+
+   if (not isFirstFrame) {
+      StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
+      StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_resourceStorage.timestamps().get_difference(0, 1));
+   } else {
+      isFirstFrame = false;
+   }
 
    m_frameFences[m_frameIndex].await();
 

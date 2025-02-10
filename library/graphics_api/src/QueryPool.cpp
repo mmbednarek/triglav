@@ -12,6 +12,13 @@ QueryPool::QueryPool(vulkan::QueryPool queryPool, const float timestampPeriod) :
 {
 }
 
+u32 QueryPool::get_int(const u32 index)
+{
+   u32 result{};
+   vkGetQueryPoolResults(m_queryPool.parent(), *m_queryPool, index, 1, sizeof(u32), &result, sizeof(u32), VK_QUERY_RESULT_WAIT_BIT);
+   return result;
+}
+
 void QueryPool::get_result(std::span<float> out, const u32 first) const
 {
    std::vector<u64> timestamps{};

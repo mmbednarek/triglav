@@ -381,6 +381,9 @@ Result<QueryPool> Device::create_query_pool(const QueryType queryType, const u32
    VkQueryPoolCreateInfo queryPoolInfo{VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO};
    queryPoolInfo.queryType = vulkan::to_vulkan_query_type(queryType);
    queryPoolInfo.queryCount = timestampCount;
+   if (queryType == QueryType::PipelineStats) {
+      queryPoolInfo.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT;
+   }
 
    VkPhysicalDeviceProperties properties;
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);

@@ -96,6 +96,8 @@ class CommandList
    void bind_texture_array(u32 binding, std::span<const Texture*> textures);
    void bind_storage_image(u32 binding, const Texture& texture);
    void bind_storage_image_view(u32 binding, const TextureView& texture);
+   void begin_query(const QueryPool& queryPool, u32 queryIndex) const;
+   void end_query(const QueryPool& queryPool, u32 queryIndex) const;
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray& array) const

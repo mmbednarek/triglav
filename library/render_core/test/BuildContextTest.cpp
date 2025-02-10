@@ -159,7 +159,7 @@ TEST(BuildContext, BasicCompute)
    buildContext.copy_texture_to_buffer("test.basic_compute.pattern_texture"_name, "test.basic_compute.output_buffer"_name);
 
    // Run commands
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    // Verify pixel values
@@ -228,7 +228,7 @@ TEST(BuildContext, BasicGraphics)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_graphics.render_target"_name, "test.basic_graphics.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.basic_graphics.output_buffer"_name, 0);
@@ -303,7 +303,7 @@ TEST(BuildContext, BasicDepth)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_depth.render_target"_name, "test.basic_depth.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.basic_depth.output_buffer"_name, 0);
@@ -373,7 +373,7 @@ TEST(BuildContext, BasicTexture)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_texture.render_target"_name, "test.basic_texture.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.basic_texture.output_buffer"_name, 0);
@@ -419,7 +419,7 @@ TEST(BuildContext, MultiplePasses)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.multiple_passes.render_target.second"_name, "test.multiple_passes.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.multiple_passes.output_buffer"_name, 0);
@@ -499,7 +499,7 @@ TEST(BuildContext, DepthTargetSample)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.depth_target_sample.render_target"_name, "test.depth_target_sample.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.depth_target_sample.output_buffer"_name, 0);
@@ -535,7 +535,7 @@ TEST(BuildContext, Conditions)
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
 
    auto job = buildContext.build_job(pipelineCache, storage);
 
@@ -590,7 +590,7 @@ TEST(BuildContext, CopyFromLastFrame)
    buildContext.end_if();
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    auto job = buildContext.build_job(pipelineCache, storage);
 
    write_buffer(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 0), 36);
@@ -653,7 +653,7 @@ TEST(BuildContext, ConditionalBarrier)
    buildContext.copy_buffer("test.conditional_barrier.data"_name, "test.conditional_barrier.user"_name);
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    auto job = buildContext.build_job(pipelineCache, storage);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
@@ -765,7 +765,7 @@ TEST(BuildContext, BasicRayTracing)
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    auto job = buildContext.build_job(pipelineCache, storage);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());

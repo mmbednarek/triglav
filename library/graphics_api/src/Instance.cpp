@@ -223,6 +223,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    deviceFeatures.features.wideLines = true;
    deviceFeatures.features.samplerAnisotropy = true;
    deviceFeatures.features.shaderInt64 = true;
+   deviceFeatures.features.pipelineStatisticsQuery = true;
 
    VkPhysicalDeviceVulkan13Features vulkan13Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
    vulkan13Features.dynamicRendering = true;
@@ -302,7 +303,7 @@ Result<Instance> Instance::create_instance()
    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
    appInfo.pEngineName = "TRIGLAV Engine";
    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-   appInfo.apiVersion = VK_API_VERSION_1_4;
+   appInfo.apiVersion = VK_API_VERSION_1_3;
 
    const std::array g_vulkanInstanceExtensions{
       VK_KHR_SURFACE_EXTENSION_NAME,

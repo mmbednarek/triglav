@@ -15,6 +15,8 @@ class QueryPool
  public:
    QueryPool(vulkan::QueryPool queryPool, float timestampPeriod);
 
+   u32 get_int(u32 index);
+
    void get_result(std::span<float> out, u32 first) const;
    [[nodiscard]] float get_difference(u32 begin, u32 end) const;
    [[nodiscard]] VkQueryPool vulkan_query_pool() const;

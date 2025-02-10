@@ -26,7 +26,8 @@ graphics_api::DescriptorArray& DescriptorStorage::store_descriptor_array(graphic
 }
 
 ResourceStorage::ResourceStorage(graphics_api::Device& device) :
-    m_timestamps(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::Timestamp, g_maxTimestampCount)))
+    m_timestamps(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::Timestamp, g_maxTimestampCount))),
+    m_pipelineStats(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::PipelineStats, g_maxTimestampCount)))
 {
 }
 
@@ -76,6 +77,11 @@ graphics_api::Buffer& ResourceStorage::buffer(const Name name, const u32 frameIn
 graphics_api::QueryPool& ResourceStorage::timestamps()
 {
    return m_timestamps;
+}
+
+graphics_api::QueryPool& ResourceStorage::pipeline_stats()
+{
+   return m_pipelineStats;
 }
 
 }// namespace triglav::render_core
