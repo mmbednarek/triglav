@@ -12,7 +12,7 @@ namespace triglav::graphics_api {
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
 
 class Pipeline;
-class TimestampArray;
+class QueryPool;
 class DescriptorWriter;
 
 namespace ray_tracing {
@@ -67,8 +67,8 @@ class CommandList
 
    void blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                      const TextureRegion& targetRegion) const;
-   void reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const;
-   void write_timestamp(PipelineStage stage, const TimestampArray& timestampArray, u32 timestampIndex) const;
+   void reset_timestamp_array(const QueryPool& timestampArray, u32 first, u32 count) const;
+   void write_timestamp(PipelineStage stage, const QueryPool& timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
    void draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);

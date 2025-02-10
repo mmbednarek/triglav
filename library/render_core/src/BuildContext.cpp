@@ -318,6 +318,16 @@ void BuildContext::clear_color(const Name targetName, const Vector4 color)
    m_renderTargets.at(targetName).clearValue.value.emplace<gapi::Color>(color.x, color.y, color.z, color.w);
 }
 
+void BuildContext::reset_queries(const u32 offset, const u32 count)
+{
+   this->add_command<detail::cmd::ResetQueries>(offset, count);
+}
+
+void BuildContext::query_timestamp(const u32 index, const bool isClosing)
+{
+   this->add_command<detail::cmd::QueryTimestamp>(index, isClosing);
+}
+
 void BuildContext::handle_descriptor_bindings()
 {
    if (m_descriptors.empty()) {

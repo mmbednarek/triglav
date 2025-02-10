@@ -724,6 +724,17 @@ VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags inFlags)
    return outFlags;
 }
 
+VkQueryType to_vulkan_query_type(const QueryType queryType)
+{
+   switch (queryType) {
+   case QueryType::PipelineStats:
+      return VK_QUERY_TYPE_PIPELINE_STATISTICS;
+   case QueryType::Timestamp:
+      return VK_QUERY_TYPE_TIMESTAMP;
+   }
+   return VK_QUERY_TYPE_MAX_ENUM;
+}
+
 VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttachment& attachment)
 {
    VkRenderingAttachmentInfo result{VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO};

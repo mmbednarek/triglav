@@ -2,6 +2,7 @@
 
 #include "Buffer.hpp"
 #include "GraphicsApi.hpp"
+#include "QueryPool.hpp"
 #include "QueueManager.hpp"
 #include "Sampler.hpp"
 #include "SamplerCache.hpp"
@@ -10,7 +11,6 @@
 #include "Swapchain.hpp"
 #include "Synchronization.hpp"
 #include "Texture.hpp"
-#include "TimestampArray.hpp"
 #include "ray_tracing/AccelerationStructure.hpp"
 #include "ray_tracing/RayTracing.hpp"
 #include "vulkan/ObjectWrapper.hpp"
@@ -67,7 +67,7 @@ class Device
                                                 TextureState initialTextureState = TextureState::Undefined,
                                                 SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties& info);
-   [[nodiscard]] Result<TimestampArray> create_timestamp_array(u32 timestampCount);
+   [[nodiscard]] Result<QueryPool> create_query_pool(QueryType queryType, u32 timestampCount);
    [[nodiscard]] Result<ray_tracing::AccelerationStructure> create_acceleration_structure(ray_tracing::AccelerationStructureType structType,
                                                                                           const Buffer& buffer, MemorySize bufferOffset,
                                                                                           MemorySize bufferSize);

@@ -540,6 +540,12 @@ struct BufferBarrier
    BufferAccessFlags dstAccess;
 };
 
+enum class QueryType
+{
+   PipelineStats,
+   Timestamp,
+};
+
 template<typename T>
 using Result = std::expected<T, Status>;
 

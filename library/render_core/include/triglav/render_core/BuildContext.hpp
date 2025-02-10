@@ -102,6 +102,10 @@ class BuildContext
    void end_render_pass();
    void clear_color(Name targetName, Vector4 color);
 
+   // Queries
+   void reset_queries(u32 offset, u32 count);
+   void query_timestamp(u32 index, bool isClosing);
+
    template<typename... TArgs>
    void begin_render_pass(Name passName, TArgs... args)
    {

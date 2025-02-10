@@ -1,4 +1,4 @@
-#include "TimestampArray.hpp"
+#include "QueryPool.hpp"
 
 #include <algorithm>
 #include <ranges>
@@ -6,13 +6,13 @@
 
 namespace triglav::graphics_api {
 
-TimestampArray::TimestampArray(vulkan::QueryPool queryPool, const float timestampPeriod) :
+QueryPool::QueryPool(vulkan::QueryPool queryPool, const float timestampPeriod) :
     m_queryPool(std::move(queryPool)),
     m_timestampPeriod(timestampPeriod)
 {
 }
 
-void TimestampArray::get_result(std::span<float> out, const u32 first) const
+void QueryPool::get_result(std::span<float> out, const u32 first) const
 {
    std::vector<u64> timestamps{};
    timestamps.resize(out.size());
@@ -23,7 +23,7 @@ void TimestampArray::get_result(std::span<float> out, const u32 first) const
                           [this](const u64 timestamp) { return static_cast<float>(timestamp) * m_timestampPeriod; });
 }
 
-float TimestampArray::get_difference(const u32 begin, const u32 end) const
+float QueryPool::get_difference(const u32 begin, const u32 end) const
 {
    std::vector<u64> timestamps{};
    timestamps.resize(1 + end - begin);
@@ -33,7 +33,7 @@ float TimestampArray::get_difference(const u32 begin, const u32 end) const
    return static_cast<float>(timestamps[timestamps.size() - 1] - timestamps[0]) * m_timestampPeriod / 1000000.0f;
 }
 
-VkQueryPool TimestampArray::vulkan_query_pool() const
+VkQueryPool QueryPool::vulkan_query_pool() const
 {
    return *m_queryPool;
 }

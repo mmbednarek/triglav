@@ -35,6 +35,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
                                                      PresentMode::Fifo))),
     m_frameFences{GAPI_CHECK(m_device.create_fence()), GAPI_CHECK(m_device.create_fence()), GAPI_CHECK(m_device.create_fence())},
     m_pipelineCache(m_device, m_resourceManager),
+    m_resourceStorage(m_device),
     m_uiViewport({g_splashScreenResolution.width, g_splashScreenResolution.height}),
     m_updateUiJob(m_device, m_glyphCache, m_uiViewport),
     m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage,

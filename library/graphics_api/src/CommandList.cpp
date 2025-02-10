@@ -3,8 +3,8 @@
 #include "DescriptorWriter.hpp"
 #include "Device.hpp"
 #include "Pipeline.hpp"
+#include "QueryPool.hpp"
 #include "Texture.hpp"
-#include "TimestampArray.hpp"
 #include "ray_tracing/ShaderBindingTable.hpp"
 #include "vulkan/DynamicProcedures.hpp"
 #include "vulkan/Util.hpp"
@@ -313,12 +313,12 @@ void CommandList::blit_texture(const Texture& sourceTex, const TextureRegion& so
                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 }
 
-void CommandList::reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const
+void CommandList::reset_timestamp_array(const QueryPool& timestampArray, u32 first, u32 count) const
 {
    vkCmdResetQueryPool(m_commandBuffer, timestampArray.vulkan_query_pool(), first, count);
 }
 
-void CommandList::write_timestamp(const PipelineStage stage, const TimestampArray& timestampArray, const u32 timestampIndex) const
+void CommandList::write_timestamp(const PipelineStage stage, const QueryPool& timestampArray, const u32 timestampIndex) const
 {
    vkCmdWriteTimestamp(m_commandBuffer, vulkan::to_vulkan_pipeline_stage(stage), timestampArray.vulkan_query_pool(), timestampIndex);
 }

@@ -376,10 +376,10 @@ Result<Sampler> Device::create_sampler(const SamplerProperties& info)
    return Sampler(std::move(sampler));
 }
 
-Result<TimestampArray> Device::create_timestamp_array(const u32 timestampCount)
+Result<QueryPool> Device::create_query_pool(const QueryType queryType, const u32 timestampCount)
 {
    VkQueryPoolCreateInfo queryPoolInfo{VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO};
-   queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+   queryPoolInfo.queryType = vulkan::to_vulkan_query_type(queryType);
    queryPoolInfo.queryCount = timestampCount;
 
    VkPhysicalDeviceProperties properties;
@@ -390,7 +390,7 @@ Result<TimestampArray> Device::create_timestamp_array(const u32 timestampCount)
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return TimestampArray(std::move(queryPool), properties.limits.timestampPeriod);
+   return QueryPool(std::move(queryPool), properties.limits.timestampPeriod);
 }
 
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Surface& surface) const

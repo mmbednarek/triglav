@@ -173,7 +173,18 @@ void GenerateCommandListPass::visit(const detail::cmd::PushConstant& cmd) const
 
 void GenerateCommandListPass::visit(const detail::cmd::TraceRays& cmd) const
 {
-   m_commandList.trace_rays(this->m_pipelineCache.get_shader_binding_table(cmd.state), cmd.dimensions);
+   m_commandList.trace_rays(m_pipelineCache.get_shader_binding_table(cmd.state), cmd.dimensions);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::ResetQueries& cmd) const
+{
+   m_commandList.reset_timestamp_array(m_resourceStorage.timestamps(), cmd.offset, cmd.count);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::QueryTimestamp& cmd) const
+{
+   m_commandList.write_timestamp(cmd.isClosing ? gapi::PipelineStage::End : gapi::PipelineStage::Entrypoint, m_resourceStorage.timestamps(),
+                                 cmd.index);
 }
 
 void GenerateCommandListPass::default_visit(const detail::Command&) const

@@ -212,6 +212,18 @@ struct TraceRays
    Vector3i dimensions;
 };
 
+struct ResetQueries
+{
+   u32 offset;
+   u32 count;
+};
+
+struct QueryTimestamp
+{
+   u32 index;
+   bool isClosing;
+};
+
 }// namespace cmd
 
 using Command =
@@ -220,6 +232,6 @@ using Command =
                 cmd::DispatchIndirect, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
                 cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier,
                 cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond,
-                cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant, cmd::TraceRays>;
+                cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant, cmd::TraceRays, cmd::ResetQueries, cmd::QueryTimestamp>;
 
 }// namespace triglav::render_core::detail

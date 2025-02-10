@@ -89,6 +89,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
                          : std::nullopt),
+    m_resourceStorage(m_device),
     m_pipelineCache(m_device, m_resourceManager),
     m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage, {resolution.width, resolution.height}),
     m_updateViewParamsJob(m_scene),
@@ -215,6 +216,7 @@ void Renderer::on_render()
 
    if (not isFirstFrame) {
       StatisticManager::the().push_accumulated(Stat::FramesPerSecond, 1.0f / deltaTime);
+      StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_resourceStorage.timestamps().get_difference(0, 1));
    } else {
       isFirstFrame = false;
    }
@@ -386,6 +388,8 @@ void Renderer::recreate_jobs()
    m_device.await_all();
 
    spdlog::info("Recreating rendering job...");
+
+   m_jobGraph.set_screen_size({m_resolution.width, m_resolution.height});
 
    auto& renderingCtx = m_jobGraph.replace_job(RenderingJob::JobName);
 

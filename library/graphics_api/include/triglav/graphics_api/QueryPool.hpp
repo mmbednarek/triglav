@@ -10,10 +10,10 @@ namespace triglav::graphics_api {
 
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(QueryPool, Device)
 
-class TimestampArray
+class QueryPool
 {
  public:
-   TimestampArray(vulkan::QueryPool queryPool, float timestampPeriod);
+   QueryPool(vulkan::QueryPool queryPool, float timestampPeriod);
 
    void get_result(std::span<float> out, u32 first) const;
    [[nodiscard]] float get_difference(u32 begin, u32 end) const;

@@ -1,8 +1,12 @@
 #include "ResourceStorage.hpp"
 
+#include "triglav/graphics_api/Device.hpp"
+
 namespace triglav::render_core {
 
 namespace {
+
+constexpr u32 g_maxTimestampCount{16};
 
 ResourceStorage::ResourceID to_resource_id(const Name name, const u32 frameID)
 {
@@ -19,6 +23,11 @@ ResourceStorage::ResourceID to_resource_id(const Name name, const u32 mipLevel, 
 graphics_api::DescriptorArray& DescriptorStorage::store_descriptor_array(graphics_api::DescriptorArray&& descArray)
 {
    return m_descriptorArrays.emplace_back(std::move(descArray));
+}
+
+ResourceStorage::ResourceStorage(graphics_api::Device& device) :
+    m_timestamps(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::Timestamp, g_maxTimestampCount)))
+{
 }
 
 void ResourceStorage::register_texture(const Name name, const u32 frameIndex, graphics_api::Texture&& texture)
@@ -62,6 +71,11 @@ void ResourceStorage::register_buffer(const Name name, const u32 frameIndex, gra
 graphics_api::Buffer& ResourceStorage::buffer(const Name name, const u32 frameIndex)
 {
    return m_buffers.at(to_resource_id(name, frameIndex));
+}
+
+graphics_api::QueryPool& ResourceStorage::timestamps()
+{
+   return m_timestamps;
 }
 
 }// namespace triglav::render_core
