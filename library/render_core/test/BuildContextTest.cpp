@@ -1,9 +1,15 @@
 #include "TestingSupport.hpp"
 
+#define TG_RAY_TRACING_TESTS 1
+
 #include "triglav/Math.hpp"
 #include "triglav/Ranges.hpp"
 #include "triglav/geometry/DebugMesh.hpp"
 #include "triglav/graphics_api/DescriptorLayoutCache.hpp"
+#include "triglav/graphics_api/ray_tracing/AccelerationStructure.hpp"
+#include "triglav/graphics_api/ray_tracing/Geometry.hpp"
+#include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
+#include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 
@@ -24,6 +30,7 @@ using triglav::render_core::ResourceStorage;
 using triglav::test::TestingSupport;
 using namespace triglav::name_literals;
 
+namespace rt = triglav::graphics_api::ray_tracing;
 namespace gapi = triglav::graphics_api;
 
 namespace {
@@ -129,7 +136,8 @@ void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_vi
 {
    const auto outFile = triglav::io::open_file(triglav::io::Path{fileName}, triglav::io::FileOpenMode::Create);
    assert(outFile.has_value());
-   assert((*outFile)->write(buffer).has_value());
+   const auto write_res = (*outFile)->write(buffer);
+   assert(write_res.has_value());
 }
 
 }// namespace
@@ -151,7 +159,7 @@ TEST(BuildContext, BasicCompute)
    buildContext.copy_texture_to_buffer("test.basic_compute.pattern_texture"_name, "test.basic_compute.output_buffer"_name);
 
    // Run commands
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    // Verify pixel values
@@ -220,7 +228,7 @@ TEST(BuildContext, BasicGraphics)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_graphics.render_target"_name, "test.basic_graphics.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.basic_graphics.output_buffer"_name, 0);
@@ -276,13 +284,14 @@ TEST(BuildContext, BasicDepth)
       // Define vertex shader, layout and input buffer
       buildContext.bind_vertex_shader("testing/basic_depth.vshader"_rc);
 
+      buildContext.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
+
       triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
       layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
       buildContext.bind_vertex_layout(layout);
 
       buildContext.bind_vertex_buffer("test.basic_depth.vertex_buffer"_name);
       buildContext.bind_index_buffer("test.basic_depth.index_buffer"_name);
-      buildContext.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
 
       // Bind fragment shader and texture
       buildContext.bind_fragment_shader("testing/basic_depth.fshader"_rc);
@@ -294,7 +303,7 @@ TEST(BuildContext, BasicDepth)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_depth.render_target"_name, "test.basic_depth.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.basic_depth.output_buffer"_name, 0);
@@ -364,7 +373,7 @@ TEST(BuildContext, BasicTexture)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.basic_texture.render_target"_name, "test.basic_texture.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.basic_texture.output_buffer"_name, 0);
@@ -410,7 +419,7 @@ TEST(BuildContext, MultiplePasses)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.multiple_passes.render_target.second"_name, "test.multiple_passes.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.multiple_passes.output_buffer"_name, 0);
@@ -464,13 +473,14 @@ TEST(BuildContext, DepthTargetSample)
       // Define vertex shader, layout and input buffer
       buildContext.bind_vertex_shader("testing/depth_target_sample/draw.vshader"_rc);
 
+      buildContext.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
+
       triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
       layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
       buildContext.bind_vertex_layout(layout);
 
       buildContext.bind_vertex_buffer("test.depth_target_sample.vertex_buffer"_name);
       buildContext.bind_index_buffer("test.depth_target_sample.index_buffer"_name);
-      buildContext.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
 
       // Bind fragment shader and texture
       buildContext.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
@@ -489,7 +499,7 @@ TEST(BuildContext, DepthTargetSample)
    // Copy the render target to staging buffer
    buildContext.copy_texture_to_buffer("test.depth_target_sample.render_target"_name, "test.depth_target_sample.output_buffer"_name);
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    execute_build_context(buildContext, storage);
 
    auto& outBuffer = storage.buffer("test.depth_target_sample.output_buffer"_name, 0);
@@ -525,7 +535,7 @@ TEST(BuildContext, Conditions)
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
 
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
 
    auto job = buildContext.build_job(pipelineCache, storage);
 
@@ -580,7 +590,7 @@ TEST(BuildContext, CopyFromLastFrame)
    buildContext.end_if();
 
    PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage;
+   ResourceStorage storage(TestingSupport::device());
    auto job = buildContext.build_job(pipelineCache, storage);
 
    write_buffer(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 0), 36);
@@ -623,3 +633,157 @@ TEST(BuildContext, CopyFromLastFrame)
 
    ASSERT_EQ(read_buffer<int>(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 1)), 36 + 2 + 10 * 3);
 }
+
+TEST(BuildContext, ConditionalBarrier)
+{
+   using namespace triglav::render_core::literals;
+
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+
+   buildContext.declare_flag("increase_number"_name);
+   buildContext.init_buffer("test.conditional_barrier.data"_name, 5);
+
+   buildContext.if_enabled("increase_number"_name);
+   buildContext.bind_compute_shader("testing/increase_number.cshader"_rc);
+   buildContext.bind_storage_buffer(0, "test.conditional_barrier.data"_name);
+   buildContext.dispatch({1, 1, 1});
+   buildContext.end_if();
+
+   buildContext.declare_staging_buffer("test.conditional_barrier.user"_name, sizeof(int));
+   buildContext.copy_buffer("test.conditional_barrier.data"_name, "test.conditional_barrier.user"_name);
+
+   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   ResourceStorage storage(TestingSupport::device());
+   auto job = buildContext.build_job(pipelineCache, storage);
+
+   const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   fence.await();
+
+   const gapi::SemaphoreArray emptyList;
+
+   job.execute(0, emptyList, emptyList, &fence);
+   fence.await();
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditional_barrier.user"_name, 0)), 5);
+
+   job.enable_flag("increase_number"_name);
+   job.execute(0, emptyList, emptyList, &fence);
+   fence.await();
+   ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditional_barrier.user"_name, 0)), 6);
+}
+
+#if TG_RAY_TRACING_TESTS
+
+TEST(BuildContext, BasicRayTracing)
+{
+   using triglav::io::FileOpenMode;
+   using triglav::io::open_file;
+   using triglav::io::Path;
+
+   gapi::BufferHeap asBufferHeap(TestingSupport::device(), gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer);
+   rt::AccelerationStructurePool asPool(TestingSupport::device());
+
+   rt::GeometryBuildContext bottomLevelCtx(TestingSupport::device(), asPool, asBufferHeap);
+
+   auto boxMesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
+   boxMesh.triangulate();
+   const auto boxMeshData =
+      boxMesh.upload_to_device(TestingSupport::device(), gapi::BufferUsage::TransferDst | gapi::BufferUsage::AccelerationStructureRead);
+
+   bottomLevelCtx.add_triangle_buffer(boxMeshData.mesh.vertices.buffer(), boxMeshData.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
+                                      sizeof(triglav::geometry::Vertex), boxMeshData.mesh.vertices.count(),
+                                      boxMeshData.mesh.indices.count() / 3);
+
+   auto* boxAS = bottomLevelCtx.commit_triangles();
+
+   auto buildBLCmdList = GAPI_CHECK(TestingSupport::device().create_command_list(gapi::WorkType::Compute));
+   GAPI_CHECK_STATUS(buildBLCmdList.begin(gapi::SubmitType::OneTime));
+   bottomLevelCtx.build_acceleration_structures(buildBLCmdList);
+   GAPI_CHECK_STATUS(buildBLCmdList.finish());
+   GAPI_CHECK_STATUS(TestingSupport::device().submit_command_list_one_time(buildBLCmdList));
+
+   rt::GeometryBuildContext topLevelCtx(TestingSupport::device(), asPool, asBufferHeap);
+
+   rt::InstanceBuilder instanceBuilder(TestingSupport::device());
+   instanceBuilder.add_instance(*boxAS, triglav::Matrix4x4(1), 0);
+   auto instanceBuffer = instanceBuilder.build_buffer();
+
+   topLevelCtx.add_instance_buffer(instanceBuffer, 1);
+
+   auto* topLevelAS = topLevelCtx.commit_instances();
+
+   auto buildTLCmdList = GAPI_CHECK(TestingSupport::device().create_command_list(gapi::WorkType::Compute));
+   GAPI_CHECK_STATUS(buildTLCmdList.begin(gapi::SubmitType::OneTime));
+   topLevelCtx.build_acceleration_structures(buildTLCmdList);
+   GAPI_CHECK_STATUS(buildTLCmdList.finish());
+   GAPI_CHECK_STATUS(TestingSupport::device().submit_command_list_one_time(buildTLCmdList));
+
+   static constexpr triglav::MemorySize bufferSize{sizeof(int) * DefaultSize.x * DefaultSize.y};
+
+   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+
+   buildContext.declare_screen_size_texture("test.basic_ray_tracing.target"_name, GAPI_FORMAT(RGBA, UNorm8));
+   buildContext.declare_staging_buffer("test.basic_ray_tracing.output"_name, bufferSize);
+
+   const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
+   const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::g_pi),
+                                             static_cast<float>(DefaultSize.x) / static_cast<float>(DefaultSize.y), 0.1f, 100.0f);
+
+   struct ViewProperties
+   {
+      triglav::Matrix4x4 projInverse;
+      triglav::Matrix4x4 viewInverse;
+   };
+
+   buildContext.init_buffer("test.basic_ray_tracing.view_props"_name, ViewProperties{inverse(perspective), inverse(view)});
+
+   buildContext.bind_rt_generation_shader("testing/rt/basic_rgen.rgenshader"_rc);
+   buildContext.bind_acceleration_structure(0, *topLevelAS);
+   buildContext.bind_rw_texture(1, "test.basic_ray_tracing.target"_name);
+   buildContext.bind_uniform_buffer(2, "test.basic_ray_tracing.view_props"_name);
+
+   buildContext.bind_rt_closest_hit_shader("testing/rt/basic_rchit.rchitshader"_rc);
+   buildContext.bind_rt_miss_shader("testing/rt/basic_rmiss.rmissshader"_rc);
+
+   triglav::render_core::RayTracingShaderGroup rtGenGroup{};
+   rtGenGroup.type = triglav::render_core::RayTracingShaderGroupType::General;
+   rtGenGroup.generalShader.emplace("testing/rt/basic_rgen.rgenshader"_rc);
+   buildContext.bind_rt_shader_group(rtGenGroup);
+
+   triglav::render_core::RayTracingShaderGroup rtMissGroup{};
+   rtMissGroup.type = triglav::render_core::RayTracingShaderGroupType::General;
+   rtMissGroup.generalShader.emplace("testing/rt/basic_rmiss.rmissshader"_rc);
+   buildContext.bind_rt_shader_group(rtMissGroup);
+
+   triglav::render_core::RayTracingShaderGroup rtClosestHitGroup{};
+   rtClosestHitGroup.type = triglav::render_core::RayTracingShaderGroupType::Triangles;
+   rtClosestHitGroup.closestHitShader.emplace("testing/rt/basic_rchit.rchitshader"_rc);
+   buildContext.bind_rt_shader_group(rtClosestHitGroup);
+
+   buildContext.trace_rays({DefaultSize.x, DefaultSize.y, 1});
+
+   buildContext.copy_texture_to_buffer("test.basic_ray_tracing.target"_name, "test.basic_ray_tracing.output"_name);
+
+   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+
+   ResourceStorage storage(TestingSupport::device());
+   auto job = buildContext.build_job(pipelineCache, storage);
+
+   const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   fence.await();
+
+   const gapi::SemaphoreArray emptyList;
+   job.execute(0, emptyList, emptyList, &fence);
+
+   fence.await();
+
+   auto& outBuffer = storage.buffer("test.basic_ray_tracing.output"_name, 0);
+   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+
+   const auto expectedBitmap = open_file(Path{"content/basic_ray_tracing_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expectedBitmap.has_value());
+
+   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expectedBitmap, pixels, bufferSize, 0x02));
+}
+
+#endif

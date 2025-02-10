@@ -1,0 +1,14 @@
+- common/view_properties.slang
+- common/frame_properties.slang
+- common/brdf.slang
+- common/shadow_map.slang
+- pass/ambient_occlusion.slang
+- pass/shading.slang
+- pass/post_processing.slang
+- geometry/skybox.slang
+- geometry/ground.slang
+- ui/text_rendering.slang
+- ui/text_generation.slang
+- ui/rect_rendering.slang
+- misc/full_screen_vs.slang
+- misc/shadow_map.slang

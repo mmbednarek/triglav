@@ -1,17 +1,17 @@
 shader_targets += custom_target('shader_particles_compute',
-                                input: 'compute.glsl',
-                                output: '@BASENAME@.spv',
-                                command: compile_compute_cmds,
+                                input: 'update_position.slang',
+                                output: 'compute.spv',
+                                command: slang_cs_commands,
 )
 
 shader_targets += custom_target('shader_particles_vertex',
-                                input: 'vertex.glsl',
-                                output: '@BASENAME@.spv',
-                                command: compile_vertex_cmds,
+                                input: 'render.slang',
+                                output: 'vertex.spv',
+                                command: slang_vs_commands,
 )
 
 shader_targets += custom_target('shader_particles_fragment',
-                                input: 'fragment.glsl',
-                                output: '@BASENAME@.spv',
-                                command: compile_fragment_cmds,
+                                input: 'render.slang',
+                                output: 'fragment.spv',
+                                command: slang_fs_commands,
 )

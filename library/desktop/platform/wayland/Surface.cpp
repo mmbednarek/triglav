@@ -13,17 +13,18 @@ Surface::Surface(Display& display, Dimension dimension) :
     m_topLevel(xdg_surface_get_toplevel(m_xdgSurface)),
     m_dimension(dimension)
 {
-   m_surfaceListener.configure = [](void* data, xdg_surface* xdg_surface, const uint32_t serial) {
+   m_surfaceListener.configure = [](void* data, [[maybe_unused]] xdg_surface* xdg_surface, const uint32_t serial) {
       auto* surface = static_cast<Surface*>(data);
       assert(surface->m_xdgSurface == xdg_surface);
       surface->on_configure(serial);
    };
-   m_topLevelListener.configure = [](void* data, xdg_toplevel* xdg_toplevel, const int32_t width, const int32_t height, wl_array* states) {
+   m_topLevelListener.configure = [](void* data, [[maybe_unused]] xdg_toplevel* xdg_toplevel, const int32_t width, const int32_t height,
+                                     wl_array* states) {
       auto* surface = static_cast<Surface*>(data);
       assert(surface->m_topLevel == xdg_toplevel);
       surface->on_toplevel_configure(width, height, states);
    };
-   m_topLevelListener.close = [](void* data, xdg_toplevel* xdg_toplevel) {
+   m_topLevelListener.close = [](void* data, [[maybe_unused]] xdg_toplevel* xdg_toplevel) {
       const auto* surface = static_cast<Surface*>(data);
       assert(surface->m_topLevel == xdg_toplevel);
       surface->on_toplevel_close();

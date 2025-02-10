@@ -2,10 +2,9 @@
 
 #include "DescriptorWriter.hpp"
 #include "Device.hpp"
-#include "Framebuffer.hpp"
 #include "Pipeline.hpp"
+#include "QueryPool.hpp"
 #include "Texture.hpp"
-#include "TimestampArray.hpp"
 #include "ray_tracing/ShaderBindingTable.hpp"
 #include "vulkan/DynamicProcedures.hpp"
 #include "vulkan/Util.hpp"
@@ -84,56 +83,6 @@ VkCommandBuffer CommandList::vulkan_command_buffer() const
    return m_commandBuffer;
 }
 
-void CommandList::begin_render_pass(const Framebuffer& framebuffer, std::span<ClearValue> clearValues) const
-{
-   static constexpr auto maxClearValues{6};
-
-   std::array<VkClearValue, maxClearValues> vulkanClearValues{};
-   for (auto i = 0u; i < clearValues.size(); ++i) {
-      if (std::holds_alternative<Color>(clearValues[i].value)) {
-         const auto [r, g, b, a] = std::get<Color>(clearValues[i].value);
-         vulkanClearValues[i].color = {{r, g, b, a}};
-      } else if (std::holds_alternative<DepthStenctilValue>(clearValues[i].value)) {
-         const auto [depthValue, stencilValue] = std::get<DepthStenctilValue>(clearValues[i].value);
-         vulkanClearValues[i].depthStencil.depth = depthValue;
-         vulkanClearValues[i].depthStencil.stencil = stencilValue;
-      }
-   }
-
-   const auto [width, height] = framebuffer.resolution();
-
-   VkRenderPassBeginInfo renderPassInfo{};
-   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-   renderPassInfo.renderPass = framebuffer.vulkan_render_pass();
-   renderPassInfo.framebuffer = framebuffer.vulkan_framebuffer();
-   renderPassInfo.renderArea.offset = {0, 0};
-   renderPassInfo.renderArea.extent.width = width;
-   renderPassInfo.renderArea.extent.height = height;
-   renderPassInfo.clearValueCount = clearValues.size();
-   renderPassInfo.pClearValues = vulkanClearValues.data();
-
-   vkCmdBeginRenderPass(m_commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-   VkViewport viewport{};
-   viewport.x = 0.0f;
-   viewport.y = 0.0f;
-   viewport.width = static_cast<float>(width);
-   viewport.height = static_cast<float>(height);
-   viewport.minDepth = 0.0f;
-   viewport.maxDepth = 1.0f;
-   vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
-
-   VkRect2D scissor{};
-   scissor.offset = {0, 0};
-   scissor.extent = VkExtent2D{width, height};
-   vkCmdSetScissor(m_commandBuffer, 0, 1, &scissor);
-}
-
-void CommandList::end_render_pass() const
-{
-   vkCmdEndRenderPass(m_commandBuffer);
-}
-
 void CommandList::bind_pipeline(const Pipeline& pipeline)
 {
    vkCmdBindPipeline(m_commandBuffer, vulkan::to_vulkan_pipeline_bind_point(pipeline.pipeline_type()), pipeline.vulkan_pipeline());
@@ -176,7 +125,12 @@ void CommandList::dispatch(const u32 x, const u32 y, const u32 z)
    vkCmdDispatch(m_commandBuffer, x, y, z);
 }
 
-void CommandList::bind_vertex_buffer(const Buffer& buffer, uint32_t layoutIndex) const
+void CommandList::dispatch_indirect(const Buffer& indirectBuffer) const
+{
+   vkCmdDispatchIndirect(m_commandBuffer, indirectBuffer.vulkan_buffer(), 0);
+}
+
+void CommandList::bind_vertex_buffer(const Buffer& buffer, const u32 layoutIndex) const
 {
    const std::array buffers{buffer.vulkan_buffer()};
    constexpr std::array<VkDeviceSize, 1> offsets{0};
@@ -195,7 +149,7 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
    vkCmdCopyBuffer(m_commandBuffer, source.vulkan_buffer(), dest.vulkan_buffer(), 1, &region);
 }
 
-void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, u32 srcOffset, u32 dstOffset, u32 size) const
+void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, const u32 srcOffset, const u32 dstOffset, const u32 size) const
 {
    assert(size > 0);
 
@@ -261,10 +215,10 @@ void CommandList::copy_texture(const Texture& source, const TextureState srcStat
                   destination.vulkan_image(), vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
 }
 
-void CommandList::push_constant_ptr(const PipelineStage stage, const void* ptr, const size_t size, const size_t offset) const
+void CommandList::push_constant_ptr(const PipelineStageFlags stages, const void* ptr, const size_t size, const size_t offset) const
 {
    assert(m_boundPipelineLayout != nullptr);
-   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout, vulkan::to_vulkan_shader_stage_flags(stage), offset, size, ptr);
+   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout, vulkan::to_vulkan_shader_stage_flags(stages), offset, size, ptr);
 }
 
 void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
@@ -293,10 +247,14 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
       barrier.subresourceRange.layerCount = 1;
       barrier.srcAccessMask = vulkan::to_vulkan_access_flags(sourceStage, info.texture->format(), info.sourceState);
       barrier.dstAccessMask = vulkan::to_vulkan_access_flags(targetStage, info.texture->format(), info.targetState);
+
+      // assert(barrier.dstAccessMask != 0);
    }
 
-   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
-                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, 0, nullptr, barriers.size(), barriers.data());
+   const auto dstStageMask = vulkan::to_vulkan_pipeline_stage_flags(targetStage);
+   assert(dstStageMask != 0);
+   vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage), dstStageMask, 0, 0, nullptr, 0, nullptr,
+                        barriers.size(), barriers.data());
 }
 
 void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
@@ -355,12 +313,12 @@ void CommandList::blit_texture(const Texture& sourceTex, const TextureRegion& so
                   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &blit, VK_FILTER_LINEAR);
 }
 
-void CommandList::reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const
+void CommandList::reset_timestamp_array(const QueryPool& timestampArray, u32 first, u32 count) const
 {
    vkCmdResetQueryPool(m_commandBuffer, timestampArray.vulkan_query_pool(), first, count);
 }
 
-void CommandList::write_timestamp(const PipelineStage stage, const TimestampArray& timestampArray, const u32 timestampIndex) const
+void CommandList::write_timestamp(const PipelineStage stage, const QueryPool& timestampArray, const u32 timestampIndex) const
 {
    vkCmdWriteTimestamp(m_commandBuffer, vulkan::to_vulkan_pipeline_stage(stage), timestampArray.vulkan_query_pool(), timestampIndex);
 }
@@ -372,12 +330,19 @@ void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer,
                                      static_cast<u32>(writes.size()), writes.data());
 }
 
-void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
-                                           const u32 stride)
+void CommandList::draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
+                                                   const u32 stride)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
    vulkan::vkCmdDrawIndexedIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls,
                                          stride);
+}
+
+void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
+                                           const u32 stride)
+{
+   this->handle_pending_descriptors(PipelineType::Graphics);
+   vkCmdDrawIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls, stride);
 }
 
 void CommandList::update_buffer(const Buffer& buffer, const u32 offset, const u32 size, const void* data) const
@@ -488,7 +453,7 @@ void CommandList::bind_texture(const u32 binding, const Texture& texture)
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_texture_array(const u32 binding, const std::span<Texture*> textures)
+void CommandList::bind_texture_array(const u32 binding, const std::span<const Texture*> textures)
 {
    m_descriptorWriter.set_texture_array(binding, textures);
    m_hasPendingDescriptors = true;
@@ -506,6 +471,16 @@ void CommandList::bind_storage_image_view(const u32 binding, const TextureView& 
    m_hasPendingDescriptors = true;
 }
 
+void CommandList::begin_query(const QueryPool& queryPool, const u32 queryIndex) const
+{
+   vkCmdBeginQuery(m_commandBuffer, queryPool.vulkan_query_pool(), queryIndex, 0);
+}
+
+void CommandList::end_query(const QueryPool& queryPool, const u32 queryIndex) const
+{
+   vkCmdEndQuery(m_commandBuffer, queryPool.vulkan_query_pool(), queryIndex);
+}
+
 void CommandList::bind_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStructure)
 {
    m_descriptorWriter.set_acceleration_structure(binding, accStructure);
@@ -517,6 +492,20 @@ void CommandList::trace_rays(const ray_tracing::ShaderBindingTable& binding_tabl
    this->handle_pending_descriptors(PipelineType::RayTracing);
    vulkan::vkCmdTraceRaysKHR(m_commandBuffer, &binding_table.gen_rays_region(), &binding_table.miss_region(), &binding_table.hit_region(),
                              &binding_table.callable_region(), extent.x, extent.y, extent.z);
+}
+
+void CommandList::set_debug_name(const std::string_view name) const
+{
+   if (name.empty())
+      return;
+
+   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
+   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(m_commandBuffer);
+   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_COMMAND_BUFFER;
+   debugUtilsObjectName.pObjectName = name.data();
+   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_device.vulkan_device(), &debugUtilsObjectName);
+
+   assert(result == VK_SUCCESS);
 }
 
 void CommandList::handle_pending_descriptors(const PipelineType pipelineType)

@@ -21,6 +21,18 @@ fragment_shaders = [
     'depth_target_sample_sample.slang',
 ]
 
+raygen_shaders = [
+    'basic_ray_tracing.slang'
+]
+
+raymiss_shaders = [
+    'basic_ray_tracing.slang'
+]
+
+rayclosesthit_shaders = [
+    'basic_ray_tracing.slang'
+]
+
 files_to_copy = [
     'index.yaml',
     'basic_graphics_expected_bitmap.dat',
@@ -28,6 +40,7 @@ files_to_copy = [
     'basic_depth_expected_bitmap.dat',
     'multiple_passes_expected_bitmap.dat',
     'depth_target_sample_expected_bitmap.dat',
+    'basic_ray_tracing_expected_bitmap.dat',
     'sample.png',
 ]
 
@@ -55,6 +68,33 @@ foreach shader : fragment_shaders
     render_core_test_file_deps += custom_target(input   : shader,
                                                 output  : '@BASENAME@_fs.spv',
                                                 command : slang_compile_fs,
+    )
+endforeach
+
+slang_compile_rgen = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'rgen_main', '-stage', 'raygeneration', '-O3', '-o', '@OUTPUT@']
+
+foreach shader : raygen_shaders
+    render_core_test_file_deps += custom_target(input   : shader,
+                                                output  : '@BASENAME@_rgen.spv',
+                                                command : slang_compile_rgen,
+    )
+endforeach
+
+slang_compile_rmiss = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'rmiss_main', '-stage', 'miss', '-O3', '-o', '@OUTPUT@']
+
+foreach shader : raymiss_shaders
+    render_core_test_file_deps += custom_target(input   : shader,
+                                                output  : '@BASENAME@_rmiss.spv',
+                                                command : slang_compile_rmiss ,
+    )
+endforeach
+
+slang_compile_rchit = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'rchit_main', '-stage', 'closesthit', '-O3', '-o', '@OUTPUT@']
+
+foreach shader : rayclosesthit_shaders
+    render_core_test_file_deps += custom_target(input   : shader,
+                                                output  : '@BASENAME@_rchit.spv',
+                                                command : slang_compile_rchit,
     )
 endforeach
 

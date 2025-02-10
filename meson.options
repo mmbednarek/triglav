@@ -1,4 +1,5 @@
-option('wayland', type : 'feature', value : 'enabled')
+option('wayland', type : 'feature', value : 'disabled')
 option('thread_sanitizer', type : 'feature', value : 'disabled')
 option('address_sanitizer', type : 'feature', value : 'disabled')
 option('disable_debug_utils', type : 'feature', value : 'disabled')
+option('disable_shader_opt', type : 'feature', value : 'disabled')

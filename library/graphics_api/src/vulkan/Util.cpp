@@ -243,6 +243,10 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
       return VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR;
    case PipelineStage::MissShader:
       return VK_SHADER_STAGE_MISS_BIT_KHR;
+   case PipelineStage::AnyHitShader:
+      return VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+   case PipelineStage::CallableShader:
+      return VK_SHADER_STAGE_CALLABLE_BIT_KHR;
    default:
       break;
    }
@@ -271,6 +275,12 @@ VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
    if (flags & PipelineStage::MissShader) {
       result |= VK_SHADER_STAGE_MISS_BIT_KHR;
    }
+   if (flags & PipelineStage::AnyHitShader) {
+      result |= VK_SHADER_STAGE_ANY_HIT_BIT_KHR;
+   }
+   if (flags & PipelineStage::CallableShader) {
+      result |= VK_SHADER_STAGE_CALLABLE_BIT_KHR;
+   }
    return result;
 }
 
@@ -279,6 +289,8 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
    switch (stage) {
    case PipelineStage::Entrypoint:
       return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   case PipelineStage::DrawIndirect:
+      return VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
    case PipelineStage::VertexInput:
       return VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
    case PipelineStage::VertexShader:
@@ -294,6 +306,14 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
    case PipelineStage::ComputeShader:
       return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    case PipelineStage::RayGenerationShader:
+      [[fallthrough]];
+   case PipelineStage::ClosestHitShader:
+      [[fallthrough]];
+   case PipelineStage::AnyHitShader:
+      [[fallthrough]];
+   case PipelineStage::CallableShader:
+      [[fallthrough]];
+   case PipelineStage::MissShader:
       return VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    case PipelineStage::Transfer:
       return VK_PIPELINE_STAGE_TRANSFER_BIT;
@@ -310,6 +330,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    VkPipelineStageFlags result{};
    if (flags & PipelineStage::Entrypoint) {
       result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   }
+   if (flags & PipelineStage::DrawIndirect) {
+      result |= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
    }
    if (flags & PipelineStage::VertexInput) {
       result |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
@@ -341,8 +364,17 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    if (flags & PipelineStage::ClosestHitShader) {
       result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
    }
+   if (flags & PipelineStage::AnyHitShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
+   if (flags & PipelineStage::CallableShader) {
+      result |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
+   }
    if (flags & PipelineStage::Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
+   }
+   if (flags & PipelineStage::End) {
+      result |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
    }
    return result;
 }
@@ -395,6 +427,14 @@ VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureStat
       } else {
          return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       }
+   case TextureState::ReadOnlyRenderTarget:
+      if (format.is_depth_format()) {
+         return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+      } else {
+         return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+      }
+   case TextureState::Present:
+      return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
    }
 
    return VK_IMAGE_LAYOUT_UNDEFINED;
@@ -404,7 +444,7 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
 {
    switch (resourceState) {
    case TextureState::Undefined:
-      return 0;
+      return VK_ACCESS_NONE;
    case TextureState::TransferSrc:
       return VK_ACCESS_TRANSFER_READ_BIT;
    case TextureState::TransferDst:
@@ -427,6 +467,14 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
       } else {
          return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
       }
+   case TextureState::ReadOnlyRenderTarget:
+      if (format.is_depth_format()) {
+         return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+      } else {
+         return VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+      }
+   case TextureState::Present:
+      return VK_ACCESS_NONE;
    }
 
    return 0;
@@ -569,6 +617,9 @@ VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags workTypes
    if (workTypes & Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
+   if (workTypes & Presentation) {
+      result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+   }
 
    return result;
 }
@@ -660,8 +711,28 @@ VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags inFlags)
    if (inFlags & ShaderWrite) {
       outFlags |= VK_ACCESS_SHADER_WRITE_BIT;
    }
+   if (inFlags & IndirectCmdRead) {
+      outFlags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+   }
+   if (inFlags & MemoryRead) {
+      outFlags |= VK_ACCESS_MEMORY_READ_BIT;
+   }
+   if (inFlags & MemoryWrite) {
+      outFlags |= VK_ACCESS_MEMORY_WRITE_BIT;
+   }
 
    return outFlags;
+}
+
+VkQueryType to_vulkan_query_type(const QueryType queryType)
+{
+   switch (queryType) {
+   case QueryType::PipelineStats:
+      return VK_QUERY_TYPE_PIPELINE_STATISTICS;
+   case QueryType::Timestamp:
+      return VK_QUERY_TYPE_TIMESTAMP;
+   }
+   return VK_QUERY_TYPE_MAX_ENUM;
 }
 
 VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttachment& attachment)

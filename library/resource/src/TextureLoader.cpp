@@ -3,8 +3,18 @@
 #include "triglav/NameResolution.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Texture.hpp"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
 
 namespace triglav::resource {
 

@@ -5,7 +5,6 @@
 #include "GraphicsApi.hpp"
 #include "Pipeline.hpp"
 
-#include <glm/vec3.hpp>
 #include <span>
 
 namespace triglav::graphics_api {
@@ -13,9 +12,7 @@ namespace triglav::graphics_api {
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(CommandPool, Device)
 
 class Pipeline;
-class Framebuffer;
-class RenderTarget;
-class TimestampArray;
+class QueryPool;
 class DescriptorWriter;
 
 namespace ray_tracing {
@@ -45,14 +42,13 @@ class CommandList
 
    [[nodiscard]] VkCommandBuffer vulkan_command_buffer() const;
 
-   void begin_render_pass(const Framebuffer& framebuffer, std::span<ClearValue> clearValues) const;
-   void end_render_pass() const;
    void bind_pipeline(const Pipeline& pipeline);
    void bind_descriptor_set(PipelineType pipelineType, const DescriptorView& descriptorSet) const;
    void draw_primitives(int vertexCount, int vertexOffset);
    void draw_primitives(int vertexCount, int vertexOffset, int instanceCount, int firstInstance);
    void draw_indexed_primitives(int indexCount, int indexOffset, int vertexOffset, int instanceCount = 1, int firstInstance = 0);
    void dispatch(u32 x, u32 y, u32 z);
+   void dispatch_indirect(const Buffer& indirectBuffer) const;
    void bind_vertex_buffer(const Buffer& buffer, uint32_t layoutIndex) const;
    void bind_index_buffer(const Buffer& buffer) const;
    void copy_buffer(const Buffer& source, const Buffer& dest) const;
@@ -62,7 +58,7 @@ class CommandList
                                TextureState srcTextureState = TextureState::TransferSrc) const;
    void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState, u32 srcMip = 0,
                      u32 dstMip = 0) const;
-   void push_constant_ptr(PipelineStage stage, const void* ptr, size_t size, size_t offset = 0) const;
+   void push_constant_ptr(PipelineStageFlags stages, const void* ptr, size_t size, size_t offset = 0) const;
 
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, const TextureBarrierInfo& info) const;
@@ -71,9 +67,10 @@ class CommandList
 
    void blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
                      const TextureRegion& targetRegion) const;
-   void reset_timestamp_array(const TimestampArray& timestampArray, u32 first, u32 count) const;
-   void write_timestamp(PipelineStage stage, const TimestampArray& timestampArray, u32 timestampIndex) const;
+   void reset_timestamp_array(const QueryPool& timestampArray, u32 first, u32 count) const;
+   void write_timestamp(PipelineStage stage, const QueryPool& timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
+   void draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void update_buffer(const Buffer& buffer, u32 offset, u32 size, const void* data) const;
 
@@ -96,9 +93,11 @@ class CommandList
    void bind_texture_image(u32 binding, const Texture& texture);
    void bind_texture_view_image(u32 binding, const TextureView& texture);
    void bind_texture(u32 binding, const Texture& texture);
-   void bind_texture_array(u32 binding, std::span<Texture*> textures);
+   void bind_texture_array(u32 binding, std::span<const Texture*> textures);
    void bind_storage_image(u32 binding, const Texture& texture);
    void bind_storage_image_view(u32 binding, const TextureView& texture);
+   void begin_query(const QueryPool& queryPool, u32 queryIndex) const;
+   void end_query(const QueryPool& queryPool, u32 queryIndex) const;
 
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray& array) const
@@ -133,6 +132,8 @@ class CommandList
    {
       return m_device;
    }
+
+   void set_debug_name(std::string_view name) const;
 
  private:
    void handle_pending_descriptors(PipelineType pipelineType);

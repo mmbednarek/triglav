@@ -8,7 +8,6 @@
 namespace triglav::graphics_api {
 
 class Device;
-class RenderTarget;
 class Shader;
 
 class PipelineBuilderBase
@@ -46,7 +45,6 @@ class ComputePipelineBuilder : public PipelineBuilderBase
 class GraphicsPipelineBuilder : public PipelineBuilderBase
 {
  public:
-   GraphicsPipelineBuilder(Device& device, RenderTarget& renderPass);
    explicit GraphicsPipelineBuilder(Device& device);
 
    GraphicsPipelineBuilder& fragment_shader(const Shader& shader);
@@ -55,7 +53,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& end_vertex_layout();
    GraphicsPipelineBuilder& descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
    GraphicsPipelineBuilder& descriptor_binding_array(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount);
-   GraphicsPipelineBuilder& push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
+   GraphicsPipelineBuilder& push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset = 0);
    GraphicsPipelineBuilder& enable_depth_test(bool enabled);
    GraphicsPipelineBuilder& depth_test_mode(DepthTestMode mode);
    GraphicsPipelineBuilder& enable_blending(bool enabled);
@@ -76,8 +74,6 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    }
 
  private:
-   RenderTarget* m_renderTarget{};
-
    uint32_t m_vertexLocation{0};
    uint32_t m_vertexBinding{0};
    VkPolygonMode m_polygonMode = VK_POLYGON_MODE_FILL;

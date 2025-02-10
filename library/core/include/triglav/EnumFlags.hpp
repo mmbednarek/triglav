@@ -37,7 +37,7 @@ struct EnumFlags
       return (this->value & rhs.value) == rhs.value;
    }
 
-   constexpr EnumFlags operator|(TEnum rhs) const
+   constexpr EnumFlags operator|(const TEnum rhs) const
    {
       return EnumFlags{this->value | static_cast<UnderlyingType>(rhs)};
    }
@@ -47,15 +47,32 @@ struct EnumFlags
       return EnumFlags{this->value | rhs.value};
    }
 
-   constexpr EnumFlags& operator|=(TEnum rhs)
+   constexpr EnumFlags& operator|=(const TEnum rhs)
    {
       this->value |= static_cast<UnderlyingType>(rhs);
       return *this;
    }
 
-   constexpr bool operator==(const EnumFlags rhs)
+   constexpr EnumFlags& operator|=(const EnumFlags rhs)
+   {
+      this->value |= rhs.value;
+      return *this;
+   }
+
+   constexpr EnumFlags& remove_flag(const TEnum flag)
+   {
+      this->value &= ~static_cast<UnderlyingType>(flag);
+      return *this;
+   }
+
+   [[nodiscard]] constexpr bool operator==(const EnumFlags rhs) const
    {
       return this->value == rhs.value;
+   }
+
+   [[nodiscard]] constexpr bool operator==(const TEnum rhs) const
+   {
+      return this->value == static_cast<UnderlyingType>(rhs);
    }
 };
 

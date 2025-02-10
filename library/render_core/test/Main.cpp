@@ -44,7 +44,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    triglav::threading::ThreadPool::the().initialize(4);
 
    auto device = GAPI_CHECK(instance.create_device(gapiSurface, triglav::graphics_api::DevicePickStrategy::PreferDedicated,
-                                                   triglav::graphics_api::DeviceFeature::None));
+                                                   triglav::graphics_api::DeviceFeature::RayTracing));
 
    triglav::test::TestingSupport::the().m_device = device.get();
 

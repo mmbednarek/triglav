@@ -6,6 +6,7 @@
 #include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Array.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
+#include "triglav/render_core/RenderCore.hpp"
 
 #include <glm/vec3.hpp>
 #include <vector>
@@ -86,8 +87,8 @@ class BindlessScene
    [[nodiscard]] const graphics_api::Buffer& count_buffer() const;
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
-   [[nodiscard]] graphics_api::Pipeline& scene_pipeline(graphics_api::RenderTarget& renderTarget);
-   [[nodiscard]] std::vector<graphics_api::Texture*>& scene_textures();
+   [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
+   [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
 
  private:
    BindlessMeshInfo& get_mesh_info(const graphics_api::CommandList& cmdList, ModelName name);
@@ -103,7 +104,8 @@ class BindlessScene
    std::vector<SceneObject> m_pendingObjects;
    std::map<ModelName, BindlessMeshInfo> m_models;
    std::map<TextureName, u32> m_textureIds;
-   std::vector<graphics_api::Texture*> m_sceneTextures;
+   std::vector<const graphics_api::Texture*> m_sceneTextures;
+   std::vector<render_core::TextureRef> m_sceneTextureRefs;
    std::optional<graphics_api::Pipeline> m_scenePipeline;
    bool m_shouldUpdatePSO{false};
 

@@ -47,7 +47,7 @@ UnixFile::~UnixFile()
    ::close(m_fileDescriptor);
 }
 
-Result<MemorySize> UnixFile::read(std::span<u8> buffer)
+Result<MemorySize> UnixFile::read(const std::span<u8> buffer)
 {
    const auto result = ::read(m_fileDescriptor, buffer.data(), buffer.size());
    if (result < 0)
@@ -55,7 +55,7 @@ Result<MemorySize> UnixFile::read(std::span<u8> buffer)
    return static_cast<MemorySize>(result);
 }
 
-Result<MemorySize> UnixFile::write(std::span<const u8> buffer)
+Result<MemorySize> UnixFile::write(const std::span<const u8> buffer)
 {
    const auto result = ::write(m_fileDescriptor, buffer.data(), buffer.size());
    if (result < 0)
@@ -63,16 +63,19 @@ Result<MemorySize> UnixFile::write(std::span<const u8> buffer)
    return static_cast<MemorySize>(result);
 }
 
-Status UnixFile::seek(SeekPosition position, MemoryOffset offset)
+Status UnixFile::seek(const SeekPosition position, const MemoryOffset offset)
 {
    int whence{};
    switch (position) {
    case SeekPosition::Begin:
       whence = SEEK_SET;
+      break;
    case SeekPosition::Current:
       whence = SEEK_CUR;
+      break;
    case SeekPosition::End:
       whence = SEEK_END;
+      break;
    }
 
    const auto res = ::lseek(m_fileDescriptor, offset, whence);
@@ -84,8 +87,7 @@ Status UnixFile::seek(SeekPosition position, MemoryOffset offset)
 
 Result<MemorySize> UnixFile::file_size()
 {
-   struct ::stat fileStat
-   {};
+   struct ::stat fileStat{};
 
    const auto res = ::stat(m_filePath.c_str(), &fileStat);
    if (res < 0) {

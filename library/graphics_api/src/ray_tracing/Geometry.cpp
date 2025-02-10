@@ -112,17 +112,17 @@ GeometryBuildContext::GeometryBuildContext(Device& device, AccelerationStructure
 }
 
 void GeometryBuildContext::add_triangle_buffer(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat,
-                                               MemorySize vertexSize, u32 maxVertexCount, u32 triangleCount)
+                                               const MemorySize vertexSize, const u32 maxVertexCount, const u32 triangleCount)
 {
    m_currentTriangles.add_triangles(vertexBuffer, indexBuffer, vertexFormat, vertexSize, maxVertexCount, triangleCount);
 }
 
-void GeometryBuildContext::add_bounding_box_buffer(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount)
+void GeometryBuildContext::add_bounding_box_buffer(const Buffer& boundingBoxBuffer, const MemorySize bbSize, const u32 bbCount)
 {
    m_currentBoundingBoxes.add_bounding_boxes(boundingBoxBuffer, bbSize, bbCount);
 }
 
-void GeometryBuildContext::add_instance_buffer(const Buffer& instanceBuffer, u32 instanceCount)
+void GeometryBuildContext::add_instance_buffer(const Buffer& instanceBuffer, const u32 instanceCount)
 {
    m_currentInstances.add_instances(instanceBuffer, instanceCount);
 }

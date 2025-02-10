@@ -35,6 +35,26 @@ class Delegate
             disconnect();
       }
 
+      Sink(const Sink& other) = delete;
+      Sink& operator=(const Sink& other) = delete;
+
+      Sink(Sink&& other) noexcept :
+          m_sink(std::move(other.m_sink)),
+          m_handler(std::exchange(other.m_handler, nullptr))
+      {
+      }
+
+      Sink& operator=(Sink&& other) noexcept
+      {
+         if (this == &other)
+            return *this;
+
+         m_sink = std::move(other.m_sink);
+         m_handler = std::exchange(other.m_handler, nullptr);
+
+         return *this;
+      }
+
       void disconnect()
       {
          m_sink.disconnect(m_handler);
@@ -83,8 +103,10 @@ class Delegate
    name##Delegate event_##name;
 
 #define TG_SINK(sender, name) sender::name##Delegate::Sink<Self> sink_##name
+#define TG_OPT_SINK(sender, name) sender::name##Delegate::OptSink<Self> sink_##name
 
 #define TG_CONNECT(obj, name, func) sink_##name(obj.event_##name.connect<&Self::func>(this))
+#define TG_CONNECT_OPT(obj, name, func) obj.event_##name.connect_to<&Self::func>(sink_##name, this)
 
 #define TG_DEFINE_AWAITER(awaiter_name, producer, event)  \
    class awaiter_name                                     \

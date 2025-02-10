@@ -1,5 +1,6 @@
 render_core_test_sources = files(
     'BuildContextTest.cpp',
+    'JobGraphTest.cpp',
     'TestingSupport.cpp',
     'TestingSupport.hpp',
     'Main.cpp',

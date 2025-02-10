@@ -31,7 +31,7 @@ ShaderBindingTableBuilder::ShaderBindingTableBuilder(Device& device, RayTracingP
 
    const auto bufferSize = m_handleSize * pipeline.shader_count();
    m_handleBuffer.resize(bufferSize);
-   auto getHandlesResult = vulkan::vkGetRayTracingShaderGroupHandlesKHR(
+   [[maybe_unused]] const auto getHandlesResult = vulkan::vkGetRayTracingShaderGroupHandlesKHR(
       device.vulkan_device(), pipeline.vulkan_pipeline(), 0, pipeline.group_count(), m_handleBuffer.size(), m_handleBuffer.data());
    assert(getHandlesResult == VK_SUCCESS);
 }

@@ -22,7 +22,7 @@ void Mouse::tick()
          return;
 
       for (int i = 0; i < result; i += 3) {
-         this->OnMouseMove.publish(static_cast<float>(buffer[i + 1]), -static_cast<float>(buffer[i + 2]));
+         event_OnMouseMove.publish(static_cast<float>(buffer[i + 1]), -static_cast<float>(buffer[i + 2]));
       }
    }
 }

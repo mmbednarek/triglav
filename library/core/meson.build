@@ -9,6 +9,7 @@ core_sources = files([
                     'include/triglav/Name.hpp',
                     'include/triglav/NameResolution.hpp',
                     'include/triglav/ObjectPool.hpp',
+                    'include/triglav/RangedArray.hpp',
                     'include/triglav/Ranges.hpp',
                     'include/triglav/ResourceType.hpp',
                     'include/triglav/Template.hpp',

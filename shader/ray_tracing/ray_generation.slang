@@ -1,5 +1,6 @@
 import ray_tracing;
 import ray_payload;
+import "../common/common.slang";
 
 [[vk::binding(0)]]
 uniform RaytracingAccelerationStructure topLevelAS : register(t0);
@@ -13,7 +14,7 @@ uniform RWTexture2D<float> outAmbientOcclusionImage : register(t1);
 uniform RWTexture2D<float> outShadowsImage : register(t2);
 
 [[vk::binding(3)]]
-uniform ConstantBuffer<ray_tracing.ObjectTransform> transform;
+uniform ConstantBuffer<common::ViewProperties> transform;
 
 [shader("raygeneration")]
 void rgen_main()
@@ -22,11 +23,11 @@ void rgen_main()
     let inUV        = pixelCenter / float2(DispatchRaysDimensions().xy);
     let d           = inUV * 2.0 - 1.0;
 
-    let target    = mul(transform.projInverse, float4(d.x, d.y, 1, 1));
+    let target    = mul(transform.invProj, float4(d.x, d.y, 1, 1));
 
     RayDesc rayDesc;
-    rayDesc.Origin    = mul(transform.viewInverse, float4(0, 0, 0, 1)).xyz;
-    rayDesc.Direction = mul(transform.viewInverse, float4(normalize(target.xyz), 0)).xyz;
+    rayDesc.Origin    = mul(transform.invView, float4(0, 0, 0, 1)).xyz;
+    rayDesc.Direction = mul(transform.invView, float4(normalize(target.xyz), 0)).xyz;
     rayDesc.TMin = 0.01;
     rayDesc.TMax = 1000.0;
 

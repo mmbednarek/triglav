@@ -63,7 +63,16 @@ struct VertexLayout
    VertexLayout() = default;
    explicit VertexLayout(u32 stride);
 
-   void add(Name name, const graphics_api::ColorFormat& format, u32 offset);
+   VertexLayout& add(Name name, const graphics_api::ColorFormat& format, u32 offset);
+
+   [[nodiscard]] PipelineHash hash() const;
+};
+
+struct PushConstantDesc
+{
+   graphics_api::PipelineStageFlags flags;
+   u32 size;
+
    [[nodiscard]] PipelineHash hash() const;
 };
 
@@ -76,6 +85,9 @@ struct GraphicPipelineState
    std::vector<graphics_api::ColorFormat> renderTargetFormats;
    std::optional<graphics_api::ColorFormat> depthTargetFormat;
    graphics_api::VertexTopology vertexTopology{graphics_api::VertexTopology::TriangleList};
+   graphics_api::DepthTestMode depthTestMode{graphics_api::DepthTestMode::Enabled};
+   std::vector<PushConstantDesc> pushConstants;
+   bool isBlendingEnabled{true};
 
    [[nodiscard]] PipelineHash hash() const;
 };
@@ -88,13 +100,55 @@ struct ComputePipelineState
    [[nodiscard]] PipelineHash hash() const;
 };
 
+enum class RayTracingShaderGroupType
+{
+   General,
+   Triangles,
+   Procedural,
+};
+
+struct RayTracingShaderGroup
+{
+   RayTracingShaderGroupType type;
+   std::optional<ResourceName> generalShader;
+   std::optional<RayClosestHitShaderName> closestHitShader;
+
+   [[nodiscard]] PipelineHash hash() const;
+};
+
+struct RayTracingPipelineState
+{
+   std::optional<RayGenShaderName> rayGenShader;
+   std::vector<RayClosestHitShaderName> rayClosestHitShaders;
+   std::vector<RayMissShaderName> rayMissShaders;
+   DescriptorState descriptorState;
+   std::vector<PushConstantDesc> pushConstants;
+   u32 maxRecursion{1};
+   std::vector<RayTracingShaderGroup> shaderGroups;
+
+   void reset();
+   [[nodiscard]] std::vector<Name> shader_bindings() const;
+   [[nodiscard]] PipelineHash hash() const;
+};
+
 struct FromLastFrame
 {
    Name name;
 };
 
-using TextureRef = std::variant<TextureName, Name, FromLastFrame>;
-using BufferRef = std::variant<graphics_api::Buffer*, Name, FromLastFrame>;
+struct External
+{
+   Name name;
+};
+
+struct TextureMip
+{
+   Name name;
+   u32 mipLevel;
+};
+
+using TextureRef = std::variant<TextureName, Name, FromLastFrame, External, TextureMip, const graphics_api::Texture*>;
+using BufferRef = std::variant<const graphics_api::Buffer*, Name, FromLastFrame, External>;
 
 struct ExecutionBarrier
 {
@@ -118,13 +172,30 @@ struct TextureBarrier
    graphics_api::PipelineStageFlags dstStageFlags{};
    graphics_api::TextureState srcState{};
    graphics_api::TextureState dstState{};
+   u32 baseMipLevel{0};
+   u32 mipLevelCount{1};
 };
+
+constexpr u32 calculate_mip_count(const Vector2i& dims)
+{
+   return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;
+}
+
+constexpr Name make_rt_shader_name(const ResourceName resName)
+{
+   return resName.name() * static_cast<u64>(resName.type());
+}
 
 namespace literals {
 
 constexpr FromLastFrame operator""_last_frame(const char* value, const std::size_t count)
 {
    return FromLastFrame{detail::hash_string(std::string_view(value, count))};
+}
+
+constexpr External operator""_external(const char* value, const std::size_t count)
+{
+   return External{detail::hash_string(std::string_view(value, count))};
 }
 
 }// namespace literals

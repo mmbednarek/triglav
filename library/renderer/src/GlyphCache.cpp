@@ -4,16 +4,16 @@
 
 namespace triglav::renderer {
 
-namespace {
+// GlyphProperties
 
-GlyphCache::Hash hash_glyph_properties(const GlyphProperties& properties)
+u64 GlyphProperties::hash() const
 {
-   GlyphCache::Hash result{properties.typeface.name()};
-   result += 9251446933U * static_cast<u32>(properties.fontSize);
+   GlyphCache::Hash result{typeface.name()};
+   result += 9251446933U * static_cast<u32>(fontSize);
    return result;
 }
 
-}// namespace
+// GlyphCache
 
 GlyphCache::GlyphCache(graphics_api::Device& device, resource::ResourceManager& resourceManager) :
     m_device(device),
@@ -23,7 +23,7 @@ GlyphCache::GlyphCache(graphics_api::Device& device, resource::ResourceManager& 
 
 const render_core::GlyphAtlas& GlyphCache::find_glyph_atlas(const GlyphProperties& properties)
 {
-   auto hash = hash_glyph_properties(properties);
+   auto hash = properties.hash();
    auto it = m_atlases.find(hash);
    if (it != m_atlases.end()) {
       return it->second;

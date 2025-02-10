@@ -104,23 +104,24 @@ enum class PipelineStage : uint32_t
 {
    None = 0,
    Entrypoint = (1 << 0),
-   VertexInput = (1 << 1),
-   VertexShader = (1 << 2),
-   FragmentShader = (1 << 3),
-   EarlyZ = (1 << 4),
-   LateZ = (1 << 5),
-   AttachmentOutput = (1 << 6),
-   ComputeShader = (1 << 7),
+   DrawIndirect = (1 << 1),
+   VertexInput = (1 << 2),
+   VertexShader = (1 << 3),
+   FragmentShader = (1 << 4),
+   EarlyZ = (1 << 5),
+   LateZ = (1 << 6),
+   AttachmentOutput = (1 << 7),
+   ComputeShader = (1 << 8),
 
-   RayGenerationShader = (1 << 8),
-   AnyHitShader = (1 << 9),
-   ClosestHitShader = (1 << 10),
-   MissShader = (1 << 11),
-   IntersectionShader = (1 << 12),
-   CallableShader = (1 << 13),
+   RayGenerationShader = (1 << 9),
+   AnyHitShader = (1 << 10),
+   ClosestHitShader = (1 << 11),
+   MissShader = (1 << 12),
+   IntersectionShader = (1 << 13),
+   CallableShader = (1 << 14),
 
-   Transfer = (1 << 14),
-   End = (1 << 15),
+   Transfer = (1 << 15),
+   End = (1 << 16),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -162,6 +163,28 @@ struct ColorFormat
          [[fallthrough]];
       case ColorFormatOrder::D:
          return true;
+      default:
+         return false;
+      }
+   }
+
+   [[nodiscard]] i32 channel_count() const
+   {
+      switch (this->order) {
+      case ColorFormatOrder::RGB:
+         return 3;
+      case ColorFormatOrder::RG:
+         return 2;
+      case ColorFormatOrder::R:
+         return 1;
+      case ColorFormatOrder::RGBA:
+         return 4;
+      case ColorFormatOrder::BGRA:
+         return 4;
+      case ColorFormatOrder::DS:
+         return 2;
+      case ColorFormatOrder::D:
+         return 1;
       default:
          return false;
       }
@@ -254,6 +277,8 @@ enum class TextureState
    GeneralRead,
    GeneralWrite,
    RenderTarget,
+   ReadOnlyRenderTarget,
+   Present,
 };
 
 [[nodiscard]] constexpr MemoryAccess to_memory_access(const TextureState state)
@@ -271,7 +296,11 @@ enum class TextureState
       [[fallthrough]];
    case TextureState::ShaderRead:
       [[fallthrough]];
+   case TextureState::ReadOnlyRenderTarget:
+      [[fallthrough]];
    case TextureState::GeneralRead:
+      [[fallthrough]];
+   case TextureState::Present:
       return MemoryAccess::Read;
    default:
       return MemoryAccess::None;
@@ -448,6 +477,9 @@ enum class BufferAccess
    VertexRead = (1 << 4),
    ShaderRead = (1 << 5),
    ShaderWrite = (1 << 6),
+   IndirectCmdRead = (1 << 7),
+   MemoryRead = (1 << 8),
+   MemoryWrite = (1 << 9),
 };
 
 [[nodiscard]] constexpr MemoryAccess to_memory_access(const BufferAccess access)
@@ -455,8 +487,12 @@ enum class BufferAccess
    switch (access) {
    case BufferAccess::TransferWrite:
       [[fallthrough]];
+   case BufferAccess::MemoryWrite:
+      [[fallthrough]];
    case BufferAccess::ShaderWrite:
       return MemoryAccess::Write;
+   case BufferAccess::IndirectCmdRead:
+      [[fallthrough]];
    case BufferAccess::TransferRead:
       [[fallthrough]];
    case BufferAccess::UniformRead:
@@ -464,6 +500,8 @@ enum class BufferAccess
    case BufferAccess::IndexRead:
       [[fallthrough]];
    case BufferAccess::VertexRead:
+      [[fallthrough]];
+   case BufferAccess::MemoryRead:
       [[fallthrough]];
    case BufferAccess::ShaderRead:
       return MemoryAccess::Read;
@@ -497,9 +535,15 @@ class Buffer;
 
 struct BufferBarrier
 {
-   Buffer* buffer;
+   const Buffer* buffer;
    BufferAccessFlags srcAccess;
    BufferAccessFlags dstAccess;
+};
+
+enum class QueryType
+{
+   PipelineStats,
+   Timestamp,
 };
 
 template<typename T>
@@ -517,7 +561,7 @@ class Exception final : public std::exception
 };
 
 template<typename TResultValue>
-TResultValue check_result(Result<TResultValue> result, const std::string_view message)
+TResultValue check_result(Result<TResultValue>&& result, const std::string_view message)
 {
    if (not result.has_value()) {
       throw Exception(result.error(), message);

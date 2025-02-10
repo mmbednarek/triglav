@@ -58,6 +58,7 @@ void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
 {
    m_camera.set_position(position);
    m_camera.set_orientation(orientation);
+   event_OnViewUpdated.publish(m_camera);
 }
 
 const Camera& Scene::camera() const
@@ -124,6 +125,11 @@ void Scene::update_shadow_maps()
    auto smProps3 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 180.0f, 256.0f);
    m_directionalShadowMapCameras[2] = OrthoCamera::from_properties(smProps3);
    event_OnShadowMapChanged.publish(2, m_directionalShadowMapCameras[2]);
+}
+
+void Scene::send_view_changed()
+{
+   event_OnViewUpdated.publish(m_camera);
 }
 
 }// namespace triglav::renderer

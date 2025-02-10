@@ -11,13 +11,13 @@ struct ClassContainer
 };
 
 template<typename TMemberType, typename TClass>
-constexpr ClassContainer<TClass> get_class_of_member(TMemberType TClass::*member)
+constexpr ClassContainer<TClass> get_class_of_member(TMemberType TClass::* member)
 {
    return ClassContainer<TClass>{};
 }
 
 template<typename TMemberType, typename TClass>
-constexpr ClassContainer<TMemberType> get_type_of_member(TMemberType TClass::*member)
+constexpr ClassContainer<TMemberType> get_type_of_member(TMemberType TClass::* member)
 {
    return ClassContainer<TMemberType>{};
 }

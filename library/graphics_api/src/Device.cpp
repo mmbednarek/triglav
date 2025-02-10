@@ -95,7 +95,7 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
    swapchainInfo.presentMode = vulkan::to_vulkan_present_mode(presentMode);
    swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
    swapchainInfo.imageFormat = *vulkanColorFormat;
-   swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+   swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
    if (oldSwapchain != nullptr) {
       swapchainInfo.oldSwapchain = oldSwapchain->vulkan_swapchain();
    }
@@ -123,9 +123,12 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
       return std::unexpected(Status::UnsupportedFormat);
    }
 
-   std::vector<vulkan::ImageView> swapchainImageViews;
 
    const auto images = vulkan::get_swapchain_images(*m_device, *swapchain);
+
+   std::vector<Texture> swapchainTextures;
+   swapchainTextures.reserve(images.size());
+
    for (const auto image : images) {
       VkImageViewCreateInfo imageViewInfo{};
       imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -147,10 +150,11 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
          return std::unexpected(Status::UnsupportedDevice);
       }
 
-      swapchainImageViews.emplace_back(std::move(imageView));
+      swapchainTextures.emplace_back(image, std::move(imageView), colorFormat, TextureUsage::ColorAttachment | TextureUsage::TransferDst,
+                                     resolution.width, resolution.height, 1);
    }
 
-   return Swapchain(m_queueManager, resolution, std::move(swapchainImageViews), std::move(swapchain), colorFormat);
+   return Swapchain(m_queueManager, resolution, std::move(swapchainTextures), std::move(swapchain), colorFormat);
 }
 
 Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint, const std::span<const char> code)
@@ -199,6 +203,7 @@ Result<DescriptorPool> Device::create_descriptor_pool(std::span<const std::pair<
 Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_t size)
 {
    assert(size != 0);
+   assert(usage != BufferUsage::None);
 
    VkBufferCreateInfo bufferInfo{};
    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -264,8 +269,10 @@ Result<Semaphore> Device::create_semaphore() const
 }
 
 Result<Texture> Device::create_texture(const ColorFormat& format, const Resolution& imageSize, const TextureUsageFlags usageFlags,
-                                       TextureState initialTextureState, SampleCount sampleCount, int mipCount) const
+                                       const TextureState initialTextureState, const SampleCount sampleCount, int mipCount) const
 {
+   assert(usageFlags != TextureUsage::None);
+
    const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
 
    if (mipCount == 0) {
@@ -369,11 +376,14 @@ Result<Sampler> Device::create_sampler(const SamplerProperties& info)
    return Sampler(std::move(sampler));
 }
 
-Result<TimestampArray> Device::create_timestamp_array(const u32 timestampCount)
+Result<QueryPool> Device::create_query_pool(const QueryType queryType, const u32 timestampCount)
 {
    VkQueryPoolCreateInfo queryPoolInfo{VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO};
-   queryPoolInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+   queryPoolInfo.queryType = vulkan::to_vulkan_query_type(queryType);
    queryPoolInfo.queryCount = timestampCount;
+   if (queryType == QueryType::PipelineStats) {
+      queryPoolInfo.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT;
+   }
 
    VkPhysicalDeviceProperties properties;
    vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
@@ -383,7 +393,7 @@ Result<TimestampArray> Device::create_timestamp_array(const u32 timestampCount)
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return TimestampArray(std::move(queryPool), properties.limits.timestampPeriod);
+   return QueryPool(std::move(queryPool), properties.limits.timestampPeriod);
 }
 
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Surface& surface) const
@@ -396,14 +406,15 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Su
 }
 
 Status Device::submit_command_list(const CommandList& commandList, const SemaphoreArrayView waitSemaphores,
-                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes)
+                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, const WorkTypeFlags /*workTypes*/)
 {
    VkSubmitInfo submitInfo{};
    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
    std::vector<VkPipelineStageFlags> waitStages{};
    waitStages.resize(waitSemaphores.semaphore_count());
-   std::ranges::fill(waitStages, vulkan::to_vulkan_wait_pipeline_stage(workTypes));
+   // std::ranges::fill(waitStages, vulkan::to_vulkan_wait_pipeline_stage(workTypes));
+   std::ranges::fill(waitStages, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
    const std::array commandBuffers{commandList.vulkan_command_buffer()};
 
    submitInfo.waitSemaphoreCount = waitSemaphores.semaphore_count();

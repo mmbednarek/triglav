@@ -18,8 +18,9 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
                        const uint32_t width, const uint32_t height) :
     m_glyphSize(static_cast<float>(glyphSize)),
     m_texture(checkResult(device.create_texture(GAPI_FORMAT(R, UNorm8), {width, height}))),
-    m_glyphStorageBuffer(GAPI_CHECK(
-       device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, sizeof(GlyphInfo) * atlasRunes.count())))
+    m_glyphStorageBuffer(
+       GAPI_CHECK(device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst | gapi::BufferUsage::TransferSrc,
+                                       sizeof(GlyphInfo) * atlasRunes.count())))
 {
    std::vector<uint8_t> atlasData{};
    atlasData.resize(width * height);

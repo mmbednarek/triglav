@@ -109,12 +109,12 @@ void chit_main(inout ray_payload.GeneralOutput payload, in ray_tracing.Attribute
     }
 
     distanceSum /= float(AMBIENT_OCCLUSION_RAY_COUNT);
-    payload.ambientOcclusionTerm = clamp(2*distanceSum, 0, 1);
+    payload.ambientOcclusionTerm = pow(clamp(2*distanceSum, 0, 1), 2);
 }
 
 [shader("miss")]
 void miss_main(inout ray_payload.GeneralOutput payload)
 {
     payload.shadowTerm = 1.0;
-    payload.ambientOcclusionTerm = 1.0;
+    payload.ambientOcclusionTerm = 0.0;
 }

@@ -124,7 +124,7 @@ void DescriptorWriter::set_texture_view_only(const uint32_t binding, const Textu
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
-void DescriptorWriter::set_texture_array(uint32_t binding, const std::span<Texture*> textures)
+void DescriptorWriter::set_texture_array(uint32_t binding, const std::span<const Texture*> textures)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
@@ -165,7 +165,7 @@ void DescriptorWriter::set_storage_image_view(const uint32_t binding, const Text
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
-void DescriptorWriter::set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct)
+void DescriptorWriter::set_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStruct)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
 

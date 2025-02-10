@@ -22,7 +22,7 @@ struct DebugLines
 class DebugLinesRenderer
 {
  public:
-   DebugLinesRenderer(graphics_api::Device& device, graphics_api::RenderTarget& renderTarget, resource::ResourceManager& resourceManager);
+   DebugLinesRenderer(graphics_api::Device& device, resource::ResourceManager& resourceManager);
 
    [[nodiscard]] DebugLines create_line_list(std::span<glm::vec3> list);
    [[nodiscard]] DebugLines create_line_list_from_bounding_box(const geometry::BoundingBox& boundingBox);

@@ -20,6 +20,7 @@ struct Text
 struct Rectangle
 {
    glm::vec4 rect;
+   glm::vec4 color;
 };
 
 }// namespace triglav::ui_core
