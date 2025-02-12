@@ -43,32 +43,28 @@ enum class BindlessValueSource
    Scalar,
 };
 
-template<BindlessValueSource Source, typename TScalarType = float>
-using BindlessValueType = std::conditional_t<Source == BindlessValueSource::TextureMap, u32, TScalarType>;
-
-template<BindlessValueSource Albedo, BindlessValueSource Normal, BindlessValueSource Roughness, BindlessValueSource Metalic>
-struct BindlessMaterialProperties
+struct Properties_MT0
 {
-   using enum BindlessValueSource;
-
-   BindlessValueType<Albedo, glm::vec4> albedo{};
-   BindlessValueType<Normal> normal{};
-   BindlessValueType<Roughness> roughness{};
-   BindlessValueType<Metalic> metalic{};
+   u32 albedoTextureID{};
+   float roughness;
+   float metallic;
 };
 
-using BindlessMaterialProps_AllScalar = BindlessMaterialProperties<BindlessValueSource::Scalar, BindlessValueSource::Scalar,
-                                                                   BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
+struct Properties_MT1
+{
+   u32 albedoTextureID{};
+   u32 normalTextureID{};
+   float roughness;
+   float metallic;
+};
 
-static_assert(sizeof(BindlessMaterialProps_AllScalar) == sizeof(glm::vec4) + 3 * sizeof(float));
-
-using BindlessMaterialProps_AlbedoTex = BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::Scalar,
-                                                                   BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
-using BindlessMaterialProps_AlbedoNormalTex = BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap,
-                                                                         BindlessValueSource::Scalar, BindlessValueSource::Scalar>;
-
-using BindlessMaterialProps_AllTex = BindlessMaterialProperties<BindlessValueSource::TextureMap, BindlessValueSource::TextureMap,
-                                                                BindlessValueSource::TextureMap, BindlessValueSource::TextureMap>;
+struct Properties_MT2
+{
+   u32 albedoTextureID{};
+   u32 normalTextureID{};
+   u32 roughnessTextureID{};
+   u32 metallicTextureID{};
+};
 
 class BindlessScene
 {
@@ -115,17 +111,15 @@ class BindlessScene
    graphics_api::VertexArray<geometry::Vertex> m_combinedVertexBuffer;
    graphics_api::IndexArray m_combinedIndexBuffer;
    graphics_api::UniformBuffer<u32> m_countBuffer;
-   graphics_api::StorageArray<BindlessMaterialProps_AllScalar> m_materialPropsAllScalar;
-   graphics_api::StorageArray<BindlessMaterialProps_AlbedoTex> m_materialPropsAlbedoTex;
-   graphics_api::StorageArray<BindlessMaterialProps_AlbedoNormalTex> m_materialPropsAlbedoNormalTex;
-   graphics_api::StorageArray<BindlessMaterialProps_AllTex> m_materialPropsAllTex;
+   graphics_api::StorageArray<Properties_MT0> m_materialPropsAlbedoTex;
+   graphics_api::StorageArray<Properties_MT1> m_materialPropsAlbedoNormalTex;
+   graphics_api::StorageArray<Properties_MT2> m_materialPropsAllTex;
 
    // Buffer write counts
    MemorySize m_writtenSceneObjectCount{0};
    MemorySize m_writtenObjectCount{0};
    MemorySize m_writtenVertexCount{0};
    MemorySize m_writtenIndexCount{0};
-   MemorySize m_writtenMaterialProperty_AllScalar{0};
    MemorySize m_writtenMaterialProperty_AlbedoTex{0};
    MemorySize m_writtenMaterialProperty_AlbedoNormalTex{0};
    MemorySize m_writtenMaterialProperty_AllTex{0};

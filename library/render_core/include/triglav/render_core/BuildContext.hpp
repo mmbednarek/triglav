@@ -124,7 +124,8 @@ class BuildContext
    void draw_primitives(u32 vertexCount, u32 vertexOffset, u32 instanceCount = 1, u32 instanceOffset = 0);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset, u32 instanceCount, u32 instanceOffset);
-   void draw_indexed_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride);
+   void draw_indexed_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride,
+                                         u32 countBufferOffset = 0);
    void draw_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride);
    void draw_full_screen_quad();
 

@@ -70,7 +70,8 @@ class CommandList
    void reset_timestamp_array(const QueryPool& timestampArray, u32 first, u32 count) const;
    void write_timestamp(PipelineStage stage, const QueryPool& timestampArray, u32 timestampIndex) const;
    void push_descriptors(u32 setIndex, DescriptorWriter& writer, PipelineType pipelineType) const;
-   void draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
+   void draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride,
+                                         u32 countBufferOffset);
    void draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, u32 maxDrawCalls, u32 stride);
    void update_buffer(const Buffer& buffer, u32 offset, u32 size, const void* data) const;
 

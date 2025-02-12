@@ -651,13 +651,13 @@ void BuildContext::draw_indexed_primitives(const u32 indexCount, const u32 index
 }
 
 void BuildContext::draw_indexed_indirect_with_count(const BufferRef drawCallBuffer, const BufferRef countBuffer, const u32 maxDrawCalls,
-                                                    const u32 stride)
+                                                    const u32 stride, const u32 countBufferOffset)
 {
    this->prepare_buffer(drawCallBuffer, gapi::BufferUsage::Indirect);
    this->prepare_buffer(countBuffer, gapi::BufferUsage::Indirect);
 
    this->handle_pending_graphic_state();
-   this->add_command<detail::cmd::DrawIndexedIndirectWithCount>(drawCallBuffer, countBuffer, maxDrawCalls, stride);
+   this->add_command<detail::cmd::DrawIndexedIndirectWithCount>(drawCallBuffer, countBuffer, maxDrawCalls, stride, countBufferOffset);
 }
 
 void BuildContext::draw_indirect_with_count(BufferRef drawCallBuffer, BufferRef countBuffer, u32 maxDrawCalls, u32 stride)

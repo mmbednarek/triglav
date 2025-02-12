@@ -7,7 +7,7 @@
 
 namespace triglav::renderer {
 
-constexpr auto g_bindlessObjectLimit = 128;
+constexpr auto g_bindlessObjectLimit = 80;
 
 using namespace name_literals;
 using namespace render_core::literals;
@@ -24,10 +24,12 @@ OcclusionCulling::OcclusionCulling(UpdateViewParamsJob& updateViewJob, BindlessS
 void OcclusionCulling::on_resource_definition(render_core::BuildContext& ctx) const
 {
    // buffers
-   ctx.declare_buffer("occlusion_culling.count_buffer"_name, sizeof(u32));
+   ctx.declare_buffer("occlusion_culling.count_buffer"_name, 3 * sizeof(u32));
    ctx.declare_proportional_texture("occlusion_culling.hierarchical_depth_buffer"_name, GAPI_FORMAT(R, UNorm16), 0.5f, true);
    ctx.declare_proportional_buffer("occlusion_culling.staging_depth_buffer"_name, 0.5f, sizeof(u16));
-   ctx.declare_buffer("occlusion_culling.visible_objects"_name, sizeof(BindlessSceneObject) * g_bindlessObjectLimit);
+   ctx.declare_buffer("occlusion_culling.visible_objects.mt0"_name, sizeof(BindlessSceneObject) * g_bindlessObjectLimit);
+   ctx.declare_buffer("occlusion_culling.visible_objects.mt1"_name, sizeof(BindlessSceneObject) * g_bindlessObjectLimit);
+   ctx.declare_buffer("occlusion_culling.visible_objects.mt2"_name, sizeof(BindlessSceneObject) * g_bindlessObjectLimit);
 
    // rts
    ctx.declare_proportional_depth_target("occlusion_culling.depth_prepass_target"_name, GAPI_FORMAT(D, UNorm16), 0.5f);
@@ -82,15 +84,18 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
 
    // Reset the count and cull the objects
 
-   ctx.fill_buffer<u32>("occlusion_culling.count_buffer"_name, 0);
+   ctx.fill_buffer("occlusion_culling.count_buffer"_name, std::array<u32, 3>{0, 0, 0});
 
    ctx.bind_compute_shader("bindless_geometry_culling.cshader"_rc);
 
    ctx.bind_storage_buffer(0, &m_bindlessScene.scene_object_buffer());
-   ctx.bind_storage_buffer(1, "occlusion_culling.visible_objects"_name);
-   ctx.bind_storage_buffer(2, "occlusion_culling.count_buffer"_name);
-   ctx.bind_uniform_buffer(3, "core.view_properties"_name);
-   ctx.bind_texture(4, "occlusion_culling.hierarchical_depth_buffer"_name);
+   ctx.bind_storage_buffer(1, "occlusion_culling.count_buffer"_name);
+   ctx.bind_uniform_buffer(2, "core.view_properties"_name);
+   ctx.bind_texture(3, "occlusion_culling.hierarchical_depth_buffer"_name);
+
+   ctx.bind_storage_buffer(4, "occlusion_culling.visible_objects.mt0"_name);
+   ctx.bind_storage_buffer(5, "occlusion_culling.visible_objects.mt1"_name);
+   ctx.bind_storage_buffer(6, "occlusion_culling.visible_objects.mt2"_name);
 
    ctx.dispatch({divide_rounded_up(m_bindlessScene.scene_object_count(), 1024), 1, 1});
 }
@@ -98,13 +103,19 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
 void OcclusionCulling::on_view_properties_not_changed(render_core::BuildContext& ctx) const
 {
    // Just copy visible objects from previous frame
-   ctx.copy_buffer("occlusion_culling.visible_objects"_last_frame, "occlusion_culling.visible_objects"_name);
+   ctx.copy_buffer("occlusion_culling.visible_objects.mt0"_last_frame, "occlusion_culling.visible_objects.mt0"_name);
+   ctx.copy_buffer("occlusion_culling.visible_objects.mt1"_last_frame, "occlusion_culling.visible_objects.mt1"_name);
+   ctx.copy_buffer("occlusion_culling.visible_objects.mt2"_last_frame, "occlusion_culling.visible_objects.mt2"_name);
    ctx.copy_buffer("occlusion_culling.count_buffer"_last_frame, "occlusion_culling.count_buffer"_name);
 }
 
 void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
 {
-   ctx.export_buffer("occlusion_culling.visible_objects"_name, graphics_api::PipelineStage::DrawIndirect,
+   ctx.export_buffer("occlusion_culling.visible_objects.mt0"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
+   ctx.export_buffer("occlusion_culling.visible_objects.mt1"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
+   ctx.export_buffer("occlusion_culling.visible_objects.mt2"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
    ctx.export_buffer("occlusion_culling.count_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);

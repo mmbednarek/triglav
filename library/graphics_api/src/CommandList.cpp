@@ -331,11 +331,11 @@ void CommandList::push_descriptors(const u32 setIndex, DescriptorWriter& writer,
 }
 
 void CommandList::draw_indexed_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,
-                                                   const u32 stride)
+                                                   const u32 stride, const u32 countBufferOffset)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
-   vulkan::vkCmdDrawIndexedIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), 0, maxDrawCalls,
-                                         stride);
+   vulkan::vkCmdDrawIndexedIndirectCount(m_commandBuffer, drawCallBuffer.vulkan_buffer(), 0, countBuffer.vulkan_buffer(), countBufferOffset,
+                                         maxDrawCalls, stride);
 }
 
 void CommandList::draw_indirect_with_count(const Buffer& drawCallBuffer, const Buffer& countBuffer, const u32 maxDrawCalls,

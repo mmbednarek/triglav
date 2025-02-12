@@ -106,7 +106,6 @@ std::map<Name, std::string_view> KnownNames{
    {"occlusion_culling.depth_prepass_target"_name, "occlusion_culling.depth_prepass_target"sv},
    {"occlusion_culling.hierarchical_depth_buffer"_name, "occlusion_culling.hierarchical_depth_buffer"sv},
    {"occlusion_culling.staging_depth_buffer"_name, "occlusion_culling.staging_depth_buffer"sv},
-   {"occlusion_culling.visible_objects"_name, "occlusion_culling.visible_objects"sv},
    {"particle"_name, "particle"sv},
    {"particles"_name, "particles"sv},
    {"pbr/full"_name, "pbr/full"sv},

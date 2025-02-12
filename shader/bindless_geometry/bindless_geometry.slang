@@ -47,9 +47,3 @@ material::VSOutput vs_main(material::VSInput vsInput)
 
     return output;
 }
-
-[shader("fragment")]
-material::FSOutput fs_main(material::FSInput fsInput)
-{
-    return material::process_material(fsInput);
-}

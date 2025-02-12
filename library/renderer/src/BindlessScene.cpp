@@ -31,31 +31,11 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_combinedVertexBuffer(device, VERTEX_BUFFER_SIZE),
     m_combinedIndexBuffer(device, INDEX_BUFFER_SIZE),
     m_countBuffer(device, gapi::BufferUsage::Indirect),
-    m_materialPropsAllScalar(device, 3),
     m_materialPropsAlbedoTex(device, 10),
     m_materialPropsAlbedoNormalTex(device, 10),
     m_materialPropsAllTex(device, 10),
     TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
-   std::array properties{
-      BindlessMaterialProps_AllScalar{
-         .albedo = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
-         .roughness = 1.0,
-         .metalic = 0.0,
-      },
-      BindlessMaterialProps_AllScalar{
-         .albedo = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f),
-         .roughness = 1.0,
-         .metalic = 0.0,
-      },
-      BindlessMaterialProps_AllScalar{
-         .albedo = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f),
-         .roughness = 1.0,
-         .metalic = 0.0,
-      },
-   };
-   m_materialPropsAllScalar.write(properties.data(), properties.size());
-
    TG_SET_DEBUG_NAME(m_sceneObjects.buffer(), "bindless_scene.scene_objects");
    TG_SET_DEBUG_NAME(m_sceneObjectStage.buffer(), "bindless_scene.scene_objects.staging");
    TG_SET_DEBUG_NAME(m_countBuffer.buffer(), "bindless_scene.count_buffer");
@@ -125,10 +105,8 @@ graphics_api::Buffer& BindlessScene::material_template_properties(const u32 mate
 {
    switch (materialTemplateId) {
    case 0:
-      return m_materialPropsAllScalar.buffer();
-   case 1:
       return m_materialPropsAlbedoTex.buffer();
-   case 2:
+   case 1:
       return m_materialPropsAlbedoNormalTex.buffer();
    default:
       return m_materialPropsAllTex.buffer();
@@ -197,51 +175,49 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
 u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, const render_objects::Material& material)
 {
    if (material.materialTemplate == "pbr/simple.mt"_rc) {
-      BindlessMaterialProps_AlbedoTex albedoTex;
-      albedoTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
+      Properties_MT0 albedoTex;
+      albedoTex.albedoTextureID = this->get_texture_id(std::get<TextureName>(material.values[0]));
       albedoTex.roughness = std::get<float>(material.values[1]);
-      albedoTex.metalic = std::get<float>(material.values[2]);
+      albedoTex.metallic = std::get<float>(material.values[2]);
 
       const auto outIndex = m_writtenMaterialProperty_AlbedoTex;
 
-      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(),
-                            m_writtenMaterialProperty_AlbedoTex * sizeof(BindlessMaterialProps_AlbedoTex),
-                            sizeof(BindlessMaterialProps_AlbedoTex), &albedoTex);
+      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(), m_writtenMaterialProperty_AlbedoTex * sizeof(Properties_MT0),
+                            sizeof(Properties_MT0), &albedoTex);
 
       ++m_writtenMaterialProperty_AlbedoTex;
 
-      return encode_material_id(1, outIndex);
+      return encode_material_id(0, outIndex);
    } else if (material.materialTemplate == "pbr/normal_map.mt"_rc) {
-      BindlessMaterialProps_AlbedoNormalTex albedoNormalTex;
-      albedoNormalTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
-      albedoNormalTex.normal = this->get_texture_id(std::get<TextureName>(material.values[1]));
+      Properties_MT1 albedoNormalTex;
+      albedoNormalTex.albedoTextureID = this->get_texture_id(std::get<TextureName>(material.values[0]));
+      albedoNormalTex.normalTextureID = this->get_texture_id(std::get<TextureName>(material.values[1]));
       albedoNormalTex.roughness = std::get<float>(material.values[2]);
-      albedoNormalTex.metalic = std::get<float>(material.values[3]);
+      albedoNormalTex.metallic = std::get<float>(material.values[3]);
 
       const auto outIndex = m_writtenMaterialProperty_AlbedoNormalTex;
 
-      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(),
-                            m_writtenMaterialProperty_AlbedoNormalTex * sizeof(BindlessMaterialProps_AlbedoNormalTex),
-                            sizeof(BindlessMaterialProps_AlbedoNormalTex), &albedoNormalTex);
+      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(), m_writtenMaterialProperty_AlbedoNormalTex * sizeof(Properties_MT1),
+                            sizeof(Properties_MT1), &albedoNormalTex);
 
       ++m_writtenMaterialProperty_AlbedoNormalTex;
 
-      return encode_material_id(2, outIndex);
+      return encode_material_id(1, outIndex);
    } else if (material.materialTemplate == "pbr/full.mt"_rc) {
-      BindlessMaterialProps_AllTex allTex;
-      allTex.albedo = this->get_texture_id(std::get<TextureName>(material.values[0]));
-      allTex.normal = this->get_texture_id(std::get<TextureName>(material.values[1]));
-      allTex.roughness = this->get_texture_id(std::get<TextureName>(material.values[2]));
-      allTex.metalic = this->get_texture_id(std::get<TextureName>(material.values[3]));
+      Properties_MT2 allTex;
+      allTex.albedoTextureID = this->get_texture_id(std::get<TextureName>(material.values[0]));
+      allTex.normalTextureID = this->get_texture_id(std::get<TextureName>(material.values[1]));
+      allTex.roughnessTextureID = this->get_texture_id(std::get<TextureName>(material.values[2]));
+      allTex.metallicTextureID = this->get_texture_id(std::get<TextureName>(material.values[3]));
 
       const auto outIndex = m_writtenMaterialProperty_AllTex;
 
-      cmdList.update_buffer(m_materialPropsAllTex.buffer(), m_writtenMaterialProperty_AllTex * sizeof(BindlessMaterialProps_AllTex),
-                            sizeof(BindlessMaterialProps_AllTex), &allTex);
+      cmdList.update_buffer(m_materialPropsAllTex.buffer(), m_writtenMaterialProperty_AllTex * sizeof(Properties_MT2),
+                            sizeof(Properties_MT2), &allTex);
 
       ++m_writtenMaterialProperty_AllTex;
 
-      return encode_material_id(3, outIndex);
+      return encode_material_id(2, outIndex);
    }
    return 0;
 }
