@@ -15,8 +15,6 @@ namespace triglav::gltf {
 
 namespace {
 
-constexpr Vector3 g_flipY = Vector3{-1, -1, -1};
-
 template<typename TAccessorType>
 std::vector<TAccessorType> accessor_to_array(const u32 accessorId, const Document& doc, const BufferManager& bufferManager)
 {
@@ -91,14 +89,14 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 meshIndex, cons
          const auto b = *indicesIt++;
          const auto c = *indicesIt++;
          const auto faceId =
-            dstMesh.add_face(uniquePositionMap[positions[a]], uniquePositionMap[positions[b]], uniquePositionMap[positions[c]]);
-         dstMesh.set_face_normals(faceId, normals[a] * g_flipY, normals[b] * g_flipY, normals[c] * g_flipY);
-         dstMesh.set_face_uvs(faceId, uvs[a], uvs[b], uvs[c]);
+            dstMesh.add_face(uniquePositionMap[positions[c]], uniquePositionMap[positions[b]], uniquePositionMap[positions[a]]);
+         dstMesh.set_face_normals(faceId, normals[c], normals[b], normals[a]);
+         dstMesh.set_face_uvs(faceId, uvs[c], uvs[b], uvs[a]);
          dstMesh.set_face_group(faceId, groupId);
       }
    }
 
-   dstMesh.reverse_orientation();
+   // dstMesh.reverse_orientation();
 
    return dstMesh;
 }
