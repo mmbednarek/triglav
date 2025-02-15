@@ -6,6 +6,7 @@
 #include "InfoDialog.hpp"
 #include "OcclusionCulling.hpp"
 #include "RayTracingScene.hpp"
+#include "RenderSurface.hpp"
 #include "Renderer.hpp"
 #include "RenderingJob.hpp"
 #include "Scene.hpp"
@@ -60,11 +61,7 @@ class Renderer
    void on_config_property_changed(ConfigProperty property, const Config& config);
    void init_config_labels();
 
-   static void prepare_pre_present_commands(const graphics_api::Device& device, const graphics_api::Swapchain& swapchain,
-                                            render_core::ResourceStorage& resources, std::vector<graphics_api::CommandList>& outCmdLists);
-
  private:
-   void recreate_swapchain(uint32_t width, uint32_t height);
    void update_uniform_data(float deltaTime);
    static float calculate_frame_duration();
    glm::vec3 moving_direction();
@@ -72,30 +69,25 @@ class Renderer
 
    bool m_mustRecreateJobs{false};
    bool m_showDebugLines{false};
-   bool m_mustRecreateSwapchain{false};
    glm::vec3 m_position{};
    glm::vec3 m_motion{};
    glm::vec2 m_mouseOffset{};
    bool m_onGround{false};
    Moving m_moveDirection{Moving::None};
 
-   desktop::ISurface& m_desktopSurface;
-   graphics_api::Surface& m_surface;
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
 
    ConfigManager m_configManager;
    Scene m_scene;
    BindlessScene m_bindlessScene;
-   graphics_api::Resolution m_resolution;
-   graphics_api::Swapchain m_swapchain;
    GlyphCache m_glyphCache;
    ui_core::Viewport m_uiViewport;
    InfoDialog m_infoDialog;
    std::optional<RayTracingScene> m_rayTracingScene;
-   std::vector<graphics_api::CommandList> m_prePresentCommands;
 
    render_core::ResourceStorage m_resourceStorage;
+   RenderSurface m_renderSurface;
    render_core::PipelineCache m_pipelineCache;
    render_core::JobGraph m_jobGraph;
    UpdateViewParamsJob m_updateViewParamsJob;
@@ -103,7 +95,6 @@ class Renderer
    OcclusionCulling m_occlusionCulling;
    RenderingJob m_renderingJob;
    u32 m_frameIndex{0};
-   std::array<graphics_api::Fence, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameFences;
 
    TG_SINK(ConfigManager, OnPropertyChanged);
 };

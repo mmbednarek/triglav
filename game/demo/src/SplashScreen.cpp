@@ -20,7 +20,7 @@ using triglav::graphics_api::Status;
 using triglav::graphics_api::Swapchain;
 using triglav::graphics_api::WorkType;
 
-constexpr Resolution g_splashScreenResolution{1024, 360};
+constexpr triglav::Vector2u g_splashScreenResolution{1024, 360};
 
 SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface,
                            triglav::graphics_api::Device& device, triglav::resource::ResourceManager& resourceManager) :
@@ -28,20 +28,16 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_graphicsSurface(graphicsSurface),
     m_device(device),
     m_resourceManager(resourceManager),
-    m_resolution(g_splashScreenResolution),
-    m_glyphCache(device, m_resourceManager),
-    m_swapchain(GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB, g_splashScreenResolution,
-                                                     PresentMode::Fifo))),
-    m_frameFences{GAPI_CHECK(m_device.create_fence()), GAPI_CHECK(m_device.create_fence()), GAPI_CHECK(m_device.create_fence())},
-    m_pipelineCache(m_device, m_resourceManager),
     m_resourceStorage(m_device),
-    m_uiViewport({g_splashScreenResolution.width, g_splashScreenResolution.height}),
+    m_renderSurface(m_device, surface, graphicsSurface, m_resourceStorage, g_splashScreenResolution, PresentMode::Fifo),
+    m_glyphCache(device, m_resourceManager),
+    m_pipelineCache(m_device, m_resourceManager),
+    m_uiViewport({g_splashScreenResolution.x, g_splashScreenResolution.y}),
     m_updateUiJob(m_device, m_glyphCache, m_uiViewport),
-    m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage,
-               {g_splashScreenResolution.width, g_splashScreenResolution.height})
+    m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage, {g_splashScreenResolution.x, g_splashScreenResolution.y})
 {
    triglav::ui_core::Rectangle statusBg{
-      .rect = {40.0f, 225.0f, g_splashScreenResolution.width - 40.0f, 275.0f},
+      .rect = {40.0f, 225.0f, g_splashScreenResolution.x - 40.0f, 275.0f},
       .color = {0.0f, 0.12f, 0.33f, 1.0f},
    };
    m_uiViewport.add_rectangle("status_bg"_name, std::move(statusBg));
@@ -70,10 +66,6 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
    };
    m_uiViewport.add_text("desc"_name, std::move(descText));
 
-   m_jobGraph.add_external_job("job.acquire_swapchain_image"_name);
-   m_jobGraph.add_external_job("job.copy_present_image"_name);
-   m_jobGraph.add_external_job("job.present_swapchain_image"_name);
-
    auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
    m_updateUiJob.build_job(updateUiCtx);
 
@@ -82,14 +74,13 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
 
    m_jobGraph.add_dependency_to_previous_frame("update_ui"_name, "update_ui"_name);
 
+   triglav::renderer::RenderSurface::add_present_jobs(m_jobGraph, "render_status"_name);
+
    m_jobGraph.add_dependency("render_status"_name, "update_ui"_name);
-   m_jobGraph.add_dependency("job.copy_present_image"_name, "render_status"_name);
-   m_jobGraph.add_dependency("job.copy_present_image"_name, "job.acquire_swapchain_image"_name);
-   m_jobGraph.add_dependency("job.present_swapchain_image"_name, "job.copy_present_image"_name);
 
    m_jobGraph.build_jobs("render_status"_name);
 
-   triglav::renderer::Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
+   m_renderSurface.recreate_present_jobs();
 
    TG_CONNECT_OPT(m_resourceManager, OnStartedLoadingAsset, on_started_loading_asset);
    TG_CONNECT_OPT(m_resourceManager, OnFinishedLoadingAsset, on_finished_loading_asset);
@@ -97,31 +88,15 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
 
 void SplashScreen::update()
 {
-   m_frameFences[m_frameIndex].await();
+   m_renderSurface.await_for_frame(m_frameIndex);
 
    m_jobGraph.build_semaphores();
 
    m_updateUiJob.prepare_frame(m_jobGraph, m_frameIndex);
 
-   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(
-      m_jobGraph.semaphore("job.copy_present_image"_name, "job.acquire_swapchain_image"_name, m_frameIndex)));
-   if (mustRecreate) {
-      this->recreate_swapchain();
-   }
-
    m_jobGraph.execute("render_status"_name, m_frameIndex, nullptr);
 
-   GAPI_CHECK_STATUS(m_device.submit_command_list(m_prePresentCommands[framebufferIndex * 3 + m_frameIndex],
-                                                  m_jobGraph.wait_semaphores("job.copy_present_image"_name, m_frameIndex),
-                                                  m_jobGraph.signal_semaphores("job.copy_present_image"_name, m_frameIndex),
-                                                  &m_frameFences[m_frameIndex], triglav::graphics_api::WorkType::Presentation));
-
-   const auto status = m_swapchain.present(m_jobGraph.wait_semaphores("job.present_swapchain_image"_name, m_frameIndex), framebufferIndex);
-   if (status == Status::OutOfDateSwapchain) {
-      this->recreate_swapchain();
-   } else {
-      GAPI_CHECK_STATUS(status);
-   }
+   m_renderSurface.present(m_jobGraph, m_frameIndex);
 
    m_frameIndex = (m_frameIndex + 1) % 3;
 }
@@ -130,21 +105,9 @@ void SplashScreen::on_close()
 {
    sink_OnStartedLoadingAsset->disconnect();
 
-   m_frameFences[m_frameIndex].await();
+   m_renderSurface.await_for_frame(m_frameIndex);
+
    m_device.await_all();
-}
-
-void SplashScreen::recreate_swapchain()
-{
-   m_device.await_all();
-
-   const auto newDimension = m_surface.dimension();
-   m_resolution = {static_cast<u32>(newDimension.x), static_cast<u32>(newDimension.y)};
-   m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_graphicsSurface, GAPI_FORMAT(BGRA, sRGB), ColorSpace::sRGB,
-                                                      {static_cast<u32>(newDimension.x), static_cast<u32>(newDimension.y)},
-                                                      PresentMode::Fifo, &m_swapchain));
-
-   triglav::renderer::Renderer::prepare_pre_present_commands(m_device, m_swapchain, m_resourceStorage, m_prePresentCommands);
 }
 
 void SplashScreen::build_rendering_job(triglav::render_core::BuildContext& ctx)
@@ -184,7 +147,7 @@ void SplashScreen::on_finished_loading_asset(const triglav::ResourceName resourc
 
 void SplashScreen::update_process_bar(const float progress)
 {
-   const triglav::Vector4 dims{40.0f, 225.0f, triglav::lerp(50.0f, g_splashScreenResolution.width - 40.0f, progress), 275.0f};
+   const triglav::Vector4 dims{40.0f, 225.0f, triglav::lerp(50.0f, g_splashScreenResolution.x - 40.0f, progress), 275.0f};
    m_uiViewport.set_rectangle_dims("status_fg"_name, dims);
 }
 

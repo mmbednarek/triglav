@@ -5,13 +5,14 @@
 #include "triglav/graphics_api/Swapchain.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
+#include "triglav/renderer/RenderSurface.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
 #include <array>
 #include <memory>
-#include <set>
 #include <mutex>
+#include <set>
 
 namespace demo {
 
@@ -25,7 +26,6 @@ class SplashScreen
 
    void update();
    void on_close();
-   void recreate_swapchain();
 
    void build_rendering_job(triglav::render_core::BuildContext& ctx);
 
@@ -40,18 +40,15 @@ class SplashScreen
    triglav::graphics_api::Surface& m_graphicsSurface;
    triglav::graphics_api::Device& m_device;
    triglav::resource::ResourceManager& m_resourceManager;
-   triglav::graphics_api::Resolution m_resolution;
+   triglav::render_core::ResourceStorage m_resourceStorage;
+   triglav::renderer::RenderSurface m_renderSurface;
    triglav::renderer::GlyphCache m_glyphCache;
-   triglav::graphics_api::Swapchain m_swapchain;
-   std::array<triglav::graphics_api::Fence, 3> m_frameFences;
    std::set<triglav::ResourceName> m_pendingResources;
    triglav::ResourceName m_displayedResource;
    triglav::render_core::PipelineCache m_pipelineCache;
-   triglav::render_core::ResourceStorage m_resourceStorage;
    triglav::ui_core::Viewport m_uiViewport;
    triglav::renderer::UpdateUserInterfaceJob m_updateUiJob;
    triglav::render_core::JobGraph m_jobGraph;
-   std::vector<triglav::graphics_api::CommandList> m_prePresentCommands;
    triglav::u32 m_frameIndex{0};
    std::mutex m_statusMutex;
 
