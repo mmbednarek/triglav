@@ -60,6 +60,8 @@ resources:
   - name: "particle.tex"
     source: "texture/particle.png"
 # MODELS
+  - name: "example.model"
+    source: "model/example.glb"
   - name: "ball.model"
     source: "model/ball.obj"
   - name: "tree.model"

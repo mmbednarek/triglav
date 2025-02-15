@@ -5,6 +5,7 @@ namespace triglav::io {
 BufferedReader::BufferedReader(IReader& stream) :
     m_stream(stream)
 {
+   this->read_next_chunk();
 }
 
 bool BufferedReader::has_next()
@@ -21,6 +22,13 @@ bool BufferedReader::has_next()
 
 u8 BufferedReader::next()
 {
+   const auto result = this->peek();
+   ++m_position;
+   return result;
+}
+
+u8 BufferedReader::peek()
+{
    if (m_position >= m_bytesRead) {
       read_next_chunk();
    }
@@ -36,7 +44,6 @@ u8 BufferedReader::next()
       ++m_column;
    }
 
-   ++m_position;
    return result;
 }
 
