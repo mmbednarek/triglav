@@ -21,7 +21,6 @@ using triglav::graphics_api::Swapchain;
 using triglav::graphics_api::WorkType;
 
 constexpr Resolution g_splashScreenResolution{1024, 360};
-constexpr ColorFormat g_splashScreenColorFormat{GAPI_FORMAT(BGRA, sRGB)};
 
 SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface,
                            triglav::graphics_api::Device& device, triglav::resource::ResourceManager& resourceManager) :
@@ -164,12 +163,14 @@ void SplashScreen::build_rendering_job(triglav::render_core::BuildContext& ctx)
 
 void SplashScreen::on_started_loading_asset(const triglav::ResourceName resourceName)
 {
+   std::unique_lock lk{m_statusMutex};
    m_pendingResources.insert(resourceName);
    this->update_loaded_resource(resourceName);
 }
 
 void SplashScreen::on_finished_loading_asset(const triglav::ResourceName resourceName, const u32 loadedAssets, const u32 totalAssets)
 {
+   std::unique_lock lk{m_statusMutex};
    this->update_process_bar(static_cast<float>(loadedAssets) / static_cast<float>(totalAssets));
 
    m_pendingResources.erase(resourceName);

@@ -11,6 +11,7 @@
 #include <array>
 #include <memory>
 #include <set>
+#include <mutex>
 
 namespace demo {
 
@@ -52,6 +53,7 @@ class SplashScreen
    triglav::render_core::JobGraph m_jobGraph;
    std::vector<triglav::graphics_api::CommandList> m_prePresentCommands;
    triglav::u32 m_frameIndex{0};
+   std::mutex m_statusMutex;
 
    TG_OPT_SINK(triglav::resource::ResourceManager, OnStartedLoadingAsset);
    TG_OPT_SINK(triglav::resource::ResourceManager, OnFinishedLoadingAsset);

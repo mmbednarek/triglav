@@ -7,7 +7,7 @@ namespace triglav::desktop::x11 {
 class Mouse
 {
  public:
-   TG_EVENT(OnMouseMove, float, float);
+   TG_EVENT(OnMouseMove, float, float)
 
    Mouse();
 

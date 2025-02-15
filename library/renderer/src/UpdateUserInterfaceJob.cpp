@@ -341,9 +341,9 @@ VertexBufferSection UpdateUserInterfaceJob::allocate_vertex_section(const Name t
 {
    // TODO: Find more efficient way to do this
    u32 offset = 0;
-   u32 unusedSpace = 0;
+   // u32 unusedSpace = 0;
    for (auto it = m_vertexSections.begin(); it != m_vertexSections.end(); ++it) {
-      unusedSpace += it->vertexOffset - offset;
+      // unusedSpace += it->vertexOffset - offset;
       if (const auto availableSize = it->vertexOffset - offset; vertexCount <= availableSize) {
          const auto dstIt = m_vertexSections.emplace(it, text, offset, vertexCount);
          return *dstIt;

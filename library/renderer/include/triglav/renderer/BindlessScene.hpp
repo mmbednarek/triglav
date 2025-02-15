@@ -92,7 +92,6 @@ class BindlessScene
    u32 get_texture_id(TextureName textureName);
 
    // References
-   graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
    Scene& m_scene;
 

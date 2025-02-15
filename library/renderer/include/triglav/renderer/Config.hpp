@@ -103,7 +103,7 @@ class ConfigManager
  public:
    using Self = ConfigManager;
 
-   TG_EVENT(OnPropertyChanged, ConfigProperty, const Config&);
+   TG_EVENT(OnPropertyChanged, ConfigProperty, const Config&)
 
    explicit ConfigManager(const graphics_api::Device& device);
 

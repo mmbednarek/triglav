@@ -13,6 +13,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>

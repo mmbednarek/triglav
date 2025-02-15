@@ -1,6 +1,7 @@
 #include "Path.hpp"
 
 #include <climits>
+#include <cstdlib>
 #include <unistd.h>
 
 namespace triglav::io {

@@ -23,7 +23,6 @@ constexpr auto encode_material_id(const u32 templateID, const u32 instanceID)
 }// namespace
 
 BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
-    m_device(device),
     m_resourceManager(resourceManager),
     m_scene(scene),
     m_sceneObjectStage(device, STAGING_BUFFER_ELEM_COUNT),

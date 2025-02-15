@@ -5,7 +5,7 @@ class BuildContext;
 }
 
 namespace triglav::renderer {
-class Config;
+struct Config;
 }
 
 namespace triglav::renderer::stage {

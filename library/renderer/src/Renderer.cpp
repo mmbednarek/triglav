@@ -35,7 +35,6 @@ using namespace triglav::name_literals;
 namespace triglav::renderer {
 
 constexpr auto g_colorFormat = GAPI_FORMAT(BGRA, sRGB);
-constexpr auto g_depthFormat = GAPI_FORMAT(D, UNorm16);
 
 namespace {
 
