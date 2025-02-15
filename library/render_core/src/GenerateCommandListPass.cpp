@@ -64,7 +64,7 @@ void GenerateCommandListPass::visit(const detail::cmd::DrawIndexedIndirectWithCo
 {
    m_commandList.draw_indexed_indirect_with_count(m_context.resolve_buffer_ref(m_resourceStorage, cmd.drawCallBuffer, m_frameIndex),
                                                   m_context.resolve_buffer_ref(m_resourceStorage, cmd.countBuffer, m_frameIndex),
-                                                  cmd.maxDrawCalls, cmd.stride);
+                                                  cmd.maxDrawCalls, cmd.stride, cmd.countBufferOffset);
 }
 
 void GenerateCommandListPass::visit(const detail::cmd::DrawIndirectWithCount& cmd) const

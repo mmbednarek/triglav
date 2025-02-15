@@ -51,20 +51,20 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.bind_fragment_shader("shading.fshader"_rc);
 
-   ctx.bind_samplable_texture(0, "gbuffer.albedo"_name);
-   ctx.bind_samplable_texture(1, "gbuffer.position"_name);
-   ctx.bind_samplable_texture(2, "gbuffer.normal"_name);
+   ctx.bind_texture(0, "gbuffer.albedo"_name);
+   ctx.bind_texture(1, "gbuffer.position"_name);
+   ctx.bind_texture(2, "gbuffer.normal"_name);
    if (config.ambientOcclusion == AmbientOcclusionMethod::RayTraced) {
-      ctx.bind_samplable_texture(3, "ray_tracing.ambient_occlusion.blurred"_name);
+      ctx.bind_texture(3, "ray_tracing.ambient_occlusion.blurred"_name);
    } else {
-      ctx.bind_samplable_texture(3, "ambient_occlusion.blurred"_name);
+      ctx.bind_texture(3, "ambient_occlusion.blurred"_name);
    }
 
    std::array<render_core::TextureRef, 3> shadowTextures{"shadow_map.cascade0"_name, "shadow_map.cascade1"_name,
                                                          "shadow_map.cascade2"_name};
    ctx.bind_sampled_texture_array(4, shadowTextures);
 
-   ctx.bind_samplable_texture(5, "ray_tracing.shadows"_name);
+   ctx.bind_texture(5, "ray_tracing.shadows"_name);
    ctx.bind_uniform_buffer(6, "core.view_properties"_external);
    ctx.bind_uniform_buffer(7, "shadow_map.matrices"_external);
 

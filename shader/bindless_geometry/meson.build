@@ -1,10 +1,6 @@
 shader_lib_material = files([
                                 'material/material_core.slang',
                                 'material/material.slang',
-                                'material/mt_albedo_normal_texture.slang',
-                                'material/mt_albedo_texture.slang',
-                                'material/mt_all_texture.slang',
-                                'material/mt_solid_color.slang',
                                 'material/texture_bindings.slang',
                             ])
 
@@ -17,13 +13,6 @@ shader_targets += custom_target('shader_bindless_geometry_vertex',
                                 output : 'vertex.spv',
                                 depend_files : [shader_lib_common, shader_lib_material, shader_lib_mesh],
                                 command : slang_vs_commands,
-)
-
-shader_targets += custom_target('shader_bindless_geometry_fragment',
-                                input : 'bindless_geometry.slang',
-                                output : 'fragment.spv',
-                                depend_files : [shader_lib_common, shader_lib_material, shader_lib_mesh],
-                                command : slang_fs_commands,
 )
 
 shader_targets += custom_target('shader_bindless_geometry_culling_compute',
@@ -65,4 +54,25 @@ shader_targets += custom_target('shader_bindless_geometry_hi_z_compute',
                                 input : 'hi_zbuffer_construct.slang',
                                 output : 'hi_z_comp.spv',
                                 command : slang_cs_commands,
+)
+
+shader_targets += custom_target('shader_bindless_geometry_render_mt0',
+                                input : 'render_geometry.slang',
+                                output : 'render_mt0.spv',
+                                depend_files : [shader_lib_common, shader_lib_material, shader_lib_mesh],
+                                command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=0', '-DMT_USE_ROUGHNESS_MAP=0', '-DMT_USE_METALIC_MAP=0'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_render_mt1',
+                                input : 'render_geometry.slang',
+                                output : 'render_mt1.spv',
+                                depend_files : [shader_lib_common, shader_lib_material, shader_lib_mesh],
+                                command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=0', '-DMT_USE_METALIC_MAP=0'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_render_mt2',
+                                input : 'render_geometry.slang',
+                                output : 'render_mt2.spv',
+                                depend_files : [shader_lib_common, shader_lib_material, shader_lib_mesh],
+                                command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=1', '-DMT_USE_METALIC_MAP=1'],
 )

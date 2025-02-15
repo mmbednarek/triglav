@@ -10,6 +10,9 @@ Mesh::Mesh() :
 
 Mesh::~Mesh() = default;
 
+Mesh::Mesh(Mesh&& other) noexcept = default;
+Mesh& Mesh::operator=(Mesh&& other) noexcept = default;
+
 bool Mesh::is_triangulated() const
 {
    assert(m_mesh != nullptr);
@@ -39,6 +42,13 @@ Index Mesh::add_vertex(float x, float y, float z)
 {
    assert(m_mesh != nullptr);
    return m_mesh->add_vertex({x, y, z}).id();
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+Index Mesh::add_vertex(const Vector3 vertex)
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->add_vertex(vertex).id();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst

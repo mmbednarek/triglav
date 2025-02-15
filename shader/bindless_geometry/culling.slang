@@ -5,17 +5,23 @@ import "../common/common.slang";
 StructuredBuffer<mesh::SceneMesh> SceneMeshes;
 
 [[vk::binding(1)]]
-RWStructuredBuffer<mesh::SceneMesh> DrawCalls;
-
-[[vk::binding(2)]]
 RWStructuredBuffer<uint32_t> Count;
 
-[[vk::binding(3)]]
+[[vk::binding(2)]]
 ConstantBuffer<common::ViewProperties> ViewProps;
 
-[[vk::binding(4)]]
+[[vk::binding(3)]]
 [[vk::image_format("r16")]]
 Texture2D<float> HiZBuffer;
+
+[[vk::binding(4)]]
+RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT0;
+
+[[vk::binding(5)]]
+RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT1;
+
+[[vk::binding(6)]]
+RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT2;
 
 uint2 to_texture_space(float2 screenSpace, float2 texRes)
 {
@@ -144,10 +150,23 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
     if (!is_object_visible(sceneMesh))
         return;
 
-    // TODO: Implement frustum and occlusion culling
+    const uint templateID = sceneMesh.materialID & 0b111;
+    sceneMesh.materialID >>= 3;
 
     uint32_t dstIndex;
-    InterlockedAdd(Count[0], 1, dstIndex);
+    InterlockedAdd(Count[templateID], 1, dstIndex);
 
-    DrawCalls[dstIndex] = sceneMesh;
+    switch (templateID)
+    {
+    case 0:
+        DrawCalls_MT0[dstIndex] = sceneMesh;
+        break;
+    case 1:
+        DrawCalls_MT1[dstIndex] = sceneMesh;
+        break;
+    case 2:
+        DrawCalls_MT2[dstIndex] = sceneMesh;
+        break;
+    default: break;
+    }
 }

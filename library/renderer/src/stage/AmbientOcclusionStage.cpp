@@ -33,13 +33,15 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
    }
    ctx.declare_render_target("ambient_occlusion.target"_name, GAPI_FORMAT(R, Float16));
 
+   // ctx.query_timestamp(0, false);
+
    ctx.begin_render_pass("ambient_occlusion"_name, "ambient_occlusion.target"_name);
 
    ctx.bind_fragment_shader("ambient_occlusion.fshader"_rc);
 
-   ctx.bind_samplable_texture(0, "gbuffer.position"_name);
-   ctx.bind_samplable_texture(1, "gbuffer.normal"_name);
-   ctx.bind_samplable_texture(2, "noise.tex"_rc);
+   ctx.bind_texture(0, "gbuffer.position"_name);
+   ctx.bind_texture(1, "gbuffer.normal"_name);
+   ctx.bind_texture(2, "noise.tex"_rc);
    ctx.bind_uniform_buffer(3, "core.view_properties"_external);
    ctx.bind_uniform_buffer(4, &m_sampleBuffer);
 
@@ -48,6 +50,8 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
    ctx.end_render_pass();
 
    blur_texture(ctx, "ambient_occlusion.target"_name, "ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
+
+   // ctx.query_timestamp(1, true);
 }
 
 void AmbientOcclusionStage::fill_sample_buffer()

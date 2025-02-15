@@ -1,6 +1,7 @@
 #include "ModelLoader.hpp"
 
 #include "triglav/geometry/Mesh.hpp"
+#include "triglav/gltf/MeshLoad.hpp"
 
 #include <algorithm>
 #include <format>
@@ -10,7 +11,7 @@ namespace triglav::resource {
 render_objects::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& device, ModelName /*name*/, const io::Path& path,
                                                             const ResourceProperties& /*props*/)
 {
-   const auto objMesh = geometry::Mesh::from_file(path);
+   const auto objMesh = path.string().ends_with(".glb") ? gltf::load_glb_mesh(path).value() : geometry::Mesh::from_file(path);
    objMesh.triangulate();
    objMesh.recalculate_tangents();
 

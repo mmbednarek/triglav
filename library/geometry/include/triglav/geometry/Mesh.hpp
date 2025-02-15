@@ -20,8 +20,8 @@ class Mesh
 
    Mesh(const Mesh& other) = delete;
    Mesh& operator=(const Mesh& other) = delete;
-   Mesh(Mesh&& other) noexcept = default;
-   Mesh& operator=(Mesh&& other) noexcept = default;
+   Mesh(Mesh&& other) noexcept;
+   Mesh& operator=(Mesh&& other) noexcept;
 
    void recalculate_normals() const;
    void recalculate_tangents() const;
@@ -29,6 +29,7 @@ class Mesh
    void reverse_orientation();
 
    Index add_vertex(float x, float y, float z);
+   Index add_vertex(Vector3 vertex);
    Index add_face_range(std::span<Index> vertices);
    template<typename... TVertices>
    Index add_face(TVertices... vertices);

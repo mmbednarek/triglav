@@ -15,5 +15,5 @@ shader_targets += custom_target(
     input   : 'shading.slang',
     output  : '@BASENAME@.spv',
     depend_files: shader_lib_common,
-    command : slang_fs_commands,
+    command : [slang_fs_commands, '-DSHOW_SHADOW_CASCADES=0'],
 )

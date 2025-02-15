@@ -114,6 +114,7 @@ struct DrawIndexedIndirectWithCount
    BufferRef countBuffer{};
    u32 maxDrawCalls{};
    u32 stride{};
+   u32 countBufferOffset{};
 };
 
 struct DrawIndirectWithCount
