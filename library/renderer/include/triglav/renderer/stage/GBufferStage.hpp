@@ -3,7 +3,7 @@
 #include "IStage.hpp"
 
 #include "triglav/render_core/RenderCore.hpp"
-#include "triglav/render_objects/Model.hpp"
+#include "triglav/render_objects/Mesh.hpp"
 
 namespace triglav::graphics_api {
 class Device;

@@ -1,9 +1,9 @@
 #include "MeshLoader.hpp"
 
+#include "triglav/asset/Asset.hpp"
 #include "triglav/geometry/Mesh.hpp"
-#include "triglav/gltf/MeshLoad.hpp"
+#include "triglav/io/File.hpp"
 
-#include <algorithm>
 #include <format>
 
 namespace triglav::resource {
@@ -11,25 +11,24 @@ namespace triglav::resource {
 render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& device, MeshName /*name*/, const io::Path& path,
                                                           const ResourceProperties& /*props*/)
 {
-   const auto objMesh = path.string().ends_with(".glb") ? gltf::load_glb_mesh(path).value() : geometry::Mesh::from_file(path);
-   objMesh.triangulate();
-   objMesh.recalculate_tangents();
+   const auto meshFileHandle = io::open_file(path, io::FileOpenMode::Read);
+   assert(meshFileHandle.has_value());
+
+   const auto mesh = asset::decode_mesh(**meshFileHandle);
+   assert(mesh.has_value());
 
    graphics_api::BufferUsageFlags additionalUsageFlags{graphics_api::BufferUsage::TransferSrc};
    if (device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
       additionalUsageFlags |= graphics_api::BufferUsage::AccelerationStructureRead;
    }
 
-   auto deviceMesh = objMesh.upload_to_device(device, additionalUsageFlags);
+   graphics_api::VertexArray<geometry::Vertex> gpuVertices{device, mesh->vertexData.vertices.size(), additionalUsageFlags};
+   GAPI_CHECK_STATUS(gpuVertices.write(mesh->vertexData.vertices.data(), mesh->vertexData.vertices.size()));
 
-   std::vector<render_objects::MaterialRange> ranges{};
-   ranges.reserve(deviceMesh.ranges.size());
-   std::ranges::transform(deviceMesh.ranges, std::back_inserter(ranges), [](const geometry::MaterialRange& range) {
-      return render_objects::MaterialRange{range.offset, range.size,
-                                           make_rc_name(std::format("{}.mat", range.materialName)).operator MaterialName()};
-   });
+   graphics_api::IndexArray gpuIndices{device, mesh->vertexData.indices.size(), additionalUsageFlags};
+   GAPI_CHECK_STATUS(gpuIndices.write(mesh->vertexData.indices.data(), mesh->vertexData.indices.size()));
 
-   return render_objects::Mesh{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};
+   return {{std::move(gpuVertices), std::move(gpuIndices)}, mesh->boundingBox, mesh->vertexData.ranges};
 }
 
 }// namespace triglav::resource

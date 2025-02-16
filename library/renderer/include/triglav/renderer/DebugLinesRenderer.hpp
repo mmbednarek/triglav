@@ -4,7 +4,7 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/HostVisibleBuffer.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
-#include "triglav/render_objects/Model.hpp"
+#include "triglav/render_objects/Mesh.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
 #include "Camera.hpp"

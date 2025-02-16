@@ -6,7 +6,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/event/Delegate.hpp"
-#include "triglav/render_objects/Model.hpp"
+#include "triglav/render_objects/Mesh.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 #include <vector>

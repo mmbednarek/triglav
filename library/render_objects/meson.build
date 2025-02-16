@@ -1,6 +1,6 @@
 render_objects_sources = files([
   'include/triglav/render_objects/Material.hpp',
-  'include/triglav/render_objects/Model.hpp',
+  'include/triglav/render_objects/Mesh.hpp',
   'include/triglav/render_objects/RenderObjects.hpp',
   'src/RenderObjects.cpp'
 ])

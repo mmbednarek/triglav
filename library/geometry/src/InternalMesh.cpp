@@ -4,6 +4,8 @@
 
 #include "triglav/io/File.hpp"
 
+#include <fmt/core.h>
+
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
@@ -396,7 +398,8 @@ VertexData InternalMesh::to_vertex_data()
          const auto& group = m_groups[groupId];
          if (group.material != currentMaterial) {
             if (lastOffset != outIndices.size()) {
-               materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
+               materialRanges.push_back(
+                  MaterialRange{lastOffset, outIndices.size() - lastOffset, make_rc_name(fmt::format("{}.mat", currentMaterial))});
             }
             currentMaterial = group.material;
             lastOffset = outIndices.size();
@@ -426,7 +429,8 @@ VertexData InternalMesh::to_vertex_data()
    }
 
    if (lastOffset != outIndices.size()) {
-      materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
+      materialRanges.push_back(
+         MaterialRange{lastOffset, outIndices.size() - lastOffset, make_rc_name(fmt::format("{}.mat", currentMaterial))});
    }
 
    return {.vertices{std::move(outVertices)}, .indices{std::move(outIndices)}, .ranges{std::move(materialRanges)}};

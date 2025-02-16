@@ -32,13 +32,8 @@ struct MeshHeader
    u32 vertexCount;
    u32 indexCount;
    u32 groupCount;
-};
-
-struct MeshGroupInfo
-{
-   u32 indexOffset;
-   u32 indexCount;
-   MaterialName materialName;
+   Vector3 boundingBoxMin;
+   Vector3 boundingBoxMax;
 };
 
 bool encode_mesh(const geometry::Mesh& mesh, io::IWriter& writer)
@@ -46,31 +41,28 @@ bool encode_mesh(const geometry::Mesh& mesh, io::IWriter& writer)
    AssetHeader header{};
    header.magic = g_magicNumber;
    header.version = g_lastVersion;
-   header.type = ResourceType::Model;
+   header.type = ResourceType::Mesh;
    if (!writer.write({reinterpret_cast<const u8*>(&header), sizeof(AssetHeader)}).has_value()) {
       return false;
    }
 
-   auto vertexData = mesh.to_vertex_data();
+   const auto bb = mesh.calculate_bounding_box();
+   const auto vertexData = mesh.to_vertex_data();
 
    MeshHeader meshHeader{};
    meshHeader.vertexLayout = MeshVertexLayout::NormalMapped;
    meshHeader.vertexCount = vertexData.vertices.size();
    meshHeader.indexCount = vertexData.indices.size();
    meshHeader.groupCount = vertexData.ranges.size();
+   meshHeader.boundingBoxMin = bb.min;
+   meshHeader.boundingBoxMax = bb.max;
    if (!writer.write({reinterpret_cast<const u8*>(&meshHeader), sizeof(MeshHeader)}).has_value()) {
       return false;
    }
 
-   for (const auto& range : vertexData.ranges) {
-      MeshGroupInfo groupInfo{
-         .indexOffset = static_cast<u32>(range.offset),
-         .indexCount = static_cast<u32>(range.size),
-         .materialName = make_rc_name(fmt::format("{}.mat", range.materialName)),
-      };
-      if (!writer.write({reinterpret_cast<const u8*>(&groupInfo), sizeof(MeshGroupInfo)}).has_value()) {
-         return false;
-      }
+   if (!writer.write({reinterpret_cast<const u8*>(vertexData.ranges.data()), sizeof(geometry::MaterialRange) * vertexData.ranges.size()})
+           .has_value()) {
+      return false;
    }
 
    if (!writer.write({reinterpret_cast<const u8*>(vertexData.vertices.data()), sizeof(geometry::Vertex) * vertexData.vertices.size()})
@@ -83,6 +75,56 @@ bool encode_mesh(const geometry::Mesh& mesh, io::IWriter& writer)
    }
 
    return true;
+}
+
+std::optional<geometry::MeshData> decode_mesh(io::IReader& reader)
+{
+   AssetHeader header{};
+   if (!reader.read({reinterpret_cast<u8*>(&header), sizeof(AssetHeader)}).has_value()) {
+      return std::nullopt;
+   }
+
+   if (header.magic != g_magicNumber) {
+      return std::nullopt;
+   }
+   if (header.version > g_lastVersion) {
+      return std::nullopt;
+   }
+   if (header.type != ResourceType::Mesh) {
+      return std::nullopt;
+   }
+
+   MeshHeader meshHeader{};
+   if (!reader.read({reinterpret_cast<u8*>(&meshHeader), sizeof(MeshHeader)}).has_value()) {
+      return std::nullopt;
+   }
+
+   if (meshHeader.vertexLayout != MeshVertexLayout::NormalMapped) {
+      return std::nullopt;
+   }
+
+   geometry::MeshData meshData{};
+   meshData.boundingBox.min = meshHeader.boundingBoxMin;
+   meshData.boundingBox.max = meshHeader.boundingBoxMax;
+
+   meshData.vertexData.ranges.resize(meshHeader.groupCount);
+   if (!reader.read({reinterpret_cast<u8*>(meshData.vertexData.ranges.data()), sizeof(geometry::MaterialRange) * meshHeader.groupCount})
+           .has_value()) {
+      return std::nullopt;
+   }
+
+   meshData.vertexData.vertices.resize(meshHeader.vertexCount);
+   if (!reader.read({reinterpret_cast<u8*>(meshData.vertexData.vertices.data()), sizeof(geometry::Vertex) * meshHeader.vertexCount})
+           .has_value()) {
+      return std::nullopt;
+   }
+
+   meshData.vertexData.indices.resize(meshHeader.indexCount);
+   if (!reader.read({reinterpret_cast<u8*>(meshData.vertexData.indices.data()), sizeof(u32) * meshHeader.indexCount}).has_value()) {
+      return std::nullopt;
+   }
+
+   return meshData;
 }
 
 }// namespace triglav::asset

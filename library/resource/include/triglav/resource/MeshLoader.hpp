@@ -5,7 +5,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/io/Path.hpp"
-#include "triglav/render_objects/Model.hpp"
+#include "triglav/render_objects/Mesh.hpp"
 
 #include <string_view>
 

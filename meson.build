@@ -73,10 +73,10 @@ subdir('library/font')
 subdir('library/geometry')
 subdir('library/gltf')
 subdir('library/render_objects')
+subdir('library/asset')
 subdir('library/resource')
 subdir('library/render_core')
 subdir('library/ui_core')
-subdir('library/asset')
 
 subdir('library/renderer')
 

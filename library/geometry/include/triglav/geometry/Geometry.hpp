@@ -1,10 +1,11 @@
 #pragma once
 
+#include "triglav/Name.hpp"
+#include "triglav/graphics_api/Array.hpp"
+
 #include <cmath>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
-
-#include "triglav/graphics_api/Array.hpp"
 
 namespace triglav::geometry {
 
@@ -54,7 +55,7 @@ struct MaterialRange
 {
    size_t offset;
    size_t size;
-   std::string materialName;
+   MaterialName materialName;
 };
 
 struct DeviceMesh
@@ -74,6 +75,12 @@ struct BoundingBox
 {
    glm::vec3 min;
    glm::vec3 max;
+};
+
+struct MeshData
+{
+   VertexData vertexData;
+   BoundingBox boundingBox;
 };
 
 constexpr double g_pi = 3.1415926535897932;

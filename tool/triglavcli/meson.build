@@ -1,6 +1,7 @@
 triglavcli_sources = files([
   'src/Commands.hpp',
   'src/ImportHandler.cpp',
+  'src/InspectHandler.cpp',
   'src/Main.cpp',
 ])
 

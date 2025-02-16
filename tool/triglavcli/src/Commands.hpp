@@ -10,6 +10,7 @@ enum class Command
 {
    Run,
    Import,
+   Inspect,
 };
 
 struct ImportArgs
@@ -18,6 +19,12 @@ struct ImportArgs
    std::string dstPath;
 };
 
+struct InspectArgs
+{
+   std::string inputAccess;
+};
+
 ExitStatus handle_import(const ImportArgs& args);
+ExitStatus handle_inspect(const InspectArgs& args);
 
 }

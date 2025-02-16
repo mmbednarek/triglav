@@ -22,6 +22,11 @@ class TypedName
  public:
    static constexpr auto resource_type = CResourceType;
 
+   constexpr explicit TypedName() :
+       m_name(0)
+   {
+   }
+
    constexpr explicit TypedName(const Name name) :
        m_name(name)
    {

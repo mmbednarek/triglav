@@ -27,6 +27,8 @@ ExitStatus handle_import(const ImportArgs& args)
       return EXIT_FAILURE;
    }
 
+   mesh->triangulate();
+
    const auto outFile = io::open_file(io::Path(args.dstPath), io::FileOpenMode::Create);
    if (!outFile.has_value()) {
       fmt::print(stderr, "Failed to open output file\n");

@@ -108,6 +108,8 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     const float roughness = texColorSample.w;
     const float metallic = texPositionSample.w;
+    // const float roughness = texPositionSample.w;
+    // const float metallic = texColorSample.w;
 
     float3 viewDir = normalize(-position);
     float3 baseReflectivity = lerp(float3(0.04), albedo, metallic);

@@ -3,7 +3,7 @@
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
-#include "triglav/render_objects/Model.hpp"
+#include "triglav/render_objects/Mesh.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
 #include <spdlog/spdlog.h>
