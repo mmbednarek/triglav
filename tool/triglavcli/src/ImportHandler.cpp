@@ -28,6 +28,7 @@ ExitStatus handle_import(const ImportArgs& args)
    }
 
    mesh->triangulate();
+   mesh->recalculate_tangents();
 
    const auto outFile = io::open_file(io::Path(args.dstPath), io::FileOpenMode::Create);
    if (!outFile.has_value()) {
