@@ -120,7 +120,7 @@ DeviceMesh Mesh::upload_to_device(graphics_api::Device& device, const graphics_a
    return m_mesh->upload_to_device(device, usageFlags);
 }
 
-VertexData Mesh::to_vertex_data()
+VertexData Mesh::to_vertex_data() const
 {
    assert(m_mesh != nullptr);
    return m_mesh->to_vertex_data();

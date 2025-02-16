@@ -48,7 +48,7 @@ class Mesh
    [[nodiscard]] size_t vertex_count() const;
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device,
                                              graphics_api::BufferUsageFlags usageFlags = graphics_api::BufferUsage::None) const;
-   [[nodiscard]] VertexData to_vertex_data();
+   [[nodiscard]] VertexData to_vertex_data() const;
 
    static Mesh from_file(const io::Path& path);
 

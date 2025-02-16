@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Int.hpp"
 #include "TypeMacroList.hpp"
 
 #include <array>
@@ -7,7 +8,7 @@
 
 namespace triglav {
 
-enum class ResourceType
+enum class ResourceType : u32
 {
 #define TG_RESOURCE_TYPE(name, ext, cppType, stage) name,
    TG_RESOURCE_TYPE_LIST
