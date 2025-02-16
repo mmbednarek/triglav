@@ -409,7 +409,6 @@ VertexData InternalMesh::to_vertex_data()
       for (const auto halfedge_index : this->face_halfedges(face_index)) {
          const auto vertex_index = this->halfedge_target(halfedge_index);
          const auto normalVector = m_normals[halfedge_index].value_or(glm::vec3{0.0f, 1.0f, 0.0f});
-         assert(m_tangents[halfedge_index].has_value());
          const auto tangent = m_tangents[halfedge_index].value_or(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
 
          Vertex vertex{
