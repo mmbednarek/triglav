@@ -137,7 +137,7 @@ std::vector<render_core::TextureRef>& BindlessScene::scene_texture_refs()
    return m_sceneTextureRefs;
 }
 
-BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList, const ModelName name)
+BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList, const MeshName name)
 {
    if (const auto it = m_models.find(name); it != m_models.end()) {
       return it->second;

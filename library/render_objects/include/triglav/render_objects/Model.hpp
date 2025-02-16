@@ -19,7 +19,7 @@ struct MaterialRange
    MaterialName materialName;
 };
 
-struct Model
+struct Mesh
 {
    graphics_api::Mesh<geometry::Vertex> mesh;
    geometry::BoundingBox boundingBox;

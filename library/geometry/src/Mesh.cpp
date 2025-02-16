@@ -104,7 +104,7 @@ void Mesh::set_material(const Index meshGroup, const std::string_view material)
 BoundingBox Mesh::calculate_bounding_box() const
 {
    assert(m_mesh != nullptr);
-   return m_mesh->calculate_bouding_box();
+   return m_mesh->calculate_bounding_box();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst

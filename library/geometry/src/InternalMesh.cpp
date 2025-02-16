@@ -66,7 +66,7 @@ InternalMesh::InternalMesh() :
     m_normals(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec3>>("h:normals", std::nullopt).first),
     m_uvs(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec2>>("h:uvs", std::nullopt).first),
     m_groupIds(m_mesh.add_property_map<FaceIndex, Index>("f:groups", g_invalidIndex).first),
-    m_tangents(m_mesh.add_property_map<HalfedgeIndex, std::optional<Tangent>>("h:tangents", std::nullopt).first)
+    m_tangents(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec4>>("h:tangents", std::nullopt).first)
 {
 }
 
@@ -254,7 +254,7 @@ bool InternalMesh::is_triangulated()
    return false;
 }
 
-BoundingBox InternalMesh::calculate_bouding_box() const
+BoundingBox InternalMesh::calculate_bounding_box() const
 {
    BoundingBox result{
       {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()},
@@ -406,14 +406,13 @@ VertexData InternalMesh::to_vertex_data()
       for (const auto halfedge_index : this->face_halfedges(face_index)) {
          const auto vertex_index = this->halfedge_target(halfedge_index);
          const auto normalVector = m_normals[halfedge_index].value_or(glm::vec3{0.0f, 1.0f, 0.0f});
-         const auto tangent = m_tangents[halfedge_index].value_or(Tangent{glm::vec3{1.0f, 0.0f, 0.0f}, 1.0f});
+         const auto tangent = m_tangents[halfedge_index].value_or(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
 
          Vertex vertex{
             this->location(vertex_index),
             m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)),
             normalVector,
-            tangent.vector,
-            tangent.sign * glm::cross(normalVector, tangent.vector),
+            tangent,
          };
 
          if (vertexMap.contains(vertex)) {
@@ -503,7 +502,7 @@ void InternalMesh::recalculate_tangents()
       for (int i = 0; i < iVert; ++i) {
          halfedge = mesh->m_mesh.next(halfedge);
       }
-      mesh->m_tangents[halfedge] = Tangent{glm::vec3{fvTangent[0], fvTangent[1], fvTangent[2]}, fSign};
+      mesh->m_tangents[halfedge] = glm::vec4{fvTangent[0], fvTangent[1], fvTangent[2], fSign};
    };
 
    SMikkTSpaceContext context{&interface, this};

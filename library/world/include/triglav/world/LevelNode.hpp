@@ -17,7 +17,7 @@ struct Transformation
 
 struct StaticMesh
 {
-   ModelName meshName{0};
+   MeshName meshName{0};
    Transformation transform{};
 };
 

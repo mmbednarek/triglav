@@ -62,7 +62,7 @@ class RayTracingScene
  private:
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resourceManager;
-   render_objects::Model& m_teapot;
+   render_objects::Mesh& m_teapot;
    Scene& m_scene;
    std::optional<graphics_api::Buffer> m_instanceListBuffer;
    graphics_api::Buffer m_objectBuffer;

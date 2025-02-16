@@ -69,7 +69,6 @@ class Renderer
 
    bool m_mustRecreateJobs{false};
    bool m_showDebugLines{false};
-   glm::vec3 m_position{};
    glm::vec3 m_motion{};
    glm::vec2 m_mouseOffset{};
    bool m_onGround{false};

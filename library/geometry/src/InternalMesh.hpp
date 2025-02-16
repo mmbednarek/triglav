@@ -35,14 +35,8 @@ class InternalMesh
    using FaceIndex = SurfaceMesh::face_index;
    using HalfedgeIndex = SurfaceMesh::halfedge_index;
 
-   struct Tangent
-   {
-      glm::vec3 vector{};
-      float sign{};
-   };
-
    using NormalPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec3>>;
-   using TangentPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<Tangent>>;
+   using TangentPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec4>>;
    using UvPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec2>>;
    using GroupPropMap = SurfaceMesh::Property_map<FaceIndex, Index>;
 
@@ -72,7 +66,7 @@ class InternalMesh
    std::optional<glm::vec2> uv(HalfedgeIndex index) const;
 
    [[nodiscard]] bool is_triangulated();
-   [[nodiscard]] BoundingBox calculate_bouding_box() const;
+   [[nodiscard]] BoundingBox calculate_bounding_box() const;
 
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsageFlags usageFlags);
    [[nodiscard]] VertexData to_vertex_data();

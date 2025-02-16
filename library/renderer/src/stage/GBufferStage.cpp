@@ -87,8 +87,7 @@ static const auto bindlessGeoVertLayout = render_core::VertexLayout(sizeof(geome
                                              .add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
                                              .add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
                                              .add("normal"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                                             .add("tangent"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, tangent))
-                                             .add("bitangent"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, bitangent));
+                                             .add("tangent"_name, GAPI_FORMAT(RGBA, Float32), offsetof(geometry::Vertex, tangent));
 
 void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 {

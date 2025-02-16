@@ -12,12 +12,11 @@
 namespace triglav::resource {
 
 template<>
-struct Loader<ResourceType::Model>
+struct Loader<ResourceType::Mesh>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
 
-   static render_objects::Model load_gpu(graphics_api::Device& device, ModelName name, const io::Path& path,
-                                         const ResourceProperties& props);
+   static render_objects::Mesh load_gpu(graphics_api::Device& device, MeshName name, const io::Path& path, const ResourceProperties& props);
 };
 
 }// namespace triglav::resource

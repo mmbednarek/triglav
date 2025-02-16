@@ -25,7 +25,7 @@ struct RayTracingConstants
 RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager& resources, Scene& scene) :
     m_device{device},
     m_resourceManager{resources},
-    m_teapot(resources.get("teapot.model"_rc)),
+    m_teapot(resources.get("teapot.mesh"_rc)),
     m_scene(scene),
     m_objectBuffer{GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, MAX_OBJECT_COUNT * sizeof(ObjectDesc)))},

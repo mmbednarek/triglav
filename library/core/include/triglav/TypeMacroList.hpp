@@ -6,7 +6,7 @@ class GlyphAtlas;
 namespace render_objects {
 struct Material;
 struct MaterialTemplate;
-struct Model;
+struct Mesh;
 }// namespace render_objects
 
 namespace graphics_api {
@@ -38,6 +38,6 @@ TG_RESOURCE_TYPE(name, extension, cppType, loadingStage)
    TG_RESOURCE_TYPE(RayMissShader, "rmissshader", ::triglav::graphics_api::Shader, 0)       \
    TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_objects::Material, 1)                \
    TG_RESOURCE_TYPE(MaterialTemplate, "mt", ::triglav::render_objects::MaterialTemplate, 0) \
-   TG_RESOURCE_TYPE(Model, "model", ::triglav::render_objects::Model, 0)                    \
+   TG_RESOURCE_TYPE(Mesh, "mesh", ::triglav::render_objects::Mesh, 0)                       \
    TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface, 0)                     \
    TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level, 0)

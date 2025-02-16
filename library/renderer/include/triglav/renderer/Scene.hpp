@@ -18,7 +18,7 @@ class Renderer;
 
 struct SceneObject
 {
-   ModelName model;
+   MeshName model;
    glm::vec3 position;
    glm::quat rotation;
    glm::vec3 scale;

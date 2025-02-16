@@ -39,8 +39,8 @@ material::VSOutput vs_main(material::VSInput vsInput)
 
     output.texCoord = vsInput.texCoord;
     output.normal = mul(viewNormalMat, vsInput.normal);
-    output.tangent = mul(viewNormalMat, vsInput.tangent);
-    output.bitangent = mul(viewNormalMat, vsInput.bitangent);
+    output.tangent = mul(viewNormalMat, vsInput.tangent.xyz);
+    output.bitangent = mul(viewNormalMat, vsInput.tangent.w * cross(vsInput.normal, vsInput.tangent.xyz));
     output.viewSpacePosition = viewSpace.xyz;
     output.position = mul(UboViewProps.proj, viewSpace);
     output.materialID = sceneMesh.materialID;

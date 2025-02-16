@@ -8,9 +8,20 @@
 
 namespace triglav::tool::cli {
 
+std::optional<geometry::Mesh> load_mesh(const std::string_view srcAsset)
+{
+   if (srcAsset.ends_with(".obj")) {
+      return geometry::Mesh::from_file(io::Path{srcAsset});
+   }
+   if (srcAsset.ends_with(".glb")) {
+      return gltf::load_glb_mesh(io::Path(srcAsset));
+   }
+   return std::nullopt;
+}
+
 ExitStatus handle_import(const ImportArgs& args)
 {
-   const auto mesh = gltf::load_glb_mesh(io::Path(args.srcAsset));
+   const auto mesh = load_mesh(args.srcAsset);
    if (!mesh.has_value()) {
       fmt::print(stderr, "Failed to load glb mesh\n");
       return EXIT_FAILURE;

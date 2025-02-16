@@ -1,4 +1,4 @@
-#include "ModelLoader.hpp"
+#include "MeshLoader.hpp"
 
 #include "triglav/geometry/Mesh.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
@@ -8,8 +8,8 @@
 
 namespace triglav::resource {
 
-render_objects::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device& device, ModelName /*name*/, const io::Path& path,
-                                                            const ResourceProperties& /*props*/)
+render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& device, MeshName /*name*/, const io::Path& path,
+                                                          const ResourceProperties& /*props*/)
 {
    const auto objMesh = path.string().ends_with(".glb") ? gltf::load_glb_mesh(path).value() : geometry::Mesh::from_file(path);
    objMesh.triangulate();
@@ -29,7 +29,7 @@ render_objects::Model Loader<ResourceType::Model>::load_gpu(graphics_api::Device
                                            make_rc_name(std::format("{}.mat", range.materialName)).operator MaterialName()};
    });
 
-   return render_objects::Model{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};
+   return render_objects::Mesh{std::move(deviceMesh.mesh), objMesh.calculate_bounding_box(), std::move(ranges)};
 }
 
 }// namespace triglav::resource

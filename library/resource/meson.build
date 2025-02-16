@@ -4,7 +4,7 @@ resource_sources = files([
   'include/triglav/resource/LoadContext.hpp',
   'include/triglav/resource/Loader.hpp',
   'include/triglav/resource/MaterialLoader.hpp',
-  'include/triglav/resource/ModelLoader.hpp',
+  'include/triglav/resource/MeshLoader.hpp',
   'include/triglav/resource/NameRegistry.hpp',
   'include/triglav/resource/PathManager.hpp',
   'include/triglav/resource/Resource.hpp',
@@ -19,7 +19,7 @@ resource_sources = files([
   'src/ResourceManager.cpp',
   'src/TextureLoader.cpp',
   'src/ShaderLoader.cpp',
-  'src/ModelLoader.cpp',
+  'src/MeshLoader.cpp',
   'src/TypefaceLoader.cpp',
   'src/PathManager.cpp',
 ])

@@ -2,7 +2,7 @@
 
 #include "LevelLoader.hpp"
 #include "MaterialLoader.hpp"
-#include "ModelLoader.hpp"
+#include "MeshLoader.hpp"
 #include "PathManager.hpp"
 #include "ShaderLoader.hpp"
 #include "TextureLoader.hpp"

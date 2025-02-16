@@ -11,9 +11,7 @@ namespace material
         [[vk::location(2)]]
         public float3 normal : NORMAL0;
         [[vk::location(3)]]
-        public float3 tangent : TANGENT0;
-        [[vk::location(4)]]
-        public float3 bitangent : TANGENT1;
+        public float4 tangent : TANGENT0;
     };
 
     public struct FSInput
