@@ -3,6 +3,7 @@
 #include "triglav/NameResolution.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Texture.hpp"
+#include "triglav/ktx/Texture.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
@@ -24,9 +25,21 @@ using graphics_api::TextureUsage;
 
 using namespace name_literals;
 
+graphics_api::Texture load_ktx_texture(const graphics_api::Device& device, const io::Path& path)
+{
+   const auto ktxTexture = ktx::Texture::from_file(path);
+   assert(ktxTexture.has_value());
+   return GAPI_CHECK(device.create_texture_from_ktx(
+      *ktxTexture, TextureUsage::Sampled | TextureUsage::TransferDst | TextureUsage::TransferSrc, TextureState::ShaderRead));
+}
+
 graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, [[maybe_unused]] const TextureName name,
                                                               const io::Path& path, const ResourceProperties& props)
 {
+   if (path.string().ends_with(".ktx")) {
+      return load_ktx_texture(device, path);
+   }
+
    int texWidth, texHeight, texChannels;
    stbi_uc* pixels = stbi_load(path.string().c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
    assert(pixels != nullptr);

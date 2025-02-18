@@ -509,6 +509,33 @@ VkSamplerAddressMode to_vulkan_sampler_address_mode(const TextureAddressMode mod
    return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
 }
 
+TextureUsageFlags to_texture_usage_flags(const VkImageUsageFlags usage)
+{
+   TextureUsageFlags result{};
+   if (usage & VK_IMAGE_USAGE_SAMPLED_BIT) {
+      result |= TextureUsage::Sampled;
+   }
+   if (usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
+      result |= TextureUsage::TransferSrc;
+   }
+   if (usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
+      result |= TextureUsage::TransferDst;
+   }
+   if (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
+      result |= TextureUsage::ColorAttachment;
+   }
+   if (usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+      result |= TextureUsage::DepthStencilAttachment;
+   }
+   if (usage & VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT) {
+      result |= TextureUsage::Transient;
+   }
+   if (usage & VK_IMAGE_USAGE_STORAGE_BIT) {
+      result |= TextureUsage::Storage;
+   }
+   return result;
+}
+
 VkImageUsageFlags to_vulkan_image_usage_flags(const TextureUsageFlags usage)
 {
    VkImageUsageFlags result{};

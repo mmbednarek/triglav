@@ -58,6 +58,12 @@ uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
    return std::min(std::max(2u, min), max);
 }
 
+ktx::VulkanDeviceInfo create_ktx_device_info(const VkPhysicalDevice physicalDevice, const VkDevice device, QueueManager& queueManager)
+{
+   const auto [pool, queue] = queueManager.next_queue_and_command_pool(WorkType::Graphics);
+   return ktx::VulkanDeviceInfo{physicalDevice, device, pool, queue};
+}
+
 }// namespace
 
 Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
@@ -67,7 +73,8 @@ Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std
     m_queueFamilyInfos{std::move(queueFamilyInfos)},
     m_enabledFeatures{enabledFeatures},
     m_queueManager(*this, m_queueFamilyInfos),
-    m_samplerCache(*this)
+    m_samplerCache(*this),
+    m_ktxDeviceInfo(create_ktx_device_info(physicalDevice, *m_device, m_queueManager))
 {
    vulkan::DynamicProcedures::the().init(*m_device);
 }
@@ -266,6 +273,46 @@ Result<Semaphore> Device::create_semaphore() const
    }
 
    return Semaphore(std::move(semaphore));
+}
+
+Result<Texture> Device::create_texture_from_ktx(const ktx::Texture& texture, const TextureUsageFlags usageFlags,
+                                                const TextureState finalState) const
+{
+   const auto vkImageUsage = vulkan::to_vulkan_image_usage_flags(usageFlags);
+   const auto texProps = m_ktxDeviceInfo.upload_texture(texture, VK_IMAGE_TILING_OPTIMAL, vkImageUsage,
+                                                        vulkan::to_vulkan_image_layout(GAPI_FORMAT(RGBA, sRGB), finalState));
+   if (!texProps.has_value()) {
+      return std::unexpected{Status::UnsupportedDevice};
+   }
+
+   vulkan::Image wrappedImage(*m_device);
+   wrappedImage.take_ownership(texProps->image);
+
+   vulkan::DeviceMemory wrappedMemory(*m_device);
+   wrappedMemory.take_ownership(texProps->memory);
+
+   VkImageViewCreateInfo imageViewInfo{};
+   imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+   imageViewInfo.image = texProps->image;
+   imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+   imageViewInfo.format = texProps->format;
+   imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+   imageViewInfo.subresourceRange.aspectMask = vulkan::to_vulkan_image_aspect_flags(usageFlags);
+   imageViewInfo.subresourceRange.baseMipLevel = 0;
+   imageViewInfo.subresourceRange.levelCount = texProps->mipCount;
+   imageViewInfo.subresourceRange.baseArrayLayer = 0;
+   imageViewInfo.subresourceRange.layerCount = 1;
+
+   vulkan::ImageView imageView(*m_device);
+   if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
+      return std::unexpected(Status::UnsupportedDevice);
+
+   return Texture(std::move(wrappedImage), std::move(wrappedMemory), std::move(imageView),
+                  GAPI_CHECK(vulkan::to_color_format(texProps->format)), usageFlags, texProps->imageSize.x, texProps->imageSize.y,
+                  static_cast<int>(texProps->mipCount));
 }
 
 Result<Texture> Device::create_texture(const ColorFormat& format, const Resolution& imageSize, const TextureUsageFlags usageFlags,

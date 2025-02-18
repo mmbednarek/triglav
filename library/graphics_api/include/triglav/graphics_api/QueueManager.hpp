@@ -31,6 +31,7 @@ class QueueManager
    explicit QueueManager(Device& device, std::span<QueueFamilyInfo> infos);
 
    [[nodiscard]] SafeQueue& next_queue(WorkTypeFlags flags);
+   [[nodiscard]] std::pair<VkQueue, VkCommandPool> next_queue_and_command_pool(WorkTypeFlags flags);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags) const;
    [[nodiscard]] u32 queue_index(WorkTypeFlags flags) const;
    [[nodiscard]] Semaphore* aquire_semaphore();

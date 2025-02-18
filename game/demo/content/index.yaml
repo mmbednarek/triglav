@@ -51,6 +51,7 @@ resources:
     source: "texture/noise.png"
   - name: "metal/albedo.tex"
     source: "texture/metal_albedo.jpg"
+    # source: "texture/grass.ktx"
   - name: "metal/metallic.tex"
     source: "texture/metal_metallic.jpg"
   - name: "metal/normal.tex"

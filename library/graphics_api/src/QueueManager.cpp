@@ -61,6 +61,13 @@ QueueManager::SafeQueue& QueueManager::next_queue(const WorkTypeFlags flags)
    return this->queue_group(flags).next_queue();
 }
 
+std::pair<VkQueue, VkCommandPool> QueueManager::next_queue_and_command_pool(const WorkTypeFlags flags)
+{
+   auto& group = this->queue_group(flags);
+   auto& queueAccessor = group.next_queue();
+   return std::make_pair(*queueAccessor.access(), *group.command_pool());
+}
+
 Result<CommandList> QueueManager::create_command_list(const WorkTypeFlags flags) const
 {
    return this->queue_group(flags).create_command_list();

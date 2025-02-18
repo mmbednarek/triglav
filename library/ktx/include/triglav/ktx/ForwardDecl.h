@@ -1,0 +1,7 @@
+#ifndef TRIGLAV_ASSET_KTXFORWARDDECL_H
+#define TRIGLAV_ASSET_KTXFORWARDDECL_H
+
+struct ktxTexture;
+struct ktxVulkanDeviceInfo;
+
+#endif// TRIGLAV_ASSET_KTXFORWARDDECL_H

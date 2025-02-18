@@ -15,6 +15,8 @@
 #include "ray_tracing/RayTracing.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
+#include "triglav/ktx/Vulkan.hpp"
+
 #include <memory>
 #include <span>
 #include <vector>
@@ -61,6 +63,7 @@ class Device
    [[nodiscard]] Result<Buffer> create_buffer(BufferUsageFlags usage, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
+   [[nodiscard]] Result<Texture> create_texture_from_ktx(const ktx::Texture& texture, TextureUsageFlags usageFlags, TextureState finalState) const;
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat& format, const Resolution& imageSize,
                                                 TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSrc |
                                                                                TextureUsage::TransferDst,
@@ -74,9 +77,6 @@ class Device
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits(const Surface& surface) const;
 
-   // [[nodiscard]] Status submit_command_list(const CommandList& commandList, SemaphoreArrayView waitSemaphores,
-   //                                          SemaphoreArrayView signalSemaphores, const Fence* fence, std::span<const WorkTypeFlags>
-   //                                          waitStages);
    [[nodiscard]] Status submit_command_list(const CommandList& commandList, SemaphoreArrayView waitSemaphores,
                                             SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes);
    [[nodiscard]] Status submit_command_list(const CommandList& commandList, const Semaphore& waitSemaphore,
@@ -101,6 +101,7 @@ class Device
    DeviceFeatureFlags m_enabledFeatures;
    QueueManager m_queueManager;
    SamplerCache m_samplerCache;
+   ktx::VulkanDeviceInfo m_ktxDeviceInfo;
 };
 
 using DeviceUPtr = std::unique_ptr<Device>;

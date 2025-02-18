@@ -29,6 +29,7 @@ VkImageLayout to_vulkan_image_layout(ColorFormat format, TextureState resourceSt
 VkAccessFlags to_vulkan_access_flags(PipelineStageFlags stage, ColorFormat format, TextureState resourceState);
 VkFilter to_vulkan_filter(FilterType filterType);
 VkSamplerAddressMode to_vulkan_sampler_address_mode(TextureAddressMode mode);
+TextureUsageFlags to_texture_usage_flags(VkImageUsageFlags usage);
 VkImageUsageFlags to_vulkan_image_usage_flags(TextureUsageFlags usage);
 VkImageAspectFlags to_vulkan_image_aspect_flags(TextureUsageFlags usage);
 VkBufferUsageFlags to_vulkan_buffer_usage_flags(BufferUsageFlags usage);

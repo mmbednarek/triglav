@@ -14,7 +14,8 @@ class TriglavEngine(ConanFile):
         "glm/0.9.9.8",
         "rapidyaml/0.5.0",
         "spdlog/1.13.0",
-        "rapidjson/1.1.0"
+        "rapidjson/1.1.0",
+        "ktx/4.3.2"
     )
     options = {
         "disable_debug_utils": [False, True],
