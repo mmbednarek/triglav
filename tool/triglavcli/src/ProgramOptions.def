@@ -1,0 +1,33 @@
+#ifndef TG_DECLARE_COMMAND
+#define TG_DECLARE_COMMAND(name, desc)
+#endif //TG_DECLARE_COMMAND
+
+#ifndef TG_END_COMMAND
+#define TG_END_COMMAND()
+#endif //TG_END_COMMAND
+
+#ifndef TG_DECLARE_ARG
+#define TG_DECLARE_ARG(argName, shorthand, longname, type, description)
+#endif //TG_END_COMMAND
+
+#ifndef TG_DECLARE_FLAG
+#define TG_DECLARE_FLAG(argName, shorthand, longname, description)
+#endif //TG_END_COMMAND
+
+TG_DECLARE_COMMAND(import, "Import an asset to the current project")
+TG_DECLARE_ARG(samplerOptions, "s", "sampler-option", StringArray, "Sampler options")
+TG_DECLARE_ARG(texturePurpose, "p", "purpose", String, "Select purpose for imported textures")
+TG_DECLARE_FLAG(shouldCompress, "c", "compress", "Compress texture using block compression")
+TG_DECLARE_FLAG(noMipMaps, "n", "no-mip-maps", "Don't generate mip maps for the imported texture")
+TG_END_COMMAND()
+
+TG_DECLARE_COMMAND(inspect, "Print asset metadata")
+TG_END_COMMAND()
+
+TG_DECLARE_COMMAND(help, "Print help menu")
+TG_END_COMMAND()
+
+#undef TG_DECLARE_COMMAND
+#undef TG_END_COMMAND
+#undef TG_DECLARE_ARG
+#undef TG_DECLARE_FLAG

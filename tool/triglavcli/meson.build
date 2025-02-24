@@ -1,5 +1,7 @@
 triglavcli_sources = files([
   'src/Commands.hpp',
+  'src/Commands.cpp',
+  'src/HelpHandler.cpp',
   'src/ImportHandler.cpp',
   'src/InspectHandler.cpp',
   'src/Main.cpp',
@@ -9,7 +11,9 @@ triglavcli_deps = [
   geometry,
   fmt,
   asset,
-  gltf
+  gltf,
+  stbi,
+  graphics_api
 ]
 
 triglavcli = executable('triglavcli',

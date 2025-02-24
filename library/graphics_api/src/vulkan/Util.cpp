@@ -23,6 +23,8 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R16_SFLOAT;
       case ColorFormatPart::Float32:
          return VK_FORMAT_R32_SFLOAT;
+      case ColorFormatPart::UNorm8_BC4:
+         return VK_FORMAT_BC4_UNORM_BLOCK;
       default:
          break;
       }
@@ -41,6 +43,8 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R16G16B16A16_SFLOAT;
       case ColorFormatPart::Float32:
          return VK_FORMAT_R32G32B32A32_SFLOAT;
+      case ColorFormatPart::sRGB_BC3:
+         return VK_FORMAT_BC3_SRGB_BLOCK;
       default:
          break;
       }
@@ -102,6 +106,10 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R16G16B16_SFLOAT;
       case ColorFormatPart::Float32:
          return VK_FORMAT_R32G32B32_SFLOAT;
+      case ColorFormatPart::sRGB_BC1:
+         return VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+      case ColorFormatPart::UNorm8_BC1:
+         return VK_FORMAT_BC1_RGB_UNORM_BLOCK;
       default:
          break;
       }
@@ -121,6 +129,14 @@ Result<ColorFormat> to_color_format(const VkFormat format)
       return GAPI_FORMAT(RGBA, Float32);
    case VK_FORMAT_D16_UNORM_S8_UINT:
       return GAPI_FORMAT(DS, UNorm16, UInt);
+   case VK_FORMAT_BC3_SRGB_BLOCK:
+      return GAPI_FORMAT(RGBA, sRGB_BC3);
+   case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
+      return GAPI_FORMAT(RGB, sRGB_BC1);
+   case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
+      return GAPI_FORMAT(RGB, UNorm8_BC1);
+   case VK_FORMAT_BC4_UNORM_BLOCK:
+      return GAPI_FORMAT(R, UNorm8);
    default:
       break;
    }

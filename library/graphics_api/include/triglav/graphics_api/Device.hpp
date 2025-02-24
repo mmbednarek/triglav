@@ -15,7 +15,7 @@
 #include "ray_tracing/RayTracing.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
-#include "triglav/ktx/Vulkan.hpp"
+#include "triglav/ktx/Texture.hpp"
 
 #include <memory>
 #include <span>
@@ -63,7 +63,8 @@ class Device
    [[nodiscard]] Result<Buffer> create_buffer(BufferUsageFlags usage, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
-   [[nodiscard]] Result<Texture> create_texture_from_ktx(const ktx::Texture& texture, TextureUsageFlags usageFlags, TextureState finalState) const;
+   [[nodiscard]] Result<Texture> create_texture_from_ktx(const ktx::Texture& texture, TextureUsageFlags usageFlags,
+                                                         TextureState finalState);
    [[nodiscard]] Result<Texture> create_texture(const ColorFormat& format, const Resolution& imageSize,
                                                 TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSrc |
                                                                                TextureUsage::TransferDst,
@@ -87,6 +88,7 @@ class Device
    [[nodiscard]] QueueManager& queue_manager();
    [[nodiscard]] SamplerCache& sampler_cache();
    [[nodiscard]] DeviceFeatureFlags enabled_features() const;
+   [[nodiscard]] Result<ktx::Texture> export_ktx_texture(const Texture& texture);
 
    void await_all() const;
 
@@ -101,7 +103,6 @@ class Device
    DeviceFeatureFlags m_enabledFeatures;
    QueueManager m_queueManager;
    SamplerCache m_samplerCache;
-   ktx::VulkanDeviceInfo m_ktxDeviceInfo;
 };
 
 using DeviceUPtr = std::unique_ptr<Device>;

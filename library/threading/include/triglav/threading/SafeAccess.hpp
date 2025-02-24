@@ -56,6 +56,13 @@ class SafeAccess
    {
    }
 
+   SafeAccess& operator=(TObject&& obj) noexcept
+   {
+      std::unique_lock lk(m_mutex);
+      m_object = std::forward<TObject>(obj);
+      return *this;
+   }
+
    SafeAccessor<TObject, std::unique_lock<TMutex>> access()
    {
       return SafeAccessor<TObject, std::unique_lock<TMutex>>{m_object, m_mutex};

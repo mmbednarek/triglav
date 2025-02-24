@@ -5,7 +5,7 @@ asset_sources = files([
 
 asset_lib = static_library('asset',
                           sources : asset_sources,
-                          dependencies : [core, io, geometry, ktx],
+                          dependencies : [core, io, geometry, tg_ktx],
                           include_directories : ['include/triglav/asset'],
 )
 

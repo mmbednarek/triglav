@@ -16,6 +16,7 @@ class WindowsFile final : public IFile
    [[nodiscard]] Result<MemorySize> write(std::span<const u8> buffer) override;
    [[nodiscard]] Status seek(SeekPosition position, MemoryOffset offset) override;
    [[nodiscard]] Result<MemorySize> file_size() override;
+   [[nodiscard]] MemorySize position() const override;
 
  private:
    HFILE m_file;

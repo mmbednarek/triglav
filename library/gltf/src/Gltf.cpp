@@ -58,6 +58,7 @@ class RapidJsonInputStream
    Ch* PutBegin()
    {
       assert(false);
+      return nullptr;
    }
 
    void Put(Ch /*c*/)
@@ -70,6 +71,7 @@ class RapidJsonInputStream
    size_t PutEnd(Ch* /*begin*/)
    {
       assert(false);
+      return 0;
    }
 
  private:
@@ -219,6 +221,7 @@ AccessorType accessor_type_from_string(const std::string_view value)
       return AccessorType::Matrix4x4;
 
    assert(false);
+   return AccessorType::Scalar;
 }
 
 ComponentType component_type_from_int(const int value)
@@ -241,6 +244,7 @@ ComponentType component_type_from_int(const int value)
    }
 
    assert(false);
+   return ComponentType::Byte;
 }
 
 Accessor deserialize_accessor(const rapidjson::Value& value)

@@ -60,6 +60,7 @@ endif
 subdir('shader')
 
 subdir('library/external/mikktspace')
+subdir('library/external/stbi')
 
 subdir('library/core')
 subdir('library/io')

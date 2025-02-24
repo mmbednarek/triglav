@@ -27,7 +27,6 @@ std::map<Name, std::string_view> KnownNames{
    {"bindless_geometry_depth_prepass"_name, "bindless_geometry_depth_prepass"sv},
    {"bindless_geometry_hi_zbuffer"_name, "bindless_geometry_hi_zbuffer"sv},
    {"bindless_geometry/shadow_map"_name, "bindless_geometry/shadow_map"sv},
-   {"bitangent"_name, "bitangent"sv},
    {"blur"_name, "blur"sv},
    {"blur/sc"_name, "blur/sc"sv},
    {"board"_name, "board"sv},

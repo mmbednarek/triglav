@@ -10,11 +10,11 @@ nodes:
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "pine"
-        mesh: "example.mesh"
+        mesh: "pine.mesh"
         transform:
-          position: {x: 12.0, y: -20.0, z: -1.5}
+          position: {x: 12.0, y: -20.0, z: -0.0}
           rotation: {yaw: 0, pitch: 0, roll: 0}
-          scale: {x: 1.0, y: 1.0, z: 1.0}
+          scale: {x: 50.0, y: 50.0, z: 50.0}
       - type: static_mesh
         name: "column_0"
         mesh: "column.mesh"

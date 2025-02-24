@@ -70,7 +70,11 @@ enum class ColorFormatPart
    UNorm16,
    UInt,
    Float32,
-   Float16
+   Float16,
+   sRGB_BC3,
+   sRGB_BC1,
+   UNorm8_BC1,
+   UNorm8_BC4,
 };
 
 constexpr size_t color_format_part_size(const ColorFormatPart part)
@@ -81,6 +85,14 @@ constexpr size_t color_format_part_size(const ColorFormatPart part)
    case ColorFormatPart::sRGB:
       return 1;
    case ColorFormatPart::UNorm8:
+      return 1;
+   case ColorFormatPart::sRGB_BC3:
+      return 1;
+   case ColorFormatPart::sRGB_BC1:
+      return 1;
+   case ColorFormatPart::UNorm8_BC1:
+      return 1;
+   case ColorFormatPart::UNorm8_BC4:
       return 1;
    case ColorFormatPart::UNorm16:
       return 2;
@@ -188,6 +200,11 @@ struct ColorFormat
       default:
          return false;
       }
+   }
+
+   bool operator==(const ColorFormat& other) const
+   {
+      return this->order == other.order && this->parts == other.parts;
    }
 };
 

@@ -1,5 +1,6 @@
 #include "UnixFile.hpp"
 
+#include <cassert>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -94,6 +95,13 @@ Result<MemorySize> UnixFile::file_size()
       return std::unexpected{Status::InvalidFile};
    }
    return fileStat.st_size;
+}
+
+MemorySize UnixFile::position() const
+{
+   const auto res = ::lseek(m_fileDescriptor, 0, SEEK_CUR);
+   assert(res >= 0);
+   return res;
 }
 
 }// namespace triglav::io::linux

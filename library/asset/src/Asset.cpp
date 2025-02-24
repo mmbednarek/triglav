@@ -2,8 +2,9 @@
 
 #include "triglav/Int.hpp"
 #include "triglav/Math.hpp"
-#include "triglav/Name.hpp"
 #include "triglav/ResourceType.hpp"
+#include "triglav/io/DisplacedStream.hpp"
+#include "triglav/ktx/Texture.hpp"
 
 #include <fmt/core.h>
 
@@ -11,13 +12,6 @@ namespace triglav::asset {
 
 constexpr u32 g_magicNumber = 0x53414754;
 constexpr u32 g_lastVersion = 0x2500;
-
-struct AssetHeader
-{
-   u32 magic;// 0x53414754
-   u32 version;
-   ResourceType type;
-};
 
 enum class MeshVertexLayout : u32
 {
@@ -36,15 +30,59 @@ struct MeshHeader
    Vector3 boundingBoxMax;
 };
 
-bool encode_mesh(const geometry::Mesh& mesh, io::IWriter& writer)
+namespace {
+
+bool write_header(io::IWriter& writer, const ResourceType resourceType)
 {
    AssetHeader header{};
    header.magic = g_magicNumber;
    header.version = g_lastVersion;
-   header.type = ResourceType::Mesh;
-   if (!writer.write({reinterpret_cast<const u8*>(&header), sizeof(AssetHeader)}).has_value()) {
-      return false;
+   header.type = resourceType;
+   return writer.write({reinterpret_cast<const u8*>(&header), sizeof(AssetHeader)}).has_value();
+}
+
+
+}// namespace
+
+EncodedSamplerProperties encode_sampler_properties(const SamplerProperties& properties)
+{
+   return static_cast<u32>(properties.minFilter) | (static_cast<u32>(properties.magFilter) << 1) |
+          (static_cast<u32>(properties.addressModeU) << 2) | (static_cast<u32>(properties.addressModeV) << 5) |
+          (static_cast<u32>(properties.addressModeW) << 8) | (static_cast<u32>(properties.enableAnisotropy) << 11);
+}
+
+SamplerProperties decode_sampler_properties(const EncodedSamplerProperties encodedProperties)
+{
+   SamplerProperties result{};
+   result.minFilter = static_cast<FilterType>(encodedProperties & 0b1);
+   result.magFilter = static_cast<FilterType>((encodedProperties >> 1) & 0b1);
+   result.addressModeU = static_cast<TextureAddressMode>((encodedProperties >> 2) & 0b111);
+   result.addressModeV = static_cast<TextureAddressMode>((encodedProperties >> 5) & 0b111);
+   result.addressModeW = static_cast<TextureAddressMode>((encodedProperties >> 8) & 0b111);
+   result.enableAnisotropy = static_cast<bool>((encodedProperties >> 11) & 0b1);
+   return result;
+}
+
+std::optional<AssetHeader> decode_header(io::IReader& reader)
+{
+   AssetHeader header{};
+   if (!reader.read({reinterpret_cast<u8*>(&header), sizeof(AssetHeader)}).has_value()) {
+      return std::nullopt;
    }
+
+   if (header.magic != g_magicNumber) {
+      return std::nullopt;
+   }
+   if (header.version > g_lastVersion) {
+      return std::nullopt;
+   }
+
+   return header;
+}
+
+bool encode_mesh(io::IWriter& writer, const geometry::Mesh& mesh)
+{
+   write_header(writer, ResourceType::Mesh);
 
    const auto bb = mesh.calculate_bounding_box();
    const auto vertexData = mesh.to_vertex_data();
@@ -79,21 +117,6 @@ bool encode_mesh(const geometry::Mesh& mesh, io::IWriter& writer)
 
 std::optional<geometry::MeshData> decode_mesh(io::IReader& reader)
 {
-   AssetHeader header{};
-   if (!reader.read({reinterpret_cast<u8*>(&header), sizeof(AssetHeader)}).has_value()) {
-      return std::nullopt;
-   }
-
-   if (header.magic != g_magicNumber) {
-      return std::nullopt;
-   }
-   if (header.version > g_lastVersion) {
-      return std::nullopt;
-   }
-   if (header.type != ResourceType::Mesh) {
-      return std::nullopt;
-   }
-
    MeshHeader meshHeader{};
    if (!reader.read({reinterpret_cast<u8*>(&meshHeader), sizeof(MeshHeader)}).has_value()) {
       return std::nullopt;
@@ -125,6 +148,41 @@ std::optional<geometry::MeshData> decode_mesh(io::IReader& reader)
    }
 
    return meshData;
+}
+
+bool encode_texture(io::IWriter& writer, const TexturePurpose purpose, const ktx::Texture& tex, const SamplerProperties& sampler)
+{
+   write_header(writer, ResourceType::Texture);
+
+   TextureHeader texHeader{};
+   texHeader.format = tex.is_compressed() ? TextureFormat::KTX_CompressedBC3 : TextureFormat::KTX_Uncompressed;
+   texHeader.purpose = purpose;
+   texHeader.payloadSize = 0;
+   texHeader.samplerProperties = encode_sampler_properties(sampler);
+
+   if (!writer.write({reinterpret_cast<const u8*>(&texHeader), sizeof(TextureHeader)}).has_value()) {
+      return false;
+   }
+
+   return tex.write_to_stream(writer);
+}
+
+std::optional<DecodedTexture> decode_texture(io::ISeekableStream& stream)
+{
+   TextureHeader texHeader{};
+   if (!stream.read({reinterpret_cast<u8*>(&texHeader), sizeof(TextureHeader)}).has_value()) {
+      return std::nullopt;
+   }
+
+   io::DisplacedStream displacedStream{stream, sizeof(AssetHeader) + sizeof(TextureHeader)};
+
+   auto texResult = ktx::Texture::from_stream(displacedStream);
+   if (!texResult.has_value()) {
+      return std::nullopt;
+   }
+
+   return DecodedTexture{std::move(*texResult), texHeader.format, texHeader.purpose,
+                         decode_sampler_properties(texHeader.samplerProperties)};
 }
 
 }// namespace triglav::asset

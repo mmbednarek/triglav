@@ -179,6 +179,17 @@ void CommandList::copy_buffer_to_texture(const Buffer& source, const Texture& de
 void CommandList::copy_texture_to_buffer(const Texture& source, const Buffer& destination, const int mipLevel,
                                          const TextureState srcTextureState) const
 {
+   u32 width = source.width();
+   u32 height = source.height();
+   for (int level = 0; level < mipLevel; ++level) {
+      width /= 2;
+      height /= 2;
+      if (width == 0)
+         width = 1;
+      if (height == 0)
+         height = 1;
+   }
+
    VkBufferImageCopy region{};
    region.bufferOffset = 0;
    region.bufferRowLength = 0;
@@ -188,7 +199,7 @@ void CommandList::copy_texture_to_buffer(const Texture& source, const Buffer& de
    region.imageSubresource.baseArrayLayer = 0;
    region.imageSubresource.layerCount = 1;
    region.imageOffset = {0, 0, 0};
-   region.imageExtent = {source.width(), source.height(), 1};
+   region.imageExtent = {width, height, 1};
    vkCmdCopyImageToBuffer(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcTextureState),
                           destination.vulkan_buffer(), 1, &region);
 }

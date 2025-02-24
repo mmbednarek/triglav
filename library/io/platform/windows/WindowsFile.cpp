@@ -1,5 +1,6 @@
 #include "WindowsFile.hpp"
 
+#include <cassert>
 #include <expected>
 
 namespace triglav::io {
@@ -105,6 +106,13 @@ Result<MemorySize> WindowsFile::file_size()
    }
 
    return static_cast<MemorySize>(fileSizeHigh) << 32 | static_cast<MemorySize>(res);
+}
+
+MemorySize WindowsFile::position() const
+{
+   const auto res = SetFilePointer(reinterpret_cast<HANDLE>(m_file), 0, nullptr, FILE_CURRENT);
+   assert(res != INVALID_SET_FILE_POINTER);
+   return res;
 }
 
 }// namespace triglav::io::windows

@@ -61,13 +61,6 @@ QueueManager::SafeQueue& QueueManager::next_queue(const WorkTypeFlags flags)
    return this->queue_group(flags).next_queue();
 }
 
-std::pair<VkQueue, VkCommandPool> QueueManager::next_queue_and_command_pool(const WorkTypeFlags flags)
-{
-   auto& group = this->queue_group(flags);
-   auto& queueAccessor = group.next_queue();
-   return std::make_pair(*queueAccessor.access(), *group.command_pool());
-}
-
 Result<CommandList> QueueManager::create_command_list(const WorkTypeFlags flags) const
 {
    return this->queue_group(flags).create_command_list();
@@ -76,6 +69,11 @@ Result<CommandList> QueueManager::create_command_list(const WorkTypeFlags flags)
 u32 QueueManager::queue_index(const WorkTypeFlags flags) const
 {
    return this->queue_group(flags).index();
+}
+
+std::pair<QueueManager::SafeQueue&, ktx::VulkanDeviceInfo&> QueueManager::ktx_device_info()
+{
+   return this->queue_group(WorkType::Graphics).ktx_device_info();
 }
 
 Semaphore* QueueManager::aquire_semaphore()
@@ -113,6 +111,7 @@ QueueManager::QueueGroup::QueueGroup(Device& device, const QueueFamilyInfo& info
 
    const auto commandPoolCount = threading::total_thread_count();
    m_commandPools.reserve(commandPoolCount);
+   m_ktxDeviceInfos.reserve(commandPoolCount);
    std::generate_n(std::back_inserter(m_commandPools), commandPoolCount, [this] { return vulkan::CommandPool{m_device.vulkan_device()}; });
 
    VkCommandPoolCreateInfo commandPoolInfo{};
@@ -124,6 +123,9 @@ QueueManager::QueueGroup::QueueGroup(Device& device, const QueueFamilyInfo& info
    for (auto& commandPool : m_commandPools) {
       if (const auto res = commandPool.construct(&commandPoolInfo); res != VK_SUCCESS) {
          throw std::runtime_error("failed to create command pool");
+      }
+      if (m_flags & WorkType::Graphics) {
+         m_ktxDeviceInfos.emplace_back(device.vulkan_physical_device(), device.vulkan_device(), *m_queues[0].access(), *commandPool);
       }
    }
 }
@@ -169,6 +171,11 @@ const vulkan::CommandPool& QueueManager::QueueGroup::command_pool() const
 {
    // Retrieve the pool assigned for this thread.
    return m_commandPools[threading::this_thread_id()];
+}
+
+std::pair<QueueManager::SafeQueue&, ktx::VulkanDeviceInfo&> QueueManager::QueueGroup::ktx_device_info()
+{
+   return {m_queues[0], m_ktxDeviceInfos[threading::this_thread_id()]};
 }
 
 QueueManager::QueueGroup& QueueManager::queue_group(const WorkTypeFlags type)

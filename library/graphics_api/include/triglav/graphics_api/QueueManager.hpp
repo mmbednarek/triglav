@@ -5,6 +5,7 @@
 #include "vulkan/ObjectWrapper.hpp"
 
 #include "triglav/ObjectPool.hpp"
+#include "triglav/ktx/Vulkan.hpp"
 #include "triglav/threading/SafeAccess.hpp"
 
 #include <atomic>
@@ -31,9 +32,9 @@ class QueueManager
    explicit QueueManager(Device& device, std::span<QueueFamilyInfo> infos);
 
    [[nodiscard]] SafeQueue& next_queue(WorkTypeFlags flags);
-   [[nodiscard]] std::pair<VkQueue, VkCommandPool> next_queue_and_command_pool(WorkTypeFlags flags);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags) const;
    [[nodiscard]] u32 queue_index(WorkTypeFlags flags) const;
+   [[nodiscard]] std::pair<SafeQueue&, ktx::VulkanDeviceInfo&> ktx_device_info();
    [[nodiscard]] Semaphore* aquire_semaphore();
    void release_semaphore(const Semaphore* semaphore);
    [[nodiscard]] Fence* aquire_fence();
@@ -49,6 +50,7 @@ class QueueManager
       [[nodiscard]] Result<CommandList> create_command_list() const;
       [[nodiscard]] u32 index() const;
       [[nodiscard]] const vulkan::CommandPool& command_pool() const;
+      std::pair<SafeQueue&, ktx::VulkanDeviceInfo&> ktx_device_info();
 
     private:
       Device& m_device;
@@ -57,6 +59,7 @@ class QueueManager
       std::vector<vulkan::CommandPool> m_commandPools;
       u32 m_queueFamilyIndex{};
       mutable std::atomic<u32> m_nextQueue;
+      std::vector<ktx::VulkanDeviceInfo> m_ktxDeviceInfos;
    };
 
    class SemaphoreFactory

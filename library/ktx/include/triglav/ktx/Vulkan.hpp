@@ -1,6 +1,7 @@
 #pragma once
 
-extern "C" {
+extern "C"
+{
 #include "ForwardDecl.h"
 #include <vulkan/vulkan.h>
 }
@@ -34,11 +35,11 @@ class VulkanDeviceInfo
    VulkanDeviceInfo(VulkanDeviceInfo&& other) noexcept;
    VulkanDeviceInfo& operator=(VulkanDeviceInfo&& other) noexcept;
 
-   [[nodiscard]] std::optional<VulkanTexture> upload_texture(const Texture& texture, VkImageTiling tiling,
-                                                                VkImageUsageFlags usageFlags, VkImageLayout finalLayout) const;
+   [[nodiscard]] std::optional<VulkanTexture> upload_texture(const Texture& texture, VkImageTiling tiling, VkImageUsageFlags usageFlags,
+                                                             VkImageLayout finalLayout) const;
 
  private:
    ::ktxVulkanDeviceInfo* m_deviceInfo;
 };
 
-}
+}// namespace triglav::ktx

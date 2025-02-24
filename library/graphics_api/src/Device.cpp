@@ -58,12 +58,6 @@ uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
    return std::min(std::max(2u, min), max);
 }
 
-ktx::VulkanDeviceInfo create_ktx_device_info(const VkPhysicalDevice physicalDevice, const VkDevice device, QueueManager& queueManager)
-{
-   const auto [pool, queue] = queueManager.next_queue_and_command_pool(WorkType::Graphics);
-   return ktx::VulkanDeviceInfo{physicalDevice, device, pool, queue};
-}
-
 }// namespace
 
 Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
@@ -73,8 +67,7 @@ Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std
     m_queueFamilyInfos{std::move(queueFamilyInfos)},
     m_enabledFeatures{enabledFeatures},
     m_queueManager(*this, m_queueFamilyInfos),
-    m_samplerCache(*this),
-    m_ktxDeviceInfo(create_ktx_device_info(physicalDevice, *m_device, m_queueManager))
+    m_samplerCache(*this)
 {
    vulkan::DynamicProcedures::the().init(*m_device);
 }
@@ -276,11 +269,20 @@ Result<Semaphore> Device::create_semaphore() const
 }
 
 Result<Texture> Device::create_texture_from_ktx(const ktx::Texture& texture, const TextureUsageFlags usageFlags,
-                                                const TextureState finalState) const
+                                                const TextureState finalState)
 {
    const auto vkImageUsage = vulkan::to_vulkan_image_usage_flags(usageFlags);
-   const auto texProps = m_ktxDeviceInfo.upload_texture(texture, VK_IMAGE_TILING_OPTIMAL, vkImageUsage,
-                                                        vulkan::to_vulkan_image_layout(GAPI_FORMAT(RGBA, sRGB), finalState));
+
+   std::optional<ktx::VulkanTexture> texProps;
+   {
+      // need to access the queue to be able to access texture
+      auto [queueAccess, ktxDevice] = m_queueManager.ktx_device_info();
+      auto accessor{queueAccess.access()};
+
+      texProps = ktxDevice.upload_texture(texture, VK_IMAGE_TILING_OPTIMAL, vkImageUsage,
+                                          vulkan::to_vulkan_image_layout(GAPI_FORMAT(RGBA, sRGB), finalState));
+   }
+
    if (!texProps.has_value()) {
       return std::unexpected{Status::UnsupportedDevice};
    }
@@ -510,8 +512,12 @@ Status Device::submit_command_list_one_time(const CommandList& commandList)
    auto& queue = m_queueManager.next_queue(commandList.work_types());
    auto queueAccessor = queue.access();
 
-   vkQueueSubmit(*queueAccessor, 1, &submitInfo, nullptr);
-   vkQueueWaitIdle(*queueAccessor);
+   if (vkQueueSubmit(*queueAccessor, 1, &submitInfo, nullptr) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+   if (vkQueueWaitIdle(*queueAccessor) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
 
    return Status::Success;
 }
@@ -558,6 +564,80 @@ SamplerCache& Device::sampler_cache()
 DeviceFeatureFlags Device::enabled_features() const
 {
    return m_enabledFeatures;
+}
+
+Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
+{
+   if (texture.format() != GAPI_FORMAT(RGBA, sRGB) && texture.format() != GAPI_FORMAT(RGBA, UNorm8)) {
+      return std::unexpected{Status::UnsupportedFormat};
+   }
+
+   ktx::TextureCreateInfo createInfo{};
+   createInfo.dimensions = {texture.resolution().width, texture.resolution().height};
+   createInfo.format = texture.format() == GAPI_FORMAT(RGBA, sRGB) ? ktx::Format::R8G8B8A8_SRGB : ktx::Format::R8G8B8A8_UNORM;
+   createInfo.generateMipmaps = false;
+   createInfo.createMipLayers = texture.mip_count() > 1;
+   auto ktxTex = ktx::Texture::create(createInfo);
+   if (!ktxTex.has_value()) {
+      return std::unexpected{Status::UnsupportedFormat};
+   }
+
+   u32 width = texture.resolution().width;
+   u32 height = texture.resolution().height;
+   for (u32 mipLevel = 0; mipLevel < texture.mip_count(); mipLevel++) {
+      const auto bufferSize = width * height * sizeof(u32);
+      auto buffer = this->create_buffer(BufferUsage::TransferDst | BufferUsage::HostVisible, bufferSize);
+      if (!buffer.has_value()) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      auto cmdList = this->create_command_list(WorkType::Compute);
+      if (!cmdList.has_value()) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      if (cmdList->begin(SubmitType::OneTime) != Status::Success) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      TextureBarrierInfo inBarrier{};
+      inBarrier.texture = &texture;
+      inBarrier.sourceState = TextureState::Undefined;
+      inBarrier.targetState = TextureState::TransferSrc;
+      inBarrier.baseMipLevel = static_cast<int>(mipLevel);
+      inBarrier.mipLevelCount = 1;
+      cmdList->texture_barrier(PipelineStage::Entrypoint, PipelineStage::Transfer, {&inBarrier, 1});
+
+      cmdList->copy_texture_to_buffer(texture, *buffer, static_cast<int>(mipLevel));
+      if (cmdList->finish() != Status::Success) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      if (this->submit_command_list_one_time(*cmdList) != Status::Success) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      auto mem = buffer->map_memory();
+      if (!mem.has_value()) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      if (!ktxTex->set_image_from_buffer({static_cast<const u8*>(**mem), bufferSize}, mipLevel, 0, 0)) {
+         return std::unexpected{Status::UnsupportedFormat};
+      }
+
+      width /= 2;
+      height /= 2;
+
+      if (width == 0) {
+         width = 1;
+      }
+      if (height == 0) {
+         height = 1;
+      }
+   }
+
+   return std::move(*ktxTex);
 }
 
 u32 Device::min_storage_buffer_alignment() const

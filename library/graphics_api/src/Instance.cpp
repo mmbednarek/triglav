@@ -127,7 +127,7 @@ Result<Surface> Instance::create_surface(const desktop::ISurface& surface) const
    return Surface{std::move(vulkan_surface)};
 }
 
-Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DevicePickStrategy strategy,
+Result<DeviceUPtr> Instance::create_device(const Surface* surface, const DevicePickStrategy strategy,
                                            const DeviceFeatureFlags enabledFeatures) const
 {
    auto physicalDevices = vulkan::get_physical_devices(*m_instance);
@@ -152,9 +152,11 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
 
    u32 queueIndex{};
    for (const auto& family : queueFamilies) {
-      VkBool32 canPresent{};
-      if (vkGetPhysicalDeviceSurfaceSupportKHR(*pickedDevice, queueIndex, surface.vulkan_surface(), &canPresent) != VK_SUCCESS)
-         return std::unexpected(Status::UnsupportedDevice);
+      VkBool32 canPresent{false};
+      if (surface != nullptr) {
+         if (vkGetPhysicalDeviceSurfaceSupportKHR(*pickedDevice, queueIndex, surface->vulkan_surface(), &canPresent) != VK_SUCCESS)
+            return std::unexpected(Status::UnsupportedDevice);
+      }
 
       QueueFamilyInfo info{};
       info.index = queueIndex;
@@ -224,6 +226,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface& surface, const DeviceP
    deviceFeatures.features.samplerAnisotropy = true;
    deviceFeatures.features.shaderInt64 = true;
    deviceFeatures.features.pipelineStatisticsQuery = true;
+   deviceFeatures.features.textureCompressionBC = true;
 
    VkPhysicalDeviceVulkan13Features vulkan13Features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
    vulkan13Features.dynamicRendering = true;
