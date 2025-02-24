@@ -14,6 +14,7 @@ render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& 
    const auto meshFileHandle = io::open_file(path, io::FileOpenMode::Read);
    assert(meshFileHandle.has_value());
 
+   [[maybe_unused]]
    const auto assetHeader = asset::decode_header(**meshFileHandle);
    assert(assetHeader.has_value());
    assert(assetHeader->type == ResourceType::Mesh);

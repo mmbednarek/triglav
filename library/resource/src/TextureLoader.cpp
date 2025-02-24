@@ -32,6 +32,7 @@ graphics_api::Texture load_tex_texture(graphics_api::Device& device, const io::P
    auto file = io::open_file(path, io::FileOpenMode::Read);
    assert(file.has_value());
 
+   [[maybe_unused]]
    const auto header = asset::decode_header(**file);
    assert(header.has_value());
    assert(header->type == ResourceType::Texture);

@@ -14,36 +14,16 @@ using triglav::desktop::InputArgs;
 using triglav::desktop::WindowAttribute;
 using triglav::resource::ResourceManager;
 
-class EventListener final
-{
- public:
-   using Self = EventListener;
-
-   EventListener(triglav::desktop::ISurface& surface) :
-       TG_CONNECT(surface, OnClose, on_close)
-   {
-   }
-
-   void on_close()
-   {
-      this->shouldClose = true;
-   }
-
-   bool shouldClose = false;
-   TG_SINK(triglav::desktop::ISurface, OnClose);
-};
-
 TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets)
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
    auto surface = display.create_surface(400, 400, WindowAttribute::Default);
    auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance());
-   auto gapiSurface = GAPI_CHECK(instance.create_surface(*surface));
 
    triglav::threading::ThreadPool::the().initialize(4);
 
-   auto device = GAPI_CHECK(instance.create_device(gapiSurface, triglav::graphics_api::DevicePickStrategy::PreferDedicated,
+   auto device = GAPI_CHECK(instance.create_device(nullptr, triglav::graphics_api::DevicePickStrategy::PreferDedicated,
                                                    triglav::graphics_api::DeviceFeature::RayTracing));
 
    triglav::test::TestingSupport::the().m_device = device.get();
@@ -64,18 +44,10 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    fmt::print("Finished loading resources\n");
 
-   EventListener listener(*surface);
-
    int status = 0;
 
-   while (!listener.shouldClose) {
-      display.dispatch_messages();
-
-      testing::InitGoogleTest(&args.arg_count, const_cast<char**>(args.args));
-      status = RUN_ALL_TESTS();
-
-      listener.shouldClose = true;
-   }
+   testing::InitGoogleTest(&args.arg_count, const_cast<char**>(args.args));
+   status = RUN_ALL_TESTS();
 
    triglav::test::TestingSupport::the().on_quit();
    triglav::threading::ThreadPool::the().quit();
