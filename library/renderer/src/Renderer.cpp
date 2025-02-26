@@ -192,6 +192,7 @@ void Renderer::on_render()
       StatisticManager::the().push_accumulated(Stat::GBufferGpuTime, m_resourceStorage.timestamps().get_difference(0, 1));
    } else {
       isFirstFrame = false;
+      OcclusionCulling::reset_buffers(m_device, m_jobGraph);
    }
 
    m_renderSurface.await_for_frame(m_frameIndex);
@@ -265,6 +266,9 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::F9) {
       m_configManager.toggle_shadow_casting();
+   }
+   if (key == Key::F10) {
+      m_configManager.toggle_rendering_particles();
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += -16.0f;

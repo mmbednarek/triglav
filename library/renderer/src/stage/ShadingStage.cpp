@@ -43,7 +43,9 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
    ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, UNorm16));
 
-   this->prepare_particles(ctx);
+   if (config.isRenderingParticles) {
+      this->prepare_particles(ctx);
+   }
 
    ctx.copy_texture("gbuffer.depth"_name, "shading.depth"_name);
 
@@ -79,7 +81,9 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.draw_full_screen_quad();
 
-   this->render_particles(ctx);
+   if (config.isRenderingParticles) {
+      this->render_particles(ctx);
+   }
 
    ctx.end_render_pass();
 

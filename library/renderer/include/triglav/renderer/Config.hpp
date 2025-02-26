@@ -18,6 +18,7 @@ enum class ConfigProperty
    IsBloomEnabled,
    IsUIHidden,
    IsSmoothCameraEnabled,
+   IsRenderingParticles,
 };
 
 enum class AmbientOcclusionMethod
@@ -91,6 +92,7 @@ struct Config
    bool isBloomEnabled;
    bool isUIHidden;
    bool isSmoothCameraEnabled;
+   bool isRenderingParticles;
 
    [[nodiscard]] bool is_any_rt_feature_enabled() const
    {
@@ -113,6 +115,7 @@ class ConfigManager
    void toggle_bloom();
    void toggle_ui_hidden();
    void toggle_smooth_camera();
+   void toggle_rendering_particles();
 
    [[nodiscard]] const Config& config() const;
 

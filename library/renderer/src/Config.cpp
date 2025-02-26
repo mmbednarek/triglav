@@ -17,6 +17,7 @@ Config get_default_config(const graphics_api::Device& device)
    result.isBloomEnabled = true;
    result.isUIHidden = false;
    result.isSmoothCameraEnabled = true;
+   result.isRenderingParticles = true;
 
    return result;
 }
@@ -87,6 +88,12 @@ void ConfigManager::toggle_smooth_camera()
 {
    m_config.isSmoothCameraEnabled = !m_config.isSmoothCameraEnabled;
    event_OnPropertyChanged.publish(ConfigProperty::IsSmoothCameraEnabled, m_config);
+}
+
+void ConfigManager::toggle_rendering_particles()
+{
+   m_config.isRenderingParticles = !m_config.isRenderingParticles;
+   event_OnPropertyChanged.publish(ConfigProperty::IsRenderingParticles, m_config);
 }
 
 const Config& ConfigManager::config() const

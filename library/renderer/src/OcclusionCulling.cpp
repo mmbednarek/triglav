@@ -4,6 +4,7 @@
 
 #include "triglav/Ranges.hpp"
 #include "triglav/render_core/BuildContext.hpp"
+#include "triglav/render_core/JobGraph.hpp"
 
 namespace triglav::renderer {
 
@@ -41,22 +42,9 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
    {
       render_core::RenderPassScope rtScope(ctx, "occlusion_culling.depth_prepass"_name, "occlusion_culling.depth_prepass_target"_name);
 
-      ctx.bind_vertex_shader("bindless_geometry_depth_prepass.vshader"_rc);
-
-      render_core::VertexLayout layout(sizeof(geometry::Vertex));
-      layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
-      ctx.bind_vertex_layout(layout);
-
-      ctx.bind_uniform_buffer(0, "core.view_properties"_name);
-      ctx.bind_storage_buffer(1, &m_bindlessScene.scene_object_buffer());
-
-      ctx.bind_fragment_shader("bindless_geometry_depth_prepass.fshader"_rc);
-
-      ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
-      ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
-
-      ctx.draw_indexed_indirect_with_count(&m_bindlessScene.scene_object_buffer(), &m_bindlessScene.count_buffer(), g_bindlessObjectLimit,
-                                           sizeof(BindlessSceneObject));
+      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt0"_last_frame, "occlusion_culling.count_buffer"_last_frame, 0);
+      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt1"_last_frame, "occlusion_culling.count_buffer"_last_frame, 1);
+      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt2"_last_frame, "occlusion_culling.count_buffer"_last_frame, 2);
    }
 
    // Copy depth buffer to the highest mip of Hi-Z
@@ -119,6 +107,44 @@ void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
    ctx.export_buffer("occlusion_culling.count_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
+}
+
+void OcclusionCulling::draw_pre_pass_objects(render_core::BuildContext& ctx, const render_core::BufferRef objectBuffer,
+                                             const render_core::BufferRef countBuffer, const u32 index) const
+{
+   ctx.bind_vertex_shader("bindless_geometry_depth_prepass.vshader"_rc);
+
+   render_core::VertexLayout layout(sizeof(geometry::Vertex));
+   layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
+   ctx.bind_vertex_layout(layout);
+
+   ctx.bind_uniform_buffer(0, "core.view_properties"_name);
+   ctx.bind_storage_buffer(1, objectBuffer);
+
+   ctx.bind_fragment_shader("bindless_geometry_depth_prepass.fshader"_rc);
+
+   ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
+   ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
+
+   ctx.draw_indexed_indirect_with_count(objectBuffer, countBuffer, g_bindlessObjectLimit, sizeof(BindlessSceneObject), sizeof(u32) * index);
+}
+
+void OcclusionCulling::reset_buffers(graphics_api::Device& device, render_core::JobGraph& graph)
+{
+   static constexpr std::array<u32, 3> zeroCounts{0, 0, 0};
+
+   const auto cmdList = GAPI_CHECK(device.create_command_list(graphics_api::WorkType::Transfer));
+
+   GAPI_CHECK_STATUS(cmdList.begin(graphics_api::SubmitType::OneTime));
+   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 0), 0, zeroCounts.size() * sizeof(u32),
+                         zeroCounts.data());
+   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 1), 0, zeroCounts.size() * sizeof(u32),
+                         zeroCounts.data());
+   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 2), 0, zeroCounts.size() * sizeof(u32),
+                         zeroCounts.data());
+   GAPI_CHECK_STATUS(cmdList.finish());
+
+   GAPI_CHECK_STATUS(device.submit_command_list_one_time(cmdList));
 }
 
 }// namespace triglav::renderer
