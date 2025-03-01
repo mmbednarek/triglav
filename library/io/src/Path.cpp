@@ -22,14 +22,20 @@ const std::string& Path::string() const
    return m_path;
 }
 
-Path Path::sub(std::string_view value) const
+std::string Path::basename() const
 {
-   return Path{fmt::format("{}/{}", m_path, value)};
+   auto it = std::find(m_path.rbegin(), m_path.rend(), path_seperator());
+   return std::string{it.base(), m_path.end()};
+}
+
+Path Path::sub(const std::string_view value) const
+{
+   return Path{sub_directory(this->m_path, value)};
 }
 
 Path Path::parent() const
 {
-   auto it = std::find(m_path.rbegin(), m_path.rend(), '/');
+   auto it = std::find(m_path.rbegin(), m_path.rend(), path_seperator());
    if (it == m_path.rend())
       return Path{""};
    return Path{std::string{m_path.begin(), it.base() - 1}};

@@ -16,6 +16,7 @@ class Path
    [[nodiscard]] Path parent() const;
    [[nodiscard]] bool exists() const;
    [[nodiscard]] const std::string& string() const;
+   [[nodiscard]] std::string basename() const;
 
  private:
    std::string m_path;
@@ -24,6 +25,9 @@ class Path
 [[nodiscard]] Result<Path> working_path();
 [[nodiscard]] Result<std::string> full_path(std::string_view path);
 [[nodiscard]] bool is_existing_path(const Path& path);
+[[nodiscard]] Result<Path> home_directory();
+std::string sub_directory(std::string_view path, std::string_view directory);
+char path_seperator();
 
 namespace path_literals {
 

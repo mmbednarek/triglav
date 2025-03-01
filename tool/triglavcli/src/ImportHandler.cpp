@@ -1,5 +1,7 @@
 #include "Commands.hpp"
 
+#include "ProjectConfig.hpp"
+
 #include "triglav/asset/Asset.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
 #include "triglav/graphics_api/Device.hpp"
@@ -13,6 +15,47 @@
 namespace triglav::tool::cli {
 
 namespace {
+
+std::string create_dst_resource_path(const ProjectInfo& projectInfo, const io::Path& srcPath, const ResourceType resType)
+{
+   auto basename = srcPath.basename();
+   auto dotAt = basename.find_last_of('.');
+   if (dotAt != std::string::npos) {
+      basename = basename.substr(0, dotAt);
+   }
+
+   switch (resType) {
+   case ResourceType::Texture:
+      return fmt::format(fmt::runtime(projectInfo.importSettings.texturePath), fmt::arg("basename", basename));
+   case ResourceType::Mesh:
+      return fmt::format(fmt::runtime(projectInfo.importSettings.meshPath), fmt::arg("basename", basename));
+   default:
+      break;
+   }
+
+   return {};
+}
+
+io::Path create_destination_path(const ProjectInfo& projectInfo, const std::string_view srcPath, const std::string_view outputPath,
+                                 const ResourceType resType)
+{
+   std::string dstResourcePath{outputPath};
+   if (dstResourcePath.empty()) {
+      dstResourcePath = create_dst_resource_path(projectInfo, io::Path{srcPath}, resType);
+   }
+   if (io::path_seperator() != '/') {
+      for (auto& ch : dstResourcePath) {
+         if (ch == '/') {
+            ch = io::path_seperator();
+         }
+      }
+   }
+
+   auto dstPath = io::Path{projectInfo.path};
+   dstPath = dstPath.sub(dstResourcePath);
+
+   return dstPath;
+}
 
 std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_view purposeStr)
 {
@@ -57,6 +100,14 @@ std::optional<geometry::Mesh> load_mesh(const std::string_view srcAsset)
 
 ExitStatus handle_mesh_import(const CmdArgs_import& args)
 {
+   auto projectInfo = load_active_project_info();
+   if (!projectInfo.has_value()) {
+      fmt::print(stderr, "triglav-cli: No active project found\n");
+      return EXIT_FAILURE;
+   }
+
+   auto dstPath = create_destination_path(*projectInfo, args.positionalArgs[0], args.outputPath, ResourceType::Texture);
+
    const auto mesh = load_mesh(args.positionalArgs[0]);
    if (!mesh.has_value()) {
       fmt::print(stderr, "Failed to load glb mesh\n");
@@ -66,7 +117,7 @@ ExitStatus handle_mesh_import(const CmdArgs_import& args)
    mesh->triangulate();
    mesh->recalculate_tangents();
 
-   const auto outFile = io::open_file(io::Path(args.positionalArgs[1]), io::FileOpenMode::Create);
+   const auto outFile = io::open_file(dstPath, io::FileOpenMode::Create);
    if (!outFile.has_value()) {
       fmt::print(stderr, "Failed to open output file\n");
       return EXIT_FAILURE;
@@ -139,6 +190,16 @@ std::optional<asset::SamplerProperties> parse_sampler_properties(const std::vect
 
 ExitStatus handle_texture_import(const CmdArgs_import& args)
 {
+   auto projectInfo = load_active_project_info();
+   if (!projectInfo.has_value()) {
+      fmt::print(stderr, "triglav-cli: No active project found\n");
+      return EXIT_FAILURE;
+   }
+
+   auto dstPath = create_destination_path(*projectInfo, args.positionalArgs[0], args.outputPath, ResourceType::Texture);
+
+   fmt::print(stderr, "triglav-cli: Importing texture to {}\n", dstPath.string());
+
    const auto purpose = parse_texture_purpose(args.texturePurpose);
    if (!purpose.has_value()) {
       return EXIT_FAILURE;
@@ -197,7 +258,7 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
       }
    }
 
-   const auto outFile = io::open_file(io::Path(args.positionalArgs[1]), io::FileOpenMode::Create);
+   const auto outFile = io::open_file(dstPath, io::FileOpenMode::Create);
    if (!outFile.has_value()) {
       return EXIT_FAILURE;
    }
@@ -218,8 +279,8 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
 
 ExitStatus handle_import(const CmdArgs_import& args)
 {
-   if (args.positionalArgs.size() != 2) {
-      fmt::print(stderr, "must provide input and output file\n");
+   if (args.positionalArgs.size() != 1) {
+      fmt::print(stderr, "must provide an input file\n");
       return EXIT_SUCCESS;
    }
 

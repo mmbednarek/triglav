@@ -1,83 +1,13 @@
 #include "Gltf.hpp"
 
 #include "triglav/io/BufferedReader.hpp"
+#include "triglav/json_util/JsonUtil.hpp"
 
 #include <array>
-
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-#elifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-#include <rapidjson/document.h>
-#ifdef __clang__
-#pragma clang diagnostic pop
-#elifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
 
 namespace triglav::gltf {
 
 namespace {
-
-class RapidJsonInputStream
-{
- public:
-   using Ch = char;
-
-   explicit RapidJsonInputStream(io::IReader& reader) :
-       m_reader(reader)
-   {
-   }
-
-   Ch Peek() const
-   {
-      if (!m_reader.has_next())
-         return 0;
-
-      return m_reader.peek();
-   }
-
-   Ch Take()
-   {
-      if (!m_reader.has_next())
-         return 0;
-
-      m_totalBytesRead += 1;
-      return m_reader.next();
-   }
-
-   size_t Tell()
-   {
-      return m_totalBytesRead;
-   }
-
-   Ch* PutBegin()
-   {
-      assert(false);
-      return nullptr;
-   }
-
-   void Put(Ch /*c*/)
-   {
-      assert(false);
-   }
-
-   void Flush() {}
-
-   size_t PutEnd(Ch* /*begin*/)
-   {
-      assert(false);
-      return 0;
-   }
-
- private:
-   mutable io::BufferedReader m_reader;
-   size_t m_totalBytesRead = 0;
-};
 
 Asset deserialize_asset(const rapidjson::Value& value)
 {
@@ -357,7 +287,7 @@ Buffer deserialize_buffer(const rapidjson::Value& value)
 
 void Document::deserialize(io::IReader& reader)
 {
-   RapidJsonInputStream stream(reader);
+   json_util::RapidJsonInputStream stream(reader);
 
    rapidjson::Document doc;
    doc.ParseStream(stream);
