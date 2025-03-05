@@ -32,6 +32,12 @@ class TypedName
    {
    }
 
+   constexpr TypedName& operator=(const Name name)
+   {
+      m_name = name;
+      return *this;
+   }
+
    [[nodiscard]] constexpr Name name() const
    {
       return m_name;

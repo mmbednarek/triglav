@@ -15,6 +15,7 @@ core_sources = files([
                     'include/triglav/Template.hpp',
                     'include/triglav/TypeMacroList.hpp',
                     'src/Core.cpp',
+                    'src/Math.cpp',
                     'src/NameResolution.cpp'
 ])
 

@@ -1,18 +1,22 @@
 #include "Commands.hpp"
 
+#include "LevelImport.hpp"
+#include "MeshImport.hpp"
 #include "ProjectConfig.hpp"
+#include "ResourceList.hpp"
+#include "TextureImport.hpp"
 
 #include "triglav/asset/Asset.hpp"
+#include "triglav/gltf/Glb.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
-#include "triglav/graphics_api/Device.hpp"
-#include "triglav/graphics_api/Instance.hpp"
-#include "triglav/io/File.hpp"
-#include "triglav/ktx/Texture.hpp"
+#include "triglav/world/Level.hpp"
 
+#include <algorithm>
 #include <fmt/core.h>
-#include <stbi/stb_image.h>
 
 namespace triglav::tool::cli {
+
+using namespace name_literals;
 
 namespace {
 
@@ -24,37 +28,7 @@ std::string create_dst_resource_path(const ProjectInfo& projectInfo, const io::P
       basename = basename.substr(0, dotAt);
    }
 
-   switch (resType) {
-   case ResourceType::Texture:
-      return fmt::format(fmt::runtime(projectInfo.importSettings.texturePath), fmt::arg("basename", basename));
-   case ResourceType::Mesh:
-      return fmt::format(fmt::runtime(projectInfo.importSettings.meshPath), fmt::arg("basename", basename));
-   default:
-      break;
-   }
-
-   return {};
-}
-
-io::Path create_destination_path(const ProjectInfo& projectInfo, const std::string_view srcPath, const std::string_view outputPath,
-                                 const ResourceType resType)
-{
-   std::string dstResourcePath{outputPath};
-   if (dstResourcePath.empty()) {
-      dstResourcePath = create_dst_resource_path(projectInfo, io::Path{srcPath}, resType);
-   }
-   if (io::path_seperator() != '/') {
-      for (auto& ch : dstResourcePath) {
-         if (ch == '/') {
-            ch = io::path_seperator();
-         }
-      }
-   }
-
-   auto dstPath = io::Path{projectInfo.path};
-   dstPath = dstPath.sub(dstResourcePath);
-
-   return dstPath;
+   return projectInfo.default_import_path(resType, basename);
 }
 
 std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_view purposeStr)
@@ -87,15 +61,30 @@ std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_vie
    return std::nullopt;
 }
 
-std::optional<geometry::Mesh> load_mesh(const std::string_view srcAsset)
+ExitStatus handle_level_from_glb(const CmdArgs_import& args)
 {
-   if (srcAsset.ends_with(".obj")) {
-      return geometry::Mesh::from_file(io::Path{srcAsset});
+   auto projectInfo = load_active_project_info();
+   if (!projectInfo.has_value()) {
+      fmt::print(stderr, "triglav-cli: No active project found\n");
+      return EXIT_FAILURE;
    }
-   if (srcAsset.ends_with(".glb")) {
-      return gltf::load_glb_mesh(io::Path(srcAsset));
+
+   auto subPath = args.outputPath.empty() ? create_dst_resource_path(*projectInfo, io::Path{args.positionalArgs[0]}, ResourceType::Level)
+                                          : args.outputPath;
+
+   const LevelImportProps importProps{
+      .srcPath = io::Path{args.positionalArgs[0]},
+      .dstPath = projectInfo->content_path(subPath),
+   };
+   if (!import_level(importProps)) {
+      return EXIT_FAILURE;
    }
-   return std::nullopt;
+
+   if (!add_resource_to_index(subPath)) {
+      return EXIT_FAILURE;
+   }
+
+   return EXIT_SUCCESS;
 }
 
 ExitStatus handle_mesh_import(const CmdArgs_import& args)
@@ -106,25 +95,19 @@ ExitStatus handle_mesh_import(const CmdArgs_import& args)
       return EXIT_FAILURE;
    }
 
-   auto dstPath = create_destination_path(*projectInfo, args.positionalArgs[0], args.outputPath, ResourceType::Texture);
+   const auto subPath = args.outputPath.empty()
+                           ? create_dst_resource_path(*projectInfo, io::Path{args.positionalArgs[0]}, ResourceType::Mesh)
+                           : args.outputPath;
 
-   const auto mesh = load_mesh(args.positionalArgs[0]);
-   if (!mesh.has_value()) {
-      fmt::print(stderr, "Failed to load glb mesh\n");
+   const MeshImportProps props{
+      .srcPath = io::Path{args.positionalArgs[0]},
+      .dstPath = projectInfo->content_path(subPath),
+   };
+   if (!import_mesh(props)) {
       return EXIT_FAILURE;
    }
 
-   mesh->triangulate();
-   mesh->recalculate_tangents();
-
-   const auto outFile = io::open_file(dstPath, io::FileOpenMode::Create);
-   if (!outFile.has_value()) {
-      fmt::print(stderr, "Failed to open output file\n");
-      return EXIT_FAILURE;
-   }
-
-   if (!asset::encode_mesh(**outFile, *mesh)) {
-      fmt::print(stderr, "Failed to encode mesh\n");
+   if (!add_resource_to_index(subPath)) {
       return EXIT_FAILURE;
    }
 
@@ -196,79 +179,33 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
       return EXIT_FAILURE;
    }
 
-   auto dstPath = create_destination_path(*projectInfo, args.positionalArgs[0], args.outputPath, ResourceType::Texture);
-
-   fmt::print(stderr, "triglav-cli: Importing texture to {}\n", dstPath.string());
+   auto subPath = args.outputPath.empty() ? create_dst_resource_path(*projectInfo, io::Path{args.positionalArgs[0]}, ResourceType::Texture)
+                                          : args.outputPath;
+   auto dstPath = projectInfo->content_path(subPath);
 
    const auto purpose = parse_texture_purpose(args.texturePurpose);
    if (!purpose.has_value()) {
       return EXIT_FAILURE;
    }
 
-   int texWidth, texHeight, texChannels;
-   stbi_uc* pixels = stbi_load(args.positionalArgs[0].c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-   if (pixels == nullptr) {
-      fmt::print(stderr, "triglav-cli: Source texture not found '{}'\n", args.positionalArgs[0].c_str());
+   const auto samplerProps = parse_sampler_properties(args.samplerOptions);
+   if (!samplerProps.has_value()) {
       return EXIT_FAILURE;
    }
 
-   const auto instance = GAPI_CHECK(graphics_api::Instance::create_instance());
-   auto device = GAPI_CHECK(instance.create_device(nullptr, graphics_api::DevicePickStrategy::PreferDedicated, 0));
-
-   auto format = GAPI_FORMAT(RGBA, UNorm8);
-   if (*purpose == asset::TexturePurpose::Albedo || *purpose == asset::TexturePurpose::AlbedoWithAlpha) {
-      format = GAPI_FORMAT(RGBA, sRGB);
-   }
-
-   auto texture = GAPI_CHECK(device->create_texture(
-      format, {static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight)},
-      graphics_api::TextureUsage::Sampled | graphics_api::TextureUsage::TransferDst | graphics_api::TextureUsage::TransferSrc,
-      graphics_api::TextureState::Undefined, graphics_api::SampleCount::Single, args.noMipMaps ? 1 : graphics_api::g_maxMipMaps));
-
-   GAPI_CHECK_STATUS(texture.write(*device, pixels));
-
-   stbi_image_free(pixels);
-
-   auto ktxTexture = GAPI_CHECK(device->export_ktx_texture(texture));
-
-   if (args.shouldCompress) {
-      // TODO: Figure out how to transcode with isNormalMap = true.
-      if (!ktxTexture.compress(ktx::TextureCompression::UASTC, false)) {
-         return EXIT_FAILURE;
-      }
-
-      ktx::TextureTranscode transcode{};
-      switch (*purpose) {
-      case asset::TexturePurpose::Albedo:
-         transcode = ktx::TextureTranscode::BC1_RGB;
-         break;
-      case asset::TexturePurpose::AlbedoWithAlpha:
-         transcode = ktx::TextureTranscode::BC3_RGBA;
-         break;
-      case asset::TexturePurpose::NormalMap:
-         transcode = ktx::TextureTranscode::BC1_RGB;
-         break;
-      default:
-         transcode = ktx::TextureTranscode::BC4_R;
-         break;
-      }
-
-      if (!ktxTexture.transcode(transcode)) {
-         return EXIT_FAILURE;
-      }
-   }
-
-   const auto outFile = io::open_file(dstPath, io::FileOpenMode::Create);
-   if (!outFile.has_value()) {
+   TextureImportProps importProps{
+      .srcPath = io::Path{args.positionalArgs[0]},
+      .dstPath = projectInfo->content_path(subPath),
+      .purpose = purpose.value(),
+      .samplerProperties = *samplerProps,
+      .shouldCompress = args.shouldCompress,
+      .hasMipMaps = !args.noMipMaps,
+   };
+   if (!import_texture(importProps)) {
       return EXIT_FAILURE;
    }
 
-   const auto samplerData = parse_sampler_properties(args.samplerOptions);
-   if (!samplerData.has_value()) {
-      return EXIT_FAILURE;
-   }
-
-   if (!asset::encode_texture(**outFile, *purpose, ktxTexture, *samplerData)) {
+   if (!add_resource_to_index(subPath)) {
       return EXIT_FAILURE;
    }
 
@@ -285,7 +222,10 @@ ExitStatus handle_import(const CmdArgs_import& args)
    }
 
    const auto srcFile = args.positionalArgs[0];
-   if (srcFile.ends_with(".obj") || srcFile.ends_with(".glb")) {
+   if (srcFile.ends_with(".glb")) {
+      return handle_level_from_glb(args);
+   }
+   if (srcFile.ends_with(".obj")) {
       return handle_mesh_import(args);
    }
    if (srcFile.ends_with(".jpg") || srcFile.ends_with(".png")) {

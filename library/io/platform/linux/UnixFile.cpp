@@ -15,13 +15,13 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
       flags = O_RDONLY;
       break;
    case FileOpenMode::Write:
-      flags = O_WRONLY;
+      flags = O_WRONLY | O_TRUNC;
       break;
    case FileOpenMode::ReadWrite:
       flags = O_RDWR;
       break;
    case FileOpenMode::Create:
-      flags = O_WRONLY | O_CREAT;
+      flags = O_WRONLY | O_CREAT | O_TRUNC;
       break;
    }
 

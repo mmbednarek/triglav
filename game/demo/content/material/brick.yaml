@@ -1,4 +1,4 @@
-template: pbr/parallax.mt
+template: normal_map
 properties:
   albedo: "brick/albedo.tex"
   normal: "brick/normal.tex"

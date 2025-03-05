@@ -17,4 +17,7 @@ using MemoryOffset = std::ptrdiff_t;
 using MemorySize = std::size_t;
 using Index = std::size_t;
 
+struct InvalidType
+{};
+
 }// namespace triglav

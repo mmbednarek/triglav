@@ -1,5 +1,6 @@
 core_test_sources = files(
     'Main.cpp',
+    'MathTest.cpp',
     'NameTest.cpp',
     'PoolTest.cpp',
 )

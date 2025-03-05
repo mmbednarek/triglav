@@ -1,5 +1,5 @@
 name: grass
-template: pbr/normal_map.mt
+template: normal_map
 properties:
   albedo: "grass.tex"
   normal: "grass/normal.tex"

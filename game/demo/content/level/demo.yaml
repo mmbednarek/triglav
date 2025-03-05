@@ -5,69 +5,55 @@ nodes:
         name: "hall"
         mesh: "hall.mesh"
         transform:
-          position: {x: 0, y: 0, z: 0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 0, y: 0, z: 0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "pine"
         mesh: "pine.mesh"
         transform:
-          position: {x: 12.0, y: -20.0, z: -0.0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 12.0, y: -20.0, z: -0.0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 50.0, y: 50.0, z: 50.0}
       - type: static_mesh
         name: "column_0"
         mesh: "column.mesh"
         transform:
-          position: {x: 0.0, y: -32.0, z: 0.0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 0.0, y: -32.0, z: 0.0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "column_1"
         mesh: "column.mesh"
         transform:
-          position: {x: 0.0, y: -16.0, z: 0.0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 0.0, y: -16.0, z: 0.0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "column_2"
         mesh: "column.mesh"
         transform:
-          position: {x: 0.0, y: 0.0, z: 0.0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 0.0, y: 0.0, z: 0.0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "column_3"
         mesh: "column.mesh"
         transform:
-          position: {x: 0.0, y: 16.0, z: 0.0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 0.0, y: 16.0, z: 0.0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "column_4"
         mesh: "column.mesh"
         transform:
-          position: {x: 0.0, y: 32.0, z: 0.0}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 0.0, y: 32.0, z: 0.0}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
         name: "sphere"
         mesh: "ball.mesh"
         transform:
-          position: {x: 12.0, y: 24.0, z: -2.5}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
+          translation: {x: 12.0, y: 24.0, z: -2.5}
+          rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 3, y: 3, z: 3}
-      - type: static_mesh
-        name: "stairs"
-        mesh: "stairs.mesh"
-        transform:
-          position: {x: -20.0, y: -30.0, z: -0.02}
-          rotation: {yaw: 0, pitch: 0, roll: 0}
-          scale: {x: 4, y: 4, z: 4}
-          # - type: static_mesh
-          #   name: "mirror"
-          #   mesh: "mirror.mesh"
-          #   transform:
-          #     position: {x: 5.0, y: 25.0, z: -0.2}
-          #     rotation: {yaw: 0, pitch: 0, roll: 0}
-          #     scale: {x: 1, y: 1, z: 1}

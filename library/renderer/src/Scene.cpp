@@ -15,9 +15,9 @@ using triglav::ResourceType;
 
 namespace triglav::renderer {
 
-glm::mat4 SceneObject::model_matrix() const
+Matrix4x4 SceneObject::model_matrix() const
 {
-   return glm::scale(glm::translate(glm::mat4(1), this->position), this->scale) * glm::mat4_cast(this->rotation);
+   return this->transform.to_matrix();
 }
 
 Scene::Scene(resource::ResourceManager& resourceManager) :
@@ -47,9 +47,7 @@ void Scene::load_level(const LevelName name)
    for (const auto& mesh : root.static_meshes()) {
       this->add_object(SceneObject{
          .model = mesh.meshName,
-         .position = mesh.transform.position,
-         .rotation = glm::quat(mesh.transform.rotation),
-         .scale = mesh.transform.scale,
+         .transform = mesh.transform,
       });
    }
 }

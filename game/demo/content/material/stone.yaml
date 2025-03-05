@@ -1,8 +1,6 @@
-template: pbr/parallax.mt
+name: quartz
+template: basic
 properties:
-  albedo: "stone/albedo.tex"
-  normal: "stone/normal.tex"
-  height_map: "stone/height_map.tex"
-  roughness: 0.8
-  metallic: 0.05
-  height_scale: 0.036
+  albedo: "quartz.tex"
+  roughness: 0.2
+  metallic: 0.1

@@ -4,10 +4,18 @@ triglavcli_sources = files([
   'src/HelpHandler.cpp',
   'src/ImportHandler.cpp',
   'src/InspectHandler.cpp',
+  'src/LevelImport.cpp',
+  'src/LevelImport.hpp',
   'src/Main.cpp',
+  'src/MeshImport.cpp',
+  'src/MeshImport.hpp',
   'src/ProjectConfig.cpp',
   'src/ProjectConfig.hpp',
   'src/ProjectHandler.cpp',
+  'src/ResourceList.cpp',
+  'src/ResourceList.hpp',
+  'src/TextureImport.hpp',
+  'src/TextureImport.cpp',
 ])
 
 triglavcli_deps = [
@@ -17,7 +25,9 @@ triglavcli_deps = [
   gltf,
   stbi,
   graphics_api,
-  json_util
+  json_util,
+  world,
+  rapidyaml,
 ]
 
 triglavcli = executable('triglavcli',

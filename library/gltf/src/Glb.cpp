@@ -1,5 +1,7 @@
 #include "Glb.hpp"
 
+#include "triglav/io/LimitedReader.hpp"
+
 #include <cassert>
 
 namespace triglav::gltf {
@@ -40,6 +42,31 @@ std::optional<GlbInfo> read_glb_info(io::ISeekableStream& stream)
       .binarySize = binaryHeader.chunkLength,
       .binaryOffset = sizeof(GlbHeader) + sizeof(GlbChunkHeader) + jsonHeader.chunkLength + sizeof(GlbChunkHeader),
    };
+}
+
+std::optional<GlbResource> open_glb_file(const io::Path& path)
+{
+   auto fileHandleRes = io::open_file(path, io::FileOpenMode::Read);
+   if (!fileHandleRes.has_value()) {
+      return std::nullopt;
+   }
+   auto& fileHandle = **fileHandleRes;
+
+   auto glbInfo = read_glb_info(fileHandle);
+   if (!glbInfo.has_value()) {
+      return std::nullopt;
+   }
+
+   fileHandle.seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(glbInfo->jsonOffset));
+
+   io::LimitedReader jsonReader(fileHandle, glbInfo->jsonSize);
+
+   auto doc = std::make_unique<Document>();
+   doc->deserialize(jsonReader);
+
+   BufferManager manager(*doc, &fileHandle, static_cast<MemoryOffset>(glbInfo->binaryOffset));
+
+   return GlbResource{.document{std::move(doc)}, .glbFileHandle{std::move(*fileHandleRes)}, .bufferManager{std::move(manager)}};
 }
 
 }// namespace triglav::gltf

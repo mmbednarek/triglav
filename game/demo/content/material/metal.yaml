@@ -1,4 +1,4 @@
-template: pbr/full.mt
+template: full_pbr
 properties:
   albedo: "metal/albedo.tex"
   normal: "metal/normal.tex"

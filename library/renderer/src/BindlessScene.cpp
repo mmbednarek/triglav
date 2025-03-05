@@ -173,11 +173,14 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
 
 u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, const render_objects::Material& material)
 {
-   if (material.materialTemplate == "pbr/simple.mt"_rc) {
+   switch (material.materialTemplate) {
+   case render_objects::MaterialTemplate::Basic: {
+      const auto& props = std::get<render_objects::MTProperties_Basic>(material.properties);
+
       Properties_MT0 albedoTex;
-      albedoTex.albedoTextureID = this->get_texture_id(std::get<TextureName>(material.values[0]));
-      albedoTex.roughness = std::get<float>(material.values[1]);
-      albedoTex.metallic = std::get<float>(material.values[2]);
+      albedoTex.albedoTextureID = this->get_texture_id(props.albedo);
+      albedoTex.roughness = props.roughness;
+      albedoTex.metallic = props.metallic;
 
       const auto outIndex = m_writtenMaterialProperty_AlbedoTex;
 
@@ -187,12 +190,15 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       ++m_writtenMaterialProperty_AlbedoTex;
 
       return encode_material_id(0, outIndex);
-   } else if (material.materialTemplate == "pbr/normal_map.mt"_rc) {
+   }
+   case render_objects::MaterialTemplate::NormalMap: {
+      const auto& props = std::get<render_objects::MTProperties_NormalMap>(material.properties);
+
       Properties_MT1 albedoNormalTex;
-      albedoNormalTex.albedoTextureID = this->get_texture_id(std::get<TextureName>(material.values[0]));
-      albedoNormalTex.normalTextureID = this->get_texture_id(std::get<TextureName>(material.values[1]));
-      albedoNormalTex.roughness = std::get<float>(material.values[2]);
-      albedoNormalTex.metallic = std::get<float>(material.values[3]);
+      albedoNormalTex.albedoTextureID = this->get_texture_id(props.albedo);
+      albedoNormalTex.normalTextureID = this->get_texture_id(props.normal);
+      albedoNormalTex.roughness = props.roughness;
+      albedoNormalTex.metallic = props.metallic;
 
       const auto outIndex = m_writtenMaterialProperty_AlbedoNormalTex;
 
@@ -202,12 +208,15 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       ++m_writtenMaterialProperty_AlbedoNormalTex;
 
       return encode_material_id(1, outIndex);
-   } else if (material.materialTemplate == "pbr/full.mt"_rc) {
+   }
+   case render_objects::MaterialTemplate::FullPBR: {
+      const auto& props = std::get<render_objects::MTProperties_FullPBR>(material.properties);
+
       Properties_MT2 allTex;
-      allTex.albedoTextureID = this->get_texture_id(std::get<TextureName>(material.values[0]));
-      allTex.normalTextureID = this->get_texture_id(std::get<TextureName>(material.values[1]));
-      allTex.roughnessTextureID = this->get_texture_id(std::get<TextureName>(material.values[2]));
-      allTex.metallicTextureID = this->get_texture_id(std::get<TextureName>(material.values[3]));
+      allTex.albedoTextureID = this->get_texture_id(props.texture);
+      allTex.normalTextureID = this->get_texture_id(props.normal);
+      allTex.roughnessTextureID = this->get_texture_id(props.roughness);
+      allTex.metallicTextureID = this->get_texture_id(props.metallic);
 
       const auto outIndex = m_writtenMaterialProperty_AllTex;
 
@@ -218,6 +227,8 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
 
       return encode_material_id(2, outIndex);
    }
+   }
+
    return 0;
 }
 

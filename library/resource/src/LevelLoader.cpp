@@ -9,50 +9,67 @@ namespace triglav::resource {
 
 namespace {
 
-glm::vec3 parse_vector3(const ryml::ConstNodeRef node)
+Vector3 parse_vector3(const ryml::ConstNodeRef node)
 {
    auto x = node["x"].val();
    auto y = node["y"].val();
    auto z = node["z"].val();
 
-   return glm::vec3{
+   return Vector3{
       std::stof(std::string{x.data(), x.size()}),
       std::stof(std::string{y.data(), y.size()}),
       std::stof(std::string{z.data(), z.size()}),
    };
 }
 
-glm::vec3 parse_angle3(const ryml::ConstNodeRef node)
+Vector4 parse_vector4(const ryml::ConstNodeRef node)
 {
-   auto x = node["roll"].val();
-   auto y = node["pitch"].val();
-   auto z = node["yaw"].val();
+   auto x = node["x"].val();
+   auto y = node["y"].val();
+   auto z = node["z"].val();
+   auto w = node["w"].val();
 
-   return glm::vec3{
+   return Vector4{
       std::stof(std::string{x.data(), x.size()}),
       std::stof(std::string{y.data(), y.size()}),
       std::stof(std::string{z.data(), z.size()}),
+      std::stof(std::string{w.data(), w.size()}),
    };
 }
 
-world::Transformation parse_transformation(const ryml::ConstNodeRef node)
+template<ResourceType CResType>
+TypedName<CResType> to_typed_name(const ryml::csubstr str)
 {
-   const auto position = node["position"];
+   if (std::ranges::all_of(str, [](const char c) { return std::isdigit(c); })) {
+      return TypedName<CResType>{std::stoull(std::string{str.data(), str.size()})};
+   }
+
+   return TypedName<CResType>{make_rc_name(std::string_view{str.data(), str.size()})};
+}
+
+Transform3D parse_transformation(const ryml::ConstNodeRef node)
+{
+   const auto translation = node["translation"];
    const auto rotation = node["rotation"];
    const auto scale = node["scale"];
 
-   return world::Transformation{
-      .position = parse_vector3(position),
-      .rotation = parse_angle3(rotation),
+   const auto rotationVec4 = parse_vector4(rotation);
+
+   return Transform3D{
+      .rotation = {rotationVec4.w, rotationVec4.x, rotationVec4.y, rotationVec4.z},
       .scale = parse_vector3(scale),
+      .translation = parse_vector3(translation),
    };
 }
 
 world::StaticMesh parse_static_mesh(const ryml::ConstNodeRef node)
 {
-   auto meshName = node["mesh"].val();
+   const auto meshName = node["mesh"].val();
+   const auto name = node["name"].val();
+
    return world::StaticMesh{
-      .meshName = make_rc_name(std::string_view{meshName.data(), meshName.size()}),
+      .meshName = to_typed_name<ResourceType::Mesh>(meshName),
+      .name = {name.data(), name.size()},
       .transform = parse_transformation(node["transform"]),
    };
 }
@@ -73,7 +90,7 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
    for (const auto node : nodes) {
       auto name = node["name"].val();
 
-      world::LevelNode levelNode;
+      world::LevelNode levelNode({name.data(), name.size()});
 
       auto items = node["items"];
       for (const auto item : items) {
@@ -85,6 +102,8 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
 
       result.add_node(make_name_id(std::string_view{name.data(), name.size()}), std::move(levelNode));
    }
+
+   assert(result.save_to_file(io::Path{"/home/ego/debug.yaml"}));
 
    return result;
 }

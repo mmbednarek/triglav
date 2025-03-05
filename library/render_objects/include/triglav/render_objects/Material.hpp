@@ -2,52 +2,65 @@
 
 #include "triglav/Name.hpp"
 
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 #include <variant>
-#include <vector>
+
+namespace c4::yml {
+
+class ConstNodeRef;
+class NodeRef;
+
+}// namespace c4::yml
 
 namespace triglav::render_objects {
 
-enum class MaterialPropertyType
+enum class MaterialTemplate
 {
-   Texture2D,
-   Float32,
-   Vector3,
-   Vector4,
-   Matrix4x4
+   Basic,
+   NormalMap,
+   FullPBR,
 };
 
-enum class PropertySource
+struct MTProperties_Basic
 {
-   Constant,
-   LastFrameColorOut,
-   LastFrameDepthOut,
-   LastViewProjectionMatrix,
-   ViewPosition,
+   TextureName albedo;
+   float roughness;
+   float metallic;
+
+   void deserialize_yaml(const c4::yml::ConstNodeRef& node);
+   void serialize_yaml(c4::yml::NodeRef& node) const;
 };
 
-struct MaterialProperty
+struct MTProperties_NormalMap
 {
-   Name name;
-   MaterialPropertyType type;
-   PropertySource source;
+   TextureName albedo;
+   TextureName normal;
+   float roughness;
+   float metallic;
+
+   void deserialize_yaml(const c4::yml::ConstNodeRef& node);
+   void serialize_yaml(c4::yml::NodeRef& node) const;
 };
 
-struct MaterialTemplate
+struct MTProperties_FullPBR
 {
-   FragmentShaderName fragmentShader;
-   VertexShaderName vertexShader;
-   std::vector<MaterialProperty> properties;
+   TextureName texture;
+   TextureName normal;
+   TextureName roughness;
+   TextureName metallic;
+
+   void deserialize_yaml(const c4::yml::ConstNodeRef& node);
+   void serialize_yaml(c4::yml::NodeRef& node) const;
 };
 
-using MaterialPropertyValue = std::variant<TextureName, float, glm::vec3, glm::vec4, glm::mat4>;
+using MaterialProperties = std::variant<MTProperties_Basic, MTProperties_NormalMap, MTProperties_FullPBR>;
 
 struct Material
 {
-   MaterialTemplateName materialTemplate;
-   std::vector<MaterialPropertyValue> values{};
+   MaterialTemplate materialTemplate;
+   MaterialProperties properties;
+
+   void deserialize_yaml(const c4::yml::ConstNodeRef& node);
+   void serialize_yaml(c4::yml::NodeRef& node) const;
 };
 
 }// namespace triglav::render_objects

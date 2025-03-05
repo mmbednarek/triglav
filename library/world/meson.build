@@ -5,17 +5,18 @@ world_sources = files([
                           'src/LevelNode.cpp',
                       ])
 
-world_deps = [core]
+world_deps_priv = [core, rapidyaml, io]
+world_deps_pub = [core]
 world_incl = include_directories(['include', 'include/triglav/world'])
 
 world_lib = static_library('world',
                            sources : world_sources,
-                           dependencies : world_deps,
+                           dependencies : world_deps_priv,
                            include_directories : world_incl,
 )
 
 world = declare_dependency(
     include_directories : include_directories(['include']),
     link_with : world_lib,
-    dependencies : world_deps,
+    dependencies : world_deps_pub,
 )

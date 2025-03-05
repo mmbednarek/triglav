@@ -1,5 +1,5 @@
 name: bark
-template: pbr/normal_map.mt
+template: normal_map
 properties:
   albedo: "bark.tex"
   normal: "bark/normal.tex"

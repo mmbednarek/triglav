@@ -103,27 +103,12 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 meshIndex, cons
 
 std::optional<geometry::Mesh> load_glb_mesh(const io::Path& path)
 {
-   auto fileHandleRes = io::open_file(path, io::FileOpenMode::Read);
-   if (!fileHandleRes.has_value()) {
-      return std::nullopt;
-   }
-   auto& fileHandle = **fileHandleRes;
-
-   auto glbInfo = read_glb_info(fileHandle);
-   if (!glbInfo.has_value()) {
+   const auto glbRes = open_glb_file(path);
+   if (!glbRes.has_value()) {
       return std::nullopt;
    }
 
-   fileHandle.seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(glbInfo->jsonOffset));
-
-   io::LimitedReader jsonReader(fileHandle, glbInfo->jsonSize);
-
-   Document doc;
-   doc.deserialize(jsonReader);
-
-   BufferManager manager(doc, &fileHandle, static_cast<MemoryOffset>(glbInfo->binaryOffset));
-
-   return mesh_from_document(doc, 0, manager);
+   return mesh_from_document(*glbRes->document, 0, glbRes->bufferManager);
 }
 
 }// namespace triglav::gltf

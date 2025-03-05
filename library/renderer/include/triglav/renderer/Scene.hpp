@@ -19,11 +19,9 @@ class Renderer;
 struct SceneObject
 {
    MeshName model;
-   glm::vec3 position;
-   glm::quat rotation;
-   glm::vec3 scale;
+   Transform3D transform;
 
-   [[nodiscard]] glm::mat4 model_matrix() const;
+   [[nodiscard]] Matrix4x4 model_matrix() const;
 };
 
 class Scene

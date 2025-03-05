@@ -23,7 +23,25 @@ Scene deserialize_scene(const rapidjson::Value& value)
    for (const auto& child : value["nodes"].GetArray()) {
       scene.nodes.push_back(child.GetInt());
    }
+   if (value.HasMember("name")) {
+      scene.name.emplace(value["name"].GetString());
+   }
    return scene;
+}
+
+Vector3 deserialize_vector3(const rapidjson::Value& value)
+{
+   std::array<float, 3> vecData{};
+   auto it = vecData.begin();
+   for (const auto& child : value.GetArray()) {
+      *it = child.GetFloat();
+      ++it;
+   }
+
+   Vector3 result{};
+   std::memcpy(reinterpret_cast<float*>(&result), vecData.data(), sizeof(float) * 3);
+
+   return result;
 }
 
 Vector4 deserialize_vector4(const rapidjson::Value& value)
@@ -69,6 +87,18 @@ Node deserialize_node(const rapidjson::Value& value)
    }
    if (value.HasMember("mesh")) {
       scene.mesh.emplace(value["mesh"].GetInt());
+   }
+   if (value.HasMember("rotation")) {
+      scene.rotation.emplace(deserialize_vector4(value["rotation"]));
+   }
+   if (value.HasMember("scale")) {
+      scene.scale.emplace(deserialize_vector3(value["scale"]));
+   }
+   if (value.HasMember("translation")) {
+      scene.translation.emplace(deserialize_vector3(value["translation"]));
+   }
+   if (value.HasMember("name")) {
+      scene.name.emplace(value["name"].GetString());
    }
    return scene;
 }

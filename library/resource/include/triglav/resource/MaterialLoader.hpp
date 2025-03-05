@@ -12,14 +12,6 @@
 namespace triglav::resource {
 
 template<>
-struct Loader<ResourceType::MaterialTemplate>
-{
-   constexpr static ResourceLoadType type{ResourceLoadType::Static};
-
-   static render_objects::MaterialTemplate load(const io::Path& path);
-};
-
-template<>
 struct Loader<ResourceType::Material>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::StaticDependent};

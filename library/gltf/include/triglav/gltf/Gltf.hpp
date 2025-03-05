@@ -22,6 +22,7 @@ struct Asset
 struct Scene
 {
    std::vector<u32> nodes;
+   std::optional<std::string> name;
 };
 
 struct Node
@@ -29,6 +30,10 @@ struct Node
    std::vector<u32> children;
    std::optional<Matrix4x4> matrix;
    std::optional<u32> mesh;
+   std::optional<Vector4> rotation;
+   std::optional<Vector3> scale;
+   std::optional<Vector3> translation;
+   std::optional<std::string> name;
 };
 
 enum class PrimitiveAttributeType
