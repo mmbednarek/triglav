@@ -45,6 +45,11 @@ bool write_mesh_to_file(const geometry::Mesh& mesh, const io::Path& dstPath)
 
 bool import_mesh(const MeshImportProps& props)
 {
+   if (!props.shouldOverride && props.dstPath.exists()) {
+      fmt::print(stderr, "triglav-cli: Failed to import mesh to {}, file exists", props.dstPath.string());
+      return false;
+   }
+
    const auto mesh = load_mesh(props.srcPath);
    if (!mesh.has_value()) {
       fmt::print(stderr, "Failed to load glb mesh\n");

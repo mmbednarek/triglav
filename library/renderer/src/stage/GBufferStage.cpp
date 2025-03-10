@@ -40,7 +40,7 @@ void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& /*c
    ctx.begin_render_pass("gbuffer"_name, "gbuffer.albedo"_name, "gbuffer.position"_name, "gbuffer.normal"_name, "gbuffer.depth"_name);
 
    this->build_skybox(ctx);
-   this->build_ground(ctx);
+   // this->build_ground(ctx);
    this->build_geometry(ctx);
 
    ctx.end_render_pass();

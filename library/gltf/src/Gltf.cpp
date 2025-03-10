@@ -242,6 +242,13 @@ MaterialTexture deserialize_material_texture(const rapidjson::Value& value)
    return texture;
 }
 
+NormalMapTexture deserialize_normal_map_texture(const rapidjson::Value& value)
+{
+   NormalMapTexture texture{};
+   texture.index = value["index"].GetInt();
+   return texture;
+}
+
 PBRMetallicRoughness deserialize_pbr_metallic_roughness(const rapidjson::Value& value)
 {
    PBRMetallicRoughness pbrMetallicRoughness{};
@@ -265,6 +272,9 @@ Material deserialize_material(const rapidjson::Value& value)
    Material material{};
    material.name = value["name"].GetString();
    material.pbrMetallicRoughness = deserialize_pbr_metallic_roughness(value["pbrMetallicRoughness"]);
+   if (value.HasMember("normalTexture")) {
+      material.normalTexture.emplace(deserialize_normal_map_texture(value["normalTexture"]));
+   }
    return material;
 }
 
@@ -273,23 +283,44 @@ Texture deserialize_texture(const rapidjson::Value& value)
    Texture texture{};
    texture.sampler = value["sampler"].GetInt();
    texture.source = value["source"].GetInt();
+   if (value.HasMember("name")) {
+      texture.name = value["name"].GetString();
+   }
    return texture;
 }
 
 Image deserialize_image(const rapidjson::Value& value)
 {
    Image image{};
-   image.uri = value["uri"].GetString();
+   if (value.HasMember("uri")) {
+      image.uri = value["uri"].GetString();
+   }
+   if (value.HasMember("mimeType")) {
+      image.mimeType = value["mimeType"].GetString();
+   }
+   if (value.HasMember("bufferView")) {
+      image.bufferView = value["bufferView"].GetInt();
+   }
+   if (value.HasMember("name")) {
+      image.name = value["name"].GetString();
+   }
    return image;
 }
 
 Sampler deserialize_sampler(const rapidjson::Value& value)
 {
    Sampler sampler{};
-   sampler.magFilter = value["magFilter"].GetInt();
-   sampler.minFilter = value["minFilter"].GetInt();
-   sampler.wrapS = value["wrapS"].GetInt();
-   sampler.wrapT = value["wrapT"].GetInt();
+   sampler.magFilter = static_cast<SamplerFilter>(value["magFilter"].GetInt());
+   sampler.minFilter = static_cast<SamplerFilter>(value["minFilter"].GetInt());
+   if (value.HasMember("wrapS")) {
+      sampler.wrapS = static_cast<SamplerWrap>(value["wrapS"].GetInt());
+   }
+   if (value.HasMember("wrapT")) {
+      sampler.wrapT = static_cast<SamplerWrap>(value["wrapT"].GetInt());
+   }
+   if (value.HasMember("name")) {
+      sampler.name = value["name"].GetString();
+   }
    return sampler;
 }
 
@@ -297,9 +328,13 @@ BufferView deserialize_buffer_view(const rapidjson::Value& value)
 {
    BufferView bufferView{};
    bufferView.buffer = value["buffer"].GetInt();
-   bufferView.byteOffset = value["byteOffset"].GetInt();
+   if (value.HasMember("byteOffset")) {
+      bufferView.byteOffset = value["byteOffset"].GetInt();
+   }
    bufferView.byteLength = value["byteLength"].GetInt();
-   bufferView.target = value["target"].GetInt();
+   if (value.HasMember("target")) {
+      bufferView.target = static_cast<BufferTarget>(value["target"].GetInt());
+   }
    return bufferView;
 }
 

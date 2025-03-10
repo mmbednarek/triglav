@@ -105,17 +105,23 @@ struct MaterialTexture
    u32 index;
 };
 
+struct NormalMapTexture
+{
+   u32 index;
+};
+
 struct PBRMetallicRoughness
 {
    std::optional<MaterialTexture> baseColorTexture;
    std::optional<Vector4> baseColorFactor;
-   float metallicFactor;
-   float roughnessFactor;
+   float metallicFactor{1};
+   float roughnessFactor{1};
 };
 
 struct Material
 {
    PBRMetallicRoughness pbrMetallicRoughness;
+   std::optional<NormalMapTexture> normalTexture;
    std::string name;
 };
 
@@ -123,27 +129,55 @@ struct Texture
 {
    u32 sampler;
    u32 source;
+   std::string name;
 };
 
 struct Image
 {
-   std::string uri;
+   std::optional<std::string> uri;
+   std::optional<std::string> mimeType;
+   std::optional<u32> bufferView;
+   std::string name;
+};
+
+enum class SamplerFilter : u32
+{
+   Nearest = 9728,
+   Linear = 9729,
+   NearestMipmapNearest = 9984,
+   LinearMipmapNearest = 9985,
+   NearestMipmapLinear = 9986,
+   LinearMipmapLinear = 9987,
+};
+
+enum class SamplerWrap : u32
+{
+   ClampToEdge = 33071,
+   MirroredRepeat = 33648,
+   Repeat = 10497,
 };
 
 struct Sampler
 {
-   u32 magFilter;
-   u32 minFilter;
-   u32 wrapS;
-   u32 wrapT;
+   SamplerFilter magFilter;
+   SamplerFilter minFilter;
+   SamplerWrap wrapS = SamplerWrap::Repeat;
+   SamplerWrap wrapT = SamplerWrap::Repeat;
+   std::string name;
+};
+
+enum class BufferTarget
+{
+   ArrayBuffer = 34962,
+   ElementArrayBuffer = 34963,
 };
 
 struct BufferView
 {
    u32 buffer;
-   u32 byteOffset;
+   u32 byteOffset = 0;
    u32 byteLength;
-   u32 target;
+   std::optional<BufferTarget> target;
 };
 
 struct Buffer

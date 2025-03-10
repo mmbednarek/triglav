@@ -41,7 +41,7 @@ class Mesh
    template<typename... TNormals>
    void set_face_normals(Index face, TNormals... vertices);
    void set_face_group(Index face, Index group);
-   void set_material(Index meshGroup, std::string_view material);
+   void set_material(Index meshGroup, MaterialName material);
 
    [[nodiscard]] BoundingBox calculate_bounding_box() const;
    [[nodiscard]] bool is_triangulated() const;

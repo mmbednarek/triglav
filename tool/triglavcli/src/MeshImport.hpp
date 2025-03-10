@@ -12,6 +12,7 @@ struct MeshImportProps
 {
    io::Path srcPath;
    io::Path dstPath;
+   bool shouldOverride{};
 };
 
 bool write_mesh_to_file(const geometry::Mesh& mesh, const io::Path& dstPath);

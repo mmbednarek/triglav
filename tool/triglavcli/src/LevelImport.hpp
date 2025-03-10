@@ -8,6 +8,7 @@ struct LevelImportProps
 {
    io::Path srcPath;
    io::Path dstPath;
+   bool shouldOverride{};
 };
 
 [[nodiscard]] bool import_level(const LevelImportProps& props);

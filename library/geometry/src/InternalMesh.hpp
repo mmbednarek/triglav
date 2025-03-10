@@ -59,7 +59,7 @@ class InternalMesh
    void set_face_uvs(Index face, std::span<glm::vec2> uvs);
    void set_face_normals(Index face, std::span<glm::vec3> normals);
    void set_face_group(Index face, Index group);
-   void set_material(Index meshGroup, std::string_view material);
+   void set_material(Index meshGroup, MaterialName material);
 
    [[nodiscard]] glm::vec3 location(VertexIndex index) const;
    std::optional<glm::vec3> normal(HalfedgeIndex index) const;

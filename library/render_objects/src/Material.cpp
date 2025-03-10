@@ -62,7 +62,7 @@ void MTProperties_Basic::serialize_yaml(c4::yml::NodeRef& node) const
    node["albedo"] = {tex.data(), tex.size()};
    auto metallic = std::to_string(this->metallic);
    node["metallic"] = {metallic.data(), metallic.size()};
-   auto roughness = std::to_string(this->metallic);
+   auto roughness = std::to_string(this->roughness);
    node["roughness"] = {roughness.data(), roughness.size()};
 }
 
@@ -82,7 +82,7 @@ void MTProperties_NormalMap::serialize_yaml(c4::yml::NodeRef& node) const
    node["normal"] = {normalMap.data(), normalMap.size()};
    auto metallic = std::to_string(this->metallic);
    node["metallic"] = {metallic.data(), metallic.size()};
-   auto roughness = std::to_string(this->metallic);
+   auto roughness = std::to_string(this->roughness);
    node["roughness"] = {roughness.data(), roughness.size()};
 }
 
@@ -102,7 +102,7 @@ void MTProperties_FullPBR::serialize_yaml(c4::yml::NodeRef& node) const
    node["normal"] = {normalMap.data(), normalMap.size()};
    auto metallic = std::to_string(this->metallic.name());
    node["metallic"] = {metallic.data(), metallic.size()};
-   auto roughness = std::to_string(this->metallic.name());
+   auto roughness = std::to_string(this->roughness.name());
    node["roughness"] = {roughness.data(), roughness.size()};
 }
 

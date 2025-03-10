@@ -20,13 +20,10 @@ inline c4::csubstr to_csubstr(std::string const& s) noexcept
 
 namespace triglav::tool::cli {
 
-
 void ResourceListItem::deserialize_yaml(const ryml::ConstNodeRef& node)
 {
-   const auto name = node["name"].val();
    const auto source = node["source"].val();
 
-   this->name = {name.data(), name.size()};
    this->source = {source.data(), source.size()};
 
    if (node.has_child("properties")) {
@@ -40,7 +37,6 @@ void ResourceListItem::deserialize_yaml(const ryml::ConstNodeRef& node)
 }
 void ResourceListItem::serialize_yaml(ryml::NodeRef& node) const
 {
-   node["name"] << ryml::csubstr(this->name.data(), this->name.size());
    node["source"] << ryml::csubstr(this->source.data(), this->source.size());
 
    if (!this->properties.empty()) {
@@ -60,9 +56,12 @@ void ResourceList::deserialize_yaml(const ryml::ConstNodeRef& node)
 
    const auto resourcesNode = node["resources"];
    for (const auto resource : resourcesNode) {
+      const auto nameStr = resource["name"].val();
+      std::string name = {nameStr.data(), nameStr.size()};
+
       ResourceListItem item;
       item.deserialize_yaml(resource);
-      this->resources.emplace_back(std::move(item));
+      this->resources.emplace(std::move(name), std::move(item));
    }
 }
 
@@ -73,26 +72,14 @@ void ResourceList::serialize_yaml(ryml::NodeRef& node) const
 
    auto resourcesNode = node["resources"];
    resourcesNode |= ryml::SEQ;
-   for (const auto& resource : this->resources) {
+   for (const auto& [name, resource] : this->resources) {
+
       auto child = resourcesNode.append_child();
       child |= ryml::MAP;
+
+      child["name"] << ryml::csubstr(name.data(), name.size());
       resource.serialize_yaml(child);
    }
-}
-
-void ResourceList::sort()
-{
-   std::sort(resources.begin(), resources.end(), [](const ResourceListItem& lhs, const ResourceListItem& rhs) {
-      const auto lhsDotAt = lhs.name.find_last_of('.');
-      const auto rhsDotAt = rhs.name.find_last_of('.');
-      const auto extLhs = lhs.name.substr(lhsDotAt + 1);
-      const auto extRhs = rhs.name.substr(rhsDotAt + 1);
-
-      if (extLhs == extRhs) {
-         return lhs.name < rhs.name;
-      }
-      return extLhs < extRhs;
-   });
 }
 
 std::optional<ResourceList> ResourceList::from_file(const io::Path& path)
@@ -138,9 +125,7 @@ bool add_resource_to_index(const std::string_view name)
    auto resList = ResourceList::from_file(indexPath);
    assert(resList.has_value());
 
-   resList->resources.emplace_back(std::string{name}, std::string{name});
-
-   resList->sort();
+   resList->resources.emplace(std::string{name}, std::string{name});
 
    return resList->save_to_file(indexPath);
 }

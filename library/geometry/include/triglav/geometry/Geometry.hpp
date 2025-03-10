@@ -48,7 +48,7 @@ struct Extent3D
 struct MeshGroup
 {
    std::string name;
-   std::string material;
+   MaterialName material;
 };
 
 struct MaterialRange

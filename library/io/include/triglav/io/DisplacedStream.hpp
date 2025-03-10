@@ -7,7 +7,7 @@ namespace triglav::io {
 class DisplacedStream final : public ISeekableStream
 {
  public:
-   DisplacedStream(ISeekableStream& stream, MemoryOffset offset);
+   DisplacedStream(ISeekableStream& stream, MemoryOffset offset, MemorySize size);
 
    Result<MemorySize> read(std::span<u8> buffer) override;
    Result<MemorySize> write(std::span<const u8> buffer) override;
@@ -17,6 +17,7 @@ class DisplacedStream final : public ISeekableStream
  private:
    ISeekableStream& m_stream;
    MemoryOffset m_offset;
+   MemorySize m_size;
 };
 
 }// namespace triglav::io

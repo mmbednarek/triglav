@@ -79,16 +79,18 @@ ktxStream create_ktx_stream_from_io_stream(io::ISeekableStream& seekableStream)
    return resultStream;
 }
 
-ktxStream create_ktx_stream_from_io_writer(io::IWriter& writer)
+struct WriterStreamUserData
 {
-   static struct UserData
-   {
-      io::IWriter& writer;
-      MemorySize position;
-   } userData{writer, 0};
+   io::IWriter& writer;
+   MemorySize position;
+};
+
+std::tuple<ktxStream, std::unique_ptr<WriterStreamUserData>> create_ktx_stream_from_io_writer(io::IWriter& writer)
+{
+   auto userData = std::make_unique<WriterStreamUserData>(writer, 0);
 
    ktxStream resultStream{};
-   resultStream.data.custom_ptr.address = &userData;
+   resultStream.data.custom_ptr.address = userData.get();
    resultStream.type = eStreamTypeCustom;
 
    resultStream.read = [](ktxStream* /*str*/, void* /*dst*/, const ktx_size_t /*count*/) -> KTX_error_code {
@@ -102,7 +104,7 @@ ktxStream create_ktx_stream_from_io_writer(io::IWriter& writer)
    };
 
    resultStream.write = [](ktxStream* str, const void* src, const ktx_size_t size, const ktx_size_t count) -> KTX_error_code {
-      auto* userData = static_cast<UserData*>(str->data.custom_ptr.address);
+      auto* userData = static_cast<WriterStreamUserData*>(str->data.custom_ptr.address);
       if (!userData->writer.write({static_cast<const u8*>(src), size * count}).has_value()) {
          return KTX_FILE_WRITE_ERROR;
       }
@@ -111,7 +113,7 @@ ktxStream create_ktx_stream_from_io_writer(io::IWriter& writer)
    };
 
    resultStream.getpos = [](ktxStream* str, ktx_off_t* const offset) -> KTX_error_code {
-      auto* userData = static_cast<UserData*>(str->data.custom_ptr.address);
+      auto* userData = static_cast<WriterStreamUserData*>(str->data.custom_ptr.address);
       *offset = userData->position;
       return KTX_SUCCESS;
    };
@@ -130,7 +132,7 @@ ktxStream create_ktx_stream_from_io_writer(io::IWriter& writer)
    resultStream.readpos = 0;
    resultStream.closeOnDestruct = false;
 
-   return resultStream;
+   return {resultStream, std::move(userData)};
 }
 
 }// namespace
@@ -166,9 +168,9 @@ bool Texture::set_image_from_buffer(const std::span<const u8> buffer, const u32 
 
 bool Texture::write_to_stream(io::IWriter& writer) const
 {
-   auto outKtxStream = create_ktx_stream_from_io_writer(writer);
+   auto [outStream, userData] = create_ktx_stream_from_io_writer(writer);
    ktxTexture_WriteToNamedFile(m_ktxTexture, "debug.ktx");
-   return ktxTexture_WriteToStream(m_ktxTexture, &outKtxStream) == KTX_SUCCESS;
+   return ktxTexture_WriteToStream(m_ktxTexture, &outStream) == KTX_SUCCESS;
 }
 
 bool Texture::write_to_file(const io::Path& path) const

@@ -40,7 +40,7 @@ class ISeekableStream : public IStream
 {
  public:
    virtual Status seek(SeekPosition position, MemoryOffset offset) = 0;
-   virtual MemorySize position() const = 0;
+   [[nodiscard]] virtual MemorySize position() const = 0;
 };
 
 

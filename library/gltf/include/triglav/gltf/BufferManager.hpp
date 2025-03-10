@@ -3,6 +3,7 @@
 #include "Gltf.hpp"
 
 #include "triglav/io/Deserializer.hpp"
+#include "triglav/io/DisplacedStream.hpp"
 #include "triglav/io/File.hpp"
 
 namespace triglav::gltf {
@@ -19,6 +20,7 @@ class BufferManager
    explicit BufferManager(Document& document, io::IFile* binaryChunk = nullptr, MemoryOffset binaryChunkOffset = 0);
 
    [[nodiscard]] io::Deserializer read_buffer_view(u32 bufferViewID, MemoryOffset additionalOffset = 0) const;
+   [[nodiscard]] io::DisplacedStream buffer_view_to_stream(u32 bufferViewID, MemoryOffset additionalOffset = 0) const;
 
  private:
    Document& m_document;

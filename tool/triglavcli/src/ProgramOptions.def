@@ -20,6 +20,7 @@ TG_DECLARE_ARG(samplerOptions, "s", "sampler-option", StringArray, "Sampler opti
 TG_DECLARE_ARG(texturePurpose, "p", "purpose", String, "Select purpose for imported textures")
 TG_DECLARE_FLAG(shouldCompress, "c", "compress", "Compress texture using block compression")
 TG_DECLARE_FLAG(noMipMaps, "n", "no-mip-maps", "Don't generate mip maps for the imported texture")
+TG_DECLARE_FLAG(shouldOverride, "r", "override", "Override already imported files")
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(inspect, "Print asset metadata")

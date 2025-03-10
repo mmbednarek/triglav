@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/geometry/Mesh.hpp"
+#include "triglav/io/File.hpp"
 #include "triglav/io/Stream.hpp"
 
 #include <optional>
@@ -140,6 +141,6 @@ bool encode_mesh(io::IWriter& writer, const geometry::Mesh& mesh);
 std::optional<geometry::MeshData> decode_mesh(io::IReader& reader);
 
 bool encode_texture(io::IWriter& writer, TexturePurpose purpose, const ktx::Texture& tex, const SamplerProperties& sampler);
-std::optional<DecodedTexture> decode_texture(io::ISeekableStream& stream);
+std::optional<DecodedTexture> decode_texture(io::IFile& stream);
 
 }// namespace triglav::asset

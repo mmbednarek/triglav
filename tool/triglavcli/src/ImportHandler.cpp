@@ -75,6 +75,7 @@ ExitStatus handle_level_from_glb(const CmdArgs_import& args)
    const LevelImportProps importProps{
       .srcPath = io::Path{args.positionalArgs[0]},
       .dstPath = projectInfo->content_path(subPath),
+      .shouldOverride = args.shouldOverride,
    };
    if (!import_level(importProps)) {
       return EXIT_FAILURE;
@@ -102,6 +103,7 @@ ExitStatus handle_mesh_import(const CmdArgs_import& args)
    const MeshImportProps props{
       .srcPath = io::Path{args.positionalArgs[0]},
       .dstPath = projectInfo->content_path(subPath),
+      .shouldOverride = args.shouldOverride,
    };
    if (!import_mesh(props)) {
       return EXIT_FAILURE;
@@ -200,6 +202,7 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
       .samplerProperties = *samplerProps,
       .shouldCompress = args.shouldCompress,
       .hasMipMaps = !args.noMipMaps,
+      .shouldOverride = args.shouldOverride,
    };
    if (!import_texture(importProps)) {
       return EXIT_FAILURE;

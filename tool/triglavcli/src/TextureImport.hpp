@@ -3,6 +3,8 @@
 #include "triglav/io/Path.hpp"
 #include "triglav/asset/Asset.hpp"
 
+#include <optional>
+
 namespace triglav::tool::cli {
 
 struct TextureImportProps
@@ -13,8 +15,17 @@ struct TextureImportProps
    asset::SamplerProperties samplerProperties;
    bool shouldCompress{};
    bool hasMipMaps{};
+   bool shouldOverride{};
 };
 
+struct ImageData
+{
+   std::vector<uint32_t> imageData;
+   Vector2u size;
+};
+
+[[nodiscard]] std::optional<ImageData> load_image_data(io::ISeekableStream& stream);
+[[nodiscard]] bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableStream& stream);
 [[nodiscard]] bool import_texture(const TextureImportProps& props);
 
 }

@@ -64,6 +64,8 @@ triglav::geometry::IndexedVertex parse_index(const std::string& index)
 
 namespace triglav::geometry {
 
+using namespace name_literals;
+
 InternalMesh::InternalMesh() :
     m_normals(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec3>>("h:normals", std::nullopt).first),
     m_uvs(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec2>>("h:uvs", std::nullopt).first),
@@ -222,7 +224,7 @@ void InternalMesh::set_face_group(const Index face, const Index group)
    m_groupIds[FaceIndex{face}] = group;
 }
 
-void InternalMesh::set_material(const Index meshGroup, const std::string_view material)
+void InternalMesh::set_material(const Index meshGroup, const MaterialName material)
 {
    m_groups[meshGroup].material = material;
 }
@@ -343,11 +345,11 @@ InternalMesh InternalMesh::from_obj_file(io::IReader& stream)
          }
       } else if (name == "o") {
          assert(arguments.size() == 1);
-         lastGroupIndex = result.add_group({arguments[0], ""});
+         lastGroupIndex = result.add_group({arguments[0], "stone.mat"_rc});
       } else if (name == "usemtl") {
          assert(arguments.size() == 1);
          if (not result.m_groups.empty()) {
-            result.m_groups[lastGroupIndex].material = arguments[0];
+            result.m_groups[lastGroupIndex].material = make_rc_name(arguments[0]);
          }
       }
    }
@@ -387,7 +389,7 @@ VertexData InternalMesh::to_vertex_data()
    std::vector<Vertex> outVertices{};
 
    std::vector<MaterialRange> materialRanges{};
-   std::string currentMaterial;
+   MaterialName currentMaterial;
 
    size_t lastOffset{};
 
@@ -398,8 +400,7 @@ VertexData InternalMesh::to_vertex_data()
          const auto& group = m_groups[groupId];
          if (group.material != currentMaterial) {
             if (lastOffset != outIndices.size()) {
-               materialRanges.push_back(
-                  MaterialRange{lastOffset, outIndices.size() - lastOffset, make_rc_name(fmt::format("{}.mat", currentMaterial))});
+               materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
             }
             currentMaterial = group.material;
             lastOffset = outIndices.size();
@@ -429,8 +430,7 @@ VertexData InternalMesh::to_vertex_data()
    }
 
    if (lastOffset != outIndices.size()) {
-      materialRanges.push_back(
-         MaterialRange{lastOffset, outIndices.size() - lastOffset, make_rc_name(fmt::format("{}.mat", currentMaterial))});
+      materialRanges.push_back(MaterialRange{lastOffset, outIndices.size() - lastOffset, currentMaterial});
    }
 
    return {.vertices{std::move(outVertices)}, .indices{std::move(outIndices)}, .ranges{std::move(materialRanges)}};

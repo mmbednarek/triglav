@@ -77,7 +77,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
    m_infoDialog.initialize();
-   m_scene.load_level("demo.level"_rc);
+   m_scene.load_level("level/wierd_tube.level"_rc);
 
    {
       // quickly copy visible sceen objects

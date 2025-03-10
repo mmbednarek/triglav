@@ -1,0 +1,54 @@
+nodes:
+  - name: root
+    items:
+      - type: static_mesh
+        name: WierdTube
+        mesh: 18446744071937723998
+        transform:
+          translation:
+            x: 0.000000
+            y: 1.046226
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 1.000000
+            y: 1.000000
+            z: 1.000000
+      - type: static_mesh
+        name: Stone_2
+        mesh: 18446744072009097381
+        transform:
+          translation:
+            x: 0.330393
+            y: 1.189814
+            z: -2.611481
+          rotation:
+            x: -0.094549
+            y: -0.028166
+            z: 0.384056
+            w: 0.918024
+          scale:
+            x: 1.587748
+            y: 1.587748
+            z: 1.587748
+      - type: static_mesh
+        name: Stone_1
+        mesh: 18446744069476217119
+        transform:
+          translation:
+            x: -3.484990
+            y: 1.768695
+            z: 0.000000
+          rotation:
+            x: 0.004469
+            y: 0.079905
+            z: -0.406244
+            w: 0.910254
+          scale:
+            x: 1.587748
+            y: 1.587748
+            z: 1.587748

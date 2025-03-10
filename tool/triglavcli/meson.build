@@ -28,6 +28,7 @@ triglavcli_deps = [
   json_util,
   world,
   rapidyaml,
+  render_objects
 ]
 
 triglavcli = executable('triglavcli',

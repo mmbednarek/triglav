@@ -13,6 +13,8 @@
 
 namespace triglav::gltf {
 
+using namespace name_literals;
+
 namespace {
 
 template<typename TAccessorType>
@@ -58,19 +60,30 @@ std::vector<TVector> extract_vector(const PrimitiveAttributeType type, const Doc
 
 }// namespace
 
-geometry::Mesh mesh_from_document(const Document& doc, const u32 meshIndex, const BufferManager& bufferManager)
+geometry::Mesh mesh_from_document(const Document& doc, const u32 meshIndex, const BufferManager& bufferManager,
+                                  const std::map<u32, MaterialName>& materials)
 {
    const Mesh& srcMesh = doc.meshes[meshIndex];
 
    geometry::Mesh dstMesh;
 
-   const auto groupId = dstMesh.add_group(geometry::MeshGroup{.name = "main", .material = "stone"});
+   const auto invalidGroupID = dstMesh.add_group(geometry::MeshGroup{.name = "invalid", .material = "stone.mat"_rc});
+
+   std::map<u32, geometry::Index> indexToName;
+   for (const auto& [index, name] : materials) {
+      indexToName[index] = dstMesh.add_group(geometry::MeshGroup{.name = fmt::format("group{}", index), .material = name});
+   }
 
    std::unordered_map<Vector3, geometry::Index> uniquePositionMap;
 
    for (const auto& prim : srcMesh.primitives) {
       if (!prim.indices.has_value())
          continue;
+
+      auto groupID = invalidGroupID;
+      if (prim.material.has_value() && indexToName.contains(prim.material.value())) {
+         groupID = indexToName.at(prim.material.value());
+      }
 
       auto positions = extract_vector<Vector3>(PrimitiveAttributeType::Position, doc, prim, bufferManager);
       for (const auto& position : positions) {
@@ -92,7 +105,7 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 meshIndex, cons
             dstMesh.add_face(uniquePositionMap[positions[c]], uniquePositionMap[positions[b]], uniquePositionMap[positions[a]]);
          dstMesh.set_face_normals(faceId, normals[c], normals[b], normals[a]);
          dstMesh.set_face_uvs(faceId, uvs[c], uvs[b], uvs[a]);
-         dstMesh.set_face_group(faceId, groupId);
+         dstMesh.set_face_group(faceId, groupID);
       }
    }
 
@@ -108,7 +121,7 @@ std::optional<geometry::Mesh> load_glb_mesh(const io::Path& path)
       return std::nullopt;
    }
 
-   return mesh_from_document(*glbRes->document, 0, glbRes->bufferManager);
+   return mesh_from_document(*glbRes->document, 0, glbRes->bufferManager, {});
 }
 
 }// namespace triglav::gltf

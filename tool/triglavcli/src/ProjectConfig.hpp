@@ -14,6 +14,7 @@ struct ImportSettings
    std::string texturePath;
    std::string meshPath;
    std::string levelPath;
+   std::string materialPath;
 
    void deserialize(const rapidjson::Value& value);
 };

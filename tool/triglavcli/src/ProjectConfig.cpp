@@ -25,6 +25,7 @@ void ImportSettings::deserialize(const rapidjson::Value& value)
    this->texturePath = value["texture_path"].GetString();
    this->meshPath = value["mesh_path"].GetString();
    this->levelPath = value["level_path"].GetString();
+   this->materialPath = value["material_path"].GetString();
 }
 
 void ProjectInfo::deserialize(const rapidjson::Value& value)
@@ -58,6 +59,8 @@ std::string ProjectInfo::default_import_path(const ResourceType resType, const s
       return fmt::format(fmt::runtime(this->importSettings.meshPath), fmt::arg("basename", basename));
    case ResourceType::Level:
       return fmt::format(fmt::runtime(this->importSettings.levelPath), fmt::arg("basename", basename));
+   case ResourceType::Material:
+      return fmt::format(fmt::runtime(this->importSettings.materialPath), fmt::arg("basename", basename));
    default:
       return "";
    }

@@ -167,14 +167,15 @@ bool encode_texture(io::IWriter& writer, const TexturePurpose purpose, const ktx
    return tex.write_to_stream(writer);
 }
 
-std::optional<DecodedTexture> decode_texture(io::ISeekableStream& stream)
+std::optional<DecodedTexture> decode_texture(io::IFile& stream)
 {
    TextureHeader texHeader{};
    if (!stream.read({reinterpret_cast<u8*>(&texHeader), sizeof(TextureHeader)}).has_value()) {
       return std::nullopt;
    }
 
-   io::DisplacedStream displacedStream{stream, sizeof(AssetHeader) + sizeof(TextureHeader)};
+   static constexpr auto offset = sizeof(AssetHeader) + sizeof(TextureHeader);
+   io::DisplacedStream displacedStream{stream, offset, *stream.file_size() - offset};
 
    auto texResult = ktx::Texture::from_stream(displacedStream);
    if (!texResult.has_value()) {

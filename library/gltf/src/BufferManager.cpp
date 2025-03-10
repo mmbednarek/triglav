@@ -31,4 +31,14 @@ io::Deserializer BufferManager::read_buffer_view(const u32 bufferViewID, const M
    return io::Deserializer(*buffer.stream);
 }
 
+io::DisplacedStream BufferManager::buffer_view_to_stream(const u32 bufferViewID, const MemoryOffset additionalOffset) const
+{
+   const auto& bufferView = m_document.bufferViews.at(bufferViewID);
+   auto& buffer = m_buffers.at(bufferView.buffer);
+   const auto offset = buffer.offset + bufferView.byteOffset + additionalOffset;
+
+   buffer.stream->seek(io::SeekPosition::Begin, offset);
+   return {*buffer.stream, offset, bufferView.byteLength};
+}
+
 }// namespace triglav::gltf
