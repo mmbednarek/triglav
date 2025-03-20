@@ -1,7 +1,7 @@
 #include "Commands.hpp"
 
-#include <fmt/core.h>
 #include <cassert>
+#include <fmt/core.h>
 
 namespace triglav::tool::cli {
 
@@ -20,7 +20,7 @@ void print_command(std::string_view commandName, std::string_view description)
    fmt::print(stderr, "{}\n", description);
 }
 
-}
+}// namespace
 
 ExitStatus handle_help(const CmdArgs_help& /*args*/)
 {

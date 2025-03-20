@@ -1,5 +1,6 @@
 ui_core_sources = files([
   'include/triglav/ui_core/widget/AlignmentBox.hpp',
+  'include/triglav/ui_core/widget/EmptySpace.hpp',
   'include/triglav/ui_core/widget/HorizontalLayout.hpp',
   'include/triglav/ui_core/widget/RectBox.hpp',
   'include/triglav/ui_core/widget/TextBox.hpp',
@@ -9,6 +10,7 @@ ui_core_sources = files([
   'include/triglav/ui_core/Primitives.hpp',
   'include/triglav/ui_core/Viewport.hpp',
   'src/widget/AlignmentBox.cpp',
+  'src/widget/EmptySpace.cpp',
   'src/widget/HorizontalLayout.cpp',
   'src/widget/RectBox.cpp',
   'src/widget/TextBox.cpp',

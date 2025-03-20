@@ -13,4 +13,4 @@ struct LevelImportProps
 
 [[nodiscard]] bool import_level(const LevelImportProps& props);
 
-}
+}// namespace triglav::tool::cli

@@ -49,8 +49,9 @@ void HorizontalLayout::add_to_viewport(const Vector4 dimensions)
    const float width = (innerDimensions.z - m_state.padding.x - m_state.separation * (childCount - 1.0f)) / childCount;
    float x{0.0f};
    for (const auto& child : m_children) {
-      child->add_to_viewport({innerDimensions.x + x, innerDimensions.y, innerDimensions.x + width, innerDimensions.w});
-      x += width + m_state.separation;
+      const auto size = child->desired_size({width, dimensions.w});
+      child->add_to_viewport({innerDimensions.x + x, innerDimensions.y, innerDimensions.x + size.x, innerDimensions.w});
+      x += size.x + m_state.separation;
    }
 }
 

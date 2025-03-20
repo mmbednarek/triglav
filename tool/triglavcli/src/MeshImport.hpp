@@ -18,4 +18,4 @@ struct MeshImportProps
 bool write_mesh_to_file(const geometry::Mesh& mesh, const io::Path& dstPath);
 [[nodiscard]] bool import_mesh(const MeshImportProps& props);
 
-}
+}// namespace triglav::tool::cli

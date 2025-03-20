@@ -21,8 +21,9 @@ Vector2 TextBox::desired_size(const Vector2 /*parentSize*/) const
       return *m_cachedDesiredSize;
    }
    auto& glyphAtlas = m_uiContext.glyph_cache().find_glyph_atlas({m_state.typeface, m_state.fontSize});
-   const auto measurement = glyphAtlas.measure_text(m_state.content);
-   m_cachedDesiredSize.emplace(measurement.width, measurement.height);
+   const auto measure = glyphAtlas.measure_text(m_state.content);
+   const auto measureZeroChar = glyphAtlas.measure_text("0");
+   m_cachedDesiredSize.emplace(measure.width, measureZeroChar.height);
    return *m_cachedDesiredSize;
 }
 

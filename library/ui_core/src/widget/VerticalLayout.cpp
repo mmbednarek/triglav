@@ -49,8 +49,9 @@ void VerticalLayout::add_to_viewport(const Vector4 dimensions)
    const float height = (innerDimensions.w - m_state.padding.y - m_state.separation * (childCount - 1.0f)) / childCount;
    float y{0.0f};
    for (const auto& child : m_children) {
-      child->add_to_viewport({innerDimensions.x, innerDimensions.y + y, innerDimensions.z, innerDimensions.y + height});
-      y += height + m_state.separation;
+      const auto size = child->desired_size({dimensions.z, height});
+      child->add_to_viewport({innerDimensions.x, innerDimensions.y + y, innerDimensions.z, innerDimensions.y + size.y});
+      y += size.y + m_state.separation;
    }
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "triglav/io/Path.hpp"
 #include "triglav/asset/Asset.hpp"
+#include "triglav/io/Path.hpp"
 
 #include <optional>
 
@@ -28,4 +28,4 @@ struct ImageData
 [[nodiscard]] bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableStream& stream);
 [[nodiscard]] bool import_texture(const TextureImportProps& props);
 
-}
+}// namespace triglav::tool::cli

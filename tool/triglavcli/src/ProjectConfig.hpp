@@ -1,11 +1,11 @@
 #pragma once
 
-#include "triglav/json_util/JsonUtil.hpp"
 #include "triglav/ResourceType.hpp"
+#include "triglav/json_util/JsonUtil.hpp"
 
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 namespace triglav::tool::cli {
 

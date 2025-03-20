@@ -30,6 +30,12 @@ class RectBox final : public IWidget
       return dynamic_cast<T&>(this->set_content(std::make_unique<T>(std::forward<TArgs>(args)...)));
    }
 
+   template<typename T>
+   T& create_content(typename T::State&& state)
+   {
+      return dynamic_cast<T&>(this->set_content(std::make_unique<T>(m_context, std::forward<typename T::State>(state))));
+   }
+
  private:
    Context& m_context;
 

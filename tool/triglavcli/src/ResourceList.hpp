@@ -2,10 +2,10 @@
 
 #include "triglav/io/Path.hpp"
 
-#include <string>
 #include <map>
 #include <optional>
 #include <ryml.hpp>
+#include <string>
 
 namespace triglav::tool::cli {
 
@@ -32,4 +32,4 @@ struct ResourceList
 
 bool add_resource_to_index(std::string_view name);
 
-}
+}// namespace triglav::tool::cli

@@ -8,7 +8,7 @@ namespace triglav::ui_core {
 
 class Context;
 
-class HorizontalLayout : public IWidget
+class HorizontalLayout final : public IWidget
 {
  public:
    struct State
@@ -29,6 +29,12 @@ class HorizontalLayout : public IWidget
    TChild& emplace_child(TArgs&&... args)
    {
       return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(std::forward<TArgs>(args)...)));
+   }
+
+   template<typename TChild>
+   TChild& create_child(typename TChild::State&& state)
+   {
+      return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(m_context, std::forward<typename TChild::State>(state))));
    }
 
  private:

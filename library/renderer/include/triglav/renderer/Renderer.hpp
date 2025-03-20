@@ -61,7 +61,6 @@ class Renderer
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
    [[nodiscard]] graphics_api::Device& device() const;
    void on_config_property_changed(ConfigProperty property, const Config& config);
-   void init_config_labels();
 
  private:
    void update_uniform_data(float deltaTime);
@@ -84,6 +83,7 @@ class Renderer
    BindlessScene m_bindlessScene;
    render_core::GlyphCache m_glyphCache;
    ui_core::Viewport m_uiViewport;
+   ui_core::Context m_uiContext;
    InfoDialog m_infoDialog;
    std::optional<RayTracingScene> m_rayTracingScene;
 
@@ -97,7 +97,6 @@ class Renderer
    RenderingJob m_renderingJob;
    u32 m_frameIndex{0};
 
-   ui_core::Context m_uiContext;
    DebugWidget m_debugWidget;
 
    TG_SINK(ConfigManager, OnPropertyChanged);

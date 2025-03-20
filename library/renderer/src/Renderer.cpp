@@ -62,7 +62,8 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_bindlessScene(m_device, m_resourceManager, m_scene),
     m_glyphCache(m_device, m_resourceManager),
     m_uiViewport({resolution.width, resolution.height}),
-    m_infoDialog(m_uiViewport, m_glyphCache),
+    m_uiContext(m_uiViewport, m_glyphCache),
+    m_infoDialog(m_uiContext, m_configManager),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
                          : std::nullopt),
@@ -74,13 +75,9 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_updateUserInterfaceJob(m_device, m_glyphCache, m_uiViewport),
     m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
     m_renderingJob(m_configManager.config()),
-    m_uiContext(m_uiViewport, m_glyphCache),
     m_debugWidget(m_uiContext),
     TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
-   // auto size = m_debugWidget.desired_size({800, 800});
-   m_debugWidget.add_to_viewport({400, 200, 450, 450});
-
    m_infoDialog.initialize();
    m_scene.load_level("level/wierd_tube.level"_rc);
 
@@ -143,37 +140,23 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
 
    m_scene.update_shadow_maps();
 
-   this->init_config_labels();
+   m_infoDialog.init_config_labels();
 }
 
 void Renderer::update_debug_info(const bool isFirstFrame)
 {
-   const auto framerateStr = std::format("{:.1f}", StatisticManager::the().value(Stat::FramesPerSecond));
-   m_uiViewport.set_text_content("info_dialog/metrics/fps/value"_name, framerateStr);
-
-   const auto framerateMinStr = std::format("{:.1f}", StatisticManager::the().min(Stat::FramesPerSecond));
-   m_uiViewport.set_text_content("info_dialog/metrics/fps_min/value"_name, framerateMinStr);
-
-   const auto framerateMaxStr = std::format("{:.1f}", StatisticManager::the().max(Stat::FramesPerSecond));
-   m_uiViewport.set_text_content("info_dialog/metrics/fps_max/value"_name, framerateMaxStr);
-
-   const auto framerateAvgStr = std::format("{:.1f}", StatisticManager::the().average(Stat::FramesPerSecond));
-   m_uiViewport.set_text_content("info_dialog/metrics/fps_avg/value"_name, framerateAvgStr);
-
-   const auto gBufferGpuTimeStr = std::format("{:.2f}ms", StatisticManager::the().value(Stat::GBufferGpuTime));
-   m_uiViewport.set_text_content("info_dialog/metrics/gpu_time/value"_name, gBufferGpuTimeStr);
+   m_infoDialog.set_fps(StatisticManager::the().value(Stat::FramesPerSecond));
+   m_infoDialog.set_min_fps(StatisticManager::the().min(Stat::FramesPerSecond));
+   m_infoDialog.set_max_fps(StatisticManager::the().max(Stat::FramesPerSecond));
+   m_infoDialog.set_avg_fps(StatisticManager::the().average(Stat::FramesPerSecond));
+   m_infoDialog.set_gpu_time(StatisticManager::the().value(Stat::GBufferGpuTime));
 
    if (!isFirstFrame) {
-      const auto primitiveCountStr = std::format("{}", m_resourceStorage.pipeline_stats().get_int(0));
-      m_uiViewport.set_text_content("info_dialog/metrics/triangles/value"_name, primitiveCountStr);
+      m_infoDialog.set_triangle_count(m_resourceStorage.pipeline_stats().get_int(0));
    }
 
-   const auto camPos = m_scene.camera().position();
-   const auto positionStr = std::format("{:.2f}, {:.2f}, {:.2f}", camPos.x, camPos.y, camPos.z);
-   m_uiViewport.set_text_content("info_dialog/location/position/value"_name, positionStr);
-
-   const auto orientationStr = std::format("{:.2f}, {:.2f}", m_scene.pitch(), m_scene.yaw());
-   m_uiViewport.set_text_content("info_dialog/location/orientation/value"_name, orientationStr);
+   m_infoDialog.set_camera_pos(m_scene.camera().position());
+   m_infoDialog.set_orientation({m_scene.pitch(), m_scene.yaw()});
 }
 
 void Renderer::on_render()
@@ -364,40 +347,10 @@ graphics_api::Device& Renderer::device() const
    return m_device;
 }
 
-void Renderer::on_config_property_changed(const ConfigProperty property, const Config& config)
+void Renderer::on_config_property_changed(const ConfigProperty /*property*/, const Config& config)
 {
    m_mustRecreateJobs = true;
    m_renderingJob.set_config(config);
-
-   switch (property) {
-   case ConfigProperty::AmbientOcclusion:
-      m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(config.ambientOcclusion));
-      break;
-   case ConfigProperty::Antialiasing:
-      m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, antialiasing_method_to_string(config.antialiasing));
-      break;
-   case ConfigProperty::ShadowCasting:
-      m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, shadow_casting_method_to_string(config.shadowCasting));
-      break;
-   case ConfigProperty::IsBloomEnabled:
-      m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, config.isBloomEnabled ? "On" : "Off");
-      break;
-   case ConfigProperty::IsSmoothCameraEnabled:
-      m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, config.isSmoothCameraEnabled ? "On" : "Off");
-      break;
-   default:
-      break;
-   }
-}
-
-void Renderer::init_config_labels()
-{
-   const auto& config = m_configManager.config();
-   m_uiViewport.set_text_content("info_dialog/features/ao/value"_name, ambient_occlusion_method_to_string(config.ambientOcclusion));
-   m_uiViewport.set_text_content("info_dialog/features/aa/value"_name, antialiasing_method_to_string(config.antialiasing));
-   m_uiViewport.set_text_content("info_dialog/features/shadows/value"_name, shadow_casting_method_to_string(config.shadowCasting));
-   m_uiViewport.set_text_content("info_dialog/features/bloom/value"_name, config.isBloomEnabled ? "On" : "Off");
-   m_uiViewport.set_text_content("info_dialog/features/smooth_camera/value"_name, config.isSmoothCameraEnabled ? "On" : "Off");
 }
 
 constexpr auto g_movingSpeed = 10.0f;

@@ -19,7 +19,7 @@ void print_argument(std::string_view shorthand, std::string_view longname, std::
    fmt::print(stderr, "{}\n", description);
 }
 
-}
+}// namespace
 
 std::optional<Command> command_from_string(const std::string_view argName)
 {
@@ -90,4 +90,4 @@ std::optional<Command> command_from_string(const std::string_view argName)
 
 #include "ProgramOptions.def"
 
-}
+}// namespace triglav::tool::cli

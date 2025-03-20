@@ -32,6 +32,12 @@ class VerticalLayout : public IWidget
       return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(std::forward<TArgs>(args)...)));
    }
 
+   template<typename TChild>
+   TChild& create_child(typename TChild::State&& state)
+   {
+      return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(m_context, std::forward<typename TChild::State>(state))));
+   }
+
  private:
    Context& m_context;
 
