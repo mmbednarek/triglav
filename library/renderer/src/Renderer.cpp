@@ -74,8 +74,13 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_updateUserInterfaceJob(m_device, m_glyphCache, m_uiViewport),
     m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
     m_renderingJob(m_configManager.config()),
+    m_uiContext(m_uiViewport, m_glyphCache),
+    m_debugWidget(m_uiContext),
     TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
+   // auto size = m_debugWidget.desired_size({800, 800});
+   m_debugWidget.add_to_viewport({400, 200, 450, 450});
+
    m_infoDialog.initialize();
    m_scene.load_level("level/wierd_tube.level"_rc);
 

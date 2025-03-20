@@ -4,6 +4,7 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Swapchain.hpp"
 #include "triglav/render_core/BuildContext.hpp"
+#include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/renderer/RenderSurface.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
@@ -42,7 +43,7 @@ class SplashScreen
    triglav::resource::ResourceManager& m_resourceManager;
    triglav::render_core::ResourceStorage m_resourceStorage;
    triglav::renderer::RenderSurface m_renderSurface;
-   triglav::renderer::GlyphCache m_glyphCache;
+   triglav::render_core::GlyphCache m_glyphCache;
    std::set<triglav::ResourceName> m_pendingResources;
    triglav::ResourceName m_displayedResource;
    triglav::render_core::PipelineCache m_pipelineCache;

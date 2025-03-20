@@ -2,7 +2,7 @@
 
 #include "BindlessScene.hpp"
 #include "Config.hpp"
-#include "GlyphCache.hpp"
+#include "DebugWidget.hpp"
 #include "InfoDialog.hpp"
 #include "OcclusionCulling.hpp"
 #include "RayTracingScene.hpp"
@@ -16,10 +16,12 @@
 #include "triglav/desktop/ISurfaceEventListener.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
+#include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/render_core/PipelineCache.hpp"
 #include "triglav/render_core/ResourceStorage.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+#include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
 #include <optional>
@@ -80,7 +82,7 @@ class Renderer
    ConfigManager m_configManager;
    Scene m_scene;
    BindlessScene m_bindlessScene;
-   GlyphCache m_glyphCache;
+   render_core::GlyphCache m_glyphCache;
    ui_core::Viewport m_uiViewport;
    InfoDialog m_infoDialog;
    std::optional<RayTracingScene> m_rayTracingScene;
@@ -94,6 +96,9 @@ class Renderer
    OcclusionCulling m_occlusionCulling;
    RenderingJob m_renderingJob;
    u32 m_frameIndex{0};
+
+   ui_core::Context m_uiContext;
+   DebugWidget m_debugWidget;
 
    TG_SINK(ConfigManager, OnPropertyChanged);
 };

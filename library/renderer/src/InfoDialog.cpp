@@ -1,6 +1,7 @@
 #include "InfoDialog.hpp"
 
 #include "triglav/Name.hpp"
+#include "triglav/render_core/GlyphCache.hpp"
 
 #include <array>
 #include <span>
@@ -42,7 +43,7 @@ constexpr std::array g_labelGroups{
    std::tuple{"info_dialog/features"_name, "Features", std::span{g_featureLabels.data(), g_featureLabels.size()}},
 };
 
-InfoDialog::InfoDialog(ui_core::Viewport& viewport, GlyphCache& glyphCache) :
+InfoDialog::InfoDialog(ui_core::Viewport& viewport, render_core::GlyphCache& glyphCache) :
     m_viewport(viewport),
     m_glyphCache(glyphCache)
 {
@@ -72,7 +73,7 @@ void InfoDialog::initialize()
 
 render_core::TextMetric InfoDialog::measure_text(const ui_core::Text& text)
 {
-   auto& atlas = m_glyphCache.find_glyph_atlas(GlyphProperties{text.typefaceName, text.fontSize});
+   auto& atlas = m_glyphCache.find_glyph_atlas(render_core::GlyphProperties{text.typefaceName, text.fontSize});
    return atlas.measure_text(text.content);
 }
 

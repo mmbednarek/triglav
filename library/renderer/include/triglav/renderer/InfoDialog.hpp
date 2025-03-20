@@ -1,17 +1,20 @@
 #pragma once
 
-#include "GlyphCache.hpp"
 
 #include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/ui_core/Viewport.hpp"
+
+namespace triglav::render_core {
+class GlyphCache;
+}
 
 namespace triglav::renderer {
 
 class InfoDialog
 {
  public:
-   InfoDialog(ui_core::Viewport& viewport, GlyphCache& glyphCache);
+   InfoDialog(ui_core::Viewport& viewport, render_core::GlyphCache& glyphCache);
 
    void initialize();
 
@@ -27,7 +30,7 @@ class InfoDialog
                  float offset);
 
    ui_core::Viewport& m_viewport;
-   GlyphCache& m_glyphCache;
+   render_core::GlyphCache& m_glyphCache;
    glm::vec2 m_position;
 };
 

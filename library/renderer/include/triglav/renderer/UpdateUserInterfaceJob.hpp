@@ -5,8 +5,6 @@
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
-#include "GlyphCache.hpp"
-
 #include <map>
 #include <mutex>
 #include <vector>
@@ -14,6 +12,8 @@
 namespace triglav::render_core {
 class BuildContext;
 class JobGraph;
+class GlyphCache;
+class GlyphProperties;
 }// namespace triglav::render_core
 
 namespace triglav::renderer {
@@ -59,7 +59,7 @@ class UpdateUserInterfaceJob
 
    static constexpr auto JobName = make_name_id("job.update_user_interface");
 
-   explicit UpdateUserInterfaceJob(graphics_api::Device& device, GlyphCache& glyphCache, ui_core::Viewport& viewport);
+   explicit UpdateUserInterfaceJob(graphics_api::Device& device, render_core::GlyphCache& glyphCache, ui_core::Viewport& viewport);
 
    void build_job(render_core::BuildContext& ctx) const;
 
@@ -73,12 +73,12 @@ class UpdateUserInterfaceJob
    void render_ui(render_core::BuildContext& ctx);
 
  private:
-   [[nodiscard]] const TypefaceInfo& get_typeface_info(const GlyphProperties& glyphProps);
+   [[nodiscard]] const TypefaceInfo& get_typeface_info(const render_core::GlyphProperties& glyphProps);
    VertexBufferSection allocate_vertex_section(Name text, u32 vertexCount);
    void free_vertex_section(Name textName);
 
    graphics_api::Device& m_device;
-   GlyphCache& m_glyphCache;
+   render_core::GlyphCache& m_glyphCache;
    ui_core::Viewport& m_viewport;
    std::vector<Name> m_pendingTextUpdates;
    std::map<Name, TextInfo> m_textInfos;

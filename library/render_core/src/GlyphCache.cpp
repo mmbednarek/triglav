@@ -2,7 +2,7 @@
 
 #include "triglav/font/Utf8StringView.hpp"
 
-namespace triglav::renderer {
+namespace triglav::render_core {
 
 // GlyphProperties
 
@@ -21,7 +21,7 @@ GlyphCache::GlyphCache(graphics_api::Device& device, resource::ResourceManager& 
 {
 }
 
-const render_core::GlyphAtlas& GlyphCache::find_glyph_atlas(const GlyphProperties& properties)
+const GlyphAtlas& GlyphCache::find_glyph_atlas(const GlyphProperties& properties)
 {
    auto hash = properties.hash();
    auto it = m_atlases.find(hash);
@@ -30,11 +30,11 @@ const render_core::GlyphAtlas& GlyphCache::find_glyph_atlas(const GlyphPropertie
    }
 
    auto& typeface = m_resourceManager.get(properties.typeface);
-   auto [atlasIt, ok] = m_atlases.emplace(hash, render_core::GlyphAtlas(m_device, typeface, font::Charset::European, properties.fontSize,
-                                                                        18 * properties.fontSize, 18 * properties.fontSize));
+   auto [atlasIt, ok] = m_atlases.emplace(hash, GlyphAtlas(m_device, typeface, font::Charset::European, properties.fontSize,
+                                                           18 * properties.fontSize, 18 * properties.fontSize));
    assert(ok);
 
    return atlasIt->second;
 }
 
-}// namespace triglav::renderer
+}// namespace triglav::render_core

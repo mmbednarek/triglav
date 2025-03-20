@@ -1,10 +1,9 @@
 #include "UpdateUserInterfaceJob.hpp"
 
-#include "GlyphCache.hpp"
-
 #include "triglav/Ranges.hpp"
 #include "triglav/font/Charset.hpp"
 #include "triglav/render_core/BuildContext.hpp"
+#include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
 #include <spdlog/spdlog.h>
@@ -62,7 +61,8 @@ constexpr u32 g_maxTextVertices = 8192;
 constexpr u32 g_maxCombinedGlyphBufferSize = sizeof(render_core::GlyphInfo) * 286 * 32;
 constexpr u32 g_vertexCountPerChar = 6;
 
-UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, GlyphCache& glyphCache, ui_core::Viewport& viewport) :
+UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, render_core::GlyphCache& glyphCache,
+                                               ui_core::Viewport& viewport) :
     m_device(device),
     m_glyphCache(glyphCache),
     m_viewport(viewport),
@@ -296,7 +296,6 @@ void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
 
    ctx.bind_sampled_texture_array(1, m_atlases);
 
-
    render_core::VertexLayout layout(sizeof(TextVertex));
    layout.add("position"_name, GAPI_FORMAT(RG, Float32), offsetof(TextVertex, position));
    layout.add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(TextVertex, uv));
@@ -309,7 +308,7 @@ void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
                                 g_maxTextDrawCalls, sizeof(TextDrawCall));
 }
 
-const TypefaceInfo& UpdateUserInterfaceJob::get_typeface_info(const GlyphProperties& glyphProps)
+const TypefaceInfo& UpdateUserInterfaceJob::get_typeface_info(const render_core::GlyphProperties& glyphProps)
 {
    if (const auto it = m_typefaceInfos.find(glyphProps.hash()); it != m_typefaceInfos.end()) {
       return it->second;
