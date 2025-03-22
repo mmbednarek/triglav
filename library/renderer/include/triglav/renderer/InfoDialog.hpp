@@ -4,6 +4,7 @@
 
 #include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+#include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
@@ -16,14 +17,17 @@ class GlyphCache;
 
 namespace triglav::renderer {
 
-class InfoDialog
+class InfoDialog final : public ui_core::IWidget
 {
  public:
    using Self = InfoDialog;
 
    InfoDialog(ui_core::Context& context, ConfigManager& configManager);
 
-   void initialize();
+   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
+   void add_to_viewport(Vector4 dimensions) override;
+   void remove_from_viewport() override;
+   void on_child_state_changed(IWidget& widget) override;
 
    void set_fps(float value) const;
    void set_min_fps(float value) const;

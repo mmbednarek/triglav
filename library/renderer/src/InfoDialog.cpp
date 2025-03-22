@@ -2,6 +2,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
+#include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
@@ -38,9 +39,9 @@ constexpr std::array g_featureLabels{
 };
 
 constexpr std::array g_labelGroups{
-   std::tuple{"Metrics", std::span{g_metricsLabels.data(), g_metricsLabels.size()}},
-   std::tuple{"Location", std::span{g_locationLabels.data(), g_locationLabels.size()}},
-   std::tuple{"Features", std::span{g_featureLabels.data(), g_featureLabels.size()}},
+   std::tuple{"Metrics"sv, std::span{g_metricsLabels.data(), g_metricsLabels.size()}},
+   std::tuple{"Location"sv, std::span{g_locationLabels.data(), g_locationLabels.size()}},
+   std::tuple{"Features"sv, std::span{g_featureLabels.data(), g_featureLabels.size()}},
 };
 
 InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) :
@@ -49,11 +50,12 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
     m_rootBox(context,
               ui_core::RectBox::State{
                  .color = {0.0, 0.0f, 0.0f, 0.75f},
-              }),
+              },
+              this),
     TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
    auto& viewport = m_rootBox.create_content<ui_core::VerticalLayout>({
-      .padding = {20.0f, 20.0f, 80.0f, 20.0f},
+      .padding = {25.0f, 25.0f, 25.0f, 25.0f},
       .separation = {10.0f},
    });
 
@@ -62,18 +64,20 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
       .typeface = "cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
+      .alignment = ui_core::TextAlignment::Center,
    });
 
    viewport.create_child<ui_core::EmptySpace>({
-      .size = {1.0f, 10.0f},
+      .size = {1.0f, 20.0f},
    });
 
-   for (const auto& labelGroups : g_labelGroups) {
+   for (const auto& [groupLabel, group] : g_labelGroups) {
       viewport.create_child<ui_core::TextBox>({
          .fontSize = 20,
          .typeface = "segoeui/bold.typeface"_rc,
-         .content = std::get<0>(labelGroups),
+         .content = std::string{groupLabel},
          .color = {1.0f, 1.0f, 0.4f, 1.0f},
+         .alignment = ui_core::TextAlignment::Center,
       });
 
       auto& labelBox = viewport.create_child<ui_core::HorizontalLayout>({
@@ -91,28 +95,45 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
          .separation = {14.0f},
       });
 
-      for (const auto& label : std::get<1>(labelGroups)) {
+      for (const auto& [name, content] : group) {
          leftPanel.create_child<ui_core::TextBox>({
             .fontSize = 18,
             .typeface = "segoeui.typeface"_rc,
-            .content = std::string{std::get<1>(label)},
+            .content = std::string{content},
             .color = {1.0f, 1.0f, 1.0f, 1.0f},
+            .alignment = ui_core::TextAlignment::Right,
          });
 
-         m_values[std::get<0>(label)] = &rightPanel.create_child<ui_core::TextBox>({
+         m_values[name] = &rightPanel.create_child<ui_core::TextBox>({
             .fontSize = 18,
             .typeface = "segoeui.typeface"_rc,
             .content = "none",
             .color = {1.0f, 1.0f, 0.4f, 1.0f},
+            .alignment = ui_core::TextAlignment::Left,
          });
       }
    }
 }
 
-void InfoDialog::initialize()
+Vector2 InfoDialog::desired_size(const Vector2 parentSize) const
 {
-   const auto size = m_rootBox.desired_size({600, 1200});
+   return m_rootBox.desired_size(parentSize);
+}
+
+void InfoDialog::add_to_viewport(Vector4 /*dimensions*/)
+{
+   const auto size = this->desired_size({600, 1200});
    m_rootBox.add_to_viewport({20, 20, size.x, size.y});
+}
+
+void InfoDialog::remove_from_viewport()
+{
+   m_rootBox.remove_from_viewport();
+}
+
+void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
+{
+   this->add_to_viewport({});
 }
 
 void InfoDialog::set_fps(const float value) const

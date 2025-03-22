@@ -78,22 +78,22 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_debugWidget(m_uiContext),
     TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
-   m_infoDialog.initialize();
+   m_infoDialog.add_to_viewport({});
    m_scene.load_level("level/wierd_tube.level"_rc);
 
    {
       // quickly copy visible sceen objects
-      auto copyObjectsCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+      const auto copyObjectsCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
       GAPI_CHECK_STATUS(copyObjectsCmdList.begin());
 
       m_bindlessScene.on_update_scene(copyObjectsCmdList);
 
       GAPI_CHECK_STATUS(copyObjectsCmdList.finish());
 
-      auto fence = GAPI_CHECK(m_device.create_fence());
+      const auto fence = GAPI_CHECK(m_device.create_fence());
       fence.await();
 
-      graphics_api::SemaphoreArray empty;
+      const graphics_api::SemaphoreArray empty;
       GAPI_CHECK_STATUS(m_device.submit_command_list(copyObjectsCmdList, empty, empty, &fence, graphics_api::WorkType::Transfer));
 
       fence.await();

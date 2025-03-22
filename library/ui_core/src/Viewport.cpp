@@ -52,8 +52,10 @@ void Viewport::set_text_position(Name name, const Vector2 position)
 void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
 {
    auto& rect = m_rectangles.at(name);
-   rect.rect = dims;
+   if (rect.rect == dims)
+      return;
 
+   rect.rect = dims;
    this->event_OnRectangleChangeDims.publish(name, rect);
 }
 

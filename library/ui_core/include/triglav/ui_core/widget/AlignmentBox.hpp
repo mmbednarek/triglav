@@ -29,11 +29,13 @@ class AlignmentBox final : public IWidget
       Alignment alignment;
    };
 
-   AlignmentBox(Context& ctx, State state);
+   AlignmentBox(Context& ctx, State state, IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
+
+   void on_child_state_changed(IWidget& widget) override;
 
    IWidget& set_content(IWidgetPtr&& content);
 
@@ -43,10 +45,18 @@ class AlignmentBox final : public IWidget
       return dynamic_cast<T&>(this->set_content(std::make_unique<T>(std::forward<TArgs>(args)...)));
    }
 
+   template<ConstructableWidget T>
+   T& create_content(typename T::State&& state)
+   {
+      return dynamic_cast<T&>(this->set_content(std::make_unique<T>(m_context, std::forward<typename T::State>(state), this)));
+   }
+
  private:
    Context& m_context;
    State m_state;
+   IWidget* m_parent;
    IWidgetPtr m_content;
+   Vector4 m_parentDimensions{};
 };
 
 }// namespace triglav::ui_core

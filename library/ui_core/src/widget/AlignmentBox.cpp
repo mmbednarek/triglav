@@ -35,9 +35,10 @@ Vector4 align_content(const Alignment alignment, const Vector4 parentDim, const 
 
 }// namespace
 
-AlignmentBox::AlignmentBox(Context& ctx, State state) :
+AlignmentBox::AlignmentBox(Context& ctx, State state, IWidget* parent) :
     m_context(ctx),
-    m_state(std::move(state))
+    m_state(std::move(state)),
+    m_parent(parent)
 {
 }
 
@@ -50,11 +51,17 @@ void AlignmentBox::add_to_viewport(Vector4 dimensions)
 {
    const Vector2 size = m_content->desired_size({dimensions.z, dimensions.w});
    m_content->add_to_viewport(align_content(m_state.alignment, dimensions, size));
+   m_parentDimensions = dimensions;
 }
 
 void AlignmentBox::remove_from_viewport()
 {
    m_content->remove_from_viewport();
+}
+
+void AlignmentBox::on_child_state_changed(IWidget& /*widget*/)
+{
+   m_content->add_to_viewport(m_parentDimensions);
 }
 
 IWidget& AlignmentBox::set_content(IWidgetPtr&& content)

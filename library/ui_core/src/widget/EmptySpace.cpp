@@ -2,7 +2,7 @@
 
 namespace triglav::ui_core {
 
-EmptySpace::EmptySpace(Context& /*ctx*/, const State state) :
+EmptySpace::EmptySpace(Context& /*ctx*/, const State state, IWidget* /*parent*/) :
     m_state(state)
 {
 }

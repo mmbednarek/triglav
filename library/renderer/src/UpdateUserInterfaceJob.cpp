@@ -70,6 +70,7 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
                                                           g_maxCombinedGlyphBufferSize))),
     TG_CONNECT(viewport, OnAddedText, on_added_text),
     TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
+    TG_CONNECT(viewport, OnTextChangePosition, on_text_change_position),
     TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
     TG_CONNECT(viewport, OnRectangleChangeDims, on_rectangle_change_dims)
 {
@@ -189,6 +190,14 @@ void UpdateUserInterfaceJob::on_text_change_content(const Name name, const ui_co
    m_pendingTextUpdates.emplace_back(name);
 }
 
+void UpdateUserInterfaceJob::on_text_change_position(Name name, const ui_core::Text& text)
+{
+   std::unique_lock lk{m_textUpdateMtx};
+   auto& textInfo = m_textInfos.at(name);
+   textInfo.position = text.position;
+   m_pendingTextUpdates.emplace_back(name);
+}
+
 void UpdateUserInterfaceJob::on_added_rectangle(const Name name, const ui_core::Rectangle& rect)
 {
    std::unique_lock lk{m_rectUpdateMtx};
@@ -271,7 +280,7 @@ static const auto g_rectangleLayout = render_core::VertexLayout(sizeof(Vector2))
 
 void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
 {
-   for (const auto& rectangle : std::views::values(m_rectangles)) {
+   for (const auto& rectangle : Values(m_rectangles)) {
       ctx.bind_vertex_shader("rectangle.vshader"_rc);
 
       ctx.bind_uniform_buffer(0, &rectangle.vsUbo);

@@ -14,7 +14,7 @@ class EmptySpace final : public IWidget
       Vector2 size;
    };
 
-   EmptySpace(Context& ctx, State state);
+   EmptySpace(Context& ctx, State state, IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
    void add_to_viewport(Vector4 dimensions) override;

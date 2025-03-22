@@ -6,6 +6,14 @@
 
 namespace triglav::ui_core {
 
+class Context;
+class IWidget;
+
+template<typename TWidget>
+concept ConstructableWidget = requires(Context& ctx, typename TWidget::State&& state, IWidget* parent) {
+   { TWidget{ctx, state, parent} } -> std::same_as<TWidget>;
+};
+
 class IWidget
 {
  public:
@@ -21,6 +29,8 @@ class IWidget
 
    // Removed the widget from current viewport.
    virtual void remove_from_viewport() = 0;
+
+   virtual void on_child_state_changed(IWidget& /*widget*/) {};
 };
 
 using IWidgetPtr = std::unique_ptr<IWidget>;

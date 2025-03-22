@@ -10,6 +10,13 @@ namespace triglav::ui_core {
 
 class Context;
 
+enum class TextAlignment
+{
+   Left,
+   Center,
+   Right,
+};
+
 class TextBox final : public IWidget
 {
  public:
@@ -19,9 +26,10 @@ class TextBox final : public IWidget
       TypefaceName typeface{};
       std::string content{};
       Vector4 color{};
+      TextAlignment alignment{TextAlignment::Left};
    };
 
-   TextBox(Context& ctx, State initialState);
+   TextBox(Context& ctx, State initialState, IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
    void add_to_viewport(Vector4 dimensions) override;
@@ -30,10 +38,12 @@ class TextBox final : public IWidget
    void set_content(std::string_view content);
 
  private:
-   Context& m_uiContext;
+   [[nodiscard]] Vector2 calculate_desired_size() const;
 
-   Name m_id{};
+   Context& m_uiContext;
    State m_state{};
+   IWidget* m_parent;
+   Name m_id{};
    mutable std::optional<Vector2> m_cachedDesiredSize{};
 };
 
