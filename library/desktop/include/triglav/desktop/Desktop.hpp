@@ -1,15 +1,14 @@
 #pragma once
 
-#include <cstdint>
+#include "triglav/Int.hpp"
 
 namespace triglav::desktop {
 
 class Surface;
-// using MouseButton = uint32_t;
 
-constexpr int MouseButton_Left = 272;
-constexpr int MouseButton_Right = 273;
-constexpr int MouseButton_Middle = 274;
+constexpr i32 MouseButton_Left = 272;
+constexpr i32 MouseButton_Right = 273;
+constexpr i32 MouseButton_Middle = 274;
 
 enum class MouseButton
 {
