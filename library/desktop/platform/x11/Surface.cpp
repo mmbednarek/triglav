@@ -1,7 +1,5 @@
 #include "Surface.h"
-#include "ISurfaceEventListener.hpp"
-
-#include <iostream>
+#include "Desktop.hpp"
 
 namespace triglav::desktop::x11 {
 

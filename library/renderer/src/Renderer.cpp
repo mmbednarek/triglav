@@ -204,9 +204,24 @@ void Renderer::on_close()
    m_device.await_all();
 }
 
+void Renderer::on_mouse_move(const Vector2 position)
+{
+   m_infoDialog.on_mouse_move(position);
+}
+
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
 {
    m_mouseOffset += glm::vec2{-dx * 0.1f, dy * 0.1f};
+}
+
+void Renderer::on_mouse_is_pressed(const desktop::MouseButton button, const Vector2 position)
+{
+   m_infoDialog.on_mouse_click(button, m_renderSurface.resolution(), position);
+}
+
+void Renderer::on_mouse_is_released(const desktop::MouseButton button, const Vector2 position)
+{
+   m_infoDialog.on_mouse_is_released(button, position);
 }
 
 static Renderer::Moving map_direction(const Key key)

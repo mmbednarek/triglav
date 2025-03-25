@@ -17,6 +17,7 @@ using namespace triglav::name_literals;
 EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& renderer) :
     m_surface(surface),
     m_renderer(renderer),
+    TG_CONNECT(surface, OnMouseMove, on_mouse_move),
     TG_CONNECT(surface, OnMouseRelativeMove, on_mouse_relative_move),
     TG_CONNECT(surface, OnMouseLeave, on_mouse_leave),
     TG_CONNECT(surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
@@ -26,6 +27,12 @@ EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& ren
     TG_CONNECT(surface, OnKeyIsPressed, on_key_is_pressed),
     TG_CONNECT(surface, OnKeyIsReleased, on_key_is_released)
 {
+}
+
+void EventListener::on_mouse_move(const triglav::Vector2 position)
+{
+   m_mousePosition = position;
+   m_renderer.on_mouse_move(position);
 }
 
 void EventListener::on_mouse_relative_move(const triglav::Vector2 offset) const
@@ -43,6 +50,8 @@ void EventListener::on_mouse_leave() const
 
 void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
 {
+   m_renderer.on_mouse_is_pressed(button, m_mousePosition);
+
    if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
       m_surface.lock_cursor();
       m_surface.hide_cursor();
@@ -51,6 +60,8 @@ void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
 
 void EventListener::on_mouse_button_is_released(const MouseButton button) const
 {
+   m_renderer.on_mouse_is_released(button, m_mousePosition);
+
    if (m_surface.is_cursor_locked() && button == MouseButton::Middle) {
       m_surface.unlock_cursor();
    }

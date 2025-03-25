@@ -45,13 +45,13 @@ void VerticalLayout::add_to_viewport(const Vector4 dimensions)
                                  dimensions.z - m_state.padding.x - m_state.padding.z,
                                  dimensions.w - m_state.padding.y - m_state.padding.w};
 
-   const auto childCount = static_cast<float>(m_children.size());
-   const float height = (innerDimensions.w - m_state.padding.y - m_state.separation * (childCount - 1.0f)) / childCount;
+   float height = innerDimensions.w;
    float y{0.0f};
    for (const auto& child : m_children) {
       const auto size = child->desired_size({dimensions.z, height});
       child->add_to_viewport({innerDimensions.x, innerDimensions.y + y, innerDimensions.z, size.y});
       y += size.y + m_state.separation;
+      height -= size.y + m_state.separation;
    }
 }
 
@@ -66,6 +66,23 @@ void VerticalLayout::on_child_state_changed(IWidget& widget)
 {
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(widget);
+   }
+}
+
+void VerticalLayout::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position)
+{
+   float height = parentSize.y;
+   float y{m_state.padding.y};
+
+   for (const auto& child : m_children) {
+      const auto size = child->desired_size({parentSize.x, height});
+      if (position.y >= y && position.y < (y + size.y)) {
+         child->on_mouse_click(mouseButton, size, position - Vector2{m_state.padding.x, y});
+         return;
+      }
+
+      y += size.y + m_state.separation;
+      height -= size.y + m_state.separation;
    }
 }
 

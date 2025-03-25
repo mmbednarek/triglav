@@ -13,7 +13,7 @@
 #include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
 
-#include "triglav/desktop/ISurfaceEventListener.hpp"
+#include "triglav/desktop/Desktop.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
@@ -54,7 +54,10 @@ class Renderer
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close();
+   void on_mouse_move(Vector2 position);
    void on_mouse_relative_move(float dx, float dy);
+   void on_mouse_is_pressed(desktop::MouseButton button, Vector2 position);
+   void on_mouse_is_released(desktop::MouseButton button, Vector2 position);
    void on_key_pressed(desktop::Key key);
    void on_key_released(desktop::Key key);
    [[nodiscard]] resource::ResourceManager& resource_manager() const;

@@ -5,6 +5,13 @@ shader_targets += custom_target('text_gemetry_gen_cs',
                                 command : slang_cs_commands,
 )
 
+shader_targets += custom_target('text_removal_cs',
+                                input : 'text_removal.slang',
+                                output : '@BASENAME@.spv',
+                                depend_files : ['text_processing.slang'],
+                                command : slang_cs_commands,
+)
+
 shader_targets += custom_target('text_render_vs',
                                 input : 'text_render.slang',
                                 output : '@BASENAME@_vs.spv',

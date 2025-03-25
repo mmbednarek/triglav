@@ -4,33 +4,30 @@ namespace triglav::ui_core {
 
 namespace {
 
-Vector4 align_content(const Alignment alignment, const Vector4 parentDim, const Vector2 contentSize)
+Vector2 calculate_content_offset(const Alignment alignment, const Vector2 parentSize, const Vector2 contentSize)
 {
    switch (alignment) {
    case Alignment::TopLeft:
-      return {parentDim.x, parentDim.y, contentSize.x, contentSize.y};
+      return {0, 0};
    case Alignment::TopCenter:
-      return {parentDim.x + 0.5f * parentDim.z - 0.5f * contentSize.x, parentDim.y, contentSize.x, contentSize.y};
+      return {0.5f * parentSize.x - 0.5f * contentSize.x, 0};
    case Alignment::TopRight:
-      return {parentDim.x + parentDim.z - contentSize.x, parentDim.y, contentSize.x, contentSize.y};
+      return {parentSize.x - contentSize.x, 0};
    case Alignment::Left:
-      return {parentDim.x, parentDim.y + 0.5f * parentDim.w - 0.5f * contentSize.y, contentSize.x, contentSize.y};
+      return {0, 0.5f * parentSize.y - 0.5f * contentSize.y};
    case Alignment::Center:
-      return {parentDim.x + 0.5f * parentDim.z - 0.5f * contentSize.x, parentDim.y + 0.5f * parentDim.w - 0.5f * contentSize.y,
-              contentSize.x, contentSize.y};
+      return {0.5f * parentSize.x - 0.5f * contentSize.x, 0.5f * parentSize.y - 0.5f * contentSize.y};
    case Alignment::Right:
-      return {parentDim.x + parentDim.z - contentSize.x, parentDim.y + 0.5f * parentDim.w - 0.5f * contentSize.y, contentSize.x,
-              contentSize.y};
+      return {parentSize.x - contentSize.x, 0.5f * parentSize.y - 0.5f * contentSize.y};
    case Alignment::BottomLeft:
-      return {parentDim.x, parentDim.y + parentDim.w - contentSize.y, contentSize.x, contentSize.y};
+      return {0, parentSize.y - contentSize.y};
    case Alignment::BottomCenter:
-      return {parentDim.x + 0.5f * parentDim.z - 0.5f * contentSize.x, parentDim.y + parentDim.w - contentSize.y, contentSize.x,
-              contentSize.y};
+      return {0.5f * parentSize.x - 0.5f * contentSize.x, parentSize.y - contentSize.y};
    case Alignment::BottomRight:
-      return {parentDim.x + parentDim.z - contentSize.x, parentDim.y + parentDim.w - contentSize.y, contentSize.x, contentSize.y};
+      return {parentSize.x - contentSize.x, parentSize.y - contentSize.y};
    }
 
-   return parentDim;
+   return parentSize;
 }
 
 }// namespace
@@ -47,10 +44,12 @@ Vector2 AlignmentBox::desired_size(const Vector2 parentSize) const
    return parentSize;
 }
 
-void AlignmentBox::add_to_viewport(Vector4 dimensions)
+void AlignmentBox::add_to_viewport(const Vector4 dimensions)
 {
-   const Vector2 size = m_content->desired_size({dimensions.z, dimensions.w});
-   m_content->add_to_viewport(align_content(m_state.alignment, dimensions, size));
+   const Vector2 parentSize{dimensions.z, dimensions.w};
+   const Vector2 size = m_content->desired_size(parentSize);
+   const Vector2 offset = calculate_content_offset(m_state.alignment, parentSize, size);
+   m_content->add_to_viewport({dimensions.x + offset.x, dimensions.y + offset.y, size.x, size.y});
    m_parentDimensions = dimensions;
 }
 
@@ -68,6 +67,15 @@ IWidget& AlignmentBox::set_content(IWidgetPtr&& content)
 {
    m_content = std::move(content);
    return *m_content;
+}
+
+void AlignmentBox::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position)
+{
+   const Vector2 size = m_content->desired_size(parentSize);
+   const Vector2 offset = calculate_content_offset(m_state.alignment, parentSize, size);
+   if (position.x > offset.x && position.x < (offset.x + size.x) && position.y > offset.y && position.y < (offset.y + size.y)) {
+      m_content->on_mouse_click(mouseButton, size, position - offset);
+   }
 }
 
 }// namespace triglav::ui_core

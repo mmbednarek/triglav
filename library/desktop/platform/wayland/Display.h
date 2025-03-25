@@ -1,7 +1,7 @@
 #pragma once
 
+#include "Desktop.hpp"
 #include "IDisplay.hpp"
-#include "ISurfaceEventListener.hpp"
 #include "api/PointerConstraints.h"
 #include "api/RelativePointer.h"
 #include "api/XdgShell.h"

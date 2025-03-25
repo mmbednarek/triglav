@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/Math.hpp"
+#include "triglav/desktop/Desktop.hpp"
 
 #include <memory>
 
@@ -31,8 +32,34 @@ class IWidget
    virtual void remove_from_viewport() = 0;
 
    virtual void on_child_state_changed(IWidget& /*widget*/) {};
+
+   virtual void on_mouse_click(const desktop::MouseButton /*button*/, const Vector2 /*parentSize*/, const Vector2 /*position*/) {}
 };
 
 using IWidgetPtr = std::unique_ptr<IWidget>;
+
+class WrappedWidget : public IWidget
+{
+ public:
+   explicit WrappedWidget(Context& context);
+
+   IWidget& set_content(IWidgetPtr&& content);
+
+   template<typename T, typename... TArgs>
+   T& emplace_content(TArgs&&... args)
+   {
+      return dynamic_cast<T&>(this->set_content(std::make_unique<T>(std::forward<TArgs>(args)...)));
+   }
+
+   template<ConstructableWidget T>
+   T& create_content(typename T::State&& state)
+   {
+      return dynamic_cast<T&>(this->set_content(std::make_unique<T>(m_context, std::forward<typename T::State>(state), this)));
+   }
+
+ protected:
+   Context& m_context;
+   IWidgetPtr m_content;
+};
 
 }// namespace triglav::ui_core

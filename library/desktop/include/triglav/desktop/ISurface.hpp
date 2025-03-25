@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ISurfaceEventListener.hpp"
+#include "Desktop.hpp"
 
 #include "triglav/EnumFlags.hpp"
 #include "triglav/Int.hpp"

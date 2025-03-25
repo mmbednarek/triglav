@@ -3,8 +3,6 @@
 #include "Buffer.hpp"
 #include "Device.hpp"
 
-#include "triglav/desktop/ISurfaceEventListener.hpp"
-
 #include <ranges>
 #include <spdlog/spdlog.h>
 

@@ -37,6 +37,7 @@ class RectBox final : public IWidget
    }
 
    void on_child_state_changed(IWidget& widget) override;
+   void on_mouse_click(desktop::MouseButton mouseButton, Vector2 parentSize, Vector2 position) override;
 
  private:
    Context& m_context;

@@ -11,6 +11,8 @@ resources:
     source: "shader/ui/rectangle_vs.spv"
   - name: "text/generate_geometry.cshader"
     source: "shader/ui/text_geometry_gen.spv"
+  - name: "text/removal.cshader"
+    source: "shader/ui/text_removal.spv"
   - name: "text/render.vshader"
     source: "shader/ui/text_render_vs.spv"
   - name: "text/render.fshader"

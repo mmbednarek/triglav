@@ -58,4 +58,9 @@ void RectBox::on_child_state_changed(IWidget& widget)
    }
 }
 
+void RectBox::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position)
+{
+   m_content->on_mouse_click(mouseButton, parentSize, position);
+}
+
 }// namespace triglav::ui_core

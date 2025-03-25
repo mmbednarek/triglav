@@ -24,6 +24,7 @@ class VerticalLayout : public IWidget
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget&) override;
+   void on_mouse_click(desktop::MouseButton mouseButton, Vector2 parentSize, Vector2 position) override;
 
    IWidget& add_child(IWidgetPtr&& widget);
 

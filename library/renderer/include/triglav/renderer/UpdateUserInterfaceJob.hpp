@@ -66,6 +66,7 @@ class UpdateUserInterfaceJob
    void prepare_frame(render_core::JobGraph& graph, u32 frameIndex);
 
    void on_added_text(Name name, const ui_core::Text& text);
+   void on_removed_text(Name name);
    void on_text_change_content(Name name, const ui_core::Text& text);
    void on_text_change_position(Name name, const ui_core::Text& text);
    void on_added_rectangle(Name name, const ui_core::Rectangle& rect);
@@ -82,9 +83,10 @@ class UpdateUserInterfaceJob
    render_core::GlyphCache& m_glyphCache;
    ui_core::Viewport& m_viewport;
    std::vector<Name> m_pendingTextUpdates;
+   std::vector<Name> m_pendingTextRemoval;
    std::map<Name, TextInfo> m_textInfos;
+   std::vector<Name> m_drawCallToTextName;
    graphics_api::Buffer m_combinedGlyphBuffer;
-   u32 m_topTextDrawCallId{0};
    u32 m_glyphOffset{};
    std::map<u64, TypefaceInfo> m_typefaceInfos;
    std::vector<render_core::TextureRef> m_atlases;
@@ -94,6 +96,7 @@ class UpdateUserInterfaceJob
    std::mutex m_rectUpdateMtx;
 
    TG_SINK(ui_core::Viewport, OnAddedText);
+   TG_SINK(ui_core::Viewport, OnRemovedText);
    TG_SINK(ui_core::Viewport, OnTextChangeContent);
    TG_SINK(ui_core::Viewport, OnTextChangePosition);
    TG_SINK(ui_core::Viewport, OnAddedRectangle);

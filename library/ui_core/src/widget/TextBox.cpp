@@ -74,6 +74,8 @@ void TextBox::set_content(const std::string_view content)
 {
    if (m_state.content == content)
       return;
+   if (m_id == 0)
+      return;
 
    m_state.content = content;
    m_uiContext.viewport().set_text_content(m_id, content);

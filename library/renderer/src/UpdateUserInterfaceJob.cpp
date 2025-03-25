@@ -69,6 +69,7 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
     m_combinedGlyphBuffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
                                                           g_maxCombinedGlyphBufferSize))),
     TG_CONNECT(viewport, OnAddedText, on_added_text),
+    TG_CONNECT(viewport, OnRemovedText, on_removed_text),
     TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
     TG_CONNECT(viewport, OnTextChangePosition, on_text_change_position),
     TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
@@ -86,6 +87,8 @@ void UpdateUserInterfaceJob::build_job(render_core::BuildContext& ctx) const
 
    ctx.declare_staging_buffer("user_interface.dispatch_buffer"_name, sizeof(Vector3u));
    ctx.declare_staging_buffer("user_interface.text_draw_call_count"_name, sizeof(u32));
+   ctx.declare_staging_buffer("user_interface.text_removal_buffer"_name, sizeof(std::pair<u32, u32>) * g_maxTextUpdateCount);
+   ctx.declare_staging_buffer("user_interface.text_removal_count"_name, sizeof(u32));
 
    ctx.declare_buffer("user_interface.text_draw_call_buffer"_name, sizeof(TextDrawCall) * g_maxTextDrawCalls);
    ctx.declare_buffer("user_interface.text_vertex_buffer"_name, sizeof(TextVertex) * g_maxTextVertices);
@@ -95,6 +98,15 @@ void UpdateUserInterfaceJob::build_job(render_core::BuildContext& ctx) const
    ctx.copy_buffer("user_interface.character_buffer.staging"_name, "user_interface.character_buffer"_name);
    ctx.copy_buffer("user_interface.text_draw_call_buffer"_last_frame, "user_interface.text_draw_call_buffer"_name);
    ctx.copy_buffer("user_interface.text_vertex_buffer"_last_frame, "user_interface.text_vertex_buffer"_name);
+
+   // Remove pending texts
+   ctx.bind_compute_shader("text/removal.cshader"_rc);
+
+   ctx.bind_uniform_buffer(0, "user_interface.text_removal_count"_name);
+   ctx.bind_storage_buffer(1, "user_interface.text_removal_buffer"_name);
+   ctx.bind_storage_buffer(2, "user_interface.text_draw_call_buffer"_name);
+
+   ctx.dispatch({1, 1, 1});
 
    // Dispatch buffer
    ctx.bind_compute_shader("text/generate_geometry.cshader"_rc);
@@ -137,12 +149,56 @@ void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u
       GAPI_CHECK(graph.resources().buffer("user_interface.text_draw_call_count"_name, frameIndex).map_memory());
    auto& textDrawCallCount = textDrawCallCountBufferMem.cast<u32>();
 
+   const auto textRemovalCountMem = GAPI_CHECK(graph.resources().buffer("user_interface.text_removal_count"_name, frameIndex).map_memory());
+   auto& textRemovalCount = textRemovalCountMem.cast<u32>();
+
+   const auto textRemovalBufferMem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.text_removal_buffer"_name, frameIndex).map_memory());
+   auto& textRemovalBuffer = textRemovalBufferMem.cast<std::array<std::pair<u32, u32>, g_maxTextUpdateCount>>();
+
+   textRemovalCount = 0;
+   std::vector<u32> textRemovals{};
+   textRemovals.reserve(textRemovalBuffer.size());
+   for (const auto& [id, textName] : Enumerate(m_pendingTextRemoval)) {
+      textRemovals.emplace_back(m_textInfos[textName].drawCallId);
+      this->free_vertex_section(textName);
+      m_textInfos.erase(textName);
+   }
+   m_pendingTextRemoval.clear();
+
+   std::ranges::stable_sort(textRemovals);
+
+   auto textRemovalBufferIt = textRemovalBuffer.begin();
+
+   const u32 remainCount = m_drawCallToTextName.size() - textRemovals.size();
+   u32 srcIndex = remainCount;
+   for (const auto dstIndex : textRemovals) {
+      while (std::ranges::binary_search(textRemovals, srcIndex))
+         ++srcIndex;
+
+      if (dstIndex < remainCount) {
+         Name srcName = m_drawCallToTextName[srcIndex];
+         m_textInfos[srcName].drawCallId = dstIndex;
+         m_drawCallToTextName[dstIndex] = srcName;
+
+         *textRemovalBufferIt = {srcIndex, dstIndex};
+         ++textRemovalBufferIt;
+         ++srcIndex;
+         ++textRemovalCount;
+      }
+   }
+
+   m_drawCallToTextName.resize(remainCount);
+
    u32 charOffset = 0;
 
    textDispatch = {m_pendingTextUpdates.size(), 1, 1};
-   textDrawCallCount = m_topTextDrawCallId;
+   textDrawCallCount = m_drawCallToTextName.size();
 
    for (const auto [index, textName] : Enumerate(m_pendingTextUpdates)) {
+      if (index >= g_maxTextUpdateCount)
+         break;
+
       const auto& textInfo = m_textInfos.at(textName);
       auto& dstUpdate = textUpdates.at(index);
 
@@ -158,7 +214,12 @@ void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u
       charOffset += dstUpdate.characterCount;
    }
 
-   m_pendingTextUpdates.clear();
+   if (m_pendingTextUpdates.size() <= g_maxTextUpdateCount) {
+      m_pendingTextUpdates.clear();
+   } else {
+      std::copy(m_pendingTextUpdates.begin() + g_maxTextUpdateCount, m_pendingTextUpdates.end(), m_pendingTextUpdates.begin());
+      m_pendingTextUpdates.resize(m_pendingTextUpdates.size() - g_maxTextUpdateCount);
+   }
 }
 
 void UpdateUserInterfaceJob::on_added_text(const Name name, const ui_core::Text& text)
@@ -168,11 +229,17 @@ void UpdateUserInterfaceJob::on_added_text(const Name name, const ui_core::Text&
    const auto& typefaceInfo = this->get_typeface_info({text.typefaceName, text.fontSize});
    const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
 
-   m_textInfos.emplace(name, TextInfo{text, m_topTextDrawCallId, typefaceInfo.glyphBufferOffset, text.color, text.position,
-                                      typefaceInfo.atlasId, vertexSection.vertexOffset, vertexSection.vertexCount});
-   ++m_topTextDrawCallId;
+   m_textInfos.emplace(name, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
+                                      text.position, typefaceInfo.atlasId, vertexSection.vertexOffset, vertexSection.vertexCount});
+   m_drawCallToTextName.emplace_back(name);
 
    m_pendingTextUpdates.emplace_back(name);
+}
+
+void UpdateUserInterfaceJob::on_removed_text(const Name name)
+{
+   std::unique_lock lk{m_textUpdateMtx};
+   m_pendingTextRemoval.emplace_back(name);
 }
 
 void UpdateUserInterfaceJob::on_text_change_content(const Name name, const ui_core::Text& text)

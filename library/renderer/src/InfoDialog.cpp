@@ -3,12 +3,15 @@
 #include "triglav/Name.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/ui_core/widget/Button.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
+#include "triglav/ui_core/widget/HideableWidget.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 #include <array>
 #include <span>
+#include <spdlog/spdlog.h>
 
 namespace triglav::renderer {
 
@@ -44,6 +47,93 @@ constexpr std::array g_labelGroups{
    std::tuple{"Features"sv, std::span{g_featureLabels.data(), g_featureLabels.size()}},
 };
 
+class HideablePanel final : public ui_core::IWidget
+{
+ public:
+   using Self = HideablePanel;
+
+   struct State
+   {
+      Vector4 padding;
+      float separation;
+      std::string label;
+   };
+
+   HideablePanel(ui_core::Context& ctx, const State state, ui_core::IWidget* parent) :
+       m_context(ctx),
+       m_state(state),
+       m_parent(parent),
+       m_verticalLayout(ctx,
+                        {
+                           .padding = state.padding,
+                           .separation = state.separation,
+                        },
+                        this),
+       m_labelBox(m_verticalLayout.create_child<ui_core::Button>({})),
+       m_content(m_verticalLayout.create_child<ui_core::HideableWidget>({
+          .isHidden = false,
+       })),
+       TG_CONNECT(m_labelBox, OnClick, on_click)
+   {
+      m_labelBox.create_content<ui_core::TextBox>({
+         .fontSize = 20,
+         .typeface = "segoeui/bold.typeface"_rc,
+         .content = state.label,
+         .color = {1.0f, 1.0f, 0.4f, 1.0f},
+         .alignment = ui_core::TextAlignment::Center,
+      });
+   }
+
+   [[nodiscard]] Vector2 desired_size(const Vector2 parentSize) const override
+   {
+      return m_verticalLayout.desired_size(parentSize);
+   }
+
+   void add_to_viewport(const Vector4 dimensions) override
+   {
+      m_verticalLayout.add_to_viewport(dimensions);
+   }
+
+   void remove_from_viewport() override
+   {
+      m_verticalLayout.remove_from_viewport();
+   }
+
+   template<ui_core::ConstructableWidget TChild>
+   TChild& create_child(typename TChild::State&& state)
+   {
+      return m_content.create_content<TChild>(std::move(state));
+   }
+
+   void on_child_state_changed(IWidget& widget) override
+   {
+      if (m_parent != nullptr) {
+         m_parent->on_child_state_changed(widget);
+      }
+   }
+
+   void on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position) override
+   {
+      return m_verticalLayout.on_mouse_click(mouseButton, parentSize, position);
+   }
+
+   void on_click(const desktop::MouseButton /*mouseButton*/) const
+   {
+      m_content.set_is_hidden(!m_content.state().isHidden);
+   }
+
+ private:
+   ui_core::Context& m_context;
+   State m_state;
+   ui_core::IWidget* m_parent;
+   ui_core::VerticalLayout m_verticalLayout;
+   ui_core::Button& m_labelBox;
+   ui_core::HideableWidget& m_content;
+   bool m_isHidden = false;
+
+   TG_SINK(ui_core::Button, OnClick);
+};
+
 InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) :
     m_context(context),
     m_configManager(configManager),
@@ -59,7 +149,9 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
       .separation = {10.0f},
    });
 
-   viewport.create_child<ui_core::TextBox>({
+   auto& titleButton = viewport.create_child<ui_core::Button>({});
+
+   titleButton.create_content<ui_core::TextBox>({
       .fontSize = 24,
       .typeface = "cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
@@ -67,21 +159,20 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
       .alignment = ui_core::TextAlignment::Center,
    });
 
+   TG_CONNECT_OPT(titleButton, OnClick, on_title_clicked);
+
    viewport.create_child<ui_core::EmptySpace>({
-      .size = {1.0f, 20.0f},
+      .size = {1.0f, 15.0f},
    });
 
    for (const auto& [groupLabel, group] : g_labelGroups) {
-      viewport.create_child<ui_core::TextBox>({
-         .fontSize = 20,
-         .typeface = "segoeui/bold.typeface"_rc,
-         .content = std::string{groupLabel},
-         .color = {1.0f, 1.0f, 0.4f, 1.0f},
-         .alignment = ui_core::TextAlignment::Center,
+      auto& panel = viewport.create_child<HideablePanel>({
+         .separation = {15.0f},
+         .label = std::string{groupLabel},
       });
 
-      auto& labelBox = viewport.create_child<ui_core::HorizontalLayout>({
-         .padding = {0.0f, 10.0f, 0.0f, 10.0f},
+      auto& labelBox = panel.create_child<ui_core::HorizontalLayout>({
+         .padding = {0.0f, 15.0f, 0.0f, 10.0f},
          .separation = {10.0f},
       });
 
@@ -123,7 +214,7 @@ Vector2 InfoDialog::desired_size(const Vector2 parentSize) const
 void InfoDialog::add_to_viewport(Vector4 /*dimensions*/)
 {
    const auto size = this->desired_size({600, 1200});
-   m_rootBox.add_to_viewport({20, 20, size.x, size.y});
+   m_rootBox.add_to_viewport({m_dialogOffset.x, m_dialogOffset.y, size.x, size.y});
 }
 
 void InfoDialog::remove_from_viewport()
@@ -134,6 +225,17 @@ void InfoDialog::remove_from_viewport()
 void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
 {
    this->add_to_viewport({});
+}
+
+void InfoDialog::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 /*parentSize*/, const Vector2 position)
+{
+   m_rootBox.on_mouse_click(mouseButton, {600, 1200}, position - m_dialogOffset);
+}
+
+void InfoDialog::on_mouse_is_released(const desktop::MouseButton /*mouseButton*/, const Vector2 /*position*/)
+{
+   m_isDragging = false;
+   m_dragOffset.reset();
 }
 
 void InfoDialog::set_fps(const float value) const
@@ -215,6 +317,24 @@ void InfoDialog::init_config_labels() const
    m_values.at("features.shadows"_name)->set_content(shadow_casting_method_to_string(config.shadowCasting));
    m_values.at("features.bloom"_name)->set_content(config.isBloomEnabled ? "On" : "Off");
    m_values.at("features.smooth_camera"_name)->set_content(config.isSmoothCameraEnabled ? "On" : "Off");
+}
+
+void InfoDialog::on_title_clicked(desktop::MouseButton /*button*/)
+{
+   m_isDragging = true;
+}
+
+void InfoDialog::on_mouse_move(const Vector2 position)
+{
+   if (!m_isDragging)
+      return;
+
+   if (!m_dragOffset.has_value()) {
+      m_dragOffset.emplace(m_dialogOffset - position);
+   }
+
+   m_dialogOffset = position + *m_dragOffset;
+   this->add_to_viewport({});
 }
 
 }// namespace triglav::renderer

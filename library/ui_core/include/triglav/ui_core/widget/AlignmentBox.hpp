@@ -51,6 +51,8 @@ class AlignmentBox final : public IWidget
       return dynamic_cast<T&>(this->set_content(std::make_unique<T>(m_context, std::forward<typename T::State>(state), this)));
    }
 
+   void on_mouse_click(desktop::MouseButton mouseButton, Vector2 parentSize, Vector2 position) override;
+
  private:
    Context& m_context;
    State m_state;

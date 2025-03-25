@@ -23,6 +23,7 @@ class HorizontalLayout final : public IWidget
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget& widget) override;
+   void on_mouse_click(const desktop::MouseButton, const Vector2, const Vector2) override;
 
    IWidget& add_child(IWidgetPtr&& widget);
 

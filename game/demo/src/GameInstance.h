@@ -24,6 +24,7 @@ class EventListener final
 
    EventListener(triglav::desktop::ISurface& surface, triglav::renderer::Renderer& renderer);
 
+   void on_mouse_move(triglav::Vector2 position);
    void on_mouse_relative_move(triglav::Vector2 offset) const;
    void on_mouse_leave() const;
    void on_mouse_button_is_pressed(triglav::desktop::MouseButton button) const;
@@ -39,7 +40,9 @@ class EventListener final
    triglav::desktop::ISurface& m_surface;
    triglav::renderer::Renderer& m_renderer;
    bool m_isRunning{true};
+   triglav::Vector2 m_mousePosition;
 
+   TG_SINK(triglav::desktop::ISurface, OnMouseMove);
    TG_SINK(triglav::desktop::ISurface, OnMouseRelativeMove);
    TG_SINK(triglav::desktop::ISurface, OnMouseLeave);
    TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsPressed);
