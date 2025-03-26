@@ -3,9 +3,8 @@
 namespace triglav::ui_core {
 
 VerticalLayout::VerticalLayout(Context& context, State state, IWidget* parent) :
-    m_context(context),
-    m_state(std::move(state)),
-    m_parent(parent)
+    LayoutWidget(context, parent),
+    m_state(std::move(state))
 {
 }
 
@@ -69,26 +68,59 @@ void VerticalLayout::on_child_state_changed(IWidget& widget)
    }
 }
 
-void VerticalLayout::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position)
+void VerticalLayout::on_event(const Event& event)
 {
-   float height = parentSize.y;
+   if (event.eventType == Event::Type::MouseLeft) {
+      for (const auto& child : m_children) {
+         child->on_event(event);
+      }
+      return;
+   }
+
+   float height = event.parentSize.y;
    float y{m_state.padding.y};
 
    for (const auto& child : m_children) {
-      const auto size = child->desired_size({parentSize.x, height});
-      if (position.y >= y && position.y < (y + size.y)) {
-         child->on_mouse_click(mouseButton, size, position - Vector2{m_state.padding.x, y});
+      const auto size = child->desired_size({event.parentSize.x, height});
+      if (event.mousePosition.y >= y && event.mousePosition.y < (y + size.y)) {
+         Event subEvent{event};
+         subEvent.parentSize = size;
+         subEvent.mousePosition -= Vector2{m_state.padding.x, y};
+         child->on_event(subEvent);
+
+         if (event.eventType == Event::Type::MouseMoved) {
+            this->handle_mouse_leave(subEvent, child.get());
+         }
          return;
       }
 
       y += size.y + m_state.separation;
       height -= size.y + m_state.separation;
    }
+
+   if (event.eventType == Event::Type::MouseMoved && m_lastActiveWidget != nullptr) {
+      Event leaveEvent{event};
+      leaveEvent.eventType = Event::Type::MouseLeft;
+      // leaveEvent.mousePosition -= m_lastActiveWidgetOffset;
+      m_lastActiveWidget->on_event(leaveEvent);
+      m_lastActiveWidget = nullptr;
+   }
 }
 
-IWidget& VerticalLayout::add_child(IWidgetPtr&& widget)
+void VerticalLayout::handle_mouse_leave(const Event& event, IWidget* widget)
 {
-   return *m_children.emplace_back(std::move(widget));
+   // FIXME: Leave events have invalid position
+   if (m_lastActiveWidget != widget) {
+      Event enterEvent{event};
+      enterEvent.eventType = Event::Type::MouseEntered;
+      widget->on_event(enterEvent);
+      if (m_lastActiveWidget != nullptr) {
+         Event leaveEvent{event};
+         leaveEvent.eventType = Event::Type::MouseLeft;
+         m_lastActiveWidget->on_event(leaveEvent);
+      }
+      m_lastActiveWidget = widget;
+   }
 }
 
 }// namespace triglav::ui_core

@@ -69,6 +69,7 @@ class UpdateUserInterfaceJob
    void on_removed_text(Name name);
    void on_text_change_content(Name name, const ui_core::Text& text);
    void on_text_change_position(Name name, const ui_core::Text& text);
+   void on_text_change_color(Name name, const ui_core::Text& text);
    void on_added_rectangle(Name name, const ui_core::Rectangle& rect);
    void on_rectangle_change_dims(Name name, const ui_core::Rectangle& rect);
 
@@ -99,6 +100,7 @@ class UpdateUserInterfaceJob
    TG_SINK(ui_core::Viewport, OnRemovedText);
    TG_SINK(ui_core::Viewport, OnTextChangeContent);
    TG_SINK(ui_core::Viewport, OnTextChangePosition);
+   TG_SINK(ui_core::Viewport, OnTextChangeColor);
    TG_SINK(ui_core::Viewport, OnAddedRectangle);
    TG_SINK(ui_core::Viewport, OnRectangleChangeDims);
 };

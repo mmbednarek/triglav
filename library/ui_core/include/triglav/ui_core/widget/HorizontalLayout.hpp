@@ -8,7 +8,7 @@ namespace triglav::ui_core {
 
 class Context;
 
-class HorizontalLayout final : public IWidget
+class HorizontalLayout final : public LayoutWidget
 {
  public:
    struct State
@@ -23,27 +23,14 @@ class HorizontalLayout final : public IWidget
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget& widget) override;
-   void on_mouse_click(const desktop::MouseButton, const Vector2, const Vector2) override;
-
-   IWidget& add_child(IWidgetPtr&& widget);
-
-   template<typename TChild, typename... TArgs>
-   TChild& emplace_child(TArgs&&... args)
-   {
-      return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(std::forward<TArgs>(args)...)));
-   }
-
-   template<ConstructableWidget TChild>
-   TChild& create_child(typename TChild::State&& state)
-   {
-      return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(m_context, std::forward<typename TChild::State>(state), this)));
-   }
+   void on_event(const Event& event) override;
 
  private:
+   void handle_mouse_leave(const Event& event, IWidget* widget);
+
    Context& m_context;
    State m_state;
-   IWidget* m_parent;
-   std::vector<IWidgetPtr> m_children;
+   IWidget* m_lastActiveWidget{nullptr};
 };
 
 }// namespace triglav::ui_core

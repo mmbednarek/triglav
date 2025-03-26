@@ -206,7 +206,11 @@ void Renderer::on_close()
 
 void Renderer::on_mouse_move(const Vector2 position)
 {
-   m_infoDialog.on_mouse_move(position);
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::MouseMoved;
+   event.mousePosition = position;
+   event.parentSize = m_renderSurface.resolution();
+   m_infoDialog.on_event(event);
 }
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
@@ -216,12 +220,22 @@ void Renderer::on_mouse_relative_move(const float dx, const float dy)
 
 void Renderer::on_mouse_is_pressed(const desktop::MouseButton button, const Vector2 position)
 {
-   m_infoDialog.on_mouse_click(button, m_renderSurface.resolution(), position);
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::MousePressed;
+   event.mousePosition = position;
+   event.parentSize = m_renderSurface.resolution();
+   event.data.emplace<ui_core::Event::Mouse>(button);
+   m_infoDialog.on_event(event);
 }
 
 void Renderer::on_mouse_is_released(const desktop::MouseButton button, const Vector2 position)
 {
-   m_infoDialog.on_mouse_is_released(button, position);
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::MouseReleased;
+   event.mousePosition = position;
+   event.parentSize = m_renderSurface.resolution();
+   event.data.emplace<ui_core::Event::Mouse>(button);
+   m_infoDialog.on_event(event);
 }
 
 static Renderer::Moving map_direction(const Key key)

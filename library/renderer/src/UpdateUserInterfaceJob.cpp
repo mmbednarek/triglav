@@ -72,6 +72,7 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
     TG_CONNECT(viewport, OnRemovedText, on_removed_text),
     TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
     TG_CONNECT(viewport, OnTextChangePosition, on_text_change_position),
+    TG_CONNECT(viewport, OnTextChangeColor, on_text_change_color),
     TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
     TG_CONNECT(viewport, OnRectangleChangeDims, on_rectangle_change_dims)
 {
@@ -262,6 +263,14 @@ void UpdateUserInterfaceJob::on_text_change_position(Name name, const ui_core::T
    std::unique_lock lk{m_textUpdateMtx};
    auto& textInfo = m_textInfos.at(name);
    textInfo.position = text.position;
+   m_pendingTextUpdates.emplace_back(name);
+}
+
+void UpdateUserInterfaceJob::on_text_change_color(Name name, const ui_core::Text& text)
+{
+   std::unique_lock lk{m_textUpdateMtx};
+   auto& textInfo = m_textInfos.at(name);
+   textInfo.color = text.color;
    m_pendingTextUpdates.emplace_back(name);
 }
 

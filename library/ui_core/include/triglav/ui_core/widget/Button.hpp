@@ -8,11 +8,13 @@ namespace triglav::ui_core {
 
 class Context;
 
-class Button final : public WrappedWidget
+class Button final : public ContainerWidget
 {
  public:
    using Self = Button;
    TG_EVENT(OnClick, desktop::MouseButton)
+   TG_EVENT(OnEnter)
+   TG_EVENT(OnLeave)
 
    struct State
    {};
@@ -24,10 +26,7 @@ class Button final : public WrappedWidget
    void remove_from_viewport() override;
 
    void on_child_state_changed(IWidget& widget) override;
-   void on_mouse_click(desktop::MouseButton button, Vector2 parentSize, Vector2 position) override;
-
- private:
-   IWidget* m_parent;
+   void on_event(const Event& event) override;
 };
 
 }// namespace triglav::ui_core

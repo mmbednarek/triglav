@@ -1,7 +1,9 @@
 #pragma once
 
+#include "../IWidget.hpp"
+#include "../UICore.hpp"
+
 #include "triglav/Name.hpp"
-#include "triglav/ui_core/IWidget.hpp"
 
 #include <optional>
 #include <string>
@@ -9,13 +11,6 @@
 namespace triglav::ui_core {
 
 class Context;
-
-enum class TextAlignment
-{
-   Left,
-   Center,
-   Right,
-};
 
 class TextBox final : public IWidget
 {
@@ -26,7 +21,7 @@ class TextBox final : public IWidget
       TypefaceName typeface{};
       std::string content{};
       Vector4 color{};
-      TextAlignment alignment{TextAlignment::Left};
+      HorizontalAlignment alignment{};
    };
 
    TextBox(Context& ctx, State initialState, IWidget* parent);
@@ -36,6 +31,7 @@ class TextBox final : public IWidget
    void remove_from_viewport() override;
 
    void set_content(std::string_view content);
+   void set_color(Vector4 color);
 
  private:
    [[nodiscard]] Vector2 calculate_desired_size() const;

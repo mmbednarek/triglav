@@ -70,18 +70,20 @@ class HideablePanel final : public ui_core::IWidget
                         },
                         this),
        m_labelBox(m_verticalLayout.create_child<ui_core::Button>({})),
+       m_labelText(m_labelBox.create_content<ui_core::TextBox>({
+          .fontSize = 20,
+          .typeface = "segoeui/bold.typeface"_rc,
+          .content = state.label,
+          .color = {1.0f, 1.0f, 0.4f, 1.0f},
+          .alignment = ui_core::HorizontalAlignment::Center,
+       })),
        m_content(m_verticalLayout.create_child<ui_core::HideableWidget>({
           .isHidden = false,
        })),
-       TG_CONNECT(m_labelBox, OnClick, on_click)
+       TG_CONNECT(m_labelBox, OnClick, on_click),
+       TG_CONNECT(m_labelBox, OnEnter, on_enter),
+       TG_CONNECT(m_labelBox, OnLeave, on_leave)
    {
-      m_labelBox.create_content<ui_core::TextBox>({
-         .fontSize = 20,
-         .typeface = "segoeui/bold.typeface"_rc,
-         .content = state.label,
-         .color = {1.0f, 1.0f, 0.4f, 1.0f},
-         .alignment = ui_core::TextAlignment::Center,
-      });
    }
 
    [[nodiscard]] Vector2 desired_size(const Vector2 parentSize) const override
@@ -112,14 +114,24 @@ class HideablePanel final : public ui_core::IWidget
       }
    }
 
-   void on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position) override
+   void on_event(const ui_core::Event& event) override
    {
-      return m_verticalLayout.on_mouse_click(mouseButton, parentSize, position);
+      return m_verticalLayout.on_event(event);
    }
 
    void on_click(const desktop::MouseButton /*mouseButton*/) const
    {
       m_content.set_is_hidden(!m_content.state().isHidden);
+   }
+
+   void on_enter() const
+   {
+      m_labelText.set_color({1.0f, 1.0f, 0.8f, 1.0f});
+   }
+
+   void on_leave() const
+   {
+      m_labelText.set_color({1.0f, 1.0f, 0.4f, 1.0f});
    }
 
  private:
@@ -128,10 +140,13 @@ class HideablePanel final : public ui_core::IWidget
    ui_core::IWidget* m_parent;
    ui_core::VerticalLayout m_verticalLayout;
    ui_core::Button& m_labelBox;
+   ui_core::TextBox& m_labelText;
    ui_core::HideableWidget& m_content;
    bool m_isHidden = false;
 
    TG_SINK(ui_core::Button, OnClick);
+   TG_SINK(ui_core::Button, OnEnter);
+   TG_SINK(ui_core::Button, OnLeave);
 };
 
 InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) :
@@ -151,15 +166,17 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
 
    auto& titleButton = viewport.create_child<ui_core::Button>({});
 
-   titleButton.create_content<ui_core::TextBox>({
+   m_title = &titleButton.create_content<ui_core::TextBox>({
       .fontSize = 24,
       .typeface = "cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
-      .alignment = ui_core::TextAlignment::Center,
+      .alignment = ui_core::HorizontalAlignment::Center,
    });
 
    TG_CONNECT_OPT(titleButton, OnClick, on_title_clicked);
+   TG_CONNECT_OPT(titleButton, OnEnter, on_title_enter);
+   TG_CONNECT_OPT(titleButton, OnLeave, on_title_leave);
 
    viewport.create_child<ui_core::EmptySpace>({
       .size = {1.0f, 15.0f},
@@ -192,7 +209,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
             .typeface = "segoeui.typeface"_rc,
             .content = std::string{content},
             .color = {1.0f, 1.0f, 1.0f, 1.0f},
-            .alignment = ui_core::TextAlignment::Right,
+            .alignment = ui_core::HorizontalAlignment::Right,
          });
 
          m_values[name] = &rightPanel.create_child<ui_core::TextBox>({
@@ -200,7 +217,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
             .typeface = "segoeui.typeface"_rc,
             .content = "none",
             .color = {1.0f, 1.0f, 0.4f, 1.0f},
-            .alignment = ui_core::TextAlignment::Left,
+            .alignment = ui_core::HorizontalAlignment::Left,
          });
       }
    }
@@ -227,15 +244,27 @@ void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
    this->add_to_viewport({});
 }
 
-void InfoDialog::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 /*parentSize*/, const Vector2 position)
+void InfoDialog::on_event(const ui_core::Event& event)
 {
-   m_rootBox.on_mouse_click(mouseButton, {600, 1200}, position - m_dialogOffset);
-}
+   ui_core::Event subEvent{event};
+   subEvent.parentSize = {600, 1200};
+   subEvent.mousePosition -= m_dialogOffset;
+   m_rootBox.on_event(subEvent);
 
-void InfoDialog::on_mouse_is_released(const desktop::MouseButton /*mouseButton*/, const Vector2 /*position*/)
-{
-   m_isDragging = false;
-   m_dragOffset.reset();
+   if (event.eventType == ui_core::Event::Type::MouseReleased) {
+      m_isDragging = false;
+      m_dragOffset.reset();
+   } else if (event.eventType == ui_core::Event::Type::MouseMoved) {
+      if (!m_isDragging)
+         return;
+
+      if (!m_dragOffset.has_value()) {
+         m_dragOffset.emplace(m_dialogOffset - event.mousePosition);
+      }
+
+      m_dialogOffset = event.mousePosition + *m_dragOffset;
+      this->add_to_viewport({});
+   }
 }
 
 void InfoDialog::set_fps(const float value) const
@@ -324,17 +353,14 @@ void InfoDialog::on_title_clicked(desktop::MouseButton /*button*/)
    m_isDragging = true;
 }
 
-void InfoDialog::on_mouse_move(const Vector2 position)
+void InfoDialog::on_title_enter() const
 {
-   if (!m_isDragging)
-      return;
+   m_title->set_color({0.9, 0.9, 0.5, 1});
+}
 
-   if (!m_dragOffset.has_value()) {
-      m_dragOffset.emplace(m_dialogOffset - position);
-   }
-
-   m_dialogOffset = position + *m_dragOffset;
-   this->add_to_viewport({});
+void InfoDialog::on_title_leave() const
+{
+   m_title->set_color({1, 1, 1, 1});
 }
 
 }// namespace triglav::renderer

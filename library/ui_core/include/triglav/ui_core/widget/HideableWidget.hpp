@@ -6,7 +6,7 @@ namespace triglav::ui_core {
 
 class Context;
 
-class HideableWidget final : public WrappedWidget
+class HideableWidget final : public ContainerWidget
 {
  public:
    struct State
@@ -21,7 +21,7 @@ class HideableWidget final : public WrappedWidget
    void remove_from_viewport() override;
 
    void on_child_state_changed(IWidget& widget) override;
-   void on_mouse_click(desktop::MouseButton button, Vector2 parentSize, Vector2 position) override;
+   void on_event(const Event& event) override;
 
    void set_is_hidden(bool value);
    [[nodiscard]] const State& state() const;
@@ -29,7 +29,6 @@ class HideableWidget final : public WrappedWidget
 
  private:
    State m_state;
-   IWidget* m_parent;
    Vector4 m_parentDimensions{};
 };
 

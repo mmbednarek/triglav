@@ -9,24 +9,6 @@
 
 namespace triglav::ui_core {
 
-namespace {
-
-Vector2 calculate_position(const Vector4 area, const Vector2 size, const TextAlignment alignment)
-{
-   switch (alignment) {
-   case TextAlignment::Left:
-      return {area.x, area.y + size.y};
-   case TextAlignment::Center:
-      return {area.x + 0.5f * area.z - 0.5f * size.x, area.y + size.y};
-   case TextAlignment::Right:
-      return {area.x + area.z - size.x, area.y + size.y};
-   }
-
-   return {area.x, area.y};
-}
-
-}// namespace
-
 TextBox::TextBox(Context& ctx, State initialState, IWidget* parent) :
     m_uiContext(ctx),
     m_state(std::move(initialState)),
@@ -47,9 +29,10 @@ Vector2 TextBox::desired_size(const Vector2 /*parentSize*/) const
 void TextBox::add_to_viewport(const Vector4 dimensions)
 {
    const auto size = this->desired_size({});
+   const Vector2 position{dimensions.x + calculate_alignment(m_state.alignment, dimensions.z, size.x), dimensions.y + size.y};
 
    if (m_id != 0) {
-      m_uiContext.viewport().set_text_position(m_id, calculate_position(dimensions, size, m_state.alignment));
+      m_uiContext.viewport().set_text_position(m_id, position);
       return;
    }
 
@@ -57,7 +40,7 @@ void TextBox::add_to_viewport(const Vector4 dimensions)
       .content = m_state.content,
       .typefaceName = m_state.typeface,
       .fontSize = m_state.fontSize,
-      .position = calculate_position(dimensions, size, m_state.alignment),
+      .position = position,
       .color = m_state.color,
    };
 
@@ -90,6 +73,17 @@ void TextBox::set_content(const std::string_view content)
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(*this);
    }
+}
+
+void TextBox::set_color(const Vector4 color)
+{
+   if (m_state.color == color)
+      return;
+   if (m_id == 0)
+      return;
+
+   m_state.color = color;
+   m_uiContext.viewport().set_text_color(m_id, color);
 }
 
 Vector2 TextBox::calculate_desired_size() const

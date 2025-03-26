@@ -10,6 +10,7 @@ ui_core_sources = files([
   'include/triglav/ui_core/Context.hpp',
   'include/triglav/ui_core/IWidget.hpp',
   'include/triglav/ui_core/Primitives.hpp',
+  'include/triglav/ui_core/UICore.hpp',
   'include/triglav/ui_core/Viewport.hpp',
   'src/widget/AlignmentBox.cpp',
   'src/widget/Button.cpp',

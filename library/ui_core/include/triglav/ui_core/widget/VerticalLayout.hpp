@@ -10,7 +10,7 @@ namespace triglav::ui_core {
 
 class Context;
 
-class VerticalLayout : public IWidget
+class VerticalLayout : public LayoutWidget
 {
  public:
    struct State
@@ -20,31 +20,18 @@ class VerticalLayout : public IWidget
    };
 
    VerticalLayout(Context& context, State state, IWidget* parent);
+
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
-   void on_child_state_changed(IWidget&) override;
-   void on_mouse_click(desktop::MouseButton mouseButton, Vector2 parentSize, Vector2 position) override;
-
-   IWidget& add_child(IWidgetPtr&& widget);
-
-   template<typename TChild, typename... TArgs>
-   TChild& emplace_child(TArgs&&... args)
-   {
-      return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(std::forward<TArgs>(args)...)));
-   }
-
-   template<ConstructableWidget TChild>
-   TChild& create_child(typename TChild::State&& state)
-   {
-      return dynamic_cast<TChild&>(this->add_child(std::make_unique<TChild>(m_context, std::forward<typename TChild::State>(state), this)));
-   }
+   void on_child_state_changed(IWidget& widget) override;
+   void on_event(const Event& event) override;
 
  private:
-   Context& m_context;
+   void handle_mouse_leave(const Event& event, IWidget* widget);
+
    State m_state;
-   IWidget* m_parent;
-   std::vector<IWidgetPtr> m_children;
+   IWidget* m_lastActiveWidget{nullptr};
 };
 
 }// namespace triglav::ui_core

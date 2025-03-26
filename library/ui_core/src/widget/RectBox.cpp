@@ -6,9 +6,8 @@
 namespace triglav::ui_core {
 
 RectBox::RectBox(Context& context, State state, IWidget* parent) :
-    m_context(context),
-    m_state(std::move(state)),
-    m_parent(parent)
+    ContainerWidget(context, parent),
+    m_state(std::move(state))
 {
 }
 
@@ -44,12 +43,6 @@ void RectBox::remove_from_viewport()
    m_context.viewport().remove_rectangle(m_rectName);
 }
 
-IWidget& RectBox::set_content(IWidgetPtr&& content)
-{
-   m_content = std::move(content);
-   return *m_content;
-}
-
 void RectBox::on_child_state_changed(IWidget& widget)
 {
    m_cachedParentSize.reset();
@@ -58,9 +51,9 @@ void RectBox::on_child_state_changed(IWidget& widget)
    }
 }
 
-void RectBox::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position)
+void RectBox::on_event(const Event& event)
 {
-   m_content->on_mouse_click(mouseButton, parentSize, position);
+   m_content->on_event(event);
 }
 
 }// namespace triglav::ui_core

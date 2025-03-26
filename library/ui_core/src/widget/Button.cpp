@@ -3,8 +3,7 @@
 namespace triglav::ui_core {
 
 Button::Button(Context& ctx, State /*state*/, IWidget* parent) :
-    WrappedWidget(ctx),
-    m_parent(parent)
+    ContainerWidget(ctx, parent)
 {
 }
 
@@ -30,10 +29,21 @@ void Button::on_child_state_changed(IWidget& widget)
    }
 }
 
-void Button::on_mouse_click(desktop::MouseButton button, Vector2 /*parentSize*/, Vector2 /*position*/)
+void Button::on_event(const Event& event)
 {
-   event_OnClick.publish(button);
-   // Should event be passed along??
+   switch (event.eventType) {
+   case Event::Type::MousePressed:
+      event_OnClick.publish(std::get<Event::Mouse>(event.data).button);
+      break;
+   case Event::Type::MouseEntered:
+      event_OnEnter.publish();
+      break;
+   case Event::Type::MouseLeft:
+      event_OnLeave.publish();
+      break;
+   default:
+      break;
+   }
 }
 
 }// namespace triglav::ui_core

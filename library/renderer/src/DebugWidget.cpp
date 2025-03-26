@@ -12,7 +12,10 @@ using namespace name_literals;
 DebugWidget::DebugWidget(ui_core::Context& ctx) :
     m_content(ctx, ui_core::RectBox::State{.color{0.0, 0.0, 0.5, 0.8}}, this)
 {
-   auto& alignmentBox = m_content.create_content<ui_core::AlignmentBox>({.alignment = ui_core::Alignment::BottomRight});
+   auto& alignmentBox = m_content.create_content<ui_core::AlignmentBox>({
+      .horizontalAlignment = ui_core::HorizontalAlignment::Right,
+      .verticalAlignment = ui_core::VerticalAlignment::Bottom,
+   });
    auto& verticalLayout = alignmentBox.create_content<ui_core::VerticalLayout>({
       .padding{20.0f, 20.0f, 20.0f, 20.0f},
       .separation = 25.0f,

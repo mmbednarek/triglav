@@ -3,9 +3,8 @@
 namespace triglav::ui_core {
 
 HideableWidget::HideableWidget(Context& ctx, const State state, IWidget* parent) :
-    WrappedWidget(ctx),
-    m_state(state),
-    m_parent(parent)
+    ContainerWidget(ctx, parent),
+    m_state(state)
 {
 }
 
@@ -40,12 +39,11 @@ void HideableWidget::on_child_state_changed(IWidget& widget)
    }
 }
 
-void HideableWidget::on_mouse_click(const desktop::MouseButton button, const Vector2 parentSize, const Vector2 position)
+void HideableWidget::on_event(const Event& event)
 {
-   if (m_state.isHidden)
-      return;
-
-   m_content->on_mouse_click(button, parentSize, position);
+   if (!m_state.isHidden) {
+      m_content->on_event(event);
+   }
 }
 
 void HideableWidget::set_is_hidden(const bool value)

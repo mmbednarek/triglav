@@ -3,9 +3,9 @@
 namespace triglav::ui_core {
 
 HorizontalLayout::HorizontalLayout(Context& context, State state, IWidget* parent) :
+    LayoutWidget(context, parent),
     m_context(context),
-    m_state(std::move(state)),
-    m_parent(parent)
+    m_state(std::move(state))
 {
 }
 
@@ -69,26 +69,58 @@ void HorizontalLayout::on_child_state_changed(IWidget& widget)
    }
 }
 
-void HorizontalLayout::on_mouse_click(const desktop::MouseButton mouseButton, const Vector2 parentSize, const Vector2 position)
+void HorizontalLayout::on_event(const Event& event)
 {
-   float width = parentSize.x;
+   if (event.eventType == Event::Type::MouseLeft) {
+      for (const auto& child : m_children) {
+         child->on_event(event);
+      }
+      return;
+   }
+
+   float width = event.parentSize.x;
    float x{m_state.padding.x};
 
    for (const auto& child : m_children) {
-      const auto size = child->desired_size({width, parentSize.y});
-      if (position.x >= x && position.x < (x + size.x)) {
-         child->on_mouse_click(mouseButton, size, position - Vector2{x, m_state.padding.y});
+      const auto size = child->desired_size({width, event.parentSize.y});
+      if (event.mousePosition.x >= x && event.mousePosition.x < (x + size.x)) {
+         Event subEvent{event};
+         subEvent.parentSize = size;
+         subEvent.mousePosition -= Vector2{x, m_state.padding.y};
+         child->on_event(subEvent);
+
+         if (event.eventType == Event::Type::MouseMoved) {
+            this->handle_mouse_leave(subEvent, child.get());
+         }
          return;
       }
 
       x += size.x + m_state.separation;
       width -= size.x + m_state.separation;
    }
+
+   if (event.eventType == Event::Type::MouseMoved && m_lastActiveWidget != nullptr) {
+      Event leaveEvent{event};
+      leaveEvent.eventType = Event::Type::MouseLeft;
+      m_lastActiveWidget->on_event(leaveEvent);
+      m_lastActiveWidget = nullptr;
+   }
 }
 
-IWidget& HorizontalLayout::add_child(IWidgetPtr&& widget)
+void HorizontalLayout::handle_mouse_leave(const Event& event, IWidget* widget)
 {
-   return *m_children.emplace_back(std::move(widget));
+   // FIXME: Leave events have invalid position
+   if (m_lastActiveWidget != widget) {
+      Event enterEvent{event};
+      enterEvent.eventType = Event::Type::MouseEntered;
+      widget->on_event(enterEvent);
+      if (m_lastActiveWidget != nullptr) {
+         Event leaveEvent{event};
+         leaveEvent.eventType = Event::Type::MouseLeft;
+         m_lastActiveWidget->on_event(leaveEvent);
+      }
+      m_lastActiveWidget = widget;
+   }
 }
 
 }// namespace triglav::ui_core

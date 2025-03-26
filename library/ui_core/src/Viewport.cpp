@@ -49,6 +49,17 @@ void Viewport::set_text_position(Name name, const Vector2 position)
    this->event_OnTextChangePosition.publish(name, textPrim);
 }
 
+void Viewport::set_text_color(const Name name, const Vector4 color)
+{
+   auto& textPrim = m_texts.at(name);
+
+   if (textPrim.color == color)
+      return;
+   textPrim.color = color;
+
+   this->event_OnTextChangeColor.publish(name, textPrim);
+}
+
 void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
 {
    auto& rect = m_rectangles.at(name);
