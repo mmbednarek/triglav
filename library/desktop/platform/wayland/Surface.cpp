@@ -37,12 +37,13 @@ Surface::Surface(Display& display, const std::string_view title, const Dimension
    xdg_toplevel_set_title(m_topLevel, title.data());
    xdg_toplevel_set_app_id(m_topLevel, "triglav-surface");
 
-   m_decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(m_display.m_decorationManager, m_topLevel);
-
-   if (attributes & WindowAttribute::ShowDecorations) {
-      zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
-   } else {
-      zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
+   if (m_display.m_decorationManager != nullptr) {
+      m_decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(m_display.m_decorationManager, m_topLevel);
+      if (attributes & WindowAttribute::ShowDecorations) {
+         zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+      } else {
+         zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
+      }
    }
 
    wl_surface_commit(m_surface);
