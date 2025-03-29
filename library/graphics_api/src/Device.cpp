@@ -454,6 +454,13 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Su
            Resolution{capabilities.maxImageExtent.width, capabilities.maxImageExtent.height}};
 }
 
+Vector2u Device::get_current_surface_extent(const Surface& surface) const
+{
+   VkSurfaceCapabilitiesKHR capabilities;
+   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, surface.vulkan_surface(), &capabilities);
+   return {capabilities.currentExtent.width, capabilities.currentExtent.height};
+}
+
 Status Device::submit_command_list(const CommandList& commandList, const SemaphoreArrayView waitSemaphores,
                                    const SemaphoreArrayView signalSemaphores, const Fence* fence, const WorkTypeFlags /*workTypes*/)
 {

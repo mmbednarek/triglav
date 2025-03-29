@@ -77,6 +77,7 @@ class Device
                                                                                           MemorySize bufferSize);
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits(const Surface& surface) const;
+   [[nodiscard]] Vector2u get_current_surface_extent(const Surface& surface) const;
 
    [[nodiscard]] Status submit_command_list(const CommandList& commandList, SemaphoreArrayView waitSemaphores,
                                             SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes);

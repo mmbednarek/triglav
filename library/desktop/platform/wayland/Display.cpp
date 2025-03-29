@@ -1,9 +1,9 @@
 #include "Display.h"
 
 #include "Surface.h"
+#include "api/CursorShape.h"
+#include "api/Decoration.h"
 #include "api/RelativePointer.h"
-
-#include "VulkanSurface.hpp"
 
 #include <cassert>
 #include <format>
@@ -219,6 +219,15 @@ Display::~Display()
    if (m_xkbKeymap != nullptr) {
       xkb_keymap_unref(m_xkbKeymap);
    }
+   if (m_decorationManager != nullptr) {
+      zxdg_decoration_manager_v1_destroy(m_decorationManager);
+   }
+   if (m_cursorShapeDevice != nullptr) {
+      wp_cursor_shape_device_v1_destroy(m_cursorShapeDevice);
+   }
+   if (m_cursorShapeManager != nullptr) {
+      wp_cursor_shape_manager_v1_destroy(m_cursorShapeManager);
+   }
    if (m_pointer != nullptr) {
       wl_pointer_destroy(m_pointer);
    }
@@ -260,6 +269,14 @@ void Display::on_register_global(const uint32_t name, const std::string_view int
       m_relativePointerManager =
          static_cast<zwp_relative_pointer_manager_v1*>(wl_registry_bind(m_registry, name, &zwp_relative_pointer_manager_v1_interface, 1));
    }
+   if (interface == wp_cursor_shape_manager_v1_interface.name) {
+      m_cursorShapeManager =
+         static_cast<wp_cursor_shape_manager_v1*>(wl_registry_bind(m_registry, name, &wp_cursor_shape_manager_v1_interface, 1));
+   }
+   if (interface == zxdg_decoration_manager_v1_interface.name) {
+      m_decorationManager =
+         static_cast<zxdg_decoration_manager_v1*>(wl_registry_bind(m_registry, name, &zxdg_decoration_manager_v1_interface, 1));
+   }
 }
 
 void Display::on_xdg_ping(const uint32_t serial) const
@@ -276,6 +293,9 @@ void Display::on_seat_capabilities(const uint32_t capabilities)
       if (m_relativePointerManager) {
          m_relativePointer = zwp_relative_pointer_manager_v1_get_relative_pointer(m_relativePointerManager, m_pointer);
          zwp_relative_pointer_v1_add_listener(m_relativePointer, &m_relativePointerListener, this);
+      }
+      if (m_cursorShapeManager != nullptr) {
+         m_cursorShapeDevice = wp_cursor_shape_manager_v1_get_pointer(m_cursorShapeManager, m_pointer);
       }
    }
 
@@ -330,9 +350,9 @@ void Display::dispatch_messages()
    wl_display_dispatch_pending(m_display);
 }
 
-std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, const WindowAttributeFlags /*flags*/)
+std::shared_ptr<ISurface> Display::create_surface(std::string_view title, Vector2u dimensions, WindowAttributeFlags flags)
 {
-   return std::make_shared<Surface>(*this, Dimension{width, height});
+   return std::make_shared<Surface>(*this, title, dimensions, flags);
 }
 
 void Display::register_surface(wl_surface* wayland_surface, Surface* surface)

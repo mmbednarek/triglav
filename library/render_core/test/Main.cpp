@@ -18,7 +18,9 @@ TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets)
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
-   auto surface = display.create_surface(400, 400, WindowAttribute::Default);
+   using namespace triglav::io::path_literals;
+
+   auto surface = display.create_surface("Testing window", {400, 400}, WindowAttribute::Default);
    auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance());
 
    triglav::threading::ThreadPool::the().initialize(4);
@@ -36,7 +38,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    LoadAssetsAwaiter awaiter(resourceManager);
 
-   resourceManager.load_asset_list(triglav::io::Path("content/index.yaml"));
+   resourceManager.load_asset_list("content/index.yaml"_path);
 
    fmt::print("Loading resources\n");
 

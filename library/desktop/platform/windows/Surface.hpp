@@ -3,6 +3,7 @@
 #include "ISurface.hpp"
 
 #include <memory>
+#include <string_view>
 #include <windows.h>
 
 namespace triglav::desktop {
@@ -12,7 +13,7 @@ constexpr auto g_windowClassName = "TRIGLAV_WINDOW";
 class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
  public:
-   Surface(HINSTANCE instance, Vector2i dimension, WindowAttributeFlags flags);
+   Surface(HINSTANCE instance, std::string_view title, Vector2i dimension, WindowAttributeFlags flags);
    ~Surface() override;
 
    void lock_cursor() override;
@@ -24,6 +25,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    [[nodiscard]] HINSTANCE winapi_instance() const;
    [[nodiscard]] HWND winapi_window_handle() const;
    LRESULT handle_window_event(UINT msg, WPARAM wParam, LPARAM lParam);
+   void set_cursor_icon(CursorIcon icon) override;
 
  private:
    void on_key_down(WPARAM keyCode) const;
@@ -37,6 +39,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    HINSTANCE m_instance;
    Vector2i m_dimension;
    HWND m_windowHandle;
+   HCURSOR m_currentCursor{};
 };
 
 }// namespace triglav::desktop

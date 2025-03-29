@@ -88,9 +88,11 @@ void Display::dispatch_messages()
    m_mouse.tick();
 }
 
-std::shared_ptr<ISurface> Display::create_surface(const int width, const int height, WindowAttributeFlags flags)
+std::shared_ptr<ISurface> Display::create_surface(const std::string_view title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
-   auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, width, height, 0, 0, 0xffffffff);
+   auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, dimensions.x, dimensions.y, 0, 0, 0xffffffff);
+
+   XStoreName(m_display, window, title.data());
 
    if (not(flags & WindowAttribute::ShowDecorations)) {
       Atom window_type = XInternAtom(m_display, "_NET_WM_WINDOW_TYPE", False);
@@ -104,7 +106,7 @@ std::shared_ptr<ISurface> Display::create_surface(const int width, const int hei
                    LeaveNotify);
    XSetWMProtocols(m_display, window, &m_wmDeleteAtom, 1);
 
-   auto surface = std::make_shared<Surface>(m_display, window, Dimension{width, height});
+   auto surface = std::make_shared<Surface>(m_display, window, dimensions);
    m_surfaces.emplace(window, surface);
    return surface;
 }
@@ -120,7 +122,7 @@ void Display::on_mouse_move(float x, float y)
    }
 }
 
-std::shared_ptr<Surface> Display::surface_by_window(Window wndHandle)
+std::shared_ptr<Surface> Display::surface_by_window(const Window wndHandle)
 {
    auto it = m_surfaces.find(wndHandle);
    if (it == m_surfaces.end())

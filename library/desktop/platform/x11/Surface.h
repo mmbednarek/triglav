@@ -28,6 +28,7 @@ class Surface final : public ISurface
    void dispatch_mouse_relative_move(float x, float y) const;
    void dispatch_close() const;
    void tick() const;
+   void set_cursor_icon(CursorIcon icon) override;
 
    [[nodiscard]] constexpr ::Display* display() const
    {
@@ -43,6 +44,7 @@ class Surface final : public ISurface
    ::Display* m_display;
    Window m_window;
    Dimension m_dimension;
+   ::Cursor m_currentCursor{};
    bool m_isCursorLocked{false};
 };
 

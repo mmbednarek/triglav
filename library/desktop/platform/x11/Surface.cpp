@@ -1,6 +1,9 @@
 #include "Surface.h"
 #include "Desktop.hpp"
 
+#include <X11/cursorfont.h>
+#include <spdlog/spdlog.h>
+
 namespace triglav::desktop::x11 {
 
 namespace {
@@ -167,6 +170,35 @@ void Surface::tick() const
       XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.x, center.y);
       XSync(m_display, false);
    }
+}
+
+void Surface::set_cursor_icon(const CursorIcon icon)
+{
+   spdlog::info("calling set_cursor_icon: {}", static_cast<int>(icon));
+
+   if (m_currentCursor != 0) {
+      XFreeCursor(m_display, m_currentCursor);
+   }
+
+   switch (icon) {
+   case CursorIcon::Arrow:
+      m_currentCursor = ::XCreateFontCursor(m_display, XC_arrow);
+      break;
+   case CursorIcon::Hand:
+      m_currentCursor = ::XCreateFontCursor(m_display, XC_hand1);
+      break;
+   case CursorIcon::Move:
+      m_currentCursor = ::XCreateFontCursor(m_display, XC_fleur);
+      break;
+   case CursorIcon::Wait:
+      m_currentCursor = ::XCreateFontCursor(m_display, XC_watch);
+      break;
+   default:
+      m_currentCursor = 0;
+      return;
+   }
+
+   ::XDefineCursor(m_display, m_window, m_currentCursor);
 }
 
 }// namespace triglav::desktop::x11

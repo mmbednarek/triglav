@@ -63,7 +63,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_glyphCache(m_device, m_resourceManager),
     m_uiViewport({resolution.width, resolution.height}),
     m_uiContext(m_uiViewport, m_glyphCache),
-    m_infoDialog(m_uiContext, m_configManager),
+    m_infoDialog(m_uiContext, m_configManager, desktopSurface),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
                          : std::nullopt),

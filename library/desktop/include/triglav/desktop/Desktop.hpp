@@ -64,4 +64,12 @@ enum class Key
    Unknown,
 };
 
+enum class CursorIcon
+{
+   Arrow,
+   Hand,
+   Move,
+   Wait,
+};
+
 }// namespace triglav::desktop

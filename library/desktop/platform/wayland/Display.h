@@ -2,6 +2,8 @@
 
 #include "Desktop.hpp"
 #include "IDisplay.hpp"
+#include "api/CursorShape.h"
+#include "api/Decoration.h"
 #include "api/PointerConstraints.h"
 #include "api/RelativePointer.h"
 #include "api/XdgShell.h"
@@ -25,7 +27,7 @@ class Display final : public IDisplay
 
    void dispatch_messages() override;
 
-   std::shared_ptr<ISurface> create_surface(int width, int height, WindowAttributeFlags flags) override;
+   std::shared_ptr<ISurface> create_surface(std::string_view title, Vector2u dimensions, WindowAttributeFlags flags) override;
 
    [[nodiscard]] constexpr wl_display* display() const noexcept
    {
@@ -86,6 +88,9 @@ class Display final : public IDisplay
    zwp_relative_pointer_manager_v1* m_relativePointerManager{};
    zwp_relative_pointer_v1* m_relativePointer{};
    zwp_relative_pointer_v1_listener m_relativePointerListener{};
+   wp_cursor_shape_manager_v1* m_cursorShapeManager{};
+   wp_cursor_shape_device_v1* m_cursorShapeDevice{};
+   zxdg_decoration_manager_v1* m_decorationManager{};
    xkb_context* m_xkbContext;
    xkb_keymap* m_xkbKeymap;
 

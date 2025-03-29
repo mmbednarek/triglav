@@ -15,7 +15,7 @@ class Surface : public ISurface
    friend Display;
 
  public:
-   explicit Surface(Display& display, Dimension dimension);
+   explicit Surface(Display& display, std::string_view title, Dimension dimension, WindowAttributeFlags attributes);
    ~Surface() override;
 
    void on_configure(uint32_t serial);
@@ -27,6 +27,7 @@ class Surface : public ISurface
    void tick();
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
+   void set_cursor_icon(CursorIcon icon) override;
 
    [[nodiscard]] constexpr Display& display() const noexcept
    {
@@ -46,11 +47,13 @@ class Surface : public ISurface
    xdg_toplevel* m_topLevel{};
    xdg_toplevel_listener m_topLevelListener{};
    zwp_locked_pointer_v1* m_lockedPointer{};
+   zxdg_toplevel_decoration_v1* m_decoration{};
    bool m_resizeReady = false;
 
    uint32_t m_pointerSerial{};
 
    Dimension m_dimension{};
+   WindowAttributeFlags m_attributes{};
    std::optional<Dimension> m_pendingDimension{};
 };
 

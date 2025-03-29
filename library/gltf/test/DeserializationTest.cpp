@@ -26,9 +26,9 @@ TEST(DerserializationTest, ReadMeshTest)
    triglav::gltf::Document doc;
    doc.deserialize(reader);
 
-   triglav::gltf::BufferManager manager(doc);
+   const triglav::gltf::BufferManager manager(doc);
 
-   auto mesh = triglav::gltf::mesh_from_document(doc, 0, manager);
+   auto mesh = triglav::gltf::mesh_from_document(doc, 0, manager, {});
 }
 
 TEST(DerserializationTest, ReadGlb)

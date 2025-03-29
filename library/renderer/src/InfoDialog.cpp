@@ -1,6 +1,7 @@
 #include "InfoDialog.hpp"
 
 #include "triglav/Name.hpp"
+#include "triglav/desktop/ISurface.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/Button.hpp"
@@ -57,9 +58,10 @@ class HideablePanel final : public ui_core::IWidget
       Vector4 padding;
       float separation;
       std::string label;
+      desktop::ISurface* surface;
    };
 
-   HideablePanel(ui_core::Context& ctx, const State state, ui_core::IWidget* parent) :
+   HideablePanel(ui_core::Context& ctx, const State& state, ui_core::IWidget* parent) :
        m_context(ctx),
        m_state(state),
        m_parent(parent),
@@ -127,11 +129,17 @@ class HideablePanel final : public ui_core::IWidget
    void on_enter() const
    {
       m_labelText.set_color({1.0f, 1.0f, 0.8f, 1.0f});
+      if (m_state.surface != nullptr) {
+         m_state.surface->set_cursor_icon(desktop::CursorIcon::Hand);
+      }
    }
 
    void on_leave() const
    {
       m_labelText.set_color({1.0f, 1.0f, 0.4f, 1.0f});
+      if (m_state.surface != nullptr) {
+         m_state.surface->set_cursor_icon(desktop::CursorIcon::Arrow);
+      }
    }
 
  private:
@@ -149,9 +157,10 @@ class HideablePanel final : public ui_core::IWidget
    TG_SINK(ui_core::Button, OnLeave);
 };
 
-InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) :
+InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, desktop::ISurface& surface) :
     m_context(context),
     m_configManager(configManager),
+    m_surface(surface),
     m_rootBox(context,
               ui_core::RectBox::State{
                  .color = {0.0, 0.0f, 0.0f, 0.75f},
@@ -186,6 +195,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager) 
       auto& panel = viewport.create_child<HideablePanel>({
          .separation = {15.0f},
          .label = std::string{groupLabel},
+         .surface = &m_surface,
       });
 
       auto& labelBox = panel.create_child<ui_core::HorizontalLayout>({
@@ -246,14 +256,24 @@ void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
 
 void InfoDialog::on_event(const ui_core::Event& event)
 {
+   const auto size = this->desired_size({600, 1200});
+   const auto position = event.mousePosition - m_dialogOffset;
+   if (position.x > size.x || position.y > size.y) {
+      return;
+   }
+
    ui_core::Event subEvent{event};
    subEvent.parentSize = {600, 1200};
-   subEvent.mousePosition -= m_dialogOffset;
+   subEvent.mousePosition = position;
+
    m_rootBox.on_event(subEvent);
 
    if (event.eventType == ui_core::Event::Type::MouseReleased) {
-      m_isDragging = false;
-      m_dragOffset.reset();
+      if (m_isDragging) {
+         m_isDragging = false;
+         m_dragOffset.reset();
+         m_surface.set_cursor_icon(desktop::CursorIcon::Arrow);
+      }
    } else if (event.eventType == ui_core::Event::Type::MouseMoved) {
       if (!m_isDragging)
          return;
@@ -315,7 +335,7 @@ void InfoDialog::set_orientation(const Vector2 value) const
    m_values.at("location.orientation"_name)->set_content(orientationStr);
 }
 
-void InfoDialog::on_config_property_changed(const ConfigProperty property, const Config& config)
+void InfoDialog::on_config_property_changed(const ConfigProperty property, const Config& config) const
 {
    switch (property) {
    case ConfigProperty::AmbientOcclusion:
@@ -351,6 +371,7 @@ void InfoDialog::init_config_labels() const
 void InfoDialog::on_title_clicked(desktop::MouseButton /*button*/)
 {
    m_isDragging = true;
+   m_surface.set_cursor_icon(desktop::CursorIcon::Move);
 }
 
 void InfoDialog::on_title_enter() const

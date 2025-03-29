@@ -51,6 +51,7 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    virtual void lock_cursor() = 0;
    virtual void unlock_cursor() = 0;
    virtual void hide_cursor() const = 0;
+   virtual void set_cursor_icon(CursorIcon icon) = 0;
 
    [[nodiscard]] virtual bool is_cursor_locked() const = 0;
    [[nodiscard]] virtual Vector2i dimension() const = 0;

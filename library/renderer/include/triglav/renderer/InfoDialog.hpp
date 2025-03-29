@@ -15,6 +15,10 @@ namespace triglav::render_core {
 class GlyphCache;
 }
 
+namespace triglav::desktop {
+class ISurface;
+}
+
 namespace triglav::renderer {
 
 class InfoDialog final : public ui_core::IWidget
@@ -22,7 +26,7 @@ class InfoDialog final : public ui_core::IWidget
  public:
    using Self = InfoDialog;
 
-   InfoDialog(ui_core::Context& context, ConfigManager& configManager);
+   InfoDialog(ui_core::Context& context, ConfigManager& configManager, desktop::ISurface& surface);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
    void add_to_viewport(Vector4 dimensions) override;
@@ -39,7 +43,7 @@ class InfoDialog final : public ui_core::IWidget
    void set_camera_pos(Vector3 value) const;
    void set_orientation(Vector2 value) const;
 
-   void on_config_property_changed(ConfigProperty property, const Config& config);
+   void on_config_property_changed(ConfigProperty property, const Config& config) const;
    void init_config_labels() const;
 
    void on_title_clicked(desktop::MouseButton button);
@@ -49,6 +53,7 @@ class InfoDialog final : public ui_core::IWidget
  private:
    ui_core::Context& m_context;
    ConfigManager& m_configManager;
+   desktop::ISurface& m_surface;
    ui_core::RectBox m_rootBox;
    std::map<Name, ui_core::TextBox*> m_values;
    bool m_isDragging{false};

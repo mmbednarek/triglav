@@ -99,10 +99,10 @@ int map_window_attributes_to_y_position(WindowAttributeFlags flags, const Dimens
 
 }// namespace
 
-Surface::Surface(const HINSTANCE instance, const Vector2i dimension, WindowAttributeFlags flags) :
+Surface::Surface(const HINSTANCE instance, const std::string_view title, const Vector2i dimension, const WindowAttributeFlags flags) :
     m_instance(instance),
     m_dimension(dimension),
-    m_windowHandle(CreateWindowExA(map_window_attributes_to_ex_style(flags), g_windowClassName, "Triglav Engine",
+    m_windowHandle(CreateWindowExA(map_window_attributes_to_ex_style(flags), g_windowClassName, title.data(),
                                    map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
                                    map_window_attributes_to_y_position(flags, dimension), m_dimension.x, m_dimension.y, nullptr, nullptr,
                                    m_instance, this))
@@ -252,6 +252,9 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
    }
    case WM_MOUSEMOVE: {
       this->on_mouse_move(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+      if (m_currentCursor != nullptr) {
+         SetCursor(m_currentCursor);
+      }
       break;
    }
    case WM_SIZE: {
@@ -263,6 +266,34 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
    }
 
    return 0;
+}
+
+void Surface::set_cursor_icon(const CursorIcon icon)
+{
+   if (m_currentCursor != nullptr) {
+      DestroyCursor(m_currentCursor);
+   }
+
+   switch (icon) {
+   case CursorIcon::Arrow:
+      m_currentCursor = LoadCursorA(nullptr, IDC_ARROW);
+      break;
+   case CursorIcon::Hand:
+      m_currentCursor = LoadCursorA(nullptr, IDC_HAND);
+      break;
+   case CursorIcon::Move:
+      m_currentCursor = LoadCursorA(nullptr, IDC_SIZEALL);
+      break;
+   case CursorIcon::Wait:
+      m_currentCursor = LoadCursorA(nullptr, IDC_WAIT);
+      break;
+   default:
+      m_currentCursor = nullptr;
+      return;
+   }
+
+   SetCursor(m_currentCursor);
+   ShowCursor(true);
 }
 
 }// namespace triglav::desktop

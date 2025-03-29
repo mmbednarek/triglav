@@ -1,17 +1,19 @@
 #include "Surface.h"
 
 #include "Display.h"
+#include "api/CursorShape.h"
 
 #include <cassert>
 
 namespace triglav::desktop {
 
-Surface::Surface(Display& display, Dimension dimension) :
+Surface::Surface(Display& display, const std::string_view title, const Dimension dimension, const WindowAttributeFlags attributes) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
     m_xdgSurface(xdg_wm_base_get_xdg_surface(display.wm_base(), m_surface)),
     m_topLevel(xdg_surface_get_toplevel(m_xdgSurface)),
-    m_dimension(dimension)
+    m_dimension(dimension),
+    m_attributes(attributes)
 {
    m_surfaceListener.configure = [](void* data, [[maybe_unused]] xdg_surface* xdg_surface, const uint32_t serial) {
       auto* surface = static_cast<Surface*>(data);
@@ -32,8 +34,16 @@ Surface::Surface(Display& display, Dimension dimension) :
 
    xdg_surface_add_listener(m_xdgSurface, &m_surfaceListener, this);
    xdg_toplevel_add_listener(m_topLevel, &m_topLevelListener, this);
-   xdg_toplevel_set_title(m_topLevel, "Example client");
-   xdg_toplevel_set_app_id(m_topLevel, "example-client");
+   xdg_toplevel_set_title(m_topLevel, title.data());
+   xdg_toplevel_set_app_id(m_topLevel, "triglav-surface");
+
+   m_decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(m_display.m_decorationManager, m_topLevel);
+
+   if (attributes & WindowAttribute::ShowDecorations) {
+      zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
+   } else {
+      zxdg_toplevel_decoration_v1_set_mode(m_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
+   }
 
    wl_surface_commit(m_surface);
    wl_display_roundtrip(m_display.display());
@@ -46,6 +56,9 @@ Surface::~Surface()
 {
    m_display.on_destroyed_surface(this);
 
+   if (m_decoration != nullptr) {
+      zxdg_toplevel_decoration_v1_destroy(m_decoration);
+   }
    xdg_toplevel_destroy(m_topLevel);
    xdg_surface_destroy(m_xdgSurface);
    wl_surface_destroy(m_surface);
@@ -105,6 +118,26 @@ bool Surface::is_cursor_locked() const
 Dimension Surface::dimension() const
 {
    return m_dimension;
+}
+
+void Surface::set_cursor_icon(const CursorIcon icon)
+{
+   switch (icon) {
+   case CursorIcon::Arrow:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT);
+      break;
+   case CursorIcon::Hand:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_POINTER);
+      break;
+   case CursorIcon::Move:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_MOVE);
+      break;
+   case CursorIcon::Wait:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_WAIT);
+      break;
+   default:
+      return;
+   }
 }
 
 void Surface::tick()
