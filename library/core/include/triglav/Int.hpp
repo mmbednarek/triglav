@@ -15,6 +15,7 @@ using u32 = std::uint32_t;
 using u64 = std::uint64_t;
 using MemoryOffset = std::ptrdiff_t;
 using MemorySize = std::size_t;
+using PointerInt = std::uintptr_t;
 using Index = std::size_t;
 
 struct InvalidType

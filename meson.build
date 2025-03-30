@@ -64,6 +64,7 @@ subdir('library/external/stbi')
 
 subdir('library/core')
 subdir('library/io')
+subdir('library/memory')
 
 subdir('library/world')
 subdir('library/threading')
