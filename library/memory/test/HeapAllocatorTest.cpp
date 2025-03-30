@@ -51,4 +51,12 @@ TEST(HeapAllocatorTest, Default)
          lastOffset = offset + size;
       }
    }
+
+   for (const auto& alloc : allocations) {
+      allocator.free(alloc);
+   }
+
+   ASSERT_EQ(allocator.free_list().size(), 1ull);
+   ASSERT_EQ(allocator.free_list().begin()->first, 0ull);
+   ASSERT_EQ(allocator.free_list().begin()->second, 1ull << 14);
 }

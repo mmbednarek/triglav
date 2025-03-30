@@ -68,6 +68,7 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
     m_viewport(viewport),
     m_combinedGlyphBuffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
                                                           g_maxCombinedGlyphBufferSize))),
+    m_vertexAllocator(g_maxTextVertices),
     TG_CONNECT(viewport, OnAddedText, on_added_text),
     TG_CONNECT(viewport, OnRemovedText, on_removed_text),
     TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
@@ -231,7 +232,8 @@ void UpdateUserInterfaceJob::on_added_text(const Name name, const ui_core::Text&
    const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
 
    m_textInfos.emplace(name, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
-                                      text.position, typefaceInfo.atlasId, vertexSection.vertexOffset, vertexSection.vertexCount});
+                                      text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
+                                      static_cast<u32>(vertexSection.size)});
    m_drawCallToTextName.emplace_back(name);
 
    m_pendingTextUpdates.emplace_back(name);
@@ -252,8 +254,8 @@ void UpdateUserInterfaceJob::on_text_change_content(const Name name, const ui_co
 
    auto& textInfo = m_textInfos.at(name);
    textInfo.text.content = text.content;
-   textInfo.dstVertexOffset = vertexSection.vertexOffset;
-   textInfo.dstVertexCount = vertexSection.vertexCount;
+   textInfo.dstVertexOffset = vertexSection.offset;
+   textInfo.dstVertexCount = vertexSection.size;
 
    m_pendingTextUpdates.emplace_back(name);
 }
@@ -421,33 +423,21 @@ const TypefaceInfo& UpdateUserInterfaceJob::get_typeface_info(const render_core:
    return newIt->second;
 }
 
-VertexBufferSection UpdateUserInterfaceJob::allocate_vertex_section(const Name text, const u32 vertexCount)
+memory::Area UpdateUserInterfaceJob::allocate_vertex_section(const Name text, const u32 vertexCount)
 {
-   // TODO: Find more efficient way to do this
-   u32 offset = 0;
-   // u32 unusedSpace = 0;
-   for (auto it = m_vertexSections.begin(); it != m_vertexSections.end(); ++it) {
-      // unusedSpace += it->vertexOffset - offset;
-      if (const auto availableSize = it->vertexOffset - offset; vertexCount <= availableSize) {
-         const auto dstIt = m_vertexSections.emplace(it, text, offset, vertexCount);
-         return *dstIt;
-      }
-      offset = it->vertexOffset + it->vertexCount;
-   }
+   const auto section = m_vertexAllocator.allocate(vertexCount);
+   assert(section.has_value());
 
-   assert(offset + vertexCount <= g_maxTextVertices);
+   memory::Area result{vertexCount, *section};
+   m_allocatedVertexSections.emplace(text, result);
 
-   m_vertexSections.emplace_back(text, offset, vertexCount);
-   return m_vertexSections.back();
+   return result;
 }
 
 void UpdateUserInterfaceJob::free_vertex_section(const Name textName)
 {
-   const auto it = std::ranges::find_if(m_vertexSections, [textName](const auto& sec) { return sec.textName == textName; });
-   if (it == m_vertexSections.end()) {
-      return;
-   }
-   m_vertexSections.erase(it);
+   m_vertexAllocator.free(m_allocatedVertexSections.at(textName));
+   m_allocatedVertexSections.erase(textName);
 }
 
 }// namespace triglav::renderer

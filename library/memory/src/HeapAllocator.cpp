@@ -46,7 +46,7 @@ void HeapAllocator::free(const Area area)
 
    const auto prev = std::prev(next);
    if (prev != m_freeList.end() && prev->first + prev->second == area.offset) {
-      prev->second += area.size + shouldNextBeErased;
+      prev->second += area.size + nextItemSize;
    } else {
       m_freeList.emplace(area.offset, area.size + nextItemSize);
    }

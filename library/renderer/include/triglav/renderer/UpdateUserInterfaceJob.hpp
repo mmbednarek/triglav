@@ -2,6 +2,7 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/graphics_api/Buffer.hpp"
+#include "triglav/memory/HeapAllocator.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
@@ -38,13 +39,6 @@ struct TypefaceInfo
    u32 glyphBufferOffset;
 };
 
-struct VertexBufferSection
-{
-   Name textName;
-   u32 vertexOffset;
-   u32 vertexCount;
-};
-
 struct RectangleData
 {
    graphics_api::Buffer vsUbo;
@@ -77,7 +71,7 @@ class UpdateUserInterfaceJob
 
  private:
    [[nodiscard]] const TypefaceInfo& get_typeface_info(const render_core::GlyphProperties& glyphProps);
-   VertexBufferSection allocate_vertex_section(Name text, u32 vertexCount);
+   memory::Area allocate_vertex_section(Name text, u32 vertexCount);
    void free_vertex_section(Name textName);
 
    graphics_api::Device& m_device;
@@ -91,7 +85,9 @@ class UpdateUserInterfaceJob
    u32 m_glyphOffset{};
    std::map<u64, TypefaceInfo> m_typefaceInfos;
    std::vector<render_core::TextureRef> m_atlases;
-   std::vector<VertexBufferSection> m_vertexSections;
+   memory::HeapAllocator m_vertexAllocator;
+   std::map<Name, memory::Area> m_allocatedVertexSections;
+
    std::map<Name, RectangleData> m_rectangles;
    std::mutex m_textUpdateMtx;
    std::mutex m_rectUpdateMtx;

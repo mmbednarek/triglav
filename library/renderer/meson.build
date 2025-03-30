@@ -53,7 +53,7 @@ renderer_sources = files([
 
 
 
-renderer_deps = [glm, graphics_api, geometry, font, io, resource, render_core, ui_core]
+renderer_deps = [glm, graphics_api, geometry, font, io, resource, render_core, ui_core, memory]
 renderer_incl = include_directories(['include', 'include/triglav/renderer'])
 
 renderer_lib = static_library('renderer',
