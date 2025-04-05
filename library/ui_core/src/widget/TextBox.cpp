@@ -29,7 +29,10 @@ Vector2 TextBox::desired_size(const Vector2 /*parentSize*/) const
 void TextBox::add_to_viewport(const Vector4 dimensions)
 {
    const auto size = this->desired_size({});
-   const Vector2 position{dimensions.x + calculate_alignment(m_state.alignment, dimensions.z, size.x), dimensions.y + size.y};
+   const Vector2 position{
+      dimensions.x + calculate_alignment(m_state.horizontalAlignment, dimensions.z, size.x),
+      dimensions.y + size.y + calculate_alignment(m_state.verticalAlignment, dimensions.w, size.y),
+   };
 
    if (m_id != 0) {
       m_uiContext.viewport().set_text_position(m_id, position);

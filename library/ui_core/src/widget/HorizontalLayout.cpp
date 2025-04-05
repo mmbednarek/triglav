@@ -39,14 +39,32 @@ Vector2 HorizontalLayout::desired_size(const Vector2 parentSize) const
    return minSize + result;
 }
 
+namespace {
+
+float initial_position(const HorizontalAlignment alignment, const float containerWidth, const float contentWidth)
+{
+   switch (alignment) {
+   case HorizontalAlignment::Left:
+      return 0.0f;
+   case HorizontalAlignment::Center:
+      return 0.5f * (containerWidth - contentWidth);
+   case HorizontalAlignment::Right:
+      return containerWidth - contentWidth;
+   }
+   return 0.0f;
+}
+
+}// namespace
+
 void HorizontalLayout::add_to_viewport(const Vector4 dimensions)
 {
    const Vector4 innerDimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
                                  dimensions.z - m_state.padding.x - m_state.padding.z,
                                  dimensions.w - m_state.padding.y - m_state.padding.w};
 
+   const auto contentSize = this->desired_size(dimensions);
    float width = innerDimensions.z;
-   float x{0.0f};
+   float x = initial_position(m_state.gravity, width, contentSize.x);
    for (const auto& child : m_children) {
       const auto size = child->desired_size({width, dimensions.w});
       child->add_to_viewport({innerDimensions.x + x, innerDimensions.y, size.x, innerDimensions.w});

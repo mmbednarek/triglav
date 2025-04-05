@@ -3,10 +3,11 @@
 namespace triglav::renderer {
 
 UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, render_core::GlyphCache& glyphCache,
-                                               ui_core::Viewport& viewport) :
+                                               ui_core::Viewport& viewport, resource::ResourceManager& resourceManager) :
     m_device(device),
-    m_textRenderer(m_device, glyphCache, viewport),
-    m_rectangleRenderer(m_device, viewport)
+    m_rectangleRenderer(m_device, viewport),
+    m_spriteRenderer(m_device, viewport, resourceManager),
+    m_textRenderer(m_device, glyphCache, viewport)
 {
 }
 
@@ -23,6 +24,7 @@ void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u
 void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
 {
    m_rectangleRenderer.build_render_ui(ctx);
+   m_spriteRenderer.build_render_ui(ctx);
    m_textRenderer.build_render_ui(ctx);
 }
 

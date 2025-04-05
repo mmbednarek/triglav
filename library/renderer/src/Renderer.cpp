@@ -62,7 +62,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_bindlessScene(m_device, m_resourceManager, m_scene),
     m_glyphCache(m_device, m_resourceManager),
     m_uiViewport({resolution.width, resolution.height}),
-    m_uiContext(m_uiViewport, m_glyphCache),
+    m_uiContext(m_uiViewport, m_glyphCache, m_resourceManager),
     m_infoDialog(m_uiContext, m_configManager, desktopSurface),
     m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
                          ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
@@ -72,7 +72,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_pipelineCache(m_device, m_resourceManager),
     m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage, {resolution.width, resolution.height}),
     m_updateViewParamsJob(m_scene),
-    m_updateUserInterfaceJob(m_device, m_glyphCache, m_uiViewport),
+    m_updateUserInterfaceJob(m_device, m_glyphCache, m_uiViewport, m_resourceManager),
     m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
     m_renderingJob(m_configManager.config()),
     m_debugWidget(m_uiContext),

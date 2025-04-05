@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="200"
+   width="600"
+   version="1.1"
+   id="svg4"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <circle
+     cx="100"
+     cy="70"
+     r="50"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="16px"
+     id="circle1" />
+  <circle
+     cx="65.360001"
+     cy="130"
+     r="50"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="16px"
+     id="circle2" />
+  <circle
+     cx="134.64"
+     cy="130"
+     r="50"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="16px"
+     id="circle3" />
+  <path
+     d="M 240,43.894737 V 156.10526 a 12.788075,12.788075 28.154966 0 0 19.88162,10.64032 l 80.23676,-53.49116 a 15.929825,15.929825 90 0 0 0,-26.508835 L 259.88162,33.254415 A 12.788075,12.788075 151.84503 0 0 240,43.894737 Z"
+     fill="#ffff66"
+     id="path3"
+     style="fill:#ffffa8;fill-opacity:1" />
+  <path
+     d="M 240,43.894737 V 156.10526 a 12.788075,12.788075 28.154966 0 0 19.88162,10.64032 l 80.23676,-53.49116 a 15.929825,15.929825 90 0 0 0,-26.508835 L 259.88162,33.254415 A 12.788075,12.788075 151.84503 0 0 240,43.894737 Z"
+     fill="#ffff66"
+     id="path3-6"
+     transform="rotate(90,396.80298,203.19702)"
+     style="fill:#ffffa8;fill-opacity:1" />
+</svg>

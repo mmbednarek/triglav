@@ -33,7 +33,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_glyphCache(device, m_resourceManager),
     m_pipelineCache(m_device, m_resourceManager),
     m_uiViewport({g_splashScreenResolution.x, g_splashScreenResolution.y}),
-    m_updateUiJob(m_device, m_glyphCache, m_uiViewport),
+    m_updateUiJob(m_device, m_glyphCache, m_uiViewport, m_resourceManager),
     m_jobGraph(m_device, m_resourceManager, m_pipelineCache, m_resourceStorage, {g_splashScreenResolution.x, g_splashScreenResolution.y})
 {
    triglav::ui_core::Rectangle statusBg{

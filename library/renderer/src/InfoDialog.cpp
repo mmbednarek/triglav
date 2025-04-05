@@ -8,6 +8,7 @@
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/HideableWidget.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
+#include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 #include <array>
@@ -72,12 +73,21 @@ class HideablePanel final : public ui_core::IWidget
                         },
                         this),
        m_labelBox(m_verticalLayout.create_child<ui_core::Button>({})),
-       m_labelText(m_labelBox.create_content<ui_core::TextBox>({
+       m_labelLayout(m_labelBox.create_content<ui_core::HorizontalLayout>({
+          .separation = 10.0f,
+          .gravity = ui_core::HorizontalAlignment::Center,
+       })),
+       m_image(m_labelLayout.create_child<ui_core::Image>({
+          .texture = "texture/ui_images.tex"_rc,
+          .maxSize = Vector2{20, 20},
+          .region = Vector4{400, 0, 200, 200},
+       })),
+       m_labelText(m_labelLayout.create_child<ui_core::TextBox>({
           .fontSize = 20,
           .typeface = "segoeui/bold.typeface"_rc,
           .content = state.label,
           .color = {1.0f, 1.0f, 0.4f, 1.0f},
-          .alignment = ui_core::HorizontalAlignment::Center,
+          .verticalAlignment = ui_core::VerticalAlignment::Center,
        })),
        m_content(m_verticalLayout.create_child<ui_core::HideableWidget>({
           .isHidden = false,
@@ -123,7 +133,13 @@ class HideablePanel final : public ui_core::IWidget
 
    void on_click(const desktop::MouseButton /*mouseButton*/) const
    {
-      m_content.set_is_hidden(!m_content.state().isHidden);
+      if (m_content.state().isHidden) {
+         m_image.set_region({400, 0, 200, 200});
+         m_content.set_is_hidden(false);
+      } else {
+         m_image.set_region({200, 0, 200, 200});
+         m_content.set_is_hidden(true);
+      }
    }
 
    void on_enter() const
@@ -148,6 +164,8 @@ class HideablePanel final : public ui_core::IWidget
    ui_core::IWidget* m_parent;
    ui_core::VerticalLayout m_verticalLayout;
    ui_core::Button& m_labelBox;
+   ui_core::HorizontalLayout& m_labelLayout;
+   ui_core::Image& m_image;
    ui_core::TextBox& m_labelText;
    ui_core::HideableWidget& m_content;
    bool m_isHidden = false;
@@ -175,12 +193,24 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
 
    auto& titleButton = viewport.create_child<ui_core::Button>({});
 
-   m_title = &titleButton.create_content<ui_core::TextBox>({
+   auto& titleLayout = titleButton.create_content<ui_core::HorizontalLayout>({
+      .separation = 10.0f,
+      .gravity = ui_core::HorizontalAlignment::Center,
+   });
+
+   titleLayout.create_child<ui_core::Image>({
+      .texture = "texture/ui_images.tex"_rc,
+      .maxSize = Vector2{32, 32},
+      .region = Vector4{0, 0, 200, 200},
+   });
+
+   m_title = &titleLayout.create_child<ui_core::TextBox>({
       .fontSize = 24,
       .typeface = "cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
-      .alignment = ui_core::HorizontalAlignment::Center,
+      .horizontalAlignment = ui_core::HorizontalAlignment::Center,
+      .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
 
    TG_CONNECT_OPT(titleButton, OnClick, on_title_clicked);
@@ -201,6 +231,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
       auto& labelBox = panel.create_child<ui_core::HorizontalLayout>({
          .padding = {0.0f, 15.0f, 0.0f, 10.0f},
          .separation = {10.0f},
+         .gravity = ui_core::HorizontalAlignment::Center,
       });
 
       auto& leftPanel = labelBox.create_child<ui_core::VerticalLayout>({
@@ -219,7 +250,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
             .typeface = "segoeui.typeface"_rc,
             .content = std::string{content},
             .color = {1.0f, 1.0f, 1.0f, 1.0f},
-            .alignment = ui_core::HorizontalAlignment::Right,
+            .horizontalAlignment = ui_core::HorizontalAlignment::Right,
          });
 
          m_values[name] = &rightPanel.create_child<ui_core::TextBox>({
@@ -227,7 +258,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
             .typeface = "segoeui.typeface"_rc,
             .content = "none",
             .color = {1.0f, 1.0f, 0.4f, 1.0f},
-            .alignment = ui_core::HorizontalAlignment::Left,
+            .horizontalAlignment = ui_core::HorizontalAlignment::Left,
          });
       }
    }

@@ -98,6 +98,41 @@ void Viewport::remove_rectangle(Name name)
    m_rectangles.erase(name);
 }
 
+void Viewport::add_sprite(Name name, Sprite&& sprite)
+{
+   auto [it, added] = m_sprites.emplace(name, sprite);
+   assert(added);
+   this->event_OnAddedSprite.publish(name, it->second);
+}
+
+Name Viewport::add_sprite(Sprite&& sprite)
+{
+   const auto name = m_topName;
+   ++m_topName;
+   this->add_sprite(name, std::move(sprite));
+   return name;
+}
+
+void Viewport::set_sprite_position(const Name name, const Vector2 position)
+{
+   auto& sprite = m_sprites.at(name);
+   sprite.position = position;
+   event_OnSpriteChangePosition.publish(name, sprite);
+}
+
+void Viewport::set_sprite_texture_region(Name name, Vector4 region)
+{
+   auto& sprite = m_sprites.at(name);
+   sprite.textureRegion = region;
+   event_OnSpriteChangeTextureRegion.publish(name, sprite);
+}
+
+void Viewport::remove_sprite(Name name)
+{
+   event_OnRemovedSprite.publish(name);
+   m_sprites.erase(name);
+}
+
 const Text& Viewport::text(const Name name) const
 {
    return m_texts.at(name);

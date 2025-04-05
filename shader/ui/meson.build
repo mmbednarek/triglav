@@ -37,3 +37,15 @@ shader_targets += custom_target('rectangle_fs',
                                 output : '@BASENAME@_fs.spv',
                                 command : slang_fs_commands,
 )
+
+shader_targets += custom_target('sprite_vs',
+                                input : 'sprite.slang',
+                                output : '@BASENAME@_vs.spv',
+                                command : slang_vs_commands,
+)
+
+shader_targets += custom_target('sprite_fs',
+                                input : 'sprite.slang',
+                                output : '@BASENAME@_fs.spv',
+                                command : slang_fs_commands,
+)

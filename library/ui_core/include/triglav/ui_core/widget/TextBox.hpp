@@ -21,7 +21,8 @@ class TextBox final : public IWidget
       TypefaceName typeface{};
       std::string content{};
       Vector4 color{};
-      HorizontalAlignment alignment{};
+      HorizontalAlignment horizontalAlignment{};
+      VerticalAlignment verticalAlignment{};
    };
 
    TextBox(Context& ctx, State initialState, IWidget* parent);

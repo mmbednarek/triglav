@@ -17,3 +17,7 @@ resources:
     source: "shader/ui/text_render_vs.spv"
   - name: "text/render.fshader"
     source: "shader/ui/text_render_fs.spv"
+  - name: "sprite.vshader"
+    source: "shader/ui/sprite_vs.spv"
+  - name: "sprite.fshader"
+    source: "shader/ui/sprite_fs.spv"

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../IWidget.hpp"
-
-#include <vector>
+#include "../UICore.hpp"
 
 namespace triglav::ui_core {
 
@@ -15,6 +14,7 @@ class HorizontalLayout final : public LayoutWidget
    {
       Vector4 padding;
       float separation;
+      HorizontalAlignment gravity = HorizontalAlignment::Left;
    };
 
    HorizontalLayout(Context& context, State state, IWidget* parent);

@@ -22,6 +22,11 @@ class Viewport
    TG_EVENT(OnRemovedRectangle, Name)
    TG_EVENT(OnRectangleChangeDims, Name, const Rectangle&)
 
+   TG_EVENT(OnAddedSprite, Name, const Sprite&)
+   TG_EVENT(OnSpriteChangePosition, Name, const Sprite&)
+   TG_EVENT(OnSpriteChangeTextureRegion, Name, const Sprite&)
+   TG_EVENT(OnRemovedSprite, Name)
+
    explicit Viewport(Vector2u dimensions);
 
    Name add_text(Text&& text);
@@ -36,6 +41,12 @@ class Viewport
    Name add_rectangle(Rectangle&& rect);
    void remove_rectangle(Name name);
 
+   void add_sprite(Name name, Sprite&& sprite);
+   Name add_sprite(Sprite&& sprite);
+   void set_sprite_position(Name name, Vector2 position);
+   void set_sprite_texture_region(Name name, Vector4 region);
+   void remove_sprite(Name name);
+
    [[nodiscard]] const Text& text(Name name) const;
    [[nodiscard]] Vector2u dimensions() const;
 
@@ -43,6 +54,7 @@ class Viewport
    Name m_topName{1};
    std::map<Name, Text> m_texts;
    std::map<Name, Rectangle> m_rectangles;
+   std::map<Name, Sprite> m_sprites;
    Vector2u m_dimensions{};
 };
 
