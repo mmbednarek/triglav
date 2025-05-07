@@ -16,7 +16,7 @@ FontManger::FontManger()
 {
    const auto err = FT_Init_FreeType(&m_library);
    if (err != 0) {
-      throw std::runtime_error("failed to initialize font libbrary");
+      throw std::runtime_error("failed to initialize font library");
    }
 }
 

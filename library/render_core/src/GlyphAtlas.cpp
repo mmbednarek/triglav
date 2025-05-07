@@ -28,7 +28,7 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
    const auto widthFP = static_cast<float>(width);
    const auto heightFP = static_cast<float>(height);
 
-   static constexpr uint32_t separation = 3;
+   static constexpr uint32_t separation = 4;
 
    uint32_t left = separation;
    uint32_t top = separation;

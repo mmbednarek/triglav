@@ -1,20 +1,18 @@
 #pragma once
 
+#include "triglav/Math.hpp"
 #include "triglav/font/Charset.hpp"
 #include "triglav/font/Typeface.hpp"
 #include "triglav/graphics_api/Texture.hpp"
 
-#include <glm/vec2.hpp>
-#include <glm/vec4.hpp>
 #include <map>
-#include <span>
 
 namespace triglav::render_core {
 
 struct GlyphVertex
 {
-   glm::vec2 position;
-   glm::vec2 texCoord;
+   Vector2 position;
+   Vector2 texCoord;
 };
 
 struct TextMetric
@@ -25,11 +23,11 @@ struct TextMetric
 
 struct GlyphInfo
 {
-   glm::vec2 texCoordTopLeft;
-   glm::vec2 texCoordBottomRight;
-   glm::vec2 size;
-   glm::vec2 advance;
-   glm::vec2 padding;
+   Vector2 texCoordTopLeft;
+   Vector2 texCoordBottomRight;
+   Vector2 size;
+   Vector2 advance;
+   Vector2 padding;
 };
 
 class GlyphAtlas
