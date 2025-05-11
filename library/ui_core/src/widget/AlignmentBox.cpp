@@ -49,10 +49,26 @@ void AlignmentBox::on_event(const Event& event)
    const Vector2 offset = calculate_content_offset(m_state.horizontalAlignment, m_state.verticalAlignment, event.parentSize, size);
    if (event.mousePosition.x > offset.x && event.mousePosition.x < (offset.x + size.x) && event.mousePosition.y > offset.y &&
        event.mousePosition.y < (offset.y + size.y)) {
+      if (event.eventType == Event::Type::MouseMoved && !m_isMouseInside) {
+         Event enterEvent;
+         enterEvent.eventType = Event::Type::MouseEntered;
+         enterEvent.parentSize = size;
+         enterEvent.mousePosition = event.mousePosition - offset;
+         m_content->on_event(enterEvent);
+      }
+      m_isMouseInside = true;
+
       Event subEvent{event};
       subEvent.parentSize = size;
       subEvent.mousePosition -= offset;
       m_content->on_event(subEvent);
+   } else if (m_isMouseInside) {
+      Event leaveEvent;
+      leaveEvent.eventType = Event::Type::MouseLeft;
+      leaveEvent.parentSize = size;
+      leaveEvent.mousePosition = event.mousePosition - offset;
+      m_content->on_event(leaveEvent);
+      m_isMouseInside = false;
    }
 }
 

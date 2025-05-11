@@ -12,7 +12,8 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device& device, ui_core::View
     m_device(device),
     m_viewport(viewport),
     TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
-    TG_CONNECT(viewport, OnRectangleChangeDims, on_rectangle_change_dims)
+    TG_CONNECT(viewport, OnRectangleChangeDims, on_rectangle_change_dims),
+    TG_CONNECT(viewport, OnRectangleChangeColor, on_rectangle_change_color)
 {
 }
 
@@ -80,6 +81,25 @@ void RectangleRenderer::on_rectangle_change_dims(const Name name, const ui_core:
    vsUbo.viewportSize = m_viewport.dimensions();
 
    GAPI_CHECK_STATUS(dstRect.vsUbo.write_indirect(&vsUbo, sizeof(VertUBO)));
+
+   struct FragUBO
+   {
+      Vector4 borderRadius;
+      Vector4 backgroundColor;
+      Vector2 rectSize;
+   } fsUbo{};
+   fsUbo.borderRadius = {10, 10, 10, 10};
+   fsUbo.backgroundColor = rect.color;
+   fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
+
+   GAPI_CHECK_STATUS(dstRect.fsUbo.write_indirect(&fsUbo, sizeof(FragUBO)));
+}
+
+void RectangleRenderer::on_rectangle_change_color(const Name name, const ui_core::Rectangle& rect)
+{
+   std::unique_lock lk{m_rectUpdateMtx};
+
+   auto& dstRect = m_rectangles.at(name);
 
    struct FragUBO
    {

@@ -92,6 +92,16 @@ Name Viewport::add_rectangle(Rectangle&& rect)
    return name;
 }
 
+void Viewport::set_rectangle_color(Name name, const Vector4 color)
+{
+   auto& rect = m_rectangles.at(name);
+   if (rect.color == color)
+      return;
+
+   rect.color = color;
+   this->event_OnRectangleChangeColor.publish(name, rect);
+}
+
 void Viewport::remove_rectangle(Name name)
 {
    event_OnRemovedRectangle.publish(name);

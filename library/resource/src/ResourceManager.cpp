@@ -39,6 +39,10 @@ void ResourceManager::load_asset_list(const io::Path& path)
       return;
    }
    m_loadContext = LoadContext::from_asset_list(path);
+   if (m_loadContext == nullptr) {
+      spdlog::error("Failed to open asset file list");
+      return;
+   }
 
    spdlog::info("Loading {} assets", m_loadContext->total_assets());
    this->load_next_stage();

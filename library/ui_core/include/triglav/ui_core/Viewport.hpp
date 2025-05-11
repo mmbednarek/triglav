@@ -19,8 +19,9 @@ class Viewport
    TG_EVENT(OnTextChangeColor, Name, const Text&)
 
    TG_EVENT(OnAddedRectangle, Name, const Rectangle&)
-   TG_EVENT(OnRemovedRectangle, Name)
    TG_EVENT(OnRectangleChangeDims, Name, const Rectangle&)
+   TG_EVENT(OnRectangleChangeColor, Name, const Rectangle&)
+   TG_EVENT(OnRemovedRectangle, Name)
 
    TG_EVENT(OnAddedSprite, Name, const Sprite&)
    TG_EVENT(OnSpriteChangePosition, Name, const Sprite&)
@@ -39,6 +40,7 @@ class Viewport
 
    void add_rectangle(Name name, Rectangle&& rect);
    Name add_rectangle(Rectangle&& rect);
+   void set_rectangle_color(Name name, Vector4 color);
    void remove_rectangle(Name name);
 
    void add_sprite(Name name, Sprite&& sprite);

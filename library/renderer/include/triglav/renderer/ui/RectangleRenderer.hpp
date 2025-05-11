@@ -30,6 +30,7 @@ class RectangleRenderer
 
    void on_added_rectangle(Name name, const ui_core::Rectangle& rect);
    void on_rectangle_change_dims(Name name, const ui_core::Rectangle& rect);
+   void on_rectangle_change_color(Name name, const ui_core::Rectangle& rect);
 
    void build_render_ui(render_core::BuildContext& ctx);
 
@@ -42,6 +43,7 @@ class RectangleRenderer
 
    TG_SINK(ui_core::Viewport, OnAddedRectangle);
    TG_SINK(ui_core::Viewport, OnRectangleChangeDims);
+   TG_SINK(ui_core::Viewport, OnRectangleChangeColor);
 };
 
 }// namespace triglav::renderer::ui

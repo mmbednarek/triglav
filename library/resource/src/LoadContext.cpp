@@ -65,6 +65,10 @@ std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
    result.resize(loading_stage_count());
 
    auto file = io::read_whole_file(path);
+   if (file.empty()) {
+      return {};
+   }
+
    auto tree =
       ryml::parse_in_place(c4::substr{const_cast<char*>(path.string().data()), path.string().size()}, c4::substr{file.data(), file.size()});
    auto resources = tree["resources"];

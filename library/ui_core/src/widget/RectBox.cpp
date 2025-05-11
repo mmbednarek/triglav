@@ -43,6 +43,17 @@ void RectBox::remove_from_viewport()
    m_context.viewport().remove_rectangle(m_rectName);
 }
 
+void RectBox::set_color(Vector4 color)
+{
+   if (m_state.color == color)
+      return;
+   if (m_rectName == 0)
+      return;
+
+   m_state.color = color;
+   m_context.viewport().set_rectangle_color(m_rectName, color);
+}
+
 void RectBox::on_child_state_changed(IWidget& widget)
 {
    m_cachedParentSize.reset();

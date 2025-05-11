@@ -194,7 +194,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
    auto& titleButton = viewport.create_child<ui_core::Button>({});
 
    auto& titleLayout = titleButton.create_content<ui_core::HorizontalLayout>({
-      .separation = 10.0f,
+      .separation = 5.0f,
       .gravity = ui_core::HorizontalAlignment::Center,
    });
 
@@ -218,12 +218,12 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
    TG_CONNECT_OPT(titleButton, OnLeave, on_title_leave);
 
    viewport.create_child<ui_core::EmptySpace>({
-      .size = {1.0f, 15.0f},
+      .size = {1.0f, 4.0f},
    });
 
    for (const auto& [groupLabel, group] : g_labelGroups) {
       auto& panel = viewport.create_child<HideablePanel>({
-         .separation = {15.0f},
+         .separation = {8.0f},
          .label = std::string{groupLabel},
          .surface = &m_surface,
       });
@@ -236,12 +236,12 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
 
       auto& leftPanel = labelBox.create_child<ui_core::VerticalLayout>({
          .padding = {0, 0.0f, 5.0f, 0.0f},
-         .separation = {14.0f},
+         .separation = {10.0f},
       });
 
       auto& rightPanel = labelBox.create_child<ui_core::VerticalLayout>({
          .padding = {5.0f, 0.0f, 0, 0.0f},
-         .separation = {14.0f},
+         .separation = {10.0f},
       });
 
       for (const auto& [name, content] : group) {

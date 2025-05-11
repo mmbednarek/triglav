@@ -31,6 +31,7 @@ class AlignmentBox final : public ContainerWidget
  private:
    State m_state;
    Vector4 m_parentDimensions{};
+   bool m_isMouseInside = false;
 };
 
 }// namespace triglav::ui_core

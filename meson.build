@@ -82,8 +82,8 @@ subdir('library/asset')
 subdir('library/resource')
 subdir('library/render_core')
 subdir('library/ui_core')
-
 subdir('library/renderer')
+subdir('library/desktop_ui')
 
 subdir('game/demo')
 

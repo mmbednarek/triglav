@@ -105,8 +105,8 @@ class Delegate
 #define TG_SINK(sender, name) sender::name##Delegate::Sink<Self> sink_##name
 #define TG_OPT_SINK(sender, name) sender::name##Delegate::OptSink<Self> sink_##name
 
-#define TG_CONNECT(obj, name, func) sink_##name(obj.event_##name.connect<&Self::func>(this))
-#define TG_CONNECT_OPT(obj, name, func) obj.event_##name.connect_to<&Self::func>(sink_##name, this)
+#define TG_CONNECT(obj, name, func) sink_##name((obj).event_##name.connect<&Self::func>(this))
+#define TG_CONNECT_OPT(obj, name, func) (obj).event_##name.connect_to<&Self::func>(sink_##name, this)
 
 #define TG_DEFINE_AWAITER(awaiter_name, producer, event)  \
    class awaiter_name                                     \
