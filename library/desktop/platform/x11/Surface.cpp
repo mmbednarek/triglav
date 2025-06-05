@@ -51,6 +51,7 @@ Key map_key(const KeyCode keyCode)
       return Key::F12;
    }
 
+   spdlog::warn("unknown keycode: {}", keyCode);
    return Key::Unknown;
 }
 
@@ -72,7 +73,8 @@ MouseButton map_button(const uint32_t keyCode)
 Surface::Surface(::Display* display, const Window window, const Dimension dimension) :
     m_display(display),
     m_window(window),
-    m_dimension(dimension)
+    m_dimension(dimension),
+    m_xim(XOpenIM(m_display, nullptr, nullptr, nullptr))
 {
 }
 
@@ -125,37 +127,48 @@ Dimension Surface::dimension() const
    return {attribs.width, attribs.height};
 }
 
-void Surface::dispatch_key_press(const KeyCode code) const
+void Surface::dispatch_key_press(const XEvent& event) const
 {
-   event_OnKeyIsPressed.publish(map_key(code));
+   if (m_keyboardInputMode & KeyboardInputMode::Text) {
+      char buffer[128];
+      const int count = Xutf8LookupString(m_xic, const_cast<XKeyPressedEvent*>(&event.xkey), buffer, 128, nullptr, nullptr);
+      const char* bufferPtr = buffer;
+      auto rune = decode_rune_from_buffer(bufferPtr, buffer + count);
+      event_OnTextInput.publish(rune);
+   }
+   if (m_keyboardInputMode & KeyboardInputMode::Direct) {
+      event_OnKeyIsPressed.publish(map_key(event.xkey.keycode));
+   }
 }
 
-void Surface::dispatch_key_release(const KeyCode code) const
+void Surface::dispatch_key_release(const XEvent& event) const
 {
-   event_OnKeyIsReleased.publish(map_key(code));
+   if (m_keyboardInputMode & KeyboardInputMode::Direct) {
+      event_OnKeyIsReleased.publish(map_key(event.xkey.keycode));
+   }
 }
 
-void Surface::dispatch_button_press(const uint32_t code) const
+void Surface::dispatch_button_press(const XEvent& event) const
 {
-   event_OnMouseButtonIsPressed.publish(map_button(code));
+   event_OnMouseButtonIsPressed.publish(map_button(event.xbutton.button));
 }
 
-void Surface::dispatch_button_release(const uint32_t code) const
+void Surface::dispatch_button_release(const XEvent& event) const
 {
-   event_OnMouseButtonIsReleased.publish(map_button(code));
+   event_OnMouseButtonIsReleased.publish(map_button(event.xbutton.button));
 }
 
-void Surface::dispatch_mouse_move(const int x, const int y) const
+void Surface::dispatch_mouse_move(const XEvent& event) const
 {
-   event_OnMouseMove.publish(Vector2{static_cast<float>(x), static_cast<float>(y)});
+   event_OnMouseMove.publish(Vector2{static_cast<float>(event.xmotion.x), static_cast<float>(event.xmotion.y)});
 }
 
-void Surface::dispatch_mouse_relative_move(const float x, const float y) const
+void Surface::dispatch_mouse_relative_move(const Vector2 diff) const
 {
    if (not m_isCursorLocked)
       return;
 
-   event_OnMouseRelativeMove.publish(Vector2{static_cast<float>(x), static_cast<float>(y)});
+   event_OnMouseRelativeMove.publish(diff);
 }
 
 void Surface::dispatch_close() const
@@ -193,12 +206,32 @@ void Surface::set_cursor_icon(const CursorIcon icon)
    case CursorIcon::Wait:
       m_currentCursor = ::XCreateFontCursor(m_display, XC_watch);
       break;
+   case CursorIcon::Edit:
+      m_currentCursor = ::XCreateFontCursor(m_display, XC_xterm);
+      break;
    default:
       m_currentCursor = 0;
       return;
    }
 
    ::XDefineCursor(m_display, m_window, m_currentCursor);
+}
+
+void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
+{
+   m_keyboardInputMode = mode;
+
+   if (mode & KeyboardInputMode::Text) {
+      ::XSetLocaleModifiers("");
+
+      if (m_xic != nullptr) {
+         ::XDestroyIC(m_xic);
+      }
+
+      m_xic =
+         ::XCreateIC(m_xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, m_window, XNFocusWindow, m_window, nullptr);
+      ::XSetICFocus(m_xic);
+   }
 }
 
 }// namespace triglav::desktop::x11

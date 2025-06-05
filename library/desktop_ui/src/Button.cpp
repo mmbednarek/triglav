@@ -1,5 +1,6 @@
 #include "Button.hpp"
 
+#include "triglav/desktop/ISurface.hpp"
 #include "triglav/ui_core/UICore.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
@@ -14,9 +15,12 @@ Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidge
    const auto& props = m_state.manager->properties();
    m_rect = &m_button.create_content<ui_core::RectBox>({
       .color = props.button_bg_color,
+      .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
+      .borderColor = {0.1f, 0.1f, 0.1f, 1.f},
+      .borderWidth = 2.5f,
    });
    auto& layout = m_rect->create_content<ui_core::VerticalLayout>({
-      .padding{10.0f, 10.0f, 10.0f, 10.0f},
+      .padding{15.0f, 15.0f, 15.0f, 15.0f},
       .separation = 0.0f,
    });
    m_label = &layout.create_child<ui_core::TextBox>({
@@ -55,9 +59,11 @@ void Button::on_event(const ui_core::Event& event)
       event_OnClick.publish(std::get<ui_core::Event::Mouse>(event.data).button);
       break;
    case ui_core::Event::Type::MouseEntered:
+      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Hand);
       m_rect->set_color(m_state.manager->properties().button_bg_hover_color);
       break;
    case ui_core::Event::Type::MouseLeft:
+      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_rect->set_color(m_state.manager->properties().button_bg_color);
       break;
    default:

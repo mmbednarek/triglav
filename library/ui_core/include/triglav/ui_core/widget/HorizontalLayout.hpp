@@ -28,7 +28,6 @@ class HorizontalLayout final : public LayoutWidget
  private:
    void handle_mouse_leave(const Event& event, IWidget* widget);
 
-   Context& m_context;
    State m_state;
    IWidget* m_lastActiveWidget{nullptr};
 };

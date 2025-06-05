@@ -5,6 +5,8 @@
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
+#include <spdlog/spdlog.h>
+
 namespace triglav::renderer::ui {
 
 constexpr u32 g_maxTextUpdateCount = 256;
@@ -99,7 +101,7 @@ void TextRenderer::on_text_change_content(const Name name, const ui_core::Text& 
    std::unique_lock lk{m_updateMtx};
 
    this->free_vertex_section(name);
-   const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
+   const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.rune_count());
 
    auto& textInfo = m_textInfos.at(name);
    textInfo.text.content = text.content;
@@ -198,7 +200,7 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
 
       dstUpdate.dstDrawCall = textInfo.drawCallId;
       dstUpdate.characterOffset = charOffset;
-      dstUpdate.characterCount = font::Charset::European.encode_string_to(textInfo.text.content, charBuffer.begin() + charOffset);
+      dstUpdate.characterCount = font::Charset::European.encode_string_to(textInfo.text.content.view(), charBuffer.begin() + charOffset);
       dstUpdate.color = textInfo.color;
       dstUpdate.position = textInfo.position;
       dstUpdate.atlasId = textInfo.atlasId;

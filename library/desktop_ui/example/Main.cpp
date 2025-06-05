@@ -2,6 +2,7 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
+#include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
@@ -10,6 +11,7 @@
 #include "triglav/threading/ThreadPool.hpp"
 #include "triglav/threading/Threading.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -27,6 +29,7 @@ using triglav::ui_core::HorizontalAlignment;
 using triglav::ui_core::VerticalAlignment;
 
 using namespace triglav::name_literals;
+using namespace triglav::string_literals;
 
 constexpr auto g_defaultWidth = 800;
 constexpr auto g_defaultHeight = 600;
@@ -50,7 +53,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    std::unique_ptr<triglav::graphics_api::Device> device;
 
    {
-      const auto surface = display.create_surface("Temporary Window", {32, 32}, WindowAttribute::Default);
+      const auto surface = display.create_surface("Temporary Window"_strv, {32, 32}, WindowAttribute::Default);
       const auto surfaceGfx = GAPI_CHECK(instance.create_surface(*surface));
 
       device = GAPI_CHECK(instance.create_device(&surfaceGfx, triglav::graphics_api::DevicePickStrategy::PreferDedicated,
@@ -76,18 +79,30 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .verticalAlignment = VerticalAlignment::Center,
    });
 
-   const triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties{
-      .background_color = {0.1f, 0.1f, 0.1f, 1.0f},
-      .foreground_color = {0.9f, 0.9f, 0.9f, 1.0f},
-      .accent_color = {0.0f, 0.0f, 1.0f, 1.0f},
-      .button_bg_color = {0.1f, 0.1f, 0.15f, 1.0f},
-      .button_bg_hover_color = {0.2f, 0.2f, 0.25f, 1.0f},
-      .button_bg_pressed_color = {0.05f, 0.05f, 0.15f, 1.0f},
-      .button_font_size = 15,
-      .base_typeface = "cantarell.typeface"_rc,
+   auto& layout = alignmentBox.create_content<triglav::ui_core::VerticalLayout>({
+      .padding = {5.0f, 5.0f, 5.0f, 5.0f},
+      .separation = 10.0f,
    });
 
-   alignmentBox.create_content<triglav::desktop_ui::Button>({
+   triglav::desktop_ui::DesktopUIManager desktopUiManager(
+      triglav::desktop_ui::ThemeProperties{
+         .background_color = {0.1f, 0.1f, 0.1f, 1.0f},
+         .foreground_color = {1.0f, 1.0f, 1.0f, 1.0f},
+         .accent_color = {0.0f, 0.0f, 1.0f, 1.0f},
+         .button_bg_color = {0.03f, 0.03f, 0.03f, 1.0f},
+         .button_bg_hover_color = {0.06f, 0.06f, 0.06f, 1.0f},
+         .button_bg_pressed_color = {0.02f, 0.02f, 0.02f, 1.0f},
+         .button_font_size = 15,
+         .base_typeface = "cantarell.typeface"_rc,
+      },
+      dialog.surface());
+
+   layout.create_child<triglav::desktop_ui::TextInput>({
+      .manager = &desktopUiManager,
+      .text = "Text Edit",
+   });
+
+   layout.create_child<triglav::desktop_ui::Button>({
       .manager = &desktopUiManager,
       .label = "Example",
    });
@@ -98,6 +113,8 @@ int triglav_main(InputArgs& args, IDisplay& display)
       dialog.update();
       display.dispatch_messages();
    }
+
+   device->await_all();
 
    ThreadPool::the().quit();
 

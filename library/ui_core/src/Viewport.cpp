@@ -27,7 +27,7 @@ void Viewport::add_text(const Name name, Text&& text)
    this->event_OnAddedText.publish(name, it->second);
 }
 
-void Viewport::set_text_content(const Name name, const std::string_view content)
+void Viewport::set_text_content(const Name name, const StringView content)
 {
    auto& textPrim = m_texts.at(name);
 

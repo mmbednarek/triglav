@@ -10,6 +10,7 @@ project('triglav_engine',
   ],
 )
 
+
 if meson.get_compiler('cpp').get_id() == 'msvc'
   add_project_arguments('/std:c++latest', language : 'cpp')
   add_project_arguments('/Zc:preprocessor', language : 'cpp')
@@ -19,6 +20,7 @@ endif
 
 if host_machine.system() == 'windows' and meson.get_compiler('cpp').get_id() == 'gcc'
   add_project_arguments('-Wa,-mbig-obj', language : 'cpp')
+  add_project_arguments('-D_GLIBCXX_USE_CXX11_ABI=1', language : 'cpp')
 endif
 
 if meson.get_compiler('cpp').get_id() == 'clang'

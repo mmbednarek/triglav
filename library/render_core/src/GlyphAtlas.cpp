@@ -2,10 +2,8 @@
 
 #include "RenderCore.hpp"
 
-#include "triglav/font/Utf8StringView.hpp"
 #include "triglav/graphics_api/Device.hpp"
 
-#include <codecvt>
 #include <cstring>
 #include <locale>
 #include <vector>
@@ -74,7 +72,7 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
    GAPI_CHECK_STATUS(m_glyphStorageBuffer.write_indirect(glyphInfoVec.data(), sizeof(GlyphInfo) * glyphInfoVec.size()));
 }
 
-std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const std::string_view text, TextMetric* outMetric) const
+std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const StringView text, TextMetric* outMetric) const
 {
    std::vector<GlyphVertex> vertices;
    vertices.reserve(text.size() * 6);
@@ -82,8 +80,7 @@ std::vector<GlyphVertex> GlyphAtlas::create_glyph_vertices(const std::string_vie
    float x = 0.0f;
    float maxHeight = 0.0f;
 
-   font::Utf8StringView textUtf8{text};
-   for (const auto ch : textUtf8) {
+   for (const auto ch : text) {
       if (not m_glyphInfos.contains(ch)) {
          x += m_glyphSize;
          continue;
@@ -140,18 +137,18 @@ graphics_api::Texture& GlyphAtlas::texture()
    return m_texture;
 }
 
-TextMetric GlyphAtlas::measure_text(const std::string_view text) const
+TextMetric GlyphAtlas::measure_text(const StringView text) const
 {
    float width = 0.0f;
    float height = 0.0f;
 
-   for (const auto ch : font::Utf8StringView{text}) {
-      if (not m_glyphInfos.contains(ch)) {
+   for (const Rune rune : text) {
+      if (not m_glyphInfos.contains(rune)) {
          width += m_glyphSize;
          continue;
       }
 
-      const auto& info = m_glyphInfos.at(ch);
+      const auto& info = m_glyphInfos.at(rune);
       if (info.size.y > height) {
          height = info.size.y;
       }

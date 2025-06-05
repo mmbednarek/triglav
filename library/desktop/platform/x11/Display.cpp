@@ -35,35 +35,35 @@ void Display::dispatch_messages()
       case KeyPress: {
          auto surface = this->surface_by_window(event.xkey.window);
          if (surface) {
-            surface->dispatch_key_press(event.xkey.keycode);
+            surface->dispatch_key_press(event);
          }
          break;
       }
       case KeyRelease: {
          auto surface = this->surface_by_window(event.xkey.window);
          if (surface) {
-            surface->dispatch_key_release(event.xkey.keycode);
+            surface->dispatch_key_release(event);
          }
          break;
       }
       case ButtonPress: {
          auto surface = this->surface_by_window(event.xbutton.window);
          if (surface) {
-            surface->dispatch_button_press(event.xbutton.button);
+            surface->dispatch_button_press(event);
          }
          break;
       }
       case ButtonRelease: {
          auto surface = this->surface_by_window(event.xbutton.window);
          if (surface) {
-            surface->dispatch_button_release(event.xbutton.button);
+            surface->dispatch_button_release(event);
          }
          break;
       }
       case MotionNotify: {
          auto surface = this->surface_by_window(event.xmotion.window);
          if (surface) {
-            surface->dispatch_mouse_move(event.xmotion.x, event.xmotion.y);
+            surface->dispatch_mouse_move(event);
          }
          break;
       }
@@ -88,7 +88,7 @@ void Display::dispatch_messages()
    m_mouse.tick();
 }
 
-std::shared_ptr<ISurface> Display::create_surface(const std::string_view title, const Vector2u dimensions, const WindowAttributeFlags flags)
+std::shared_ptr<ISurface> Display::create_surface(const StringView title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
    auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, dimensions.x, dimensions.y, 0, 0, 0xffffffff);
 
@@ -111,14 +111,14 @@ std::shared_ptr<ISurface> Display::create_surface(const std::string_view title, 
    return surface;
 }
 
-void Display::on_mouse_move(float x, float y)
+void Display::on_mouse_move(const float x, const float y)
 {
    for (const auto wndHandle : std::views::keys(m_surfaces)) {
       auto surface = this->surface_by_window(wndHandle);
       if (not surface)
          break;
 
-      surface->dispatch_mouse_relative_move(1.5f * x, 1.5f * y);
+      surface->dispatch_mouse_relative_move({1.5f * x, 1.5f * y});
    }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/Math.hpp"
+#include "triglav/String.hpp"
 #include "triglav/font/Charset.hpp"
 #include "triglav/font/Typeface.hpp"
 #include "triglav/graphics_api/Texture.hpp"
@@ -36,10 +37,10 @@ class GlyphAtlas
    GlyphAtlas(graphics_api::Device& device, const font::Typeface& typeface, const font::Charset& atlasRunes, int glyphSize, uint32_t width,
               uint32_t height);
 
-   [[nodiscard]] std::vector<GlyphVertex> create_glyph_vertices(std::string_view text, TextMetric* outMetric = nullptr) const;
+   [[nodiscard]] std::vector<GlyphVertex> create_glyph_vertices(StringView text, TextMetric* outMetric = nullptr) const;
    [[nodiscard]] const graphics_api::Texture& texture() const;
    [[nodiscard]] graphics_api::Texture& texture();
-   [[nodiscard]] TextMetric measure_text(std::string_view text) const;
+   [[nodiscard]] TextMetric measure_text(StringView text) const;
    [[nodiscard]] const graphics_api::Buffer& storage_buffer() const;
 
  private:

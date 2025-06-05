@@ -31,6 +31,9 @@ void RectBox::add_to_viewport(const Vector4 dimensions)
       m_rectName = m_context.viewport().add_rectangle(Rectangle{
          .rect = rectSize,
          .color = m_state.color,
+         .borderRadius = m_state.borderRadius,
+         .borderColor = m_state.borderColor,
+         .borderWidth = m_state.borderWidth,
       });
    }
 

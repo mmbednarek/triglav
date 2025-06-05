@@ -19,7 +19,7 @@ class TextBox final : public IWidget
    {
       i32 fontSize{};
       TypefaceName typeface{};
-      std::string content{};
+      String content{};
       Vector4 color{};
       HorizontalAlignment horizontalAlignment{};
       VerticalAlignment verticalAlignment{};
@@ -31,7 +31,7 @@ class TextBox final : public IWidget
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
 
-   void set_content(std::string_view content);
+   void set_content(StringView content);
    void set_color(Vector4 color);
 
  private:

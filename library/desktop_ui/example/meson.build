@@ -4,7 +4,8 @@ desktop_ui_example_sources = files(
 
 desktop_ui_example_deps = [render_core,
                            desktop,
-                           desktop_ui]
+                           desktop_ui,
+                           shaders]
 
 desktop_ui_example = executable('desktop_ui_example',
                                 sources : desktop_ui_example_sources,

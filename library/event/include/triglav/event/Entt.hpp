@@ -8,6 +8,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wrestrict"
+#pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
 #endif
 
 #include <entt/entt.hpp>

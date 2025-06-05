@@ -5,6 +5,7 @@
 #include "triglav/EnumFlags.hpp"
 #include "triglav/Int.hpp"
 #include "triglav/Math.hpp"
+#include "triglav/Utf8.hpp"
 #include "triglav/event/Delegate.hpp"
 
 #include <memory>
@@ -29,6 +30,16 @@ enum class WindowAttribute : u32
 
 TRIGLAV_DECL_FLAGS(WindowAttribute)
 
+enum class KeyboardInputMode
+{
+   None = 0,
+   Direct = (1 << 0),
+   Text = (1 << 1),
+};
+
+TRIGLAV_DECL_FLAGS(KeyboardInputMode)
+
+
 using Dimension = Vector2i;
 
 class ISurface : public std::enable_shared_from_this<ISurface>
@@ -45,6 +56,7 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    TG_EVENT(OnClose)
    TG_EVENT(OnKeyIsPressed, Key)
    TG_EVENT(OnKeyIsReleased, Key)
+   TG_EVENT(OnTextInput, Rune)
 
    virtual ~ISurface() = default;
 
@@ -52,6 +64,7 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    virtual void unlock_cursor() = 0;
    virtual void hide_cursor() const = 0;
    virtual void set_cursor_icon(CursorIcon icon) = 0;
+   virtual void set_keyboard_input_mode(KeyboardInputModeFlags mode) = 0;
 
    [[nodiscard]] virtual bool is_cursor_locked() const = 0;
    [[nodiscard]] virtual Vector2i dimension() const = 0;

@@ -2,11 +2,16 @@
 
 #include "Desktop.hpp"
 #include "IDisplay.hpp"
+extern "C"
+{
 #include "api/CursorShape.h"
 #include "api/Decoration.h"
 #include "api/PointerConstraints.h"
 #include "api/RelativePointer.h"
 #include "api/XdgShell.h"
+}
+
+#include "triglav/String.hpp"
 
 #include <map>
 #include <string_view>
@@ -27,7 +32,7 @@ class Display final : public IDisplay
 
    void dispatch_messages() override;
 
-   std::shared_ptr<ISurface> create_surface(std::string_view title, Vector2u dimensions, WindowAttributeFlags flags) override;
+   std::shared_ptr<ISurface> create_surface(StringView title, Vector2u dimensions, WindowAttributeFlags flags) override;
 
    [[nodiscard]] constexpr wl_display* display() const noexcept
    {
@@ -93,6 +98,7 @@ class Display final : public IDisplay
    zxdg_decoration_manager_v1* m_decorationManager{};
    xkb_context* m_xkbContext;
    xkb_keymap* m_xkbKeymap;
+   xkb_state* m_xkbState;
 
    std::map<wl_surface*, Surface*> m_surfaceMap{};
    Surface* m_pointerSurface{};

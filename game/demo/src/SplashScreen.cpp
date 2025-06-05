@@ -1,8 +1,9 @@
 #include "SplashScreen.h"
 
+#include "triglav/Format.hpp"
+#include "triglav/String.hpp"
 #include "triglav/renderer/Renderer.hpp"
 
-#include <fmt/core.h>
 
 namespace demo {
 
@@ -154,7 +155,8 @@ void SplashScreen::update_process_bar(const float progress)
 void SplashScreen::update_loaded_resource(const triglav::ResourceName name)
 {
    m_displayedResource = name;
-   m_uiViewport.set_text_content("desc"_name, fmt::format("Loading resource {}", m_resourceManager.lookup_name(name).value_or("unknown")));
+   const auto msg = triglav::format("Loading resource {}", m_resourceManager.lookup_name(name).value_or("unknown"));
+   m_uiViewport.set_text_content("desc"_name, msg.view());
 }
 
 }// namespace demo

@@ -4,10 +4,11 @@ desktop_sources += files([
                          'api/PointerConstraints.c',
                          'api/RelativePointer.c',
                          'api/Tablet.c',
+                         'api/TextInput.c',
                          'api/XdgShell.c',
                          'Display.cpp',
-                         'Display.h',
+                         'Display.hpp',
                          'Surface.cpp',
-                         'Surface.h',
+                         'Surface.hpp',
                          'VulkanSurface.cpp',
                      ])

@@ -1,7 +1,5 @@
 #include "GlyphCache.hpp"
 
-#include "triglav/font/Utf8StringView.hpp"
-
 namespace triglav::render_core {
 
 // GlyphProperties

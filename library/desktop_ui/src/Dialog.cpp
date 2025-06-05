@@ -7,12 +7,13 @@
 namespace triglav::desktop_ui {
 
 using namespace name_literals;
+using namespace string_literals;
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
                render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
-    m_surface(display.create_surface("UI Dialog", dimensions, desktop::WindowAttribute::Default)),
+    m_surface(display.create_surface("UI Dialog"_strv, dimensions, desktop::WindowAttribute::Default)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
     m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Fifo),
@@ -24,7 +25,9 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
     TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
-    TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released)
+    TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
+    TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
+    TG_CONNECT(*m_surface, OnTextInput, on_text_input)
 {
 }
 
@@ -134,6 +137,32 @@ void Dialog::on_mouse_button_is_released(desktop::MouseButton button)
    m_rootWidget->on_event(event);
 }
 
+void Dialog::on_key_is_pressed(desktop::Key key)
+{
+   if (m_rootWidget == nullptr)
+      return;
+
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::KeyPressed;
+   event.mousePosition = m_mousePosition;
+   event.parentSize = m_renderSurface.resolution();
+   event.data.emplace<ui_core::Event::Keyboard>(key);
+   m_rootWidget->on_event(event);
+}
+
+void Dialog::on_text_input(const Rune rune)
+{
+   if (m_rootWidget == nullptr)
+      return;
+
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::TextInput;
+   event.mousePosition = m_mousePosition;
+   event.parentSize = m_renderSurface.resolution();
+   event.data.emplace<ui_core::Event::TextInput>(rune);
+   m_rootWidget->on_event(event);
+}
+
 ui_core::IWidget& Dialog::set_root_widget(ui_core::IWidgetPtr&& content)
 {
    if (m_rootWidget != nullptr) {
@@ -143,6 +172,11 @@ ui_core::IWidget& Dialog::set_root_widget(ui_core::IWidgetPtr&& content)
    m_rootWidget = std::move(content);
 
    return *m_rootWidget;
+}
+
+desktop::ISurface& Dialog::surface() const
+{
+   return *m_surface;
 }
 
 bool Dialog::should_close() const

@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan_wayland.h>
 
-#include "Surface.h"
+#include "Surface.hpp"
 
 namespace triglav::desktop {
 

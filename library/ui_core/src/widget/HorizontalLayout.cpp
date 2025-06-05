@@ -4,7 +4,6 @@ namespace triglav::ui_core {
 
 HorizontalLayout::HorizontalLayout(Context& context, State state, IWidget* parent) :
     LayoutWidget(context, parent),
-    m_context(context),
     m_state(std::move(state))
 {
 }

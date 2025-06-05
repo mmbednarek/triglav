@@ -29,6 +29,12 @@ DescriptorWriter::~DescriptorWriter()
       return;
 
    this->update();
+
+   // for (const auto& write : m_descriptorWrites) {
+   //    if (write.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+   //       delete[] write.pImageInfo;
+   //    }
+   // }
 }
 
 void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer)
@@ -113,7 +119,7 @@ void DescriptorWriter::set_texture_only(uint32_t binding, const Texture& texture
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
-void DescriptorWriter::set_texture_view_only(const uint32_t binding, const TextureView& texture)
+void DescriptorWriter::set_texture_view_only(const u32 binding, const TextureView& texture)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 
@@ -124,7 +130,7 @@ void DescriptorWriter::set_texture_view_only(const uint32_t binding, const Textu
    writeDescriptorSet.pImageInfo = imageInfo;
 }
 
-void DescriptorWriter::set_texture_array(uint32_t binding, const std::span<const Texture*> textures)
+void DescriptorWriter::set_texture_array(const u32 binding, const std::span<const Texture*> textures)
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 

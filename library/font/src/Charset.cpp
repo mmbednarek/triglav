@@ -7,7 +7,7 @@ const Charset Charset::European = Charset().add_range(32, 126).add_range(0xc0, 0
 
 // ***** Charset::Iterator *****
 
-Charset::Iterator::Iterator(const Charset* charset, std::vector<RuneRange>::const_iterator rangeIt, Rune rune) :
+Charset::Iterator::Iterator(const Charset* charset, const std::vector<RuneRange>::const_iterator rangeIt, const Rune rune) :
     m_charset(charset),
     m_rangeIt(rangeIt),
     m_rune(rune)
@@ -48,7 +48,7 @@ Charset& Charset::add_range(Rune from, Rune to)
    return *this;
 }
 
-std::vector<u32> Charset::encode_string(const std::string_view str) const
+std::vector<u32> Charset::encode_string(const StringView str) const
 {
    std::vector<u32> result;
    result.reserve(str.size());

@@ -13,7 +13,7 @@ namespace triglav::render_core {
 class BuildContext;
 class JobGraph;
 class GlyphCache;
-class GlyphProperties;
+struct GlyphProperties;
 }// namespace triglav::render_core
 
 namespace triglav::renderer::ui {

@@ -1,8 +1,11 @@
 #pragma once
 
-#include "Display.h"
+#include "Display.hpp"
 #include "ISurface.hpp"
+extern "C"
+{
 #include "api/XdgShell.h"
+}
 
 #include <optional>
 
@@ -15,7 +18,7 @@ class Surface : public ISurface
    friend Display;
 
  public:
-   explicit Surface(Display& display, std::string_view title, Dimension dimension, WindowAttributeFlags attributes);
+   explicit Surface(Display& display, StringView title, Dimension dimension, WindowAttributeFlags attributes);
    ~Surface() override;
 
    void on_configure(uint32_t serial);
@@ -28,6 +31,7 @@ class Surface : public ISurface
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Dimension dimension() const override;
    void set_cursor_icon(CursorIcon icon) override;
+   void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
 
    [[nodiscard]] constexpr Display& display() const noexcept
    {
@@ -49,6 +53,7 @@ class Surface : public ISurface
    zwp_locked_pointer_v1* m_lockedPointer{};
    zxdg_toplevel_decoration_v1* m_decoration{};
    bool m_resizeReady = false;
+   KeyboardInputModeFlags m_keyboardInputMode{KeyboardInputMode::Direct};
 
    uint32_t m_pointerSerial{};
 

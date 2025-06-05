@@ -20,7 +20,7 @@ class Display final : public IDisplay
    ~Display() override;
 
    void dispatch_messages() override;
-   std::shared_ptr<ISurface> create_surface(std::string_view title, Vector2u dimensions, WindowAttributeFlags flags) override;
+   std::shared_ptr<ISurface> create_surface(StringView title, Vector2u dimensions, WindowAttributeFlags flags) override;
 
  private:
    void on_mouse_move(float x, float y);

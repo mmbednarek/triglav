@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/String.hpp"
 #include "triglav/event/Delegate.hpp"
 
 #include <string_view>
@@ -28,20 +29,20 @@ enum class AmbientOcclusionMethod
    RayTraced,
 };
 
-[[nodiscard]] inline std::string_view ambient_occlusion_method_to_string(const AmbientOcclusionMethod method)
+[[nodiscard]] inline StringView ambient_occlusion_method_to_string(const AmbientOcclusionMethod method)
 {
-   using namespace std::string_view_literals;
+   using namespace string_literals;
 
    switch (method) {
    case AmbientOcclusionMethod::Disabled:
-      return "Disabled"sv;
+      return "Disabled"_strv;
    case AmbientOcclusionMethod::ScreenSpace:
-      return "Screen-Space"sv;
+      return "Screen-Space"_strv;
    case AmbientOcclusionMethod::RayTraced:
-      return "Ray-Traced"sv;
+      return "Ray-Traced"_strv;
    }
 
-   return "Unknown"sv;
+   return "Unknown"_strv;
 }
 
 enum class AntialiasingMethod
@@ -50,18 +51,18 @@ enum class AntialiasingMethod
    FastApproximate,
 };
 
-[[nodiscard]] inline std::string_view antialiasing_method_to_string(const AntialiasingMethod method)
+[[nodiscard]] inline StringView antialiasing_method_to_string(const AntialiasingMethod method)
 {
-   using namespace std::string_view_literals;
+   using namespace string_literals;
 
    switch (method) {
    case AntialiasingMethod::Disabled:
-      return "Disabled"sv;
+      return "Disabled"_strv;
    case AntialiasingMethod::FastApproximate:
-      return "Fast-Approximate"sv;
+      return "Fast-Approximate"_strv;
    }
 
-   return "Unknown"sv;
+   return "Unknown"_strv;
 }
 
 enum class ShadowCastingMethod
@@ -70,18 +71,18 @@ enum class ShadowCastingMethod
    RayTracing,
 };
 
-[[nodiscard]] inline std::string_view shadow_casting_method_to_string(const ShadowCastingMethod method)
+[[nodiscard]] inline StringView shadow_casting_method_to_string(const ShadowCastingMethod method)
 {
-   using namespace std::string_view_literals;
+   using namespace string_literals;
 
    switch (method) {
    case ShadowCastingMethod::ShadowMap:
-      return "Shadow-Map"sv;
+      return "Shadow-Map"_strv;
    case ShadowCastingMethod::RayTracing:
-      return "Ray-Tracing"sv;
+      return "Ray-Tracing"_strv;
    }
 
-   return "Unknown"sv;
+   return "Unknown"_strv;
 }
 
 struct Config

@@ -32,7 +32,7 @@ class Viewport
 
    Name add_text(Text&& text);
    void add_text(Name name, Text&& text);
-   void set_text_content(Name name, std::string_view content);
+   void set_text_content(Name name, StringView content);
    void set_text_position(Name name, Vector2 position);
    void set_text_color(Name name, Vector4 color);
    void set_rectangle_dims(Name name, Vector4 dims);

@@ -2,18 +2,20 @@
 
 #include "ISurface.hpp"
 
+#include "triglav/String.hpp"
+
 #include <memory>
 #include <string_view>
 #include <windows.h>
 
 namespace triglav::desktop {
 
-constexpr auto g_windowClassName = "TRIGLAV_WINDOW";
+constexpr auto g_windowClassName = L"TRIGLAV_WINDOW";
 
 class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
  public:
-   Surface(HINSTANCE instance, std::string_view title, Vector2i dimension, WindowAttributeFlags flags);
+   Surface(HINSTANCE instance, StringView title, Vector2i dimension, WindowAttributeFlags flags);
    ~Surface() override;
 
    void lock_cursor() override;
@@ -21,6 +23,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    void hide_cursor() const override;
    [[nodiscard]] bool is_cursor_locked() const override;
    [[nodiscard]] Vector2i dimension() const override;
+   void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
 
    [[nodiscard]] HINSTANCE winapi_instance() const;
    [[nodiscard]] HWND winapi_window_handle() const;
@@ -35,11 +38,13 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    void on_mouse_move(int x, int y) const;
    void on_close() const;
    void on_resize(short x, short y);
+   void on_rune(Rune rune) const;
 
    HINSTANCE m_instance;
    Vector2i m_dimension;
    HWND m_windowHandle;
    HCURSOR m_currentCursor{};
+   KeyboardInputModeFlags m_keyboardInputMode{};
 };
 
 }// namespace triglav::desktop

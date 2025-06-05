@@ -1,13 +1,13 @@
-#include "Surface.h"
+#include "Surface.hpp"
 
-#include "Display.h"
+#include "Display.hpp"
 #include "api/CursorShape.h"
 
 #include <cassert>
 
 namespace triglav::desktop {
 
-Surface::Surface(Display& display, const std::string_view title, const Dimension dimension, const WindowAttributeFlags attributes) :
+Surface::Surface(Display& display, const StringView title, const Dimension dimension, const WindowAttributeFlags attributes) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
     m_xdgSurface(xdg_wm_base_get_xdg_surface(display.wm_base(), m_surface)),
@@ -136,9 +136,17 @@ void Surface::set_cursor_icon(const CursorIcon icon)
    case CursorIcon::Wait:
       wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_WAIT);
       break;
+   case CursorIcon::Edit:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_TEXT);
+      break;
    default:
       return;
    }
+}
+
+void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
+{
+   m_keyboardInputMode = mode;
 }
 
 void Surface::tick()

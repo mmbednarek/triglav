@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Typeface.hpp"
-#include "Utf8StringView.hpp"
+
+#include "triglav/String.hpp"
 
 #include <string_view>
 #include <vector>
@@ -41,15 +42,14 @@ class Charset
    };
 
    Charset& add_range(Rune from, Rune to);
-   [[nodiscard]] std::vector<u32> encode_string(std::string_view str) const;
+   [[nodiscard]] std::vector<u32> encode_string(StringView str) const;
 
    template<typename TIterator>
-   u32 encode_string_to(std::string_view str, TIterator outIt) const
+   u32 encode_string_to(const StringView str, TIterator outIt) const
    {
       u32 count{};
 
-      Utf8StringView utf8Str(str);
-      for (const auto rune : utf8Str) {
+      for (const auto rune : str) {
          u32 indexBase = 0;
          for (const auto& [from, to] : m_ranges) {
             if (rune >= from && rune <= to) {

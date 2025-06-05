@@ -2,14 +2,13 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
-
-#include <string>
+#include "triglav/String.hpp"
 
 namespace triglav::ui_core {
 
 struct Text
 {
-   std::string content;
+   String content;
    TypefaceName typefaceName;
    i32 fontSize{};
    Vector2 position;
@@ -20,6 +19,9 @@ struct Rectangle
 {
    Vector4 rect;
    Vector4 color;
+   Vector4 borderRadius;
+   Vector4 borderColor;
+   float borderWidth;
 };
 
 struct Sprite

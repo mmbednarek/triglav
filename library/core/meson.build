@@ -4,6 +4,7 @@ core_sources = files([
                     'include/triglav/CompTimeString.hpp',
                     'include/triglav/Debug.hpp',
                     'include/triglav/EnumFlags.hpp',
+                    'include/triglav/Format.hpp',
                     'include/triglav/Int.hpp',
                     'include/triglav/Math.hpp',
                     'include/triglav/Name.hpp',
@@ -14,9 +15,11 @@ core_sources = files([
                     'include/triglav/ResourceType.hpp',
                     'include/triglav/Template.hpp',
                     'include/triglav/TypeMacroList.hpp',
+                    'include/triglav/Utf8.hpp',
                     'src/Core.cpp',
                     'src/Math.cpp',
-                    'src/NameResolution.cpp'
+                    'src/NameResolution.cpp',
+                    'src/String.cpp'
 ])
 
 core_deps = [glm, entt]

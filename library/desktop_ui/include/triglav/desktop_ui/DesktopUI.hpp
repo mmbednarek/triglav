@@ -3,6 +3,10 @@
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
 
+namespace triglav::desktop {
+class ISurface;
+}
+
 namespace triglav::desktop_ui {
 
 struct ThemeProperties
@@ -20,12 +24,15 @@ struct ThemeProperties
 class DesktopUIManager
 {
  public:
-   explicit DesktopUIManager(ThemeProperties properties);
+   DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface);
 
    [[nodiscard]] const ThemeProperties& properties() const;
+   [[nodiscard]] const desktop::ISurface& surface() const;
+   [[nodiscard]] desktop::ISurface& surface();
 
  private:
    ThemeProperties m_properties;
+   desktop::ISurface& m_surface;
 };
 
 }// namespace triglav::desktop_ui

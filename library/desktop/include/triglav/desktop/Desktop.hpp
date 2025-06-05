@@ -62,6 +62,7 @@ enum class Key
 
    Space,
    Unknown,
+   Backspace,
 };
 
 enum class CursorIcon
@@ -70,6 +71,7 @@ enum class CursorIcon
    Hand,
    Move,
    Wait,
+   Edit,
 };
 
 }// namespace triglav::desktop

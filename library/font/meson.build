@@ -3,11 +3,9 @@ font_sources = files([
                          'include/triglav/font/FontManager.hpp',
                          'include/triglav/font/FreeTypeForwardDecl.hpp',
                          'include/triglav/font/Typeface.hpp',
-                         'include/triglav/font/Utf8StringView.hpp',
                          'src/Charset.cpp',
                          'src/FontManager.cpp',
                          'src/Typeface.cpp',
-                         'src/Utf8StringView.cpp',
                      ])
 
 font_lib = static_library('font',

@@ -1,5 +1,7 @@
 #include "Surface.hpp"
 
+#include "triglav/Format.hpp"
+
 #include <spdlog/spdlog.h>
 #include <windowsx.h>
 
@@ -51,7 +53,7 @@ Key translate_key(const WPARAM keyCode)
    return Key::Unknown;
 }
 
-DWORD map_window_attributes_to_ex_style(WindowAttributeFlags flags)
+DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags)
 {
    DWORD result{};
    if (flags & WindowAttribute::TopMost) {
@@ -64,7 +66,7 @@ DWORD map_window_attributes_to_ex_style(WindowAttributeFlags flags)
    return result;
 }
 
-DWORD map_window_attributes_to_style(WindowAttributeFlags flags)
+DWORD map_window_attributes_to_style(const WindowAttributeFlags flags)
 {
    DWORD result{};
 
@@ -79,7 +81,7 @@ DWORD map_window_attributes_to_style(WindowAttributeFlags flags)
    return result;
 }
 
-int map_window_attributes_to_x_position(WindowAttributeFlags flags, const Dimension& dimension)
+int map_window_attributes_to_x_position(const WindowAttributeFlags flags, const Dimension& dimension)
 {
    if (flags & WindowAttribute::AlignCenter) {
       auto screenWidth = GetSystemMetrics(SM_CXSCREEN);
@@ -88,7 +90,7 @@ int map_window_attributes_to_x_position(WindowAttributeFlags flags, const Dimens
    return CW_USEDEFAULT;
 }
 
-int map_window_attributes_to_y_position(WindowAttributeFlags flags, const Dimension& dimension)
+int map_window_attributes_to_y_position(const WindowAttributeFlags flags, const Dimension& dimension)
 {
    if (flags & WindowAttribute::AlignCenter) {
       auto screenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -97,15 +99,24 @@ int map_window_attributes_to_y_position(WindowAttributeFlags flags, const Dimens
    return CW_USEDEFAULT;
 }
 
+HWND create_window(const HINSTANCE instance, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags,
+                   void* lpParam)
+{
+   std::vector<wchar_t> wCharTitle(title.rune_count());
+   std::copy(title.begin(), title.end(), wCharTitle.begin());
+
+   return CreateWindowExW(map_window_attributes_to_ex_style(flags), g_windowClassName, wCharTitle.data(),
+                          map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
+                          map_window_attributes_to_y_position(flags, dimension), dimension.x, dimension.y, nullptr, nullptr, instance,
+                          lpParam);
+}
+
 }// namespace
 
-Surface::Surface(const HINSTANCE instance, const std::string_view title, const Vector2i dimension, const WindowAttributeFlags flags) :
+Surface::Surface(const HINSTANCE instance, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags) :
     m_instance(instance),
     m_dimension(dimension),
-    m_windowHandle(CreateWindowExA(map_window_attributes_to_ex_style(flags), g_windowClassName, title.data(),
-                                   map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
-                                   map_window_attributes_to_y_position(flags, dimension), m_dimension.x, m_dimension.y, nullptr, nullptr,
-                                   m_instance, this))
+    m_windowHandle(create_window(instance, title, dimension, flags, this))
 {
    ShowWindow(m_windowHandle, SW_NORMAL);
    UpdateWindow(m_windowHandle);
@@ -143,6 +154,11 @@ bool Surface::is_cursor_locked() const
 Dimension Surface::dimension() const
 {
    return m_dimension;
+}
+
+void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
+{
+   m_keyboardInputMode = mode;
 }
 
 HINSTANCE Surface::winapi_instance() const
@@ -208,6 +224,13 @@ void Surface::on_resize(const short x, const short y)
    event_OnResize.publish(Vector2i{static_cast<float>(x), static_cast<float>(y)});
 }
 
+void Surface::on_rune(const Rune rune) const
+{
+   if (m_keyboardInputMode & KeyboardInputMode::Text) {
+      event_OnTextInput.publish(rune);
+   }
+}
+
 LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const LPARAM lParam)
 {
    switch (msg) {
@@ -261,8 +284,12 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       this->on_resize(LOWORD(lParam), HIWORD(lParam));
       break;
    }
+   case WM_CHAR: {
+      this->on_rune(wParam);
+      break;
+   }
    default:
-      return DefWindowProcA(m_windowHandle, msg, wParam, lParam);
+      return DefWindowProcW(m_windowHandle, msg, wParam, lParam);
    }
 
    return 0;
@@ -276,16 +303,16 @@ void Surface::set_cursor_icon(const CursorIcon icon)
 
    switch (icon) {
    case CursorIcon::Arrow:
-      m_currentCursor = LoadCursorA(nullptr, IDC_ARROW);
+      m_currentCursor = LoadCursor(nullptr, IDC_ARROW);
       break;
    case CursorIcon::Hand:
-      m_currentCursor = LoadCursorA(nullptr, IDC_HAND);
+      m_currentCursor = LoadCursor(nullptr, IDC_HAND);
       break;
    case CursorIcon::Move:
-      m_currentCursor = LoadCursorA(nullptr, IDC_SIZEALL);
+      m_currentCursor = LoadCursor(nullptr, IDC_SIZEALL);
       break;
    case CursorIcon::Wait:
-      m_currentCursor = LoadCursorA(nullptr, IDC_WAIT);
+      m_currentCursor = LoadCursor(nullptr, IDC_WAIT);
       break;
    default:
       m_currentCursor = nullptr;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/Math.hpp"
+#include "triglav/String.hpp"
 #include "triglav/desktop/Desktop.hpp"
 
 #include <memory>
@@ -26,6 +27,8 @@ struct Event
       MouseMoved,
       MouseEntered,
       MouseLeft,
+      KeyPressed,
+      TextInput,
    };
 
    struct Mouse
@@ -38,10 +41,15 @@ struct Event
       desktop::Key key;
    };
 
+   struct TextInput
+   {
+      Rune inputRune;
+   };
+
    Type eventType;
    Vector2 parentSize;
    Vector2 mousePosition;
-   std::variant<std::monostate, Mouse, Keyboard> data;
+   std::variant<std::monostate, Mouse, Keyboard, TextInput> data;
 };
 
 class IWidget

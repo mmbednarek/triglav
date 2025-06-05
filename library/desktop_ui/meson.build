@@ -2,9 +2,11 @@ desktop_ui_sources = files([
                           'include/triglav/desktop_ui/Button.hpp',
                           'include/triglav/desktop_ui/DesktopUI.hpp',
                           'include/triglav/desktop_ui/Dialog.hpp',
+                          'include/triglav/desktop_ui/TextInput.hpp',
                           'src/Button.cpp',
                           'src/DesktopUI.cpp',
                           'src/Dialog.cpp',
+                          'src/TextInput.cpp',
                       ])
 
 desktop_ui_deps = [core, threading, ui_core, renderer]

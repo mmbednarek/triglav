@@ -8,6 +8,26 @@ namespace triglav::renderer::ui {
 
 using namespace name_literals;
 
+struct FragUBO
+{
+   Vector4 borderRadius;
+   Vector4 borderColor;
+   Vector4 backgroundColor;
+   Vector2 rectSize;
+   float borderWidth;
+
+   static FragUBO from_primitive(const ui_core::Rectangle& rect)
+   {
+      FragUBO fsUbo{};
+      fsUbo.borderRadius = rect.borderRadius;
+      fsUbo.borderColor = rect.borderColor;
+      fsUbo.backgroundColor = rect.color;
+      fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
+      fsUbo.borderWidth = rect.borderWidth;
+      return fsUbo;
+   }
+};
+
 RectangleRenderer::RectangleRenderer(graphics_api::Device& device, ui_core::Viewport& viewport) :
     m_device(device),
     m_viewport(viewport),
@@ -42,16 +62,7 @@ void RectangleRenderer::on_added_rectangle(Name name, const ui_core::Rectangle& 
       m_device.create_buffer(graphics_api::BufferUsage::UniformBuffer | graphics_api::BufferUsage::TransferDst, sizeof(VertUBO)));
    GAPI_CHECK_STATUS(vsUboBuffer.write_indirect(&vsUbo, sizeof(VertUBO)));
 
-   struct FragUBO
-   {
-      Vector4 borderRadius;
-      Vector4 backgroundColor;
-      Vector2 rectSize;
-   } fsUbo{};
-   fsUbo.borderRadius = {10, 10, 10, 10};
-   fsUbo.backgroundColor = rect.color;
-   fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
-
+   const auto fsUbo = FragUBO::from_primitive(rect);
    auto fsUboBuffer = GAPI_CHECK(
       m_device.create_buffer(graphics_api::BufferUsage::UniformBuffer | graphics_api::BufferUsage::TransferDst, sizeof(FragUBO)));
    GAPI_CHECK_STATUS(fsUboBuffer.write_indirect(&fsUbo, sizeof(FragUBO)));
@@ -82,16 +93,7 @@ void RectangleRenderer::on_rectangle_change_dims(const Name name, const ui_core:
 
    GAPI_CHECK_STATUS(dstRect.vsUbo.write_indirect(&vsUbo, sizeof(VertUBO)));
 
-   struct FragUBO
-   {
-      Vector4 borderRadius;
-      Vector4 backgroundColor;
-      Vector2 rectSize;
-   } fsUbo{};
-   fsUbo.borderRadius = {10, 10, 10, 10};
-   fsUbo.backgroundColor = rect.color;
-   fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
-
+   const auto fsUbo = FragUBO::from_primitive(rect);
    GAPI_CHECK_STATUS(dstRect.fsUbo.write_indirect(&fsUbo, sizeof(FragUBO)));
 }
 
@@ -101,16 +103,7 @@ void RectangleRenderer::on_rectangle_change_color(const Name name, const ui_core
 
    auto& dstRect = m_rectangles.at(name);
 
-   struct FragUBO
-   {
-      Vector4 borderRadius;
-      Vector4 backgroundColor;
-      Vector2 rectSize;
-   } fsUbo{};
-   fsUbo.borderRadius = {10, 10, 10, 10};
-   fsUbo.backgroundColor = rect.color;
-   fsUbo.rectSize = {rect.rect.z - rect.rect.x, rect.rect.w - rect.rect.y};
-
+   const auto fsUbo = FragUBO::from_primitive(rect);
    GAPI_CHECK_STATUS(dstRect.fsUbo.write_indirect(&fsUbo, sizeof(FragUBO)));
 }
 

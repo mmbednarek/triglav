@@ -9,6 +9,8 @@
 
 namespace triglav::ui_core {
 
+using namespace string_literals;
+
 TextBox::TextBox(Context& ctx, State initialState, IWidget* parent) :
     m_uiContext(ctx),
     m_state(std::move(initialState)),
@@ -56,7 +58,7 @@ void TextBox::remove_from_viewport()
    m_id = 0;
 }
 
-void TextBox::set_content(const std::string_view content)
+void TextBox::set_content(const StringView content)
 {
    if (m_state.content == content)
       return;
@@ -92,8 +94,8 @@ void TextBox::set_color(const Vector4 color)
 Vector2 TextBox::calculate_desired_size() const
 {
    auto& glyphAtlas = m_uiContext.glyph_cache().find_glyph_atlas({m_state.typeface, m_state.fontSize});
-   const auto measure = glyphAtlas.measure_text(m_state.content);
-   const auto measureZeroChar = glyphAtlas.measure_text("0");
+   const auto measure = glyphAtlas.measure_text(m_state.content.view());
+   const auto measureZeroChar = glyphAtlas.measure_text("0"_strv);
    return {measure.width, measureZeroChar.height};
 }
 
