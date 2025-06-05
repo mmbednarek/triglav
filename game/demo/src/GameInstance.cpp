@@ -13,6 +13,7 @@ using triglav::resource::PathManager;
 namespace gapi = triglav::graphics_api;
 
 using namespace triglav::name_literals;
+using namespace triglav::string_literals;
 
 EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& renderer) :
     m_surface(surface),
@@ -124,7 +125,7 @@ gapi::DeviceFeatureFlags requested_features(const gapi::Instance& instance)
 
 GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution) :
     m_splashScreenSurface(
-       display.create_surface("Triglav Engine Demo - Loading", {1024, 360}, WindowAttribute::AlignCenter | WindowAttribute::TopMost)),
+       display.create_surface("Triglav Engine Demo - Loading"_strv, {1024, 360}, WindowAttribute::AlignCenter | WindowAttribute::TopMost)),
     m_resolution(resolution),
     m_instance(GAPI_CHECK(gapi::Instance::create_instance())),
     m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
@@ -176,7 +177,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
 
    display.dispatch_messages();
 
-   m_demoSurface = display.create_surface("Triglav Engine Demo", {m_resolution.width, m_resolution.height}, WindowAttribute::Default);
+   m_demoSurface = display.create_surface("Triglav Engine Demo"_strv, {m_resolution.width, m_resolution.height}, WindowAttribute::Default);
    m_graphicsDemoSurface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demoSurface)));
 
    m_renderer =
