@@ -56,6 +56,15 @@ std::vector<u32> Charset::encode_string(const StringView str) const
    return result;
 }
 
+bool Charset::contains(const Rune r) const
+{
+   for (const auto& [from, to] : m_ranges) {
+      if (r >= from && r <= to)
+         return true;
+   }
+   return false;
+}
+
 u32 Charset::count() const
 {
    u32 count{};

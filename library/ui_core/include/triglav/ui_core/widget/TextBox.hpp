@@ -33,6 +33,7 @@ class TextBox final : public IWidget
 
    void set_content(StringView content);
    void set_color(Vector4 color);
+   const State& state() const;
 
  private:
    [[nodiscard]] Vector2 calculate_desired_size() const;

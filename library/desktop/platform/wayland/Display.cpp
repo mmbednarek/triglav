@@ -22,6 +22,8 @@ namespace {
 Key map_key(const u32 key)
 {
    switch (key) {
+   case 14:
+      return Key::Backspace;
    case 17:
       return Key::W;
    case 31:
@@ -60,6 +62,14 @@ Key map_key(const u32 key)
       return Key::F11;
    case 70:
       return Key::F12;
+   case 103:
+      return Key::DownArrow;
+   case 105:
+      return Key::LeftArrow;
+   case 106:
+      return Key::RightArrow;
+   case 108:
+      return Key::UpArrow;
    }
 
    return Key::Unknown;

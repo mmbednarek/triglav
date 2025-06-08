@@ -11,6 +11,8 @@ namespace {
 Key map_key(const KeyCode keyCode)
 {
    switch (keyCode) {
+   case 22:
+      return Key::Backspace;
    case 25:
       return Key::W;
    case 39:
@@ -49,6 +51,14 @@ Key map_key(const KeyCode keyCode)
       return Key::F11;
    case 78:
       return Key::F12;
+   case 111:
+      return Key::UpArrow;
+   case 113:
+      return Key::LeftArrow;
+   case 114:
+      return Key::RightArrow;
+   case 116:
+      return Key::DownArrow;
    }
 
    spdlog::warn("unknown keycode: {}", keyCode);

@@ -30,12 +30,23 @@ class TextInput final : public ui_core::IWidget
    void add_to_viewport(Vector4 dimensions) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
+   void update_carret_state();
 
  private:
+   void recalculate_caret_offset();
+
+   ui_core::Context& m_context;
    State m_state;
    ui_core::RectBox m_rect;
    ui_core::TextBox* m_text{};
+
+   Name m_caretBox{};
+   bool m_isCarretVisible{false};
+   u32 m_caretPosition{};
+   Vector4 m_dimensions;
+
    bool m_isActive{false};
+   std::optional<u32> m_timeoutHandle{};
 };
 
 }// namespace triglav::desktop_ui

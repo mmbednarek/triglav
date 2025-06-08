@@ -217,6 +217,29 @@ bool String::is_empty() const
    return m_size == 0;
 }
 
+StringView String::subview(i32 initialRune, i32 lastRune) const
+{
+   const auto runeCount = static_cast<i32>(this->rune_count());
+   while (initialRune < 0) {
+      initialRune += runeCount;
+   }
+   while (lastRune < 0) {
+      lastRune += runeCount;
+   }
+
+   assert(initialRune < runeCount);
+   assert(lastRune <= runeCount);
+   assert(initialRune <= lastRune);
+
+   auto startPtr = this->data();
+   skip_runes(startPtr, this->data() + m_size, initialRune);
+
+   auto endPtr = startPtr;
+   skip_runes(endPtr, this->data() + m_size, lastRune - initialRune);
+
+   return {startPtr, static_cast<MemorySize>(endPtr - startPtr)};
+}
+
 void String::append(const StringView other)
 {
    const auto oldSize = m_size;
@@ -230,6 +253,45 @@ void String::append_rune(const Rune rune)
    const auto oldSize = m_size;
    this->grow_to(m_size + count);
    encode_rune_to_buffer(rune, this->data() + oldSize, count);
+}
+
+void String::insert_rune_at(const u32 position, const Rune rune)
+{
+   const auto count = rune_to_byte_count(rune);
+   const auto oldSize = m_size;
+   this->grow_to(m_size + count);
+
+   auto* ptr = this->data();
+   skip_runes(ptr, ptr + oldSize, position);
+
+   const auto offset = ptr - this->data();
+   std::memmove(ptr + count, ptr, oldSize - offset);
+
+   encode_rune_to_buffer(rune, ptr, count);
+}
+
+void String::remove_rune_at(const u32 position)
+{
+   auto* runeStart = this->data();
+   skip_runes(runeStart, runeStart + m_size, position);
+
+   auto* runeEnd = runeStart;
+   skip_runes(runeEnd, this->data() + m_size, 1);
+
+   const auto runeSize = runeEnd - runeStart;
+   const auto remainingSize = (this->data() + m_size) - runeEnd;
+   std::memmove(runeStart, runeEnd, remainingSize);
+
+   const auto oldSize = m_size;
+   const auto newSize = m_size - runeSize;
+
+   if (oldSize > g_smallStringCapacity && newSize <= g_smallStringCapacity) {
+      const auto* ptr = this->data();
+      std::memcpy(m_smallPayload.data(), ptr, newSize);
+      delete[] ptr;
+   }
+
+   m_size = newSize;
 }
 
 void String::shrink_by(const MemorySize runeCount)

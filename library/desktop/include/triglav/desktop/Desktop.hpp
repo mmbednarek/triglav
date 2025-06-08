@@ -63,6 +63,11 @@ enum class Key
    Space,
    Unknown,
    Backspace,
+
+   LeftArrow,
+   UpArrow,
+   RightArrow,
+   DownArrow,
 };
 
 enum class CursorIcon

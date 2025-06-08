@@ -8,6 +8,7 @@
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/resource/PathManager.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+#include "triglav/threading/Scheduler.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 #include "triglav/threading/Threading.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
@@ -30,6 +31,7 @@ using triglav::ui_core::VerticalAlignment;
 
 using namespace triglav::name_literals;
 using namespace triglav::string_literals;
+using namespace std::chrono_literals;
 
 constexpr auto g_defaultWidth = 800;
 constexpr auto g_defaultHeight = 600;
@@ -109,9 +111,18 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    dialog.initialize();
 
+   triglav::threading::Scheduler::the().register_timeout(2s, []() { spdlog::info("After dwo seconds..."); });
+
+   triglav::threading::Scheduler::the().register_timeout(5s, []() { spdlog::info("After five seconds..."); });
+
+   triglav::threading::Scheduler::the().register_timeout(5s, []() { spdlog::info("Also after five seconds..."); });
+
+   triglav::threading::Scheduler::the().register_timeout(6s, []() { spdlog::info("After six seconds..."); });
+
    while (!dialog.should_close()) {
       dialog.update();
       display.dispatch_messages();
+      triglav::threading::Scheduler::the().tick();
    }
 
    device->await_all();

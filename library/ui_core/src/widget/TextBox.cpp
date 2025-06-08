@@ -91,6 +91,11 @@ void TextBox::set_color(const Vector4 color)
    m_uiContext.viewport().set_text_color(m_id, color);
 }
 
+const TextBox::State& TextBox::state() const
+{
+   return m_state;
+}
+
 Vector2 TextBox::calculate_desired_size() const
 {
    auto& glyphAtlas = m_uiContext.glyph_cache().find_glyph_atlas({m_state.typeface, m_state.fontSize});

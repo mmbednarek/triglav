@@ -43,6 +43,7 @@ class Charset
 
    Charset& add_range(Rune from, Rune to);
    [[nodiscard]] std::vector<u32> encode_string(StringView str) const;
+   [[nodiscard]] bool contains(Rune r) const;
 
    template<typename TIterator>
    u32 encode_string_to(const StringView str, TIterator outIt) const

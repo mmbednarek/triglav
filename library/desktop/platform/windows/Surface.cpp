@@ -20,8 +20,18 @@ Key translate_key(const WPARAM keyCode)
       return Key::S;
    case 'D':
       return Key::D;
+   case VK_BACK:
+      return Key::Backspace;
    case VK_SPACE:
       return Key::Space;
+   case VK_UP:
+      return Key::UpArrow;
+   case VK_DOWN:
+      return Key::DownArrow;
+   case VK_LEFT:
+      return Key::LeftArrow;
+   case VK_RIGHT:
+      return Key::RightArrow;
    case VK_F1:
       return Key::F1;
    case VK_F2:

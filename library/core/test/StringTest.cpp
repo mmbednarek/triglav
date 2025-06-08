@@ -182,3 +182,47 @@ TEST(StringTest, Shrink)
       ASSERT_EQ(msg, "aćałaa");
    }
 }
+
+TEST(StringTest, InsertRune)
+{
+   /* ASCII */ {
+      triglav::String msg{"test message"};
+      msg.insert_rune_at(4, "i"_rune);
+      msg.insert_rune_at(5, "n"_rune);
+      msg.insert_rune_at(6, "g"_rune);
+
+      ASSERT_EQ(msg, "testing message");
+   }
+
+   /* UTF-8 */ {
+      triglav::String msg{"źdźbło łąka"};
+      msg.insert_rune_at(6, " "_rune);
+      msg.insert_rune_at(7, "ż"_rune);
+      msg.insert_rune_at(8, "ó"_rune);
+      msg.insert_rune_at(9, "ł"_rune);
+      msg.insert_rune_at(10, "ć"_rune);
+
+      ASSERT_EQ(msg, "źdźbło żółć łąka");
+
+      msg.insert_rune_at(0, "a"_rune);
+      ASSERT_EQ(msg, "aźdźbło żółć łąka");
+
+      msg.insert_rune_at(17, "m"_rune);
+      ASSERT_EQ(msg, "aźdźbło żółć łąkam");
+   }
+}
+
+TEST(StringTest, RemoveRune)
+{
+   /*UTF-8*/ {
+      triglav::String msg{"źdźbło łąka"};
+      msg.remove_rune_at(2);
+      ASSERT_EQ(msg, "źdbło łąka");
+
+      msg.remove_rune_at(0);
+      ASSERT_EQ(msg, "dbło łąka");
+
+      msg.remove_rune_at(8);
+      ASSERT_EQ(msg, "dbło łąk");
+   }
+}

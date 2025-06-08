@@ -102,4 +102,15 @@ constexpr Rune decode_rune_from_buffer(const char*& buffer, const char* endPtr)
    return result;
 }
 
+template<typename T>
+constexpr void skip_runes(T& buffer, T endPtr, u32 runeCount)
+{
+   while (buffer != endPtr && (runeCount != 0 || !is_rune_initial_byte(*buffer))) {
+      if (is_rune_initial_byte(*buffer)) {
+         --runeCount;
+      }
+      ++buffer;
+   }
+}
+
 }// namespace triglav

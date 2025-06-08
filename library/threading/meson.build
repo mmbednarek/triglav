@@ -1,9 +1,11 @@
 threading_sources = files([
   'include/triglav/threading/DoubleBufferQueue.hpp',
   'include/triglav/threading/SafeAccess.hpp',
+  'include/triglav/threading/Scheduler.hpp',
   'include/triglav/threading/SharedMutex.hpp',
   'include/triglav/threading/Threading.hpp',
   'include/triglav/threading/ThreadPool.hpp',
+  'src/Scheduler.cpp',
   'src/ThreadPool.cpp',
   'src/Threading.cpp',
 ])

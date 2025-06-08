@@ -90,9 +90,13 @@ class String
    [[nodiscard]] StringView view() const;
    [[nodiscard]] bool is_empty() const;
 
+   [[nodiscard]] StringView subview(i32 initialRune, i32 lastRune) const;
+
    void append(StringView other);
    void append_rune(Rune rune);
    void shrink_by(MemorySize runeCount);
+   void insert_rune_at(u32 position, Rune rune);
+   void remove_rune_at(u32 position);
 
    [[nodiscard]] iterator begin() const;
    [[nodiscard]] iterator end() const;
