@@ -1,6 +1,7 @@
 #include "Material.hpp"
 
 #include <ryml.hpp>
+#include <string>
 
 namespace triglav::render_objects {
 

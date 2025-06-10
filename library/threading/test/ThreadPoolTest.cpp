@@ -1,9 +1,10 @@
 #include <gtest/gtest.h>
-#include <iostream>
 
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <atomic>
+#include <chrono>
+#include <iostream>
 
 using triglav::threading::ThreadPool;
 

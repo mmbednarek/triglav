@@ -48,7 +48,7 @@ constexpr uint64_t compute_crc(const char* data, const uint32_t len, uint64_t cr
 
 constexpr auto hash_string(const std::string_view value)
 {
-   return compute_crc(value.data(), value.size());
+   return compute_crc(value.data(), static_cast<uint32_t>(value.size()));
 }
 
 }// namespace triglav::detail

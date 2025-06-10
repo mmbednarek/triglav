@@ -64,9 +64,6 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_uiViewport({resolution.width, resolution.height}),
     m_uiContext(m_uiViewport, m_glyphCache, m_resourceManager),
     m_infoDialog(m_uiContext, m_configManager, desktopSurface),
-    m_rayTracingScene((m_device.enabled_features() & DeviceFeature::RayTracing)
-                         ? std::make_optional<RayTracingScene>(m_device, m_resourceManager, m_scene)
-                         : std::nullopt),
     m_resourceStorage(m_device),
     m_renderSurface(m_device, desktopSurface, surface, m_resourceStorage, {resolution.width, resolution.height}, get_present_mode()),
     m_pipelineCache(m_device, m_resourceManager),
@@ -78,6 +75,10 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
     m_debugWidget(m_uiContext),
     TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
 {
+   if (m_device.enabled_features() & DeviceFeature::RayTracing) {
+      m_rayTracingScene.emplace(m_device, m_resourceManager, m_scene);
+   }
+
    m_infoDialog.add_to_viewport({});
    m_scene.load_level("level/wierd_tube.level"_rc);
 

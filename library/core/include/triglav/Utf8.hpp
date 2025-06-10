@@ -76,7 +76,7 @@ constexpr u32 byte_count_from_initial_byte(u8 initialByte)
    return byteCount;
 }
 
-constexpr Rune decode_rune_from_buffer(const char*& buffer, const char* endPtr)
+constexpr Rune decode_rune_from_buffer(const char*& buffer, [[maybe_unused]] const char* endPtr)
 {
    const auto ch = static_cast<u8>(*buffer);
    if ((ch & 0x80) == 0) {

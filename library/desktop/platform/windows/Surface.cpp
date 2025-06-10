@@ -112,8 +112,10 @@ int map_window_attributes_to_y_position(const WindowAttributeFlags flags, const 
 HWND create_window(const HINSTANCE instance, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags,
                    void* lpParam)
 {
-   std::vector<wchar_t> wCharTitle(title.rune_count());
+   const auto runeCount = title.rune_count();
+   std::vector<wchar_t> wCharTitle(runeCount + 1);
    std::copy(title.begin(), title.end(), wCharTitle.begin());
+   wCharTitle[runeCount] = 0;
 
    return CreateWindowExW(map_window_attributes_to_ex_style(flags), g_windowClassName, wCharTitle.data(),
                           map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
@@ -295,7 +297,7 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       break;
    }
    case WM_CHAR: {
-      this->on_rune(wParam);
+      this->on_rune(static_cast<Rune>(wParam));
       break;
    }
    default:

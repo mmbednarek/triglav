@@ -7,7 +7,7 @@ tg_ktx_sources = files([
 
 tg_ktx_lib = static_library('tg_ktx',
                             sources : tg_ktx_sources,
-                            dependencies : [core, io, ktx],
+                            dependencies : [core, io, ktx, vulkan],
                             include_directories : ['include/triglav/ktx'],
 )
 

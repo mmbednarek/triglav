@@ -1,5 +1,7 @@
 #include "Charset.hpp"
 
+#include <iterator>
+
 namespace triglav::font {
 
 const Charset Charset::Ascii = Charset().add_range(32, 126);

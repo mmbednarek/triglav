@@ -87,7 +87,7 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
    world::Level result{};
 
    auto nodes = tree["nodes"];
-   for (const auto node : nodes) {
+   for (const auto& node : nodes) {
       auto name = node["name"].val();
 
       world::LevelNode levelNode({name.data(), name.size()});
@@ -102,8 +102,6 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
 
       result.add_node(make_name_id(std::string_view{name.data(), name.size()}), std::move(levelNode));
    }
-
-   assert(result.save_to_file(io::Path{"/home/ego/debug.yaml"}));
 
    return result;
 }

@@ -176,12 +176,12 @@ struct TextureBarrier
    u32 mipLevelCount{1};
 };
 
-constexpr u32 calculate_mip_count(const Vector2i& dims)
+inline u32 calculate_mip_count(const Vector2i& dims)
 {
    return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;
 }
 
-constexpr Name make_rt_shader_name(const ResourceName resName)
+inline Name make_rt_shader_name(const ResourceName resName)
 {
    return resName.name() * static_cast<u64>(resName.type());
 }

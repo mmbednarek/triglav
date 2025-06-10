@@ -1,6 +1,7 @@
 #include "BufferManager.hpp"
 
 #include <fmt/core.h>
+#include <stdexcept>
 
 namespace triglav::gltf {
 

@@ -18,6 +18,7 @@ class StringView
     public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = Rune;
+      using difference_type = ptrdiff_t;
       using pointer = Rune*;
       using reference = Rune&;
 
@@ -35,7 +36,7 @@ class StringView
    };
    using iterator = Iterator;
 
-   explicit constexpr StringView(const char* string) :
+   explicit StringView(const char* string) :
        m_data(string),
        m_size(std::strlen(string))
    {
