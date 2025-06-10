@@ -16,6 +16,7 @@ class Viewport
    TG_EVENT(OnRemovedText, Name)
    TG_EVENT(OnTextChangeContent, Name, const Text&)
    TG_EVENT(OnTextChangePosition, Name, const Text&)
+   TG_EVENT(OnTextChangeCrop, Name, const Text&)
    TG_EVENT(OnTextChangeColor, Name, const Text&)
 
    TG_EVENT(OnAddedRectangle, Name, const Rectangle&)
@@ -34,6 +35,7 @@ class Viewport
    void add_text(Name name, Text&& text);
    void set_text_content(Name name, StringView content);
    void set_text_position(Name name, Vector2 position);
+   void set_text_crop(Name name, Vector4 crop);
    void set_text_color(Name name, Vector4 color);
    void set_rectangle_dims(Name name, Vector4 dims);
    void remove_text(Name name);

@@ -22,6 +22,7 @@ using namespace render_core::literals;
 struct TextUpdateInfo
 {
    Vector4 color;
+   Vector4 crop;
    Vector2 position;
    u32 atlasId;
 
@@ -46,6 +47,7 @@ struct TextDrawCall
    u32 firstInstance;
 
    Vector4 color;
+   Vector4 crop;
    Vector2 position;
    u32 atlasIndex;
 
@@ -71,6 +73,7 @@ TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache
     TG_CONNECT(viewport, OnRemovedText, on_removed_text),
     TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
     TG_CONNECT(viewport, OnTextChangePosition, on_text_change_position),
+    TG_CONNECT(viewport, OnTextChangeCrop, on_text_change_crop),
     TG_CONNECT(viewport, OnTextChangeColor, on_text_change_color)
 {
 }
@@ -83,7 +86,7 @@ void TextRenderer::on_added_text(const Name name, const ui_core::Text& text)
    const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
 
    m_textInfos.emplace(name, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
-                                      text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
+                                      text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
                                       static_cast<u32>(vertexSection.size)});
    m_drawCallToTextName.emplace_back(name);
 
@@ -116,6 +119,14 @@ void TextRenderer::on_text_change_position(const Name name, const ui_core::Text&
    std::unique_lock lk{m_updateMtx};
    auto& textInfo = m_textInfos.at(name);
    textInfo.position = text.position;
+   m_pendingTextUpdates.emplace_back(name);
+}
+
+void TextRenderer::on_text_change_crop(Name name, const ui_core::Text& text)
+{
+   std::unique_lock lk{m_updateMtx};
+   auto& textInfo = m_textInfos.at(name);
+   textInfo.crop = text.crop;
    m_pendingTextUpdates.emplace_back(name);
 }
 
@@ -202,6 +213,7 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
       dstUpdate.characterOffset = charOffset;
       dstUpdate.characterCount = font::Charset::European.encode_string_to(textInfo.text.content.view(), charBuffer.begin() + charOffset);
       dstUpdate.color = textInfo.color;
+      dstUpdate.crop = textInfo.crop;
       dstUpdate.position = textInfo.position;
       dstUpdate.atlasId = textInfo.atlasId;
       dstUpdate.glyphBufferOffset = textInfo.glyphBufferOffset;

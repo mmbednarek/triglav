@@ -12,6 +12,9 @@ struct VSOutput
 
     [[vk::location(2)]]
     nointerpolation uint atlasID;
+
+    [[vk::location(3)]]
+    float4 crop;
 }
 
 [[vk::binding(0)]]
@@ -41,6 +44,8 @@ VSOutput vs_main(text_processing::Vertex inVertex)
     out.texCoord = inVertex.uv;
     out.color = drawCall.color;
     out.atlasID = drawCall.atlasID;
+    // out.crop = float4(200, 200, 600, 400);
+    out.crop = drawCall.crop;
 
     return out;
 }
@@ -50,5 +55,9 @@ uniform Sampler2D<float> g_atlases[];
 
 float4 fs_main(VSOutput inFrag) : SV_Target0
 {
-    return float4(inFrag.color.xyz, g_atlases[inFrag.atlasID].Sample(inFrag.texCoord));
+    float2 xy = inFrag.position.xy;
+    if (xy.x >= inFrag.crop.x && xy.x <= inFrag.crop.z && xy.y >= inFrag.crop.y && xy.y <= inFrag.crop.w) {
+        return float4(inFrag.color.xyz, g_atlases[inFrag.atlasID].Sample(inFrag.texCoord));
+    }
+    return float4(0, 0, 0, 0);
 }

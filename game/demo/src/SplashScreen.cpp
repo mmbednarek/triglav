@@ -55,6 +55,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .fontSize = 36,
       .position = {64.0f, 80.0f},
       .color = {0.13f, 0.39f, 0.78f, 1.0f},
+      .crop = {0, 0, g_splashScreenResolution.x, g_splashScreenResolution.y},
    };
    m_uiViewport.add_text("title"_name, std::move(titleText));
 
@@ -64,6 +65,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .fontSize = 24,
       .position = {64.0f, 160.0f},
       .color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
+      .crop = {0, 0, g_splashScreenResolution.x, g_splashScreenResolution.y},
    };
    m_uiViewport.add_text("desc"_name, std::move(descText));
 

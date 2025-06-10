@@ -49,6 +49,17 @@ void Viewport::set_text_position(Name name, const Vector2 position)
    this->event_OnTextChangePosition.publish(name, textPrim);
 }
 
+void Viewport::set_text_crop(Name name, const Vector4 crop)
+{
+   auto& textPrim = m_texts.at(name);
+
+   if (textPrim.crop == crop)
+      return;
+   textPrim.crop = crop;
+
+   this->event_OnTextChangeCrop.publish(name, textPrim);
+}
+
 void Viewport::set_text_color(const Name name, const Vector4 color)
 {
    auto& textPrim = m_texts.at(name);

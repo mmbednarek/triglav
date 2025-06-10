@@ -25,6 +25,7 @@ struct TextInfo
    u32 glyphBufferOffset;
 
    Vector4 color;
+   Vector4 crop;
    Vector2 position;
    u32 atlasId;
 
@@ -49,6 +50,7 @@ class TextRenderer
    void on_removed_text(Name name);
    void on_text_change_content(Name name, const ui_core::Text& text);
    void on_text_change_position(Name name, const ui_core::Text& text);
+   void on_text_change_crop(Name name, const ui_core::Text& text);
    void on_text_change_color(Name name, const ui_core::Text& text);
 
    void prepare_frame(render_core::JobGraph& graph, u32 frameIndex);
@@ -82,6 +84,7 @@ class TextRenderer
    TG_SINK(ui_core::Viewport, OnRemovedText);
    TG_SINK(ui_core::Viewport, OnTextChangeContent);
    TG_SINK(ui_core::Viewport, OnTextChangePosition);
+   TG_SINK(ui_core::Viewport, OnTextChangeCrop);
    TG_SINK(ui_core::Viewport, OnTextChangeColor);
 };
 

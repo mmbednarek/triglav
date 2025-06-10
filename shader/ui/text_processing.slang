@@ -5,6 +5,7 @@ namespace text_processing
     public struct UpdateInfo
     {
         public float4 color;
+        public float4 crop;
         public float2 position;
         public uint atlasID;
 
@@ -25,6 +26,7 @@ namespace text_processing
         public uint firstInstance;
 
         public float4 color;
+        public float4 crop;
         public float2 position;
         public uint atlasID;
     };

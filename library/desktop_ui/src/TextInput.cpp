@@ -45,7 +45,8 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
 
 Vector2 TextInput::desired_size(const Vector2 parentSize) const
 {
-   return m_rect.desired_size(parentSize);
+   auto size = m_rect.desired_size(parentSize);
+   return {m_state.width, size.y};
 }
 
 void TextInput::add_to_viewport(const Vector4 dimensions)

@@ -111,14 +111,6 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    dialog.initialize();
 
-   triglav::threading::Scheduler::the().register_timeout(2s, []() { spdlog::info("After dwo seconds..."); });
-
-   triglav::threading::Scheduler::the().register_timeout(5s, []() { spdlog::info("After five seconds..."); });
-
-   triglav::threading::Scheduler::the().register_timeout(5s, []() { spdlog::info("Also after five seconds..."); });
-
-   triglav::threading::Scheduler::the().register_timeout(6s, []() { spdlog::info("After six seconds..."); });
-
    while (!dialog.should_close()) {
       dialog.update();
       display.dispatch_messages();

@@ -13,6 +13,7 @@ struct Text
    i32 fontSize{};
    Vector2 position;
    Vector4 color;
+   Vector4 crop;
 };
 
 struct Rectangle

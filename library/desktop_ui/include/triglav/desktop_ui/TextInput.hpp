@@ -22,6 +22,7 @@ class TextInput final : public ui_core::IWidget
    {
       DesktopUIManager* manager;
       String text;
+      float width{250.0f};
    };
 
    TextInput(ui_core::Context& ctx, State state, ui_core::IWidget* parent);

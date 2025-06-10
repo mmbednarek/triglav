@@ -13,6 +13,7 @@ core_sources = files([
                     'include/triglav/RangedArray.hpp',
                     'include/triglav/Ranges.hpp',
                     'include/triglav/ResourceType.hpp',
+                    'include/triglav/String.hpp',
                     'include/triglav/Template.hpp',
                     'include/triglav/TypeMacroList.hpp',
                     'include/triglav/Utf8.hpp',
