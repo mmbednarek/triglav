@@ -159,6 +159,31 @@ TextMetric GlyphAtlas::measure_text(const StringView text) const
    return TextMetric{.width = width, .height = height};
 }
 
+u32 GlyphAtlas::find_rune_index(const StringView text, const float offset) const
+{
+   float width = 0.0f;
+
+   u32 index = 0;
+   for (const Rune rune : text) {
+      float runeWidth;
+      if (not m_glyphInfos.contains(rune)) {
+         runeWidth = m_glyphSize;
+      } else {
+         const auto& info = m_glyphInfos.at(rune);
+         runeWidth = info.advance.x;
+      }
+
+      if ((width + 0.5f * runeWidth) >= offset) {
+         return index;
+      }
+
+      width += runeWidth;
+      ++index;
+   }
+
+   return index;
+}
+
 const graphics_api::Buffer& GlyphAtlas::storage_buffer() const
 {
    return m_glyphStorageBuffer;

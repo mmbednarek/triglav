@@ -41,6 +41,7 @@ class GlyphAtlas
    [[nodiscard]] const graphics_api::Texture& texture() const;
    [[nodiscard]] graphics_api::Texture& texture();
    [[nodiscard]] TextMetric measure_text(StringView text) const;
+   [[nodiscard]] u32 find_rune_index(StringView text, float offset) const;
    [[nodiscard]] const graphics_api::Buffer& storage_buffer() const;
 
  private:

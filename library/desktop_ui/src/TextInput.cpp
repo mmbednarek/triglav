@@ -7,13 +7,20 @@
 #include "triglav/ui_core/Primitives.hpp"
 #include "triglav/ui_core/UICore.hpp"
 #include "triglav/ui_core/Viewport.hpp"
+#include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
+#include <spdlog/spdlog.h>
+
 namespace triglav::desktop_ui {
 
 using namespace std::chrono_literals;
+using namespace string_literals;
+
+constexpr Vector2 g_textMargin{8, 15};
+constexpr float g_carretMargin{12};
 
 TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_core::IWidget* /*parent*/) :
     m_context(ctx),
@@ -21,32 +28,28 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
     m_rect(ctx,
            {
               .color = m_state.manager->properties().button_bg_color,
-              .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
+              .borderRadius = {5.0f, 5.0f, 5.0f, 5.0f},
               .borderColor = {0.1f, 0.1f, 0.1f, 1.f},
-              .borderWidth = 2.5f,
+              .borderWidth = 1.0f,
            },
            this),
     m_caretPosition(m_state.text.rune_count())
 {
    const auto& props = m_state.manager->properties();
-   auto& layout = m_rect.create_content<ui_core::VerticalLayout>({
-      .padding{15.0f, 15.0f, 15.0f, 15.0f},
-      .separation = 0.0f,
-   });
-   m_text = &layout.create_child<ui_core::TextBox>({
-      .fontSize = props.button_font_size,
-      .typeface = props.base_typeface,
-      .content = state.text.data(),
-      .color = props.foreground_color,
-      .horizontalAlignment = ui_core::HorizontalAlignment::Center,
-      .verticalAlignment = ui_core::VerticalAlignment::Center,
+
+   auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
+   const auto measure = glyphAtlas.measure_text("0"_strv);
+
+   m_textSize = {measure.width, measure.height};
+
+   m_rect.create_content<ui_core::EmptySpace>({
+      .size{m_state.width, 2 * g_textMargin.y + measure.height},
    });
 }
 
-Vector2 TextInput::desired_size(const Vector2 parentSize) const
+Vector2 TextInput::desired_size(const Vector2 /*parentSize*/) const
 {
-   auto size = m_rect.desired_size(parentSize);
-   return {m_state.width, size.y};
+   return {m_state.width, m_textSize.y + 30.0};
 }
 
 void TextInput::add_to_viewport(const Vector4 dimensions)
@@ -54,16 +57,30 @@ void TextInput::add_to_viewport(const Vector4 dimensions)
    m_rect.add_to_viewport(dimensions);
 
    m_caretBox = m_context.viewport().add_rectangle(ui_core::Rectangle{
-      .rect = {dimensions.x + 15, dimensions.y + 12, dimensions.x + 16, dimensions.y + dimensions.w - 12},
+      .rect = {dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, dimensions.x + g_textMargin.x + 1,
+               dimensions.y + dimensions.w - g_carretMargin},
       .color = m_state.manager->properties().foreground_color,
       .borderRadius = {},
       .borderColor = {},
       .borderWidth = 0.0f,
    });
 
-   this->recalculate_caret_offset();
+   const auto& props = m_state.manager->properties();
+
+   m_textXPosition = dimensions.x + g_textMargin.x;
+
+   m_textPrim = m_context.viewport().add_text(ui_core::Text{
+      .content = m_state.text,
+      .typefaceName = props.base_typeface,
+      .fontSize = props.button_font_size,
+      .position = {m_textXPosition - m_textOffset, dimensions.y + m_textSize.y + 15.0},
+      .color = props.foreground_color,
+      .crop = {dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x, dimensions.y + dimensions.w},
+   });
 
    m_dimensions = dimensions;
+
+   this->recalculate_caret_offset();
 }
 
 void TextInput::remove_from_viewport()
@@ -74,10 +91,16 @@ void TextInput::remove_from_viewport()
 
 void TextInput::on_event(const ui_core::Event& event)
 {
+   const auto& props = m_state.manager->properties();
+
    switch (event.eventType) {
-   case ui_core::Event::Type::MousePressed:
+   case ui_core::Event::Type::MousePressed: {
       m_rect.set_color(m_state.manager->properties().button_bg_pressed_color);
+      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
+      m_caretPosition = glyphAtlas.find_rune_index(m_state.text.view(), event.mousePosition.x - g_textMargin.x - m_textOffset);
+      this->recalculate_caret_offset();
       break;
+   }
    case ui_core::Event::Type::MouseReleased:
       m_rect.set_color(m_state.manager->properties().button_bg_hover_color);
       break;
@@ -107,7 +130,7 @@ void TextInput::on_event(const ui_core::Event& event)
          m_state.text.insert_rune_at(m_caretPosition, rune);
          ++m_caretPosition;
          this->recalculate_caret_offset();
-         m_text->set_content(m_state.text.view());
+         m_context.viewport().set_text_content(m_textPrim, m_state.text.view());
       }
       break;
    }
@@ -127,11 +150,11 @@ void TextInput::on_event(const ui_core::Event& event)
          this->recalculate_caret_offset();
          break;
       case desktop::Key::Backspace: {
-         if (!m_state.text.is_empty()) {
+         if (!m_state.text.is_empty() && m_caretPosition != 0) {
             m_caretPosition--;
             m_state.text.remove_rune_at(m_caretPosition);
-            this->recalculate_caret_offset();
-            m_text->set_content(m_state.text.view());
+            this->recalculate_caret_offset(true);
+            m_context.viewport().set_text_content(m_textPrim, m_state.text.view());
          }
          break;
       }
@@ -157,7 +180,7 @@ void TextInput::update_carret_state()
    m_timeoutHandle = threading::Scheduler::the().register_timeout(duration, [this]() { this->update_carret_state(); });
 }
 
-void TextInput::recalculate_caret_offset()
+void TextInput::recalculate_caret_offset(const bool removal)
 {
    float caretOffset = 0.0f;
    const auto runeCount = m_state.text.rune_count();
@@ -165,17 +188,43 @@ void TextInput::recalculate_caret_offset()
       m_caretPosition = runeCount;
    }
 
-   if (m_caretPosition != 0) {
-      auto substr = m_state.text.subview(0, static_cast<i32>(m_caretPosition));
+   const auto& props = m_state.manager->properties();
 
-      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({m_text->state().typeface, m_text->state().fontSize});
+   if (m_caretPosition != 0) {
+      const auto substr = m_state.text.subview(0, static_cast<i32>(m_caretPosition));
+
+      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
       const auto measure = glyphAtlas.measure_text(substr);
 
       caretOffset = measure.width;
+      if (removal && m_textOffset < 0 && m_caretOffset > caretOffset) {
+         m_textOffset += m_caretOffset - caretOffset;
+         if (m_textOffset > 0) {
+            m_textOffset = 0;
+         }
+         this->update_text_position();
+      } else if ((caretOffset + m_textOffset) > (m_dimensions.z - 2 * g_textMargin.x)) {
+         m_textOffset = m_dimensions.z - 2 * g_textMargin.x - caretOffset;
+         this->update_text_position();
+      } else if ((caretOffset + m_textOffset) < 0) {
+         m_textOffset = -caretOffset;
+         this->update_text_position();
+      }
+
+      m_caretOffset = caretOffset;
+   } else if (m_textOffset != 0) {
+      m_textOffset = 0;
+      this->update_text_position();
    }
 
-   m_context.viewport().set_rectangle_dims(m_caretBox, {m_dimensions.x + 15 + caretOffset, m_dimensions.y + 12,
-                                                        m_dimensions.x + 16 + caretOffset, m_dimensions.y + m_dimensions.w - 12});
+   m_context.viewport().set_rectangle_dims(
+      m_caretBox, {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin,
+                   m_dimensions.x + g_textMargin.x + 1 + m_textOffset + caretOffset, m_dimensions.y + m_dimensions.w - g_carretMargin});
+}
+
+void TextInput::update_text_position() const
+{
+   m_context.viewport().set_text_position(m_textPrim, {m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y});
 }
 
 }// namespace triglav::desktop_ui

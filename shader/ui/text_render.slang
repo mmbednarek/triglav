@@ -44,7 +44,6 @@ VSOutput vs_main(text_processing::Vertex inVertex)
     out.texCoord = inVertex.uv;
     out.color = drawCall.color;
     out.atlasID = drawCall.atlasID;
-    // out.crop = float4(200, 200, 600, 400);
     out.crop = drawCall.crop;
 
     return out;
