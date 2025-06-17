@@ -27,7 +27,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
     m_state(state),
     m_rect(ctx,
            {
-              .color = m_state.manager->properties().button_bg_color,
+              .color = m_state.manager->properties().text_input_bg_inactive,
               .borderRadius = {5.0f, 5.0f, 5.0f, 5.0f},
               .borderColor = {0.1f, 0.1f, 0.1f, 1.f},
               .borderWidth = 1.0f,
@@ -59,7 +59,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions)
    m_caretBox = m_context.viewport().add_rectangle(ui_core::Rectangle{
       .rect = {dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, dimensions.x + g_textMargin.x + 1,
                dimensions.y + dimensions.w - g_carretMargin},
-      .color = m_state.manager->properties().foreground_color,
+      .color = {0, 0, 0, 0},
       .borderRadius = {},
       .borderColor = {},
       .borderWidth = 0.0f,
@@ -95,29 +95,27 @@ void TextInput::on_event(const ui_core::Event& event)
 
    switch (event.eventType) {
    case ui_core::Event::Type::MousePressed: {
-      m_rect.set_color(m_state.manager->properties().button_bg_pressed_color);
+      m_isActive = true;
+      m_rect.set_color(m_state.manager->properties().text_input_bg_active);
+      m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
       auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
       m_caretPosition = glyphAtlas.find_rune_index(m_state.text.view(), event.mousePosition.x - g_textMargin.x - m_textOffset);
-      this->recalculate_caret_offset();
-      break;
-   }
-   case ui_core::Event::Type::MouseReleased:
-      m_rect.set_color(m_state.manager->properties().button_bg_hover_color);
-      break;
-   case ui_core::Event::Type::MouseEntered:
-      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Edit);
-      m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
-      m_rect.set_color(m_state.manager->properties().button_bg_hover_color);
-      m_isActive = true;
       if (!m_timeoutHandle.has_value()) {
          m_timeoutHandle =
             threading::Scheduler::the().register_timeout(std::chrono::milliseconds{500}, [this]() { this->update_carret_state(); });
       }
+      this->recalculate_caret_offset();
+      break;
+   }
+   case ui_core::Event::Type::MouseEntered:
+      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Edit);
+      m_rect.set_color(m_state.manager->properties().text_input_bg_hover);
       break;
    case ui_core::Event::Type::MouseLeft:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
-      m_rect.set_color(m_state.manager->properties().button_bg_color);
+      m_rect.set_color(m_state.manager->properties().text_input_bg_inactive);
+      m_context.viewport().set_rectangle_color(m_caretBox, {0, 0, 0, 0});
       m_isActive = false;
       if (m_timeoutHandle.has_value()) {
          threading::Scheduler::the().cancel(*m_timeoutHandle);
@@ -135,6 +133,9 @@ void TextInput::on_event(const ui_core::Event& event)
       break;
    }
    case ui_core::Event::Type::KeyPressed: {
+      if (!m_isActive) {
+         return;
+      }
       const auto value = std::get<ui_core::Event::Keyboard>(event.data);
       switch (value.key) {
       case desktop::Key::LeftArrow:

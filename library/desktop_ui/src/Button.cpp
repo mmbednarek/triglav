@@ -15,9 +15,9 @@ Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidge
    const auto& props = m_state.manager->properties();
    m_rect = &m_button.create_content<ui_core::RectBox>({
       .color = props.button_bg_color,
-      .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
-      .borderColor = {0.1f, 0.1f, 0.1f, 1.f},
-      .borderWidth = 2.5f,
+      .borderRadius = {13.0f, 13.0f, 13.0f, 13.0f},
+      .borderColor = {},
+      .borderWidth = 0.0f,
    });
    auto& layout = m_rect->create_content<ui_core::VerticalLayout>({
       .padding{15.0f, 15.0f, 15.0f, 15.0f},
