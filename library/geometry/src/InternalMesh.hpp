@@ -4,7 +4,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wunused-parameter"
-#elif defined(__GNUC__)
+#elifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
 #elifdef _MSC_VER
@@ -17,7 +17,7 @@
 
 #ifdef __clang__
 #pragma clang diagnostic pop
-#elif defined(__GNUC__)
+#elifdef __GNUC__
 #pragma GCC diagnostic pop
 #elifdef _MSC_VER
 #pragma warning(pop)

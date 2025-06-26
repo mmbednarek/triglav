@@ -1,6 +1,7 @@
 #include "ProjectConfig.hpp"
 
 #include <fmt/core.h>
+#include <ranges>
 
 namespace triglav::tool::cli {
 

@@ -321,7 +321,8 @@ const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProp
    const auto transferCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
 
    GAPI_CHECK_STATUS(transferCmdList.begin(graphics_api::SubmitType::OneTime));
-   transferCmdList.copy_buffer(glyphAtlas.storage_buffer(), m_combinedGlyphBuffer, 0, m_glyphOffset, static_cast<u32>(glyphAtlas.storage_buffer().size()));
+   transferCmdList.copy_buffer(glyphAtlas.storage_buffer(), m_combinedGlyphBuffer, 0, m_glyphOffset,
+                               static_cast<u32>(glyphAtlas.storage_buffer().size()));
    GAPI_CHECK_STATUS(transferCmdList.finish());
 
    GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(transferCmdList));

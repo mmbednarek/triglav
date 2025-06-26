@@ -6,15 +6,16 @@
 
 #include <fmt/core.h>
 
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-copy"
-#pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
-#elifdef __clang__
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-parameter"
+#pragma clang diagnostic ignored "-Wdeprecated-copy-with-user-provided-copy"
+#elifdef __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-copy"
+#pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
 #elifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4996 4456 4245 4267 4244 4305 5054 4702)

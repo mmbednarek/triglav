@@ -21,6 +21,7 @@
 #include <renderdoc_app.h>
 #endif
 
+using triglav::u32;
 using triglav::render_core::BufferRef;
 using triglav::render_core::BuildContext;
 using triglav::render_core::DescriptorStorage;
@@ -28,7 +29,6 @@ using triglav::render_core::PipelineCache;
 using triglav::render_core::RenderPassScope;
 using triglav::render_core::ResourceStorage;
 using triglav::test::TestingSupport;
-using triglav::u32;
 using namespace triglav::name_literals;
 
 namespace rt = triglav::graphics_api::ray_tracing;

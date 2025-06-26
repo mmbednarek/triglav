@@ -377,7 +377,8 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
                writer.set_storage_image_view(static_cast<u32>(index), this->resolve_texture_view_ref(storage, desc.texRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SamplableTexture>) {
                const gapi::Texture& texture = this->resolve_texture_ref(storage, desc.texRef, frameIndex);
-               writer.set_sampled_texture(static_cast<u32>(index), texture, m_device.sampler_cache().find_sampler(texture.sampler_properties()));
+               writer.set_sampled_texture(static_cast<u32>(index), texture,
+                                          m_device.sampler_cache().find_sampler(texture.sampler_properties()));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SampledTextureArray>) {
                std::vector<const gapi::Texture*> textures;
                textures.reserve(desc.texRefs.size());

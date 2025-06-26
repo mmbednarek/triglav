@@ -43,8 +43,8 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
       io::ISeekableStream& stream;
       bool isEOF;
    } streamData{
-      .stream{stream},
-      .isEOF{false},
+      .stream = stream,
+      .isEOF = false,
    };
 
    stbi_io_callbacks callbacks;

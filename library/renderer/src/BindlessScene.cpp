@@ -79,7 +79,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
 
    *m_countBuffer = static_cast<u32>(m_writtenSceneObjectCount);
 
-   cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0, static_cast<u32>(m_writtenObjectCount * sizeof(BindlessSceneObject)),
+   cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0,
+                       static_cast<u32>(m_writtenObjectCount * sizeof(BindlessSceneObject)),
                        static_cast<u32>(m_pendingObjects.size() * sizeof(BindlessSceneObject)));
 
    m_pendingObjects.clear();
@@ -158,7 +159,8 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
    auto [emplacedIt, ok] = m_models.emplace(name, meshInfo);
    assert(ok);
 
-   cmdList.copy_buffer(model.mesh.vertices.buffer(), m_combinedVertexBuffer.buffer(), 0, static_cast<u32>(m_writtenVertexCount * sizeof(geometry::Vertex)),
+   cmdList.copy_buffer(model.mesh.vertices.buffer(), m_combinedVertexBuffer.buffer(), 0,
+                       static_cast<u32>(m_writtenVertexCount * sizeof(geometry::Vertex)),
                        static_cast<u32>(model.mesh.vertices.count() * sizeof(geometry::Vertex)));
 
    m_writtenVertexCount += model.mesh.vertices.count();
@@ -184,8 +186,9 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
 
       const auto outIndex = static_cast<u32>(m_writtenMaterialProperty_AlbedoTex);
 
-      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(), static_cast<u32>(m_writtenMaterialProperty_AlbedoTex * sizeof(Properties_MT0)),
-                            sizeof(Properties_MT0), &albedoTex);
+      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(),
+                            static_cast<u32>(m_writtenMaterialProperty_AlbedoTex * sizeof(Properties_MT0)), sizeof(Properties_MT0),
+                            &albedoTex);
 
       ++m_writtenMaterialProperty_AlbedoTex;
 
@@ -202,8 +205,9 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
 
       const auto outIndex = static_cast<u32>(m_writtenMaterialProperty_AlbedoNormalTex);
 
-      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(), static_cast<u32>(m_writtenMaterialProperty_AlbedoNormalTex * sizeof(Properties_MT1)),
-                            sizeof(Properties_MT1), &albedoNormalTex);
+      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(),
+                            static_cast<u32>(m_writtenMaterialProperty_AlbedoNormalTex * sizeof(Properties_MT1)), sizeof(Properties_MT1),
+                            &albedoNormalTex);
 
       ++m_writtenMaterialProperty_AlbedoNormalTex;
 
