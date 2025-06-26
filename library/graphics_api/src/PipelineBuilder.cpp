@@ -35,7 +35,7 @@ void PipelineBuilderBase::add_descriptor_binding(const DescriptorType descriptor
 {
    VkDescriptorSetLayoutBinding layoutBinding{};
    layoutBinding.descriptorCount = descriptorCount;
-   layoutBinding.binding = m_vulkanDescriptorBindings.size();
+   layoutBinding.binding = static_cast<u32>(m_vulkanDescriptorBindings.size());
    layoutBinding.descriptorType = vulkan::to_vulkan_descriptor_type(descriptorType);
    layoutBinding.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStages);
    m_vulkanDescriptorBindings.emplace_back(layoutBinding);
@@ -44,8 +44,8 @@ void PipelineBuilderBase::add_descriptor_binding(const DescriptorType descriptor
 void PipelineBuilderBase::add_push_constant(const PipelineStageFlags shaderStages, const size_t size, const size_t offset)
 {
    VkPushConstantRange range;
-   range.offset = offset;
-   range.size = size;
+   range.offset = static_cast<u32>(offset);
+   range.size = static_cast<u32>(size);
    range.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStages);
    m_pushConstantRanges.emplace_back(range);
 }
@@ -54,7 +54,7 @@ Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> Pipeline
 {
    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
    descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-   descriptorSetLayoutInfo.bindingCount = m_vulkanDescriptorBindings.size();
+   descriptorSetLayoutInfo.bindingCount = static_cast<u32>(m_vulkanDescriptorBindings.size());
    descriptorSetLayoutInfo.pBindings = m_vulkanDescriptorBindings.data();
    if (m_usePushDescriptors) {
       descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
@@ -68,7 +68,7 @@ Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> Pipeline
    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
    pipelineLayoutInfo.setLayoutCount = 1;
    pipelineLayoutInfo.pSetLayouts = &(*descriptorSetLayout);
-   pipelineLayoutInfo.pushConstantRangeCount = m_pushConstantRanges.size();
+   pipelineLayoutInfo.pushConstantRangeCount = static_cast<u32>(m_pushConstantRanges.size());
    pipelineLayoutInfo.pPushConstantRanges = m_pushConstantRanges.data();
 
    vulkan::PipelineLayout pipelineLayout(m_device.vulkan_device());
@@ -171,7 +171,7 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_attribute(const ColorFo
    vertexAttribute.binding = m_vertexBinding;
    vertexAttribute.location = m_vertexLocation;
    vertexAttribute.format = *vulkan::to_vulkan_color_format(format);
-   vertexAttribute.offset = offset;
+   vertexAttribute.offset = static_cast<u32>(offset);
    m_attributes.emplace_back(vertexAttribute);
 
    ++m_vertexLocation;
@@ -315,14 +315,14 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
 {
    VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
    dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-   dynamicStateInfo.dynamicStateCount = g_dynamicStates.size();
+   dynamicStateInfo.dynamicStateCount = static_cast<u32>(g_dynamicStates.size());
    dynamicStateInfo.pDynamicStates = g_dynamicStates.data();
 
    VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
    vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-   vertexInputInfo.vertexBindingDescriptionCount = m_bindings.size();
+   vertexInputInfo.vertexBindingDescriptionCount = static_cast<u32>(m_bindings.size());
    vertexInputInfo.pVertexBindingDescriptions = m_bindings.data();
-   vertexInputInfo.vertexAttributeDescriptionCount = m_attributes.size();
+   vertexInputInfo.vertexAttributeDescriptionCount = static_cast<u32>(m_attributes.size());
    vertexInputInfo.pVertexAttributeDescriptions = m_attributes.data();
 
    VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
@@ -371,7 +371,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    multisamplingInfo.minSampleShading = 1.0f;
 
    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
-   for (const auto& _ : m_colorAttachmentFormats) {
+   for ([[maybe_unused]] const auto& _ : m_colorAttachmentFormats) {
       VkPipelineColorBlendAttachmentState colorBlendAttachment{};
       colorBlendAttachment.colorWriteMask =
          VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
@@ -389,7 +389,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
    colorBlendingInfo.logicOpEnable = not m_blendingEnabled;
    colorBlendingInfo.logicOp = VK_LOGIC_OP_COPY;
-   colorBlendingInfo.attachmentCount = colorBlendAttachments.size();
+   colorBlendingInfo.attachmentCount = static_cast<u32>(colorBlendAttachments.size());
    colorBlendingInfo.pAttachments = colorBlendAttachments.data();
    colorBlendingInfo.blendConstants[0] = 0.0f;
    colorBlendingInfo.blendConstants[1] = 0.0f;
@@ -418,7 +418,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
       colorAttachmentFormats.emplace_back(GAPI_CHECK(vulkan::to_vulkan_color_format(colorFormat)));
    }
 
-   renderingInfo.colorAttachmentCount = colorAttachmentFormats.size();
+   renderingInfo.colorAttachmentCount = static_cast<u32>(colorAttachmentFormats.size());
    renderingInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
    if (m_depthAttachmentFormat.has_value()) {
       renderingInfo.depthAttachmentFormat = GAPI_CHECK(vulkan::to_vulkan_color_format(*m_depthAttachmentFormat));

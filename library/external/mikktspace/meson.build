@@ -2,6 +2,9 @@ mikktspace_args = []
 
 if meson.get_compiler('cpp').get_id() == 'clang'
     mikktspace_args += '-Wno-unused-but-set-variable'
+elif meson.get_compiler('cpp').get_id() == 'msvc'
+    mikktspace_args += '/wd4456'
+    mikktspace_args += '/wd4201'
 endif
 
 mikktspace_lib = static_library('mikktspace',

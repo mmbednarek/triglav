@@ -94,8 +94,8 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
 
       auto items = node["items"];
       for (const auto item : items) {
-         auto type = item["type"].val();
-         if (type == "static_mesh") {
+         auto typeVal = item["type"].val();
+         if (typeVal == "static_mesh") {
             levelNode.add_static_mesh(parse_static_mesh(item));
          }
       }

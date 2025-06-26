@@ -192,7 +192,7 @@ class BuildContext
    {
       this->bind_vertex_buffer(&mesh.vertices.buffer());
       this->bind_index_buffer(&mesh.indices.buffer());
-      this->draw_indexed_primitives(mesh.indices.count(), 0, 0);
+      this->draw_indexed_primitives(static_cast<u32>(mesh.indices.count()), 0, 0);
    }
 
    void add_texture_usage(Name texName, graphics_api::TextureUsageFlags flags);

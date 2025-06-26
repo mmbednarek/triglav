@@ -1,5 +1,7 @@
 #include "Deserializer.hpp"
 
+#include <cassert>
+
 namespace triglav::io {
 
 Deserializer::Deserializer(IReader& reader) :
@@ -11,7 +13,8 @@ template<typename T>
 T Deserializer::read_value_internal()
 {
    T result{};
-   m_reader.read({reinterpret_cast<u8*>(&result), sizeof(T)});
+   [[maybe_unused]] const auto readRes = m_reader.read({reinterpret_cast<u8*>(&result), sizeof(T)});
+   assert(readRes.has_value());
    return result;
 }
 

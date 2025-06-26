@@ -134,7 +134,7 @@ void DescriptorWriter::set_texture_array(const u32 binding, const std::span<cons
 {
    auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-   writeDescriptorSet.descriptorCount = textures.size();
+   writeDescriptorSet.descriptorCount = static_cast<u32>(textures.size());
 
    auto* images = new VkDescriptorImageInfo[textures.size()];
    for (u32 i = 0; i < textures.size(); ++i) {

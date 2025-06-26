@@ -47,9 +47,9 @@ Status Swapchain::present(const SemaphoreArrayView& waitSemaphores, const uint32
 
    VkPresentInfoKHR presentInfo{};
    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-   presentInfo.waitSemaphoreCount = waitSemaphores.semaphore_count();
+   presentInfo.waitSemaphoreCount = static_cast<u32>(waitSemaphores.semaphore_count());
    presentInfo.pWaitSemaphores = waitSemaphores.vulkan_semaphores();
-   presentInfo.swapchainCount = swapchains.size();
+   presentInfo.swapchainCount = static_cast<u32>(swapchains.size());
    presentInfo.pSwapchains = swapchains.data();
    presentInfo.pImageIndices = imageIndices.data();
    presentInfo.pResults = nullptr;
@@ -74,7 +74,7 @@ VkImageView Swapchain::vulkan_image_view(const u32 frameIndex) const
 
 u32 Swapchain::frame_count() const
 {
-   return m_textures.size();
+   return static_cast<u32>(m_textures.size());
 }
 
 ColorFormat Swapchain::color_format() const

@@ -13,7 +13,7 @@ LoadContext::LoadContext(std::vector<ResourceStage>&& loadingStages) :
     m_loadingStages(std::move(loadingStages))
 {
    for (const auto& stage : m_loadingStages) {
-      m_totalAssets += stage.resourceList.size();
+      m_totalAssets += static_cast<u32>(stage.resourceList.size());
    }
 }
 

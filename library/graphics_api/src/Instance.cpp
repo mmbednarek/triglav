@@ -269,7 +269,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface* surface, const DeviceP
    deviceInfo.pNext = &deviceFeatures;
    deviceInfo.queueCreateInfoCount = static_cast<uint32_t>(deviceQueueCreateInfos.size());
    deviceInfo.pQueueCreateInfos = deviceQueueCreateInfos.data();
-   deviceInfo.enabledExtensionCount = vulkanDeviceExtensions.size();
+   deviceInfo.enabledExtensionCount = static_cast<u32>(vulkanDeviceExtensions.size());
    deviceInfo.ppEnabledExtensionNames = vulkanDeviceExtensions.data();
 
    vulkan::Device device;
@@ -320,9 +320,9 @@ Result<Instance> Instance::create_instance()
    VkInstanceCreateInfo instanceInfo{};
    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
    instanceInfo.pApplicationInfo = &appInfo;
-   instanceInfo.enabledExtensionCount = g_vulkanInstanceExtensions.size();
+   instanceInfo.enabledExtensionCount = static_cast<u32>(g_vulkanInstanceExtensions.size());
    instanceInfo.ppEnabledExtensionNames = g_vulkanInstanceExtensions.data();
-   instanceInfo.enabledLayerCount = g_vulkanInstanceLayers.size();
+   instanceInfo.enabledLayerCount = static_cast<u32>(g_vulkanInstanceLayers.size());
    instanceInfo.ppEnabledLayerNames = g_vulkanInstanceLayers.data();
 
 #if TG_ENABLE_SYNC_VALIDATION

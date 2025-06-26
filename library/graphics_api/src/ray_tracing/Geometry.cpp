@@ -95,7 +95,7 @@ void GeometryBuildInfo::finalize(VkAccelerationStructureTypeKHR accelerationStru
    m_buildInfo.mode = m_lastAccelerationStructure == nullptr ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR
                                                              : VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR;
    m_buildInfo.dstAccelerationStructure = nullptr;
-   m_buildInfo.geometryCount = m_geometries.size();
+   m_buildInfo.geometryCount = static_cast<u32>(m_geometries.size());
    m_buildInfo.pGeometries = m_geometries.data();
    m_buildInfo.scratchData.deviceAddress = 0;
 }
@@ -180,7 +180,7 @@ AccelerationStructure* GeometryBuildContext::commit_instances()
 
 void GeometryBuildContext::build_acceleration_structures(CommandList& cmdList)
 {
-   vulkan::vkCmdBuildAccelerationStructuresKHR(cmdList.vulkan_command_buffer(), m_buildInfos.size(), m_buildInfos.data(),
+   vulkan::vkCmdBuildAccelerationStructuresKHR(cmdList.vulkan_command_buffer(), static_cast<u32>(m_buildInfos.size()), m_buildInfos.data(),
                                                m_buildRangePtrs.data());
 }
 

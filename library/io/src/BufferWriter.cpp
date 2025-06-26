@@ -17,7 +17,7 @@ Result<MemorySize> BufferWriter::write(const std::span<const u8> buffer)
    }
 
    std::memcpy(m_buffer.data() + m_offset, buffer.data(), buffer.size());
-   m_offset += buffer.size();
+   m_offset += static_cast<u32>(buffer.size());
    return buffer.size();
 }
 

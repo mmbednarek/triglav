@@ -10,13 +10,14 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
-#endif
-
-#ifdef __clang__
+#elifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #pragma clang diagnostic ignored "-Wunused-but-set-variable"
 #pragma clang diagnostic ignored "-Wunused-parameter"
+#elifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996 4456 4245 4267 4244 4305 5054 4702)
 #endif
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
@@ -25,10 +26,10 @@
 
 #ifdef __clang__
 #pragma clang diagnostic pop
-#endif
-
-#ifdef __GNUC__
+#elifdef __GNUC__
 #pragma GCC diagnostic pop
+#elifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #include <glm/geometric.hpp>
@@ -88,7 +89,7 @@ InternalMesh::FaceIndex InternalMesh::add_face(const std::span<VertexIndex> vert
 Index InternalMesh::add_group(MeshGroup normal)
 {
    m_groups.emplace_back(std::move(normal));
-   return m_groups.size() - 1;
+   return static_cast<Index>(m_groups.size() - 1);
 }
 
 size_t InternalMesh::vertex_count() const
@@ -386,7 +387,7 @@ VertexData InternalMesh::to_vertex_data()
       throw std::runtime_error("mesh must be triangulated before calculating vertex data");
    assert(not m_mesh.faces().empty());
 
-   std::unordered_map<Vertex, uint32_t> vertexMap{};
+   std::unordered_map<Vertex, u32> vertexMap{};
    std::vector<Vertex> outVertices{};
 
    std::vector<MaterialRange> materialRanges{};
@@ -424,8 +425,8 @@ VertexData InternalMesh::to_vertex_data()
             outIndices.push_back(vertexMap[vertex]);
          } else {
             outVertices.push_back(vertex);
-            vertexMap[vertex] = outVertices.size() - 1;
-            outIndices.push_back(outVertices.size() - 1);
+            vertexMap[vertex] = static_cast<u32>(outVertices.size() - 1);
+            outIndices.push_back(static_cast<u32>(outVertices.size() - 1));
          }
       }
    }
@@ -452,12 +453,12 @@ void InternalMesh::recalculate_tangents()
    SMikkTSpaceInterface interface{};
    interface.m_getNumFaces = [](const SMikkTSpaceContext* pContext) -> int {
       const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
-      return mesh->faces().size();
+      return static_cast<int>(mesh->faces().size());
    };
    interface.m_getNumVerticesOfFace = [](const SMikkTSpaceContext* pContext, const int iFace) -> int {
       const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);
       const FaceIndex faceIndex{static_cast<FaceIndex::size_type>(iFace)};
-      return mesh->m_mesh.vertices_around_face(mesh->m_mesh.halfedge(faceIndex)).size();
+      return static_cast<int>(mesh->m_mesh.vertices_around_face(mesh->m_mesh.halfedge(faceIndex)).size());
    };
    interface.m_getPosition = [](const SMikkTSpaceContext* pContext, float fvPosOut[], const int iFace, const int iVert) {
       const auto* mesh = static_cast<InternalMesh*>(pContext->m_pUserData);

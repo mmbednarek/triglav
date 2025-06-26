@@ -190,12 +190,12 @@ void BuildContext::bind_sampled_texture_array(const BindingIndex index, std::spa
       this->prepare_texture(ref, gapi::TextureState::ShaderRead, gapi::TextureUsage::Sampled);
    }
 
-   m_descriptorCounts.sampledTextureCount += texRefs.size();
+   m_descriptorCounts.sampledTextureCount += static_cast<u32>(texRefs.size());
 
    DescriptorInfo descriptor;
    descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::ImageSampler;
-   descriptor.descriptorCount = texRefs.size();
+   descriptor.descriptorCount = static_cast<u32>(texRefs.size());
    this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
    std::vector<TextureRef> textureRefs;
@@ -224,12 +224,12 @@ void BuildContext::bind_uniform_buffers(const BindingIndex index, const std::spa
       this->prepare_buffer(buffer, gapi::BufferUsage::UniformBuffer);
    }
 
-   m_descriptorCounts.uniformBufferCount += buffers.size();
+   m_descriptorCounts.uniformBufferCount += static_cast<u32>(buffers.size());
 
    DescriptorInfo descriptor;
    descriptor.pipelineStages = m_activePipelineStages;
    descriptor.descriptorType = gapi::DescriptorType::UniformBuffer;
-   descriptor.descriptorCount = buffers.size();
+   descriptor.descriptorCount = static_cast<u32>(buffers.size());
    this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
 
    std::vector<BufferRef> bufferRefs;
@@ -255,10 +255,10 @@ void BuildContext::bind_storage_buffer(const BindingIndex index, const BufferRef
 void BuildContext::push_constant_span(const std::span<const u8> buffer)
 {
    if (m_activePipelineStages == gapi::PipelineStage::FragmentShader || m_activePipelineStages == gapi::PipelineStage::VertexShader) {
-      m_graphicPipelineState.pushConstants.emplace_back(m_activePipelineStages, buffer.size());
+      m_graphicPipelineState.pushConstants.emplace_back(m_activePipelineStages, static_cast<u32>(buffer.size()));
    } else if (m_activePipelineStages & gapi::PipelineStage::RayGenerationShader ||
               m_activePipelineStages & gapi::PipelineStage::MissShader || m_activePipelineStages & gapi::PipelineStage::ClosestHitShader) {
-      m_rayTracingPipelineState.pushConstants.emplace_back(m_activePipelineStages, buffer.size());
+      m_rayTracingPipelineState.pushConstants.emplace_back(m_activePipelineStages, static_cast<u32>(buffer.size()));
    }
 
    std::vector data(buffer.begin(), buffer.end());
@@ -374,32 +374,32 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
       std::visit(
          [this, index, frameIndex, &writer, &storage]<typename TDescriptor>(const TDescriptor& desc) {
             if constexpr (std::is_same_v<TDescriptor, detail::descriptor::RWTexture>) {
-               writer.set_storage_image_view(index, this->resolve_texture_view_ref(storage, desc.texRef, frameIndex));
+               writer.set_storage_image_view(static_cast<u32>(index), this->resolve_texture_view_ref(storage, desc.texRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SamplableTexture>) {
                const gapi::Texture& texture = this->resolve_texture_ref(storage, desc.texRef, frameIndex);
-               writer.set_sampled_texture(index, texture, m_device.sampler_cache().find_sampler(texture.sampler_properties()));
+               writer.set_sampled_texture(static_cast<u32>(index), texture, m_device.sampler_cache().find_sampler(texture.sampler_properties()));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SampledTextureArray>) {
                std::vector<const gapi::Texture*> textures;
                textures.reserve(desc.texRefs.size());
                for (const auto& texRef : desc.texRefs) {
                   textures.push_back(&this->resolve_texture_ref(storage, texRef, frameIndex));
                }
-               writer.set_texture_array(index, textures);
+               writer.set_texture_array(static_cast<u32>(index), textures);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::Texture>) {
-               writer.set_texture_view_only(index, this->resolve_texture_view_ref(storage, desc.texRef, frameIndex));
+               writer.set_texture_view_only(static_cast<u32>(index), this->resolve_texture_view_ref(storage, desc.texRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBuffer>) {
-               writer.set_raw_uniform_buffer(index, this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
+               writer.set_raw_uniform_buffer(static_cast<u32>(index), this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferArray>) {
                std::vector<const gapi::Buffer*> buffers;
                buffers.reserve(desc.buffers.size());
                for (const auto ref : desc.buffers) {
                   buffers.emplace_back(&this->resolve_buffer_ref(storage, ref, frameIndex));
                }
-               writer.set_uniform_buffer_array(index, buffers);
+               writer.set_uniform_buffer_array(static_cast<u32>(index), buffers);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::StorageBuffer>) {
-               writer.set_storage_buffer(index, this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
+               writer.set_storage_buffer(static_cast<u32>(index), this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::AccelerationStructure>) {
-               writer.set_acceleration_structure(index, *desc.accelerationStructure);
+               writer.set_acceleration_structure(static_cast<u32>(index), *desc.accelerationStructure);
             }
          },
          descVariant->descriptor);
@@ -935,7 +935,7 @@ void BuildContext::create_resources(ResourceStorage& storage)
                } else if constexpr (std::is_same_v<TDecl, detail::decl::Buffer>) {
                   auto buffSize = decl.buffSize;
                   if (decl.scale.has_value()) {
-                     buffSize = m_screenSize.x * m_screenSize.y * decl.scale.value() * buffSize;
+                     buffSize = static_cast<MemorySize>(m_screenSize.x * m_screenSize.y * decl.scale.value() * buffSize);
                   }
                   auto buffer = GAPI_CHECK(m_device.create_buffer(decl.buffUsageFlags, buffSize));
                   TG_SET_DEBUG_NAME(buffer, create_object_name(decl.buffName, frameIndex));

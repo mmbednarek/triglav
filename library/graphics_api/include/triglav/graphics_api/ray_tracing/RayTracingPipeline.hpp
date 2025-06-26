@@ -13,7 +13,7 @@ class RayTracingPipeline;
 
 struct ShaderIndexWithType
 {
-   Index shaderIndex;
+   u32 shaderIndex;
    PipelineStage shaderType;
 };
 

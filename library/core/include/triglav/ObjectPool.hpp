@@ -57,7 +57,7 @@ class PoolBucket
       }
 
       m_path[index] = m_head;
-      m_head = index;
+      m_head = static_cast<u32>(index);
 
       return true;
    }
@@ -122,7 +122,7 @@ class ObjectPool
    TObject* acquire_object()
    {
       if (m_bucketHead == Bucket::aquiredIndex) {
-         m_bucketHead = m_buckets.size();
+         m_bucketHead = static_cast<u32>(m_buckets.size());
          auto& bucket = m_buckets.emplace_back(std::make_unique<Bucket>(m_objectFactory));
          m_bucketRanges[PointerRange{bucket->base_ptr()}] = m_bucketHead;
          return bucket->acquire_object();

@@ -22,9 +22,9 @@ namespace triglav::tool::cli {
 
 void ResourceListItem::deserialize_yaml(const ryml::ConstNodeRef& node)
 {
-   const auto source = node["source"].val();
+   const auto sourceVal = node["source"].val();
 
-   this->source = {source.data(), source.size()};
+   this->source = {sourceVal.data(), sourceVal.size()};
 
    if (node.has_child("properties")) {
       auto propertiesNode = node["properties"];

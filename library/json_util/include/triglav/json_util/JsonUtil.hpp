@@ -7,6 +7,9 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996 5054)
 #endif
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>
@@ -14,6 +17,8 @@
 #pragma clang diagnostic pop
 #elifdef __GNUC__
 #pragma GCC diagnostic pop
+#elifdef _MSC_VER
+#pragma warning(pop)
 #endif
 #include <optional>
 

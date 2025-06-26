@@ -28,6 +28,7 @@ using triglav::render_core::PipelineCache;
 using triglav::render_core::RenderPassScope;
 using triglav::render_core::ResourceStorage;
 using triglav::test::TestingSupport;
+using triglav::u32;
 using namespace triglav::name_literals;
 
 namespace rt = triglav::graphics_api::ray_tracing;
@@ -297,7 +298,7 @@ TEST(BuildContext, BasicDepth)
       buildContext.bind_fragment_shader("testing/basic_depth.fshader"_rc);
 
       // Draw
-      buildContext.draw_indexed_primitives(boxMeshData.indices.size(), 0, 0, 2, 0);
+      buildContext.draw_indexed_primitives(static_cast<u32>(boxMeshData.indices.size()), 0, 0, 2, 0);
    }
 
    // Copy the render target to staging buffer
@@ -486,7 +487,7 @@ TEST(BuildContext, DepthTargetSample)
       buildContext.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
 
       // Draw
-      buildContext.draw_indexed_primitives(boxMeshData.indices.size(), 0, 0, 1, 0);
+      buildContext.draw_indexed_primitives(static_cast<u32>(boxMeshData.indices.size()), 0, 0, 1, 0);
    }
    {
       // Second pass
@@ -617,7 +618,7 @@ TEST(BuildContext, CopyFromLastFrame)
 
    job.disable_flag("has_buffer_changed"_name);
 
-   for (const auto _ : triglav::Range(0, 10)) {
+   for ([[maybe_unused]] const auto _ : triglav::Range(0, 10)) {
       job.execute(1, listFirst, listSecond, nullptr);
       job.execute(2, listSecond, listThird, nullptr);
       job.execute(0, listThird, listFirst, &fence);
@@ -690,8 +691,8 @@ TEST(BuildContext, BasicRayTracing)
       boxMesh.upload_to_device(TestingSupport::device(), gapi::BufferUsage::TransferDst | gapi::BufferUsage::AccelerationStructureRead);
 
    bottomLevelCtx.add_triangle_buffer(boxMeshData.mesh.vertices.buffer(), boxMeshData.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
-                                      sizeof(triglav::geometry::Vertex), boxMeshData.mesh.vertices.count(),
-                                      boxMeshData.mesh.indices.count() / 3);
+                                      sizeof(triglav::geometry::Vertex), static_cast<u32>(boxMeshData.mesh.vertices.count()),
+                                      static_cast<u32>(boxMeshData.mesh.indices.count() / 3));
 
    auto* boxAS = bottomLevelCtx.commit_triangles();
 

@@ -11,7 +11,7 @@
 
 namespace triglav::gltf {
 
-constexpr u32 g_invalidID = ~0;
+constexpr u32 g_invalidID = ~0u;
 
 struct Asset
 {

@@ -76,7 +76,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
 
    for (int ring = 1; ring < ring_count; ++ring) {
       const auto v = static_cast<float>(ring) / static_cast<float>(ring_count);
-      const auto pitch = v * g_pi + g_pi / 2.0f;
+      const auto pitch = v * static_cast<float>(g_pi) + static_cast<float>(g_pi) / 2.0f;
       const auto cos_pitch = cos(pitch);
       const auto norm_z = -sin(pitch);
       const auto z = radius * norm_z;
@@ -84,7 +84,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
 
       for (int segment = 0; segment <= segment_count; ++segment) {
          const auto u = 1.0f - static_cast<float>(segment) / static_cast<float>(segment_count);
-         const auto yaw = 2 * g_pi * u;
+         const auto yaw = 2.0f * static_cast<float>(g_pi) * u;
          const auto norm_x = -cos_pitch * sin(yaw);
          const auto x = radius * norm_x;
          const auto norm_y = cos_pitch * cos(yaw);

@@ -35,8 +35,8 @@ TEST(HeapAllocatorTest, Default)
 
       // Verify integrity
       triglav::MemorySize totalSize{};
-      for (const auto& [offset, size] : allocator.free_list()) {
-         totalSize += size;
+      for (const auto& [_, itemSize] : allocator.free_list()) {
+         totalSize += itemSize;
       }
       for (const auto& area : allocations) {
          totalSize += area.size;
@@ -46,9 +46,9 @@ TEST(HeapAllocatorTest, Default)
 
       // Verify there is no continuity between free list items
       triglav::MemorySize lastOffset{~0ull};
-      for (const auto& [offset, size] : allocator.free_list()) {
-         ASSERT_NE(lastOffset, offset);
-         lastOffset = offset + size;
+      for (const auto& [itemOffset, itemSize] : allocator.free_list()) {
+         ASSERT_NE(lastOffset, itemOffset);
+         lastOffset = itemOffset + itemSize;
       }
    }
 

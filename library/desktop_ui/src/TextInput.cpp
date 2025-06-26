@@ -33,7 +33,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
               .borderWidth = 1.0f,
            },
            this),
-    m_caretPosition(m_state.text.rune_count())
+    m_caretPosition(static_cast<u32>(m_state.text.rune_count()))
 {
    const auto& props = m_state.manager->properties();
 
@@ -184,7 +184,7 @@ void TextInput::update_carret_state()
 void TextInput::recalculate_caret_offset(const bool removal)
 {
    float caretOffset = 0.0f;
-   const auto runeCount = m_state.text.rune_count();
+   const auto runeCount = static_cast<u32>(m_state.text.rune_count());
    if (m_caretPosition >= runeCount) {
       m_caretPosition = runeCount;
    }

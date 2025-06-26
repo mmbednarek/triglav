@@ -7,6 +7,9 @@
 #elif defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
+#elifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4996 4456 4245 4267 4244 4305 5054 4702)
 #endif
 
 #include <CGAL/Simple_cartesian.h>
@@ -16,6 +19,8 @@
 #pragma clang diagnostic pop
 #elif defined(__GNUC__)
 #pragma GCC diagnostic pop
+#elifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #include <optional>

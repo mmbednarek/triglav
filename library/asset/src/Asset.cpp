@@ -89,9 +89,9 @@ bool encode_mesh(io::IWriter& writer, const geometry::Mesh& mesh)
 
    MeshHeader meshHeader{};
    meshHeader.vertexLayout = MeshVertexLayout::NormalMapped;
-   meshHeader.vertexCount = vertexData.vertices.size();
-   meshHeader.indexCount = vertexData.indices.size();
-   meshHeader.groupCount = vertexData.ranges.size();
+   meshHeader.vertexCount = static_cast<u32>(vertexData.vertices.size());
+   meshHeader.indexCount = static_cast<u32>(vertexData.indices.size());
+   meshHeader.groupCount = static_cast<u32>(vertexData.ranges.size());
    meshHeader.boundingBoxMin = bb.min;
    meshHeader.boundingBoxMax = bb.max;
    if (!writer.write({reinterpret_cast<const u8*>(&meshHeader), sizeof(MeshHeader)}).has_value()) {

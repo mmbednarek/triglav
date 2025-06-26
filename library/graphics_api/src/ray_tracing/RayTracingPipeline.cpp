@@ -73,7 +73,7 @@ RayTracingPipelineBuilder& RayTracingPipelineBuilder::max_recursion(u32 count)
 RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader(const Name name, const Shader& shader)
 {
    auto index = this->add_shader(shader);
-   m_shaderIndices.emplace(name, ShaderIndexWithType{.shaderIndex = index, .shaderType = shader.stage()});
+   m_shaderIndices.emplace(name, ShaderIndexWithType{.shaderIndex = static_cast<u32>(index), .shaderType = shader.stage()});
    return *this;
 }
 
@@ -123,9 +123,9 @@ RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(cons
 Result<RayTracingPipeline> RayTracingPipelineBuilder::build()
 {
    VkRayTracingPipelineCreateInfoKHR pipelineCreateInfo{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
-   pipelineCreateInfo.stageCount = m_shaderStageInfos.size();
+   pipelineCreateInfo.stageCount = static_cast<u32>(m_shaderStageInfos.size());
    pipelineCreateInfo.pStages = m_shaderStageInfos.data();
-   pipelineCreateInfo.groupCount = m_shaderGroups.size();
+   pipelineCreateInfo.groupCount = static_cast<u32>(m_shaderGroups.size());
    pipelineCreateInfo.pGroups = m_shaderGroups.data();
    pipelineCreateInfo.maxPipelineRayRecursionDepth = m_maxRecursion;
 
@@ -167,7 +167,7 @@ u32 RayTracingPipeline::group_count() const
 
 u32 RayTracingPipeline::shader_count() const
 {
-   return m_shaderIndices.size();
+   return static_cast<u32>(m_shaderIndices.size());
 }
 
 ShaderIndexWithType RayTracingPipeline::shader_index(Name name) const

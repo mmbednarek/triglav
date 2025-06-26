@@ -32,7 +32,7 @@ DescriptorArray& DescriptorArray::operator=(DescriptorArray&& other) noexcept
 DescriptorArray::~DescriptorArray()
 {
    if (not m_descriptorSets.empty()) {
-      vkFreeDescriptorSets(m_device, m_descriptorPool, m_descriptorSets.size(), m_descriptorSets.data());
+      vkFreeDescriptorSets(m_device, m_descriptorPool, static_cast<u32>(m_descriptorSets.size()), m_descriptorSets.data());
    }
 }
 

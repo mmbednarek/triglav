@@ -76,7 +76,7 @@ const OrthoCamera& Scene::shadow_map_camera(const u32 index) const
 
 u32 Scene::directional_shadow_map_count() const
 {
-   return m_directionalShadowMapCameras.size();
+   return static_cast<u32>(m_directionalShadowMapCameras.size());
 }
 
 float Scene::yaw() const
@@ -93,10 +93,10 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
 {
    m_yaw += delta_yaw;
    while (m_yaw < 0) {
-      m_yaw += 2 * M_PI;
+      m_yaw += static_cast<float>(2 * M_PI);
    }
-   while (m_yaw >= 2 * M_PI) {
-      m_yaw -= 2 * M_PI;
+   while (m_yaw >= static_cast<float>(2 * M_PI)) {
+      m_yaw -= static_cast<float>(2 * M_PI);
    }
 
    m_pitch += delta_pitch;

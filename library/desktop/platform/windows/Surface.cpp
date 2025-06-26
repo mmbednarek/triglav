@@ -114,7 +114,7 @@ HWND create_window(const HINSTANCE instance, const StringView title, const Vecto
 {
    const auto runeCount = title.rune_count();
    std::vector<wchar_t> wCharTitle(runeCount + 1);
-   std::copy(title.begin(), title.end(), wCharTitle.begin());
+   std::transform(title.begin(), title.end(), wCharTitle.begin(), [](const Rune r) { return static_cast<wchar_t>(r); });
    wCharTitle[runeCount] = 0;
 
    return CreateWindowExW(map_window_attributes_to_ex_style(flags), g_windowClassName, wCharTitle.data(),

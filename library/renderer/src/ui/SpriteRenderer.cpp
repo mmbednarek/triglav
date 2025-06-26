@@ -109,7 +109,7 @@ u32 SpriteRenderer::get_texture_id(const TextureName name)
       return it->second;
    }
 
-   const auto id = m_textures.size();
+   const auto id = static_cast<u32>(m_textures.size());
    m_textures.emplace_back(name);
    m_textureIDs.emplace(name, id);
    return id;

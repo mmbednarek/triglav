@@ -27,12 +27,12 @@ class Deserializer
    template<typename T>
    [[nodiscard]] T read_value()
    {
-#define TG_IO_TYPE(TYPE)                  \
-   if constexpr (std::is_same_v<T, TYPE>) \
-      return this->read_##TYPE();
+      if (false)
+         ;
+#define TG_IO_TYPE(TYPE) else if constexpr (std::is_same_v<T, TYPE>) return this->read_##TYPE();
       TG_IO_DESERIALIZER_TYPES
 #undef TG_IO_TYPE
-      return T{};
+      else return T{};
    }
 
  private:

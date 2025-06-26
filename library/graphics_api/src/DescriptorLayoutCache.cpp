@@ -48,7 +48,7 @@ VkDescriptorSetLayout DescriptorLayoutCache::construct_layout(const Hash hash, c
    });
 
    VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO};
-   descriptorSetLayoutInfo.bindingCount = layoutBindings.size();
+   descriptorSetLayoutInfo.bindingCount = static_cast<u32>(layoutBindings.size());
    descriptorSetLayoutInfo.pBindings = layoutBindings.data();
 
    vulkan::DescriptorSetLayout layout{m_device};

@@ -33,7 +33,7 @@ u8 BufferedReader::peek()
       read_next_chunk();
    }
    if (m_position >= m_bytesRead) {
-      return EOF;
+      return static_cast<u8>(EOF);
    }
 
    const auto result = m_buffer[m_position];

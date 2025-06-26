@@ -1,6 +1,6 @@
 #include "SharedMutex.hpp"
 
-#include <synchapi.h>
+// #include <synchapi.h>
 #include <windows.h>
 
 namespace triglav::threading {

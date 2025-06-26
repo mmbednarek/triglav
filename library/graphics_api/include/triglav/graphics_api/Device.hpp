@@ -93,7 +93,7 @@ class Device
 
    void await_all() const;
 
-   [[nodiscard]] u32 min_storage_buffer_alignment() const;
+   [[nodiscard]] MemorySize min_storage_buffer_alignment() const;
 
  private:
    [[nodiscard]] uint32_t find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;

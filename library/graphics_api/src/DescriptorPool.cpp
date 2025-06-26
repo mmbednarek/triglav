@@ -42,7 +42,7 @@ Status DescriptorPool::allocate_descriptors(const std::span<VkDescriptorSetLayou
 
 Status DescriptorPool::free_descriptors(const std::span<VkDescriptorSet> sets)
 {
-   const auto res = vkFreeDescriptorSets(m_descriptorPool.parent(), *m_descriptorPool, sets.size(), sets.data());
+   const auto res = vkFreeDescriptorSets(m_descriptorPool.parent(), *m_descriptorPool, static_cast<u32>(sets.size()), sets.data());
    if (res != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
@@ -54,7 +54,7 @@ Result<DescriptorArray> DescriptorPool::allocate_array(const DescriptorLayoutArr
    VkDescriptorSetAllocateInfo descriptorSetsInfo{};
    descriptorSetsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
    descriptorSetsInfo.descriptorPool = *m_descriptorPool;
-   descriptorSetsInfo.descriptorSetCount = descriptorLayouts.layouts().size();
+   descriptorSetsInfo.descriptorSetCount = static_cast<u32>(descriptorLayouts.layouts().size());
    descriptorSetsInfo.pSetLayouts = descriptorLayouts.layouts().data();
 
    std::vector<VkDescriptorSet> descriptorSets{};

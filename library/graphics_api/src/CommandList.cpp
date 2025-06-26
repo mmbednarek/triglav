@@ -134,7 +134,7 @@ void CommandList::bind_vertex_buffer(const Buffer& buffer, const u32 layoutIndex
 {
    const std::array buffers{buffer.vulkan_buffer()};
    constexpr std::array<VkDeviceSize, 1> offsets{0};
-   vkCmdBindVertexBuffers(m_commandBuffer, layoutIndex, buffers.size(), buffers.data(), offsets.data());
+   vkCmdBindVertexBuffers(m_commandBuffer, layoutIndex, static_cast<u32>(buffers.size()), buffers.data(), offsets.data());
 }
 
 void CommandList::bind_index_buffer(const Buffer& buffer) const
@@ -229,7 +229,8 @@ void CommandList::copy_texture(const Texture& source, const TextureState srcStat
 void CommandList::push_constant_ptr(const PipelineStageFlags stages, const void* ptr, const size_t size, const size_t offset) const
 {
    assert(m_boundPipelineLayout != nullptr);
-   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout, vulkan::to_vulkan_shader_stage_flags(stages), offset, size, ptr);
+   vkCmdPushConstants(m_commandBuffer, m_boundPipelineLayout, vulkan::to_vulkan_shader_stage_flags(stages), static_cast<u32>(offset),
+                      static_cast<u32>(size), ptr);
 }
 
 void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
@@ -265,7 +266,7 @@ void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const Pi
    const auto dstStageMask = vulkan::to_vulkan_pipeline_stage_flags(targetStage);
    assert(dstStageMask != 0);
    vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage), dstStageMask, 0, 0, nullptr, 0, nullptr,
-                        barriers.size(), barriers.data());
+                        static_cast<u32>(barriers.size()), barriers.data());
 }
 
 void CommandList::texture_barrier(const PipelineStageFlags sourceStage, const PipelineStageFlags targetStage,
@@ -299,8 +300,8 @@ void CommandList::buffer_barrier(const PipelineStageFlags sourceStage, const Pip
    }
 
    vkCmdPipelineBarrier(m_commandBuffer, vulkan::to_vulkan_pipeline_stage_flags(sourceStage),
-                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, vkBarriers.size(), vkBarriers.data(), 0,
-                        nullptr);
+                        vulkan::to_vulkan_pipeline_stage_flags(targetStage), 0, 0, nullptr, static_cast<u32>(vkBarriers.size()),
+                        vkBarriers.data(), 0, nullptr);
 }
 
 void CommandList::blit_texture(const Texture& sourceTex, const TextureRegion& sourceRegion, const Texture& targetTex,
@@ -377,7 +378,7 @@ void CommandList::begin_rendering(const RenderingInfo& info) const
    vulkanInfo.renderArea.extent.height = info.renderAreaExtent.y;
    vulkanInfo.layerCount = info.layerCount;
    vulkanInfo.viewMask = info.viewMask;
-   vulkanInfo.colorAttachmentCount = colorAttachments.size();
+   vulkanInfo.colorAttachmentCount = static_cast<u32>(colorAttachments.size());
    vulkanInfo.pColorAttachments = colorAttachments.data();
 
    VkRenderingAttachmentInfo depthAttachment;

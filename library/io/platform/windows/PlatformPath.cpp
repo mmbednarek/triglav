@@ -41,7 +41,7 @@ Result<Path> home_directory()
    }
 
    std::string homeDirStr(byteCount, '\0');
-   ::WideCharToMultiByte(CP_UTF8, 0, homeDir, -1, homeDirStr.data(), homeDirStr.size(), nullptr, nullptr);
+   ::WideCharToMultiByte(CP_UTF8, 0, homeDir, -1, homeDirStr.data(), static_cast<int>(homeDirStr.size()), nullptr, nullptr);
 
    return Path{homeDirStr};
 }

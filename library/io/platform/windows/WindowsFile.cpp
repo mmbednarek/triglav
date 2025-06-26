@@ -23,6 +23,12 @@ UINT map_file_open_style(const FileOpenMode mode)
    return 0;
 }
 
+
+HANDLE hfile_to_handle(HFILE file)
+{
+   return reinterpret_cast<HANDLE>(static_cast<u64>(file));
+}
+
 }// namespace
 
 Result<IFileUPtr> open_file(const Path& path, const FileOpenMode mode)
@@ -47,13 +53,13 @@ WindowsFile::WindowsFile(const HFILE file) :
 
 WindowsFile::~WindowsFile()
 {
-   CloseHandle(reinterpret_cast<HANDLE>(m_file));
+   CloseHandle(hfile_to_handle(m_file));
 }
 
 Result<MemorySize> WindowsFile::read(const std::span<u8> buffer)
 {
    DWORD bytesRead{};
-   const auto res = ReadFile(reinterpret_cast<HANDLE>(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesRead, nullptr);
+   const auto res = ReadFile(hfile_to_handle(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesRead, nullptr);
    if (not res) {
       return std::unexpected(Status::BrokenPipe);
    }
@@ -63,7 +69,7 @@ Result<MemorySize> WindowsFile::read(const std::span<u8> buffer)
 Result<MemorySize> WindowsFile::write(const std::span<const u8> buffer)
 {
    DWORD bytesWritten{};
-   const auto res = WriteFile(reinterpret_cast<HANDLE>(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesWritten, nullptr);
+   const auto res = WriteFile(hfile_to_handle(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesWritten, nullptr);
    if (not res) {
       return std::unexpected(Status::BrokenPipe);
    }
@@ -85,7 +91,7 @@ Status WindowsFile::seek(const SeekPosition position, const MemoryOffset offset)
       break;
    }
 
-   const auto res = SetFilePointer(reinterpret_cast<HANDLE>(m_file), static_cast<LONG>(offset), nullptr, moveMethod);
+   const auto res = SetFilePointer(hfile_to_handle(m_file), static_cast<LONG>(offset), nullptr, moveMethod);
    if (res == INVALID_SET_FILE_POINTER) {
       return Status::BrokenPipe;
    }
@@ -96,7 +102,7 @@ Status WindowsFile::seek(const SeekPosition position, const MemoryOffset offset)
 Result<MemorySize> WindowsFile::file_size()
 {
    DWORD fileSizeHigh{};
-   const auto res = GetFileSize(reinterpret_cast<HANDLE>(m_file), &fileSizeHigh);
+   const auto res = GetFileSize(hfile_to_handle(m_file), &fileSizeHigh);
    if (res == INVALID_FILE_SIZE) {
       return std::unexpected(Status::InvalidFile);
    }
@@ -110,7 +116,7 @@ Result<MemorySize> WindowsFile::file_size()
 
 MemorySize WindowsFile::position() const
 {
-   const auto res = SetFilePointer(reinterpret_cast<HANDLE>(m_file), 0, nullptr, FILE_CURRENT);
+   const auto res = SetFilePointer(hfile_to_handle(m_file), 0, nullptr, FILE_CURRENT);
    assert(res != INVALID_SET_FILE_POINTER);
    return res;
 }

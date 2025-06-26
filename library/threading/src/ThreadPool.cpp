@@ -90,7 +90,7 @@ ThreadPool& ThreadPool::the()
 
 u32 ThreadPool::thread_count() const
 {
-   return m_threads.size();
+   return static_cast<u32>(m_threads.size());
 }
 
 }// namespace triglav::threading

@@ -113,7 +113,7 @@ TEST(JobGraphTest, BasicInterframeDependency)
 
    graph.disable_flag("basic_interframe_dependency"_name, "is_first_frame"_name);
 
-   for (const int _ : triglav::Range(0, 20)) {
+   for ([[maybe_unused]] const int _ : triglav::Range(0, 20)) {
       graph.execute("basic_interframe_dependency"_name, 1, nullptr);
       graph.execute("basic_interframe_dependency"_name, 2, nullptr);
       graph.execute("basic_interframe_dependency"_name, 0, &fence);

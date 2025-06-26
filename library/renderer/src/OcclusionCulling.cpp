@@ -136,11 +136,11 @@ void OcclusionCulling::reset_buffers(graphics_api::Device& device, render_core::
    const auto cmdList = GAPI_CHECK(device.create_command_list(graphics_api::WorkType::Transfer));
 
    GAPI_CHECK_STATUS(cmdList.begin(graphics_api::SubmitType::OneTime));
-   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 0), 0, zeroCounts.size() * sizeof(u32),
+   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 0), 0, static_cast<u32>(zeroCounts.size() * sizeof(u32)),
                          zeroCounts.data());
-   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 1), 0, zeroCounts.size() * sizeof(u32),
+   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 1), 0, static_cast<u32>(zeroCounts.size() * sizeof(u32)),
                          zeroCounts.data());
-   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 2), 0, zeroCounts.size() * sizeof(u32),
+   cmdList.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 2), 0, static_cast<u32>(zeroCounts.size() * sizeof(u32)),
                          zeroCounts.data());
    GAPI_CHECK_STATUS(cmdList.finish());
 

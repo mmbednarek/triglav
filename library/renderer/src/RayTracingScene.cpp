@@ -57,7 +57,7 @@ void RayTracingScene::build_acceleration_structures()
 
    m_instanceListBuffer.emplace(m_instanceBuilder.build_buffer());
 
-   m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, m_objects.size());
+   m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, static_cast<u32>(m_objects.size()));
    m_tlAccelerationStructure = m_buildTLContext.commit_instances();
 
    GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
@@ -74,8 +74,8 @@ void RayTracingScene::on_object_added_to_scene(const SceneObject& object)
    m_mustUpdateAccelerationStructures = true;
 
    const auto& model = m_resourceManager.get(object.model);
-   const auto vertexCount = model.mesh.vertices.count();
-   const auto triangleCount = model.mesh.indices.count() / 3;
+   const auto vertexCount = static_cast<u32>(model.mesh.vertices.count());
+   const auto triangleCount = static_cast<u32>(model.mesh.indices.count() / 3);
    m_buildBLContext.add_triangle_buffer(model.mesh.vertices.buffer(), model.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
                                         sizeof(geo::Vertex), vertexCount, triangleCount);
 

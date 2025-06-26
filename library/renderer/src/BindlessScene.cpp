@@ -77,10 +77,10 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
       }
    }
 
-   *m_countBuffer = m_writtenSceneObjectCount;
+   *m_countBuffer = static_cast<u32>(m_writtenSceneObjectCount);
 
-   cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0, m_writtenObjectCount * sizeof(BindlessSceneObject),
-                       m_pendingObjects.size() * sizeof(BindlessSceneObject));
+   cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0, static_cast<u32>(m_writtenObjectCount * sizeof(BindlessSceneObject)),
+                       static_cast<u32>(m_pendingObjects.size() * sizeof(BindlessSceneObject)));
 
    m_pendingObjects.clear();
 }
@@ -119,7 +119,7 @@ const gapi::Buffer& BindlessScene::count_buffer() const
 
 u32 BindlessScene::scene_object_count() const
 {
-   return m_writtenSceneObjectCount;
+   return static_cast<u32>(m_writtenSceneObjectCount);
 }
 
 Scene& BindlessScene::scene() const
@@ -149,22 +149,22 @@ BindlessMeshInfo& BindlessScene::get_mesh_info(const gapi::CommandList& cmdList,
    auto material = m_resourceManager.get(model.range[0].materialName);
 
    BindlessMeshInfo meshInfo;
-   meshInfo.indexCount = model.mesh.indices.count();
-   meshInfo.indexOffset = m_writtenIndexCount;
-   meshInfo.vertexOffset = m_writtenVertexCount;
+   meshInfo.indexCount = static_cast<u32>(model.mesh.indices.count());
+   meshInfo.indexOffset = static_cast<u32>(m_writtenIndexCount);
+   meshInfo.vertexOffset = static_cast<u32>(m_writtenVertexCount);
    meshInfo.boundingBoxMax = model.boundingBox.max;
    meshInfo.boundingBoxMin = model.boundingBox.min;
    meshInfo.materialID = this->get_material_id(cmdList, material);
    auto [emplacedIt, ok] = m_models.emplace(name, meshInfo);
    assert(ok);
 
-   cmdList.copy_buffer(model.mesh.vertices.buffer(), m_combinedVertexBuffer.buffer(), 0, m_writtenVertexCount * sizeof(geometry::Vertex),
-                       model.mesh.vertices.count() * sizeof(geometry::Vertex));
+   cmdList.copy_buffer(model.mesh.vertices.buffer(), m_combinedVertexBuffer.buffer(), 0, static_cast<u32>(m_writtenVertexCount * sizeof(geometry::Vertex)),
+                       static_cast<u32>(model.mesh.vertices.count() * sizeof(geometry::Vertex)));
 
    m_writtenVertexCount += model.mesh.vertices.count();
 
-   cmdList.copy_buffer(model.mesh.indices.buffer(), m_combinedIndexBuffer.buffer(), 0, m_writtenIndexCount * sizeof(u32),
-                       model.mesh.indices.count() * sizeof(u32));
+   cmdList.copy_buffer(model.mesh.indices.buffer(), m_combinedIndexBuffer.buffer(), 0, static_cast<u32>(m_writtenIndexCount * sizeof(u32)),
+                       static_cast<u32>(model.mesh.indices.count() * sizeof(u32)));
 
    m_writtenIndexCount += model.mesh.indices.count();
 
@@ -182,9 +182,9 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       albedoTex.roughness = props.roughness;
       albedoTex.metallic = props.metallic;
 
-      const auto outIndex = m_writtenMaterialProperty_AlbedoTex;
+      const auto outIndex = static_cast<u32>(m_writtenMaterialProperty_AlbedoTex);
 
-      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(), m_writtenMaterialProperty_AlbedoTex * sizeof(Properties_MT0),
+      cmdList.update_buffer(m_materialPropsAlbedoTex.buffer(), static_cast<u32>(m_writtenMaterialProperty_AlbedoTex * sizeof(Properties_MT0)),
                             sizeof(Properties_MT0), &albedoTex);
 
       ++m_writtenMaterialProperty_AlbedoTex;
@@ -200,9 +200,9 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       albedoNormalTex.roughness = props.roughness;
       albedoNormalTex.metallic = props.metallic;
 
-      const auto outIndex = m_writtenMaterialProperty_AlbedoNormalTex;
+      const auto outIndex = static_cast<u32>(m_writtenMaterialProperty_AlbedoNormalTex);
 
-      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(), m_writtenMaterialProperty_AlbedoNormalTex * sizeof(Properties_MT1),
+      cmdList.update_buffer(m_materialPropsAlbedoNormalTex.buffer(), static_cast<u32>(m_writtenMaterialProperty_AlbedoNormalTex * sizeof(Properties_MT1)),
                             sizeof(Properties_MT1), &albedoNormalTex);
 
       ++m_writtenMaterialProperty_AlbedoNormalTex;
@@ -218,9 +218,9 @@ u32 BindlessScene::get_material_id(const graphics_api::CommandList& cmdList, con
       allTex.roughnessTextureID = this->get_texture_id(props.roughness);
       allTex.metallicTextureID = this->get_texture_id(props.metallic);
 
-      const auto outIndex = m_writtenMaterialProperty_AllTex;
+      const auto outIndex = static_cast<u32>(m_writtenMaterialProperty_AllTex);
 
-      cmdList.update_buffer(m_materialPropsAllTex.buffer(), m_writtenMaterialProperty_AllTex * sizeof(Properties_MT2),
+      cmdList.update_buffer(m_materialPropsAllTex.buffer(), static_cast<u32>(m_writtenMaterialProperty_AllTex * sizeof(Properties_MT2)),
                             sizeof(Properties_MT2), &allTex);
 
       ++m_writtenMaterialProperty_AllTex;
@@ -242,7 +242,7 @@ u32 BindlessScene::get_texture_id(const TextureName textureName)
    m_shouldUpdatePSO = true;
 
    auto& texture = m_resourceManager.get(textureName);
-   const auto textureId = m_sceneTextures.size();
+   const auto textureId = static_cast<u32>(m_sceneTextures.size());
    m_sceneTextures.emplace_back(&texture);
    m_sceneTextureRefs.emplace_back(textureName);
 

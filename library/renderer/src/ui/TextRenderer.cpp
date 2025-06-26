@@ -83,7 +83,7 @@ void TextRenderer::on_added_text(const Name name, const ui_core::Text& text)
    std::unique_lock lk{m_updateMtx};
 
    const auto& typefaceInfo = this->get_typeface_info({text.typefaceName, text.fontSize});
-   const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.size());
+   const auto vertexSection = this->allocate_vertex_section(name, static_cast<u32>(g_vertexCountPerChar * text.content.size()));
 
    m_textInfos.emplace(name, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
                                       text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
@@ -104,12 +104,12 @@ void TextRenderer::on_text_change_content(const Name name, const ui_core::Text& 
    std::unique_lock lk{m_updateMtx};
 
    this->free_vertex_section(name);
-   const auto vertexSection = this->allocate_vertex_section(name, g_vertexCountPerChar * text.content.rune_count());
+   const auto vertexSection = this->allocate_vertex_section(name, static_cast<u32>(g_vertexCountPerChar * text.content.rune_count()));
 
    auto& textInfo = m_textInfos.at(name);
    textInfo.text.content = text.content;
-   textInfo.dstVertexOffset = vertexSection.offset;
-   textInfo.dstVertexCount = vertexSection.size;
+   textInfo.dstVertexOffset = static_cast<u32>(vertexSection.offset);
+   textInfo.dstVertexCount = static_cast<u32>(vertexSection.size);
 
    m_pendingTextUpdates.emplace_back(name);
 }
@@ -177,7 +177,7 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
 
    auto textRemovalBufferIt = textRemovalBuffer.begin();
 
-   const u32 remainCount = m_drawCallToTextName.size() - textRemovals.size();
+   const auto remainCount = static_cast<u32>(m_drawCallToTextName.size() - textRemovals.size());
    u32 srcIndex = remainCount;
    for (const auto dstIndex : textRemovals) {
       while (std::ranges::binary_search(textRemovals, srcIndex))
@@ -199,8 +199,8 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
 
    u32 charOffset = 0;
 
-   textDispatch = {m_pendingTextUpdates.size(), 1, 1};
-   textDrawCallCount = m_drawCallToTextName.size();
+   textDispatch = {static_cast<u32>(m_pendingTextUpdates.size()), 1, 1};
+   textDrawCallCount = static_cast<u32>(m_drawCallToTextName.size());
 
    for (const auto [index, textName] : Enumerate(m_pendingTextUpdates)) {
       if (index >= g_maxTextUpdateCount)
@@ -315,13 +315,13 @@ const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProp
 
    auto& glyphAtlas = m_glyphCache.find_glyph_atlas(glyphProps);
 
-   const u32 atlasId = m_atlases.size();
+   const auto atlasId = static_cast<u32>(m_atlases.size());
    m_atlases.emplace_back(&glyphAtlas.texture());
 
    const auto transferCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
 
    GAPI_CHECK_STATUS(transferCmdList.begin(graphics_api::SubmitType::OneTime));
-   transferCmdList.copy_buffer(glyphAtlas.storage_buffer(), m_combinedGlyphBuffer, 0, m_glyphOffset, glyphAtlas.storage_buffer().size());
+   transferCmdList.copy_buffer(glyphAtlas.storage_buffer(), m_combinedGlyphBuffer, 0, m_glyphOffset, static_cast<u32>(glyphAtlas.storage_buffer().size()));
    GAPI_CHECK_STATUS(transferCmdList.finish());
 
    GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(transferCmdList));
@@ -330,7 +330,7 @@ const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProp
       m_typefaceInfos.emplace(glyphProps.hash(), TypefaceInfo{atlasId, static_cast<u32>(m_glyphOffset / sizeof(render_core::GlyphInfo))});
    assert(ok);
 
-   m_glyphOffset += glyphAtlas.storage_buffer().size();
+   m_glyphOffset += static_cast<u32>(glyphAtlas.storage_buffer().size());
 
    return newIt->second;
 }

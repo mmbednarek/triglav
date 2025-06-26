@@ -53,9 +53,9 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
       const auto res = stream->stream.read({reinterpret_cast<u8*>(data), static_cast<MemorySize>(size)});
       if (!res.has_value() || *res != static_cast<MemorySize>(size)) {
          stream->isEOF = true;
-         return *res;
+         return static_cast<int>(*res);
       }
-      return *res;
+      return static_cast<int>(*res);
    };
    callbacks.skip = [](void* user, const int num) {
       auto* stream = static_cast<StreamData*>(user);

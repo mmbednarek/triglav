@@ -112,7 +112,7 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
    };
    if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
       swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-      swapchainInfo.queueFamilyIndexCount = queueFamilyIndices.size();
+      swapchainInfo.queueFamilyIndexCount = static_cast<u32>(queueFamilyIndices.size());
       swapchainInfo.pQueueFamilyIndices = queueFamilyIndices.data();
    } else {
       swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -189,7 +189,7 @@ Result<DescriptorPool> Device::create_descriptor_pool(std::span<const std::pair<
    VkDescriptorPoolCreateInfo descriptorPoolInfo{};
    descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
    descriptorPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-   descriptorPoolInfo.poolSizeCount = descriptorPoolSizes.size();
+   descriptorPoolInfo.poolSizeCount = static_cast<u32>(descriptorPoolSizes.size());
    descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
    descriptorPoolInfo.maxSets = maxDescriptorCount;
 
@@ -473,12 +473,12 @@ Status Device::submit_command_list(const CommandList& commandList, const Semapho
    std::ranges::fill(waitStages, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
    const std::array commandBuffers{commandList.vulkan_command_buffer()};
 
-   submitInfo.waitSemaphoreCount = waitSemaphores.semaphore_count();
+   submitInfo.waitSemaphoreCount = static_cast<u32>(waitSemaphores.semaphore_count());
    submitInfo.pWaitSemaphores = waitSemaphores.vulkan_semaphores();
    submitInfo.pWaitDstStageMask = waitStages.data();
-   submitInfo.commandBufferCount = commandBuffers.size();
+   submitInfo.commandBufferCount = static_cast<u32>(commandBuffers.size());
    submitInfo.pCommandBuffers = commandBuffers.data();
-   submitInfo.signalSemaphoreCount = signalSemaphores.semaphore_count();
+   submitInfo.signalSemaphoreCount = static_cast<u32>(signalSemaphores.semaphore_count());
    submitInfo.pSignalSemaphores = signalSemaphores.vulkan_semaphores();
 
    VkFence vulkanFence{};
@@ -647,7 +647,7 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
    return std::move(*ktxTex);
 }
 
-u32 Device::min_storage_buffer_alignment() const
+MemorySize Device::min_storage_buffer_alignment() const
 {
    VkPhysicalDeviceProperties props;
    vkGetPhysicalDeviceProperties(m_physicalDevice, &props);

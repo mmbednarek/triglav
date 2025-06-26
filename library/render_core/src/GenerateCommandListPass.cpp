@@ -152,7 +152,7 @@ void GenerateCommandListPass::visit(const detail::cmd::PlaceBufferBarrier& cmd) 
 
 void GenerateCommandListPass::visit(const detail::cmd::FillBuffer& cmd) const
 {
-   m_commandList.update_buffer(m_resourceStorage.buffer(cmd.buffName, m_frameIndex), 0, cmd.data.size(), cmd.data.data());
+   m_commandList.update_buffer(m_resourceStorage.buffer(cmd.buffName, m_frameIndex), 0, static_cast<u32>(cmd.data.size()), cmd.data.data());
 }
 
 void GenerateCommandListPass::visit(const detail::cmd::BeginRenderPass& cmd) const
