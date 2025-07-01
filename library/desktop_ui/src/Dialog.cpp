@@ -27,7 +27,8 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
     TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
     TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
-    TG_CONNECT(*m_surface, OnTextInput, on_text_input)
+    TG_CONNECT(*m_surface, OnTextInput, on_text_input),
+    TG_CONNECT(*m_surface, OnResize, on_resize)
 {
 }
 
@@ -102,6 +103,7 @@ void Dialog::on_mouse_move(const Vector2 position)
 
    if (m_rootWidget == nullptr)
       return;
+
    // spdlog::info("mouse button x: {}, y: {}", position.x, position.y);
 
    ui_core::Event event;
@@ -162,6 +164,11 @@ void Dialog::on_text_input(const Rune rune)
    event.data.emplace<ui_core::Event::TextInput>(rune);
    m_rootWidget->on_event(event);
 }
+
+void Dialog::on_resize(const Vector2i size)
+{
+   spdlog::info("Resize event: {} {}", size.x, size.y);
+};
 
 ui_core::IWidget& Dialog::set_root_widget(ui_core::IWidgetPtr&& content)
 {

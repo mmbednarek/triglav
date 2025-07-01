@@ -34,6 +34,7 @@ class Dialog
    void on_mouse_button_is_released(desktop::MouseButton button);
    void on_key_is_pressed(desktop::Key key);
    void on_text_input(Rune rune);
+   void on_resize(Vector2i size);
 
    ui_core::IWidget& set_root_widget(ui_core::IWidgetPtr&& content);
 
@@ -73,6 +74,7 @@ class Dialog
    TG_SINK(desktop::ISurface, OnMouseButtonIsReleased);
    TG_SINK(desktop::ISurface, OnKeyIsPressed);
    TG_SINK(desktop::ISurface, OnTextInput);
+   TG_SINK(desktop::ISurface, OnResize);
 };
 
 }// namespace triglav::desktop_ui

@@ -55,11 +55,28 @@ InputArgs construct_input_args()
    return {const_cast<const char**>(args), count};
 }
 
+void create_debug_console()
+{
+   FILE* conin = stdin;
+   FILE* conout = stdout;
+   FILE* conerr = stderr;
+   AllocConsole();
+   AttachConsole(GetCurrentProcessId());
+   freopen_s(&conin, "CONIN$", "r", stdin);
+   freopen_s(&conout, "CONOUT$", "w", stdout);
+   freopen_s(&conerr, "CONOUT$", "w", stderr);
+   SetConsoleTitleW(L"Triglav Debug Console");
+}
+
 }// namespace
 
 int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*lpCmdLine*/, int /*nCmdShow*/)
 {
    InputArgs inputArgs{construct_input_args()};
+
+#if !NDEBUG
+   create_debug_console();
+#endif
 
    auto display = triglav::desktop::get_display();
    try {

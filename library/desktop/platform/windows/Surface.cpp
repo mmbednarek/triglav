@@ -117,9 +117,24 @@ HWND create_window(const HINSTANCE instance, const StringView title, const Vecto
    std::transform(title.begin(), title.end(), wCharTitle.begin(), [](const Rune r) { return static_cast<wchar_t>(r); });
    wCharTitle[runeCount] = 0;
 
-   return CreateWindowExW(map_window_attributes_to_ex_style(flags), g_windowClassName, wCharTitle.data(),
-                          map_window_attributes_to_style(flags), map_window_attributes_to_x_position(flags, dimension),
-                          map_window_attributes_to_y_position(flags, dimension), dimension.x, dimension.y, nullptr, nullptr, instance,
+   const auto style = map_window_attributes_to_style(flags);
+   const auto styleEx = map_window_attributes_to_ex_style(flags);
+
+   RECT rect{
+      /*left*/ 0,
+      /*top*/ 0,
+      /*right*/ dimension.x,
+      /*botton*/ dimension.y,
+   };
+   if (!AdjustWindowRectEx(&rect, style, false, styleEx)) {
+      spdlog::error("failed to calculate window size");
+      return nullptr;
+   }
+
+   Vector2i clientDim{rect.right - rect.left, rect.bottom - rect.top};
+
+   return CreateWindowExW(styleEx, g_windowClassName, wCharTitle.data(), style, map_window_attributes_to_x_position(flags, dimension),
+                          map_window_attributes_to_y_position(flags, dimension), clientDim.x, clientDim.y, nullptr, nullptr, instance,
                           lpParam);
 }
 
@@ -325,6 +340,9 @@ void Surface::set_cursor_icon(const CursorIcon icon)
       break;
    case CursorIcon::Wait:
       m_currentCursor = LoadCursor(nullptr, IDC_WAIT);
+      break;
+   case CursorIcon::Edit:
+      m_currentCursor = LoadCursor(nullptr, IDC_IBEAM);
       break;
    default:
       m_currentCursor = nullptr;
