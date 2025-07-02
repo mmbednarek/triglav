@@ -315,6 +315,10 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       this->on_rune(static_cast<Rune>(wParam));
       break;
    }
+   case WM_INPUT: {
+      spdlog::info("WM_INPUT event!");
+      break;
+   }
    default:
       return DefWindowProcW(m_windowHandle, msg, wParam, lParam);
    }
