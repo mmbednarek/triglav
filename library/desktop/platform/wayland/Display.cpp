@@ -323,13 +323,14 @@ void Display::on_pointer_enter(const u32 serial, wl_surface* surface, const i32 
    if (not m_surfaceMap.contains(surface))
       return;
 
-   m_pointerSurface = m_surfaceMap.at(surface);
+   auto pointerSurface = m_pointerSurface.access();
 
-   if (m_pointerSurface == nullptr)
+   *pointerSurface = m_surfaceMap.at(surface);
+   if (*pointerSurface == nullptr)
       return;
 
-   m_pointerSurface->m_pointerSerial = serial;
-   m_pointerSurface->event_OnMouseEnter.publish(Vector2{static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f});
+   (*pointerSurface)->m_pointerSerial = serial;
+   (*pointerSurface)->event_OnMouseEnter.publish(Vector2{static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f});
 }
 
 void Display::on_pointer_leave(u32 /*serial*/, wl_surface* surface)
@@ -337,22 +338,25 @@ void Display::on_pointer_leave(u32 /*serial*/, wl_surface* surface)
    if (not m_surfaceMap.contains(surface))
       return;
 
-   if (m_pointerSurface == nullptr)
+   auto pointerSurface = m_pointerSurface.access();
+   if (*pointerSurface == nullptr)
       return;
 
-   assert(m_pointerSurface == m_surfaceMap.at(surface));
+   assert(*pointerSurface == m_surfaceMap.at(surface));
 
-   m_pointerSurface->event_OnMouseLeave.publish();
+   (*pointerSurface)->event_OnMouseLeave.publish();
 
-   m_pointerSurface = nullptr;
+   *pointerSurface = nullptr;
 }
 
 void Display::on_pointer_motion(u32 /*time*/, const i32 x, const i32 y) const
 {
-   if (m_pointerSurface == nullptr)
+   auto pointerSurface = m_pointerSurface.read_access();
+
+   if (*pointerSurface == nullptr)
       return;
 
-   m_pointerSurface->event_OnMouseMove.publish(Vector2{static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f});
+   (*pointerSurface)->event_OnMouseMove.publish(Vector2{static_cast<float>(x) / 256.0f, static_cast<float>(y) / 256.0f});
 }
 
 void Display::dispatch_messages()
@@ -376,28 +380,30 @@ void Display::register_surface(wl_surface* wayland_surface, Surface* surface)
 void Display::on_pointer_relative_motion(u32 /*utime_hi*/, u32 /*utime_lo*/, const i32 dx, const i32 dy, i32 /*dx_unaccel*/,
                                          i32 /*dy_unaccel*/) const
 {
-   if (m_pointerSurface == nullptr)
+   auto pointerSurface = m_pointerSurface.read_access();
+   if (*pointerSurface == nullptr)
       return;
-   m_pointerSurface->event_OnMouseRelativeMove.publish(Vector2{static_cast<float>(dx) / 256.0f, static_cast<float>(dy) / 256.0f});
+   (*pointerSurface)->event_OnMouseRelativeMove.publish(Vector2{static_cast<float>(dx) / 256.0f, static_cast<float>(dy) / 256.0f});
 }
 
 void Display::on_pointer_axis(u32 /*time*/, u32 /*axis*/, i32 value) const
 {
-   if (m_pointerSurface == nullptr)
+   auto pointerSurface = m_pointerSurface.read_access();
+   if (*pointerSurface == nullptr)
       return;
-
-   m_pointerSurface->event_OnMouseWheelTurn.publish(static_cast<float>(value) / 2560.0f);
+   (*pointerSurface)->event_OnMouseWheelTurn.publish(static_cast<float>(value) / 2560.0f);
 }
 
 void Display::on_pointer_button(const u32 /*serial*/, const u32 /*time*/, const u32 button, const u32 state) const
 {
-   if (m_pointerSurface == nullptr)
+   auto pointerSurface = m_pointerSurface.read_access();
+   if (*pointerSurface == nullptr)
       return;
 
    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-      m_pointerSurface->event_OnMouseButtonIsPressed.publish(map_button(button));
+      (*pointerSurface)->event_OnMouseButtonIsPressed.publish(map_button(button));
    } else if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
-      m_pointerSurface->event_OnMouseButtonIsReleased.publish(map_button(button));
+      (*pointerSurface)->event_OnMouseButtonIsReleased.publish(map_button(button));
    }
 }
 
@@ -406,7 +412,8 @@ void Display::on_keyboard_enter(const u32 /*serial*/, wl_surface* surface, wl_ar
    if (not m_surfaceMap.contains(surface))
       return;
 
-   m_keyboardSurface = m_surfaceMap.at(surface);
+   auto keyboardSurface = m_keyboardSurface.access();
+   *keyboardSurface = m_surfaceMap.at(surface);
 }
 
 void Display::on_keymap(const u32 format, const i32 fd, const u32 size)
@@ -427,35 +434,43 @@ void Display::on_keymap(const u32 format, const i32 fd, const u32 size)
 
 void Display::on_key(const u32 /*serial*/, const u32 /*time*/, const u32 key, const u32 state) const
 {
-   if (m_keyboardSurface == nullptr)
+   auto keyboardSurface = m_keyboardSurface.read_access();
+   if (*keyboardSurface == nullptr)
       return;
 
-   if (m_keyboardSurface->m_keyboardInputMode & KeyboardInputMode::Text && state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+   if ((*keyboardSurface)->m_keyboardInputMode & KeyboardInputMode::Text && state == WL_KEYBOARD_KEY_STATE_PRESSED) {
       char data[128];
       const i32 count = xkb_state_key_get_utf8(m_xkbState, key + 8, data, 128);
       if (count > 0) {
          const char* buffPtr = data;
          Rune rune = decode_rune_from_buffer(buffPtr, buffPtr + count);
-         m_keyboardSurface->event_OnTextInput.publish(rune);
+         (*keyboardSurface)->event_OnTextInput.publish(rune);
       }
    }
 
-   if (m_keyboardSurface->m_keyboardInputMode & KeyboardInputMode::Direct) {
+   if ((*keyboardSurface)->m_keyboardInputMode & KeyboardInputMode::Direct) {
       if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-         m_keyboardSurface->event_OnKeyIsPressed.publish(map_key(key));
+         (*keyboardSurface)->event_OnKeyIsPressed.publish(map_key(key));
       } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
-         m_keyboardSurface->event_OnKeyIsReleased.publish(map_key(key));
+         (*keyboardSurface)->event_OnKeyIsReleased.publish(map_key(key));
       }
    }
 }
 
 void Display::on_destroyed_surface(Surface* surface)
 {
-   if (m_pointerSurface == surface) {
-      m_pointerSurface = nullptr;
+   {
+      auto pointerSurface = m_pointerSurface.access();
+      if (*pointerSurface == surface) {
+         *pointerSurface = nullptr;
+      }
    }
-   if (m_keyboardSurface == surface) {
-      m_keyboardSurface = nullptr;
+
+   {
+      auto keyboardSurface = m_keyboardSurface.access();
+      if (*keyboardSurface == surface) {
+         *keyboardSurface = nullptr;
+      }
    }
 
    m_surfaceMap.erase(surface->surface());

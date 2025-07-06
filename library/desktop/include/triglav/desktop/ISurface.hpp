@@ -24,6 +24,9 @@ enum class WindowAttribute : u32
    AlignCenter = (1 << 1),
    TopMost = (1 << 2),
    Resizeable = (1 << 3),
+   // Creating a surface with Popup attribute
+   // must be followed by a call to set_parent_surface()
+   Popup = (1 << 4),
 
    Default = ShowDecorations | Resizeable,
 };
@@ -65,6 +68,7 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    virtual void hide_cursor() const = 0;
    virtual void set_cursor_icon(CursorIcon icon) = 0;
    virtual void set_keyboard_input_mode(KeyboardInputModeFlags mode) = 0;
+   virtual void set_parent_surface(ISurface& other, Vector2 offset) = 0;
 
    [[nodiscard]] virtual bool is_cursor_locked() const = 0;
    [[nodiscard]] virtual Vector2i dimension() const = 0;

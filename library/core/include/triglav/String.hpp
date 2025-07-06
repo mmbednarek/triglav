@@ -190,6 +190,12 @@ constexpr StringView operator""_strv()
    return StringView{TValue.m_data.data(), TValue.m_data.size() - 1};
 }
 
+template<CompTimeString TValue>
+constexpr String operator""_str()
+{
+   return String{TValue.m_data.data(), TValue.m_data.size() - 1};
+}
+
 }// namespace string_literals
 
 }// namespace triglav

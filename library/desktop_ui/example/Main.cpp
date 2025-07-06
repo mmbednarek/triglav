@@ -2,6 +2,8 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
+#include "triglav/desktop_ui/DialogManager.hpp"
+#include "triglav/desktop_ui/DropDownMenu.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/CommandLine.hpp"
@@ -20,6 +22,7 @@ using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
 using triglav::desktop::WindowAttribute;
 using triglav::desktop_ui::Dialog;
+using triglav::desktop_ui::DialogManager;
 using triglav::font::FontManger;
 using triglav::io::CommandLine;
 using triglav::render_core::GlyphCache;
@@ -74,9 +77,9 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initialWidth = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_defaultWidth));
    const auto initialHeight = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_defaultHeight));
 
-   Dialog dialog(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight});
+   DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight});
 
-   auto& alignmentBox = dialog.create_root_widget<triglav::ui_core::AlignmentBox>({
+   auto& alignmentBox = dialogManager.root().create_root_widget<triglav::ui_core::AlignmentBox>({
       .horizontalAlignment = HorizontalAlignment::Center,
       .verticalAlignment = VerticalAlignment::Center,
    });
@@ -88,23 +91,41 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    triglav::desktop_ui::DesktopUIManager desktopUiManager(
       triglav::desktop_ui::ThemeProperties{
+         // Core
+         .base_typeface = "cantarell.typeface"_rc,
          .background_color = {0.1f, 0.1f, 0.1f, 1.0f},
          .foreground_color = {1.0f, 1.0f, 1.0f, 1.0f},
          .accent_color = {0.0f, 0.0f, 1.0f, 1.0f},
+
+         // Button
          .button_bg_color = {0.0f, 0.105f, 1.0f, 1.0f},
          .button_bg_hover_color = {0.035f, 0.22f, 1.0f, 1.0f},
          .button_bg_pressed_color = {0.0f, 0.015f, 0.48f, 1.0f},
+         .button_font_size = 15,
+
+         // Text
          .text_input_bg_inactive = {0.03f, 0.03f, 0.03f, 1.0f},
          .text_input_bg_active = {0.01f, 0.01f, 0.01f, 1.0f},
          .text_input_bg_hover = {0.035f, 0.035f, 0.035f, 1.0f},
-         .button_font_size = 15,
-         .base_typeface = "cantarell.typeface"_rc,
+
+         // Dropdown
+         .dropdown_bg = {0.04f, 0.04f, 0.04f, 1.0f},
+         .dropdown_bg_hover = {0.05f, 0.05f, 0.05f, 1.0f},
+         .dropdown_border = {0.1f, 0.1f, 0.1f, 1.0f},
+         .dropdown_border_width = 1.0f,
       },
-      dialog.surface());
+      dialogManager.root().surface(), dialogManager);
 
    layout.create_child<triglav::desktop_ui::TextInput>({
       .manager = &desktopUiManager,
       .text = "Text Edit",
+   });
+
+   layout.create_child<triglav::desktop_ui::DropDownMenu>({
+      .manager = &desktopUiManager,
+      .items = {"Monday"_str, "Tuesday"_str, "Wednesday"_str, "Thursday"_str, "Friday"_str, "Saturday"_str, "Sunday"_str, "AAA"_str,
+                "BBB"_str, "CCC"_str},
+      .selectedItem = 0,
    });
 
    layout.create_child<triglav::desktop_ui::Button>({
@@ -112,11 +133,12 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .label = "Example",
    });
 
-   dialog.initialize();
+   dialogManager.root().initialize();
 
-   while (!dialog.should_close()) {
-      dialog.update();
+   while (!dialogManager.should_close()) {
+      dialogManager.tick();
       display.dispatch_messages();
+
       triglav::threading::Scheduler::the().tick();
    }
 

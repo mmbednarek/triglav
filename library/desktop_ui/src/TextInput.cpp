@@ -101,8 +101,7 @@ void TextInput::on_event(const ui_core::Event& event)
       auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
       m_caretPosition = glyphAtlas.find_rune_index(m_state.text.view(), event.mousePosition.x - g_textMargin.x - m_textOffset);
       if (!m_timeoutHandle.has_value()) {
-         m_timeoutHandle =
-            threading::Scheduler::the().register_timeout(std::chrono::milliseconds{500}, [this]() { this->update_carret_state(); });
+         this->update_carret_state();
       }
       this->recalculate_caret_offset();
       break;
