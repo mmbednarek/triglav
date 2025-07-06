@@ -77,17 +77,18 @@ float4 sample_rect(float2 screenPos)
 float4 fs_main([[vk::location(0)]] float2 screenPos : POSITION0) : SV_Target0
 {
     float4 values[4];
-
     values[0] = sample_rect(screenPos + float2(+0.25, +0.25));
     values[1] = sample_rect(screenPos + float2(+0.25, -0.25));
     values[2] = sample_rect(screenPos + float2(-0.25, +0.25));
     values[3] = sample_rect(screenPos + float2(-0.25, -0.25));
 
-    float4 result = float4(0, 0, 0, 0);
+    float3 result = float3(0, 0, 0);
+    float divisor = 0.0;
     [unroll]
     for (int i = 0; i < 4; ++i) {
-        result += values[i];
+        float4 val = values[i];
+        result += val.xyz * val.a;
+        divisor += val.a;
     }
-
-    return 0.25 * result;
+    return float4(result / divisor, 0.25 * divisor);
 }

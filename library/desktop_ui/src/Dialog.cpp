@@ -10,10 +10,11 @@ using namespace name_literals;
 using namespace string_literals;
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions) :
+               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
+               desktop::WindowAttributeFlags flags) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
-    m_surface(display.create_surface("UI Dialog"_strv, dimensions, desktop::WindowAttribute::Default)),
+    m_surface(display.create_surface("UI Dialog"_strv, dimensions, flags)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
     m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Fifo),

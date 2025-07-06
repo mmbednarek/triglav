@@ -29,6 +29,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    [[nodiscard]] HWND winapi_window_handle() const;
    LRESULT handle_window_event(UINT msg, WPARAM wParam, LPARAM lParam);
    void set_cursor_icon(CursorIcon icon) override;
+   void set_parent_surface(ISurface& other, Vector2 offset) override;
 
  private:
    void on_key_down(WPARAM keyCode) const;

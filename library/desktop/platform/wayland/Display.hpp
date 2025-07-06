@@ -12,6 +12,7 @@ extern "C"
 }
 
 #include "triglav/String.hpp"
+#include "triglav/threading/SafeAccess.hpp"
 
 #include <map>
 #include <string_view>
@@ -101,8 +102,8 @@ class Display final : public IDisplay
    xkb_state* m_xkbState;
 
    std::map<wl_surface*, Surface*> m_surfaceMap{};
-   Surface* m_pointerSurface{};
-   Surface* m_keyboardSurface{};
+   threading::SafeReadWriteAccess<Surface*> m_pointerSurface{};
+   threading::SafeReadWriteAccess<Surface*> m_keyboardSurface{};
 };
 
 }// namespace triglav::desktop

@@ -244,4 +244,6 @@ void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
    }
 }
 
+void Surface::position_relative_to(ISurface& /*other*/, Vector2 /*offset*/) {}
+
 }// namespace triglav::desktop::x11

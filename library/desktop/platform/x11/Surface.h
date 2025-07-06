@@ -30,6 +30,7 @@ class Surface final : public ISurface
    void tick() const;
    void set_cursor_icon(CursorIcon icon) override;
    void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
+   void position_relative_to(ISurface& other, Vector2 offset) override;
 
    [[nodiscard]] constexpr ::Display* display() const
    {
