@@ -103,7 +103,7 @@ DropDownSelector::DropDownSelector(ui_core::Context& ctx, const State state, ui_
    for (const auto& [index, item] : Enumerate(m_state.menu->m_state.items)) {
       m_verticalLayout.create_child<DropDownSelectorButton>({
          .label = item,
-         .index = index,
+         .index = static_cast<u32>(index),
          .menu = m_state.menu,
       });
    }

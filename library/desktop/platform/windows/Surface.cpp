@@ -72,6 +72,9 @@ DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags)
    if (flags & WindowAttribute::ShowDecorations) {
       result |= WS_EX_CLIENTEDGE;
    }
+   if (flags & WindowAttribute::Popup) {
+      result |= WS_EX_TOOLWINDOW;
+   }
 
    return result;
 }
@@ -82,11 +85,12 @@ DWORD map_window_attributes_to_style(const WindowAttributeFlags flags)
 
    if (flags & WindowAttribute::ShowDecorations) {
       result |= WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME;
-   } else {
-      result |= WS_DLGFRAME;
    }
    if (flags & WindowAttribute::Resizeable) {
       result |= WS_THICKFRAME;
+   }
+   if (flags & WindowAttribute::Popup) {
+      result |= WS_POPUP;
    }
    return result;
 }
@@ -355,6 +359,18 @@ void Surface::set_cursor_icon(const CursorIcon icon)
 
    SetCursor(m_currentCursor);
    ShowCursor(true);
+}
+
+void Surface::set_parent_surface(ISurface& other, Vector2 offset)
+{
+   const auto parentWnd = dynamic_cast<Surface&>(other).m_windowHandle;
+
+   RECT parentRect;
+   GetClientRect(parentWnd, &parentRect);
+   ClientToScreen(parentWnd, reinterpret_cast<LPPOINT>(&parentRect.left));
+
+   SetWindowPos(m_windowHandle, HWND_TOP, parentRect.left + static_cast<int>(offset.x), parentRect.top + static_cast<int>(offset.y), 0, 0,
+                SWP_NOSIZE);
 }
 
 }// namespace triglav::desktop
