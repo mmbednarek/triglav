@@ -32,7 +32,7 @@ void Button::on_child_state_changed(IWidget& widget)
 void Button::on_event(const Event& event)
 {
    switch (event.eventType) {
-   case Event::Type::MousePressed:
+   case Event::Type::MouseReleased:
       event_OnClick.publish(std::get<Event::Mouse>(event.data).button);
       break;
    case Event::Type::MouseEntered:

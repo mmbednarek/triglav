@@ -30,6 +30,7 @@ class Dialog
    void initialize();
    void update();
    void on_close();
+   void on_mouse_enter(Vector2 position);
    void on_mouse_move(Vector2 position);
    void on_mouse_button_is_pressed(desktop::MouseButton button);
    void on_mouse_button_is_released(desktop::MouseButton button);
@@ -70,6 +71,7 @@ class Dialog
    Vector2 m_mousePosition{};
 
    TG_SINK(desktop::ISurface, OnClose);
+   TG_SINK(desktop::ISurface, OnMouseEnter);
    TG_SINK(desktop::ISurface, OnMouseMove);
    TG_SINK(desktop::ISurface, OnMouseButtonIsPressed);
    TG_SINK(desktop::ISurface, OnMouseButtonIsReleased);

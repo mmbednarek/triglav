@@ -61,7 +61,13 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    TG_EVENT(OnKeyIsReleased, Key)
    TG_EVENT(OnTextInput, Rune)
 
+   ISurface() = default;
    virtual ~ISurface() = default;
+
+   ISurface(const ISurface& surface) = delete;
+   ISurface& operator=(const ISurface& surface) = delete;
+   ISurface(ISurface&& surface) noexcept = delete;
+   ISurface& operator=(ISurface&& surface) noexcept = delete;
 
    virtual void lock_cursor() = 0;
    virtual void unlock_cursor() = 0;

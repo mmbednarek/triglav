@@ -18,10 +18,12 @@ class TriglavEngine(ConanFile):
         "ktx/4.3.2"
     )
     options = {
+        "address_sanitizer": [False, True],
         "disable_debug_utils": [False, True],
         "wayland": [False, True]
     }
     default_options = {
+        "address_sanitizer": False,
         "disable_debug_utils": False,
         "wayland": False,
     }
@@ -39,6 +41,7 @@ class TriglavEngine(ConanFile):
             backend = 'vs2022'
 
         tc = MesonToolchain(self, backend=backend)
+        tc.project_options["address_sanitizer"] = "enabled" if self.options["address_sanitizer"] else "disabled"
         tc.project_options["disable_debug_utils"] = "enabled" if self.options["disable_debug_utils"] else "disabled"
         tc.project_options["wayland"] = "enabled" if self.options["wayland"] else "disabled"
         tc.generate()
