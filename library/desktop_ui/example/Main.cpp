@@ -123,8 +123,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    layout.create_child<triglav::desktop_ui::DropDownMenu>({
       .manager = &desktopUiManager,
-      .items = {"Monday"_str, "Tuesday"_str, "Wednesday"_str, "Thursday"_str, "Friday"_str, "Saturday"_str, "Sunday"_str, "AAA"_str,
-                "BBB"_str, "CCC"_str},
+      .items = {"Monday"_str, "Tuesday"_str, "Wednesday"_str, "Thursday"_str, "Friday"_str, "Saturday"_str, "Sunday"_str},
       .selectedItem = 0,
    });
 

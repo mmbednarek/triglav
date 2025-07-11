@@ -14,7 +14,13 @@ class ISurface;
 class IDisplay
 {
  public:
+   IDisplay() = default;
    virtual ~IDisplay() = default;
+
+   IDisplay(const IDisplay& display) = delete;
+   IDisplay& operator=(const IDisplay& display) = delete;
+   IDisplay(IDisplay&& display) noexcept = delete;
+   IDisplay& operator=(IDisplay&& display) noexcept = delete;
 
    virtual void dispatch_messages() = 0;
    virtual std::shared_ptr<ISurface> create_surface(StringView title, Vector2u dimensions, WindowAttributeFlags flags) = 0;

@@ -17,13 +17,14 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
     m_surface(display.create_surface("UI Dialog"_strv, dimensions, flags)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
-    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Fifo),
+    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),
     m_uiViewport(dimensions),
     m_updateUiJob(device, m_glyphCache, m_uiViewport, m_resourceManager),
     m_pipelineCache(device, m_resourceManager),
     m_jobGraph(device, m_resourceManager, m_pipelineCache, m_resourceStorage, dimensions),
     m_context(m_uiViewport, m_glyphCache, m_resourceManager),
     TG_CONNECT(*m_surface, OnClose, on_close),
+    TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
     TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
     TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
@@ -98,14 +99,17 @@ void Dialog::on_close()
    m_shouldClose = true;
 }
 
+void Dialog::on_mouse_enter(Vector2 position)
+{
+   m_mousePosition = position;
+}
+
 void Dialog::on_mouse_move(const Vector2 position)
 {
    m_mousePosition = position;
 
    if (m_rootWidget == nullptr)
       return;
-
-   // spdlog::info("mouse button x: {}, y: {}", position.x, position.y);
 
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MouseMoved;

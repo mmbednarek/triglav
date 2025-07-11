@@ -22,6 +22,7 @@ Dialog& DialogManager::root() const
 
 Dialog& DialogManager::create_popup_dialog(const Vector2i offset, const Vector2u dimensions)
 {
+   std::unique_lock lk{m_popupMtx};
    const auto& popup = m_popups.emplace_back(std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager,
                                                                       dimensions, desktop::WindowAttribute::Popup));
    popup->surface().set_parent_surface(m_root->surface(), offset);
@@ -35,6 +36,10 @@ bool DialogManager::should_close() const
 
 void DialogManager::tick()
 {
+   m_device.await_all();
+
+   std::unique_lock lk{m_popupMtx};
+
    for (const auto& dialog : m_popupsToEarse) {
       auto it = std::ranges::find_if(m_popups, [dialog](const auto& popup) { return popup.get() == dialog; });
       m_popups.erase(it);
@@ -49,6 +54,8 @@ void DialogManager::tick()
 
 void DialogManager::close_popup(Dialog* dialog)
 {
+   std::unique_lock lk{m_popupMtx};
+
    assert(dialog != nullptr);
    m_popupsToEarse.emplace_back(dialog);
 }

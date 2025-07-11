@@ -13,6 +13,7 @@ class Display : public IDisplay
 
    void dispatch_messages() override;
    std::shared_ptr<ISurface> create_surface(StringView title, Vector2u dimensions, WindowAttributeFlags flags) override;
+   [[nodiscard]] HINSTANCE winapi_instance() const;
 
  private:
    HINSTANCE m_instance;

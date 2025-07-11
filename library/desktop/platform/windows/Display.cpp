@@ -3,6 +3,7 @@
 #include "Surface.hpp"
 
 namespace triglav::desktop {
+
 namespace {
 
 LRESULT CALLBACK process_messages(const HWND windowHandle, const UINT msg, const WPARAM wParam, const LPARAM lParam)
@@ -55,12 +56,17 @@ void Display::dispatch_messages()
 
 std::shared_ptr<ISurface> Display::create_surface(const StringView title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
-   return std::make_shared<Surface>(m_instance, title, dimensions, flags);
+   return std::make_shared<Surface>(*this, title, dimensions, flags);
 }
 
 std::unique_ptr<IDisplay> get_display()
 {
    return std::make_unique<Display>(GetModuleHandleW(nullptr));
+}
+
+HINSTANCE Display::winapi_instance() const
+{
+   return m_instance;
 }
 
 }// namespace triglav::desktop

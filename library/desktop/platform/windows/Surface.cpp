@@ -1,5 +1,7 @@
 #include "Surface.hpp"
 
+#include "Display.hpp"
+
 #include "triglav/Format.hpp"
 
 #include <spdlog/spdlog.h>
@@ -144,10 +146,10 @@ HWND create_window(const HINSTANCE instance, const StringView title, const Vecto
 
 }// namespace
 
-Surface::Surface(const HINSTANCE instance, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags) :
-    m_instance(instance),
+Surface::Surface(Display& display, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags) :
+    m_display(display),
     m_dimension(dimension),
-    m_windowHandle(create_window(instance, title, dimension, flags, this))
+    m_windowHandle(create_window(display.winapi_instance(), title, dimension, flags, this))
 {
    ShowWindow(m_windowHandle, SW_NORMAL);
    UpdateWindow(m_windowHandle);
@@ -194,7 +196,7 @@ void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
 
 HINSTANCE Surface::winapi_instance() const
 {
-   return m_instance;
+   return m_display.winapi_instance();
 }
 
 HWND Surface::winapi_window_handle() const
@@ -214,6 +216,9 @@ void Surface::on_key_up(WPARAM keyCode) const
 
 void Surface::on_button_down(MouseButton button) const
 {
+   if (m_currentCursor != nullptr) {
+      SetCursor(m_currentCursor);
+   }
    event_OnMouseButtonIsPressed.publish(button);
 }
 
@@ -222,8 +227,12 @@ void Surface::on_button_up(MouseButton button) const
    event_OnMouseButtonIsReleased.publish(button);
 }
 
-void Surface::on_mouse_move(const int x, const int y) const
+void Surface::on_mouse_move(const int x, const int y)
 {
+   if (m_currentCursor != nullptr) {
+      SetCursor(m_currentCursor);
+   }
+
    if (this->is_cursor_locked()) {
       POINT point{};
       GetCursorPos(&point);
@@ -259,6 +268,18 @@ void Surface::on_rune(const Rune rune) const
 {
    if (m_keyboardInputMode & KeyboardInputMode::Text) {
       event_OnTextInput.publish(rune);
+   }
+}
+
+void Surface::on_set_focus(const bool hasFocus)
+{
+   if (hasFocus) {
+      POINT point;
+      if (GetCursorPos(&point) && ScreenToClient(m_windowHandle, &point)) {
+         event_OnMouseEnter.publish(Vector2{static_cast<float>(point.x), static_cast<float>(point.y)});
+      }
+   } else {
+      event_OnMouseLeave.publish();
    }
 }
 
@@ -306,9 +327,6 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
    }
    case WM_MOUSEMOVE: {
       this->on_mouse_move(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-      if (m_currentCursor != nullptr) {
-         SetCursor(m_currentCursor);
-      }
       break;
    }
    case WM_SIZE: {
@@ -321,6 +339,14 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
    }
    case WM_INPUT: {
       spdlog::info("WM_INPUT event!");
+      break;
+   }
+   case WM_SETFOCUS: {
+      this->on_set_focus(true);
+      break;
+   }
+   case WM_KILLFOCUS: {
+      this->on_set_focus(false);
       break;
    }
    default:
@@ -371,6 +397,11 @@ void Surface::set_parent_surface(ISurface& other, Vector2 offset)
 
    SetWindowPos(m_windowHandle, HWND_TOP, parentRect.left + static_cast<int>(offset.x), parentRect.top + static_cast<int>(offset.y), 0, 0,
                 SWP_NOSIZE);
+}
+
+Display& Surface::display()
+{
+   return m_display;
 }
 
 }// namespace triglav::desktop

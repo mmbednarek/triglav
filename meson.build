@@ -10,12 +10,17 @@ project('triglav_engine',
   ],
 )
 
+message(meson.get_compiler('cpp').get_id())
 
 if meson.get_compiler('cpp').get_id() == 'msvc'
   add_project_arguments('/std:c++latest', language : 'cpp')
   add_project_arguments('/Zc:preprocessor', language : 'cpp')
   add_project_arguments('/wd4201', language : 'cpp')
   add_project_arguments('/wd4324', language : 'cpp')
+
+  if get_option('address_sanitizer').enabled()
+    add_project_arguments('/fsanitize=address', language : 'cpp')
+  endif
 else
   add_project_arguments('-Wno-missing-field-initializers', language : 'cpp')
 endif

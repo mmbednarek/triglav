@@ -3,6 +3,7 @@
 #include "Dialog.hpp"
 
 #include <vector>
+#include <mutex>
 
 namespace triglav::desktop_ui {
 
@@ -29,6 +30,7 @@ class DialogManager
    std::unique_ptr<Dialog> m_root;
    std::vector<std::unique_ptr<Dialog>> m_popups;
    std::vector<Dialog*> m_popupsToEarse;
+   std::mutex m_popupMtx;
 };
 
 }// namespace triglav::desktop_ui
