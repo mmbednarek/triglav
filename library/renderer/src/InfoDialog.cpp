@@ -171,7 +171,6 @@ class HideablePanel final : public ui_core::IWidget
 };
 
 InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, desktop::ISurface& surface) :
-    m_context(context),
     m_configManager(configManager),
     m_surface(surface),
     m_rootBox(context,

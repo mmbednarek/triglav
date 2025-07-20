@@ -51,7 +51,6 @@ class InfoDialog final : public ui_core::IWidget
    void on_title_leave() const;
 
  private:
-   ui_core::Context& m_context;
    ConfigManager& m_configManager;
    desktop::ISurface& m_surface;
    ui_core::RectBox m_rootBox;

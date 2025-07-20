@@ -1,4 +1,4 @@
-#include "GameInstance.h"
+#include "GameInstance.hpp"
 
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/resource/PathManager.hpp"

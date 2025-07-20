@@ -1,9 +1,9 @@
 demo_sources = files([
   'src/GameInstance.cpp',
-  'src/GameInstance.h',
+  'src/GameInstance.hpp',
   'src/Main.cpp',
   'src/SplashScreen.cpp',
-  'src/SplashScreen.h',
+  'src/SplashScreen.hpp',
 ])
 
 demo_deps = [
