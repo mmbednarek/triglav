@@ -1,4 +1,4 @@
-#include "SplashScreen.h"
+#include "SplashScreen.hpp"
 
 #include "triglav/Format.hpp"
 #include "triglav/String.hpp"
@@ -25,8 +25,6 @@ constexpr triglav::Vector2u g_splashScreenResolution{1024, 360};
 
 SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface,
                            triglav::graphics_api::Device& device, triglav::resource::ResourceManager& resourceManager) :
-    m_surface(surface),
-    m_graphicsSurface(graphicsSurface),
     m_device(device),
     m_resourceManager(resourceManager),
     m_resourceStorage(m_device),

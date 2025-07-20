@@ -29,8 +29,7 @@ u32 work_type_flag_count(const WorkTypeFlags flags)
 
 }// namespace
 
-QueueManager::QueueManager(Device& device, std::span<QueueFamilyInfo> infos) :
-    m_device(device),
+QueueManager::QueueManager(Device& device, const std::span<QueueFamilyInfo> infos) :
     m_semaphoreFactory(device),
     m_semaphorePool(m_semaphoreFactory),
     m_fenceFactory(device),

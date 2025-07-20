@@ -3,6 +3,7 @@
 #include "Texture.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
+#include <functional>
 #include <optional>
 
 namespace triglav::graphics_api {

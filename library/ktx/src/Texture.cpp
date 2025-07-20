@@ -10,6 +10,7 @@ extern "C"
 #include <ktxvulkan.h>
 }
 #include <fmt/core.h>
+#include <memory>
 
 namespace triglav::ktx {
 

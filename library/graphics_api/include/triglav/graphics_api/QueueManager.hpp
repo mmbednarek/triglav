@@ -29,7 +29,7 @@ class QueueManager
  public:
    using SafeQueue = threading::SafeAccess<VkQueue>;
 
-   explicit QueueManager(Device& device, std::span<QueueFamilyInfo> infos);
+   QueueManager(Device& device, std::span<QueueFamilyInfo> infos);
 
    [[nodiscard]] SafeQueue& next_queue(WorkTypeFlags flags);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags) const;
@@ -87,7 +87,6 @@ class QueueManager
    [[nodiscard]] QueueGroup& queue_group(WorkTypeFlags type);
    [[nodiscard]] const QueueGroup& queue_group(WorkTypeFlags type) const;
 
-   Device& m_device;
    SemaphoreFactory m_semaphoreFactory;
    ObjectPool<Semaphore, SemaphoreFactory, 8> m_semaphorePool;
    FenceFactory m_fenceFactory;

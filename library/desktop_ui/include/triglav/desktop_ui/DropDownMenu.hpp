@@ -104,7 +104,7 @@ class DropDownMenu final : public ui_core::IWidget
    [[maybe_unused]] ui_core::Context& m_context;
    State m_state;
 
-   ui_core::IWidget* m_parent;
+   [[maybe_unused]] ui_core::IWidget* m_parent;
    ui_core::RectBox m_rect;
    ui_core::TextBox* m_label{};
    Vector4 m_dimensions;

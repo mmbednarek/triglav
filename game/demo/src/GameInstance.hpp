@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SplashScreen.h"
+#include "SplashScreen.hpp"
 
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"

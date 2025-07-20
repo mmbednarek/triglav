@@ -37,8 +37,6 @@ class SplashScreen
    void update_process_bar(float progress);
    void update_loaded_resource(triglav::ResourceName name);
 
-   triglav::desktop::ISurface& m_surface;
-   triglav::graphics_api::Surface& m_graphicsSurface;
    triglav::graphics_api::Device& m_device;
    triglav::resource::ResourceManager& m_resourceManager;
    triglav::render_core::ResourceStorage m_resourceStorage;

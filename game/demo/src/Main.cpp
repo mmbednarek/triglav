@@ -1,4 +1,4 @@
-#include "GameInstance.h"
+#include "GameInstance.hpp"
 
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"

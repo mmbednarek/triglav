@@ -65,7 +65,6 @@ struct TextVertex
 TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyphCache, ui_core::Viewport& viewport) :
     m_device(device),
     m_glyphCache(glyphCache),
-    m_viewport(viewport),
     m_combinedGlyphBuffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
                                                           g_maxCombinedGlyphBufferSize))),
     m_vertexAllocator(g_maxTextVertices),

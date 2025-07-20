@@ -2,7 +2,8 @@
 
 namespace triglav::graphics_api::vulkan {
 
-void DynamicProcedures::init(VkDevice vulkanDevice){
+void DynamicProcedures::init(VkDevice vulkanDevice)
+{
 #define TRIGLAV_HANDLE(proc) m_##proc = reinterpret_cast<PFN_##proc>(vkGetDeviceProcAddr(vulkanDevice, #proc));
    TRIGLAV_GAPI_VULKAN_DYNAMIC_PROCS
 #undef TRIGLAV_HANDLE

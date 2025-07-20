@@ -65,7 +65,6 @@ class TextRenderer
 
    graphics_api::Device& m_device;
    render_core::GlyphCache& m_glyphCache;
-   ui_core::Viewport& m_viewport;
 
    std::vector<Name> m_pendingTextUpdates;
    std::vector<Name> m_pendingTextRemoval;
