@@ -10,8 +10,7 @@ DialogManager::DialogManager(const graphics_api::Instance& instance, graphics_ap
     m_display(display),
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
-    m_root(std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager, rootDimensions,
-                                    desktop::WindowAttribute::Default))
+    m_root(std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager, rootDimensions))
 {
 }
 
@@ -23,9 +22,8 @@ Dialog& DialogManager::root() const
 Dialog& DialogManager::create_popup_dialog(const Vector2i offset, const Vector2u dimensions)
 {
    std::unique_lock lk{m_popupMtx};
-   const auto& popup = m_popups.emplace_back(std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager,
-                                                                      dimensions, desktop::WindowAttribute::Popup));
-   popup->surface().set_parent_surface(m_root->surface(), offset);
+   const auto& popup = m_popups.emplace_back(
+      std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager, dimensions, m_root->surface(), offset));
    return *popup;
 }
 

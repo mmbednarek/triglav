@@ -2,8 +2,8 @@
 
 #include "Dialog.hpp"
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace triglav::desktop_ui {
 

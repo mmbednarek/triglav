@@ -23,9 +23,14 @@ class Dialog
  public:
    using Self = Dialog;
 
+   // Top level dialog
+   Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
+          render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u dimensions);
+
+   // Popup dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
           render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u dimensions,
-          desktop::WindowAttributeFlags flags);
+          desktop::ISurface& parentSurface, Vector2i offset);
 
    void initialize();
    void update();

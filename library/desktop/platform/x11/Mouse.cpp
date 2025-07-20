@@ -1,4 +1,4 @@
-#include "Mouse.h"
+#include "Mouse.hpp"
 
 #include <array>
 #include <fcntl.h>

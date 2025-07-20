@@ -9,12 +9,48 @@ namespace triglav::desktop_ui {
 using namespace name_literals;
 using namespace string_literals;
 
+namespace {
+
+std::shared_ptr<desktop::ISurface> create_popup_surface(desktop::IDisplay& display, desktop::ISurface& parentWindow,
+                                                        const Vector2u dimensions, const Vector2i offset)
+{
+   auto surface = display.create_surface("Popup Window"_strv, dimensions, desktop::WindowAttribute::Popup);
+   surface->set_parent_surface(parentWindow, offset);
+   return surface;
+}
+
+}// namespace
+
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
-               desktop::WindowAttributeFlags flags) :
+               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
-    m_surface(display.create_surface("UI Dialog"_strv, dimensions, flags)),
+    m_surface(display.create_surface("UI Dialog"_strv, dimensions, desktop::WindowAttribute::Default)),
+    m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
+    m_resourceStorage(device),
+    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),
+    m_uiViewport(dimensions),
+    m_updateUiJob(device, m_glyphCache, m_uiViewport, m_resourceManager),
+    m_pipelineCache(device, m_resourceManager),
+    m_jobGraph(device, m_resourceManager, m_pipelineCache, m_resourceStorage, dimensions),
+    m_context(m_uiViewport, m_glyphCache, m_resourceManager),
+    TG_CONNECT(*m_surface, OnClose, on_close),
+    TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
+    TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
+    TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
+    TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
+    TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
+    TG_CONNECT(*m_surface, OnTextInput, on_text_input),
+    TG_CONNECT(*m_surface, OnResize, on_resize)
+{
+}
+
+Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
+               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
+               desktop::ISurface& parentSurface, const Vector2i offset) :
+    m_glyphCache(glyphCache),
+    m_resourceManager(resourceManager),
+    m_surface(create_popup_surface(display, parentSurface, dimensions, offset)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
     m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),

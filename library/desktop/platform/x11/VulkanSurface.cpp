@@ -1,9 +1,11 @@
 #include "VulkanSurface.hpp"
 
+#include "Display.hpp"
+
 #include <X11/Xlib.h>
 #include <vulkan/vulkan_xlib.h>
 
-#include "Surface.h"
+#include "Surface.hpp"
 
 namespace triglav::desktop {
 
@@ -16,7 +18,7 @@ VkResult create_vulkan_surface(const VkInstance instance, const ISurface* surfac
    info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
    info.pNext = nullptr;
    info.flags = 0;
-   info.dpy = surface->display();
+   info.dpy = surface->display().x11_display();
    info.window = surface->window();
 
    return vkCreateXlibSurfaceKHR(instance, &info, pAllocator, pSurface);

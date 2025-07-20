@@ -1,7 +1,7 @@
-#include "Display.h"
+#include "Display.hpp"
 
 #include "ISurface.hpp"
-#include "Surface.h"
+#include "Surface.hpp"
 
 #include <X11/Xatom.h>
 
@@ -90,6 +90,10 @@ void Display::dispatch_messages()
 
 std::shared_ptr<ISurface> Display::create_surface(const StringView title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
+   if (flags & WindowAttribute::Popup) {
+      return std::make_shared<Surface>(*this, dimensions);
+   }
+
    auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, dimensions.x, dimensions.y, 0, 0, 0xffffffff);
 
    XStoreName(m_display, window, title.data());
@@ -106,9 +110,14 @@ std::shared_ptr<ISurface> Display::create_surface(const StringView title, const 
                    LeaveNotify);
    XSetWMProtocols(m_display, window, &m_wmDeleteAtom, 1);
 
-   auto surface = std::make_shared<Surface>(m_display, window, dimensions);
-   m_surfaces.emplace(window, surface);
+   auto surface = std::make_shared<Surface>(*this, window, dimensions);
+   this->map_surface(window, surface->weak_from_this());
    return surface;
+}
+
+void Display::map_surface(const ::Window window, const std::weak_ptr<ISurface>& surface)
+{
+   m_surfaces.emplace(window, surface);
 }
 
 void Display::on_mouse_move(const float x, const float y)
