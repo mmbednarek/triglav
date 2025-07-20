@@ -5,7 +5,7 @@
 
 #include "triglav/desktop/IDisplay.hpp"
 
-#include "Mouse.h"
+#include "Mouse.hpp"
 
 namespace triglav::desktop::x11 {
 
@@ -21,6 +21,13 @@ class Display final : public IDisplay
 
    void dispatch_messages() override;
    std::shared_ptr<ISurface> create_surface(StringView title, Vector2u dimensions, WindowAttributeFlags flags) override;
+
+   [[nodiscard]] constexpr ::Display* x11_display() const
+   {
+      return m_display;
+   }
+
+   void map_surface(::Window window, const std::weak_ptr<ISurface>& surface);
 
  private:
    void on_mouse_move(float x, float y);

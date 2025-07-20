@@ -1,5 +1,7 @@
-#include "Surface.h"
+#include "Surface.hpp"
+
 #include "Desktop.hpp"
+#include "Display.hpp"
 
 #include <X11/cursorfont.h>
 #include <spdlog/spdlog.h>
@@ -80,17 +82,24 @@ MouseButton map_button(const uint32_t keyCode)
 
 }// namespace
 
-Surface::Surface(::Display* display, const Window window, const Dimension dimension) :
+Surface::Surface(Display& display, const Window window, const Dimension dimension) :
     m_display(display),
     m_window(window),
     m_dimension(dimension),
-    m_xim(XOpenIM(m_display, nullptr, nullptr, nullptr))
+    m_xim(XOpenIM(m_display.x11_display(), nullptr, nullptr, nullptr))
+{
+}
+
+Surface::Surface(Display& display, const Dimension dimension) :
+    m_display(display),
+    m_window(~0u),
+    m_dimension(dimension)
 {
 }
 
 Surface::~Surface()
 {
-   if (m_display != nullptr) {
+   if (m_window != ~0u) {
       this->internal_close();
    }
 }
@@ -99,18 +108,18 @@ void Surface::lock_cursor()
 {
    m_isCursorLocked = true;
 
-   XGrabPointer(m_display, m_window, false,
+   XGrabPointer(m_display.x11_display(), m_window, false,
                 ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | EnterWindowMask | LeaveWindowMask,
-                GrabModeAsync, GrabModeAsync, RootWindow(m_display, DefaultScreen(m_display)), 0L, CurrentTime);
+                GrabModeAsync, GrabModeAsync, RootWindow(m_display.x11_display(), DefaultScreen(m_display.x11_display())), 0L, CurrentTime);
    Dimension center{m_dimension.x / 2, m_dimension.y / 2};
-   XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.x, center.y);
-   XSync(m_display, false);
+   XWarpPointer(m_display.x11_display(), 0L, m_window, 0, 0, 0, 0, center.x, center.y);
+   XSync(m_display.x11_display(), false);
 }
 
 void Surface::unlock_cursor()
 {
    m_isCursorLocked = false;
-   XUngrabPointer(m_display, CurrentTime);
+   XUngrabPointer(m_display.x11_display(), CurrentTime);
 }
 
 void Surface::hide_cursor() const
@@ -120,9 +129,8 @@ void Surface::hide_cursor() const
 
 void Surface::internal_close()
 {
-   XDestroyWindow(m_display, m_window);
-   m_window = ~0;
-   m_display = nullptr;
+   XDestroyWindow(m_display.x11_display(), m_window);
+   m_window = ~0u;
 }
 
 bool Surface::is_cursor_locked() const
@@ -133,8 +141,71 @@ bool Surface::is_cursor_locked() const
 Dimension Surface::dimension() const
 {
    XWindowAttributes attribs;
-   ::XGetWindowAttributes(m_display, m_window, &attribs);
+   ::XGetWindowAttributes(m_display.x11_display(), m_window, &attribs);
    return {attribs.width, attribs.height};
+}
+
+void Surface::set_cursor_icon(const CursorIcon icon)
+{
+   spdlog::info("calling set_cursor_icon: {}", static_cast<int>(icon));
+
+   if (m_currentCursor != 0) {
+      XFreeCursor(m_display.x11_display(), m_currentCursor);
+   }
+
+   switch (icon) {
+   case CursorIcon::Arrow:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_arrow);
+      break;
+   case CursorIcon::Hand:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_hand1);
+      break;
+   case CursorIcon::Move:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_fleur);
+      break;
+   case CursorIcon::Wait:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_watch);
+      break;
+   case CursorIcon::Edit:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_xterm);
+      break;
+   default:
+      m_currentCursor = 0;
+      return;
+   }
+
+   ::XDefineCursor(m_display.x11_display(), m_window, m_currentCursor);
+}
+
+void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
+{
+   m_keyboardInputMode = mode;
+
+   if (mode & KeyboardInputMode::Text) {
+      ::XSetLocaleModifiers("");
+
+      if (m_xic != nullptr) {
+         ::XDestroyIC(m_xic);
+      }
+
+      m_xic =
+         ::XCreateIC(m_xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, m_window, XNFocusWindow, m_window, nullptr);
+      ::XSetICFocus(m_xic);
+   }
+}
+
+void Surface::set_parent_surface(ISurface& other, const Vector2 offset)
+{
+   assert(m_window == ~0u);
+   m_window = XCreateSimpleWindow(m_display.x11_display(), dynamic_cast<Surface&>(other).m_window, static_cast<int>(offset.x),
+                                  static_cast<int>(offset.y), m_dimension.x, m_dimension.y, 0, 0, 0xffffffff);
+
+   XMapWindow(m_display.x11_display(), m_window);
+   XSelectInput(m_display.x11_display(), m_window,
+                ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
+                   LeaveNotify);
+
+   m_display.map_surface(m_window, this->weak_from_this());
 }
 
 void Surface::dispatch_key_press(const XEvent& event) const
@@ -189,61 +260,20 @@ void Surface::dispatch_close() const
 void Surface::tick() const
 {
    if (m_isCursorLocked) {
-      Dimension center{m_dimension.x / 2, m_dimension.y / 2};
-      XWarpPointer(m_display, 0L, m_window, 0, 0, 0, 0, center.x, center.y);
-      XSync(m_display, false);
+      const Dimension center{m_dimension.x / 2, m_dimension.y / 2};
+      XWarpPointer(m_display.x11_display(), 0L, m_window, 0, 0, 0, 0, center.x, center.y);
+      XSync(m_display.x11_display(), false);
    }
 }
 
-void Surface::set_cursor_icon(const CursorIcon icon)
+Display& Surface::display()
 {
-   spdlog::info("calling set_cursor_icon: {}", static_cast<int>(icon));
-
-   if (m_currentCursor != 0) {
-      XFreeCursor(m_display, m_currentCursor);
-   }
-
-   switch (icon) {
-   case CursorIcon::Arrow:
-      m_currentCursor = ::XCreateFontCursor(m_display, XC_arrow);
-      break;
-   case CursorIcon::Hand:
-      m_currentCursor = ::XCreateFontCursor(m_display, XC_hand1);
-      break;
-   case CursorIcon::Move:
-      m_currentCursor = ::XCreateFontCursor(m_display, XC_fleur);
-      break;
-   case CursorIcon::Wait:
-      m_currentCursor = ::XCreateFontCursor(m_display, XC_watch);
-      break;
-   case CursorIcon::Edit:
-      m_currentCursor = ::XCreateFontCursor(m_display, XC_xterm);
-      break;
-   default:
-      m_currentCursor = 0;
-      return;
-   }
-
-   ::XDefineCursor(m_display, m_window, m_currentCursor);
+   return m_display;
 }
 
-void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
+const Display& Surface::display() const
 {
-   m_keyboardInputMode = mode;
-
-   if (mode & KeyboardInputMode::Text) {
-      ::XSetLocaleModifiers("");
-
-      if (m_xic != nullptr) {
-         ::XDestroyIC(m_xic);
-      }
-
-      m_xic =
-         ::XCreateIC(m_xim, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, m_window, XNFocusWindow, m_window, nullptr);
-      ::XSetICFocus(m_xic);
-   }
+   return m_display;
 }
-
-void Surface::position_relative_to(ISurface& /*other*/, Vector2 /*offset*/) {}
 
 }// namespace triglav::desktop::x11
