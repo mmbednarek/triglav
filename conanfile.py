@@ -4,19 +4,9 @@ from conan.tools.meson import Meson
 from conan.tools.gnu import PkgConfigDeps
 
 class TriglavEngine(ConanFile):
+    name = "triglav-engine"
+    version = "0.0.1"
     settings = "os", "arch", "compiler", "build_type"
-    requires = (
-        "cgal/6.0.1",
-        "entt/3.15.0",
-        "freetype/2.13.2",
-        "fmt/11.2.0",
-        "gtest/1.14.0",
-        "glm/0.9.9.8",
-        "rapidyaml/0.5.0",
-        "spdlog/1.15.3",
-        "rapidjson/1.1.0",
-        "ktx/4.3.2"
-    )
     options = {
         "address_sanitizer": [False, True],
         "disable_debug_utils": [False, True],
@@ -28,6 +18,18 @@ class TriglavEngine(ConanFile):
         "wayland": False,
     }
     # We should use system vulkan
+
+    def requirements(self):
+        self.requires("cgal/6.0.1")
+        self.requires("entt/3.15.0")
+        self.requires("freetype/2.13.2")
+        self.requires("fmt/11.2.0", override=True)
+        self.requires("gtest/1.14.0")
+        self.requires("glm/0.9.9.8")
+        self.requires("rapidyaml/0.5.0")
+        self.requires("spdlog/1.15.3")
+        self.requires("rapidjson/1.1.0")
+        self.requires("ktx/4.3.2")
 
     def configure(self):
         self.options["boost"].without_test = True
