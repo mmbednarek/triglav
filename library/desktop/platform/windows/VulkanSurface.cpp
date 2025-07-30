@@ -19,7 +19,7 @@ VkResult create_vulkan_surface(const VkInstance instance, const ISurface* surfac
    return vkCreateWin32SurfaceKHR(instance, &surfaceInfo, pAllocator, pSurface);
 }
 
-const char* vulkan_extension_name()
+const char* vulkan_extension_name(const IDisplay* /*display*/)
 {
    return VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
 }

@@ -9,7 +9,7 @@ extern "C"
 
 #include <optional>
 
-namespace triglav::desktop {
+namespace triglav::desktop::wayland {
 
 class Display;
 
@@ -18,7 +18,9 @@ class Surface : public ISurface
    friend Display;
 
  public:
-   explicit Surface(Display& display, StringView title, Dimension dimension, WindowAttributeFlags attributes);
+   Surface(Display& display, StringView title, Dimension dimension, WindowAttributeFlags attributes);
+   Surface(Display& display, ISurface& parentSurface, Dimension dimension, Vector2 offset, WindowAttributeFlags attributes);
+
    ~Surface() override;
 
    void on_configure(uint32_t serial);
@@ -36,7 +38,7 @@ class Surface : public ISurface
    [[nodiscard]] Dimension dimension() const override;
    void set_cursor_icon(CursorIcon icon) override;
    void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
-   void set_parent_surface(ISurface& other, Vector2 offset) override;
+   [[nodiscard]] std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) override;
 
    [[nodiscard]] constexpr Display& display() const noexcept
    {
@@ -71,4 +73,4 @@ class Surface : public ISurface
    std::optional<Dimension> m_pendingDimension{};
 };
 
-}// namespace triglav::desktop
+}// namespace triglav::desktop::wayland

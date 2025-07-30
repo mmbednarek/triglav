@@ -298,7 +298,7 @@ constexpr std::array g_vulkanInstanceLayers{
 constexpr std::array<const char*, 0> g_vulkanInstanceLayers{};
 #endif
 
-Result<Instance> Instance::create_instance()
+Result<Instance> Instance::create_instance(const desktop::IDisplay* display)
 {
    VkApplicationInfo appInfo{};
    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -308,20 +308,23 @@ Result<Instance> Instance::create_instance()
    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
    appInfo.apiVersion = VK_API_VERSION_1_3;
 
-   const std::array g_vulkanInstanceExtensions{
+   std::vector vulkanInstanceExtensions{
       VK_KHR_SURFACE_EXTENSION_NAME,
-      desktop::vulkan_extension_name(),
 #if GAPI_ENABLE_VALIDATION
       VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
       VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
    };
 
+   if (display != nullptr) {
+      vulkanInstanceExtensions.push_back(desktop::vulkan_extension_name(display));
+   }
+
    VkInstanceCreateInfo instanceInfo{};
    instanceInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
    instanceInfo.pApplicationInfo = &appInfo;
-   instanceInfo.enabledExtensionCount = static_cast<u32>(g_vulkanInstanceExtensions.size());
-   instanceInfo.ppEnabledExtensionNames = g_vulkanInstanceExtensions.data();
+   instanceInfo.enabledExtensionCount = static_cast<u32>(vulkanInstanceExtensions.size());
+   instanceInfo.ppEnabledExtensionNames = vulkanInstanceExtensions.data();
    instanceInfo.enabledLayerCount = static_cast<u32>(g_vulkanInstanceLayers.size());
    instanceInfo.ppEnabledLayerNames = g_vulkanInstanceLayers.data();
 

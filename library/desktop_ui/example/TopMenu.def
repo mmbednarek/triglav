@@ -1,0 +1,21 @@
+
+TG_MENU_DROPDOWN(file, "File")
+TG_MENU_ITEM(file_new, "New")
+TG_MENU_ITEM(file_open, "Open")
+TG_MENU_ITEM(file_save, "Save")
+TG_MENU_ITEM(file_save_as, "Save As")
+TG_MENU_DROPDOWN_LIST(file_recent, "Recent Files")
+TG_MENU_ITEM(file_close, "Close")
+TG_MENU_DROPDOWN_END
+
+TG_MENU_DROPDOWN(edit, "Edit")
+
+TG_MENU_ITEM(copy, "Copy")
+TG_MENU_ITEM(cut, "Cut")
+
+TG_MENU_DROPDOWN(paste, "Paste")
+TG_MENU_ITEM(paste_paste, "Paste")
+TG_MENU_ITEM(paste_from_history, "From History")
+TG_MENU_DROPDOWN_END
+
+TG_MENU_DROPDOWN_END

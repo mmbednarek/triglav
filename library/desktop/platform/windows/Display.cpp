@@ -56,7 +56,7 @@ void Display::dispatch_messages()
 
 std::shared_ptr<ISurface> Display::create_surface(const StringView title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
-   return std::make_shared<Surface>(*this, title, dimensions, flags);
+   return std::make_shared<Surface>(*this, title, dimensions, flags, false);
 }
 
 std::unique_ptr<IDisplay> get_display()

@@ -98,7 +98,7 @@ bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableSt
       return false;
    }
 
-   const auto instance = GAPI_CHECK(graphics_api::Instance::create_instance());
+   const auto instance = GAPI_CHECK(graphics_api::Instance::create_instance(nullptr));
    const auto device = GAPI_CHECK(instance.create_device(nullptr, graphics_api::DevicePickStrategy::PreferDedicated, 0));
 
    const auto texture = GAPI_CHECK(device->create_texture(

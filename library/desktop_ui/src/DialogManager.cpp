@@ -23,7 +23,7 @@ Dialog& DialogManager::create_popup_dialog(const Vector2i offset, const Vector2u
 {
    std::unique_lock lk{m_popupMtx};
    const auto& popup = m_popups.emplace_back(
-      std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager, dimensions, m_root->surface(), offset));
+      std::make_unique<Dialog>(m_instance, m_device, m_root->surface(), m_glyphCache, m_resourceManager, dimensions, offset));
    return *popup;
 }
 

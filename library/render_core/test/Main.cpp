@@ -23,7 +23,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    using namespace triglav::io::path_literals;
 
    auto surface = display.create_surface("Testing window"_strv, {400, 400}, WindowAttribute::Default);
-   auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance());
+   auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance(&display));
 
    triglav::threading::ThreadPool::the().initialize(4);
 

@@ -3,15 +3,10 @@ desktop_sources = files([])
 desktop_deps = [vulkan, spdlog, core, event]
 
 if host_machine.system() == 'linux'
-    if get_option('wayland').enabled()
-        desktop_deps += wayland_client
-        desktop_deps += xkb_common
-        subdir('platform/wayland')
-    else
-        desktop_deps += xlib
-        desktop_deps += xkb_common
-        subdir('platform/x11')
-    endif
+    desktop_deps += wayland_client
+    desktop_deps += xlib
+    desktop_deps += xkb_common
+    subdir('platform/linux')
 elif host_machine.system() == 'windows'
     subdir('platform/windows')
 endif

@@ -90,10 +90,6 @@ void Display::dispatch_messages()
 
 std::shared_ptr<ISurface> Display::create_surface(const StringView title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
-   if (flags & WindowAttribute::Popup) {
-      return std::make_shared<Surface>(*this, dimensions);
-   }
-
    auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, dimensions.x, dimensions.y, 0, 0, 0xffffffff);
 
    XStoreName(m_display, window, title.data());
@@ -147,12 +143,3 @@ std::shared_ptr<Surface> Display::surface_by_window(const Window wndHandle)
 }
 
 }// namespace triglav::desktop::x11
-
-namespace triglav::desktop {
-
-std::unique_ptr<IDisplay> get_display()
-{
-   return std::make_unique<x11::Display>();
-}
-
-}// namespace triglav::desktop
