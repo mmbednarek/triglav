@@ -18,7 +18,7 @@ class Instance
                                                   DeviceFeatureFlags enabledFeatures) const;
    [[nodiscard]] bool are_features_supported(DeviceFeatureFlags enabledFeatures) const;
 
-   [[nodiscard]] static Result<Instance> create_instance();
+   [[nodiscard]] static Result<Instance> create_instance(const desktop::IDisplay* display);
 
  private:
    vulkan::Instance m_instance;

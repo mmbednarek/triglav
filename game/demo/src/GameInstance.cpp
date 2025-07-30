@@ -127,7 +127,7 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
     m_splashScreenSurface(
        display.create_surface("Triglav Engine Demo - Loading"_strv, {1024, 360}, WindowAttribute::AlignCenter | WindowAttribute::TopMost)),
     m_resolution(resolution),
-    m_instance(GAPI_CHECK(gapi::Instance::create_instance())),
+    m_instance(GAPI_CHECK(gapi::Instance::create_instance(&display))),
     m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
     m_device(GAPI_CHECK(m_instance.create_device(&*m_graphicsSplashScreenSurface, device_pick_strategy(), requested_features(m_instance)))),
     m_resourceManager(*m_device, m_fontManager),

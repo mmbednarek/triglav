@@ -15,7 +15,7 @@ extern "C"
 #include <unistd.h>
 #include <xkbcommon/xkbcommon.h>
 
-namespace triglav::desktop {
+namespace triglav::desktop::wayland {
 
 namespace {
 
@@ -476,9 +476,4 @@ void Display::on_destroyed_surface(Surface* surface)
    m_surfaceMap.erase(surface->surface());
 }
 
-std::unique_ptr<IDisplay> get_display()
-{
-   return std::make_unique<Display>();
-}
-
-}// namespace triglav::desktop
+}// namespace triglav::desktop::wayland

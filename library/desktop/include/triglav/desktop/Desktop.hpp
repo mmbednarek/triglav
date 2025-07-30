@@ -4,8 +4,6 @@
 
 namespace triglav::desktop {
 
-class Surface;
-
 constexpr i32 MouseButton_Left = 272;
 constexpr i32 MouseButton_Right = 273;
 constexpr i32 MouseButton_Middle = 274;

@@ -14,9 +14,6 @@ class Surface final : public ISurface
    // Top level window
    Surface(Display& display, Window window, Dimension dimension);
 
-   // Popup surface, must be followed by set_parent_surface.
-   Surface(Display& display, Dimension dimension);
-
    ~Surface() override;
 
    void lock_cursor() override;
@@ -27,7 +24,7 @@ class Surface final : public ISurface
    [[nodiscard]] Dimension dimension() const override;
    void set_cursor_icon(CursorIcon icon) override;
    void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
-   void set_parent_surface(ISurface& other, Vector2 offset) override;
+   [[nodiscard]] std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) override;
 
    void dispatch_key_press(const XEvent& event) const;
    void dispatch_key_release(const XEvent& event) const;

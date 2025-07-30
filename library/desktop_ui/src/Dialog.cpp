@@ -9,18 +9,6 @@ namespace triglav::desktop_ui {
 using namespace name_literals;
 using namespace string_literals;
 
-namespace {
-
-std::shared_ptr<desktop::ISurface> create_popup_surface(desktop::IDisplay& display, desktop::ISurface& parentWindow,
-                                                        const Vector2u dimensions, const Vector2i offset)
-{
-   auto surface = display.create_surface("Popup Window"_strv, dimensions, desktop::WindowAttribute::Popup);
-   surface->set_parent_surface(parentWindow, offset);
-   return surface;
-}
-
-}// namespace
-
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
                render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions) :
     m_glyphCache(glyphCache),
@@ -45,12 +33,12 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
 {
 }
 
-Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
+Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parentSurface,
                render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
-               desktop::ISurface& parentSurface, const Vector2i offset) :
+               const Vector2i offset) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
-    m_surface(create_popup_surface(display, parentSurface, dimensions, offset)),
+    m_surface(parentSurface.create_popup(dimensions, offset, desktop::WindowAttribute::None)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
     m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),

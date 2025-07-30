@@ -3,11 +3,14 @@
 #include "Display.hpp"
 
 #include "triglav/Format.hpp"
+#include "triglav/String.hpp"
 
 #include <spdlog/spdlog.h>
 #include <windowsx.h>
 
 namespace triglav::desktop {
+
+using namespace string_literals;
 
 namespace {
 
@@ -65,7 +68,7 @@ Key translate_key(const WPARAM keyCode)
    return Key::Unknown;
 }
 
-DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags)
+DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags, const bool isPopup)
 {
    DWORD result{};
    if (flags & WindowAttribute::TopMost) {
@@ -74,14 +77,14 @@ DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags)
    if (flags & WindowAttribute::ShowDecorations) {
       result |= WS_EX_CLIENTEDGE;
    }
-   if (flags & WindowAttribute::Popup) {
+   if (isPopup) {
       result |= WS_EX_TOOLWINDOW;
    }
 
    return result;
 }
 
-DWORD map_window_attributes_to_style(const WindowAttributeFlags flags)
+DWORD map_window_attributes_to_style(const WindowAttributeFlags flags, const bool isPopup)
 {
    DWORD result{};
 
@@ -91,7 +94,7 @@ DWORD map_window_attributes_to_style(const WindowAttributeFlags flags)
    if (flags & WindowAttribute::Resizeable) {
       result |= WS_THICKFRAME;
    }
-   if (flags & WindowAttribute::Popup) {
+   if (isPopup) {
       result |= WS_POPUP;
    }
    return result;
@@ -116,15 +119,15 @@ int map_window_attributes_to_y_position(const WindowAttributeFlags flags, const 
 }
 
 HWND create_window(const HINSTANCE instance, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags,
-                   void* lpParam)
+                   void* lpParam, const bool isPopup)
 {
    const auto runeCount = title.rune_count();
    std::vector<wchar_t> wCharTitle(runeCount + 1);
    std::transform(title.begin(), title.end(), wCharTitle.begin(), [](const Rune r) { return static_cast<wchar_t>(r); });
    wCharTitle[runeCount] = 0;
 
-   const auto style = map_window_attributes_to_style(flags);
-   const auto styleEx = map_window_attributes_to_ex_style(flags);
+   const auto style = map_window_attributes_to_style(flags, isPopup);
+   const auto styleEx = map_window_attributes_to_ex_style(flags, isPopup);
 
    RECT rect{
       /*left*/ 0,
@@ -146,10 +149,10 @@ HWND create_window(const HINSTANCE instance, const StringView title, const Vecto
 
 }// namespace
 
-Surface::Surface(Display& display, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags) :
+Surface::Surface(Display& display, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags, const bool isPopup) :
     m_display(display),
     m_dimension(dimension),
-    m_windowHandle(create_window(display.winapi_instance(), title, dimension, flags, this))
+    m_windowHandle(create_window(display.winapi_instance(), title, dimension, flags, this, isPopup))
 {
    ShowWindow(m_windowHandle, SW_NORMAL);
    UpdateWindow(m_windowHandle);
@@ -387,16 +390,18 @@ void Surface::set_cursor_icon(const CursorIcon icon)
    ShowCursor(true);
 }
 
-void Surface::set_parent_surface(ISurface& other, Vector2 offset)
+std::shared_ptr<ISurface> Surface::create_popup(const Vector2u dimensions, const Vector2 offset, const WindowAttributeFlags flags)
 {
-   const auto parentWnd = dynamic_cast<Surface&>(other).m_windowHandle;
+   auto popupSurface = std::make_shared<Surface>(m_display, "popup"_strv, dimensions, flags, true);
 
    RECT parentRect;
-   GetClientRect(parentWnd, &parentRect);
-   ClientToScreen(parentWnd, reinterpret_cast<LPPOINT>(&parentRect.left));
+   GetClientRect(m_windowHandle, &parentRect);
+   ClientToScreen(m_windowHandle, reinterpret_cast<LPPOINT>(&parentRect.left));
 
-   SetWindowPos(m_windowHandle, HWND_TOP, parentRect.left + static_cast<int>(offset.x), parentRect.top + static_cast<int>(offset.y), 0, 0,
-                SWP_NOSIZE);
+   SetWindowPos(popupSurface->m_windowHandle, HWND_TOP, parentRect.left + static_cast<int>(offset.x),
+                parentRect.top + static_cast<int>(offset.y), 0, 0, SWP_NOSIZE);
+
+   return popupSurface;
 }
 
 Display& Surface::display()

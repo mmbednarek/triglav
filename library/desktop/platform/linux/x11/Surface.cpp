@@ -90,13 +90,6 @@ Surface::Surface(Display& display, const Window window, const Dimension dimensio
 {
 }
 
-Surface::Surface(Display& display, const Dimension dimension) :
-    m_display(display),
-    m_window(~0u),
-    m_dimension(dimension)
-{
-}
-
 Surface::~Surface()
 {
    if (m_window != ~0u) {
@@ -194,18 +187,19 @@ void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
    }
 }
 
-void Surface::set_parent_surface(ISurface& other, const Vector2 offset)
+std::shared_ptr<ISurface> Surface::create_popup(const Vector2u dimensions, const Vector2 offset, const WindowAttributeFlags /*flags*/)
 {
-   assert(m_window == ~0u);
-   m_window = XCreateSimpleWindow(m_display.x11_display(), dynamic_cast<Surface&>(other).m_window, static_cast<int>(offset.x),
-                                  static_cast<int>(offset.y), m_dimension.x, m_dimension.y, 0, 0, 0xffffffff);
+   const auto popupWindow = XCreateSimpleWindow(m_display.x11_display(), m_window, static_cast<int>(offset.x), static_cast<int>(offset.y),
+                                                dimensions.x, dimensions.y, 0, 0, 0xffffffff);
 
-   XMapWindow(m_display.x11_display(), m_window);
-   XSelectInput(m_display.x11_display(), m_window,
+   XMapWindow(m_display.x11_display(), popupWindow);
+   XSelectInput(m_display.x11_display(), popupWindow,
                 ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
                    LeaveNotify);
 
-   m_display.map_surface(m_window, this->weak_from_this());
+   auto surface = std::make_shared<Surface>(m_display, popupWindow, dimensions);
+   m_display.map_surface(popupWindow, surface);
+   return surface;
 }
 
 void Surface::dispatch_key_press(const XEvent& event) const

@@ -17,7 +17,7 @@ class Display;
 class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
  public:
-   Surface(Display& display, StringView title, Vector2i dimension, WindowAttributeFlags flags);
+   Surface(Display& display, StringView title, Vector2i dimension, WindowAttributeFlags flags, bool isPopup);
    ~Surface() override;
 
    void lock_cursor() override;
@@ -31,7 +31,8 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    [[nodiscard]] HWND winapi_window_handle() const;
    LRESULT handle_window_event(UINT msg, WPARAM wParam, LPARAM lParam);
    void set_cursor_icon(CursorIcon icon) override;
-   void set_parent_surface(ISurface& other, Vector2 offset) override;
+   [[nodiscard]] std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) override;
+
    [[nodiscard]] Display& display();
 
  private:

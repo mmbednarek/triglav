@@ -19,7 +19,7 @@ extern "C"
 #include <wayland-client.h>
 #include <xkbcommon/xkbcommon.h>
 
-namespace triglav::desktop {
+namespace triglav::desktop::wayland {
 
 class Surface;
 
@@ -106,4 +106,4 @@ class Display final : public IDisplay
    threading::SafeReadWriteAccess<Surface*> m_keyboardSurface{};
 };
 
-}// namespace triglav::desktop
+}// namespace triglav::desktop::wayland

@@ -53,7 +53,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto threadCount = CommandLine::the().arg_int("threadCount"_name).value_or(8);
    ThreadPool::the().initialize(std::clamp(threadCount, 0, 8));
 
-   const auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance());
+   const auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance(&display));
 
    std::unique_ptr<triglav::graphics_api::Device> device;
 

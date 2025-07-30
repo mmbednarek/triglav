@@ -5,5 +5,4 @@ desktop_sources += files([
                          'Mouse.hpp',
                          'Surface.cpp',
                          'Surface.hpp',
-                         'VulkanSurface.cpp',
                      ])
