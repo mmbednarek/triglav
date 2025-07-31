@@ -104,6 +104,8 @@ void Dialog::update()
 {
    if (!m_isInitialized)
       return;
+   if (!m_uiViewport.should_redraw())
+      return;
 
    m_renderSurface.await_for_frame(m_frameIndex);
 

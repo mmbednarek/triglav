@@ -364,6 +364,7 @@ void Display::dispatch_messages()
    for (auto& surface : m_surfaceMap | std::views::values) {
       surface->tick();
    }
+   wl_display_roundtrip(m_display);
    wl_display_dispatch_pending(m_display);
 }
 

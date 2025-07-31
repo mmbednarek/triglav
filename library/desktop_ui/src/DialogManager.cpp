@@ -34,15 +34,17 @@ bool DialogManager::should_close() const
 
 void DialogManager::tick()
 {
-   m_device.await_all();
-
    std::unique_lock lk{m_popupMtx};
 
-   for (const auto& dialog : m_popupsToEarse) {
-      auto it = std::ranges::find_if(m_popups, [dialog](const auto& popup) { return popup.get() == dialog; });
-      m_popups.erase(it);
+   if (!m_popupsToEarse.empty()) {
+      m_device.await_all();
+
+      for (const auto& dialog : m_popupsToEarse) {
+         auto it = std::ranges::find_if(m_popups, [dialog](const auto& popup) { return popup.get() == dialog; });
+         m_popups.erase(it);
+      }
+      m_popupsToEarse.clear();
    }
-   m_popupsToEarse.clear();
 
    m_root->update();
    for (const auto& popup : m_popups) {

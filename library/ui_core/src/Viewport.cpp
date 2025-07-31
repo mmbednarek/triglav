@@ -25,6 +25,7 @@ void Viewport::add_text(const Name name, Text&& text)
    assert(added);
 
    this->event_OnAddedText.publish(name, it->second);
+   m_needsRedraw = true;
 }
 
 void Viewport::set_text_content(const Name name, const StringView content)
@@ -36,6 +37,7 @@ void Viewport::set_text_content(const Name name, const StringView content)
    textPrim.content = content;
 
    this->event_OnTextChangeContent.publish(name, textPrim);
+   m_needsRedraw = true;
 }
 
 void Viewport::set_text_position(Name name, const Vector2 position)
@@ -47,6 +49,7 @@ void Viewport::set_text_position(Name name, const Vector2 position)
    textPrim.position = position;
 
    this->event_OnTextChangePosition.publish(name, textPrim);
+   m_needsRedraw = true;
 }
 
 void Viewport::set_text_crop(Name name, const Vector4 crop)
@@ -58,6 +61,7 @@ void Viewport::set_text_crop(Name name, const Vector4 crop)
    textPrim.crop = crop;
 
    this->event_OnTextChangeCrop.publish(name, textPrim);
+   m_needsRedraw = true;
 }
 
 void Viewport::set_text_color(const Name name, const Vector4 color)
@@ -69,6 +73,7 @@ void Viewport::set_text_color(const Name name, const Vector4 color)
    textPrim.color = color;
 
    this->event_OnTextChangeColor.publish(name, textPrim);
+   m_needsRedraw = true;
 }
 
 void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
@@ -79,12 +84,14 @@ void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
 
    rect.rect = dims;
    this->event_OnRectangleChangeDims.publish(name, rect);
+   m_needsRedraw = true;
 }
 
 void Viewport::remove_text(const Name name)
 {
    this->event_OnRemovedText.publish(name);
    m_texts.erase(name);
+   m_needsRedraw = true;
 }
 
 void Viewport::add_rectangle(Name name, Rectangle&& rect)
@@ -93,6 +100,7 @@ void Viewport::add_rectangle(Name name, Rectangle&& rect)
    assert(added);
 
    this->event_OnAddedRectangle.publish(name, it->second);
+   m_needsRedraw = true;
 }
 
 Name Viewport::add_rectangle(Rectangle&& rect)
@@ -111,12 +119,14 @@ void Viewport::set_rectangle_color(Name name, const Vector4 color)
 
    rect.color = color;
    this->event_OnRectangleChangeColor.publish(name, rect);
+   m_needsRedraw = true;
 }
 
 void Viewport::remove_rectangle(Name name)
 {
    event_OnRemovedRectangle.publish(name);
    m_rectangles.erase(name);
+   m_needsRedraw = true;
 }
 
 void Viewport::add_sprite(Name name, Sprite&& sprite)
@@ -124,6 +134,7 @@ void Viewport::add_sprite(Name name, Sprite&& sprite)
    auto [it, added] = m_sprites.emplace(name, sprite);
    assert(added);
    this->event_OnAddedSprite.publish(name, it->second);
+   m_needsRedraw = true;
 }
 
 Name Viewport::add_sprite(Sprite&& sprite)
@@ -139,6 +150,7 @@ void Viewport::set_sprite_position(const Name name, const Vector2 position)
    auto& sprite = m_sprites.at(name);
    sprite.position = position;
    event_OnSpriteChangePosition.publish(name, sprite);
+   m_needsRedraw = true;
 }
 
 void Viewport::set_sprite_texture_region(Name name, Vector4 region)
@@ -146,12 +158,14 @@ void Viewport::set_sprite_texture_region(Name name, Vector4 region)
    auto& sprite = m_sprites.at(name);
    sprite.textureRegion = region;
    event_OnSpriteChangeTextureRegion.publish(name, sprite);
+   m_needsRedraw = true;
 }
 
 void Viewport::remove_sprite(Name name)
 {
    event_OnRemovedSprite.publish(name);
    m_sprites.erase(name);
+   m_needsRedraw = true;
 }
 
 const Text& Viewport::text(const Name name) const
@@ -162,6 +176,15 @@ const Text& Viewport::text(const Name name) const
 Vector2u Viewport::dimensions() const
 {
    return m_dimensions;
+}
+
+bool Viewport::should_redraw()
+{
+   if (m_needsRedraw) {
+      m_needsRedraw = false;
+      return true;
+   }
+   return false;
 }
 
 }// namespace triglav::ui_core
