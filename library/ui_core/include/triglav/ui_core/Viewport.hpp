@@ -54,12 +54,15 @@ class Viewport
    [[nodiscard]] const Text& text(Name name) const;
    [[nodiscard]] Vector2u dimensions() const;
 
+   [[nodiscard]] bool should_redraw();
+
  private:
    Name m_topName{1};
    std::map<Name, Text> m_texts;
    std::map<Name, Rectangle> m_rectangles;
    std::map<Name, Sprite> m_sprites;
    Vector2u m_dimensions{};
+   bool m_needsRedraw{true};
 };
 
 }// namespace triglav::ui_core
