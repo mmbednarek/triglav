@@ -14,9 +14,11 @@
 #include "triglav/threading/ThreadPool.hpp"
 #include "triglav/threading/Threading.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 #include <spdlog/spdlog.h>
+#include <triglav/ui_core/widget/EmptySpace.hpp>
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -84,7 +86,30 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .verticalAlignment = VerticalAlignment::Center,
    });
 
-   auto& layout = alignmentBox.create_content<triglav::ui_core::VerticalLayout>({
+   auto& globalLayout = alignmentBox.create_content<triglav::ui_core::VerticalLayout>({
+      .padding = {0, 0, 0, 0},
+      .separation = 5.0f,
+   });
+
+   auto& rect = globalLayout.create_child<triglav::ui_core::RectBox>({
+      .color = {1, 0, 1, 1},
+      .borderRadius = {0, 0, 0, 0},
+      .borderColor = {0, 0, 0, 0},
+      .borderWidth = 0,
+   });
+   rect.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
+
+   auto& scroll = globalLayout.create_child<triglav::ui_core::ScrollBox>({.maxHeight = 300.0f});
+
+   auto& rect2 = globalLayout.create_child<triglav::ui_core::RectBox>({
+      .color = {1, 0, 1, 1},
+      .borderRadius = {0, 0, 0, 0},
+      .borderColor = {0, 0, 0, 0},
+      .borderWidth = 0,
+   });
+   rect2.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
+
+   auto& layout = scroll.create_content<triglav::ui_core::VerticalLayout>({
       .padding = {5.0f, 5.0f, 5.0f, 5.0f},
       .separation = 10.0f,
    });
@@ -131,6 +156,14 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .manager = &desktopUiManager,
       .label = "Example",
    });
+
+   auto& rect3 = layout.create_child<triglav::ui_core::RectBox>({
+      .color = {0, 1, 0, 1},
+      .borderRadius = {0, 0, 0, 0},
+      .borderColor = {0, 0, 0, 0},
+      .borderWidth = 0,
+   });
+   rect3.create_content<triglav::ui_core::EmptySpace>({.size = {200, 300}});
 
    dialogManager.root().initialize();
 

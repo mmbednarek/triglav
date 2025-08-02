@@ -56,27 +56,41 @@ void TextInput::add_to_viewport(const Vector4 dimensions)
 {
    m_rect.add_to_viewport(dimensions);
 
-   m_caretBox = m_context.viewport().add_rectangle(ui_core::Rectangle{
-      .rect = {dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, dimensions.x + g_textMargin.x + 1,
-               dimensions.y + dimensions.w - g_carretMargin},
-      .color = {0, 0, 0, 0},
-      .borderRadius = {},
-      .borderColor = {},
-      .borderWidth = 0.0f,
-   });
+   const Vector4 rectDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, dimensions.x + g_textMargin.x + 1,
+                          dimensions.y + dimensions.w - g_carretMargin};
+
+   if (m_caretBox != 0) {
+      m_context.viewport().set_rectangle_dims(m_caretBox, rectDims);
+   } else {
+      m_caretBox = m_context.viewport().add_rectangle(ui_core::Rectangle{
+         .rect = rectDims,
+         .color = {0, 0, 0, 0},
+         .borderRadius = {},
+         .borderColor = {},
+         .borderWidth = 0.0f,
+      });
+   }
 
    const auto& props = m_state.manager->properties();
 
    m_textXPosition = dimensions.x + g_textMargin.x;
+   const Vector2 textPos{m_textXPosition - m_textOffset, dimensions.y + m_textSize.y + 15.0};
+   const Vector4 textCrop{dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x,
+                          dimensions.y + dimensions.w};
 
-   m_textPrim = m_context.viewport().add_text(ui_core::Text{
-      .content = m_state.text,
-      .typefaceName = props.base_typeface,
-      .fontSize = props.button_font_size,
-      .position = {m_textXPosition - m_textOffset, dimensions.y + m_textSize.y + 15.0},
-      .color = props.foreground_color,
-      .crop = {dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x, dimensions.y + dimensions.w},
-   });
+   if (m_textPrim != 0) {
+      m_context.viewport().set_text_position(m_textPrim, textPos);
+      m_context.viewport().set_text_crop(m_textPrim, textCrop);
+   } else {
+      m_textPrim = m_context.viewport().add_text(ui_core::Text{
+         .content = m_state.text,
+         .typefaceName = props.base_typeface,
+         .fontSize = props.button_font_size,
+         .position = textPos,
+         .color = props.foreground_color,
+         .crop = {dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x, dimensions.y + dimensions.w},
+      });
+   }
 
    m_dimensions = dimensions;
 
