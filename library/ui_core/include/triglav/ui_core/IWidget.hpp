@@ -27,6 +27,7 @@ struct Event
       MouseMoved,
       MouseEntered,
       MouseLeft,
+      MouseScrolled,
       KeyPressed,
       TextInput,
    };
@@ -34,6 +35,11 @@ struct Event
    struct Mouse
    {
       desktop::MouseButton button;
+   };
+
+   struct Scroll
+   {
+      float amount{};
    };
 
    struct Keyboard
@@ -49,7 +55,7 @@ struct Event
    Type eventType;
    Vector2 parentSize;
    Vector2 mousePosition;
-   std::variant<std::monostate, Mouse, Keyboard, TextInput> data;
+   std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 };
 
 class IWidget

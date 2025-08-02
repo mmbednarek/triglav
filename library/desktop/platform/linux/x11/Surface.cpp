@@ -225,7 +225,13 @@ void Surface::dispatch_key_release(const XEvent& event) const
 
 void Surface::dispatch_button_press(const XEvent& event) const
 {
-   event_OnMouseButtonIsPressed.publish(map_button(event.xbutton.button));
+   if (event.xbutton.button == 4) {
+      event_OnMouseWheelTurn.publish(-1.0);
+   } else if (event.xbutton.button == 5) {
+      event_OnMouseWheelTurn.publish(1.0);
+   } else {
+      event_OnMouseButtonIsPressed.publish(map_button(event.xbutton.button));
+   }
 }
 
 void Surface::dispatch_button_release(const XEvent& event) const
