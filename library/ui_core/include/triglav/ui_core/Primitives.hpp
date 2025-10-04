@@ -6,6 +6,10 @@
 
 namespace triglav::ui_core {
 
+using TextId = u32;
+using RectId = u32;
+using SpriteId = u32;
+
 struct Text
 {
    String content;

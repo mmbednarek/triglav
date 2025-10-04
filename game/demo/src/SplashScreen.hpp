@@ -50,6 +50,10 @@ class SplashScreen
    triglav::render_core::JobGraph m_jobGraph;
    triglav::u32 m_frameIndex{0};
    std::mutex m_statusMutex;
+   triglav::ui_core::RectId m_statusBgId{};
+   triglav::ui_core::RectId m_statusFgId{};
+   triglav::ui_core::TextId m_titleId{};
+   triglav::ui_core::TextId m_descId{};
 
    TG_OPT_SINK(triglav::resource::ResourceManager, OnStartedLoadingAsset);
    TG_OPT_SINK(triglav::resource::ResourceManager, OnFinishedLoadingAsset);

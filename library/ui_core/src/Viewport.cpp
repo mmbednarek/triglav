@@ -12,192 +12,155 @@ Viewport::Viewport(const Vector2u dimensions) :
 {
 }
 
-Name Viewport::add_text(Text&& text)
+TextId Viewport::add_text(Text&& text)
 {
-   const Name result = m_topName;
-   ++m_topName;
-   this->add_text(result, std::move(text));
-   return result;
-}
-
-void Viewport::add_text(const Name name, Text&& text)
-{
-   auto [it, added] = m_texts.emplace(name, std::move(text));
+   auto textId = m_topTextId++;
+   auto [it, added] = m_texts.emplace(textId, std::move(text));
    assert(added);
 
-   this->event_OnAddedText.publish(name, it->second);
+   spdlog::info("ui-viewport: add text: {}", textId);
+
+   this->event_OnAddedText.publish(textId, it->second);
    m_needsRedraw = true;
+
+   return textId;
 }
 
-void Viewport::set_text_content(const Name name, const StringView content)
+void Viewport::set_text_content(const TextId textId, const StringView content)
 {
-   auto& textPrim = m_texts.at(name);
+   auto& textPrim = m_texts.at(textId);
 
    if (textPrim.content == content)
       return;
    textPrim.content = content;
 
-   this->event_OnTextChangeContent.publish(name, textPrim);
+   this->event_OnUpdatedText.publish(textId, textPrim);
    m_needsRedraw = true;
 }
 
-void Viewport::set_text_position(Name name, const Vector2 position)
+void Viewport::set_text_position(TextId textId, const Vector2 position, const Rect crop)
 {
-   auto& textPrim = m_texts.at(name);
+   auto& textPrim = m_texts.at(textId);
 
-   if (textPrim.position == position)
+   if (textPrim.position == position && textPrim.crop == crop)
       return;
    textPrim.position = position;
-
-   spdlog::info("ui-viewport: text: {} = (position: {}, {})", name, position.x, position.y);
-
-   this->event_OnTextChangePosition.publish(name, textPrim);
-   m_needsRedraw = true;
-}
-
-void Viewport::set_text_crop(Name name, const Vector4 crop)
-{
-   auto& textPrim = m_texts.at(name);
-
-   if (textPrim.crop == crop)
-      return;
    textPrim.crop = crop;
 
-   spdlog::info("ui-viewport: text: {} = (crop: {}, {}, {}, {})", name, crop.x, crop.y, crop.z, crop.w);
+   // spdlog::info("ui-viewport: text: {} = (position: {}, {}, crop: {}, {}, {}, {})", textId, position.x, position.y, crop.x, crop.y, crop.z, crop.w);
 
-   this->event_OnTextChangeCrop.publish(name, textPrim);
+   this->event_OnUpdatedText.publish(textId, textPrim);
    m_needsRedraw = true;
 }
 
-void Viewport::set_text_color(const Name name, const Vector4 color)
+void Viewport::set_text_color(const TextId textId, const Color color)
 {
-   auto& textPrim = m_texts.at(name);
+   auto& textPrim = m_texts.at(textId);
 
    if (textPrim.color == color)
       return;
    textPrim.color = color;
 
-   spdlog::info("ui-viewport: text: {} = (color: {}, {}, {}, {})", name, color.x, color.y, color.z, color.w);
+   // spdlog::info("ui-viewport: text: {} = (color: {}, {}, {}, {})", textId, color.x, color.y, color.z, color.w);
 
-   this->event_OnTextChangeColor.publish(name, textPrim);
+   this->event_OnUpdatedText.publish(textId, textPrim);
    m_needsRedraw = true;
 }
 
-void Viewport::remove_text(const Name name)
+void Viewport::remove_text(const TextId textId)
 {
-   spdlog::info("ui-viewport: removing text: {}", name);
-   this->event_OnRemovedText.publish(name);
-   m_texts.erase(name);
+   spdlog::info("ui-viewport: removing text: {}", textId);
+   this->event_OnRemovedText.publish(textId);
+   m_texts.erase(textId);
    m_needsRedraw = true;
 }
 
-void Viewport::add_rectangle(Name name, Rectangle&& rect)
+RectId Viewport::add_rectangle(Rectangle&& rect)
 {
-   auto [it, added] = m_rectangles.emplace(name, std::move(rect));
+   auto rectId = m_topRectId++;
+   auto [it, added] = m_rectangles.emplace(rectId, rect);
    assert(added);
 
-   this->event_OnAddedRectangle.publish(name, it->second);
+   spdlog::info("ui-viewport: add rectangle: {}", rectId);
+
+   this->event_OnAddedRectangle.publish(rectId, it->second);
    m_needsRedraw = true;
+
+   return rectId;
 }
 
-Name Viewport::add_rectangle(Rectangle&& rect)
+void Viewport::set_rectangle_dims(const RectId rectId, const Rect dims, const Rect crop)
 {
-   const auto name = m_topName;
-   ++m_topName;
-   this->add_rectangle(name, std::move(rect));
-   return name;
-}
-
-void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
-{
-   auto& rect = m_rectangles.at(name);
-   if (rect.rect == dims)
+   auto& rect = m_rectangles.at(rectId);
+   if (rect.rect == dims && rect.crop == crop)
       return;
 
-   spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {})", name, dims.x, dims.y, dims.z, dims.w);
-
-   rect.rect = dims;
-   this->event_OnRectangleChangeDims.publish(name, rect);
-   m_needsRedraw = true;
-}
-
-void Viewport::set_rectangle_dims_with_crop(Name name, const Vector4 dims, const Vector4 crop)
-{
-   auto& rect = m_rectangles.at(name);
-   if (rect.rect == dims)
-      return;
+   // spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", rectId, dims.x, dims.y, dims.z, dims.w, crop.x, crop.y, crop.z, crop.w);
 
    rect.rect = dims;
    rect.crop = crop;
-   spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", name, dims.x, dims.y, dims.z, dims.w, crop.x, crop.y, crop.z, crop.w);
-   this->event_OnRectangleChangeDims.publish(name, rect);
+   this->event_OnUpdatedRectangle.publish(rectId, rect);
    m_needsRedraw = true;
 }
 
-void Viewport::set_rectangle_color(Name name, const Vector4 color)
+void Viewport::set_rectangle_color(RectId rectId, const Vector4 color)
 {
-   auto& rect = m_rectangles.at(name);
+   auto& rect = m_rectangles.at(rectId);
    if (rect.color == color)
       return;
 
-   spdlog::info("ui-viewport: rect: {} = (color: {}, {}, {}, {})", name, color.x, color.y, color.z, color.w);
+   // spdlog::info("ui-viewport: rect: {} = (color: {}, {}, {}, {})", rectId, color.x, color.y, color.z, color.w);
 
    rect.color = color;
-   this->event_OnRectangleChangeColor.publish(name, rect);
+   this->event_OnUpdatedRectangle.publish(rectId, rect);
    m_needsRedraw = true;
 }
 
-void Viewport::remove_rectangle(Name name)
+void Viewport::remove_rectangle(RectId rectId)
 {
-   spdlog::info("ui-viewport: removing rect: {}", name);
+   spdlog::info("ui-viewport: removing rect: {}", rectId);
 
-   event_OnRemovedRectangle.publish(name);
-   m_rectangles.erase(name);
+   event_OnRemovedRectangle.publish(rectId);
+   m_rectangles.erase(rectId);
    m_needsRedraw = true;
 }
 
-void Viewport::add_sprite(Name name, Sprite&& sprite)
+SpriteId Viewport::add_sprite(Sprite&& sprite)
 {
-   auto [it, added] = m_sprites.emplace(name, sprite);
+   auto spriteId = m_topSpriteId++;
+   auto [it, added] = m_sprites.emplace(spriteId, sprite);
    assert(added);
-   this->event_OnAddedSprite.publish(name, it->second);
+   this->event_OnAddedSprite.publish(spriteId, it->second);
    m_needsRedraw = true;
+   return spriteId;
 }
 
-Name Viewport::add_sprite(Sprite&& sprite)
+void Viewport::set_sprite_position(const SpriteId spriteId, const Vector2 position, const Rect /*crop*/)
 {
-   const auto name = m_topName;
-   ++m_topName;
-   this->add_sprite(name, std::move(sprite));
-   return name;
-}
-
-void Viewport::set_sprite_position(const Name name, const Vector2 position)
-{
-   auto& sprite = m_sprites.at(name);
+   auto& sprite = m_sprites.at(spriteId);
    sprite.position = position;
-   event_OnSpriteChangePosition.publish(name, sprite);
+   event_OnUpdatedSprite.publish(spriteId, sprite);
    m_needsRedraw = true;
 }
 
-void Viewport::set_sprite_texture_region(Name name, Vector4 region)
+void Viewport::set_sprite_texture_region(const SpriteId spriteId, Vector4 region)
 {
-   auto& sprite = m_sprites.at(name);
+   auto& sprite = m_sprites.at(spriteId);
    sprite.textureRegion = region;
-   event_OnSpriteChangeTextureRegion.publish(name, sprite);
+   event_OnUpdatedSprite.publish(spriteId, sprite);
    m_needsRedraw = true;
 }
 
-void Viewport::remove_sprite(Name name)
+void Viewport::remove_sprite(const SpriteId spriteId)
 {
-   event_OnRemovedSprite.publish(name);
-   m_sprites.erase(name);
+   event_OnRemovedSprite.publish(spriteId);
+   m_sprites.erase(spriteId);
    m_needsRedraw = true;
 }
 
-const Text& Viewport::text(const Name name) const
+const Text& Viewport::text(const TextId textId) const
 {
-   return m_texts.at(name);
+   return m_texts.at(textId);
 }
 
 Vector2u Viewport::dimensions() const

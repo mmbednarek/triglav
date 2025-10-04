@@ -51,8 +51,8 @@ TEST(UpdateList, BasicAddAndRemove)
    writer.items.resize(100);
    triglav::UpdateList<u32, Item> updateList;
 
-   updateList.add(0, Item::Foo);
-   updateList.add(1, Item::Car);
+   updateList.add_or_update(0, Item::Foo);
+   updateList.add_or_update(1, Item::Car);
    updateList.write_to_buffers(writer);
    writer.commit();
 
@@ -70,12 +70,12 @@ TEST(UpdateList, BasicUpdate)
    writer.items.resize(100);
    triglav::UpdateList<u32, Item> updateList;
 
-   updateList.add(0, Item::Foo);
-   updateList.add(1, Item::Car);
+   updateList.add_or_update(0, Item::Foo);
+   updateList.add_or_update(1, Item::Car);
    updateList.write_to_buffers(writer);
    writer.commit();
 
-   updateList.update(1, Item::Bar);
+   updateList.add_or_update(1, Item::Bar);
    updateList.write_to_buffers(writer);
    writer.commit();
 
@@ -90,16 +90,16 @@ TEST(UpdateList, MultipleAddsAndRemovals)
    writer.items.resize(100);
    triglav::UpdateList<u32, Item> updateList;
 
-   updateList.add(0, Item::Foo);
-   updateList.add(1, Item::Bar);
-   updateList.add(2, Item::Car);
-   updateList.add(3, Item::Goo);
+   updateList.add_or_update(0, Item::Foo);
+   updateList.add_or_update(1, Item::Bar);
+   updateList.add_or_update(2, Item::Car);
+   updateList.add_or_update(3, Item::Goo);
    updateList.write_to_buffers(writer);
    writer.commit();
 
    updateList.remove(1);
    updateList.remove(2);
-   updateList.add(4, Item::Doo);
+   updateList.add_or_update(4, Item::Doo);
    updateList.write_to_buffers(writer);
    writer.commit();
 
@@ -115,10 +115,10 @@ TEST(UpdateList, RemoveAllAddOne)
    writer.items.resize(100);
    triglav::UpdateList<u32, Item> updateList;
 
-   updateList.add(3, Item::Foo);
-   updateList.add(2, Item::Bar);
-   updateList.add(1, Item::Car);
-   updateList.add(0, Item::Goo);
+   updateList.add_or_update(3, Item::Foo);
+   updateList.add_or_update(2, Item::Bar);
+   updateList.add_or_update(1, Item::Car);
+   updateList.add_or_update(0, Item::Goo);
    updateList.write_to_buffers(writer);
    writer.commit();
 
@@ -126,7 +126,7 @@ TEST(UpdateList, RemoveAllAddOne)
    updateList.remove(1);
    updateList.remove(2);
    updateList.remove(3);
-   updateList.add(4, Item::Doo);
+   updateList.add_or_update(4, Item::Doo);
    updateList.write_to_buffers(writer);
    writer.commit();
 
@@ -140,10 +140,10 @@ TEST(UpdateList, ConflicingRemove)
    writer.items.resize(100);
    triglav::UpdateList<u32, Item> updateList;
 
-   updateList.add(0, Item::Foo);
-   updateList.add(1, Item::Bar);
-   updateList.add(2, Item::Car);
-   updateList.add(3, Item::Goo);
+   updateList.add_or_update(0, Item::Foo);
+   updateList.add_or_update(1, Item::Bar);
+   updateList.add_or_update(2, Item::Car);
+   updateList.add_or_update(3, Item::Goo);
    updateList.write_to_buffers(writer);
    writer.commit();
 
@@ -184,7 +184,7 @@ TEST(UpdateList, RandomList)
 
       u32 index = 0;
       for (const auto value : expected_values) {
-         updateList.add(index++, int{value});
+         updateList.add_or_update(index++, int{value});
       }
    }
 
@@ -212,7 +212,7 @@ TEST(UpdateList, RandomList)
          addition_count += additions.size();
 
          for (const auto value : additions) {
-            updateList.add(add_index++, int{value});
+            updateList.add_or_update(add_index++, int{value});
             expected_values.emplace(value);
          }
       }

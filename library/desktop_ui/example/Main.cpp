@@ -88,7 +88,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    auto& globalLayout = alignmentBox.create_content<triglav::ui_core::VerticalLayout>({
       .padding = {0, 0, 0, 0},
-      .separation = 5.0f,
+      .separation = 0.0f,
    });
 
    auto& rect = globalLayout.create_child<triglav::ui_core::RectBox>({

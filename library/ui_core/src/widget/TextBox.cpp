@@ -44,12 +44,12 @@ void TextBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
       dimensions.y + size.y + calculate_alignment(m_state.verticalAlignment, dimensions.w, size.y),
    };
 
-   const Vector4 crop{dimensions.x - 0.5f * size.x, dimensions.y - 0.5f * size.y, dimensions.x + dimensions.z + 0.5f * size.x,
+   Vector4 crop{dimensions.x - 0.5f * size.x, dimensions.y - 0.5f * size.y, dimensions.x + dimensions.z + 0.5f * size.x,
                       dimensions.y + dimensions.w + 0.5f * size.y};
+   crop = min_area(crop, croppingMask);
 
    if (m_id != 0) {
-      m_uiContext.viewport().set_text_position(m_id, position);
-      m_uiContext.viewport().set_text_crop(m_id, crop);
+      m_uiContext.viewport().set_text_position(m_id, position, crop);
       return;
    }
 
@@ -59,7 +59,7 @@ void TextBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
       .fontSize = m_state.fontSize,
       .position = position,
       .color = m_state.color,
-      .crop = min_area(crop, croppingMask),
+      .crop = crop,
    };
 
    m_id = m_uiContext.viewport().add_text(std::move(text));

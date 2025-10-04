@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../IWidget.hpp"
+#include "../Primitives.hpp"
 
 #include "triglav/Name.hpp"
 
@@ -28,7 +29,7 @@ class Image final : public IWidget
  private:
    Context& m_context;
    State m_state;
-   Name m_spriteID{};
+   SpriteId m_spriteID{};
 };
 
 }// namespace triglav::ui_core

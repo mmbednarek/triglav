@@ -46,12 +46,9 @@ class TextRenderer
 
    TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyphCache, ui_core::Viewport& viewport);
 
-   void on_added_text(Name name, const ui_core::Text& text);
-   void on_removed_text(Name name);
-   void on_text_change_content(Name name, const ui_core::Text& text);
-   void on_text_change_position(Name name, const ui_core::Text& text);
-   void on_text_change_crop(Name name, const ui_core::Text& text);
-   void on_text_change_color(Name name, const ui_core::Text& text);
+   void on_added_text(ui_core::TextId textId, const ui_core::Text& text);
+   void on_updated_text(ui_core::TextId textId, const ui_core::Text& text);
+   void on_removed_text(ui_core::TextId textId);
 
    void prepare_frame(render_core::JobGraph& graph, u32 frameIndex);
 
@@ -60,31 +57,28 @@ class TextRenderer
 
  private:
    [[nodiscard]] const TypefaceInfo& get_typeface_info(const render_core::GlyphProperties& glyphProps);
-   memory::Area allocate_vertex_section(Name text, u32 vertexCount);
-   void free_vertex_section(Name textName);
+   memory::Area allocate_vertex_section(ui_core::TextId textId, u32 vertexCount);
+   void free_vertex_section(ui_core::TextId textId);
 
    graphics_api::Device& m_device;
    render_core::GlyphCache& m_glyphCache;
 
-   std::vector<Name> m_pendingTextUpdates;
-   std::vector<Name> m_pendingTextRemoval;
-   std::map<Name, TextInfo> m_textInfos;
-   std::vector<Name> m_drawCallToTextName;
+   std::vector<ui_core::TextId> m_pendingTextUpdates;
+   std::vector<ui_core::TextId> m_pendingTextRemoval;
+   std::map<ui_core::TextId, TextInfo> m_textInfos;
+   std::vector<ui_core::TextId> m_drawCallToTextName;
    std::vector<render_core::TextureRef> m_atlases;
    graphics_api::Buffer m_combinedGlyphBuffer;
    u32 m_glyphOffset{};
    std::map<u64, TypefaceInfo> m_typefaceInfos;
    memory::HeapAllocator m_vertexAllocator;
-   std::map<Name, memory::Area> m_allocatedVertexSections;
+   std::map<ui_core::TextId, memory::Area> m_allocatedVertexSections;
 
    std::mutex m_updateMtx;
 
    TG_SINK(ui_core::Viewport, OnAddedText);
+   TG_SINK(ui_core::Viewport, OnUpdatedText);
    TG_SINK(ui_core::Viewport, OnRemovedText);
-   TG_SINK(ui_core::Viewport, OnTextChangeContent);
-   TG_SINK(ui_core::Viewport, OnTextChangePosition);
-   TG_SINK(ui_core::Viewport, OnTextChangeCrop);
-   TG_SINK(ui_core::Viewport, OnTextChangeColor);
 };
 
 }// namespace triglav::renderer::ui

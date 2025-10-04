@@ -72,7 +72,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
                           dimensions.w - 2*g_carretMargin};
 
    if (m_caretBox != 0) {
-      m_context.viewport().set_rectangle_dims_with_crop(m_caretBox, caretDims, croppingMask);
+      m_context.viewport().set_rectangle_dims(m_caretBox, caretDims, croppingMask);
    } else {
       m_caretBox = m_context.viewport().add_rectangle(ui_core::Rectangle{
          .rect = caretDims,
@@ -92,8 +92,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
    textCrop = min_area(textCrop, croppingMask);
 
    if (m_textPrim != 0) {
-      m_context.viewport().set_text_position(m_textPrim, textPos);
-      m_context.viewport().set_text_crop(m_textPrim, textCrop);
+      m_context.viewport().set_text_position(m_textPrim, textPos, textCrop);
    } else {
       m_textPrim = m_context.viewport().add_text(ui_core::Text{
          .content = m_state.text,
@@ -101,11 +100,12 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
          .fontSize = props.button_font_size,
          .position = textPos,
          .color = props.foreground_color,
-         .crop = {dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x, dimensions.y + dimensions.w},
+         .crop = textCrop,
       });
    }
 
    m_dimensions = dimensions;
+   m_croppingMask = croppingMask;
 
    this->recalculate_caret_offset();
 }
@@ -252,12 +252,12 @@ void TextInput::recalculate_caret_offset(const bool removal)
    }
 
    m_context.viewport().set_rectangle_dims(
-      m_caretBox, {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin, 1, m_dimensions.w - 2*g_carretMargin});
+      m_caretBox, {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin, 1, m_dimensions.w - 2*g_carretMargin}, m_croppingMask);
 }
 
 void TextInput::update_text_position() const
 {
-   m_context.viewport().set_text_position(m_textPrim, {m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y});
+   m_context.viewport().set_text_position(m_textPrim, {m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y}, m_dimensions);
 }
 
 }// namespace triglav::desktop_ui

@@ -58,8 +58,7 @@ void Image::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask
    }
 
    if (m_spriteID != 0) {
-      m_context.viewport().set_sprite_position(m_spriteID, {dimensions.x, dimensions.y});
-      // TODO: Set sprite cropping!
+      m_context.viewport().set_sprite_position(m_spriteID, {dimensions.x, dimensions.y}, croppingMask);
       return;
    }
 

@@ -18,22 +18,19 @@ template<typename TKey, typename TValue>
 class UpdateList
 {
  public:
-   void add(TKey key, TValue&& value);
-   void update(TKey key, TValue&& value);
+   void add_or_update(TKey key, TValue&& value);
    void remove(TKey key);
    [[nodiscard]] u32 top_index() const;
-   [[nodiscard]] const std::map<TKey, u32>& key_map() const
-   {
-      return m_keyMapping;
-   }
+   [[nodiscard]] const std::map<TKey, u32>& key_map() const;
+   void clear();
 
    void write_to_buffers(InsertRemoveWriter<TValue> auto& writer);
 
  private:
    std::map<TKey, u32> m_keyMapping;
    std::vector<std::pair<TKey, TValue>> m_additions;
-   std::vector<std::pair<TKey, TValue>> m_updates;
    std::set<TKey> m_removals;
+   std::map<u32, TKey> m_reservedIndices;
    u32 m_indexCount{};
 };
 

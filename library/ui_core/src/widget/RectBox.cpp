@@ -32,7 +32,7 @@ void RectBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
    }
 
    if (m_rectName != 0) {
-      m_context.viewport().set_rectangle_dims(m_rectName, dimensions);
+      m_context.viewport().set_rectangle_dims(m_rectName, dimensions, croppingMask);
    } else {
       m_rectName = m_context.viewport().add_rectangle(Rectangle{
          .rect = dimensions,
