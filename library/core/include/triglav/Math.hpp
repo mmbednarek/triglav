@@ -46,6 +46,16 @@ constexpr auto g_pi = 3.14159265358979323846f;
    return a > 0.0f ? 1.0f : -1.0f;
 }
 
+[[nodiscard]] inline bool do_regions_intersect(const Vector4 a, const Vector4 b)
+{
+   return a.x <= (b.x + b.z) && (a.x + a.z) >= b.x && a.y <= (b.y + b.w) && (a.y + a.w) >= b.y;
+}
+
+[[nodiscard]] inline Vector4 min_area(const Vector4 lhs, const Vector4 rhs)
+{
+   return {std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::min(lhs.z, rhs.z), std::min(lhs.w, rhs.w)};
+}
+
 struct Transform3D
 {
    Quaternion rotation;

@@ -48,9 +48,9 @@ Vector2 DropDownSelectorButton::desired_size(const Vector2 parentSize) const
    return m_button.desired_size(parentSize);
 }
 
-void DropDownSelectorButton::add_to_viewport(const Vector4 dimensions)
+void DropDownSelectorButton::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   return m_button.add_to_viewport(dimensions);
+   return m_button.add_to_viewport(dimensions, croppingMask);
 }
 
 void DropDownSelectorButton::remove_from_viewport()
@@ -114,9 +114,9 @@ Vector2 DropDownSelector::desired_size(const Vector2 parentSize) const
    return m_verticalLayout.desired_size(parentSize);
 }
 
-void DropDownSelector::add_to_viewport(const Vector4 dimensions)
+void DropDownSelector::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   return m_verticalLayout.add_to_viewport(dimensions);
+   return m_verticalLayout.add_to_viewport(dimensions, croppingMask);
 }
 
 void DropDownSelector::remove_from_viewport()
@@ -171,10 +171,11 @@ Vector2 DropDownMenu::desired_size(const Vector2 parentSize) const
    return m_rect.desired_size(parentSize);
 }
 
-void DropDownMenu::add_to_viewport(const Vector4 dimensions)
+void DropDownMenu::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
    m_dimensions = dimensions;
-   m_rect.add_to_viewport(dimensions);
+   m_croppingMask = croppingMask;
+   m_rect.add_to_viewport(dimensions, croppingMask);
 }
 
 void DropDownMenu::remove_from_viewport()
@@ -216,7 +217,7 @@ void DropDownMenu::on_event(const ui_core::Event& event)
 
 void DropDownMenu::on_child_state_changed(IWidget& /*widget*/)
 {
-   m_rect.add_to_viewport(m_dimensions);
+   m_rect.add_to_viewport(m_dimensions, m_croppingMask);
 }
 
 void DropDownMenu::set_selected_item(const u32 index)

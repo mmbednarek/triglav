@@ -67,7 +67,8 @@ void Dialog::initialize()
    if (m_rootWidget == nullptr)
       return;
 
-   m_rootWidget->add_to_viewport({0, 0, m_surface->dimension().x, m_surface->dimension().y});
+   m_rootWidget->add_to_viewport({0, 0, m_surface->dimension().x, m_surface->dimension().y},
+                                 {0, 0, m_surface->dimension().x, m_surface->dimension().y});
 
    auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
    m_updateUiJob.build_job(updateUiCtx);

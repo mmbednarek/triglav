@@ -55,7 +55,7 @@ float initial_position(const HorizontalAlignment alignment, const float containe
 
 }// namespace
 
-void HorizontalLayout::add_to_viewport(const Vector4 dimensions)
+void HorizontalLayout::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
    const Vector4 innerDimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
                                  dimensions.z - m_state.padding.x - m_state.padding.z,
@@ -66,7 +66,7 @@ void HorizontalLayout::add_to_viewport(const Vector4 dimensions)
    float x = initial_position(m_state.gravity, width, contentSize.x);
    for (const auto& child : m_children) {
       const auto size = child->desired_size({width, dimensions.w});
-      child->add_to_viewport({innerDimensions.x + x, innerDimensions.y, size.x, innerDimensions.w});
+      child->add_to_viewport({innerDimensions.x + x, innerDimensions.y, size.x, innerDimensions.w}, croppingMask);
       x += size.x + m_state.separation;
       width -= size.x + m_state.separation;
    }

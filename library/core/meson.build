@@ -16,6 +16,7 @@ core_sources = files([
                     'include/triglav/String.hpp',
                     'include/triglav/Template.hpp',
                     'include/triglav/TypeMacroList.hpp',
+                    'include/triglav/UpdateList.hpp',
                     'include/triglav/Utf8.hpp',
                     'src/Core.cpp',
                     'src/Math.cpp',

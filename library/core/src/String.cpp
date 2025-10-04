@@ -104,11 +104,10 @@ String::String(const StringView string) :
 {
 }
 
-String::String(const char* string, const MemorySize data_size) :
-    m_size(data_size)
+String::String(const char* string, const MemorySize data_size)
 {
-   this->ensure_capacity_for_size(m_size);
-   std::memcpy(this->data(), string, m_size);
+   this->ensure_capacity_for_size(data_size);
+   std::memcpy(this->data(), string, data_size);
 }
 
 String::~String()
@@ -116,8 +115,7 @@ String::~String()
    this->deallocate();
 }
 
-String::String(const String& other) :
-    m_size(other.m_size)
+String::String(const String& other)
 {
    this->ensure_capacity_for_size(other.m_size);
    std::memcpy(this->data(), other.data(), m_size);
@@ -126,7 +124,7 @@ String::String(const String& other) :
 String& String::operator=(const String& other)
 {
    this->ensure_capacity_for_size(other.m_size);
-   std::memcpy(this->data(), other.data(), m_size);
+   std::memcpy(this->data(), other.data(), other.m_size);
    return *this;
 }
 

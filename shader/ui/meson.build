@@ -26,6 +26,36 @@ shader_targets += custom_target('text_render_fs',
                                 command : slang_fs_commands,
 )
 
+# RECTANGLE
+
+shader_targets += custom_target('rectangle_insertion',
+                                input : 'rectangle_insertion.slang',
+                                output : '@BASENAME@_cs.spv',
+                                depend_files : ['rectangle_api.slang'],
+                                command : slang_cs_commands,
+)
+
+shader_targets += custom_target('rectangle_removal',
+                                input : 'rectangle_removal.slang',
+                                output : '@BASENAME@_cs.spv',
+                                depend_files : ['rectangle_api.slang'],
+                                command : slang_cs_commands,
+)
+
+shader_targets += custom_target('rectangle_render_vs',
+                                input : 'rectangle_render.slang',
+                                output : '@BASENAME@_vs.spv',
+                                depend_files : ['rectangle_api.slang'],
+                                command : slang_vs_commands,
+)
+
+shader_targets += custom_target('rectangle_render_fs',
+                                input : 'rectangle_render.slang',
+                                output : '@BASENAME@_fs.spv',
+                                depend_files : ['rectangle_api.slang'],
+                                command : slang_fs_commands,
+)
+
 shader_targets += custom_target('rectangle_vs',
                                 input : 'rectangle.slang',
                                 output : '@BASENAME@_vs.spv',

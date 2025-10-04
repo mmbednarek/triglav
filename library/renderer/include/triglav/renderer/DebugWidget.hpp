@@ -11,7 +11,7 @@ class DebugWidget final : public ui_core::IWidget
    explicit DebugWidget(ui_core::Context& ctx);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
 
  private:

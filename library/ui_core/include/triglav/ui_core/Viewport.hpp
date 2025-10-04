@@ -37,11 +37,12 @@ class Viewport
    void set_text_position(Name name, Vector2 position);
    void set_text_crop(Name name, Vector4 crop);
    void set_text_color(Name name, Vector4 color);
-   void set_rectangle_dims(Name name, Vector4 dims);
    void remove_text(Name name);
 
    void add_rectangle(Name name, Rectangle&& rect);
    Name add_rectangle(Rectangle&& rect);
+   void set_rectangle_dims(Name name, Vector4 dims);
+   void set_rectangle_dims_with_crop(Name name, Vector4 dims, Vector4 crop);
    void set_rectangle_color(Name name, Vector4 color);
    void remove_rectangle(Name name);
 

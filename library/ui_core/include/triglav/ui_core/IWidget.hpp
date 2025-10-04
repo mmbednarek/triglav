@@ -69,7 +69,7 @@ class IWidget
    // Adds widget to the current viewport
    // If the widget has already been added, it
    // will be adjusted to the new parent's dimensions.
-   virtual void add_to_viewport(Vector4 dimensions) = 0;
+   virtual void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) = 0;
 
    // Removed the widget from current viewport.
    virtual void remove_from_viewport() = 0;

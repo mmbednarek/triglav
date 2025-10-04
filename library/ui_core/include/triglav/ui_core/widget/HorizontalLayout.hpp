@@ -20,7 +20,7 @@ class HorizontalLayout final : public LayoutWidget
    HorizontalLayout(Context& context, State state, IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget& widget) override;
    void on_event(const Event& event) override;

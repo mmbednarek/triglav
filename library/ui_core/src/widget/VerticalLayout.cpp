@@ -38,7 +38,7 @@ Vector2 VerticalLayout::desired_size(const Vector2 parentSize) const
    return minSize + result;
 }
 
-void VerticalLayout::add_to_viewport(const Vector4 dimensions)
+void VerticalLayout::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
    const Vector4 innerDimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
                                  dimensions.z - m_state.padding.x - m_state.padding.z,
@@ -48,7 +48,7 @@ void VerticalLayout::add_to_viewport(const Vector4 dimensions)
    float y{0.0f};
    for (const auto& child : m_children) {
       const auto size = child->desired_size({dimensions.z, height});
-      child->add_to_viewport({innerDimensions.x, innerDimensions.y + y, innerDimensions.z, size.y});
+      child->add_to_viewport({innerDimensions.x, innerDimensions.y + y, innerDimensions.z, size.y}, croppingMask);
       y += size.y + m_state.separation;
       height -= size.y + m_state.separation;
    }

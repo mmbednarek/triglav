@@ -12,7 +12,7 @@ Vector2 EmptySpace::desired_size(Vector2 /*parentSize*/) const
    return m_state.size;
 }
 
-void EmptySpace::add_to_viewport(Vector4 /*dimensions*/) {}
+void EmptySpace::add_to_viewport(Vector4 /*dimensions*/, const Vector4 /*croppingMask*/) {}
 
 void EmptySpace::remove_from_viewport() {}
 

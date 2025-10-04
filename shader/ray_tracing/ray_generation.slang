@@ -3,15 +3,15 @@ import ray_payload;
 import "../common/common.slang";
 
 [[vk::binding(0)]]
-uniform RaytracingAccelerationStructure topLevelAS : register(t0);
+uniform RaytracingAccelerationStructure topLevelAS;
 
 [[vk::binding(1)]]
 [vk::image_format("r16f")]
-uniform RWTexture2D<float> outAmbientOcclusionImage : register(t1);
+uniform RWTexture2D<float> outAmbientOcclusionImage : register(u0);
 
 [[vk::binding(2)]]
 [vk::image_format("r16f")]
-uniform RWTexture2D<float> outShadowsImage : register(t2);
+uniform RWTexture2D<float> outShadowsImage : register(u1);
 
 [[vk::binding(3)]]
 uniform ConstantBuffer<common::ViewProperties> transform;

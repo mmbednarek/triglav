@@ -35,6 +35,7 @@ class UpdateUserInterfaceJob
 
  private:
    graphics_api::Device& m_device;
+   ui_core::Viewport& m_viewport;
    ui::RectangleRenderer m_rectangleRenderer;
    ui::SpriteRenderer m_spriteRenderer;
    ui::TextRenderer m_textRenderer;

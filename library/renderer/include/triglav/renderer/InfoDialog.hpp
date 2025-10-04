@@ -29,7 +29,7 @@ class InfoDialog final : public ui_core::IWidget
    InfoDialog(ui_core::Context& context, ConfigManager& configManager, desktop::ISurface& surface);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget& widget) override;
    void on_event(const ui_core::Event& event) override;
@@ -57,6 +57,7 @@ class InfoDialog final : public ui_core::IWidget
    std::map<Name, ui_core::TextBox*> m_values;
    bool m_isDragging{false};
    Vector2 m_dialogOffset{20, 20};
+   Vector4 m_croppingMask;
    std::optional<Vector2> m_dragOffset;
    ui_core::TextBox* m_title;
 
