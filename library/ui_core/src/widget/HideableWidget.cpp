@@ -16,13 +16,14 @@ Vector2 HideableWidget::desired_size(const Vector2 parentSize) const
    return m_content->desired_size(parentSize);
 }
 
-void HideableWidget::add_to_viewport(const Vector4 dimensions)
+void HideableWidget::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
    m_parentDimensions = dimensions;
+   m_croppingMask = croppingMask;
 
    if (m_state.isHidden)
       return;
-   m_content->add_to_viewport(dimensions);
+   m_content->add_to_viewport(dimensions, croppingMask);
 }
 
 void HideableWidget::remove_from_viewport()
@@ -51,7 +52,7 @@ void HideableWidget::set_is_hidden(const bool value)
    if (value) {
       this->remove_from_viewport();
    } else {
-      this->add_to_viewport(m_parentDimensions);
+      this->add_to_viewport(m_parentDimensions, m_croppingMask);
    }
    m_state.isHidden = value;
 

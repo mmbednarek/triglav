@@ -21,29 +21,37 @@ Vector2 RectBox::desired_size(const Vector2 parentSize) const
    return m_cachedSize;
 }
 
-void RectBox::add_to_viewport(const Vector4 dimensions)
+void RectBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   const Vector4 rectSize{dimensions.x, dimensions.y, dimensions.x + dimensions.z, dimensions.y + dimensions.w};
+   if (!do_regions_intersect(dimensions, croppingMask)) {
+      if (m_rectName != 0) {
+         m_context.viewport().remove_rectangle(m_rectName);
+         m_rectName = 0;
+      }
+      return;
+   }
 
    if (m_rectName != 0) {
-      m_context.viewport().set_rectangle_dims(m_rectName, rectSize);
+      m_context.viewport().set_rectangle_dims(m_rectName, dimensions);
    } else {
       m_rectName = m_context.viewport().add_rectangle(Rectangle{
-         .rect = rectSize,
+         .rect = dimensions,
          .color = m_state.color,
          .borderRadius = m_state.borderRadius,
          .borderColor = m_state.borderColor,
+         .crop = croppingMask,
          .borderWidth = m_state.borderWidth,
       });
    }
 
-   m_content->add_to_viewport(dimensions);
+   m_content->add_to_viewport(dimensions, croppingMask);
 }
 
 void RectBox::remove_from_viewport()
 {
    m_content->remove_from_viewport();
    m_context.viewport().remove_rectangle(m_rectName);
+   m_rectName = 0;
 }
 
 void RectBox::set_color(Vector4 color)

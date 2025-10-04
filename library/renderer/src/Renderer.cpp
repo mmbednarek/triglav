@@ -79,7 +79,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
       m_rayTracingScene.emplace(m_device, m_resourceManager, m_scene);
    }
 
-   m_infoDialog.add_to_viewport({});
+   m_infoDialog.add_to_viewport({}, {0, 0, resolution.width, resolution.height});
    m_scene.load_level("level/wierd_tube.level"_rc);
 
    {

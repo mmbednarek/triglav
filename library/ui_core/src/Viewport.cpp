@@ -3,6 +3,7 @@
 #include "Primitives.hpp"
 
 #include <utility>
+#include <spdlog/spdlog.h>
 
 namespace triglav::ui_core {
 
@@ -48,6 +49,8 @@ void Viewport::set_text_position(Name name, const Vector2 position)
       return;
    textPrim.position = position;
 
+   spdlog::info("ui-viewport: text: {} = (position: {}, {})", name, position.x, position.y);
+
    this->event_OnTextChangePosition.publish(name, textPrim);
    m_needsRedraw = true;
 }
@@ -59,6 +62,8 @@ void Viewport::set_text_crop(Name name, const Vector4 crop)
    if (textPrim.crop == crop)
       return;
    textPrim.crop = crop;
+
+   spdlog::info("ui-viewport: text: {} = (crop: {}, {}, {}, {})", name, crop.x, crop.y, crop.z, crop.w);
 
    this->event_OnTextChangeCrop.publish(name, textPrim);
    m_needsRedraw = true;
@@ -72,23 +77,15 @@ void Viewport::set_text_color(const Name name, const Vector4 color)
       return;
    textPrim.color = color;
 
+   spdlog::info("ui-viewport: text: {} = (color: {}, {}, {}, {})", name, color.x, color.y, color.z, color.w);
+
    this->event_OnTextChangeColor.publish(name, textPrim);
-   m_needsRedraw = true;
-}
-
-void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
-{
-   auto& rect = m_rectangles.at(name);
-   if (rect.rect == dims)
-      return;
-
-   rect.rect = dims;
-   this->event_OnRectangleChangeDims.publish(name, rect);
    m_needsRedraw = true;
 }
 
 void Viewport::remove_text(const Name name)
 {
+   spdlog::info("ui-viewport: removing text: {}", name);
    this->event_OnRemovedText.publish(name);
    m_texts.erase(name);
    m_needsRedraw = true;
@@ -111,11 +108,39 @@ Name Viewport::add_rectangle(Rectangle&& rect)
    return name;
 }
 
+void Viewport::set_rectangle_dims(const Name name, const Vector4 dims)
+{
+   auto& rect = m_rectangles.at(name);
+   if (rect.rect == dims)
+      return;
+
+   spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {})", name, dims.x, dims.y, dims.z, dims.w);
+
+   rect.rect = dims;
+   this->event_OnRectangleChangeDims.publish(name, rect);
+   m_needsRedraw = true;
+}
+
+void Viewport::set_rectangle_dims_with_crop(Name name, const Vector4 dims, const Vector4 crop)
+{
+   auto& rect = m_rectangles.at(name);
+   if (rect.rect == dims)
+      return;
+
+   rect.rect = dims;
+   rect.crop = crop;
+   spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", name, dims.x, dims.y, dims.z, dims.w, crop.x, crop.y, crop.z, crop.w);
+   this->event_OnRectangleChangeDims.publish(name, rect);
+   m_needsRedraw = true;
+}
+
 void Viewport::set_rectangle_color(Name name, const Vector4 color)
 {
    auto& rect = m_rectangles.at(name);
    if (rect.color == color)
       return;
+
+   spdlog::info("ui-viewport: rect: {} = (color: {}, {}, {}, {})", name, color.x, color.y, color.z, color.w);
 
    rect.color = color;
    this->event_OnRectangleChangeColor.publish(name, rect);
@@ -124,6 +149,8 @@ void Viewport::set_rectangle_color(Name name, const Vector4 color)
 
 void Viewport::remove_rectangle(Name name)
 {
+   spdlog::info("ui-viewport: removing rect: {}", name);
+
    event_OnRemovedRectangle.publish(name);
    m_rectangles.erase(name);
    m_needsRedraw = true;

@@ -205,7 +205,11 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
       if (index >= g_maxTextUpdateCount)
          break;
 
-      const auto& textInfo = m_textInfos.at(textName);
+      auto textInfoIt = m_textInfos.find(textName);
+      if (textInfoIt == m_textInfos.end())
+         continue;
+
+      const auto& textInfo = textInfoIt->second;
       auto& dstUpdate = textUpdates.at(index);
 
       dstUpdate.dstDrawCall = textInfo.drawCallId;

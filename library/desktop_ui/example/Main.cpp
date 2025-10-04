@@ -14,11 +14,11 @@
 #include "triglav/threading/ThreadPool.hpp"
 #include "triglav/threading/Threading.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 #include <spdlog/spdlog.h>
-#include <triglav/ui_core/widget/EmptySpace.hpp>
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;

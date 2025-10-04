@@ -28,8 +28,16 @@ Vector2 TextBox::desired_size(const Vector2 /*parentSize*/) const
    return *m_cachedDesiredSize;
 }
 
-void TextBox::add_to_viewport(const Vector4 dimensions)
+void TextBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
+   if (!do_regions_intersect(dimensions, croppingMask)) {
+      if (m_id != 0) {
+         m_uiContext.viewport().remove_text(m_id);
+         m_id = 0;
+      }
+      return;
+   }
+
    const auto size = this->desired_size({});
    const Vector2 position{
       dimensions.x + calculate_alignment(m_state.horizontalAlignment, dimensions.z, size.x),
@@ -51,7 +59,7 @@ void TextBox::add_to_viewport(const Vector4 dimensions)
       .fontSize = m_state.fontSize,
       .position = position,
       .color = m_state.color,
-      .crop = crop,
+      .crop = min_area(crop, croppingMask),
    };
 
    m_id = m_uiContext.viewport().add_text(std::move(text));

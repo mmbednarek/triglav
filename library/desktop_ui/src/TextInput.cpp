@@ -52,21 +52,34 @@ Vector2 TextInput::desired_size(const Vector2 /*parentSize*/) const
    return {m_state.width, m_textSize.y + 30.0};
 }
 
-void TextInput::add_to_viewport(const Vector4 dimensions)
+void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   m_rect.add_to_viewport(dimensions);
+   m_rect.add_to_viewport(dimensions, croppingMask);
 
-   const Vector4 rectDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, dimensions.x + g_textMargin.x + 1,
-                          dimensions.y + dimensions.w - g_carretMargin};
+   if (!do_regions_intersect(dimensions, croppingMask)) {
+      if (m_caretBox != 0) {
+         m_context.viewport().remove_rectangle(m_caretBox);
+         m_caretBox = 0;
+      }
+      if (m_textPrim != 0) {
+         m_context.viewport().remove_text(m_textPrim);
+         m_textPrim = 0;
+      }
+      return;
+   }
+
+   const Vector4 caretDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1,
+                          dimensions.w - 2*g_carretMargin};
 
    if (m_caretBox != 0) {
-      m_context.viewport().set_rectangle_dims(m_caretBox, rectDims);
+      m_context.viewport().set_rectangle_dims_with_crop(m_caretBox, caretDims, croppingMask);
    } else {
       m_caretBox = m_context.viewport().add_rectangle(ui_core::Rectangle{
-         .rect = rectDims,
+         .rect = caretDims,
          .color = {0, 0, 0, 0},
          .borderRadius = {},
          .borderColor = {},
+         .crop = croppingMask,
          .borderWidth = 0.0f,
       });
    }
@@ -75,8 +88,8 @@ void TextInput::add_to_viewport(const Vector4 dimensions)
 
    m_textXPosition = dimensions.x + g_textMargin.x;
    const Vector2 textPos{m_textXPosition - m_textOffset, dimensions.y + m_textSize.y + 15.0};
-   const Vector4 textCrop{dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x,
-                          dimensions.y + dimensions.w};
+   Vector4 textCrop{dimensions.x + g_textMargin.x, dimensions.y, dimensions.x + dimensions.z - g_textMargin.x, dimensions.y + dimensions.w};
+   textCrop = min_area(textCrop, croppingMask);
 
    if (m_textPrim != 0) {
       m_context.viewport().set_text_position(m_textPrim, textPos);
@@ -100,11 +113,18 @@ void TextInput::add_to_viewport(const Vector4 dimensions)
 void TextInput::remove_from_viewport()
 {
    m_context.viewport().remove_rectangle(m_caretBox);
+   m_context.viewport().remove_text(m_textPrim);
    m_rect.remove_from_viewport();
+
+   m_caretBox = 0;
+   m_textPrim = 0;
 }
 
 void TextInput::on_event(const ui_core::Event& event)
 {
+   if (m_textPrim == 0 || m_caretBox == 0) {
+      return;
+   }
    const auto& props = m_state.manager->properties();
 
    switch (event.eventType) {
@@ -232,8 +252,7 @@ void TextInput::recalculate_caret_offset(const bool removal)
    }
 
    m_context.viewport().set_rectangle_dims(
-      m_caretBox, {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin,
-                   m_dimensions.x + g_textMargin.x + 1 + m_textOffset + caretOffset, m_dimensions.y + m_dimensions.w - g_carretMargin});
+      m_caretBox, {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin, 1, m_dimensions.w - 2*g_carretMargin});
 }
 
 void TextInput::update_text_position() const

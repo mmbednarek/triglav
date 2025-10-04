@@ -29,7 +29,7 @@ class DropDownSelectorButton final : public ui_core::IWidget
    DropDownSelectorButton(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -64,7 +64,7 @@ class DropDownSelector final : public ui_core::IWidget
    DropDownSelector(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -93,7 +93,7 @@ class DropDownMenu final : public ui_core::IWidget
    DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -108,6 +108,7 @@ class DropDownMenu final : public ui_core::IWidget
    ui_core::RectBox m_rect;
    ui_core::TextBox* m_label{};
    Vector4 m_dimensions;
+   Vector4 m_croppingMask;
    Dialog* m_currentPopup{};
 };
 

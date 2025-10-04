@@ -47,10 +47,19 @@ Vector2 Image::desired_size(const Vector2 parentSize) const
    return calculate_proportional_size(*m_state.maxSize, texSize);
 }
 
-void Image::add_to_viewport(const Vector4 dimensions)
+void Image::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
+   if (!do_regions_intersect(dimensions, croppingMask)) {
+      if (m_spriteID != 0) {
+         m_context.viewport().remove_sprite(m_spriteID);
+         m_spriteID = 0;
+      }
+      return;
+   }
+
    if (m_spriteID != 0) {
       m_context.viewport().set_sprite_position(m_spriteID, {dimensions.x, dimensions.y});
+      // TODO: Set sprite cropping!
       return;
    }
 
@@ -58,6 +67,7 @@ void Image::add_to_viewport(const Vector4 dimensions)
       .texture = m_state.texture,
       .position = {dimensions.x, dimensions.y},
       .size = {dimensions.z, dimensions.w},
+      .crop = croppingMask,
       .textureRegion = m_state.region,
    });
 }

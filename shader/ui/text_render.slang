@@ -55,7 +55,7 @@ uniform Sampler2D<float> g_atlases[];
 float4 fs_main(VSOutput inFrag) : SV_Target0
 {
     float2 xy = inFrag.position.xy;
-    if (xy.x >= inFrag.crop.x && xy.x <= inFrag.crop.z && xy.y >= inFrag.crop.y && xy.y <= inFrag.crop.w) {
+    if (xy.x >= inFrag.crop.x && xy.x <= (inFrag.crop.x + inFrag.crop.z) && xy.y >= inFrag.crop.y && xy.y <= (inFrag.crop.y + inFrag.crop.w)) {
         return float4(inFrag.color.xyz, g_atlases[inFrag.atlasID].Sample(inFrag.texCoord));
     }
     return float4(0, 0, 0, 0);

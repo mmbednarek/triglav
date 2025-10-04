@@ -38,9 +38,9 @@ Vector2 Button::desired_size(const Vector2 parentSize) const
    return m_button.desired_size(parentSize);
 }
 
-void Button::add_to_viewport(const Vector4 dimensions)
+void Button::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   m_button.add_to_viewport(dimensions);
+   m_button.add_to_viewport(dimensions, croppingMask);
 }
 
 void Button::remove_from_viewport()
