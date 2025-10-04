@@ -29,10 +29,9 @@ class SpriteRenderer
 
    SpriteRenderer(graphics_api::Device& device, ui_core::Viewport& viewport, resource::ResourceManager& resourceManager);
 
-   void on_added_sprite(Name id, const ui_core::Sprite& sprite);
-   void on_sprite_change_position(Name id, const ui_core::Sprite& sprite);
-   void on_sprite_change_texture_region(Name id, const ui_core::Sprite& sprite);
-   void on_removed_sprite(Name id);
+   void on_added_sprite(ui_core::SpriteId id, const ui_core::Sprite& sprite);
+   void on_updated_sprite(ui_core::SpriteId id, const ui_core::Sprite& sprite);
+   void on_removed_sprite(ui_core::SpriteId id);
 
    void build_render_ui(render_core::BuildContext& ctx);
 
@@ -44,11 +43,10 @@ class SpriteRenderer
    resource::ResourceManager& m_resourceManager;
    std::vector<render_core::TextureRef> m_textures;
    std::map<TextureName, u32> m_textureIDs;
-   std::map<Name, SpriteData> m_sprites;
+   std::map<ui_core::SpriteId, SpriteData> m_sprites;
 
    TG_SINK(ui_core::Viewport, OnAddedSprite);
-   TG_SINK(ui_core::Viewport, OnSpriteChangePosition);
-   TG_SINK(ui_core::Viewport, OnSpriteChangeTextureRegion);
+   TG_SINK(ui_core::Viewport, OnUpdatedSprite);
    TG_SINK(ui_core::Viewport, OnRemovedSprite);
 };
 

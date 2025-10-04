@@ -12,6 +12,8 @@ namespace triglav::renderer::ui {
 using namespace name_literals;
 using namespace render_core::literals;
 
+using ui_core::RectId;
+
 // Staging insertion buffer
 // GPU insertion buffer
 constexpr auto g_insertionBufferSize = 32;
@@ -57,41 +59,29 @@ RectangleRenderer::RectangleRenderer(graphics_api::Device& device, ui_core::View
     m_device(device),
     m_viewport(viewport),
     TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
-    TG_CONNECT(viewport, OnRectangleChangeDims, on_rectangle_change_dims),
-    TG_CONNECT(viewport, OnRectangleChangeColor, on_rectangle_change_color),
+    TG_CONNECT(viewport, OnUpdatedRectangle, on_updated_rectangle),
     TG_CONNECT(viewport, OnRemovedRectangle, on_removed_rectangle)
 {
 }
 
-void RectangleRenderer::on_added_rectangle(const Name name, const ui_core::Rectangle& rect)
+void RectangleRenderer::on_added_rectangle(const RectId rectId, const ui_core::Rectangle& rect)
+{
+   this->on_updated_rectangle(rectId, rect);
+}
+
+void RectangleRenderer::on_updated_rectangle(const RectId rectId, const ui_core::Rectangle& rect)
 {
    std::unique_lock lk{m_rectUpdateMtx};
    for (auto& updates : m_frameUpdates) {
-      updates.add(name, to_primitive(rect));
+      updates.add_or_update(rectId, to_primitive(rect));
    }
 }
 
-void RectangleRenderer::on_rectangle_change_dims(const Name name, const ui_core::Rectangle& rect)
+void RectangleRenderer::on_removed_rectangle(const RectId rectId)
 {
    std::unique_lock lk{m_rectUpdateMtx};
    for (auto& updates : m_frameUpdates) {
-      updates.update(name, to_primitive(rect));
-   }
-}
-
-void RectangleRenderer::on_rectangle_change_color(const Name name, const ui_core::Rectangle& rect)
-{
-   std::unique_lock lk{m_rectUpdateMtx};
-   for (auto& updates : m_frameUpdates) {
-      updates.update(name, to_primitive(rect));
-   }
-}
-
-void RectangleRenderer::on_removed_rectangle(const Name name)
-{
-   std::unique_lock lk{m_rectUpdateMtx};
-   for (auto& updates : m_frameUpdates) {
-      updates.remove(name);
+      updates.remove(rectId);
    }
 }
 

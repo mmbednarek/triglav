@@ -5,6 +5,7 @@
 #include "triglav/String.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
+#include "triglav/ui_core/Primitives.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 
 namespace triglav::ui_core {
@@ -41,11 +42,12 @@ class TextInput final : public ui_core::IWidget
    State m_state;
    ui_core::RectBox m_rect;
 
-   Name m_textPrim{};
-   Name m_caretBox{};
+   ui_core::TextId m_textPrim{};
+   ui_core::RectId m_caretBox{};
    bool m_isCarretVisible{false};
    u32 m_caretPosition{};
    Vector4 m_dimensions{};
+   Vector4 m_croppingMask{};
    Vector2 m_textSize{};
    float m_textXPosition{};
    float m_textOffset{};

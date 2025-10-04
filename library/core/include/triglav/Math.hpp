@@ -19,6 +19,12 @@ using Vector3 = glm::vec3;
 using Vector4 = glm::vec4;
 using Quaternion = glm::quat;
 
+// (x, y, width, height)
+using Rect = Vector4;
+
+// (r, g, b, a)
+using Color = Vector4;
+
 struct Vector3_Aligned16B
 {
    alignas(16) Vector3 value{};

@@ -2,6 +2,7 @@
 
 #include "../IWidget.hpp"
 #include "../UICore.hpp"
+#include "../Primitives.hpp"
 
 #include "triglav/Name.hpp"
 
@@ -41,7 +42,7 @@ class TextBox final : public IWidget
    Context& m_uiContext;
    State m_state{};
    IWidget* m_parent;
-   Name m_id{};
+   TextId m_id{};
    mutable std::optional<Vector2> m_cachedDesiredSize{};
 };
 

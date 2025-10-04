@@ -59,10 +59,9 @@ class RectangleRenderer
 
    RectangleRenderer(graphics_api::Device& device, ui_core::Viewport& viewport);
 
-   void on_added_rectangle(Name name, const ui_core::Rectangle& rect);
-   void on_rectangle_change_dims(Name name, const ui_core::Rectangle& rect);
-   void on_rectangle_change_color(Name name, const ui_core::Rectangle& rect);
-   void on_removed_rectangle(Name name);
+   void on_added_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
+   void on_updated_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
+   void on_removed_rectangle(ui_core::RectId rectId);
 
    void add_insertion(u32 index, const RectPrimitive& prim);
    void add_removal(u32 src, u32 dst);
@@ -74,7 +73,7 @@ class RectangleRenderer
  private:
    graphics_api::Device& m_device;
    ui_core::Viewport& m_viewport;
-   std::array<UpdateList<Name, RectPrimitive>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameUpdates;
+   std::array<UpdateList<ui_core::RectId, RectPrimitive>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameUpdates;
 
    RectWriteData* m_stagingInsertions;
    u32 m_stagingInsertionsTop{};
@@ -85,8 +84,7 @@ class RectangleRenderer
    std::mutex m_rectUpdateMtx;
 
    TG_SINK(ui_core::Viewport, OnAddedRectangle);
-   TG_SINK(ui_core::Viewport, OnRectangleChangeDims);
-   TG_SINK(ui_core::Viewport, OnRectangleChangeColor);
+   TG_SINK(ui_core::Viewport, OnUpdatedRectangle);
    TG_SINK(ui_core::Viewport, OnRemovedRectangle);
 };
 

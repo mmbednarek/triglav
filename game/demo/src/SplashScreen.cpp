@@ -39,13 +39,13 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .rect = {40.0f, 225.0f, g_splashScreenResolution.x - 40.0f, 275.0f},
       .color = {0.0f, 0.12f, 0.33f, 1.0f},
    };
-   m_uiViewport.add_rectangle("status_bg"_name, std::move(statusBg));
+   m_statusBgId = m_uiViewport.add_rectangle(std::move(statusBg));
 
    triglav::ui_core::Rectangle statusFg{
       .rect = {40.0f, 225.0f, 50.0f, 275.0f},
       .color = {0.05f, 0.29f, 0.67f, 1.0f},
    };
-   m_uiViewport.add_rectangle("status_fg"_name, std::move(statusFg));
+   m_statusFgId = m_uiViewport.add_rectangle(std::move(statusFg));
 
    triglav::ui_core::Text titleText{
       .content = "Triglav Render Demo",
@@ -55,7 +55,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .color = {0.13f, 0.39f, 0.78f, 1.0f},
       .crop = {0, 0, g_splashScreenResolution.x, g_splashScreenResolution.y},
    };
-   m_uiViewport.add_text("title"_name, std::move(titleText));
+   m_titleId = m_uiViewport.add_text(std::move(titleText));
 
    triglav::ui_core::Text descText{
       .content = "Loading Resources",
@@ -65,7 +65,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
       .crop = {0, 0, g_splashScreenResolution.x, g_splashScreenResolution.y},
    };
-   m_uiViewport.add_text("desc"_name, std::move(descText));
+   m_descId = m_uiViewport.add_text(std::move(descText));
 
    auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
    m_updateUiJob.build_job(updateUiCtx);
@@ -149,14 +149,14 @@ void SplashScreen::on_finished_loading_asset(const triglav::ResourceName resourc
 void SplashScreen::update_process_bar(const float progress)
 {
    const triglav::Vector4 dims{40.0f, 225.0f, triglav::lerp(50.0f, g_splashScreenResolution.x - 40.0f, progress), 275.0f};
-   m_uiViewport.set_rectangle_dims("status_fg"_name, dims);
+   m_uiViewport.set_rectangle_dims(m_statusFgId, dims, {0, 0, g_splashScreenResolution.x, g_splashScreenResolution.y});
 }
 
 void SplashScreen::update_loaded_resource(const triglav::ResourceName name)
 {
    m_displayedResource = name;
    const auto msg = triglav::format("Loading resource {}", m_resourceManager.lookup_name(name).value_or("unknown"));
-   m_uiViewport.set_text_content("desc"_name, msg.view());
+   m_uiViewport.set_text_content(m_descId, msg.view());
 }
 
 }// namespace demo

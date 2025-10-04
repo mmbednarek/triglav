@@ -4,7 +4,7 @@
 
 namespace triglav::ui_core {
 
-constexpr auto g_scrollFactor = 2.0f;
+constexpr auto g_scrollFactor = 6.0f;
 
 ScrollBox::ScrollBox(Context& ctx, State state, IWidget* parent) :
     ContainerWidget(ctx, parent),

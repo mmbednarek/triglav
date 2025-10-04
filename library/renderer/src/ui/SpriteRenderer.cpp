@@ -8,6 +8,7 @@ namespace triglav::renderer::ui {
 
 using namespace name_literals;
 
+using ui_core::SpriteId;
 using graphics_api::BufferUsage;
 
 struct SpriteUBO
@@ -49,13 +50,12 @@ SpriteRenderer::SpriteRenderer(graphics_api::Device& device, ui_core::Viewport& 
     m_viewport(viewport),
     m_resourceManager(resourceManager),
     TG_CONNECT(viewport, OnAddedSprite, on_added_sprite),
-    TG_CONNECT(viewport, OnSpriteChangePosition, on_sprite_change_position),
-    TG_CONNECT(viewport, OnSpriteChangeTextureRegion, on_sprite_change_texture_region),
+    TG_CONNECT(viewport, OnUpdatedSprite, on_updated_sprite),
     TG_CONNECT(viewport, OnRemovedSprite, on_removed_sprite)
 {
 }
 
-void SpriteRenderer::on_added_sprite(const Name id, const ui_core::Sprite& sprite)
+void SpriteRenderer::on_added_sprite(const SpriteId id, const ui_core::Sprite& sprite)
 {
    auto buffer = GAPI_CHECK(m_device.create_buffer(BufferUsage::UniformBuffer | BufferUsage::TransferDst, sizeof(SpriteUBO)));
 
@@ -68,7 +68,7 @@ void SpriteRenderer::on_added_sprite(const Name id, const ui_core::Sprite& sprit
    m_sprites.emplace(id, SpriteData{std::move(buffer)});
 }
 
-void SpriteRenderer::on_sprite_change_position(const Name id, const ui_core::Sprite& sprite)
+void SpriteRenderer::on_updated_sprite(const SpriteId id, const ui_core::Sprite& sprite)
 {
    const auto texSizeRes = m_resourceManager.get(sprite.texture).resolution();
    const Vector2 texSize{texSizeRes.width, texSizeRes.height};
@@ -76,12 +76,7 @@ void SpriteRenderer::on_sprite_change_position(const Name id, const ui_core::Spr
    GAPI_CHECK_STATUS(m_sprites.at(id).vsUbo.write_indirect(&uboData, sizeof(SpriteUBO)));
 }
 
-void SpriteRenderer::on_sprite_change_texture_region(const Name id, const ui_core::Sprite& sprite)
-{
-   this->on_sprite_change_position(id, sprite);
-}
-
-void SpriteRenderer::on_removed_sprite(const Name id)
+void SpriteRenderer::on_removed_sprite(const SpriteId id)
 {
    m_sprites.erase(id);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../IWidget.hpp"
+#include "../Primitives.hpp"
 
 #include "triglav/Name.hpp"
 
@@ -31,7 +32,7 @@ class RectBox final : public ContainerWidget
 
  private:
    State m_state{};
-   Name m_rectName{};
+   RectId m_rectName{};
    mutable std::optional<Vector2> m_cachedParentSize{};
    mutable Vector2 m_cachedSize{};
 };
