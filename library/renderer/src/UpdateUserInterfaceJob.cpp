@@ -22,16 +22,17 @@ void UpdateUserInterfaceJob::build_job(render_core::BuildContext& ctx) const
    ctx.init_buffer("ui.viewport_info"_name, Vector2{m_viewport.dimensions()});
 
    m_rectangleRenderer.build_data_update(ctx);
+   m_spriteRenderer.build_data_update(ctx);
    m_textRenderer.build_data_preparation(ctx);
 
-   ctx.export_buffer("ui.viewport_info"_name, graphics_api::PipelineStage::VertexShader,
-                     graphics_api::BufferAccess::ShaderRead,
+   ctx.export_buffer("ui.viewport_info"_name, graphics_api::PipelineStage::VertexShader, graphics_api::BufferAccess::ShaderRead,
                      graphics_api::BufferUsage::UniformBuffer);
 }
 
 void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u32 frameIndex)
 {
    m_rectangleRenderer.prepare_frame(graph, frameIndex);
+   m_spriteRenderer.prepare_frame(graph, frameIndex);
    m_textRenderer.prepare_frame(graph, frameIndex);
 }
 

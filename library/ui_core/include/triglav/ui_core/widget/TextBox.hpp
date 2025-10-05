@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../IWidget.hpp"
-#include "../UICore.hpp"
 #include "../Primitives.hpp"
+#include "../UICore.hpp"
 
 #include "triglav/Name.hpp"
 

@@ -26,9 +26,9 @@ class UpdateList
    void write_to_buffers(UpdateWriter<TValue> auto& writer);
 
  private:
-  void register_mapping(TKey key, u32 index);
-  [[nodiscard]] u32 remove_mapping_by_key(TKey key);
-  void remove_mapping_by_index(u32 index);
+   void register_mapping(TKey key, u32 index);
+   [[nodiscard]] u32 remove_mapping_by_key(TKey key);
+   void remove_mapping_by_index(u32 index);
 
    std::map<TKey, u32> m_keyToIndex;
    std::map<u32, TKey> m_indexToKey;

@@ -56,14 +56,32 @@ shader_targets += custom_target('rectangle_render_fs',
                                 command : slang_fs_commands,
 )
 
-shader_targets += custom_target('sprite_vs',
-                                input : 'sprite.slang',
+# SPRITE
+
+shader_targets += custom_target('sprite_insertion',
+                                input : 'sprite_insertion.slang',
+                                output : '@BASENAME@_cs.spv',
+                                depend_files : ['sprite_api.slang'],
+                                command : slang_cs_commands,
+)
+
+shader_targets += custom_target('sprite_removal',
+                                input : 'sprite_removal.slang',
+                                output : '@BASENAME@_cs.spv',
+                                depend_files : ['sprite_api.slang'],
+                                command : slang_cs_commands,
+)
+
+shader_targets += custom_target('sprite_render_vs',
+                                input : 'sprite_render.slang',
                                 output : '@BASENAME@_vs.spv',
+                                depend_files : ['sprite_api.slang'],
                                 command : slang_vs_commands,
 )
 
-shader_targets += custom_target('sprite_fs',
-                                input : 'sprite.slang',
+shader_targets += custom_target('sprite_render_fs',
+                                input : 'sprite_render.slang',
                                 output : '@BASENAME@_fs.spv',
+                                depend_files : ['sprite_api.slang'],
                                 command : slang_fs_commands,
 )

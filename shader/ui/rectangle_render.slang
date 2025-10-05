@@ -41,36 +41,26 @@ struct VSOutput
 
 typealias FSInput = VSOutput;
 
+static float2 g_vertexIndex[] = {
+    float2(0, 0),
+    float2(0, 1),
+    float2(1, 0),
+    float2(1, 0),
+    float2(0, 1),
+    float2(1, 1),
+};
+
 VSOutput vs_main(uint vid: SV_VertexID)
 {
     const rectangle_api::Primitive prim = g_drawCallBuffer[common::get_draw_index()].primitive;
 
-    // TODO: Measure if getting the position from an array would be faster.
-    float2 ssPosition;
-    switch (vid) {
-        case 0:
-            ssPosition = float2(prim.dimensions.x, prim.dimensions.y);
-            break;
-        case 1:
-            ssPosition = float2(prim.dimensions.x, prim.dimensions.y + prim.dimensions.w);
-            break;
-        case 2:
-            ssPosition = float2(prim.dimensions.x + prim.dimensions.z, prim.dimensions.y);
-            break;
-        case 3:
-            ssPosition = float2(prim.dimensions.x + prim.dimensions.z, prim.dimensions.y);
-            break;
-        case 4:
-            ssPosition = float2(prim.dimensions.x, prim.dimensions.y + prim.dimensions.w);
-            break;
-        case 5:
-            ssPosition = float2(prim.dimensions.x + prim.dimensions.z, prim.dimensions.y + prim.dimensions.w);
-            break;
-    }
+    const float2 vertex = g_vertexIndex[vid];
+    const float2 posOnRect = vertex * prim.dimensions.zw;
+    const float2 ssPosition = prim.dimensions.xy + posOnRect;
 
     VSOutput out;
     out.position = float4(2 * (ssPosition / g_viewportSize) - float2(1, 1), 0, 1);
-    out.screenPos = ssPosition - prim.dimensions.xy;
+    out.screenPos = posOnRect;
     out.screenOffset = prim.dimensions.xy;
     out.rectSize = prim.dimensions.zw;
     out.borderRadius = prim.borderRadius;

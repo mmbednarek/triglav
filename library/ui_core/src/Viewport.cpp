@@ -2,8 +2,8 @@
 
 #include "Primitives.hpp"
 
-#include <utility>
 #include <spdlog/spdlog.h>
+#include <utility>
 
 namespace triglav::ui_core {
 
@@ -47,7 +47,8 @@ void Viewport::set_text_position(TextId textId, const Vector2 position, const Re
    textPrim.position = position;
    textPrim.crop = crop;
 
-   // spdlog::info("ui-viewport: text: {} = (position: {}, {}, crop: {}, {}, {}, {})", textId, position.x, position.y, crop.x, crop.y, crop.z, crop.w);
+   // spdlog::info("ui-viewport: text: {} = (position: {}, {}, crop: {}, {}, {}, {})", textId, position.x, position.y, crop.x, crop.y,
+   // crop.z, crop.w);
 
    this->event_OnUpdatedText.publish(textId, textPrim);
    m_needsRedraw = true;
@@ -95,7 +96,8 @@ void Viewport::set_rectangle_dims(const RectId rectId, const Rect dims, const Re
    if (rect.rect == dims && rect.crop == crop)
       return;
 
-   // spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", rectId, dims.x, dims.y, dims.z, dims.w, crop.x, crop.y, crop.z, crop.w);
+   // spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", rectId, dims.x, dims.y, dims.z, dims.w, crop.x,
+   // crop.y, crop.z, crop.w);
 
    rect.rect = dims;
    rect.crop = crop;
