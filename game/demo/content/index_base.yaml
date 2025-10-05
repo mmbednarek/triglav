@@ -33,3 +33,6 @@ resources:
     source: "shader/ui/sprite_render_vs.spv"
   - name: "sprite/render.fshader"
     source: "shader/ui/sprite_render_fs.spv"
+  # UI
+  - name: "texture/ui_images.tex"
+    source: "texture/ui_images.tex"

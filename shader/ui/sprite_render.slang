@@ -19,6 +19,12 @@ struct VSOutput
 
     [[vk::location(1)]]
     nointerpolation uint32_t imageID;
+
+    [[vk::location(2)]]
+    float2 screenPosition;
+
+    [[vk::location(3)]]
+    nointerpolation float4 croppingMask;
 };
 
 typealias FSInput = VSOutput;
@@ -43,6 +49,8 @@ VSOutput vs_main(uint vid: SV_VertexID)
     out.position = float4(2 * (ssPosition / g_viewportSize) - float2(1, 1), 0, 1);
     out.texCoord = prim.uvRect.xy + vertex*prim.uvRect.zw;
     out.imageID = prim.imageID;
+    out.screenPosition = ssPosition;
+    out.croppingMask = prim.croppingMask;
     return out;
 }
 
@@ -51,5 +59,13 @@ uniform Sampler2D<float4> g_textures[];
 
 float4 fs_main(FSInput input) : SV_Target0
 {
+    float2 xy = input.screenPosition;
+    if ((xy.x < input.croppingMask.x) ||
+        (xy.x > (input.croppingMask.x + input.croppingMask.z)) ||
+        (xy.y < input.croppingMask.y) ||
+        (xy.y > (input.croppingMask.y + input.croppingMask.w))) {
+        return float4(0, 0, 0, 0);
+    }
+
     return g_textures[input.imageID].Sample(input.texCoord);
 }

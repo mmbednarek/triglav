@@ -15,6 +15,7 @@
 #include "triglav/threading/Threading.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
+#include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
@@ -155,6 +156,11 @@ int triglav_main(InputArgs& args, IDisplay& display)
    layout.create_child<triglav::desktop_ui::Button>({
       .manager = &desktopUiManager,
       .label = "Example",
+   });
+
+   layout.create_child<triglav::ui_core::Image>({
+      .texture = "texture/ui_images.tex"_rc,
+      .maxSize = triglav::Vector2{200, 200},
    });
 
    auto& rect3 = layout.create_child<triglav::ui_core::RectBox>({
