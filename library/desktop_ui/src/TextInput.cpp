@@ -68,8 +68,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
       return;
    }
 
-   const Vector4 caretDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1,
-                          dimensions.w - 2*g_carretMargin};
+   const Vector4 caretDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1, dimensions.w - 2 * g_carretMargin};
 
    if (m_caretBox != 0) {
       m_context.viewport().set_rectangle_dims(m_caretBox, caretDims, croppingMask);
@@ -251,13 +250,16 @@ void TextInput::recalculate_caret_offset(const bool removal)
       this->update_text_position();
    }
 
-   m_context.viewport().set_rectangle_dims(
-      m_caretBox, {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin, 1, m_dimensions.w - 2*g_carretMargin}, m_croppingMask);
+   m_context.viewport().set_rectangle_dims(m_caretBox,
+                                           {m_dimensions.x + g_textMargin.x + m_textOffset + caretOffset, m_dimensions.y + g_carretMargin,
+                                            1, m_dimensions.w - 2 * g_carretMargin},
+                                           m_croppingMask);
 }
 
 void TextInput::update_text_position() const
 {
-   m_context.viewport().set_text_position(m_textPrim, {m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y}, m_dimensions);
+   m_context.viewport().set_text_position(m_textPrim, {m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y},
+                                          m_dimensions);
 }
 
 }// namespace triglav::desktop_ui

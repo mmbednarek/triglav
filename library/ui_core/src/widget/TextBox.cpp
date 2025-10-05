@@ -45,7 +45,7 @@ void TextBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
    };
 
    Vector4 crop{dimensions.x - 0.5f * size.x, dimensions.y - 0.5f * size.y, dimensions.x + dimensions.z + 0.5f * size.x,
-                      dimensions.y + dimensions.w + 0.5f * size.y};
+                dimensions.y + dimensions.w + 0.5f * size.y};
    crop = min_area(crop, croppingMask);
 
    if (m_id != 0) {

@@ -83,8 +83,8 @@ void TextRenderer::on_added_text(const TextId textId, const ui_core::Text& text)
    const auto vertexSection = this->allocate_vertex_section(textId, static_cast<u32>(g_vertexCountPerChar * text.content.size()));
 
    m_textInfos.emplace(textId, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
-                                      text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
-                                      static_cast<u32>(vertexSection.size)});
+                                        text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
+                                        static_cast<u32>(vertexSection.size)});
    m_drawCallToTextName.emplace_back(textId);
 
    m_pendingTextUpdates.emplace_back(textId);
