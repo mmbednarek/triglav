@@ -202,6 +202,9 @@ void TextInput::on_event(const ui_core::Event& event)
 
 void TextInput::update_carret_state()
 {
+   if (m_caretBox == 0)
+      return;
+
    m_isCarretVisible = !m_isCarretVisible;
    if (m_isCarretVisible) {
       m_context.viewport().set_rectangle_color(m_caretBox, m_state.manager->properties().foreground_color);

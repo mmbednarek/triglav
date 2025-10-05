@@ -28,7 +28,7 @@ class UpdateList
  private:
    void register_mapping(TKey key, u32 index);
    [[nodiscard]] u32 remove_mapping_by_key(TKey key);
-   void remove_mapping_by_index(u32 index);
+   [[nodiscard]] TKey remove_mapping_by_index(u32 index);
 
    std::map<TKey, u32> m_keyToIndex;
    std::map<u32, TKey> m_indexToKey;

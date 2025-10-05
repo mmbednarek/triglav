@@ -370,6 +370,7 @@ void Renderer::on_resize(const uint32_t width, const uint32_t height)
       return;
 
    m_renderSurface.recreate_swapchain(Vector2u{width, height});
+   this->recreate_jobs();
 }
 
 graphics_api::Device& Renderer::device() const

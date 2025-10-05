@@ -40,6 +40,11 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
    }
    std::erase_if(m_additions, [this](const auto& pair) { return m_keyToIndex.contains(pair.first); });
 
+   std::set<u32> removal_indices{};
+   for (const auto rem_key : m_removals) {
+      removal_indices.emplace(m_keyToIndex.at(rem_key));
+   }
+
    const auto target_count = m_indexCount - m_removals.size() + m_additions.size();
 
    // First we use additions to remove the objects
@@ -80,19 +85,20 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
       }
 
       // ignore the source indices that are assigned for removals
-      auto index_key = m_indexToKey[src_index];
-      while (m_removals.contains(index_key)) {
+      while (removal_indices.contains(src_index)) {
          ++src_index;
-         index_key = m_indexToKey[src_index];
       }
 
       // assigned a new mapping and move the object
-      this->remove_mapping_by_index(src_index);
+      auto index_key = this->remove_mapping_by_index(src_index);
       this->register_mapping(index_key, rem_index);
       writer.move_object(src_index, rem_index);
       ++src_index;
       ++removal_it;
    }
+
+   assert(m_keyToIndex.size() == target_count);
+   assert(m_indexToKey.size() == target_count);
 
    m_indexCount = target_count;
    m_removals.clear();
@@ -123,11 +129,12 @@ u32 UpdateList<TKey, TValue>::remove_mapping_by_key(const TKey key)
 }
 
 template<typename TKey, typename TValue>
-void UpdateList<TKey, TValue>::remove_mapping_by_index(const u32 index)
+TKey UpdateList<TKey, TValue>::remove_mapping_by_index(const u32 index)
 {
    const auto key = m_indexToKey.at(index);
    m_keyToIndex.erase(key);
    m_indexToKey.erase(index);
+   return key;
 }
 
 }// namespace triglav
