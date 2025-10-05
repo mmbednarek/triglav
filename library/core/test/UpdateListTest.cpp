@@ -21,14 +21,14 @@ struct UpdateWriter
    std::vector<std::pair<u32, u32>> removals;
    std::vector<TItem> items;
 
-   void add_insertion(u32 index, TItem item)
+   void set_object(const u32 dstIndex, const TItem item)
    {
-      insertions.emplace_back(index, item);
+      insertions.emplace_back(dstIndex, item);
    }
 
-   void add_removal(u32 src, u32 dst)
+   void move_object(u32 srcIndex, u32 dstIndex)
    {
-      removals.emplace_back(src, dst);
+      removals.emplace_back(srcIndex, dstIndex);
    }
 
    void commit()
