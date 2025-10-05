@@ -45,13 +45,6 @@ struct RectCopyInfo
    u32 dstID;
 };
 
-// struct RectangleData
-// {
-//    graphics_api::Buffer vsUbo;
-//    graphics_api::Buffer fsUbo;
-//    graphics_api::Buffer vertexBuffer;
-// };
-
 class RectangleRenderer
 {
  public:
@@ -63,8 +56,8 @@ class RectangleRenderer
    void on_updated_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
    void on_removed_rectangle(ui_core::RectId rectId);
 
-   void add_insertion(u32 index, const RectPrimitive& prim);
-   void add_removal(u32 src, u32 dst);
+   void set_object(u32 index, const RectPrimitive& prim);
+   void move_object(u32 src, u32 dst);
 
    void prepare_frame(render_core::JobGraph& graph, u32 frameIndex);
    void build_data_update(render_core::BuildContext& ctx) const;
