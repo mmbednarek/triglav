@@ -242,7 +242,10 @@ void Surface::dispatch_button_press(const XEvent& event) const
 
 void Surface::dispatch_button_release(const XEvent& event) const
 {
-   event_OnMouseButtonIsReleased.publish(map_button(event.xbutton.button));
+   const auto button = map_button(event.xbutton.button);
+   if (button != MouseButton::Unknown) {
+      event_OnMouseButtonIsReleased.publish(button);
+   }
 }
 
 void Surface::dispatch_mouse_move(const XEvent& event) const
