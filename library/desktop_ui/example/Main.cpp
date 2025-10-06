@@ -4,6 +4,7 @@
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/DialogManager.hpp"
 #include "triglav/desktop_ui/DropDownMenu.hpp"
+#include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/CommandLine.hpp"
@@ -82,39 +83,6 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight});
 
-   auto& alignmentBox = dialogManager.root().create_root_widget<triglav::ui_core::AlignmentBox>({
-      .horizontalAlignment = HorizontalAlignment::Center,
-      .verticalAlignment = VerticalAlignment::Center,
-   });
-
-   auto& globalLayout = alignmentBox.create_content<triglav::ui_core::VerticalLayout>({
-      .padding = {0, 0, 0, 0},
-      .separation = 0.0f,
-   });
-
-   auto& rect = globalLayout.create_child<triglav::ui_core::RectBox>({
-      .color = {1, 0, 1, 1},
-      .borderRadius = {0, 0, 0, 0},
-      .borderColor = {0, 0, 0, 0},
-      .borderWidth = 0,
-   });
-   rect.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
-
-   auto& scroll = globalLayout.create_child<triglav::ui_core::ScrollBox>({.maxHeight = 300.0f});
-
-   auto& rect2 = globalLayout.create_child<triglav::ui_core::RectBox>({
-      .color = {1, 0, 1, 1},
-      .borderRadius = {0, 0, 0, 0},
-      .borderColor = {0, 0, 0, 0},
-      .borderWidth = 0,
-   });
-   rect2.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
-
-   auto& layout = scroll.create_content<triglav::ui_core::VerticalLayout>({
-      .padding = {5.0f, 5.0f, 5.0f, 5.0f},
-      .separation = 10.0f,
-   });
-
    triglav::desktop_ui::DesktopUIManager desktopUiManager(
       triglav::desktop_ui::ThemeProperties{
          // Core
@@ -141,6 +109,60 @@ int triglav_main(InputArgs& args, IDisplay& display)
          .dropdown_border_width = 1.0f,
       },
       dialogManager.root().surface(), dialogManager);
+
+   auto& splitter = dialogManager.root().create_root_widget<triglav::desktop_ui::Splitter>({
+      .manager = &desktopUiManager,
+      .offset = static_cast<float>(g_defaultWidth) / 2,
+      .axis = triglav::ui_core::Axis::Horizontal,
+   });
+
+   auto& vertSplitter = splitter.create_preceding<triglav::desktop_ui::Splitter>({
+      .manager = &desktopUiManager,
+      .offset = static_cast<float>(g_defaultHeight) / 2,
+      .axis = triglav::ui_core::Axis::Vertical,
+   });
+
+   vertSplitter.create_preceding<triglav::ui_core::EmptySpace>({
+      .size = {200, 200},
+   });
+
+   auto& leftBox = vertSplitter.create_following<triglav::ui_core::RectBox>({
+      .color = {0.0f, 0.7f, 0.0f, 1.0f},
+      .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
+      .borderColor = {0.0f, 0.8f, 0.0f, 1.0f},
+      .borderWidth = 1.0f,
+   });
+   leftBox.create_content<triglav::ui_core::EmptySpace>({
+      .size = {200, 200},
+   });
+
+   auto& globalLayout = splitter.create_following<triglav::ui_core::VerticalLayout>({
+      .padding = {0, 0, 0, 0},
+      .separation = 0.0f,
+   });
+
+   auto& rect = globalLayout.create_child<triglav::ui_core::RectBox>({
+      .color = {1, 0, 1, 1},
+      .borderRadius = {0, 0, 0, 0},
+      .borderColor = {0, 0, 0, 0},
+      .borderWidth = 0,
+   });
+   rect.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
+
+   auto& scroll = globalLayout.create_child<triglav::ui_core::ScrollBox>({.maxHeight = 300.0f});
+
+   auto& rect2 = globalLayout.create_child<triglav::ui_core::RectBox>({
+      .color = {1, 0, 1, 1},
+      .borderRadius = {0, 0, 0, 0},
+      .borderColor = {0, 0, 0, 0},
+      .borderWidth = 0,
+   });
+   rect2.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
+
+   auto& layout = scroll.create_content<triglav::ui_core::VerticalLayout>({
+      .padding = {5.0f, 5.0f, 5.0f, 5.0f},
+      .separation = 10.0f,
+   });
 
    layout.create_child<triglav::desktop_ui::TextInput>({
       .manager = &desktopUiManager,

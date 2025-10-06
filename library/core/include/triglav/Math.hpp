@@ -22,6 +22,16 @@ using Quaternion = glm::quat;
 // (x, y, width, height)
 using Rect = Vector4;
 
+[[nodiscard]] constexpr Vector2 rect_position(const Rect& r)
+{
+   return {r.x, r.y};
+}
+
+[[nodiscard]] constexpr Vector2 rect_size(const Rect& r)
+{
+   return {r.z, r.w};
+}
+
 // (r, g, b, a)
 using Color = Vector4;
 

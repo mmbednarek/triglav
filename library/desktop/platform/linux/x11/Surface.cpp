@@ -162,6 +162,12 @@ void Surface::set_cursor_icon(const CursorIcon icon)
    case CursorIcon::Edit:
       m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_xterm);
       break;
+   case CursorIcon::ResizeHorizontal:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_sb_h_double_arrow);
+      break;
+   case CursorIcon::ResizeVertical:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_double_arrow);
+      break;
    default:
       m_currentCursor = 0;
       return;
