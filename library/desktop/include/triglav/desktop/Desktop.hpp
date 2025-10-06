@@ -75,6 +75,8 @@ enum class CursorIcon
    Move,
    Wait,
    Edit,
+   ResizeHorizontal,
+   ResizeVertical,
 };
 
 }// namespace triglav::desktop

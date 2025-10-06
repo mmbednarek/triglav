@@ -4,12 +4,14 @@ desktop_ui_sources = files([
                           'include/triglav/desktop_ui/Dialog.hpp',
                           'include/triglav/desktop_ui/DialogManager.hpp',
                           'include/triglav/desktop_ui/DropDownMenu.hpp',
+                          'include/triglav/desktop_ui/Splitter.hpp',
                           'include/triglav/desktop_ui/TextInput.hpp',
                           'src/Button.cpp',
                           'src/DesktopUI.cpp',
                           'src/Dialog.cpp',
                           'src/DialogManager.cpp',
                           'src/DropDownMenu.cpp',
+                          'src/Splitter.cpp',
                           'src/TextInput.cpp',
                       ])
 

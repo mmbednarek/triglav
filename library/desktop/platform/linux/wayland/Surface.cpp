@@ -213,6 +213,12 @@ void Surface::set_cursor_icon(const CursorIcon icon)
    case CursorIcon::Edit:
       wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_TEXT);
       break;
+   case CursorIcon::ResizeHorizontal:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_EW_RESIZE);
+      break;
+   case CursorIcon::ResizeVertical:
+      wp_cursor_shape_device_v1_set_shape(m_display.m_cursorShapeDevice, m_pointerSerial, WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NS_RESIZE);
+      break;
    default:
       return;
    }

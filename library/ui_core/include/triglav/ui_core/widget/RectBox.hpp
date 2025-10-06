@@ -14,9 +14,9 @@ class RectBox final : public ContainerWidget
  public:
    struct State
    {
-      Vector4 color;
+      Color color;
       Vector4 borderRadius;
-      Vector4 borderColor;
+      Color borderColor;
       float borderWidth;
    };
 

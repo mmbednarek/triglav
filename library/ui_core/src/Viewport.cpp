@@ -137,10 +137,11 @@ SpriteId Viewport::add_sprite(Sprite&& sprite)
    return spriteId;
 }
 
-void Viewport::set_sprite_position(const SpriteId spriteId, const Vector2 position, const Rect /*crop*/)
+void Viewport::set_sprite_position(const SpriteId spriteId, const Vector2 position, const Rect crop)
 {
    auto& sprite = m_sprites.at(spriteId);
    sprite.position = position;
+   sprite.crop = crop;
    event_OnUpdatedSprite.publish(spriteId, sprite);
    m_needsRedraw = true;
 }
