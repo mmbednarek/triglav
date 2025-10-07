@@ -45,7 +45,7 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
       removal_indices.emplace(m_keyToIndex.at(rem_key));
    }
 
-   const auto target_count = m_indexCount - m_removals.size() + m_additions.size();
+   const u32 target_count = static_cast<u32>(m_indexCount - m_removals.size() + m_additions.size());
 
    // First we use additions to remove the objects
    auto addition_it = m_additions.begin();
@@ -66,7 +66,7 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
    }
 
    // If there are remaining additions append them to the end
-   auto dst_index = m_indexCount;
+   u32 dst_index = m_indexCount;
    while (addition_it != m_additions.end()) {
       this->register_mapping(addition_it->first, dst_index);
       writer.set_object(dst_index++, addition_it->second);
@@ -75,7 +75,7 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
 
    // If there are existing removals we need to move non-removed objects from the top
    // to index of the removal
-   auto src_index = target_count;
+   u32 src_index = target_count;
    while (removal_it != m_removals.end()) {
       auto rem_index = this->remove_mapping_by_key(*removal_it);
       if (rem_index >= target_count) {
