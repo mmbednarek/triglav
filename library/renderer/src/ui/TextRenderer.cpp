@@ -160,7 +160,7 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
          ++srcIndex;
 
       if (dstIndex < remainCount) {
-         Name srcName = m_drawCallToTextName[srcIndex];
+         ui_core::TextId srcName = m_drawCallToTextName[srcIndex];
          m_textInfos[srcName].drawCallId = dstIndex;
          m_drawCallToTextName[dstIndex] = srcName;
 

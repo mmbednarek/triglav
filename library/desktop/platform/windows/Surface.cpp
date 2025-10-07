@@ -286,6 +286,13 @@ void Surface::on_set_focus(const bool hasFocus)
    }
 }
 
+void Surface::on_mouse_wheel(int delta)
+{
+   if (delta != 0) {
+      event_OnMouseWheelTurn.publish(-static_cast<float>(delta) / 30.0f);
+   }
+}
+
 LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const LPARAM lParam)
 {
    switch (msg) {
@@ -352,6 +359,11 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       this->on_set_focus(false);
       break;
    }
+   case WM_MOUSEWHEEL: {
+      const auto delta = GET_WHEEL_DELTA_WPARAM(wParam);
+      this->on_mouse_wheel(delta);
+      break;
+   }
    default:
       return DefWindowProcW(m_windowHandle, msg, wParam, lParam);
    }
@@ -380,6 +392,12 @@ void Surface::set_cursor_icon(const CursorIcon icon)
       break;
    case CursorIcon::Edit:
       m_currentCursor = LoadCursor(nullptr, IDC_IBEAM);
+      break;
+   case CursorIcon::ResizeHorizontal:
+      m_currentCursor = LoadCursor(nullptr, IDC_SIZEWE);
+      break;
+   case CursorIcon::ResizeVertical:
+      m_currentCursor = LoadCursor(nullptr, IDC_SIZENS);
       break;
    default:
       m_currentCursor = nullptr;

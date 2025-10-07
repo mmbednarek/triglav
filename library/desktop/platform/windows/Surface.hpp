@@ -45,6 +45,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    void on_resize(short x, short y);
    void on_rune(Rune rune) const;
    void on_set_focus(bool hasFocus);
+   void on_mouse_wheel(int delta);
 
    Display& m_display;
    Vector2i m_dimension;
