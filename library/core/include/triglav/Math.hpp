@@ -1,8 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
-#include <algorithm>
 
 #include "Int.hpp"
 
