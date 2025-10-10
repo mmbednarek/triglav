@@ -55,6 +55,7 @@ struct Event
    Type eventType;
    Vector2 parentSize;
    Vector2 mousePosition;
+   Vector2 globalMousePosition;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 };
 

@@ -143,6 +143,7 @@ void Dialog::on_mouse_move(const Vector2 position)
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MouseMoved;
    event.mousePosition = position;
+   event.globalMousePosition = position;
    event.parentSize = m_renderSurface.resolution();
    m_rootWidget->on_event(event);
 }
@@ -155,6 +156,7 @@ void Dialog::on_mouse_wheel_turn(const float amount) const
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MouseScrolled;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data = ui_core::Event::Scroll{amount};
    m_rootWidget->on_event(event);
@@ -168,6 +170,7 @@ void Dialog::on_mouse_button_is_pressed(desktop::MouseButton button) const
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MousePressed;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_rootWidget->on_event(event);
@@ -181,6 +184,7 @@ void Dialog::on_mouse_button_is_released(desktop::MouseButton button) const
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MouseReleased;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_rootWidget->on_event(event);
@@ -194,6 +198,7 @@ void Dialog::on_key_is_pressed(desktop::Key key) const
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::KeyPressed;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::Keyboard>(key);
    m_rootWidget->on_event(event);
@@ -207,6 +212,7 @@ void Dialog::on_text_input(const Rune rune) const
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::TextInput;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::TextInput>(rune);
    m_rootWidget->on_event(event);

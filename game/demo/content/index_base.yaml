@@ -36,3 +36,5 @@ resources:
   # UI
   - name: "texture/ui_images.tex"
     source: "texture/ui_images.tex"
+  - name: "texture/ui_atlas.tex"
+    source: "texture/ui_atlas.tex"

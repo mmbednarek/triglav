@@ -55,6 +55,7 @@ void AlignmentBox::on_event(const Event& event)
          enterEvent.eventType = Event::Type::MouseEntered;
          enterEvent.parentSize = size;
          enterEvent.mousePosition = event.mousePosition - offset;
+         enterEvent.globalMousePosition = event.mousePosition;
          m_content->on_event(enterEvent);
       }
       m_isMouseInside = true;
@@ -68,6 +69,7 @@ void AlignmentBox::on_event(const Event& event)
       leaveEvent.eventType = Event::Type::MouseLeft;
       leaveEvent.parentSize = size;
       leaveEvent.mousePosition = event.mousePosition - offset;
+      leaveEvent.globalMousePosition = event.mousePosition;
       m_content->on_event(leaveEvent);
       m_isMouseInside = false;
    }

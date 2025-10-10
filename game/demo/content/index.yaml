@@ -196,6 +196,8 @@ resources:
     source: model/terrain.mesh
   - name: texture/logo.tex
     source: texture/logo.tex
+  - name: texture/ui_atlas.tex
+    source: texture/ui_atlas.tex
   - name: texture/wierd_tube.tex0.tex
     source: texture/wierd_tube.tex0.tex
   - name: texture/wierd_tube.tex1.tex

@@ -1,6 +1,7 @@
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop_ui/Button.hpp"
+#include "triglav/desktop_ui/ContextMenu.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/DialogManager.hpp"
 #include "triglav/desktop_ui/DropDownMenu.hpp"
@@ -44,6 +45,38 @@ constexpr auto g_defaultWidth = 800;
 constexpr auto g_defaultHeight = 600;
 
 TG_DEFINE_AWAITER(ResourceLoadedAwaiter, ResourceManager, OnLoadedAssets)
+
+class ColorChanger
+{
+ public:
+   using Self = ColorChanger;
+
+   ColorChanger(triglav::ui_core::RectBox& rectBox, triglav::desktop_ui::MenuController& controller) :
+       m_rectBox(rectBox),
+       TG_CONNECT(controller, OnClicked, on_clicked)
+   {
+   }
+
+   void on_clicked(const triglav::Name name, const triglav::desktop_ui::MenuItem& /*item*/) const
+   {
+      switch (name) {
+      case "green"_name:
+         m_rectBox.set_color({0, 1, 0, 1});
+         break;
+      case "red"_name:
+         m_rectBox.set_color({1, 0, 0, 1});
+         break;
+      case "blue"_name:
+         m_rectBox.set_color({0, 0, 1, 1});
+         break;
+      default:
+         break;
+      }
+   }
+
+   triglav::ui_core::RectBox& m_rectBox;
+   TG_SINK(triglav::desktop_ui::MenuController, OnClicked);
+};
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
@@ -126,12 +159,25 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .size = {200, 200},
    });
 
-   auto& leftBox = vertSplitter.create_following<triglav::ui_core::RectBox>({
+   triglav::desktop_ui::MenuController menuController;
+   menuController.add_item("green"_name, "Make green"_strv);
+   menuController.add_item("red"_name, "Make red"_strv);
+   menuController.add_item("blue"_name, "Make blue"_strv);
+
+   auto& contextMenu = vertSplitter.create_following<triglav::desktop_ui::ContextMenu>({
+      .manager = &desktopUiManager,
+      .controller = &menuController,
+   });
+
+   auto& leftBox = contextMenu.create_content<triglav::ui_core::RectBox>({
       .color = {0.0f, 0.7f, 0.0f, 1.0f},
       .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
       .borderColor = {0.0f, 0.8f, 0.0f, 1.0f},
       .borderWidth = 1.0f,
    });
+
+   ColorChanger colorChanger(leftBox, menuController);
+
    leftBox.create_content<triglav::ui_core::EmptySpace>({
       .size = {200, 200},
    });

@@ -19,6 +19,10 @@ void UpdateList<TKey, TValue>::add_or_update(TKey key, TValue&& value)
 template<typename TKey, typename TValue>
 void UpdateList<TKey, TValue>::remove(TKey key)
 {
+   if (!m_keyToIndex.contains(key)) {
+      std::erase_if(m_additions, [key](const auto& pair) { return pair.first == key; });
+      return;
+   }
    m_removals.emplace(key);
 }
 

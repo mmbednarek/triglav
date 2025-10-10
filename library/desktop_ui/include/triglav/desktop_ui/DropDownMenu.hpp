@@ -107,6 +107,7 @@ class DropDownMenu final : public ui_core::IWidget
    [[maybe_unused]] ui_core::IWidget* m_parent;
    ui_core::RectBox m_rect;
    ui_core::TextBox* m_label{};
+   ui_core::SpriteId m_downArrow{};
    Vector4 m_dimensions;
    Vector4 m_croppingMask;
    Dialog* m_currentPopup{};

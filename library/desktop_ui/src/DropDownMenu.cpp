@@ -161,7 +161,7 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
       .typeface = props.base_typeface,
       .content = m_state.items[m_state.selectedItem],
       .color = props.foreground_color,
-      .horizontalAlignment = ui_core::HorizontalAlignment::Center,
+      .horizontalAlignment = ui_core::HorizontalAlignment::Left,
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
 }
@@ -176,11 +176,26 @@ void DropDownMenu::add_to_viewport(const Vector4 dimensions, const Vector4 cropp
    m_dimensions = dimensions;
    m_croppingMask = croppingMask;
    m_rect.add_to_viewport(dimensions, croppingMask);
+
+   const Vector2 spriteSize{dimensions.w * 0.4, dimensions.w * 0.4};
+   const Vector2 spritePos{dimensions.x + dimensions.z - 2 * spriteSize.x, dimensions.y + dimensions.w * 0.5 - spriteSize.x * 0.5};
+   if (m_downArrow == 0) {
+      m_downArrow = m_context.viewport().add_sprite({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .position = spritePos,
+         .size = spriteSize,
+         .crop = {croppingMask},
+         .textureRegion = Vector4{0, 0, 64, 64},
+      });
+   } else {
+      m_context.viewport().set_sprite_position(m_downArrow, spritePos, croppingMask);
+   }
 }
 
 void DropDownMenu::remove_from_viewport()
 {
    m_rect.remove_from_viewport();
+   m_context.viewport().remove_sprite(m_downArrow);
 }
 
 void DropDownMenu::on_event(const ui_core::Event& event)
@@ -190,6 +205,7 @@ void DropDownMenu::on_event(const ui_core::Event& event)
       if (m_currentPopup != nullptr) {
          m_state.manager->dialog_manager().close_popup(m_currentPopup);
          m_currentPopup = nullptr;
+         m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
       } else {
          // Fake selector with invalid context
          const auto selector = std::make_unique<DropDownSelector>(m_context, DropDownSelector::State{.menu = this}, nullptr);
@@ -201,6 +217,8 @@ void DropDownMenu::on_event(const ui_core::Event& event)
          popup.create_root_widget<DropDownSelector>({this});
          popup.initialize();
          m_currentPopup = &popup;
+
+         m_context.viewport().set_sprite_texture_region(m_downArrow, {64, 0, 64, 64});
       }
       break;
    }
@@ -225,6 +243,7 @@ void DropDownMenu::set_selected_item(const u32 index)
    m_state.selectedItem = index;
    const auto& label = m_state.items.at(index);
    m_label->set_content(label.view());
+   m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
 
    if (m_currentPopup != nullptr) {
       m_state.manager->dialog_manager().close_popup(m_currentPopup);
