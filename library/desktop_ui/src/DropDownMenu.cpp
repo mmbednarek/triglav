@@ -200,37 +200,7 @@ void DropDownMenu::remove_from_viewport()
 
 void DropDownMenu::on_event(const ui_core::Event& event)
 {
-   switch (event.eventType) {
-   case ui_core::Event::Type::MouseReleased: {
-      if (m_currentPopup != nullptr) {
-         m_state.manager->dialog_manager().close_popup(m_currentPopup);
-         m_currentPopup = nullptr;
-         m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
-      } else {
-         // Fake selector with invalid context
-         const auto selector = std::make_unique<DropDownSelector>(m_context, DropDownSelector::State{.menu = this}, nullptr);
-         const auto desiredDims = selector->desired_size({m_dimensions.x, 1024});
-
-         // TODO: Add ability to update context.
-         auto& popup = m_state.manager->dialog_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
-                                                                             {m_dimensions.z, desiredDims.y});
-         popup.create_root_widget<DropDownSelector>({this});
-         popup.initialize();
-         m_currentPopup = &popup;
-
-         m_context.viewport().set_sprite_texture_region(m_downArrow, {64, 0, 64, 64});
-      }
-      break;
-   }
-   case ui_core::Event::Type::MouseEntered:
-      m_rect.set_color(m_state.manager->properties().dropdown.bg_hover);
-      break;
-   case ui_core::Event::Type::MouseLeft:
-      m_rect.set_color(m_state.manager->properties().dropdown.bg);
-      break;
-   default:
-      break;
-   }
+   this->visit_event(event);
 }
 
 void DropDownMenu::on_child_state_changed(IWidget& /*widget*/)
@@ -249,6 +219,39 @@ void DropDownMenu::set_selected_item(const u32 index)
       m_state.manager->dialog_manager().close_popup(m_currentPopup);
       m_currentPopup = nullptr;
    }
+}
+
+void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
+{
+   if (m_currentPopup != nullptr) {
+      m_state.manager->dialog_manager().close_popup(m_currentPopup);
+      m_currentPopup = nullptr;
+      m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
+      return;
+   }
+
+   // Fake selector with invalid context
+   const auto selector = std::make_unique<DropDownSelector>(m_context, DropDownSelector::State{.menu = this}, nullptr);
+   const auto desiredDims = selector->desired_size({m_dimensions.x, 1024});
+
+   // TODO: Add ability to update context.
+   auto& popup = m_state.manager->dialog_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
+                                                                       {m_dimensions.z, desiredDims.y});
+   popup.create_root_widget<DropDownSelector>({this});
+   popup.initialize();
+   m_currentPopup = &popup;
+
+   m_context.viewport().set_sprite_texture_region(m_downArrow, {64, 0, 64, 64});
+}
+
+void DropDownMenu::on_mouse_entered(const ui_core::Event& /*event*/)
+{
+   m_rect.set_color(m_state.manager->properties().dropdown.bg_hover);
+}
+
+void DropDownMenu::on_mouse_left(const ui_core::Event& /*event*/)
+{
+   m_rect.set_color(m_state.manager->properties().dropdown.bg);
 }
 
 }// namespace triglav::desktop_ui

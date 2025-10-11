@@ -7,8 +7,6 @@
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
-#include <fmt/format.h>
-
 namespace triglav::desktop_ui {
 
 using namespace name_literals;
@@ -19,6 +17,7 @@ constexpr auto g_itemVMargin = 8.0f;
 constexpr auto g_globalMargin = 6.0f;
 constexpr auto g_indicatorSize = 16.0f;
 constexpr auto g_indicatorMargin = 8.0f;
+constexpr auto g_separatorHeight = 2.0f;
 
 MenuList::MenuList(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::BaseWidget(parent),
@@ -53,6 +52,22 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
    if (m_labels.empty()) {
       m_labels.reserve(items.size());
       for (const Name itemName : items) {
+         if (itemName == "separator"_name) {
+            m_separators.push_back(m_context.viewport().add_rectangle({
+               .rect = {dimensions.x + g_globalMargin, y_offset + (measure.separation_height - g_separatorHeight) / 2, measure.item_size.x,
+                        g_separatorHeight},
+               .color = TG_THEME_VAL(active_color),
+               .borderRadius = {0, 0, 0, 0},
+               .borderColor = palette::TRANSPARENT,
+               .crop = croppingMask,
+               .borderWidth = 0.0f,
+            }));
+            y_offset += measure.separation_height;
+            continue;
+         }
+
+         m_heightToItem[y_offset] = itemName;
+
          const auto& item = m_state.controller->item(itemName);
          m_labels.push_back(m_context.viewport().add_text({
             .content = item.label,
@@ -91,6 +106,9 @@ void MenuList::remove_from_viewport()
    for (const auto icon : m_icons) {
       m_context.viewport().remove_sprite(icon);
    }
+   for (const auto separator : m_separators) {
+      m_context.viewport().remove_rectangle(separator);
+   }
    m_context.viewport().remove_rectangle(m_backgroundId);
    if (m_hoverRectId != 0) {
       m_context.viewport().remove_rectangle(m_hoverRectId);
@@ -105,14 +123,19 @@ void MenuList::on_event(const ui_core::Event& event)
 void MenuList::on_mouse_moved(const ui_core::Event& event)
 {
    const auto measure = this->get_measure();
-   const auto& items = m_state.controller->children(m_state.listName);
 
-   const auto index = this->index_from_mouse_position(event.mousePosition);
-   if (index == m_hoverIndex)
+   const auto [offset_y, new_hovered_item] = this->index_from_mouse_position(event.mousePosition);
+   if (new_hovered_item == m_hoveredItem)
       return;
 
-   if (index >= items.size()) {
-      m_hoverIndex = ~0;
+   m_hoveredItem = new_hovered_item;
+
+   if (m_subMenu != nullptr) {
+      m_state.manager->dialog_manager().close_popup(m_subMenu);
+      m_subMenu = nullptr;
+   }
+
+   if (m_hoveredItem == 0) {
       if (m_hoverRectId != 0) {
          m_context.viewport().remove_rectangle(m_hoverRectId);
          m_hoverRectId = 0;
@@ -120,9 +143,7 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
       return;
    }
 
-   m_hoverIndex = index;
-   const Vector4 dims{g_globalMargin, g_globalMargin + static_cast<float>(m_hoverIndex) * measure.item_size.y, measure.item_size.x,
-                      measure.item_size.y};
+   const Vector4 dims{g_globalMargin, offset_y, measure.item_size.x, measure.item_size.y};
    if (m_hoverRectId != 0) {
       m_context.viewport().set_rectangle_dims(m_hoverRectId, dims, m_croppingMask);
    } else {
@@ -136,20 +157,14 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
       });
    }
 
-   if (m_subMenu != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_subMenu);
-      m_subMenu = nullptr;
-   }
-
-   const auto item_name = items.at(m_hoverIndex);
-   auto& item = m_state.controller->item(item_name);
+   auto& item = m_state.controller->item(m_hoveredItem);
    if (item.isSubmenu) {
-      const Vector2 offset = m_state.screenOffset + Vector2{2 * g_globalMargin + 128, g_globalMargin + 32 * m_hoverIndex};
+      const Vector2 offset = m_state.screenOffset + Vector2{measure.size.x, offset_y};
 
       State child_state{
          .manager = m_state.manager,
          .controller = m_state.controller,
-         .listName = item_name,
+         .listName = m_hoveredItem,
          .screenOffset = offset,
       };
       const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
@@ -164,16 +179,24 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
 
 void MenuList::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
-   const auto& items = m_state.controller->children(m_state.listName);
-   if (m_hoverIndex != ~0u) {
-      m_state.controller->trigger_on_clicked(items[m_hoverIndex]);
+   if (m_hoveredItem != 0) {
+      m_state.controller->trigger_on_clicked(m_hoveredItem);
    }
 }
 
-u32 MenuList::index_from_mouse_position(const Vector2 position) const
+std::pair<float, Name> MenuList::index_from_mouse_position(const Vector2 position) const
 {
-   const auto indexFP = (position.y - g_globalMargin) / this->get_measure().item_size.y;
-   return indexFP >= 0.0f ? static_cast<u32>(indexFP) : ~0u;
+   const auto it_lb = m_heightToItem.lower_bound(position.y);
+   if (it_lb == m_heightToItem.begin()) {
+      return {0.0f, 0};
+   }
+
+   const auto it = std::prev(it_lb);
+   if (position.y > it->first + this->get_measure().item_size.y) {
+      return {0.0f, 0};
+   }
+
+   return *it;
 }
 
 MenuList::Measure MenuList::get_measure() const
@@ -190,7 +213,12 @@ MenuList::Measure MenuList::get_measure() const
 
    float maxHeight = 0.0f;
    float maxWidth = 0.0f;
+   u32 separator_count = 0;
    for (const auto child : children) {
+      if (child == "separator"_name) {
+         ++separator_count;
+         continue;
+      }
       const auto& item = m_state.controller->item(child);
       auto measure_text = atlas.measure_text(item.label.view());
       if (item.isSubmenu) {
@@ -200,11 +228,17 @@ MenuList::Measure MenuList::get_measure() const
       maxHeight = std::max(maxHeight, measure_text.height);
    }
 
+   const u32 item_count = children.size() - separator_count;
+
    const Vector2 item_size{2 * g_itemHMargin + maxWidth, 2 * g_itemVMargin + maxHeight};
+   const float separation_height = 0.5f * item_size.y;
    m_cachedMeasure = Measure{
-      .size = {2 * g_globalMargin + item_size.x, 2 * g_globalMargin + item_size.y * static_cast<float>(children.size())},
+      .size = {2 * g_globalMargin + item_size.x,
+               2 * g_globalMargin + item_size.y * static_cast<float>(item_count) + separation_height * static_cast<float>(separator_count)},
       .item_size = item_size,
       .text_height = maxHeight,
+      .separation_height = separation_height,
+      .separator_count = separator_count,
    };
    return *m_cachedMeasure;
 }

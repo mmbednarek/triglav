@@ -144,6 +144,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    triglav::desktop_ui::MenuController menuController;
    menuController.add_item("green"_name, "Make green"_strv);
    menuController.add_item("red"_name, "Make red"_strv);
+   menuController.add_seperator();
    menuController.add_item("blue"_name, "Make blue"_strv);
    menuController.add_submenu("more"_name, "More colors..."_strv);
    menuController.add_subitem("more"_name, "yellow"_name, "Yellow"_strv);

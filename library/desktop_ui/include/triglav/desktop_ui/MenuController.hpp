@@ -26,6 +26,7 @@ class MenuController
    void add_item(Name name, StringView label);
    void add_submenu(Name name, StringView label);
    void add_subitem(Name parent, Name name, StringView label);
+   void add_seperator();
 
    const std::vector<Name>& children(Name parent) const;
    const MenuItem& item(Name name) const;

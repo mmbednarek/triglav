@@ -77,6 +77,7 @@ std::map<Name, std::string_view> KnownNames{
    {"metrics.fps_min"_name, "metrics.fps_min"sv},
    {"metrics.gpu_time"_name, "metrics.gpu_time"sv},
    {"metrics.triangles"_name, "metrics.triangles"sv},
+   {"more"_name, "more"sv},
    {"noise"_name, "noise"sv},
    {"noRayTracing"_name, "noRayTracing"sv},
    {"normal"_name, "normal"sv},
@@ -91,6 +92,7 @@ std::map<Name, std::string_view> KnownNames{
    {"post_processing"_name, "post_processing"sv},
    {"preferIntegratedGpu"_name, "preferIntegratedGpu"sv},
    {"presentMode"_name, "presentMode"sv},
+   {"purple"_name, "purple"sv},
    {"ray_tracing.ambient_occlusion"_name, "ray_tracing.ambient_occlusion"sv},
    {"ray_tracing.ambient_occlusion.blurred"_name, "ray_tracing.ambient_occlusion.blurred"sv},
    {"ray_tracing.shadows"_name, "ray_tracing.shadows"sv},
@@ -107,6 +109,7 @@ std::map<Name, std::string_view> KnownNames{
    {"rt_shadow"_name, "rt_shadow"sv},
    {"segoeui"_name, "segoeui"sv},
    {"segoeui/bold"_name, "segoeui/bold"sv},
+   {"separator"_name, "separator"sv},
    {"shading"_name, "shading"sv},
    {"shading.bloom"_name, "shading.bloom"sv},
    {"shading.blurred_bloom"_name, "shading.blurred_bloom"sv},
@@ -216,6 +219,7 @@ std::map<Name, std::string_view> KnownNames{
    {"user_interface.text_vertex_buffer"_name, "user_interface.text_vertex_buffer"sv},
    {"uv"_name, "uv"sv},
    {"width"_name, "width"sv},
+   {"yellow"_name, "yellow"sv},
 };
 
 }// namespace
