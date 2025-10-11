@@ -36,6 +36,14 @@ using Rect = Vector4;
 // (r, g, b, a)
 using Color = Vector4;
 
+namespace palette {
+
+constexpr Color BLACK{0, 0, 0, 1.0f};
+constexpr Color WHITE{1.0f, 1.0f, 1.0f, 1.0f};
+constexpr Color TRANSPARENT{0.0f, 0.0f, 0.0f, 0.0f};
+
+}// namespace palette
+
 struct Vector3_Aligned16B
 {
    alignas(16) Vector3 value{};

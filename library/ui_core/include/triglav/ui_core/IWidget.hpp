@@ -59,6 +59,21 @@ struct Event
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 };
 
+class EventVisitor
+{
+ public:
+   virtual void on_mouse_pressed(const Event& /*event*/, const Event::Mouse& /*mouse*/) {}
+   virtual void on_mouse_released(const Event& /*event*/, const Event::Mouse& /*mouse*/) {}
+   virtual void on_mouse_moved(const Event& /*event*/) {}
+   virtual void on_mouse_entered(const Event& /*event*/) {}
+   virtual void on_mouse_left(const Event& /*event*/) {}
+   virtual void on_mouse_scrolled(const Event& /*event*/, const Event::Scroll& /*scroll*/) {}
+   virtual void on_key_pressed(const Event& /*event*/, const Event::Keyboard& /*key_press*/) {}
+   virtual void on_text_input(const Event& /*event*/, const Event::TextInput& /*text_input*/) {}
+
+   void visit_event(const Event& event);
+};
+
 class IWidget
 {
  public:

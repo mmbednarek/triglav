@@ -122,39 +122,8 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight});
 
-   triglav::desktop_ui::DesktopUIManager desktopUiManager(
-      triglav::desktop_ui::ThemeProperties{// Core
-                                           .base_typeface = "cantarell.typeface"_rc,
-                                           .background_color = {0.1f, 0.1f, 0.1f, 1.0f},
-                                           .foreground_color = {1.0f, 1.0f, 1.0f, 1.0f},
-                                           .accent_color = {0.0f, 0.0f, 1.0f, 1.0f},
-
-                                           // Button
-                                           .button =
-                                              {
-                                                 .bg_color = {0.0f, 0.105f, 1.0f, 1.0f},
-                                                 .bg_hover_color = {0.035f, 0.22f, 1.0f, 1.0f},
-                                                 .bg_pressed_color = {0.0f, 0.015f, 0.48f, 1.0f},
-                                                 .font_size = 15,
-                                              },
-
-                                           // Text
-                                           .text_input =
-                                              {
-                                                 .bg_inactive = {0.03f, 0.03f, 0.03f, 1.0f},
-                                                 .bg_active = {0.01f, 0.01f, 0.01f, 1.0f},
-                                                 .bg_hover = {0.035f, 0.035f, 0.035f, 1.0f},
-                                              },
-
-                                           // Dropdown
-                                           .dropdown =
-                                              {
-                                                 .bg = {0.04f, 0.04f, 0.04f, 1.0f},
-                                                 .bg_hover = {0.05f, 0.05f, 0.05f, 1.0f},
-                                                 .border = {0.1f, 0.1f, 0.1f, 1.0f},
-                                                 .border_width = 1.0f,
-                                              }},
-      dialogManager.root().surface(), dialogManager);
+   triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties::get_default(),
+                                                          dialogManager.root().surface(), dialogManager);
 
    auto& splitter = dialogManager.root().create_root_widget<triglav::desktop_ui::Splitter>({
       .manager = &desktopUiManager,
