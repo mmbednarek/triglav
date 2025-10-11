@@ -29,6 +29,11 @@ void MenuController::add_subitem(const Name parent, const Name name, const Strin
    };
 }
 
+void MenuController::add_seperator()
+{
+   m_hierarchy["root"_name].push_back("separator"_name);
+}
+
 const std::vector<Name>& MenuController::children(const Name parent) const
 {
    return m_hierarchy.at(parent);
