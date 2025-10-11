@@ -36,15 +36,17 @@ void ContextMenu::on_event(const ui_core::Event& event)
          m_state.manager->dialog_manager().close_popup(m_menuDialog);
          m_menuDialog = nullptr;
       } else if (mouse_payload.button == desktop::MouseButton::Right) {
-         const auto size = MenuList::calculate_size(*m_state.controller, "root"_name);
-
-         auto& popup = m_state.manager->dialog_manager().create_popup_dialog(event.globalMousePosition, size);
-         popup.create_root_widget<MenuList>({
+         MenuList::State child_state{
             .manager = m_state.manager,
             .controller = m_state.controller,
             .listName = "root"_name,
             .screenOffset = event.globalMousePosition,
-         });
+         };
+         const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
+         const auto size = temporary_menu->desired_size({});
+
+         auto& popup = m_state.manager->dialog_manager().create_popup_dialog(event.globalMousePosition, size);
+         popup.create_root_widget<MenuList>(MenuList::State{child_state});
          popup.initialize();
          m_menuDialog = &popup;
          return;

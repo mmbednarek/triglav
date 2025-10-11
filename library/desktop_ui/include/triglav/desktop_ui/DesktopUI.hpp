@@ -15,7 +15,9 @@ struct ThemeProperties
 {
    // Core
    TypefaceName base_typeface;
+   i32 base_font_size;
    Color background_color;
+   Color active_color;
    Color foreground_color;
    Color accent_color;
 
@@ -44,6 +46,8 @@ struct ThemeProperties
       Vector4 border;
       float border_width;
    } dropdown;
+
+   static ThemeProperties get_default();
 };
 
 #define TG_THEME_VAL(name) m_state.manager->properties().name

@@ -2,6 +2,36 @@
 
 namespace triglav::ui_core {
 
+void EventVisitor::visit_event(const Event& event)
+{
+   switch (event.eventType) {
+   case Event::Type::MousePressed:
+      this->on_mouse_pressed(event, std::get<Event::Mouse>(event.data));
+      break;
+   case Event::Type::MouseReleased:
+      this->on_mouse_released(event, std::get<Event::Mouse>(event.data));
+      break;
+   case Event::Type::MouseMoved:
+      this->on_mouse_moved(event);
+      break;
+   case Event::Type::MouseEntered:
+      this->on_mouse_entered(event);
+      break;
+   case Event::Type::MouseLeft:
+      this->on_mouse_left(event);
+      break;
+   case Event::Type::MouseScrolled:
+      this->on_mouse_scrolled(event, std::get<Event::Scroll>(event.data));
+      break;
+   case Event::Type::KeyPressed:
+      this->on_key_pressed(event, std::get<Event::Keyboard>(event.data));
+      break;
+   case Event::Type::TextInput:
+      this->on_text_input(event, std::get<Event::TextInput>(event.data));
+      break;
+   }
+}
+
 BaseWidget::BaseWidget(IWidget* parent) :
     m_parent(parent)
 {
