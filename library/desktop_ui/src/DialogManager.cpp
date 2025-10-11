@@ -54,9 +54,10 @@ void DialogManager::tick()
 
 void DialogManager::close_popup(Dialog* dialog)
 {
-   std::unique_lock lk{m_popupMtx};
-
    assert(dialog != nullptr);
+   dialog->uninitialize();
+
+   std::unique_lock lk{m_popupMtx};
    m_popupsToEarse.emplace_back(dialog);
 }
 

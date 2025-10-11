@@ -89,6 +89,13 @@ void Dialog::initialize()
    m_isInitialized = true;
 }
 
+void Dialog::uninitialize() const
+{
+   if (m_rootWidget != nullptr) {
+      m_rootWidget->remove_from_viewport();
+   }
+}
+
 void Dialog::build_rendering_job(render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));

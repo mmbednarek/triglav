@@ -32,6 +32,7 @@ class Dialog
           render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u dimensions, Vector2i offset);
 
    void initialize();
+   void uninitialize() const;
    void update();
    void on_close();
    void on_mouse_enter(Vector2 position);

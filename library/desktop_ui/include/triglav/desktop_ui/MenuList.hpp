@@ -8,13 +8,18 @@
 
 namespace triglav::desktop_ui {
 
-class MenuList : public ui_core::BaseWidget
+class Dialog;
+class DesktopUIManager;
+
+class MenuList final : public ui_core::BaseWidget
 {
  public:
    struct State
    {
+      DesktopUIManager* manager;
       MenuController* controller;
       Name listName;
+      Vector2 screenOffset;
    };
 
    MenuList(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
@@ -36,6 +41,7 @@ class MenuList : public ui_core::BaseWidget
    ui_core::RectId m_hoverRectId{};
    Vector4 m_croppingMask;
    u32 m_hoverIndex = ~0;
+   Dialog* m_subMenu = nullptr;
    float m_sizePerItem{};
 };
 

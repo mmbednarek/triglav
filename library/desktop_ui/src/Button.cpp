@@ -14,7 +14,7 @@ Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidge
 {
    const auto& props = m_state.manager->properties();
    m_rect = &m_button.create_content<ui_core::RectBox>({
-      .color = props.button_bg_color,
+      .color = TG_THEME_VAL(button.bg_color),
       .borderRadius = {13.0f, 13.0f, 13.0f, 13.0f},
       .borderColor = {},
       .borderWidth = 0.0f,
@@ -24,7 +24,7 @@ Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidge
       .separation = 0.0f,
    });
    m_label = &layout.create_child<ui_core::TextBox>({
-      .fontSize = props.button_font_size,
+      .fontSize = TG_THEME_VAL(button.font_size),
       .typeface = props.base_typeface,
       .content = state.label,
       .color = props.foreground_color,
@@ -52,19 +52,19 @@ void Button::on_event(const ui_core::Event& event)
 {
    switch (event.eventType) {
    case ui_core::Event::Type::MousePressed:
-      m_rect->set_color(m_state.manager->properties().button_bg_pressed_color);
+      m_rect->set_color(m_state.manager->properties().button.bg_pressed_color);
       break;
    case ui_core::Event::Type::MouseReleased:
-      m_rect->set_color(m_state.manager->properties().button_bg_hover_color);
+      m_rect->set_color(m_state.manager->properties().button.bg_hover_color);
       event_OnClick.publish(std::get<ui_core::Event::Mouse>(event.data).button);
       break;
    case ui_core::Event::Type::MouseEntered:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Hand);
-      m_rect->set_color(m_state.manager->properties().button_bg_hover_color);
+      m_rect->set_color(m_state.manager->properties().button.bg_hover_color);
       break;
    case ui_core::Event::Type::MouseLeft:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
-      m_rect->set_color(m_state.manager->properties().button_bg_color);
+      m_rect->set_color(m_state.manager->properties().button.bg_color);
       break;
    default:
       break;
