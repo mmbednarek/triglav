@@ -69,6 +69,12 @@ class ColorChanger
       case "blue"_name:
          m_rectBox.set_color({0, 0, 1, 1});
          break;
+      case "yellow"_name:
+         m_rectBox.set_color({1, 1, 0, 1});
+         break;
+      case "purple"_name:
+         m_rectBox.set_color({0.5, 0, 0.5, 1});
+         break;
       default:
          break;
       }
@@ -117,30 +123,37 @@ int triglav_main(InputArgs& args, IDisplay& display)
    DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight});
 
    triglav::desktop_ui::DesktopUIManager desktopUiManager(
-      triglav::desktop_ui::ThemeProperties{
-         // Core
-         .base_typeface = "cantarell.typeface"_rc,
-         .background_color = {0.1f, 0.1f, 0.1f, 1.0f},
-         .foreground_color = {1.0f, 1.0f, 1.0f, 1.0f},
-         .accent_color = {0.0f, 0.0f, 1.0f, 1.0f},
+      triglav::desktop_ui::ThemeProperties{// Core
+                                           .base_typeface = "cantarell.typeface"_rc,
+                                           .background_color = {0.1f, 0.1f, 0.1f, 1.0f},
+                                           .foreground_color = {1.0f, 1.0f, 1.0f, 1.0f},
+                                           .accent_color = {0.0f, 0.0f, 1.0f, 1.0f},
 
-         // Button
-         .button_bg_color = {0.0f, 0.105f, 1.0f, 1.0f},
-         .button_bg_hover_color = {0.035f, 0.22f, 1.0f, 1.0f},
-         .button_bg_pressed_color = {0.0f, 0.015f, 0.48f, 1.0f},
-         .button_font_size = 15,
+                                           // Button
+                                           .button =
+                                              {
+                                                 .bg_color = {0.0f, 0.105f, 1.0f, 1.0f},
+                                                 .bg_hover_color = {0.035f, 0.22f, 1.0f, 1.0f},
+                                                 .bg_pressed_color = {0.0f, 0.015f, 0.48f, 1.0f},
+                                                 .font_size = 15,
+                                              },
 
-         // Text
-         .text_input_bg_inactive = {0.03f, 0.03f, 0.03f, 1.0f},
-         .text_input_bg_active = {0.01f, 0.01f, 0.01f, 1.0f},
-         .text_input_bg_hover = {0.035f, 0.035f, 0.035f, 1.0f},
+                                           // Text
+                                           .text_input =
+                                              {
+                                                 .bg_inactive = {0.03f, 0.03f, 0.03f, 1.0f},
+                                                 .bg_active = {0.01f, 0.01f, 0.01f, 1.0f},
+                                                 .bg_hover = {0.035f, 0.035f, 0.035f, 1.0f},
+                                              },
 
-         // Dropdown
-         .dropdown_bg = {0.04f, 0.04f, 0.04f, 1.0f},
-         .dropdown_bg_hover = {0.05f, 0.05f, 0.05f, 1.0f},
-         .dropdown_border = {0.1f, 0.1f, 0.1f, 1.0f},
-         .dropdown_border_width = 1.0f,
-      },
+                                           // Dropdown
+                                           .dropdown =
+                                              {
+                                                 .bg = {0.04f, 0.04f, 0.04f, 1.0f},
+                                                 .bg_hover = {0.05f, 0.05f, 0.05f, 1.0f},
+                                                 .border = {0.1f, 0.1f, 0.1f, 1.0f},
+                                                 .border_width = 1.0f,
+                                              }},
       dialogManager.root().surface(), dialogManager);
 
    auto& splitter = dialogManager.root().create_root_widget<triglav::desktop_ui::Splitter>({
@@ -163,6 +176,9 @@ int triglav_main(InputArgs& args, IDisplay& display)
    menuController.add_item("green"_name, "Make green"_strv);
    menuController.add_item("red"_name, "Make red"_strv);
    menuController.add_item("blue"_name, "Make blue"_strv);
+   menuController.add_submenu("more"_name, "More colors..."_strv);
+   menuController.add_subitem("more"_name, "yellow"_name, "Yellow"_strv);
+   menuController.add_subitem("more"_name, "purple"_name, "Purple"_strv);
 
    auto& contextMenu = vertSplitter.create_following<triglav::desktop_ui::ContextMenu>({
       .manager = &desktopUiManager,

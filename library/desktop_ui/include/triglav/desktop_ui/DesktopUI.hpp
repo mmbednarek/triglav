@@ -15,27 +15,38 @@ struct ThemeProperties
 {
    // Core
    TypefaceName base_typeface;
-   Vector4 background_color;
-   Vector4 foreground_color;
-   Vector4 accent_color;
+   Color background_color;
+   Color foreground_color;
+   Color accent_color;
 
    // Button
-   Vector4 button_bg_color;
-   Vector4 button_bg_hover_color;
-   Vector4 button_bg_pressed_color;
-   i32 button_font_size;
+   struct
+   {
+      Color bg_color;
+      Color bg_hover_color;
+      Color bg_pressed_color;
+      i32 font_size;
+   } button;
 
    // Text input
-   Vector4 text_input_bg_inactive;
-   Vector4 text_input_bg_active;
-   Vector4 text_input_bg_hover;
+   struct
+   {
+      Color bg_inactive;
+      Color bg_active;
+      Color bg_hover;
+   } text_input;
 
    // Dropdown menu
-   Vector4 dropdown_bg;
-   Vector4 dropdown_bg_hover;
-   Vector4 dropdown_border;
-   float dropdown_border_width;
+   struct
+   {
+      Vector4 bg;
+      Vector4 bg_hover;
+      Vector4 border;
+      float border_width;
+   } dropdown;
 };
+
+#define TG_THEME_VAL(name) m_state.manager->properties().name
 
 class DesktopUIManager
 {

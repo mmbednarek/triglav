@@ -1,5 +1,8 @@
 #include "MenuList.hpp"
 
+#include "DesktopUI.hpp"
+#include "DialogManager.hpp"
+
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/Viewport.hpp"
@@ -68,6 +71,10 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
 
 void MenuList::remove_from_viewport()
 {
+   if (m_subMenu != nullptr) {
+      m_state.manager->dialog_manager().close_popup(m_subMenu);
+      m_subMenu = nullptr;
+   }
    for (const auto label : m_labels) {
       m_context.viewport().remove_text(label);
    }
@@ -105,6 +112,28 @@ void MenuList::on_event(const ui_core::Event& event)
                   .crop = m_croppingMask,
                   .borderWidth = 0.0f,
                });
+            }
+
+            if (m_subMenu != nullptr) {
+               m_state.manager->dialog_manager().close_popup(m_subMenu);
+               m_subMenu = nullptr;
+            }
+
+            const auto item_name = items.at(m_hoverIndex);
+            auto& item = m_state.controller->item(item_name);
+            if (item.isSubmenu) {
+               const auto size = MenuList::calculate_size(*m_state.controller, item_name);
+               const Vector2 offset = m_state.screenOffset + Vector2{2 * g_globalMargin + 128, g_globalMargin + 32 * m_hoverIndex};
+
+               auto& popup = m_state.manager->dialog_manager().create_popup_dialog(offset, size);
+               popup.create_root_widget<MenuList>({
+                  .manager = m_state.manager,
+                  .controller = m_state.controller,
+                  .listName = item_name,
+                  .screenOffset = offset,
+               });
+               popup.initialize();
+               m_subMenu = &popup;
             }
          }
       }

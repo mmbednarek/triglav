@@ -27,7 +27,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
     m_state(state),
     m_rect(ctx,
            {
-              .color = m_state.manager->properties().text_input_bg_inactive,
+              .color = m_state.manager->properties().text_input.bg_inactive,
               .borderRadius = {5.0f, 5.0f, 5.0f, 5.0f},
               .borderColor = {0.1f, 0.1f, 0.1f, 1.f},
               .borderWidth = 1.0f,
@@ -37,7 +37,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
 {
    const auto& props = m_state.manager->properties();
 
-   auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
+   auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size});
    const auto measure = glyphAtlas.measure_text("0"_strv);
 
    m_textSize = {measure.width, measure.height};
@@ -96,7 +96,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
       m_textPrim = m_context.viewport().add_text(ui_core::Text{
          .content = m_state.text,
          .typefaceName = props.base_typeface,
-         .fontSize = props.button_font_size,
+         .fontSize = props.button.font_size,
          .position = textPos,
          .color = props.foreground_color,
          .crop = textCrop,
@@ -129,9 +129,9 @@ void TextInput::on_event(const ui_core::Event& event)
    switch (event.eventType) {
    case ui_core::Event::Type::MousePressed: {
       m_isActive = true;
-      m_rect.set_color(m_state.manager->properties().text_input_bg_active);
+      m_rect.set_color(m_state.manager->properties().text_input.bg_active);
       m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
-      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
+      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size});
       m_caretPosition = glyphAtlas.find_rune_index(m_state.text.view(), event.mousePosition.x - g_textMargin.x - m_textOffset);
       if (!m_timeoutHandle.has_value()) {
          this->update_carret_state();
@@ -141,12 +141,12 @@ void TextInput::on_event(const ui_core::Event& event)
    }
    case ui_core::Event::Type::MouseEntered:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Edit);
-      m_rect.set_color(m_state.manager->properties().text_input_bg_hover);
+      m_rect.set_color(m_state.manager->properties().text_input.bg_hover);
       break;
    case ui_core::Event::Type::MouseLeft:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
-      m_rect.set_color(m_state.manager->properties().text_input_bg_inactive);
+      m_rect.set_color(m_state.manager->properties().text_input.bg_inactive);
       m_context.viewport().set_rectangle_color(m_caretBox, {0, 0, 0, 0});
       m_isActive = false;
       if (m_timeoutHandle.has_value()) {
@@ -229,7 +229,7 @@ void TextInput::recalculate_caret_offset(const bool removal)
    if (m_caretPosition != 0) {
       const auto substr = m_state.text.subview(0, static_cast<i32>(m_caretPosition));
 
-      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button_font_size});
+      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size});
       const auto measure = glyphAtlas.measure_text(substr);
 
       caretOffset = measure.width;

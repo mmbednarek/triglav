@@ -40,8 +40,10 @@ void ContextMenu::on_event(const ui_core::Event& event)
 
          auto& popup = m_state.manager->dialog_manager().create_popup_dialog(event.globalMousePosition, size);
          popup.create_root_widget<MenuList>({
+            .manager = m_state.manager,
             .controller = m_state.controller,
             .listName = "root"_name,
+            .screenOffset = event.globalMousePosition,
          });
          popup.initialize();
          m_menuDialog = &popup;

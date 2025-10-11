@@ -24,7 +24,7 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
     TG_CONNECT(m_button, OnLeave, on_leave)
 {
    m_rect = &m_button.create_content<ui_core::RectBox>({
-      .color = m_state.menu->m_state.manager->properties().dropdown_bg,
+      .color = m_state.menu->m_state.manager->properties().dropdown.bg,
       .borderRadius = {0, 0, 0, 0},
       .borderColor = {0, 0, 0, 0},
       .borderWidth = 0.0f,
@@ -79,12 +79,12 @@ void DropDownSelectorButton::on_click(const desktop::MouseButton button) const
 
 void DropDownSelectorButton::on_enter() const
 {
-   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown_bg_hover);
+   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown.bg_hover);
 }
 
 void DropDownSelectorButton::on_leave() const
 {
-   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown_bg);
+   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown.bg);
 }
 
 // -- DropDownSelector --
@@ -144,10 +144,10 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
     m_parent(parent),
     m_rect(ctx,
            {
-              .color = m_state.manager->properties().dropdown_bg,
+              .color = m_state.manager->properties().dropdown.bg,
               .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
-              .borderColor = m_state.manager->properties().dropdown_border,
-              .borderWidth = m_state.manager->properties().dropdown_border_width,
+              .borderColor = m_state.manager->properties().dropdown.border,
+              .borderWidth = m_state.manager->properties().dropdown.border_width,
            },
            this)
 {
@@ -157,7 +157,7 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
       .separation = 0.0f,
    });
    m_label = &layout.create_child<ui_core::TextBox>({
-      .fontSize = props.button_font_size,
+      .fontSize = props.button.font_size,
       .typeface = props.base_typeface,
       .content = m_state.items[m_state.selectedItem],
       .color = props.foreground_color,
@@ -223,10 +223,10 @@ void DropDownMenu::on_event(const ui_core::Event& event)
       break;
    }
    case ui_core::Event::Type::MouseEntered:
-      m_rect.set_color(m_state.manager->properties().dropdown_bg_hover);
+      m_rect.set_color(m_state.manager->properties().dropdown.bg_hover);
       break;
    case ui_core::Event::Type::MouseLeft:
-      m_rect.set_color(m_state.manager->properties().dropdown_bg);
+      m_rect.set_color(m_state.manager->properties().dropdown.bg);
       break;
    default:
       break;
