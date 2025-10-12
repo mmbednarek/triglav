@@ -5,6 +5,7 @@
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/DialogManager.hpp"
 #include "triglav/desktop_ui/DropDownMenu.hpp"
+#include "triglav/desktop_ui/MenuBar.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/font/FontManager.hpp"
@@ -125,7 +126,40 @@ int triglav_main(InputArgs& args, IDisplay& display)
    triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties::get_default(),
                                                           dialogManager.root().surface(), dialogManager);
 
-   auto& splitter = dialogManager.root().create_root_widget<triglav::desktop_ui::Splitter>({
+   auto& globalVerLayout = dialogManager.root().create_root_widget<triglav::ui_core::VerticalLayout>({
+      .padding = {0.0f, 0.0f, 0.0f, 0.0f},
+      .separation = 0.0f,
+   });
+
+   triglav::desktop_ui::MenuController menu_bar_controller;
+   menu_bar_controller.add_submenu("file"_name, "File"_strv);
+   menu_bar_controller.add_subitem("file"_name, "file.open"_name, "Open"_strv);
+   menu_bar_controller.add_subitem("file"_name, "file.save"_name, "Save"_strv);
+   menu_bar_controller.add_submenu("file"_name, "file.recent_files"_name, "Recent Files"_strv);
+   menu_bar_controller.add_subitem("file.recent_files"_name, "file.recent_files.a"_name, "foo.txt"_strv);
+   menu_bar_controller.add_subitem("file.recent_files"_name, "file.recent_files.b"_name, "bar.txt"_strv);
+   menu_bar_controller.add_subitem("file.recent_files"_name, "file.recent_files.c"_name, "dar.txt"_strv);
+
+   menu_bar_controller.add_subitem("file"_name, "file.close"_name, "Close"_strv);
+
+   menu_bar_controller.add_submenu("edit"_name, "Edit"_strv);
+   menu_bar_controller.add_subitem("edit"_name, "edit.undo"_name, "Undo"_strv);
+   menu_bar_controller.add_subitem("edit"_name, "edit.redo"_name, "Redo"_strv);
+
+   menu_bar_controller.add_submenu("view"_name, "View"_strv);
+   menu_bar_controller.add_subitem("view"_name, "view.font_increase"_name, "Increase Font"_strv);
+   menu_bar_controller.add_subitem("view"_name, "view.font_decrease"_name, "Decrease Font"_strv);
+
+   menu_bar_controller.add_submenu("help"_name, "Help"_strv);
+   menu_bar_controller.add_subitem("help"_name, "help.online_help"_name, "Online Help"_strv);
+   menu_bar_controller.add_subitem("help"_name, "help.about"_name, "About"_strv);
+
+   globalVerLayout.create_child<triglav::desktop_ui::MenuBar>({
+      .manager = &desktopUiManager,
+      .controller = &menu_bar_controller,
+   });
+
+   auto& splitter = globalVerLayout.create_child<triglav::desktop_ui::Splitter>({
       .manager = &desktopUiManager,
       .offset = static_cast<float>(g_defaultWidth) / 2,
       .axis = triglav::ui_core::Axis::Horizontal,
@@ -141,18 +175,18 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .size = {200, 200},
    });
 
-   triglav::desktop_ui::MenuController menuController;
-   menuController.add_item("green"_name, "Make green"_strv);
-   menuController.add_item("red"_name, "Make red"_strv);
-   menuController.add_seperator();
-   menuController.add_item("blue"_name, "Make blue"_strv);
-   menuController.add_submenu("more"_name, "More colors..."_strv);
-   menuController.add_subitem("more"_name, "yellow"_name, "Yellow"_strv);
-   menuController.add_subitem("more"_name, "purple"_name, "Purple"_strv);
+   triglav::desktop_ui::MenuController context_menu_controller;
+   context_menu_controller.add_item("green"_name, "Make green"_strv);
+   context_menu_controller.add_item("red"_name, "Make red"_strv);
+   context_menu_controller.add_seperator();
+   context_menu_controller.add_item("blue"_name, "Make blue"_strv);
+   context_menu_controller.add_submenu("more"_name, "More colors..."_strv);
+   context_menu_controller.add_subitem("more"_name, "yellow"_name, "Yellow"_strv);
+   context_menu_controller.add_subitem("more"_name, "purple"_name, "Purple"_strv);
 
    auto& contextMenu = vertSplitter.create_following<triglav::desktop_ui::ContextMenu>({
       .manager = &desktopUiManager,
-      .controller = &menuController,
+      .controller = &context_menu_controller,
    });
 
    auto& leftBox = contextMenu.create_content<triglav::ui_core::RectBox>({
@@ -162,7 +196,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .borderWidth = 1.0f,
    });
 
-   ColorChanger colorChanger(leftBox, menuController);
+   ColorChanger colorChanger(leftBox, context_menu_controller);
 
    leftBox.create_content<triglav::ui_core::EmptySpace>({
       .size = {200, 200},

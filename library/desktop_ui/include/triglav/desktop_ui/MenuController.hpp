@@ -21,10 +21,11 @@ class MenuController
  public:
    using Self = MenuController;
 
-   TG_EVENT(OnClicked, Name, const MenuItem&);
+   TG_EVENT(OnClicked, Name, const MenuItem&)
 
    void add_item(Name name, StringView label);
    void add_submenu(Name name, StringView label);
+   void add_submenu(Name parent, Name name, StringView label);
    void add_subitem(Name parent, Name name, StringView label);
    void add_seperator();
 
