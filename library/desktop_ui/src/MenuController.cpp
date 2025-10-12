@@ -11,7 +11,12 @@ void MenuController::add_item(const Name name, const StringView label)
 
 void MenuController::add_submenu(const Name name, const StringView label)
 {
-   m_hierarchy["root"_name].push_back(name);
+   this->add_submenu("root"_name, name, label);
+}
+
+void MenuController::add_submenu(const Name parent, const Name name, const StringView label)
+{
+   m_hierarchy[parent].push_back(name);
    m_items[name] = {
       .name = name,
       .label = label,
