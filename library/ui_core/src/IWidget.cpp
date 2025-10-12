@@ -2,34 +2,27 @@
 
 namespace triglav::ui_core {
 
-void EventVisitor::visit_event(const Event& event)
+bool EventVisitor::visit_event(const Event& event)
 {
    switch (event.eventType) {
    case Event::Type::MousePressed:
-      this->on_mouse_pressed(event, std::get<Event::Mouse>(event.data));
-      break;
+      return this->on_mouse_pressed(event, std::get<Event::Mouse>(event.data));
    case Event::Type::MouseReleased:
-      this->on_mouse_released(event, std::get<Event::Mouse>(event.data));
-      break;
+      return this->on_mouse_released(event, std::get<Event::Mouse>(event.data));
    case Event::Type::MouseMoved:
-      this->on_mouse_moved(event);
-      break;
+      return this->on_mouse_moved(event);
    case Event::Type::MouseEntered:
-      this->on_mouse_entered(event);
-      break;
+      return this->on_mouse_entered(event);
    case Event::Type::MouseLeft:
-      this->on_mouse_left(event);
-      break;
+      return this->on_mouse_left(event);
    case Event::Type::MouseScrolled:
-      this->on_mouse_scrolled(event, std::get<Event::Scroll>(event.data));
-      break;
+      return this->on_mouse_scrolled(event, std::get<Event::Scroll>(event.data));
    case Event::Type::KeyPressed:
-      this->on_key_pressed(event, std::get<Event::Keyboard>(event.data));
-      break;
+      return this->on_key_pressed(event, std::get<Event::Keyboard>(event.data));
    case Event::Type::TextInput:
-      this->on_text_input(event, std::get<Event::TextInput>(event.data));
-      break;
+      return this->on_text_input(event, std::get<Event::TextInput>(event.data));
    }
+   return true;
 }
 
 BaseWidget::BaseWidget(IWidget* parent) :

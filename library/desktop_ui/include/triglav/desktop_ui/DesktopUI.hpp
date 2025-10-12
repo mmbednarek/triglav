@@ -47,6 +47,12 @@ struct ThemeProperties
       float border_width;
    } dropdown;
 
+   // Checkbox
+   struct
+   {
+      float padding;
+   } checkbox;
+
    static ThemeProperties get_default();
 };
 
