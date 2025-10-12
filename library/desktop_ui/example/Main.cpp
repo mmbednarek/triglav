@@ -1,3 +1,4 @@
+#include "triglav/Format.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop_ui/Button.hpp"
@@ -9,6 +10,7 @@
 #include "triglav/desktop_ui/MenuBar.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
+#include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
@@ -31,6 +33,7 @@ using triglav::desktop::InputArgs;
 using triglav::desktop::WindowAttribute;
 using triglav::desktop_ui::Dialog;
 using triglav::desktop_ui::DialogManager;
+using triglav::desktop_ui::TREE_ROOT;
 using triglav::font::FontManger;
 using triglav::io::CommandLine;
 using triglav::render_core::GlyphCache;
@@ -274,13 +277,63 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .maxSize = triglav::Vector2{200, 200},
    });
 
-   auto& rect3 = layout.create_child<triglav::ui_core::RectBox>({
-      .color = {0, 1, 0, 1},
-      .borderRadius = {0, 0, 0, 0},
-      .borderColor = {0, 0, 0, 0},
-      .borderWidth = 0,
+   triglav::desktop_ui::TreeController controller;
+
+   auto container_item = controller.add_item(TREE_ROOT, triglav::desktop_ui::TreeItem{
+                                                           .iconName = "texture/ui_images.tex"_rc,
+                                                           .iconRegion = {0, 0, 200, 200},
+                                                           .label = "Collection",
+                                                           .hasChildren = true,
+                                                        });
+
+   for (int i = 0; i < 2; ++i) {
+      controller.add_item(container_item, triglav::desktop_ui::TreeItem{
+                                             .iconName = "texture/ui_images.tex"_rc,
+                                             .iconRegion = {0, 0, 200, 200},
+                                             .label = triglav::format("Sub Item {}", i),
+                                             .hasChildren = false,
+                                          });
+   }
+
+   const auto child_item = controller.add_item(container_item, triglav::desktop_ui::TreeItem{
+                                                                  .iconName = "texture/ui_images.tex"_rc,
+                                                                  .iconRegion = {0, 0, 200, 200},
+                                                                  .label = "Child Collection",
+                                                                  .hasChildren = true,
+                                                               });
+
+   for (int i = 0; i < 4; ++i) {
+      controller.add_item(child_item, triglav::desktop_ui::TreeItem{
+                                         .iconName = "texture/ui_images.tex"_rc,
+                                         .iconRegion = {0, 0, 200, 200},
+                                         .label = triglav::format("Sub sub Item {}", i),
+                                         .hasChildren = false,
+                                      });
+   }
+
+   for (int i = 2; i < 4; ++i) {
+      controller.add_item(container_item, triglav::desktop_ui::TreeItem{
+                                             .iconName = "texture/ui_images.tex"_rc,
+                                             .iconRegion = {0, 0, 200, 200},
+                                             .label = triglav::format("Sub Item {}", i),
+                                             .hasChildren = false,
+                                          });
+   }
+
+   for (int i = 0; i < 4; ++i) {
+      controller.add_item(TREE_ROOT, triglav::desktop_ui::TreeItem{
+                                        .iconName = "texture/ui_images.tex"_rc,
+                                        .iconRegion = {0, 0, 200, 200},
+                                        .label = triglav::format("Test Item {}", i),
+                                        .hasChildren = false,
+                                     });
+   }
+
+   layout.create_child<triglav::desktop_ui::TreeView>({
+      .manager = &desktopUiManager,
+      .controller = &controller,
+      .extended_items = {container_item},
    });
-   rect3.create_content<triglav::ui_core::EmptySpace>({.size = {200, 300}});
 
    dialogManager.root().initialize();
 
