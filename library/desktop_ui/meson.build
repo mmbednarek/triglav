@@ -1,5 +1,6 @@
 desktop_ui_sources = files([
                           'include/triglav/desktop_ui/Button.hpp',
+                          'include/triglav/desktop_ui/CheckBox.hpp',
                           'include/triglav/desktop_ui/ContextMenu.hpp',
                           'include/triglav/desktop_ui/DesktopUI.hpp',
                           'include/triglav/desktop_ui/Dialog.hpp',
@@ -11,6 +12,7 @@ desktop_ui_sources = files([
                           'include/triglav/desktop_ui/Splitter.hpp',
                           'include/triglav/desktop_ui/TextInput.hpp',
                           'src/Button.cpp',
+                          'src/CheckBox.cpp',
                           'src/ContextMenu.cpp',
                           'src/DesktopUI.cpp',
                           'src/Dialog.cpp',

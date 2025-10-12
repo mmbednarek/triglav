@@ -36,9 +36,9 @@ class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   void on_mouse_moved(const ui_core::Event&) override;
-   void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
-   void on_mouse_left(const ui_core::Event&) override;
+   bool on_mouse_moved(const ui_core::Event&) override;
+   bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
+   bool on_mouse_left(const ui_core::Event&) override;
 
  private:
    [[nodiscard]] std::pair<float, Name> index_from_mouse_position(Vector2 position) const;

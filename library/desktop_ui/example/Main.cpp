@@ -1,6 +1,7 @@
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop_ui/Button.hpp"
+#include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/ContextMenu.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/DialogManager.hpp"
@@ -18,6 +19,7 @@
 #include "triglav/threading/Threading.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
+#include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
@@ -240,6 +242,27 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .items = {"Monday"_str, "Tuesday"_str, "Wednesday"_str, "Thursday"_str, "Friday"_str, "Saturday"_str, "Sunday"_str},
       .selectedItem = 0,
    });
+
+   auto& checkBoxLayout = layout.create_child<triglav::ui_core::HorizontalLayout>({
+      .padding = {2.0f, 2.0f, 2.0f, 2.0f},
+      .separation = 8.0f,
+   });
+
+   triglav::desktop_ui::RadioGroup radioGroup;
+
+   for (int i = 0; i < 4; ++i) {
+      auto& checkBox = checkBoxLayout.create_child<triglav::desktop_ui::CheckBox>({
+         .manager = &desktopUiManager,
+         .radioGroup = &radioGroup,
+         .isEnabled = false,
+      });
+      checkBox.create_content<triglav::ui_core::Image>({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .maxSize = triglav::Vector2{16, 16},
+         .region = triglav::Vector4{i * 64, 0, 64, 64},
+      });
+      radioGroup.add_check_box(&checkBox);
+   }
 
    layout.create_child<triglav::desktop_ui::Button>({
       .manager = &desktopUiManager,
