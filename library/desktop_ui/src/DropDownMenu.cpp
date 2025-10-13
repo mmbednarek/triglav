@@ -35,7 +35,7 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
    });
    layout.create_child<ui_core::TextBox>({
       .fontSize = 16,
-      .typeface = "cantarell.typeface"_rc,
+      .typeface = TG_THEME_VAL(base_typeface),
       .content = m_state.label,
       .color = {1, 1, 1, 1},
       .horizontalAlignment = ui_core::HorizontalAlignment::Center,
@@ -102,9 +102,10 @@ DropDownSelector::DropDownSelector(ui_core::Context& ctx, const State state, ui_
    assert(m_state.menu != nullptr);
    for (const auto& [index, item] : Enumerate(m_state.menu->m_state.items)) {
       m_verticalLayout.create_child<DropDownSelectorButton>({
+         .manager = m_state.menu->m_state.manager,
+         .menu = m_state.menu,
          .label = item,
          .index = static_cast<u32>(index),
-         .menu = m_state.menu,
       });
    }
 }

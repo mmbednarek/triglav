@@ -6,6 +6,10 @@ resources:
     source: "fonts/cantarell.ttf"
   - name: "cantarell/bold.typeface"
     source: "fonts/cantarell_bold.ttf"
+  - name: "lato/light.typeface"
+    source: "fonts/lato_light.ttf"
+  - name: "lato/regular.typeface"
+    source: "fonts/lato_regular.ttf"
   # Rectangle shaders
   - name: "rectangle/insertion.cshader"
     source: "shader/ui/rectangle_insertion_cs.spv"
