@@ -39,7 +39,7 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
    m_backgroundId = m_context.viewport().add_rectangle({
       .rect = dimensions,
       .color = TG_THEME_VAL(background_color),
-      .borderRadius = palette::TRANSPARENT,
+      .borderRadius = palette::NO_COLOR,
       .borderColor = TG_THEME_VAL(active_color),
       .crop = croppingMask,
       .borderWidth = 1.0f,
@@ -58,7 +58,7 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
                         g_separatorHeight},
                .color = TG_THEME_VAL(active_color),
                .borderRadius = {0, 0, 0, 0},
-               .borderColor = palette::TRANSPARENT,
+               .borderColor = palette::NO_COLOR,
                .crop = croppingMask,
                .borderWidth = 0.0f,
             }));
@@ -151,7 +151,7 @@ bool MenuList::on_mouse_moved(const ui_core::Event& event)
          .rect = dims,
          .color = TG_THEME_VAL(active_color),
          .borderRadius = {4, 4, 4, 4},
-         .borderColor = palette::TRANSPARENT,
+         .borderColor = palette::NO_COLOR,
          .crop = m_croppingMask,
          .borderWidth = 0.0f,
       });
@@ -230,7 +230,7 @@ MenuList::Measure MenuList::get_measure() const
       maxHeight = std::max(maxHeight, measure_text.height);
    }
 
-   const u32 item_count = children.size() - separator_count;
+   const u32 item_count = static_cast<u32>(children.size()) - separator_count;
 
    const Vector2 item_size{2 * g_itemHMargin + maxWidth, 2 * g_itemVMargin + maxHeight};
    const float separation_height = 0.5f * item_size.y;
