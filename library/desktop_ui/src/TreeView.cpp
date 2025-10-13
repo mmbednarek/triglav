@@ -85,7 +85,7 @@ bool TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
          .rect = highlight_dims,
          .color = TG_THEME_VAL(active_color),
          .borderRadius = {0, 0, 0, 0},
-         .borderColor = palette::TRANSPARENT,
+         .borderColor = palette::NO_COLOR,
          .crop = m_croppingMask,
          .borderWidth = 0.0f,
       });

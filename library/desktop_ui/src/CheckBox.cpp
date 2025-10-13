@@ -40,7 +40,7 @@ void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
          .rect = {dimensions.x, dimensions.y, size},
          .color = TG_THEME_VAL(background_color),
          .borderRadius = {4.0f, 4.0f, 4.0f, 4.0f},
-         .borderColor = palette::TRANSPARENT,
+         .borderColor = palette::NO_COLOR,
          .crop = croppingMask,
          .borderWidth = 0.0f,
       });

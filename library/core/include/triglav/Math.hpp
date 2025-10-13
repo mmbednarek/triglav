@@ -38,9 +38,9 @@ using Color = Vector4;
 
 namespace palette {
 
-constexpr Color BLACK{0, 0, 0, 1.0f};
-constexpr Color WHITE{1.0f, 1.0f, 1.0f, 1.0f};
-constexpr Color TRANSPARENT{0.0f, 0.0f, 0.0f, 0.0f};
+constexpr auto BLACK = Color{0, 0, 0, 1.0f};
+constexpr auto WHITE = Color{1.0f, 1.0f, 1.0f, 1.0f};
+constexpr auto NO_COLOR = Color{0.0f, 0.0f, 0.0f, 0.0f};
 
 }// namespace palette
 
