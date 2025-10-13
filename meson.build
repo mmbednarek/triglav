@@ -67,34 +67,7 @@ if host_machine.system() == 'linux'
 endif
 
 subdir('shader')
-
-subdir('library/external/mikktspace')
-subdir('library/external/stbi')
-
-subdir('library/core')
-subdir('library/io')
-subdir('library/memory')
-
-subdir('library/world')
-subdir('library/threading')
-subdir('library/event')
-subdir('library/desktop')
-subdir('library/desktop_main')
-subdir('library/ktx')
-subdir('library/graphics_api')
-subdir('library/font')
-subdir('library/geometry')
-subdir('library/json_util')
-subdir('library/render_objects')
-subdir('library/gltf')
-subdir('library/asset')
-subdir('library/resource')
-subdir('library/render_core')
-subdir('library/ui_core')
-subdir('library/renderer')
-subdir('library/desktop_ui')
-
+subdir('library')
 subdir('game/demo')
-
 subdir('tool/triglavcli')
 
