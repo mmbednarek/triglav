@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -18,6 +19,30 @@ using Vector2 = glm::vec2;
 using Vector3 = glm::vec3;
 using Vector4 = glm::vec4;
 using Quaternion = glm::quat;
+
+// (x, y, width, height)
+using Rect = Vector4;
+
+[[nodiscard]] constexpr Vector2 rect_position(const Rect& r)
+{
+   return {r.x, r.y};
+}
+
+[[nodiscard]] constexpr Vector2 rect_size(const Rect& r)
+{
+   return {r.z, r.w};
+}
+
+// (r, g, b, a)
+using Color = Vector4;
+
+namespace palette {
+
+constexpr auto BLACK = Color{0, 0, 0, 1.0f};
+constexpr auto WHITE = Color{1.0f, 1.0f, 1.0f, 1.0f};
+constexpr auto NO_COLOR = Color{0.0f, 0.0f, 0.0f, 0.0f};
+
+}// namespace palette
 
 struct Vector3_Aligned16B
 {
@@ -44,6 +69,16 @@ constexpr auto g_pi = 3.14159265358979323846f;
 [[nodiscard]] constexpr float sign(const float a)
 {
    return a > 0.0f ? 1.0f : -1.0f;
+}
+
+[[nodiscard]] inline bool do_regions_intersect(const Vector4 a, const Vector4 b)
+{
+   return a.x <= (b.x + b.z) && (a.x + a.z) >= b.x && a.y <= (b.y + b.w) && (a.y + a.w) >= b.y;
+}
+
+[[nodiscard]] inline Vector4 min_area(const Vector4 lhs, const Vector4 rhs)
+{
+   return {std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::min(lhs.z, rhs.z), std::min(lhs.w, rhs.w)};
 }
 
 struct Transform3D

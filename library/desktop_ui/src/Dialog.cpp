@@ -25,6 +25,7 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
     TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
+    TG_CONNECT(*m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
     TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
     TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
@@ -50,6 +51,7 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
     TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
+    TG_CONNECT(*m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
     TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
     TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
@@ -65,7 +67,8 @@ void Dialog::initialize()
    if (m_rootWidget == nullptr)
       return;
 
-   m_rootWidget->add_to_viewport({0, 0, m_surface->dimension().x, m_surface->dimension().y});
+   m_rootWidget->add_to_viewport({0, 0, m_surface->dimension().x, m_surface->dimension().y},
+                                 {0, 0, m_surface->dimension().x, m_surface->dimension().y});
 
    auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
    m_updateUiJob.build_job(updateUiCtx);
@@ -84,6 +87,13 @@ void Dialog::initialize()
    m_renderSurface.recreate_present_jobs();
 
    m_isInitialized = true;
+}
+
+void Dialog::uninitialize() const
+{
+   if (m_rootWidget != nullptr) {
+      m_rootWidget->remove_from_viewport();
+   }
 }
 
 void Dialog::build_rendering_job(render_core::BuildContext& ctx)
@@ -125,7 +135,7 @@ void Dialog::on_close()
    m_shouldClose = true;
 }
 
-void Dialog::on_mouse_enter(Vector2 position)
+void Dialog::on_mouse_enter(const Vector2 position)
 {
    m_mousePosition = position;
 }
@@ -140,11 +150,26 @@ void Dialog::on_mouse_move(const Vector2 position)
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MouseMoved;
    event.mousePosition = position;
+   event.globalMousePosition = position;
    event.parentSize = m_renderSurface.resolution();
    m_rootWidget->on_event(event);
 }
 
-void Dialog::on_mouse_button_is_pressed(desktop::MouseButton button)
+void Dialog::on_mouse_wheel_turn(const float amount) const
+{
+   if (m_rootWidget == nullptr)
+      return;
+
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::MouseScrolled;
+   event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
+   event.parentSize = m_renderSurface.resolution();
+   event.data = ui_core::Event::Scroll{amount};
+   m_rootWidget->on_event(event);
+}
+
+void Dialog::on_mouse_button_is_pressed(desktop::MouseButton button) const
 {
    if (m_rootWidget == nullptr)
       return;
@@ -152,12 +177,13 @@ void Dialog::on_mouse_button_is_pressed(desktop::MouseButton button)
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MousePressed;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_rootWidget->on_event(event);
 }
 
-void Dialog::on_mouse_button_is_released(desktop::MouseButton button)
+void Dialog::on_mouse_button_is_released(desktop::MouseButton button) const
 {
    if (m_rootWidget == nullptr)
       return;
@@ -165,12 +191,13 @@ void Dialog::on_mouse_button_is_released(desktop::MouseButton button)
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::MouseReleased;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_rootWidget->on_event(event);
 }
 
-void Dialog::on_key_is_pressed(desktop::Key key)
+void Dialog::on_key_is_pressed(desktop::Key key) const
 {
    if (m_rootWidget == nullptr)
       return;
@@ -178,12 +205,13 @@ void Dialog::on_key_is_pressed(desktop::Key key)
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::KeyPressed;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::Keyboard>(key);
    m_rootWidget->on_event(event);
 }
 
-void Dialog::on_text_input(const Rune rune)
+void Dialog::on_text_input(const Rune rune) const
 {
    if (m_rootWidget == nullptr)
       return;
@@ -191,6 +219,7 @@ void Dialog::on_text_input(const Rune rune)
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::TextInput;
    event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
    event.parentSize = m_renderSurface.resolution();
    event.data.emplace<ui_core::Event::TextInput>(rune);
    m_rootWidget->on_event(event);

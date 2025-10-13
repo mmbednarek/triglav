@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../IWidget.hpp"
+#include "../Primitives.hpp"
 
 #include "triglav/Name.hpp"
 
@@ -21,14 +22,14 @@ class Image final : public IWidget
    Image(Context& ctx, State state, IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void set_region(Vector4 region);
 
  private:
    Context& m_context;
    State m_state;
-   Name m_spriteID{};
+   SpriteId m_spriteID{};
 };
 
 }// namespace triglav::ui_core

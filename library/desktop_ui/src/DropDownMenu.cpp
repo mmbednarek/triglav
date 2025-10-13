@@ -24,7 +24,7 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
     TG_CONNECT(m_button, OnLeave, on_leave)
 {
    m_rect = &m_button.create_content<ui_core::RectBox>({
-      .color = m_state.menu->m_state.manager->properties().dropdown_bg,
+      .color = m_state.menu->m_state.manager->properties().dropdown.bg,
       .borderRadius = {0, 0, 0, 0},
       .borderColor = {0, 0, 0, 0},
       .borderWidth = 0.0f,
@@ -35,7 +35,7 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
    });
    layout.create_child<ui_core::TextBox>({
       .fontSize = 16,
-      .typeface = "cantarell.typeface"_rc,
+      .typeface = TG_THEME_VAL(base_typeface),
       .content = m_state.label,
       .color = {1, 1, 1, 1},
       .horizontalAlignment = ui_core::HorizontalAlignment::Center,
@@ -48,9 +48,9 @@ Vector2 DropDownSelectorButton::desired_size(const Vector2 parentSize) const
    return m_button.desired_size(parentSize);
 }
 
-void DropDownSelectorButton::add_to_viewport(const Vector4 dimensions)
+void DropDownSelectorButton::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   return m_button.add_to_viewport(dimensions);
+   return m_button.add_to_viewport(dimensions, croppingMask);
 }
 
 void DropDownSelectorButton::remove_from_viewport()
@@ -79,12 +79,12 @@ void DropDownSelectorButton::on_click(const desktop::MouseButton button) const
 
 void DropDownSelectorButton::on_enter() const
 {
-   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown_bg_hover);
+   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown.bg_hover);
 }
 
 void DropDownSelectorButton::on_leave() const
 {
-   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown_bg);
+   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown.bg);
 }
 
 // -- DropDownSelector --
@@ -102,9 +102,10 @@ DropDownSelector::DropDownSelector(ui_core::Context& ctx, const State state, ui_
    assert(m_state.menu != nullptr);
    for (const auto& [index, item] : Enumerate(m_state.menu->m_state.items)) {
       m_verticalLayout.create_child<DropDownSelectorButton>({
+         .manager = m_state.menu->m_state.manager,
+         .menu = m_state.menu,
          .label = item,
          .index = static_cast<u32>(index),
-         .menu = m_state.menu,
       });
    }
 }
@@ -114,9 +115,9 @@ Vector2 DropDownSelector::desired_size(const Vector2 parentSize) const
    return m_verticalLayout.desired_size(parentSize);
 }
 
-void DropDownSelector::add_to_viewport(const Vector4 dimensions)
+void DropDownSelector::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   return m_verticalLayout.add_to_viewport(dimensions);
+   return m_verticalLayout.add_to_viewport(dimensions, croppingMask);
 }
 
 void DropDownSelector::remove_from_viewport()
@@ -144,10 +145,10 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
     m_parent(parent),
     m_rect(ctx,
            {
-              .color = m_state.manager->properties().dropdown_bg,
+              .color = m_state.manager->properties().dropdown.bg,
               .borderRadius = {10.0f, 10.0f, 10.0f, 10.0f},
-              .borderColor = m_state.manager->properties().dropdown_border,
-              .borderWidth = m_state.manager->properties().dropdown_border_width,
+              .borderColor = m_state.manager->properties().dropdown.border,
+              .borderWidth = m_state.manager->properties().dropdown.border_width,
            },
            this)
 {
@@ -157,11 +158,11 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
       .separation = 0.0f,
    });
    m_label = &layout.create_child<ui_core::TextBox>({
-      .fontSize = props.button_font_size,
+      .fontSize = props.button.font_size,
       .typeface = props.base_typeface,
       .content = m_state.items[m_state.selectedItem],
       .color = props.foreground_color,
-      .horizontalAlignment = ui_core::HorizontalAlignment::Center,
+      .horizontalAlignment = ui_core::HorizontalAlignment::Left,
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
 }
@@ -171,52 +172,41 @@ Vector2 DropDownMenu::desired_size(const Vector2 parentSize) const
    return m_rect.desired_size(parentSize);
 }
 
-void DropDownMenu::add_to_viewport(const Vector4 dimensions)
+void DropDownMenu::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
    m_dimensions = dimensions;
-   m_rect.add_to_viewport(dimensions);
+   m_croppingMask = croppingMask;
+   m_rect.add_to_viewport(dimensions, croppingMask);
+
+   const Vector2 spriteSize{dimensions.w * 0.4, dimensions.w * 0.4};
+   const Vector2 spritePos{dimensions.x + dimensions.z - 2 * spriteSize.x, dimensions.y + dimensions.w * 0.5 - spriteSize.x * 0.5};
+   if (m_downArrow == 0) {
+      m_downArrow = m_context.viewport().add_sprite({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .position = spritePos,
+         .size = spriteSize,
+         .crop = {croppingMask},
+         .textureRegion = Vector4{0, 0, 64, 64},
+      });
+   } else {
+      m_context.viewport().set_sprite_position(m_downArrow, spritePos, croppingMask);
+   }
 }
 
 void DropDownMenu::remove_from_viewport()
 {
    m_rect.remove_from_viewport();
+   m_context.viewport().remove_sprite(m_downArrow);
 }
 
 void DropDownMenu::on_event(const ui_core::Event& event)
 {
-   switch (event.eventType) {
-   case ui_core::Event::Type::MouseReleased: {
-      if (m_currentPopup != nullptr) {
-         m_state.manager->dialog_manager().close_popup(m_currentPopup);
-         m_currentPopup = nullptr;
-      } else {
-         // Fake selector with invalid context
-         const auto selector = std::make_unique<DropDownSelector>(m_context, DropDownSelector::State{.menu = this}, nullptr);
-         const auto desiredDims = selector->desired_size({m_dimensions.x, 1024});
-
-         // TODO: Add ability to update context.
-         auto& popup = m_state.manager->dialog_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
-                                                                             {m_dimensions.z, desiredDims.y});
-         popup.create_root_widget<DropDownSelector>({this});
-         popup.initialize();
-         m_currentPopup = &popup;
-      }
-      break;
-   }
-   case ui_core::Event::Type::MouseEntered:
-      m_rect.set_color(m_state.manager->properties().dropdown_bg_hover);
-      break;
-   case ui_core::Event::Type::MouseLeft:
-      m_rect.set_color(m_state.manager->properties().dropdown_bg);
-      break;
-   default:
-      break;
-   }
+   this->visit_event(event);
 }
 
 void DropDownMenu::on_child_state_changed(IWidget& /*widget*/)
 {
-   m_rect.add_to_viewport(m_dimensions);
+   m_rect.add_to_viewport(m_dimensions, m_croppingMask);
 }
 
 void DropDownMenu::set_selected_item(const u32 index)
@@ -224,11 +214,49 @@ void DropDownMenu::set_selected_item(const u32 index)
    m_state.selectedItem = index;
    const auto& label = m_state.items.at(index);
    m_label->set_content(label.view());
+   m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
 
    if (m_currentPopup != nullptr) {
       m_state.manager->dialog_manager().close_popup(m_currentPopup);
       m_currentPopup = nullptr;
    }
+}
+
+bool DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
+{
+   if (m_currentPopup != nullptr) {
+      m_state.manager->dialog_manager().close_popup(m_currentPopup);
+      m_currentPopup = nullptr;
+      m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
+      return false;
+   }
+
+   // Fake selector with invalid context
+   const auto selector = std::make_unique<DropDownSelector>(m_context, DropDownSelector::State{.menu = this}, nullptr);
+   const auto desiredDims = selector->desired_size({m_dimensions.x, 1024});
+
+   // TODO: Add ability to update context.
+   auto& popup = m_state.manager->dialog_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
+                                                                       {m_dimensions.z, desiredDims.y});
+   popup.create_root_widget<DropDownSelector>({this});
+   popup.initialize();
+   m_currentPopup = &popup;
+
+   m_context.viewport().set_sprite_texture_region(m_downArrow, {64, 0, 64, 64});
+
+   return false;
+}
+
+bool DropDownMenu::on_mouse_entered(const ui_core::Event& /*event*/)
+{
+   m_rect.set_color(m_state.manager->properties().dropdown.bg_hover);
+   return false;
+}
+
+bool DropDownMenu::on_mouse_left(const ui_core::Event& /*event*/)
+{
+   m_rect.set_color(m_state.manager->properties().dropdown.bg);
+   return false;
 }
 
 }// namespace triglav::desktop_ui

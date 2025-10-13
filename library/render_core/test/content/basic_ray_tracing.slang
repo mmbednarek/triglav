@@ -3,7 +3,7 @@ uniform RaytracingAccelerationStructure topLevelAS : register(t0);
 
 [[vk::binding(1)]]
 [vk::image_format("rgba8")]
-uniform RWTexture2D outImage : register(t1);
+uniform RWTexture2D outImage : register(u0);
 
 struct ViewProperties
 {

@@ -24,13 +24,14 @@ Vector2 AlignmentBox::desired_size(const Vector2 parentSize) const
    return parentSize;
 }
 
-void AlignmentBox::add_to_viewport(const Vector4 dimensions)
+void AlignmentBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
    const Vector2 parentSize{dimensions.z, dimensions.w};
    const Vector2 size = m_content->desired_size(parentSize);
    const Vector2 offset = calculate_content_offset(m_state.horizontalAlignment, m_state.verticalAlignment, parentSize, size);
-   m_content->add_to_viewport({dimensions.x + offset.x, dimensions.y + offset.y, size.x, size.y});
+   m_content->add_to_viewport({dimensions.x + offset.x, dimensions.y + offset.y, size.x, size.y}, croppingMask);
    m_parentDimensions = dimensions;
+   m_croppingMask = croppingMask;
 }
 
 void AlignmentBox::remove_from_viewport()
@@ -40,7 +41,7 @@ void AlignmentBox::remove_from_viewport()
 
 void AlignmentBox::on_child_state_changed(IWidget& /*widget*/)
 {
-   m_content->add_to_viewport(m_parentDimensions);
+   m_content->add_to_viewport(m_parentDimensions, m_croppingMask);
 }
 
 void AlignmentBox::on_event(const Event& event)
@@ -54,6 +55,7 @@ void AlignmentBox::on_event(const Event& event)
          enterEvent.eventType = Event::Type::MouseEntered;
          enterEvent.parentSize = size;
          enterEvent.mousePosition = event.mousePosition - offset;
+         enterEvent.globalMousePosition = event.mousePosition;
          m_content->on_event(enterEvent);
       }
       m_isMouseInside = true;
@@ -67,6 +69,7 @@ void AlignmentBox::on_event(const Event& event)
       leaveEvent.eventType = Event::Type::MouseLeft;
       leaveEvent.parentSize = size;
       leaveEvent.mousePosition = event.mousePosition - offset;
+      leaveEvent.globalMousePosition = event.mousePosition;
       m_content->on_event(leaveEvent);
       m_isMouseInside = false;
    }

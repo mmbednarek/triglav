@@ -27,6 +27,7 @@ struct Event
       MouseMoved,
       MouseEntered,
       MouseLeft,
+      MouseScrolled,
       KeyPressed,
       TextInput,
    };
@@ -34,6 +35,11 @@ struct Event
    struct Mouse
    {
       desktop::MouseButton button;
+   };
+
+   struct Scroll
+   {
+      float amount{};
    };
 
    struct Keyboard
@@ -49,7 +55,56 @@ struct Event
    Type eventType;
    Vector2 parentSize;
    Vector2 mousePosition;
-   std::variant<std::monostate, Mouse, Keyboard, TextInput> data;
+   Vector2 globalMousePosition;
+   std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
+};
+
+class EventVisitor
+{
+ public:
+   // return true if event should be propagated
+
+   virtual bool on_mouse_pressed(const Event& /*event*/, const Event::Mouse& /*mouse*/)
+   {
+      return true;
+   }
+
+   virtual bool on_mouse_released(const Event& /*event*/, const Event::Mouse& /*mouse*/)
+   {
+      return true;
+   }
+
+   virtual bool on_mouse_moved(const Event& /*event*/)
+   {
+      return true;
+   }
+
+   virtual bool on_mouse_entered(const Event& /*event*/)
+   {
+      return true;
+   }
+
+   virtual bool on_mouse_left(const Event& /*event*/)
+   {
+      return true;
+   }
+
+   virtual bool on_mouse_scrolled(const Event& /*event*/, const Event::Scroll& /*scroll*/)
+   {
+      return true;
+   }
+
+   virtual bool on_key_pressed(const Event& /*event*/, const Event::Keyboard& /*key_press*/)
+   {
+      return true;
+   }
+
+   virtual bool on_text_input(const Event& /*event*/, const Event::TextInput& /*text_input*/)
+   {
+      return true;
+   }
+
+   bool visit_event(const Event& event);
 };
 
 class IWidget
@@ -63,7 +118,7 @@ class IWidget
    // Adds widget to the current viewport
    // If the widget has already been added, it
    // will be adjusted to the new parent's dimensions.
-   virtual void add_to_viewport(Vector4 dimensions) = 0;
+   virtual void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) = 0;
 
    // Removed the widget from current viewport.
    virtual void remove_from_viewport() = 0;

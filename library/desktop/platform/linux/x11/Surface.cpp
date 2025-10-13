@@ -162,6 +162,12 @@ void Surface::set_cursor_icon(const CursorIcon icon)
    case CursorIcon::Edit:
       m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_xterm);
       break;
+   case CursorIcon::ResizeHorizontal:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_sb_h_double_arrow);
+      break;
+   case CursorIcon::ResizeVertical:
+      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_double_arrow);
+      break;
    default:
       m_currentCursor = 0;
       return;
@@ -225,12 +231,21 @@ void Surface::dispatch_key_release(const XEvent& event) const
 
 void Surface::dispatch_button_press(const XEvent& event) const
 {
-   event_OnMouseButtonIsPressed.publish(map_button(event.xbutton.button));
+   if (event.xbutton.button == 4) {
+      event_OnMouseWheelTurn.publish(-1.0);
+   } else if (event.xbutton.button == 5) {
+      event_OnMouseWheelTurn.publish(1.0);
+   } else {
+      event_OnMouseButtonIsPressed.publish(map_button(event.xbutton.button));
+   }
 }
 
 void Surface::dispatch_button_release(const XEvent& event) const
 {
-   event_OnMouseButtonIsReleased.publish(map_button(event.xbutton.button));
+   const auto button = map_button(event.xbutton.button);
+   if (button != MouseButton::Unknown) {
+      event_OnMouseButtonIsReleased.publish(button);
+   }
 }
 
 void Surface::dispatch_mouse_move(const XEvent& event) const

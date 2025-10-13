@@ -100,9 +100,9 @@ class HideablePanel final : public ui_core::IWidget
       return m_verticalLayout.desired_size(parentSize);
    }
 
-   void add_to_viewport(const Vector4 dimensions) override
+   void add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask) override
    {
-      m_verticalLayout.add_to_viewport(dimensions);
+      m_verticalLayout.add_to_viewport(dimensions, croppingMask);
    }
 
    void remove_from_viewport() override
@@ -263,10 +263,11 @@ Vector2 InfoDialog::desired_size(const Vector2 parentSize) const
    return m_rootBox.desired_size(parentSize);
 }
 
-void InfoDialog::add_to_viewport(Vector4 /*dimensions*/)
+void InfoDialog::add_to_viewport(Vector4 /*dimensions*/, const Vector4 croppingMask)
 {
    const auto size = this->desired_size({600, 1200});
-   m_rootBox.add_to_viewport({m_dialogOffset.x, m_dialogOffset.y, size.x, size.y});
+   m_croppingMask = croppingMask;
+   m_rootBox.add_to_viewport({m_dialogOffset.x, m_dialogOffset.y, size.x, size.y}, croppingMask);
 }
 
 void InfoDialog::remove_from_viewport()
@@ -276,7 +277,7 @@ void InfoDialog::remove_from_viewport()
 
 void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
 {
-   this->add_to_viewport({});
+   this->add_to_viewport({}, m_croppingMask);
 }
 
 void InfoDialog::on_event(const ui_core::Event& event)
@@ -308,7 +309,7 @@ void InfoDialog::on_event(const ui_core::Event& event)
       }
 
       m_dialogOffset = event.mousePosition + *m_dragOffset;
-      this->add_to_viewport({});
+      this->add_to_viewport({}, m_croppingMask);
    }
 }
 

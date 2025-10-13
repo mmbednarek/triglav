@@ -6,6 +6,10 @@
 
 namespace triglav::ui_core {
 
+using TextId = u32;
+using RectId = u32;
+using SpriteId = u32;
+
 struct Text
 {
    String content;
@@ -22,6 +26,7 @@ struct Rectangle
    Vector4 color;
    Vector4 borderRadius;
    Vector4 borderColor;
+   Vector4 crop;
    float borderWidth;
 };
 
@@ -30,6 +35,7 @@ struct Sprite
    TextureName texture;
    Vector2 position;
    Vector2 size;
+   Vector4 crop;
    std::optional<Vector4> textureRegion;
 };
 

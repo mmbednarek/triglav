@@ -18,6 +18,7 @@ constexpr u32 g_vertexCountPerChar = 6;
 
 using namespace name_literals;
 using namespace render_core::literals;
+using ui_core::TextId;
 
 struct TextUpdateInfo
 {
@@ -69,72 +70,48 @@ TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache
                                                           g_maxCombinedGlyphBufferSize))),
     m_vertexAllocator(g_maxTextVertices),
     TG_CONNECT(viewport, OnAddedText, on_added_text),
-    TG_CONNECT(viewport, OnRemovedText, on_removed_text),
-    TG_CONNECT(viewport, OnTextChangeContent, on_text_change_content),
-    TG_CONNECT(viewport, OnTextChangePosition, on_text_change_position),
-    TG_CONNECT(viewport, OnTextChangeCrop, on_text_change_crop),
-    TG_CONNECT(viewport, OnTextChangeColor, on_text_change_color)
+    TG_CONNECT(viewport, OnUpdatedText, on_updated_text),
+    TG_CONNECT(viewport, OnRemovedText, on_removed_text)
 {
 }
 
-void TextRenderer::on_added_text(const Name name, const ui_core::Text& text)
+void TextRenderer::on_added_text(const TextId textId, const ui_core::Text& text)
 {
    std::unique_lock lk{m_updateMtx};
 
    const auto& typefaceInfo = this->get_typeface_info({text.typefaceName, text.fontSize});
-   const auto vertexSection = this->allocate_vertex_section(name, static_cast<u32>(g_vertexCountPerChar * text.content.size()));
+   const auto vertexSection = this->allocate_vertex_section(textId, static_cast<u32>(g_vertexCountPerChar * text.content.size()));
 
-   m_textInfos.emplace(name, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
-                                      text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
-                                      static_cast<u32>(vertexSection.size)});
-   m_drawCallToTextName.emplace_back(name);
+   m_textInfos.emplace(textId, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
+                                        text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
+                                        static_cast<u32>(vertexSection.size)});
+   m_drawCallToTextName.emplace_back(textId);
 
-   m_pendingTextUpdates.emplace_back(name);
+   m_pendingTextUpdates.emplace_back(textId);
 }
 
-void TextRenderer::on_removed_text(const Name name)
+void TextRenderer::on_removed_text(const TextId textId)
 {
    std::unique_lock lk{m_updateMtx};
-   m_pendingTextRemoval.emplace_back(name);
+   m_pendingTextRemoval.emplace_back(textId);
 }
 
-void TextRenderer::on_text_change_content(const Name name, const ui_core::Text& text)
+void TextRenderer::on_updated_text(const TextId textId, const ui_core::Text& text)
 {
    std::unique_lock lk{m_updateMtx};
 
-   this->free_vertex_section(name);
-   const auto vertexSection = this->allocate_vertex_section(name, static_cast<u32>(g_vertexCountPerChar * text.content.rune_count()));
+   this->free_vertex_section(textId);
+   const auto vertexSection = this->allocate_vertex_section(textId, static_cast<u32>(g_vertexCountPerChar * text.content.rune_count()));
 
-   auto& textInfo = m_textInfos.at(name);
+   auto& textInfo = m_textInfos.at(textId);
    textInfo.text.content = text.content;
    textInfo.dstVertexOffset = static_cast<u32>(vertexSection.offset);
    textInfo.dstVertexCount = static_cast<u32>(vertexSection.size);
-
-   m_pendingTextUpdates.emplace_back(name);
-}
-
-void TextRenderer::on_text_change_position(const Name name, const ui_core::Text& text)
-{
-   std::unique_lock lk{m_updateMtx};
-   auto& textInfo = m_textInfos.at(name);
    textInfo.position = text.position;
-   m_pendingTextUpdates.emplace_back(name);
-}
-
-void TextRenderer::on_text_change_crop(Name name, const ui_core::Text& text)
-{
-   std::unique_lock lk{m_updateMtx};
-   auto& textInfo = m_textInfos.at(name);
    textInfo.crop = text.crop;
-   m_pendingTextUpdates.emplace_back(name);
-}
-
-void TextRenderer::on_text_change_color(const Name name, const ui_core::Text& text)
-{
-   std::unique_lock lk{m_updateMtx};
-   auto& textInfo = m_textInfos.at(name);
    textInfo.color = text.color;
-   m_pendingTextUpdates.emplace_back(name);
+
+   m_pendingTextUpdates.emplace_back(textId);
 }
 
 void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIndex)
@@ -183,7 +160,7 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
          ++srcIndex;
 
       if (dstIndex < remainCount) {
-         Name srcName = m_drawCallToTextName[srcIndex];
+         ui_core::TextId srcName = m_drawCallToTextName[srcIndex];
          m_textInfos[srcName].drawCallId = dstIndex;
          m_drawCallToTextName[dstIndex] = srcName;
 
@@ -205,7 +182,11 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIn
       if (index >= g_maxTextUpdateCount)
          break;
 
-      const auto& textInfo = m_textInfos.at(textName);
+      auto textInfoIt = m_textInfos.find(textName);
+      if (textInfoIt == m_textInfos.end())
+         continue;
+
+      const auto& textInfo = textInfoIt->second;
       auto& dstUpdate = textUpdates.at(index);
 
       dstUpdate.dstDrawCall = textInfo.drawCallId;
@@ -335,21 +316,21 @@ const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProp
    return newIt->second;
 }
 
-memory::Area TextRenderer::allocate_vertex_section(const Name text, const u32 vertexCount)
+memory::Area TextRenderer::allocate_vertex_section(const TextId textId, const u32 vertexCount)
 {
    const auto section = m_vertexAllocator.allocate(vertexCount);
    assert(section.has_value());
 
    memory::Area result{vertexCount, *section};
-   m_allocatedVertexSections.emplace(text, result);
+   m_allocatedVertexSections.emplace(textId, result);
 
    return result;
 }
 
-void TextRenderer::free_vertex_section(const Name textName)
+void TextRenderer::free_vertex_section(const TextId textId)
 {
-   m_vertexAllocator.free(m_allocatedVertexSections.at(textName));
-   m_allocatedVertexSections.erase(textName);
+   m_vertexAllocator.free(m_allocatedVertexSections.at(textId));
+   m_allocatedVertexSections.erase(textId);
 }
 
 }// namespace triglav::renderer::ui

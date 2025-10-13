@@ -21,15 +21,16 @@ class DropDownSelectorButton final : public ui_core::IWidget
 
    struct State
    {
+      DesktopUIManager* manager;
+      DropDownMenu* menu;
       String label;
       u32 index;
-      DropDownMenu* menu;
    };
 
    DropDownSelectorButton(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -64,7 +65,7 @@ class DropDownSelector final : public ui_core::IWidget
    DropDownSelector(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -75,7 +76,7 @@ class DropDownSelector final : public ui_core::IWidget
    ui_core::VerticalLayout m_verticalLayout;
 };
 
-class DropDownMenu final : public ui_core::IWidget
+class DropDownMenu final : public ui_core::IWidget, ui_core::EventVisitor
 {
    friend class DropDownSelectorButton;
    friend class DropDownSelector;
@@ -93,12 +94,16 @@ class DropDownMenu final : public ui_core::IWidget
    DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions) override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
 
    void set_selected_item(u32 index);
+
+   bool on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse) override;
+   bool on_mouse_entered(const ui_core::Event& event) override;
+   bool on_mouse_left(const ui_core::Event& event) override;
 
  private:
    [[maybe_unused]] ui_core::Context& m_context;
@@ -107,7 +112,9 @@ class DropDownMenu final : public ui_core::IWidget
    [[maybe_unused]] ui_core::IWidget* m_parent;
    ui_core::RectBox m_rect;
    ui_core::TextBox* m_label{};
+   ui_core::SpriteId m_downArrow{};
    Vector4 m_dimensions;
+   Vector4 m_croppingMask;
    Dialog* m_currentPopup{};
 };
 

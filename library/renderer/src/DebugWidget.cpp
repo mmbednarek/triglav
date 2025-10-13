@@ -60,9 +60,9 @@ Vector2 DebugWidget::desired_size(const Vector2 parentSize) const
    return m_content.desired_size(parentSize);
 }
 
-void DebugWidget::add_to_viewport(const Vector4 dimensions)
+void DebugWidget::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   m_content.add_to_viewport(dimensions);
+   m_content.add_to_viewport(dimensions, croppingMask);
 }
 
 void DebugWidget::remove_from_viewport()

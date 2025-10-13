@@ -32,14 +32,16 @@ class Dialog
           render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u dimensions, Vector2i offset);
 
    void initialize();
+   void uninitialize() const;
    void update();
    void on_close();
    void on_mouse_enter(Vector2 position);
    void on_mouse_move(Vector2 position);
-   void on_mouse_button_is_pressed(desktop::MouseButton button);
-   void on_mouse_button_is_released(desktop::MouseButton button);
-   void on_key_is_pressed(desktop::Key key);
-   void on_text_input(Rune rune);
+   void on_mouse_wheel_turn(float amount) const;
+   void on_mouse_button_is_pressed(desktop::MouseButton button) const;
+   void on_mouse_button_is_released(desktop::MouseButton button) const;
+   void on_key_is_pressed(desktop::Key key) const;
+   void on_text_input(Rune rune) const;
    void on_resize(Vector2i size);
 
    ui_core::IWidget& set_root_widget(ui_core::IWidgetPtr&& content);
@@ -77,6 +79,7 @@ class Dialog
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnMouseEnter);
    TG_SINK(desktop::ISurface, OnMouseMove);
+   TG_SINK(desktop::ISurface, OnMouseWheelTurn);
    TG_SINK(desktop::ISurface, OnMouseButtonIsPressed);
    TG_SINK(desktop::ISurface, OnMouseButtonIsReleased);
    TG_SINK(desktop::ISurface, OnKeyIsPressed);

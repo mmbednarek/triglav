@@ -12,52 +12,45 @@ namespace triglav::ui_core {
 class Viewport
 {
  public:
-   TG_EVENT(OnAddedText, Name, const Text&)
-   TG_EVENT(OnRemovedText, Name)
-   TG_EVENT(OnTextChangeContent, Name, const Text&)
-   TG_EVENT(OnTextChangePosition, Name, const Text&)
-   TG_EVENT(OnTextChangeCrop, Name, const Text&)
-   TG_EVENT(OnTextChangeColor, Name, const Text&)
+   TG_EVENT(OnAddedText, TextId, const Text&)
+   TG_EVENT(OnUpdatedText, TextId, const Text&)
+   TG_EVENT(OnRemovedText, TextId)
 
-   TG_EVENT(OnAddedRectangle, Name, const Rectangle&)
-   TG_EVENT(OnRectangleChangeDims, Name, const Rectangle&)
-   TG_EVENT(OnRectangleChangeColor, Name, const Rectangle&)
-   TG_EVENT(OnRemovedRectangle, Name)
+   TG_EVENT(OnAddedRectangle, RectId, const Rectangle&)
+   TG_EVENT(OnUpdatedRectangle, RectId, const Rectangle&)
+   TG_EVENT(OnRemovedRectangle, RectId)
 
-   TG_EVENT(OnAddedSprite, Name, const Sprite&)
-   TG_EVENT(OnSpriteChangePosition, Name, const Sprite&)
-   TG_EVENT(OnSpriteChangeTextureRegion, Name, const Sprite&)
-   TG_EVENT(OnRemovedSprite, Name)
+   TG_EVENT(OnAddedSprite, SpriteId, const Sprite&)
+   TG_EVENT(OnUpdatedSprite, SpriteId, const Sprite&)
+   TG_EVENT(OnRemovedSprite, SpriteId)
 
    explicit Viewport(Vector2u dimensions);
 
-   Name add_text(Text&& text);
-   void add_text(Name name, Text&& text);
-   void set_text_content(Name name, StringView content);
-   void set_text_position(Name name, Vector2 position);
-   void set_text_crop(Name name, Vector4 crop);
-   void set_text_color(Name name, Vector4 color);
-   void set_rectangle_dims(Name name, Vector4 dims);
-   void remove_text(Name name);
+   TextId add_text(Text&& text);
+   void set_text_content(TextId textId, StringView content);
+   void set_text_position(TextId textId, Vector2 position, Rect crop);
+   void set_text_color(TextId textId, Color color);
+   void remove_text(TextId textId);
 
-   void add_rectangle(Name name, Rectangle&& rect);
-   Name add_rectangle(Rectangle&& rect);
-   void set_rectangle_color(Name name, Vector4 color);
-   void remove_rectangle(Name name);
+   RectId add_rectangle(Rectangle&& rect);
+   void set_rectangle_dims(RectId rectId, Rect dims, Rect crop);
+   void set_rectangle_color(RectId rectId, Color color);
+   void remove_rectangle(RectId rectId);
 
-   void add_sprite(Name name, Sprite&& sprite);
-   Name add_sprite(Sprite&& sprite);
-   void set_sprite_position(Name name, Vector2 position);
-   void set_sprite_texture_region(Name name, Vector4 region);
-   void remove_sprite(Name name);
+   SpriteId add_sprite(Sprite&& sprite);
+   void set_sprite_position(SpriteId spriteId, Vector2 position, Rect crop);
+   void set_sprite_texture_region(SpriteId spriteId, Rect region);
+   void remove_sprite(SpriteId spriteId);
 
-   [[nodiscard]] const Text& text(Name name) const;
+   [[nodiscard]] const Text& text(TextId textId) const;
    [[nodiscard]] Vector2u dimensions() const;
 
    [[nodiscard]] bool should_redraw();
 
  private:
-   Name m_topName{1};
+   TextId m_topTextId{1};
+   RectId m_topRectId{1};
+   SpriteId m_topSpriteId{1};
    std::map<Name, Text> m_texts;
    std::map<Name, Rectangle> m_rectangles;
    std::map<Name, Sprite> m_sprites;
