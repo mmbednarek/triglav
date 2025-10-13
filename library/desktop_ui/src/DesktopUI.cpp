@@ -7,7 +7,7 @@ using namespace name_literals;
 ThemeProperties ThemeProperties::get_default()
 {
    return {
-      .base_typeface = "cantarell.typeface"_rc,
+      .base_typeface = "lato/regular.typeface"_rc,
       .base_font_size = 15,
       .background_color = {0.05f, 0.05f, 0.05f, 1.0f},
       .active_color = {0.1f, 0.1f, 0.1f, 1.0f},

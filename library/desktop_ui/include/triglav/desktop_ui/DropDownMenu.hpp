@@ -21,9 +21,10 @@ class DropDownSelectorButton final : public ui_core::IWidget
 
    struct State
    {
+      DesktopUIManager* manager;
+      DropDownMenu* menu;
       String label;
       u32 index;
-      DropDownMenu* menu;
    };
 
    DropDownSelectorButton(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
