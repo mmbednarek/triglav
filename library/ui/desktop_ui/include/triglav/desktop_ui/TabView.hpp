@@ -37,15 +37,15 @@ class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   // bool on_mouse_moved(const ui_core::Event&) override;
+   bool on_mouse_moved(const ui_core::Event&) override;
    bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
    // bool on_mouse_left(const ui_core::Event&) override;
 
-   void set_active_tab(const u32 activeTab);
+   void set_active_tab(u32 activeTab);
 
  private:
    [[nodiscard]] std::pair<float, u32> index_from_mouse_position(Vector2 position) const;
-   [[nodiscard]] Measure get_measure(Vector2 availableSize) const;
+   [[nodiscard]] const Measure& get_measure(Vector2 availableSize) const;
 
    State m_state;
    std::vector<ui_core::TextId> m_labels;
@@ -53,10 +53,10 @@ class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
    Vector4 m_dimensions;
    Vector4 m_croppingMask;
 
-   //ui_core::RectId m_backgroundId;
-   //ui_core::RectId m_hoverRectId{};
-   //u32 m_hoveredItem = 0;
-   //float m_hoveredItemOffset = 0.0f;
+   ui_core::RectId m_backgroundId{};
+   ui_core::RectId m_hoverRectId{};
+   ui_core::RectId m_activeRectId{};
+   u32 m_hoveredItem = 0;
 
    mutable Vector2 m_cachedMeasureSize{};
    mutable std::optional<Measure> m_cachedMeasure{};

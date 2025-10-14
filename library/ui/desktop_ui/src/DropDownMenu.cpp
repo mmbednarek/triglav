@@ -197,6 +197,7 @@ void DropDownMenu::remove_from_viewport()
 {
    m_rect.remove_from_viewport();
    m_context.viewport().remove_sprite(m_downArrow);
+   m_downArrow = 0;
 }
 
 void DropDownMenu::on_event(const ui_core::Event& event)

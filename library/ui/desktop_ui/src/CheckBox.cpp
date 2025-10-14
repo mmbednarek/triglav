@@ -56,6 +56,7 @@ void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
 void CheckBox::remove_from_viewport()
 {
    m_context.viewport().remove_rectangle(m_background);
+   m_background = 0;
    m_content->remove_from_viewport();
 }
 

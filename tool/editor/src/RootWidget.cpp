@@ -61,7 +61,8 @@ void RootWidget::on_event(const ui_core::Event& event)
    m_globalLayout.on_event(event);
 }
 
-void RootWidget::on_clicked_menu_bar(Name itemName, const desktop_ui::MenuItem& /*item*/) {
+void RootWidget::on_clicked_menu_bar(Name itemName, const desktop_ui::MenuItem& /*item*/)
+{
    if (itemName == "file.close"_name) {
       m_state.editor->close();
    }
