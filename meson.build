@@ -70,4 +70,5 @@ subdir('shader')
 subdir('library')
 subdir('game/demo')
 subdir('tool/triglavcli')
+subdir('tool/editor')
 
