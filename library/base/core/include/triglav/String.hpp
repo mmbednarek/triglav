@@ -58,6 +58,8 @@ class StringView
    [[nodiscard]] Iterator begin() const;
    [[nodiscard]] Iterator end() const;
 
+   [[nodiscard]] std::string_view to_std() const;
+
  private:
    const char* m_data;
    MemorySize m_size;

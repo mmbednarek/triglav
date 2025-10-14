@@ -92,6 +92,11 @@ StringView::Iterator StringView::end() const
    return {m_data, m_data + m_size, true};
 }
 
+std::string_view StringView::to_std() const
+{
+   return std::string_view{m_data, m_size};
+}
+
 String::String() = default;
 
 String::String(const char* string) :
