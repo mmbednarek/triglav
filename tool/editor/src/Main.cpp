@@ -6,9 +6,7 @@
 
 int triglav_main(triglav::desktop::InputArgs& args, triglav::desktop::IDisplay& display)
 {
-   triglav::launcher::Application app(args, display);
-   app.complete_stage();
-
-   triglav::editor::Editor editor(app);
+   triglav::editor::Editor editor(args, display);
    return editor.run();
 }
+

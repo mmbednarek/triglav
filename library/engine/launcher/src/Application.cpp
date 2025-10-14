@@ -50,16 +50,26 @@ void Application::complete_stage()
       TG_LAUNCH_STAGES
 #undef TG_STAGE
    default:
+      m_stage.reset();
       break;
+   }
+}
+
+void Application::intitialize()
+{
+   this->complete_stage();
+
+   while (m_currentStage != LaunchStage::Complete) {
+      if (m_stage != nullptr) {
+         m_stage->tick();
+      }
+
+      this->tick();
    }
 }
 
 void Application::tick() const
 {
-   if (m_stage != nullptr) {
-      m_stage->tick();
-   }
-
    m_display.dispatch_messages();
    threading::Scheduler::the().tick();
 }
