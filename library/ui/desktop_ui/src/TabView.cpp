@@ -1,5 +1,7 @@
 #include "TabView.hpp"
 
+#include <utility>
+
 #include "DesktopUI.hpp"
 
 #include "triglav/render_core/GlyphCache.hpp"
@@ -12,7 +14,7 @@ constexpr auto g_itemPadding = 10.0f;
 
 TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::LayoutWidget(ctx, parent),
-    m_state(state)
+    m_state(std::move(state))
 {
 }
 
@@ -178,7 +180,7 @@ void TabView::set_active_tab(const u32 activeTab)
    this->add_to_viewport(m_dimensions, m_croppingMask);
 }
 
-[[nodiscard]] std::pair<float, u32> TabView::index_from_mouse_position(Vector2 position) const
+[[nodiscard]] std::pair<float, u32> TabView::index_from_mouse_position(const Vector2 position) const
 {
    const auto it_lb = m_offsetToItem.lower_bound(position.x);
    if (it_lb == m_offsetToItem.begin()) {

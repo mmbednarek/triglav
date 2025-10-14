@@ -60,4 +60,29 @@ IWidget& LayoutWidget::add_child(IWidgetPtr&& widget)
    return *m_children.emplace_back(std::move(widget));
 }
 
+ProxyWidget::ProxyWidget(Context& context, IWidget* parent) :
+    ContainerWidget(context, parent)
+{
+}
+
+Vector2 ProxyWidget::desired_size(const Vector2 parentSize) const
+{
+   return m_content->desired_size(parentSize);
+}
+
+void ProxyWidget::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+{
+   m_content->add_to_viewport(dimensions, croppingMask);
+}
+
+void ProxyWidget::remove_from_viewport()
+{
+   m_content->remove_from_viewport();
+}
+
+void ProxyWidget::on_event(const Event& event)
+{
+   m_content->on_event(event);
+}
+
 }// namespace triglav::ui_core

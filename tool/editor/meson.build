@@ -1,6 +1,8 @@
 editor_sources = files([
                            'src/Editor.cpp',
                            'src/Editor.hpp',
+                           'src/LevelEditor.cpp',
+                           'src/LevelEditor.hpp',
                            'src/Main.cpp',
                            'src/RootWidget.cpp',
                            'src/RootWidget.hpp',

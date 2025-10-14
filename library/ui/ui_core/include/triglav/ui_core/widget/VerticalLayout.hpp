@@ -15,8 +15,8 @@ class VerticalLayout : public LayoutWidget
  public:
    struct State
    {
-      Vector4 padding;
-      float separation;
+      Vector4 padding{};
+      float separation{};
    };
 
    VerticalLayout(Context& context, State state, IWidget* parent);
