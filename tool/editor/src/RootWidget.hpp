@@ -13,7 +13,7 @@ namespace triglav::editor {
 
 class Editor;
 
-class RootWidget : public ui_core::BaseWidget
+class RootWidget final : public ui_core::ProxyWidget
 {
  public:
    using Self = RootWidget;
@@ -25,18 +25,12 @@ class RootWidget : public ui_core::BaseWidget
 
    RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
-   Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
-   void remove_from_viewport() override;
-   void on_event(const ui_core::Event& event);
-
-   void on_clicked_menu_bar(Name itemName, const desktop_ui::MenuItem& item);
+   void on_clicked_menu_bar(Name itemName, const desktop_ui::MenuItem& item) const;
 
  private:
    ui_core::Context& m_context;
    State m_state;
-   ui_core::VerticalLayout m_globalLayout;
-   desktop_ui::DesktopUIManager m_deskopUIManager;
+   desktop_ui::DesktopUIManager m_desktopUIManager;
    desktop_ui::MenuController m_menuBarController;
    desktop_ui::MenuBar* m_menuBar;
 

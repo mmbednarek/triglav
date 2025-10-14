@@ -189,4 +189,15 @@ class LayoutWidget : public BaseWidget
    std::vector<IWidgetPtr> m_children;
 };
 
+class ProxyWidget : public ContainerWidget
+{
+ public:
+   ProxyWidget(Context& context, IWidget* parent);
+
+   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   void remove_from_viewport() override;
+   void on_event(const Event& event) override;
+};
+
 }// namespace triglav::ui_core

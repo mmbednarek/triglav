@@ -27,14 +27,14 @@
      inkscape:deskcolor="#000000"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="2.8284271"
-     inkscape:cx="35.708892"
-     inkscape:cy="18.208"
-     inkscape:window-width="1023"
-     inkscape:window-height="1217"
+     inkscape:zoom="5.2075461"
+     inkscape:cx="113.20111"
+     inkscape:cy="59.336969"
+     inkscape:window-width="2560"
+     inkscape:window-height="1406"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-maximized="1"
      inkscape:current-layer="layer1">
     <inkscape:grid
        id="grid2"
@@ -52,7 +52,141 @@
        visible="true" />
   </sodipodi:namedview>
   <defs
-     id="defs1" />
+     id="defs1">
+    <marker
+       style="overflow:visible"
+       id="marker10"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.5"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path10" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker9"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Concave triangle arrow"
+       markerWidth="0.5"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="M -2,-4 9,0 -2,4 c 2,-2.33 2,-5.66 0,-8 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path7" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="ConcaveTriangle"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Concave triangle arrow"
+       markerWidth="0.5"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="M -2,-4 9,0 -2,4 c 2,-2.33 2,-5.66 0,-8 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path9" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker6"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Concave triangle arrow"
+       markerWidth="0.5"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="M -2,-4 9,0 -2,4 c 2,-2.33 2,-5.66 0,-8 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path6" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker5"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Concave triangle arrow"
+       markerWidth="0.5"
+       markerHeight="0.5"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="M -2,-4 9,0 -2,4 c 2,-2.33 2,-5.66 0,-8 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path5" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.4"
+       markerHeight="0.4"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path8" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="RoundedArrow-2"
+       refX="0"
+       refY="0"
+       orient="auto-start-reverse"
+       inkscape:stockid="Rounded arrow"
+       markerWidth="0.40000001"
+       markerHeight="0.40000001"
+       viewBox="0 0 1 1"
+       inkscape:isstock="true"
+       inkscape:collect="always"
+       preserveAspectRatio="xMidYMid">
+      <path
+         transform="scale(0.7)"
+         d="m -0.21114562,-4.1055728 6.42229122,3.21114561 a 1,1 90 0 1 0,1.78885438 L -0.21114562,4.1055728 A 1.236068,1.236068 31.717474 0 1 -2,3 v -6 a 1.236068,1.236068 148.28253 0 1 1.78885438,-1.1055728 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:none"
+         id="path8-9" />
+    </marker>
+  </defs>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
@@ -77,5 +211,60 @@
        d="m 212,8 20,20 q 4,4 0,8 l -20,20"
        id="arrow-right"
        sodipodi:nodetypes="cccc" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#ConcaveTriangle);marker-end:url(#marker9)"
+       d="m 16, 96 h 32"
+       id="move-hor" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker6);marker-end:url(#marker5)"
+       d="M 32,80 v 32"
+       id="move-vert" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:6;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow);paint-order:stroke fill markers"
+       id="rotate"
+       sodipodi:type="arc"
+       sodipodi:cx="96"
+       sodipodi:cy="96"
+       sodipodi:rx="24"
+       sodipodi:ry="24"
+       sodipodi:start="1.5707963"
+       sodipodi:end="3.9269908"
+       sodipodi:arc-type="arc"
+       d="M 96,120 A 24,24 0 0 1 73.826891,105.1844 24,24 0 0 1 79.029437,79.029438"
+       sodipodi:open="true" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:6;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow-2);paint-order:stroke fill markers"
+       id="rotate-7"
+       sodipodi:type="arc"
+       sodipodi:cx="-96.000008"
+       sodipodi:cy="-95"
+       sodipodi:rx="24"
+       sodipodi:ry="24"
+       sodipodi:start="1.5707963"
+       sodipodi:end="3.9269908"
+       sodipodi:arc-type="arc"
+       d="m -96.000008,-71 a 24,24 0 0 1 -22.173112,-14.815597 24,24 0 0 1 5.20255,-26.154963"
+       sodipodi:open="true"
+       transform="scale(-1)" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#marker10)"
+       d="M 150.2884,105.60394 172.36886,83.523473"
+       id="scale-arrow" />
+    <rect
+       style="fill:none;stroke:#d9d9d9;stroke-width:4.22625;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:16.905, 4.22625, 4.22625, 4.22625, 4.22625, 4.22625;stroke-dashoffset:10.143;stroke-opacity:1;paint-order:stroke fill markers"
+       id="rect10"
+       width="39.43483"
+       height="37.391487"
+       x="145.66794"
+       y="70.699768"
+       ry="0.28890944" />
+    <rect
+       style="fill:#d9d9d9;fill-opacity:1;stroke:none;stroke-width:5.27017;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:5.27017, 10.5403;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke fill markers"
+       id="rect11"
+       width="23.471994"
+       height="23.471994"
+       x="133.88203"
+       y="98.532837"
+       ry="0.80063331" />
   </g>
 </svg>
