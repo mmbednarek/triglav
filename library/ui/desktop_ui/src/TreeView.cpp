@@ -47,14 +47,18 @@ void TreeView::remove_from_viewport()
    for (const auto label : std::views::values(m_labels)) {
       m_context.viewport().remove_text(label);
    }
+   m_labels.clear();
    for (const auto icon : std::views::values(m_icons)) {
       m_context.viewport().remove_sprite(icon);
    }
+   m_icons.clear();
    for (const auto arrow : std::views::values(m_arrows)) {
       m_context.viewport().remove_sprite(arrow);
    }
+   m_arrows.clear();
    if (m_itemHighlight != 0) {
       m_context.viewport().remove_rectangle(m_itemHighlight);
+      m_itemHighlight = 0;
    }
 }
 

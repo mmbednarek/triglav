@@ -1,9 +1,9 @@
 #pragma once
 
-#include "triglav/ui_core/IWidget.hpp"
-#include "triglav/ui_core/widget/VerticalLayout.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/MenuController.hpp"
+#include "triglav/ui_core/IWidget.hpp"
+#include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 namespace triglav::desktop_ui {
 class MenuBar;

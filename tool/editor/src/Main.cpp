@@ -9,4 +9,3 @@ int triglav_main(triglav::desktop::InputArgs& args, triglav::desktop::IDisplay& 
    triglav::editor::Editor editor(args, display);
    return editor.run();
 }
-

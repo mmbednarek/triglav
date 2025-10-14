@@ -38,6 +38,8 @@ int Editor::run()
       m_app.tick();
    }
 
+   m_app.gfx_device().await_all();
+
    return 0;
 }
 
