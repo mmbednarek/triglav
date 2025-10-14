@@ -3,14 +3,14 @@
 namespace triglav::desktop_ui {
 
 DialogManager::DialogManager(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-                             render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager,
-                             const Vector2u rootDimensions) :
+                             render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u rootDimensions,
+                             StringView rootTitle) :
     m_instance(instance),
     m_device(device),
     m_display(display),
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
-    m_root(std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager, rootDimensions))
+    m_root(std::make_unique<Dialog>(m_instance, m_device, m_display, m_glyphCache, m_resourceManager, rootDimensions, rootTitle))
 {
 }
 

@@ -25,7 +25,7 @@ class Dialog
 
    // Top level dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-          render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u dimensions);
+          render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u dimensions, StringView title);
 
    // Popup dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parentSurface,

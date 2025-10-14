@@ -13,7 +13,8 @@ class DialogManager
    using Self = DialogManager;
 
    DialogManager(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-                 render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u rootDimensions);
+                 render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, Vector2u rootDimensions,
+                 StringView rootTitle);
 
    [[nodiscard]] Dialog& root() const;
    [[nodiscard]] Dialog& create_popup_dialog(Vector2i offset, Vector2u dimensions);

@@ -9,6 +9,7 @@
 #include "triglav/desktop_ui/DropDownMenu.hpp"
 #include "triglav/desktop_ui/MenuBar.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
+#include "triglav/desktop_ui/TabView.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/font/FontManager.hpp"
@@ -126,7 +127,8 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initialWidth = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_defaultWidth));
    const auto initialHeight = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_defaultHeight));
 
-   DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight});
+   DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight},
+                               "Desktop UI Example"_strv);
 
    triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties::get_default(),
                                                           dialogManager.root().surface(), dialogManager);
@@ -230,10 +232,17 @@ int triglav_main(InputArgs& args, IDisplay& display)
    });
    rect2.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
 
-   auto& layout = scroll.create_content<triglav::ui_core::VerticalLayout>({
+
+   auto& tabView = scroll.create_content<triglav::desktop_ui::TabView>({
+      .manager = &desktopUiManager,
+      .tabNames = {"Random Items"_str, "Tree Example"_str},
+   });
+
+   auto& layout = tabView.create_child<triglav::ui_core::VerticalLayout>({
       .padding = {5.0f, 5.0f, 5.0f, 5.0f},
       .separation = 10.0f,
    });
+
 
    layout.create_child<triglav::desktop_ui::TextInput>({
       .manager = &desktopUiManager,
@@ -329,7 +338,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
                                      });
    }
 
-   layout.create_child<triglav::desktop_ui::TreeView>({
+   tabView.create_child<triglav::desktop_ui::TreeView>({
       .manager = &desktopUiManager,
       .controller = &controller,
       .extended_items = {container_item},

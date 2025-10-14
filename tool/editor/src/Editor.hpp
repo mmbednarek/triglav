@@ -5,17 +5,22 @@
 
 namespace triglav::editor {
 
+class RootWidget;
+
 class Editor
 {
  public:
-   explicit Editor(launcher::Application& app);
+   explicit Editor(desktop::InputArgs& args, desktop::IDisplay& display);
 
-   void init();
+   void initialize();
    int run();
+   void close();
 
  private:
-   launcher::Application& m_app;
+   launcher::Application m_app;
    std::unique_ptr<desktop_ui::DialogManager> m_dialogManager;
+   RootWidget* m_rootWidget{};
+   bool m_shouldClose = false;
 };
 
 }// namespace triglav::editor

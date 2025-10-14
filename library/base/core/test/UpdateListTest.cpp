@@ -219,7 +219,7 @@ TEST(UpdateList, RandomList)
 
       scope(INSERT_REMOVALS)
       {
-         std::uniform_int_distribution<int> removal_range(0, initial_count - 1);
+         std::uniform_int_distribution<int> removal_range(0, static_cast<int>(initial_count) - 1);
 
          std::set<int> removals;
          for (int i = 0; i < 100; ++i) {
