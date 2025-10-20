@@ -17,7 +17,7 @@ void Editor::initialize()
 {
    m_dialogManager =
       std::make_unique<desktop_ui::DialogManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
-                                                  m_app.resource_manager(), Vector2{1920, 1080}, "Triglav Editor"_strv);
+                                                  m_app.resource_manager(), Vector2{1280, 720}, "Triglav Editor"_strv);
 
    m_rootWidget = &m_dialogManager->root().create_root_widget<RootWidget>({
       .dialogManager = m_dialogManager.get(),

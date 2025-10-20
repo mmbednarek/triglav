@@ -19,15 +19,15 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
 {
    auto& layout = this->create_content<ui_core::VerticalLayout>({});
    auto& toolbar = layout.create_child<ui_core::RectBox>({
-      .color = TG_THEME_VAL(background_color),
+      .color = TG_THEME_VAL(background_color_brighter),
       .borderRadius = {0, 0, 0, 0},
       .borderColor = palette::NO_COLOR,
       .borderWidth = 0.0f,
    });
 
    auto& toolbar_layout = toolbar.create_content<ui_core::HorizontalLayout>({
-      .padding = {4.0f, 4.0f, 4.0f, 4.0f},
-      .separation = 12.0f,
+      .padding = {8.0f, 6.0f, 8.0f, 6.0f},
+      .separation = 4.0f,
       .gravity = ui_core::HorizontalAlignment::Left,
    });
 

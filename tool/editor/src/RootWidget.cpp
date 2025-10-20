@@ -2,6 +2,7 @@
 
 #include "Editor.hpp"
 #include "LevelEditor.hpp"
+#include "ProjectExplorer.hpp"
 
 #include "triglav/desktop_ui/DialogManager.hpp"
 #include "triglav/desktop_ui/MenuBar.hpp"
@@ -46,8 +47,9 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
 
    auto& splitter = globalLayout.create_child<desktop_ui::Splitter>({
       .manager = &m_desktopUIManager,
-      .offset = 1080,
+      .offset = 300,
       .axis = ui_core::Axis::Horizontal,
+      .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
    auto& leftTabView = splitter.create_preceding<desktop_ui::TabView>({
@@ -61,11 +63,11 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
 
    auto& rightTabView = splitter.create_following<desktop_ui::TabView>({
       .manager = &m_desktopUIManager,
-      .tabNames = {"ProjectExplorer"},
+      .tabNames = {"Project Explorer"},
       .activeTab = 0,
    });
-   rightTabView.create_child<ui_core::EmptySpace>({
-      .size = {100, 100},
+   rightTabView.create_child<ProjectExplorer>({
+      .manager = &m_desktopUIManager,
    });
 }
 

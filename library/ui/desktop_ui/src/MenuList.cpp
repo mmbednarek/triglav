@@ -38,7 +38,7 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
 
    m_backgroundId = m_context.viewport().add_rectangle({
       .rect = dimensions,
-      .color = TG_THEME_VAL(background_color),
+      .color = TG_THEME_VAL(background_color_darker),
       .borderRadius = palette::NO_COLOR,
       .borderColor = TG_THEME_VAL(active_color),
       .crop = croppingMask,

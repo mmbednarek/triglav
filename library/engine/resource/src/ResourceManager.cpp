@@ -150,4 +150,9 @@ std::optional<std::string> ResourceManager::lookup_name(const ResourceName resou
    return m_nameRegistry.lookup_resource_name(resourceName);
 }
 
+const NameRegistry& ResourceManager::name_registry() const
+{
+   return m_nameRegistry;
+}
+
 }// namespace triglav::resource

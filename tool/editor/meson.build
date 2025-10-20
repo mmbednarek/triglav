@@ -4,6 +4,8 @@ editor_sources = files([
                            'src/LevelEditor.cpp',
                            'src/LevelEditor.hpp',
                            'src/Main.cpp',
+                           'src/ProjectExplorer.cpp',
+                           'src/ProjectExplorer.hpp',
                            'src/RootWidget.cpp',
                            'src/RootWidget.hpp',
                        ])

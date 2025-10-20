@@ -36,6 +36,7 @@ class Viewport
    void set_rectangle_dims(RectId rectId, Rect dims, Rect crop);
    void set_rectangle_color(RectId rectId, Color color);
    void remove_rectangle(RectId rectId);
+   void remove_rectangle_safe(RectId& rectId);
 
    SpriteId add_sprite(Sprite&& sprite);
    void set_sprite_position(SpriteId spriteId, Vector2 position, Rect crop);
@@ -44,6 +45,7 @@ class Viewport
 
    [[nodiscard]] const Text& text(TextId textId) const;
    [[nodiscard]] Vector2u dimensions() const;
+   void set_dimensions(Vector2u dimensions);
 
    [[nodiscard]] bool should_redraw();
 

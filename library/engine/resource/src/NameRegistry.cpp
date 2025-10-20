@@ -7,6 +7,7 @@ void NameRegistry::register_resource(ResourceName resourceName, const std::strin
    auto RW_registeredResourceNames = m_registeredResourceNames.access();
    RW_registeredResourceNames->emplace(resourceName, std::string{nameStr});
 }
+
 std::optional<std::string> NameRegistry::lookup_resource_name(ResourceName resourceName) const
 {
    auto RW_registeredResourceNames = m_registeredResourceNames.read_access();

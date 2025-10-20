@@ -34,11 +34,11 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
 
    const bool first_init = m_labels.empty();
 
-   const Vector4 background_dims{dimensions.x, dimensions.y, dimensions.z, 2 * g_itemPadding + measure.item_height};
+   const Vector4 background_dims{dimensions.x, dimensions.y, dimensions.z, measure.tab_height};
    if (m_backgroundId == 0) {
       m_backgroundId = m_context.viewport().add_rectangle({
          .rect = background_dims,
-         .color = TG_THEME_VAL(background_color),
+         .color = TG_THEME_VAL(background_color_darker),
          .borderRadius = {0, 0, 0, 0},
          .borderColor = {0, 0, 0, 0},
          .crop = croppingMask,
@@ -52,13 +52,13 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
    u32 index = 0;
    for (const auto& tabName : m_state.tabNames) {
       if (index == m_state.activeTab) {
-         const Vector4 active_tab_dims{offset_x, dimensions.y, 2 * g_itemPadding + measure.item_widths[index],
-                                       2 * g_itemPadding + measure.item_height};
+         const Vector4 active_tab_dims{offset_x, dimensions.y + 0.25f * g_itemPadding, measure.tab_widths[index],
+                                       measure.tab_height - 0.25f * g_itemPadding};
          if (m_activeRectId == 0) {
             m_activeRectId = m_context.viewport().add_rectangle({
                .rect = active_tab_dims,
-               .color = TG_THEME_VAL(accent_color),
-               .borderRadius = {0.0f, 0.0f, 0, 0},
+               .color = TG_THEME_VAL(background_color_brighter),
+               .borderRadius = {0.0f, 0.0f, 0.0f, 0.0f},
                .borderColor = palette::NO_COLOR,
                .crop = croppingMask,
                .borderWidth = 0.0f,
@@ -66,9 +66,23 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
          } else {
             m_context.viewport().set_rectangle_dims(m_activeRectId, active_tab_dims, m_croppingMask);
          }
+
+         const Vector4 highlight_tab_dims{offset_x, dimensions.y, measure.tab_widths[index], 0.25f * g_itemPadding};
+         if (m_highlightRectId == 0) {
+            m_highlightRectId = m_context.viewport().add_rectangle({
+               .rect = highlight_tab_dims,
+               .color = TG_THEME_VAL(accent_color),
+               .borderRadius = {0.0f, 0.0f, 0.0f, 0.0f},
+               .borderColor = palette::NO_COLOR,
+               .crop = croppingMask,
+               .borderWidth = 0.0f,
+            });
+         } else {
+            m_context.viewport().set_rectangle_dims(m_highlightRectId, highlight_tab_dims, m_croppingMask);
+         }
       }
 
-      Vector2 text_pos{offset_x + g_itemPadding, dimensions.y + g_itemPadding + measure.item_height};
+      Vector2 text_pos{offset_x + g_itemPadding, dimensions.y + measure.tab_height - g_itemPadding};
       if (first_init) {
          m_labels.emplace_back(m_context.viewport().add_text({
             .content = tabName,
@@ -84,13 +98,12 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
 
       m_offsetToItem[offset_x - dimensions.x] = index;
 
-      offset_x += 2 * g_itemPadding + measure.item_widths[index];
+      offset_x += measure.tab_widths[index];
       ++index;
    }
 
-   m_children[m_state.activeTab]->add_to_viewport({dimensions.x, dimensions.y + 2 * g_itemPadding + measure.item_height, dimensions.z,
-                                                   dimensions.w - 2 * g_itemPadding - measure.item_height},
-                                                  croppingMask);
+   m_children[m_state.activeTab]->add_to_viewport(
+      {dimensions.x, dimensions.y + measure.tab_height, dimensions.z, dimensions.w - measure.tab_height}, croppingMask);
 }
 
 void TabView::remove_from_viewport()
@@ -98,6 +111,14 @@ void TabView::remove_from_viewport()
    for (const auto label : m_labels) {
       m_context.viewport().remove_text(label);
    }
+   m_labels.clear();
+
+   m_context.viewport().remove_rectangle(m_backgroundId);
+   m_backgroundId = 0;
+   m_context.viewport().remove_rectangle_safe(m_activeRectId);
+   m_context.viewport().remove_rectangle_safe(m_hoverRectId);
+   m_context.viewport().remove_rectangle_safe(m_highlightRectId);
+
    m_children[m_state.activeTab]->remove_from_viewport();
 }
 
@@ -105,14 +126,14 @@ void TabView::on_event(const ui_core::Event& event)
 {
    if (this->visit_event(event)) {
       ui_core::Event subEvent(event);
-      subEvent.mousePosition.y -= 2 * g_itemPadding + this->get_measure({m_dimensions.z, m_dimensions.w}).item_height;
+      subEvent.mousePosition.y -= this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height;
       m_children[m_state.activeTab]->on_event(subEvent);
    }
 }
 bool TabView::on_mouse_moved(const ui_core::Event& event)
 {
-   if (event.mousePosition.y > 2 * g_itemPadding + this->get_measure({m_dimensions.z, m_dimensions.w}).item_height) {
-      m_hoveredItem = ~0;
+   if (event.mousePosition.y > this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height) {
+      m_hoveredItem = ~0u;
       if (m_hoverRectId != 0) {
          m_context.viewport().remove_rectangle(m_hoverRectId);
          m_hoverRectId = 0;
@@ -123,6 +144,17 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
    auto [offset_x, index] = this->index_from_mouse_position(event.mousePosition);
    if (index == m_hoveredItem)
       return false;
+
+   if (m_isDragging) {
+      std::swap(m_children[index], m_children[m_state.activeTab]);
+      std::swap(m_state.tabNames[index], m_state.tabNames[m_state.activeTab]);
+      m_state.activeTab = index;
+
+      m_cachedMeasure.reset();
+      this->remove_from_viewport();
+      this->add_to_viewport(m_dimensions, m_croppingMask);
+      return false;
+   }
 
    m_hoveredItem = index;
 
@@ -135,12 +167,11 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
    }
 
    const auto& measure = this->get_measure({m_dimensions.z, m_dimensions.w});
-   const Vector4 hover_tab_dims{m_dimensions.x + offset_x, m_dimensions.y, 2 * g_itemPadding + measure.item_widths[index],
-                                2 * g_itemPadding + measure.item_height};
+   const Vector4 hover_tab_dims{m_dimensions.x + offset_x, m_dimensions.y, measure.tab_widths[index], measure.tab_height};
    if (m_hoverRectId == 0) {
       m_hoverRectId = m_context.viewport().add_rectangle({
          .rect = hover_tab_dims,
-         .color = TG_THEME_VAL(active_color),
+         .color = TG_THEME_VAL(background_color_brighter),
          .borderRadius = {0, 0, 0, 0},
          .borderColor = palette::NO_COLOR,
          .crop = m_croppingMask,
@@ -155,7 +186,7 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
 
 bool TabView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
 {
-   if (event.mousePosition.y > 2 * g_itemPadding + this->get_measure({m_dimensions.z, m_dimensions.w}).item_height) {
+   if (event.mousePosition.y > this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height) {
       return true;
    }
 
@@ -170,7 +201,14 @@ bool TabView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event
    }
 
    this->set_active_tab(index);
+   m_isDragging = true;
    return false;
+}
+
+bool TabView::on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&)
+{
+   m_isDragging = false;
+   return true;
 }
 
 void TabView::set_active_tab(const u32 activeTab)
@@ -188,7 +226,7 @@ void TabView::set_active_tab(const u32 activeTab)
    }
 
    const auto it = std::prev(it_lb);
-   if (position.x > (it->first + 2 * g_itemPadding + this->get_measure({m_dimensions.x, m_dimensions.y}).item_widths[it->second])) {
+   if (position.x > (it->first + this->get_measure({m_dimensions.x, m_dimensions.y}).tab_widths[it->second])) {
       return {0.0f, ~0};
    }
 
@@ -210,10 +248,11 @@ void TabView::set_active_tab(const u32 activeTab)
    });
 
    for (const auto& name : m_state.tabNames) {
-      auto name_measure = atlas.measure_text(name.view());
-      item_widths.emplace_back(name_measure.width);
+      const auto name_measure = atlas.measure_text(name.view());
+      const auto width = 2 * g_itemPadding + name_measure.width;
+      item_widths.emplace_back(width);
       max_height = std::max(max_height, name_measure.height);
-      total_tab_width += 2 * g_itemPadding + name_measure.width;
+      total_tab_width += width;
    }
 
    const auto total_tab_height = 2 * g_itemPadding + max_height;
@@ -230,8 +269,8 @@ void TabView::set_active_tab(const u32 activeTab)
 
    m_cachedMeasure.emplace(Measure{
       .size = {total_tab_width + max_widget_width, total_tab_height + max_widget_height},
-      .item_widths = std::move(item_widths),
-      .item_height = max_height,
+      .tab_widths = std::move(item_widths),
+      .tab_height = 2 * g_itemPadding + max_height,
    });
    m_cachedMeasureSize = availableSize;
    return *m_cachedMeasure;

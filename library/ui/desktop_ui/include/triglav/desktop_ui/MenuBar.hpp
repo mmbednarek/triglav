@@ -49,7 +49,7 @@ class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
    State m_state;
    std::vector<ui_core::TextId> m_labels;
    std::map<float, Name> m_offsetToItem;
-   ui_core::RectId m_backgroundId;
+   ui_core::RectId m_backgroundId{};
    ui_core::RectId m_hoverRectId{};
    Vector4 m_dimensions;
    Vector4 m_croppingMask;

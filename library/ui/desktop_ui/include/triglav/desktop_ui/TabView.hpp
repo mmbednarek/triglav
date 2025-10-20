@@ -26,8 +26,8 @@ class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
    struct Measure
    {
       Vector2 size;
-      std::vector<float> item_widths;
-      float item_height;
+      std::vector<float> tab_widths;
+      float tab_height;
    };
 
    TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
@@ -39,7 +39,7 @@ class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
 
    bool on_mouse_moved(const ui_core::Event&) override;
    bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
-   // bool on_mouse_left(const ui_core::Event&) override;
+   bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&) override;
 
    void set_active_tab(u32 activeTab);
 
@@ -56,7 +56,9 @@ class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
    ui_core::RectId m_backgroundId{};
    ui_core::RectId m_hoverRectId{};
    ui_core::RectId m_activeRectId{};
+   ui_core::RectId m_highlightRectId{};
    u32 m_hoveredItem = 0;
+   bool m_isDragging{false};
 
    mutable Vector2 m_cachedMeasureSize{};
    mutable std::optional<Measure> m_cachedMeasure{};

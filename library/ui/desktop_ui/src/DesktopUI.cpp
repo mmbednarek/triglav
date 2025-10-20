@@ -9,10 +9,11 @@ ThemeProperties ThemeProperties::get_default()
    return {
       .base_typeface = "lato/regular.typeface"_rc,
       .base_font_size = 15,
-      .background_color = {0.05f, 0.05f, 0.05f, 1.0f},
-      .active_color = {0.1f, 0.1f, 0.1f, 1.0f},
+      .background_color_darker = {0.094f, 0.094f, 0.094f, 1.0f},
+      .background_color_brighter = {0.12f, 0.12f, 0.12f, 1.0f},
+      .active_color = {0.14f, 0.14f, 0.14f, 1.0f},
       .foreground_color = {1.0f, 1.0f, 1.0f, 1.0f},
-      .accent_color = {0.0f, 0.105f, 1.0f, 1.0f},
+      .accent_color = {0.0f, 0.47f, 0.84f, 1.0f},
 
       .button =
          {
@@ -24,16 +25,16 @@ ThemeProperties ThemeProperties::get_default()
 
       .text_input =
          {
-            .bg_inactive = {0.03f, 0.03f, 0.03f, 1.0f},
-            .bg_active = {0.01f, 0.01f, 0.01f, 1.0f},
-            .bg_hover = {0.035f, 0.035f, 0.035f, 1.0f},
+            .bg_inactive = {0.12f, 0.12f, 0.12f, 1.0f},
+            .bg_active = {0.15f, 0.15f, 0.15f, 1.0f},
+            .bg_hover = {0.16f, 0.16f, 0.16f, 1.0f},
          },
 
       .dropdown =
          {
-            .bg = {0.04f, 0.04f, 0.04f, 1.0f},
-            .bg_hover = {0.05f, 0.05f, 0.05f, 1.0f},
-            .border = {0.1f, 0.1f, 0.1f, 1.0f},
+            .bg = {0.12f, 0.12f, 0.12f, 1.0f},
+            .bg_hover = {0.16f, 0.16f, 0.16f, 1.0f},
+            .border = {0.2f, 0.2f, 0.2f, 1.0f},
             .border_width = 1.0f,
          },
       .checkbox =

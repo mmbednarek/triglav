@@ -45,14 +45,14 @@ shader_targets += custom_target('rectangle_removal',
 shader_targets += custom_target('rectangle_render_vs',
                                 input : 'rectangle_render.slang',
                                 output : '@BASENAME@_vs.spv',
-                                depend_files : ['rectangle_api.slang'],
+                                depend_files : ['rectangle_api.slang', shader_lib_common],
                                 command : slang_vs_commands,
 )
 
 shader_targets += custom_target('rectangle_render_fs',
                                 input : 'rectangle_render.slang',
                                 output : '@BASENAME@_fs.spv',
-                                depend_files : ['rectangle_api.slang'],
+                                depend_files : ['rectangle_api.slang', shader_lib_common],
                                 command : slang_fs_commands,
 )
 
