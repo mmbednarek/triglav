@@ -170,7 +170,7 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parentId) const
 void TreeView::draw_level(const TreeItemId parentId, const float offset_x, float& offset_y)
 {
    const auto measure = this->get_measure(TREE_ROOT);
-   const Vector2 icon_size{measure.item_size.y, measure.item_size.y};
+   const Vector2 icon_size{measure.item_size.y + g_itemPadding, measure.item_size.y + g_itemPadding};
 
    const auto& children = m_state.controller->children(parentId);
    for (const auto child : children) {
@@ -179,7 +179,7 @@ void TreeView::draw_level(const TreeItemId parentId, const float offset_x, float
       m_offsetToItemId[offset_y - m_dimensions.y] = child;
 
       if (item.hasChildren) {
-         const Vector2 arrow_pos{offset_x, offset_y + g_itemPadding};
+         const Vector2 arrow_pos{offset_x, offset_y + g_itemPadding/2};
          Vector4 region{0, 0, 64, 64};
          if (!m_state.extended_items.contains(child)) {
             region = {3 * 64, 0, 64, 64};
@@ -199,7 +199,7 @@ void TreeView::draw_level(const TreeItemId parentId, const float offset_x, float
          }
       }
 
-      const Vector2 icon_pos{offset_x + icon_size.x + g_itemPadding, offset_y + g_itemPadding};
+      const Vector2 icon_pos{offset_x + icon_size.x + g_itemPadding, offset_y + g_itemPadding/2};
       if (auto icon_it = m_icons.find(child); icon_it != m_icons.end()) {
          m_context.viewport().set_sprite_position(icon_it->second, icon_pos, m_croppingMask);
       } else {

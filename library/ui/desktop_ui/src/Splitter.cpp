@@ -139,13 +139,15 @@ float Splitter::offset() const
    return 0.0f;
 }
 
-void Splitter::add_offset(float diff)
+void Splitter::add_offset(const float diff)
 {
    switch (m_state.offset_type) {
    case SplitterOffsetType::Preceeding:
       m_state.offset += diff;
+      break;
    case SplitterOffsetType::Following: {
       m_state.offset -= diff;
+      break;
    }
    }
 }

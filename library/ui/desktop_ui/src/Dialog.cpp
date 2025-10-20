@@ -232,6 +232,8 @@ void Dialog::on_resize(const Vector2i size)
 {
    spdlog::info("Resize event: {} {}", size.x, size.y);
 
+   m_device.await_all();
+
    m_jobGraph.set_screen_size(size);
    m_uiViewport.set_dimensions(size);
 
@@ -242,8 +244,6 @@ void Dialog::on_resize(const Vector2i size)
    auto& renderCtx = m_jobGraph.replace_job("render_dialog"_name);
    this->build_rendering_job(renderCtx);
    m_jobGraph.rebuild_job("render_dialog"_name);
-
-   m_device.await_all();
 
    m_renderSurface.recreate_swapchain(size);
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
@@ -18,6 +19,7 @@ class LevelEditor final : public ui_core::ProxyWidget
 
  private:
    State m_state;
+   desktop_ui::RadioGroup m_toolRadioGroup;
 };
 
 }// namespace triglav::editor
