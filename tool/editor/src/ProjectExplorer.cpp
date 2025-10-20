@@ -61,8 +61,8 @@ void ProjectExplorer::add_controller_item(std::string_view path)
       auto it = m_pathToId.find(path.substr(0, pos));
       if (it == m_pathToId.end()) {
          item_id = m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                                     .iconName = "texture/ui_images.tex"_rc,
-                                                     .iconRegion = {0, 0, 200, 200},
+                                                     .iconName = "texture/ui_atlas.tex"_rc,
+                                                     .iconRegion = {0, 128, 64, 64},
                                                      .label = {path.substr(last_pos, pos).data(), pos - last_pos},
                                                      .hasChildren = true,
                                                   });
@@ -75,8 +75,8 @@ void ProjectExplorer::add_controller_item(std::string_view path)
    }
 
    m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                     .iconName = "texture/ui_images.tex"_rc,
-                                     .iconRegion = {0, 0, 200, 200},
+                                     .iconName = "texture/ui_atlas.tex"_rc,
+                                     .iconRegion = {64, 128, 64, 64},
                                      .label = {path.substr(last_pos).data(), path.size() - last_pos},
                                      .hasChildren = false,
                                   });

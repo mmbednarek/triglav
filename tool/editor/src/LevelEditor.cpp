@@ -31,9 +31,21 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
       .gravity = ui_core::HorizontalAlignment::Left,
    });
 
+   auto& select_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
+      .manager = m_state.manager,
+      .radioGroup = &m_toolRadioGroup,
+      .isEnabled = false,
+   });
+   select_btn.create_content<ui_core::Image>({
+      .texture = "texture/ui_atlas.tex"_rc,
+      .maxSize = Vector2{16.0f, 16.0f},
+      .region = Vector4{192, 64, 64, 64},
+   });
+   m_toolRadioGroup.add_check_box(&select_btn);
+
    auto& move_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
       .manager = m_state.manager,
-      .radioGroup = nullptr,
+      .radioGroup = &m_toolRadioGroup,
       .isEnabled = false,
    });
    move_btn.create_content<ui_core::Image>({
@@ -41,10 +53,11 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
       .maxSize = Vector2{16.0f, 16.0f},
       .region = Vector4{0, 64, 64, 64},
    });
+   m_toolRadioGroup.add_check_box(&move_btn);
 
    auto& rotate_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
       .manager = m_state.manager,
-      .radioGroup = nullptr,
+      .radioGroup = &m_toolRadioGroup,
       .isEnabled = false,
    });
    rotate_btn.create_content<ui_core::Image>({
@@ -52,10 +65,11 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
       .maxSize = Vector2{16.0f, 16.0f},
       .region = Vector4{64, 64, 64, 64},
    });
+   m_toolRadioGroup.add_check_box(&rotate_btn);
 
    auto& scale_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
       .manager = m_state.manager,
-      .radioGroup = nullptr,
+      .radioGroup = &m_toolRadioGroup,
       .isEnabled = false,
    });
    scale_btn.create_content<ui_core::Image>({
@@ -63,6 +77,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
       .maxSize = Vector2{16.0f, 16.0f},
       .region = Vector4{128, 64, 64, 64},
    });
+   m_toolRadioGroup.add_check_box(&scale_btn);
 
    auto& align_box = layout.create_child<ui_core::AlignmentBox>({
       .horizontalAlignment = ui_core::HorizontalAlignment::Left,
