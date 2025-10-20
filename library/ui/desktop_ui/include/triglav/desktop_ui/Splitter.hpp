@@ -2,11 +2,18 @@
 
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
+#include "triglav/ui_core/Primitives.hpp"
 #include "triglav/ui_core/UICore.hpp"
 
 namespace triglav::desktop_ui {
 
 class DesktopUIManager;
+
+enum class SplitterOffsetType
+{
+    Preceeding,
+    Following,
+};
 
 class Splitter final : public ui_core::BaseWidget
 {
@@ -18,6 +25,7 @@ class Splitter final : public ui_core::BaseWidget
       DesktopUIManager* manager;
       float offset;
       ui_core::Axis axis;
+      SplitterOffsetType offset_type;
    };
 
    Splitter(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
@@ -43,6 +51,8 @@ class Splitter final : public ui_core::BaseWidget
    }
 
  private:
+   float offset() const;
+   void add_offset(float diff);
    TG_DECLARE_AXIS_FUNCS(m_state.axis)
 
    ui_core::Context& m_context;
@@ -54,6 +64,7 @@ class Splitter final : public ui_core::BaseWidget
    float m_lastMousePos{};
    Vector4 m_dimensions{};
    Vector4 m_croppingMask{};
+   ui_core::RectId m_background{};
 };
 
 }// namespace triglav::desktop_ui

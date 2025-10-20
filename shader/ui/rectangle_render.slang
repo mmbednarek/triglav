@@ -64,8 +64,8 @@ VSOutput vs_main(uint vid: SV_VertexID)
     out.screenOffset = prim.dimensions.xy;
     out.rectSize = prim.dimensions.zw;
     out.borderRadius = prim.borderRadius;
-    out.borderColor = prim.borderColor;
-    out.backgroundColor = prim.backgroundColor;
+    out.borderColor = common::to_linear_color(prim.borderColor);
+    out.backgroundColor = common::to_linear_color(prim.backgroundColor);
     out.croppingMask = prim.croppingMask;
     out.borderWidth = prim.borderWidth;
     return out;

@@ -16,7 +16,8 @@ struct ThemeProperties
    // Core
    TypefaceName base_typeface;
    i32 base_font_size;
-   Color background_color;
+   Color background_color_darker;
+   Color background_color_brighter;
    Color active_color;
    Color foreground_color;
    Color accent_color;

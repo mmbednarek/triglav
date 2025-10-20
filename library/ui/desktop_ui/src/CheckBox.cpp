@@ -33,12 +33,12 @@ Vector2 CheckBox::desired_size(const Vector2 parentSize) const
 
 void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   auto size = this->desired_size(dimensions);
+   auto size = this->desired_size({dimensions.z, dimensions.w});
 
    if (m_background == 0) {
       m_background = m_context.viewport().add_rectangle({
          .rect = {dimensions.x, dimensions.y, size},
-         .color = TG_THEME_VAL(background_color),
+         .color = TG_THEME_VAL(background_color_brighter),
          .borderRadius = {4.0f, 4.0f, 4.0f, 4.0f},
          .borderColor = palette::NO_COLOR,
          .crop = croppingMask,
@@ -88,7 +88,7 @@ bool CheckBox::on_mouse_entered(const ui_core::Event& /*event*/)
 bool CheckBox::on_mouse_left(const ui_core::Event& /*event*/)
 {
    if (!m_state.isEnabled) {
-      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color));
+      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color_brighter));
    }
    return true;
 }
@@ -99,7 +99,7 @@ void CheckBox::set_state(const bool isEnabled)
    if (m_state.isEnabled) {
       m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(accent_color));
    } else {
-      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color));
+      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color_brighter));
    }
 }
 

@@ -120,11 +120,20 @@ void Viewport::set_rectangle_color(RectId rectId, const Vector4 color)
 
 void Viewport::remove_rectangle(RectId rectId)
 {
+   assert(rectId != 0);
    spdlog::info("ui-viewport: removing rect: {}", rectId);
 
    event_OnRemovedRectangle.publish(rectId);
    m_rectangles.erase(rectId);
    m_needsRedraw = true;
+}
+
+void Viewport::remove_rectangle_safe(RectId& rectId)
+{
+   if (rectId == 0)
+      return;
+   this->remove_rectangle(rectId);
+   rectId = 0;
 }
 
 SpriteId Viewport::add_sprite(Sprite&& sprite)
@@ -169,6 +178,11 @@ const Text& Viewport::text(const TextId textId) const
 Vector2u Viewport::dimensions() const
 {
    return m_dimensions;
+}
+
+void Viewport::set_dimensions(Vector2u dimensions)
+{
+   m_dimensions = dimensions;
 }
 
 bool Viewport::should_redraw()

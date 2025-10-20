@@ -4,6 +4,7 @@
 #include "DialogManager.hpp"
 #include "MenuList.hpp"
 
+#include "triglav/Ranges.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/Viewport.hpp"
@@ -34,18 +35,26 @@ void MenuBar::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
    m_dimensions = dimensions;
    m_croppingMask = croppingMask;
 
-   m_backgroundId = m_context.viewport().add_rectangle({
-      .rect = dimensions,
-      .color = TG_THEME_VAL(background_color),
-      .borderRadius = {0, 0, 0, 0},
-      .borderColor = palette::NO_COLOR,
-      .crop = croppingMask,
-      .borderWidth = 0.0f,
-   });
+   if (m_backgroundId == 0) {
+      m_backgroundId = m_context.viewport().add_rectangle({
+         .rect = dimensions,
+         .color = TG_THEME_VAL(background_color_darker),
+         .borderRadius = {0, 0, 0, 0},
+         .borderColor = palette::NO_COLOR,
+         .crop = croppingMask,
+         .borderWidth = 0.0f,
+      });
+   } else {
+      m_context.viewport().set_rectangle_dims(m_backgroundId, dimensions, croppingMask);
+   }
+
+   m_context.viewport().remove_rectangle_safe(m_hoverRectId);
 
    const auto& items = m_state.controller->children("root"_name);
 
    float x_offset = dimensions.x + g_globalMargin;
+
+   m_offsetToItem.clear();
 
    if (m_labels.empty()) {
       m_labels.reserve(items.size());
@@ -64,18 +73,26 @@ void MenuBar::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMa
 
          x_offset += 2 * g_itemHMargin + measure.item_widths.at(itemName);
       }
+   } else {
+      for (auto [index, label] : Enumerate(m_labels)) {
+         m_offsetToItem[x_offset] = items[index];
+         m_context.viewport().set_text_position(
+            label, {x_offset + g_itemHMargin, dimensions.y + g_globalMargin + g_itemVMargin + measure.item_height}, croppingMask);
+         x_offset += 2 * g_itemHMargin + measure.item_widths.at(items[index]);
+      }
    }
 }
 
 void MenuBar::remove_from_viewport()
 {
-   m_context.viewport().remove_rectangle(m_backgroundId);
+   m_context.viewport().remove_rectangle_safe(m_backgroundId);
+
    for (const auto label : m_labels) {
       m_context.viewport().remove_text(label);
    }
-   if (m_hoverRectId != 0) {
-      m_context.viewport().remove_rectangle(m_hoverRectId);
-   }
+   m_labels.clear();
+
+   m_context.viewport().remove_rectangle_safe(m_hoverRectId);
 }
 
 void MenuBar::on_event(const ui_core::Event& event)
@@ -98,9 +115,12 @@ bool MenuBar::on_mouse_moved(const ui_core::Event& event)
 
 bool MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
-   const auto measure = this->get_measure();
-
    this->close_submenu();
+   if (m_hoveredItem == 0) {
+      return false;
+   }
+
+   const auto measure = this->get_measure();
 
    const Vector4 dims{m_hoveredItemOffset, g_globalMargin, 2 * g_itemHMargin + measure.item_widths.at(m_hoveredItem),
                       2 * g_itemVMargin + measure.item_height};

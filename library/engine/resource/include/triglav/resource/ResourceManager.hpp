@@ -74,6 +74,8 @@ class ResourceManager
 
    std::optional<std::string> lookup_name(ResourceName resourceName) const;
 
+   const NameRegistry& name_registry() const;
+
  private:
    void load_next_stage();
 

@@ -14,6 +14,7 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
                const StringView title) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
+    m_device(device),
     m_surface(display.create_surface(title, dimensions, desktop::WindowAttribute::Default)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
@@ -40,6 +41,7 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
                const Vector2i offset) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
+    m_device(device),
     m_surface(parentSurface.create_popup(dimensions, offset, desktop::WindowAttribute::None)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
@@ -229,6 +231,23 @@ void Dialog::on_text_input(const Rune rune) const
 void Dialog::on_resize(const Vector2i size)
 {
    spdlog::info("Resize event: {} {}", size.x, size.y);
+
+   m_jobGraph.set_screen_size(size);
+   m_uiViewport.set_dimensions(size);
+
+   auto& updateUiCtx = m_jobGraph.replace_job("update_ui"_name);
+   m_updateUiJob.build_job(updateUiCtx);
+   m_jobGraph.rebuild_job("update_ui"_name);
+
+   auto& renderCtx = m_jobGraph.replace_job("render_dialog"_name);
+   this->build_rendering_job(renderCtx);
+   m_jobGraph.rebuild_job("render_dialog"_name);
+
+   m_device.await_all();
+
+   m_renderSurface.recreate_swapchain(size);
+
+   m_rootWidget->add_to_viewport({0, 0, size.x, size.y}, {0, 0, size.x, size.y});
 };
 
 ui_core::IWidget& Dialog::set_root_widget(ui_core::IWidgetPtr&& content)

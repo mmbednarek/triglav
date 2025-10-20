@@ -60,6 +60,7 @@ class Dialog
 
    render_core::GlyphCache& m_glyphCache;
    resource::ResourceManager& m_resourceManager;
+   graphics_api::Device& m_device;
 
    std::shared_ptr<desktop::ISurface> m_surface;
    graphics_api::Surface m_graphicsSurface;

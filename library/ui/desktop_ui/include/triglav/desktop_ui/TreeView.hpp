@@ -48,16 +48,16 @@ class TreeView : public ui_core::BaseWidget, ui_core::EventVisitor
 
    ui_core::Context& m_context;
    State m_state;
-   Vector4 m_dimensions;
-   Vector4 m_croppingMask;
+   Vector4 m_dimensions{};
+   Vector4 m_croppingMask{};
    std::map<TreeItemId, ui_core::TextId> m_labels;
    std::map<TreeItemId, ui_core::SpriteId> m_icons;
    std::map<TreeItemId, ui_core::SpriteId> m_arrows;
    std::map<float, TreeItemId> m_offsetToItemId;
    ui_core::RectId m_itemHighlight{};
-   Vector4 m_highlightDims;
+   Vector4 m_highlightDims{};
 
-   mutable std::optional<Measure> m_cachedMeasure;
+   mutable std::optional<Measure> m_cachedMeasure{};
 };
 
 }// namespace triglav::desktop_ui

@@ -56,10 +56,7 @@ void TreeView::remove_from_viewport()
       m_context.viewport().remove_sprite(arrow);
    }
    m_arrows.clear();
-   if (m_itemHighlight != 0) {
-      m_context.viewport().remove_rectangle(m_itemHighlight);
-      m_itemHighlight = 0;
-   }
+   m_context.viewport().remove_rectangle_safe(m_itemHighlight);
 }
 
 void TreeView::on_event(const ui_core::Event& event)
