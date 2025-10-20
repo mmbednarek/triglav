@@ -56,6 +56,9 @@ class Dialog
    [[nodiscard]] bool should_close() const;
 
  private:
+   Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyphCache,
+          resource::ResourceManager& resourceManager, Vector2u dimensions, std::shared_ptr<desktop::ISurface> surface);
+
    void build_rendering_job(render_core::BuildContext& ctx);
 
    render_core::GlyphCache& m_glyphCache;

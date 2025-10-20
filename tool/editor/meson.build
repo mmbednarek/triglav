@@ -6,6 +6,8 @@ editor_sources = files([
                            'src/Main.cpp',
                            'src/ProjectExplorer.cpp',
                            'src/ProjectExplorer.hpp',
+                           'src/RenderViewport.cpp',
+                           'src/RenderViewport.hpp',
                            'src/RootWidget.cpp',
                            'src/RootWidget.hpp',
                        ])

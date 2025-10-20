@@ -12,37 +12,25 @@ using namespace string_literals;
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
                render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
                const StringView title) :
-    m_glyphCache(glyphCache),
-    m_resourceManager(resourceManager),
-    m_device(device),
-    m_surface(display.create_surface(title, dimensions, desktop::WindowAttribute::Default)),
-    m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
-    m_resourceStorage(device),
-    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),
-    m_uiViewport(dimensions),
-    m_updateUiJob(device, m_glyphCache, m_uiViewport, m_resourceManager),
-    m_pipelineCache(device, m_resourceManager),
-    m_jobGraph(device, m_resourceManager, m_pipelineCache, m_resourceStorage, dimensions),
-    m_context(m_uiViewport, m_glyphCache, m_resourceManager),
-    TG_CONNECT(*m_surface, OnClose, on_close),
-    TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
-    TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
-    TG_CONNECT(*m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
-    TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
-    TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
-    TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
-    TG_CONNECT(*m_surface, OnTextInput, on_text_input),
-    TG_CONNECT(*m_surface, OnResize, on_resize)
+    Dialog(instance, device, glyphCache, resourceManager, dimensions,
+           display.create_surface(title, dimensions, desktop::WindowAttribute::Default))
 {
 }
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parentSurface,
                render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
                const Vector2i offset) :
+    Dialog(instance, device, glyphCache, resourceManager, dimensions,
+           parentSurface.create_popup(dimensions, offset, desktop::WindowAttribute::None))
+{
+}
+
+Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyphCache,
+               resource::ResourceManager& resourceManager, const Vector2u dimensions, std::shared_ptr<desktop::ISurface> surface) :
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
     m_device(device),
-    m_surface(parentSurface.create_popup(dimensions, offset, desktop::WindowAttribute::None)),
+    m_surface(std::move(surface)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
     m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),
@@ -103,7 +91,7 @@ void Dialog::build_rendering_job(render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
 
-   ctx.begin_render_pass("splash_screen"_name, "core.color_out"_name);
+   ctx.begin_render_pass("dialog_render_ui"_name, "core.color_out"_name);
 
    m_updateUiJob.render_ui(ctx);
 
