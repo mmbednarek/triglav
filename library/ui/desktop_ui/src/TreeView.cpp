@@ -61,10 +61,10 @@ void TreeView::remove_from_viewport()
 
 void TreeView::on_event(const ui_core::Event& event)
 {
-   this->visit_event(event);
+   ui_core::visit_event<void>(*this, event);
 }
 
-bool TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
+void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
 {
    auto [base_offset, item_id] = this->index_from_mouse_position(event.mousePosition);
    if (item_id == 0) {
@@ -72,7 +72,7 @@ bool TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
          m_context.viewport().remove_rectangle(m_itemHighlight);
          m_itemHighlight = 0;
       }
-      return false;
+      return;
    }
    const auto& item = m_state.controller->item(item_id);
 
@@ -102,8 +102,6 @@ bool TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
    }
 
    this->add_to_viewport(m_dimensions, m_croppingMask);
-
-   return false;
 }
 
 std::pair<float, TreeItemId> TreeView::index_from_mouse_position(const Vector2 position) const

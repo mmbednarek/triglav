@@ -3,6 +3,7 @@
 #include "triglav/render_core/BuildContext.hpp"
 
 #include <spdlog/spdlog.h>
+#include "WidgetRenderer.hpp"
 
 namespace triglav::desktop_ui {
 
@@ -228,7 +229,6 @@ void Dialog::on_resize(const Vector2i size)
    auto& updateUiCtx = m_jobGraph.replace_job("update_ui"_name);
    m_updateUiJob.build_job(updateUiCtx);
    m_jobGraph.rebuild_job("update_ui"_name);
-
    auto& renderCtx = m_jobGraph.replace_job("render_dialog"_name);
    this->build_rendering_job(renderCtx);
    m_jobGraph.rebuild_job("render_dialog"_name);

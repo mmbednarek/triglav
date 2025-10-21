@@ -14,6 +14,7 @@ desktop_ui_sources = files([
                           'include/triglav/desktop_ui/TextInput.hpp',
                           'include/triglav/desktop_ui/TreeController.hpp',
                           'include/triglav/desktop_ui/TreeView.hpp',
+                          'include/triglav/desktop_ui/WidgetRenderer.hpp',
                           'src/Button.cpp',
                           'src/CheckBox.cpp',
                           'src/ContextMenu.cpp',
@@ -29,6 +30,7 @@ desktop_ui_sources = files([
                           'src/TextInput.cpp',
                           'src/TreeController.cpp',
                           'src/TreeView.cpp',
+                          'src/WidgetRenderer.cpp',
                       ])
 
 desktop_ui_deps = [core, threading, ui_core, renderer]

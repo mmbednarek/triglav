@@ -19,7 +19,7 @@ class RadioGroup
    std::vector<CheckBox*> m_checkBoxes;
 };
 
-class CheckBox : public ui_core::ContainerWidget, ui_core::EventVisitor
+class CheckBox : public ui_core::ContainerWidget
 {
  public:
    struct State
@@ -39,9 +39,9 @@ class CheckBox : public ui_core::ContainerWidget, ui_core::EventVisitor
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&) override;
-   bool on_mouse_entered(const ui_core::Event&) override;
-   bool on_mouse_left(const ui_core::Event&) override;
+   bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&);
+   bool on_mouse_entered(const ui_core::Event&);
+   bool on_mouse_left(const ui_core::Event&);
 
    void set_state(bool isEnabled);
 

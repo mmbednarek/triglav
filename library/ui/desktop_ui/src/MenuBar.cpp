@@ -97,27 +97,26 @@ void MenuBar::remove_from_viewport()
 
 void MenuBar::on_event(const ui_core::Event& event)
 {
-   this->visit_event(event);
+   ui_core::visit_event<void>(*this, event);
 }
 
-bool MenuBar::on_mouse_moved(const ui_core::Event& event)
+void MenuBar::on_mouse_moved(const ui_core::Event& event)
 {
    const auto [offset_x, new_hovered_item] = this->index_from_mouse_position(event.mousePosition);
    if (new_hovered_item == m_hoveredItem)
-      return false;
+      return;
 
    m_hoveredItem = new_hovered_item;
    m_hoveredItemOffset = offset_x;
 
    this->close_submenu();
-   return false;
 }
 
-bool MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
+void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
    this->close_submenu();
    if (m_hoveredItem == 0) {
-      return false;
+      return;
    }
 
    const auto measure = this->get_measure();
@@ -151,11 +150,9 @@ bool MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
    popup.create_root_widget<MenuList>(MenuList::State{child_state});
    popup.initialize();
    m_subMenu = &popup;
-
-   return false;
 }
 
-bool MenuBar::on_mouse_left(const ui_core::Event& /*event*/)
+void MenuBar::on_mouse_left(const ui_core::Event& /*event*/)
 {
    if (m_subMenu != nullptr) {
       m_state.manager->dialog_manager().close_popup(m_subMenu);
@@ -166,8 +163,6 @@ bool MenuBar::on_mouse_left(const ui_core::Event& /*event*/)
       m_context.viewport().remove_rectangle(m_hoverRectId);
       m_hoverRectId = 0;
    }
-
-   return false;
 }
 
 std::pair<float, Name> MenuBar::index_from_mouse_position(const Vector2 position) const

@@ -117,16 +117,16 @@ void MenuList::remove_from_viewport()
 
 void MenuList::on_event(const ui_core::Event& event)
 {
-   this->visit_event(event);
+   ui_core::visit_event<void>(*this, event);
 }
 
-bool MenuList::on_mouse_moved(const ui_core::Event& event)
+void MenuList::on_mouse_moved(const ui_core::Event& event)
 {
    const auto measure = this->get_measure();
 
    const auto [offset_y, new_hovered_item] = this->index_from_mouse_position(event.mousePosition);
    if (new_hovered_item == m_hoveredItem)
-      return false;
+      return;
 
    m_hoveredItem = new_hovered_item;
 
@@ -140,7 +140,7 @@ bool MenuList::on_mouse_moved(const ui_core::Event& event)
          m_context.viewport().remove_rectangle(m_hoverRectId);
          m_hoverRectId = 0;
       }
-      return false;
+      return;
    }
 
    const Vector4 dims{g_globalMargin, offset_y, measure.item_size.x, measure.item_size.y};
@@ -175,15 +175,13 @@ bool MenuList::on_mouse_moved(const ui_core::Event& event)
       popup.initialize();
       m_subMenu = &popup;
    }
-   return false;
 }
 
-bool MenuList::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
+void MenuList::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
    if (m_hoveredItem != 0) {
       m_state.controller->trigger_on_clicked(m_hoveredItem);
    }
-   return false;
 }
 
 std::pair<float, Name> MenuList::index_from_mouse_position(const Vector2 position) const

@@ -2,11 +2,23 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/String.hpp"
+#include "triglav/Template.hpp"
 #include "triglav/desktop/Desktop.hpp"
 
 #include <memory>
+#include <type_traits>
 #include <variant>
 #include <vector>
+
+#define TG_UI_EVENTS                                          \
+   TG_DEFINE_EVENT(MousePressed, on_mouse_pressed, Mouse)     \
+   TG_DEFINE_EVENT(MouseReleased, on_mouse_released, Mouse)   \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseMoved, on_mouse_moved)     \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseEntered, on_mouse_entered) \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseLeft, on_mouse_left)       \
+   TG_DEFINE_EVENT(MouseScrolled, on_mouse_scrolled, Scroll)  \
+   TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)      \
+   TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)
 
 namespace triglav::ui_core {
 
@@ -22,14 +34,11 @@ struct Event
 {
    enum class Type
    {
-      MousePressed,
-      MouseReleased,
-      MouseMoved,
-      MouseEntered,
-      MouseLeft,
-      MouseScrolled,
-      KeyPressed,
-      TextInput,
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD) NAME,
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD) NAME,
+      TG_UI_EVENTS
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
    };
 
    struct Mouse
@@ -59,53 +68,57 @@ struct Event
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 };
 
-class EventVisitor
+namespace event_visitor_concepts {
+
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD)                                                 \
+   template<typename TVisitor, typename TResult>                                               \
+   concept NAME = requires(TVisitor& visitor, const Event& e, const Event::PAYLOAD& payload) { \
+      { visitor.METHOD(e, payload) } -> std::convertible_to<TResult>;                          \
+   };
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD)                \
+   template<typename TVisitor, typename TResult>                \
+   concept NAME = requires(TVisitor& visitor, const Event& e) { \
+      { visitor.METHOD(e) } -> std::convertible_to<TResult>;    \
+   };
+TG_UI_EVENTS
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
+
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD) NAME<TVisitor, TResult> ||
+
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD) NAME<TVisitor, TResult> ||
+template<typename TVisitor, typename TResult>
+concept AnyVisitor = TG_UI_EVENTS false;
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
+
+}// namespace event_visitor_concepts
+
+template<typename TResult, event_visitor_concepts::AnyVisitor<TResult> TEventVisitor>
+TResult visit_event(TEventVisitor& visitor, const Event& ev, NonVoid<TResult> default_result = {})
 {
- public:
-   // return true if event should be propagated
-
-   virtual bool on_mouse_pressed(const Event& /*event*/, const Event::Mouse& /*mouse*/)
-   {
-      return true;
+   switch (ev.eventType) {
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD)                              \
+   case Event::Type::NAME:                                                  \
+      if constexpr (event_visitor_concepts::NAME<TEventVisitor, TResult>) { \
+         return visitor.METHOD(ev, std::get<Event::PAYLOAD>(ev.data));      \
+      }                                                                     \
+      break;
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD)                            \
+   case Event::Type::NAME:                                                  \
+      if constexpr (event_visitor_concepts::NAME<TEventVisitor, TResult>) { \
+         return visitor.METHOD(ev);                                         \
+      }                                                                     \
+      break;
+      TG_UI_EVENTS
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
    }
 
-   virtual bool on_mouse_released(const Event& /*event*/, const Event::Mouse& /*mouse*/)
-   {
-      return true;
+   if constexpr (!std::is_same_v<TResult, void>) {
+      return default_result;
    }
-
-   virtual bool on_mouse_moved(const Event& /*event*/)
-   {
-      return true;
-   }
-
-   virtual bool on_mouse_entered(const Event& /*event*/)
-   {
-      return true;
-   }
-
-   virtual bool on_mouse_left(const Event& /*event*/)
-   {
-      return true;
-   }
-
-   virtual bool on_mouse_scrolled(const Event& /*event*/, const Event::Scroll& /*scroll*/)
-   {
-      return true;
-   }
-
-   virtual bool on_key_pressed(const Event& /*event*/, const Event::Keyboard& /*key_press*/)
-   {
-      return true;
-   }
-
-   virtual bool on_text_input(const Event& /*event*/, const Event::TextInput& /*text_input*/)
-   {
-      return true;
-   }
-
-   bool visit_event(const Event& event);
-};
+}
 
 class IWidget
 {

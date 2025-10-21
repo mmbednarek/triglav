@@ -13,7 +13,7 @@ namespace triglav::desktop_ui {
 class Dialog;
 class DesktopUIManager;
 
-class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
+class MenuBar final : public ui_core::BaseWidget
 {
  public:
    struct State
@@ -36,9 +36,9 @@ class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   bool on_mouse_moved(const ui_core::Event&) override;
-   bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
-   bool on_mouse_left(const ui_core::Event&) override;
+   void on_mouse_moved(const ui_core::Event&);
+   void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
+   void on_mouse_left(const ui_core::Event&);
 
  private:
    [[nodiscard]] std::pair<float, Name> index_from_mouse_position(Vector2 position) const;

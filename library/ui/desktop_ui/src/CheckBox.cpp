@@ -62,7 +62,7 @@ void CheckBox::remove_from_viewport()
 
 void CheckBox::on_event(const ui_core::Event& event)
 {
-   if (this->visit_event(event)) {
+   if (ui_core::visit_event<bool>(*this, event, true)) {
       m_content->on_event(event);
    }
 }

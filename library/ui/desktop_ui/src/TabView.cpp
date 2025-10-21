@@ -124,12 +124,13 @@ void TabView::remove_from_viewport()
 
 void TabView::on_event(const ui_core::Event& event)
 {
-   if (this->visit_event(event)) {
+   if (ui_core::visit_event<bool>(*this, event, true)) {
       ui_core::Event subEvent(event);
       subEvent.mousePosition.y -= this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height;
       m_children[m_state.activeTab]->on_event(subEvent);
    }
 }
+
 bool TabView::on_mouse_moved(const ui_core::Event& event)
 {
    if (event.mousePosition.y > this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height) {
