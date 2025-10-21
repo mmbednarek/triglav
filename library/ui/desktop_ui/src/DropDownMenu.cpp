@@ -202,7 +202,7 @@ void DropDownMenu::remove_from_viewport()
 
 void DropDownMenu::on_event(const ui_core::Event& event)
 {
-   this->visit_event(event);
+   ui_core::visit_event<void>(*this, event);
 }
 
 void DropDownMenu::on_child_state_changed(IWidget& /*widget*/)
@@ -223,13 +223,13 @@ void DropDownMenu::set_selected_item(const u32 index)
    }
 }
 
-bool DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
+void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
    if (m_currentPopup != nullptr) {
       m_state.manager->dialog_manager().close_popup(m_currentPopup);
       m_currentPopup = nullptr;
       m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
-      return false;
+      return;
    }
 
    // Fake selector with invalid context
@@ -244,20 +244,16 @@ bool DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_c
    m_currentPopup = &popup;
 
    m_context.viewport().set_sprite_texture_region(m_downArrow, {64, 0, 64, 64});
-
-   return false;
 }
 
-bool DropDownMenu::on_mouse_entered(const ui_core::Event& /*event*/)
+void DropDownMenu::on_mouse_entered(const ui_core::Event& /*event*/)
 {
    m_rect.set_color(m_state.manager->properties().dropdown.bg_hover);
-   return false;
 }
 
-bool DropDownMenu::on_mouse_left(const ui_core::Event& /*event*/)
+void DropDownMenu::on_mouse_left(const ui_core::Event& /*event*/)
 {
    m_rect.set_color(m_state.manager->properties().dropdown.bg);
-   return false;
 }
 
 }// namespace triglav::desktop_ui

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <span>
+#include <utility>
 
 namespace triglav {
 
@@ -52,5 +53,8 @@ std::array<T, Count> span_to_array(const std::span<T> jobFrames)
 {
    return detail::span_to_array_internal<T, Count, 0>(jobFrames);
 }
+
+template<typename T>
+using NonVoid = std::conditional_t<std::is_same_v<T, void>, std::monostate, T>;
 
 }// namespace triglav

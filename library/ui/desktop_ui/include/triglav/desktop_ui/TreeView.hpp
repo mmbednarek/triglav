@@ -12,7 +12,7 @@ namespace triglav::desktop_ui {
 
 class DesktopUIManager;
 
-class TreeView : public ui_core::BaseWidget, ui_core::EventVisitor
+class TreeView : public ui_core::BaseWidget
 {
  public:
    using Self = TreeView;
@@ -37,7 +37,7 @@ class TreeView : public ui_core::BaseWidget, ui_core::EventVisitor
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
+   void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
 
 
  private:

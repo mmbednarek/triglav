@@ -76,7 +76,7 @@ class DropDownSelector final : public ui_core::IWidget
    ui_core::VerticalLayout m_verticalLayout;
 };
 
-class DropDownMenu final : public ui_core::IWidget, ui_core::EventVisitor
+class DropDownMenu final : public ui_core::IWidget
 {
    friend class DropDownSelectorButton;
    friend class DropDownSelector;
@@ -101,9 +101,9 @@ class DropDownMenu final : public ui_core::IWidget, ui_core::EventVisitor
 
    void set_selected_item(u32 index);
 
-   bool on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse) override;
-   bool on_mouse_entered(const ui_core::Event& event) override;
-   bool on_mouse_left(const ui_core::Event& event) override;
+   void on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
+   void on_mouse_entered(const ui_core::Event& event);
+   void on_mouse_left(const ui_core::Event& event);
 
  private:
    [[maybe_unused]] ui_core::Context& m_context;

@@ -13,7 +13,7 @@ namespace triglav::desktop_ui {
 class Dialog;
 class DesktopUIManager;
 
-class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
+class TabView final : public ui_core::LayoutWidget
 {
  public:
    struct State
@@ -37,9 +37,9 @@ class TabView final : public ui_core::LayoutWidget, ui_core::EventVisitor
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   bool on_mouse_moved(const ui_core::Event&) override;
-   bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
-   bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&) override;
+   bool on_mouse_moved(const ui_core::Event&);
+   bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
+   bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&);
 
    void set_active_tab(u32 activeTab);
 
