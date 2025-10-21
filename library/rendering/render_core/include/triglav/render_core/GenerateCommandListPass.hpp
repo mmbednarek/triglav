@@ -39,6 +39,7 @@ class GenerateCommandListPass
    void visit(const detail::cmd::CopyBufferToTexture& cmd) const;
    void visit(const detail::cmd::CopyBuffer& cmd) const;
    void visit(const detail::cmd::CopyTexture& cmd) const;
+   void visit(const detail::cmd::CopyTextureRegion& cmd) const;
    void visit(const detail::cmd::PlaceTextureBarrier& cmd) const;
    void visit(const detail::cmd::PlaceBufferBarrier& cmd) const;
    void visit(const detail::cmd::FillBuffer& cmd) const;
@@ -50,6 +51,7 @@ class GenerateCommandListPass
    void visit(const detail::cmd::QueryTimestamp& cmd) const;
    void visit(const detail::cmd::BeginQuery& cmd) const;
    void visit(const detail::cmd::EndQuery& cmd) const;
+   void visit(const detail::cmd::SetViewport& cmd) const;
 
    void default_visit(const detail::Command&) const;
 

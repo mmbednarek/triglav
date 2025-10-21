@@ -1,5 +1,7 @@
 #pragma once
 
+#include "RootWindow.hpp"
+
 #include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/launcher/Application.hpp"
 
@@ -16,9 +18,11 @@ class Editor
    int run();
    void close();
 
+   [[nodiscard]] RootWindow* root_window() const;
+
  private:
    launcher::Application m_app;
-   std::unique_ptr<desktop_ui::Dialog> m_dialog;
+   std::unique_ptr<RootWindow> m_rootWindow;
    std::unique_ptr<desktop_ui::PopupManager> m_dialogManager;
    RootWidget* m_rootWidget{};
    bool m_shouldClose = false;

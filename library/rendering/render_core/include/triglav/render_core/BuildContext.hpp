@@ -120,6 +120,7 @@ class BuildContext
    void set_vertex_topology(graphics_api::VertexTopology topology);
    void set_depth_test_mode(graphics_api::DepthTestMode mode);
    void set_is_blending_enabled(bool enabled);
+   void set_viewport(Vector4 dimensions, float minDepth, float maxDepth);
 
    void draw_primitives(u32 vertexCount, u32 vertexOffset, u32 instanceCount = 1, u32 instanceOffset = 0);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
@@ -139,6 +140,7 @@ class BuildContext
    void copy_buffer_to_texture(BufferRef srcBuff, TextureRef dstTex);
    void copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer);
    void copy_texture(TextureRef srcTex, TextureRef dstTex);
+   void copy_texture_region(TextureRef srcTex, Vector2i srcOffset, TextureRef dstTex, Vector2i dstOffset, Vector2i size);
 
    // Conditional commands
    void declare_flag(Name flagName);
