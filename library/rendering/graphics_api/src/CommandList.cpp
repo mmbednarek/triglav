@@ -52,6 +52,15 @@ CommandList& CommandList::operator=(CommandList&& other) noexcept
    return *this;
 }
 
+Status CommandList::reset() const
+{
+   m_triangleCount = 0;
+   if (vkResetCommandBuffer(m_commandBuffer, 0) != VK_SUCCESS) {
+      return Status::UnsupportedDevice;
+   }
+   return Status::Success;
+}
+
 Status CommandList::begin(const SubmitType type) const
 {
    m_triangleCount = 0;
@@ -96,16 +105,16 @@ void CommandList::bind_descriptor_set(const PipelineType pipelineType, const Des
                            &vulkanDescriptorSet, 0, nullptr);
 }
 
+void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
+{
+   this->draw_primitives(vertexCount, vertexOffset, 1, 0);
+}
+
 void CommandList::draw_primitives(const int vertexCount, const int vertexOffset, const int instanceCount, const int firstInstance)
 {
    this->handle_pending_descriptors(PipelineType::Graphics);
    m_triangleCount += instanceCount * (vertexCount / 3);
    vkCmdDraw(m_commandBuffer, vertexCount, instanceCount, vertexOffset, firstInstance);
-}
-
-void CommandList::draw_primitives(const int vertexCount, const int vertexOffset)
-{
-   this->draw_primitives(vertexCount, vertexOffset, 1, 0);
 }
 
 void CommandList::draw_indexed_primitives(const int indexCount, const int indexOffset, const int vertexOffset, const int instanceCount,
@@ -222,6 +231,29 @@ void CommandList::copy_texture(const Texture& source, const TextureState srcStat
                          },
                          .dstOffset{0, 0, 0},
                          .extent{destination.width(), destination.height(), 1}};
+   vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcState),
+                  destination.vulkan_image(), vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
+}
+
+void CommandList::copy_texture_region(const Texture& source, const TextureState srcState, const Vector2i srcOffset,
+                                      const Texture& destination, const TextureState dstState, const Vector2i dstOffset,
+                                      const Vector2u size, const u32 srcMip, const u32 dstMip) const
+{
+   const VkImageCopy imageCopy{.srcSubresource{
+                                  .aspectMask = vulkan::to_vulkan_aspect_flags(source.usage_flags()),
+                                  .mipLevel = srcMip,
+                                  .baseArrayLayer = 0,
+                                  .layerCount = 1,
+                               },
+                               .srcOffset{srcOffset.x, srcOffset.y, 0},
+                               .dstSubresource{
+                                  .aspectMask = vulkan::to_vulkan_aspect_flags(destination.usage_flags()),
+                                  .mipLevel = dstMip,
+                                  .baseArrayLayer = 0,
+                                  .layerCount = 1,
+                               },
+                               .dstOffset{dstOffset.x, dstOffset.y, 0},
+                               .extent{size.x, size.y, 1}};
    vkCmdCopyImage(m_commandBuffer, source.vulkan_image(), vulkan::to_vulkan_image_layout(source.format(), srcState),
                   destination.vulkan_image(), vulkan::to_vulkan_image_layout(destination.format(), dstState), 1, &imageCopy);
 }
@@ -409,23 +441,10 @@ void CommandList::end_rendering() const
    vkCmdEndRendering(m_commandBuffer);
 }
 
-WorkTypeFlags CommandList::work_types() const
+void CommandList::bind_raw_uniform_buffer(const u32 binding, const Buffer& buffer)
 {
-   return m_workTypes;
-}
-
-uint64_t CommandList::triangle_count() const
-{
-   return m_triangleCount;
-}
-
-Status CommandList::reset() const
-{
-   m_triangleCount = 0;
-   if (vkResetCommandBuffer(m_commandBuffer, 0) != VK_SUCCESS) {
-      return Status::UnsupportedDevice;
-   }
-   return Status::Success;
+   m_descriptorWriter.set_raw_uniform_buffer(binding, buffer);
+   m_hasPendingDescriptors = true;
 }
 
 void CommandList::bind_storage_buffer(const u32 binding, const Buffer& buffer)
@@ -440,10 +459,29 @@ void CommandList::bind_storage_buffer(const u32 binding, const Buffer& buffer, u
    m_hasPendingDescriptors = true;
 }
 
-void CommandList::bind_raw_uniform_buffer(const u32 binding, const Buffer& buffer)
+void CommandList::bind_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStructure)
 {
-   m_descriptorWriter.set_raw_uniform_buffer(binding, buffer);
+   m_descriptorWriter.set_acceleration_structure(binding, accStructure);
    m_hasPendingDescriptors = true;
+}
+
+void CommandList::set_viewport(const Vector4 dimensions, const float minDepth, const float maxDepth) const
+{
+   VkViewport viewport{};
+   viewport.x = dimensions.x;
+   viewport.y = dimensions.y;
+   viewport.width = dimensions.z;
+   viewport.height = dimensions.w;
+   viewport.minDepth = minDepth;
+   viewport.maxDepth = maxDepth;
+   vkCmdSetViewport(m_commandBuffer, 0, 1, &viewport);
+}
+
+void CommandList::trace_rays(const ray_tracing::ShaderBindingTable& binding_table, const glm::ivec3 extent)
+{
+   this->handle_pending_descriptors(PipelineType::RayTracing);
+   vulkan::vkCmdTraceRaysKHR(m_commandBuffer, &binding_table.gen_rays_region(), &binding_table.miss_region(), &binding_table.hit_region(),
+                             &binding_table.callable_region(), extent.x, extent.y, extent.z);
 }
 
 void CommandList::bind_texture_image(const u32 binding, const Texture& texture)
@@ -493,17 +531,14 @@ void CommandList::end_query(const QueryPool& queryPool, const u32 queryIndex) co
    vkCmdEndQuery(m_commandBuffer, queryPool.vulkan_query_pool(), queryIndex);
 }
 
-void CommandList::bind_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStructure)
+WorkTypeFlags CommandList::work_types() const
 {
-   m_descriptorWriter.set_acceleration_structure(binding, accStructure);
-   m_hasPendingDescriptors = true;
+   return m_workTypes;
 }
 
-void CommandList::trace_rays(const ray_tracing::ShaderBindingTable& binding_table, const glm::ivec3 extent)
+uint64_t CommandList::triangle_count() const
 {
-   this->handle_pending_descriptors(PipelineType::RayTracing);
-   vulkan::vkCmdTraceRaysKHR(m_commandBuffer, &binding_table.gen_rays_region(), &binding_table.miss_region(), &binding_table.hit_region(),
-                             &binding_table.callable_region(), extent.x, extent.y, extent.z);
+   return m_triangleCount;
 }
 
 void CommandList::set_debug_name(const std::string_view name) const

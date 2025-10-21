@@ -58,6 +58,7 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
    });
    leftTabView.create_child<LevelEditor>({
       .manager = &m_desktopUIManager,
+      .rootWindow = m_state.editor->root_window(),
    });
 
    auto& rightTabView = splitter.create_following<desktop_ui::TabView>({

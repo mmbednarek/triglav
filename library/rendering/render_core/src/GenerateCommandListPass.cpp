@@ -130,6 +130,14 @@ void GenerateCommandListPass::visit(const detail::cmd::CopyTexture& cmd) const
       m_context.resolve_texture_ref(m_resourceStorage, cmd.dstTexture, m_frameIndex), graphics_api::TextureState::TransferDst);
 }
 
+void GenerateCommandListPass::visit(const detail::cmd::CopyTextureRegion& cmd) const
+{
+   m_commandList.copy_texture_region(m_context.resolve_texture_ref(m_resourceStorage, cmd.srcTexture, m_frameIndex),
+                                     graphics_api::TextureState::TransferSrc, cmd.srcOffset,
+                                     m_context.resolve_texture_ref(m_resourceStorage, cmd.dstTexture, m_frameIndex),
+                                     graphics_api::TextureState::TransferDst, cmd.dstOffset, cmd.size);
+}
+
 void GenerateCommandListPass::visit(const detail::cmd::PlaceTextureBarrier& cmd) const
 {
    graphics_api::TextureBarrierInfo info{};
@@ -199,6 +207,11 @@ void GenerateCommandListPass::visit(const detail::cmd::BeginQuery& cmd) const
 void GenerateCommandListPass::visit(const detail::cmd::EndQuery& cmd) const
 {
    m_commandList.end_query(m_resourceStorage.pipeline_stats(), cmd.index);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::SetViewport& cmd) const
+{
+   m_commandList.set_viewport(cmd.dimensions, cmd.minDepth, cmd.maxDepth);
 }
 
 void GenerateCommandListPass::default_visit(const detail::Command&) const

@@ -7,14 +7,13 @@ namespace triglav::editor {
 class RenderViewport
 {
  public:
-   RenderViewport();
-
-   void initialize();
+   explicit RenderViewport(Vector4 dimensions);
+   void initialize(render_core::JobGraph& jobGraph);
    void update();
    void build_render_job(render_core::BuildContext& ctx);
 
  private:
-   render_core::JobGraph& m_jobGraph;
+   Vector4 m_dimensions{};
 };
 
 }// namespace triglav::editor

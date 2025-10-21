@@ -58,6 +58,8 @@ class CommandList
                                TextureState srcTextureState = TextureState::TransferSrc) const;
    void copy_texture(const Texture& source, TextureState srcState, const Texture& destination, TextureState dstState, u32 srcMip = 0,
                      u32 dstMip = 0) const;
+   void copy_texture_region(const Texture& source, TextureState srcState, Vector2i srcOffset, const Texture& destination,
+                            TextureState dstState, Vector2i dstOffset, Vector2u size, u32 srcMip = 0, u32 dstMip = 0) const;
    void push_constant_ptr(PipelineStageFlags stages, const void* ptr, size_t size, size_t offset = 0) const;
 
    void texture_barrier(PipelineStageFlags sourceStage, PipelineStageFlags targetStage, std::span<const TextureBarrierInfo> infos) const;
@@ -82,6 +84,7 @@ class CommandList
    void bind_storage_buffer(u32 binding, const Buffer& buffer);
    void bind_storage_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size);
    void bind_acceleration_structure(u32 binding, const ray_tracing::AccelerationStructure& accStructure);
+   void set_viewport(Vector4 dimensions, float minDepth, float maxDepth) const;
 
    void trace_rays(const ray_tracing::ShaderBindingTable& binding_table, glm::ivec3 extent);
 

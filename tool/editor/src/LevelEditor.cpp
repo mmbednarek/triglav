@@ -1,9 +1,10 @@
 #include "LevelEditor.hpp"
 
+#include "LevelViewport.hpp"
+
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
-#include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
@@ -79,11 +80,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    });
    m_toolRadioGroup.add_check_box(&scale_btn);
 
-   auto& align_box = layout.create_child<ui_core::AlignmentBox>({
-      .horizontalAlignment = ui_core::HorizontalAlignment::Left,
-      .verticalAlignment = ui_core::VerticalAlignment::Top,
-   });
-   align_box.create_content<ui_core::EmptySpace>({.size = {20, 20}});
+   m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow);
 }
 
 }// namespace triglav::editor

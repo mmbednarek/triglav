@@ -632,6 +632,11 @@ void BuildContext::set_is_blending_enabled(const bool enabled)
    m_graphicPipelineState.isBlendingEnabled = enabled;
 }
 
+void BuildContext::set_viewport(const Vector4 dimensions, const float minDepth, const float maxDepth)
+{
+   this->add_command<detail::cmd::SetViewport>(dimensions, minDepth, maxDepth);
+}
+
 void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset, u32 instanceCount, u32 instanceOffset)
 {
    this->handle_pending_graphic_state();
@@ -764,6 +769,19 @@ void BuildContext::copy_texture(TextureRef srcTex, TextureRef dstTex)
    this->prepare_texture(dstTex, gapi::TextureState::TransferDst, gapi::TextureUsage::TransferDst);
 
    this->add_command<detail::cmd::CopyTexture>(srcTex, dstTex);
+
+   m_workTypes |= gapi::WorkType::Transfer;
+}
+
+void BuildContext::copy_texture_region(const TextureRef srcTex, const Vector2i srcOffset, const TextureRef dstTex, const Vector2i dstOffset,
+                                       const Vector2i size)
+{
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
+
+   this->prepare_texture(srcTex, gapi::TextureState::TransferSrc, gapi::TextureUsage::TransferSrc);
+   this->prepare_texture(dstTex, gapi::TextureState::TransferDst, gapi::TextureUsage::TransferDst);
+
+   this->add_command<detail::cmd::CopyTextureRegion>(srcTex, srcOffset, dstTex, dstOffset, size);
 
    m_workTypes |= gapi::WorkType::Transfer;
 }
