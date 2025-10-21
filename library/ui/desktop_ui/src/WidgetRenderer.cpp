@@ -9,7 +9,6 @@ WidgetRenderer::WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCac
     m_surface(surface),
     m_uiViewport(surface.dimension()),
     m_updateUiJob(device, glyphCache, m_uiViewport, resourceManager),
-    m_pipelineCache(device, resourceManager),
     m_context(m_uiViewport, glyphCache, resourceManager),
     TG_CONNECT(m_surface, OnMouseEnter, on_mouse_enter),
     TG_CONNECT(m_surface, OnMouseMove, on_mouse_move),
@@ -21,7 +20,7 @@ WidgetRenderer::WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCac
 {
 }
 
-void WidgetRenderer::create_update_job(render_core::BuildContext& ctx)
+void WidgetRenderer::create_update_job(render_core::BuildContext& ctx) const
 {
    m_updateUiJob.build_job(ctx);
 }
@@ -35,9 +34,21 @@ void WidgetRenderer::create_render_job(render_core::BuildContext& ctx, Name outp
    ctx.end_render_pass();
 }
 
-void WidgetRenderer::add_widget_to_viewport(const Vector2i resolution)
+void WidgetRenderer::prepare_resources(render_core::JobGraph& graph, const u32 frame_index)
+{
+   m_updateUiJob.prepare_frame(graph, frame_index);
+}
+
+void WidgetRenderer::add_widget_to_viewport(const Vector2i resolution) const
 {
    m_rootWidget->add_to_viewport({0, 0, resolution.x, resolution.y}, {0, 0, resolution.x, resolution.y});
+}
+
+void WidgetRenderer::remove_widget_from_viewport() const
+{
+   if (m_rootWidget != nullptr) {
+      m_rootWidget->remove_from_viewport();
+   }
 }
 
 void WidgetRenderer::on_mouse_enter(const Vector2 position)
@@ -139,6 +150,16 @@ ui_core::IWidget& WidgetRenderer::set_root_widget(ui_core::IWidgetPtr&& content)
    m_rootWidget = std::move(content);
 
    return *m_rootWidget;
+}
+
+bool WidgetRenderer::is_empty() const
+{
+   return m_rootWidget == nullptr;
+}
+
+ui_core::Viewport& WidgetRenderer::ui_viewport()
+{
+   return m_uiViewport;
 }
 
 }// namespace triglav::desktop_ui

@@ -68,7 +68,7 @@ void ProjectExplorer::add_controller_item(std::string_view path)
                                                   });
          m_pathToId[path.substr(0, pos)] = item_id;
       } else {
-		  item_id = it->second;
+         item_id = it->second;
       }
       last_pos = pos + 1;
       pos = path.find('/', last_pos);

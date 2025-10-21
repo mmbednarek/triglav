@@ -1,8 +1,8 @@
 #include "MenuBar.hpp"
 
 #include "DesktopUI.hpp"
-#include "DialogManager.hpp"
 #include "MenuList.hpp"
+#include "PopupManager.hpp"
 
 #include "triglav/Ranges.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
@@ -146,7 +146,7 @@ void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
    const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
    const auto size = temporary_menu->desired_size({});
 
-   auto& popup = m_state.manager->dialog_manager().create_popup_dialog(offset, size);
+   auto& popup = m_state.manager->popup_manager().create_popup_dialog(offset, size);
    popup.create_root_widget<MenuList>(MenuList::State{child_state});
    popup.initialize();
    m_subMenu = &popup;
@@ -155,7 +155,7 @@ void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
 void MenuBar::on_mouse_left(const ui_core::Event& /*event*/)
 {
    if (m_subMenu != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_subMenu);
+      m_state.manager->popup_manager().close_popup(m_subMenu);
       m_subMenu = nullptr;
    }
 
@@ -188,7 +188,7 @@ void MenuBar::close_submenu()
    }
 
    if (m_subMenu != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_subMenu);
+      m_state.manager->popup_manager().close_popup(m_subMenu);
       m_subMenu = nullptr;
    }
 }

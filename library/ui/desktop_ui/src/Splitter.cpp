@@ -1,7 +1,7 @@
 #include "Splitter.hpp"
 
-#include <DesktopUI.hpp>
-#include <DialogManager.hpp>
+#include "DesktopUI.hpp"
+#include "PopupManager.hpp"
 
 namespace triglav::desktop_ui {
 
@@ -51,14 +51,14 @@ void Splitter::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
 
    Vector4 splitter_dims{make_vec(parallel(offset) + this->offset(), ortho(offset)), make_vec(g_splitterSize, ortho(size))};
    if (m_background == 0) {
-       m_background = m_context.viewport().add_rectangle({
+      m_background = m_context.viewport().add_rectangle({
          .rect = splitter_dims,
          .color = TG_THEME_VAL(background_color_darker),
          .borderRadius = {0, 0, 0, 0},
          .borderColor = palette::NO_COLOR,
          .crop = m_croppingMask,
          .borderWidth = 0.0f,
-	  });
+      });
    } else {
       m_context.viewport().set_rectangle_dims(m_background, splitter_dims, m_croppingMask);
    }
@@ -86,7 +86,7 @@ void Splitter::on_event(const ui_core::Event& event)
          m_isMoving = false;
       }
    } else if (m_isShowingCursor && (mouse_pos < this->offset() || mouse_pos > this->offset() + g_splitterSize)) {
-      m_state.manager->dialog_manager().root().surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+      m_state.manager->popup_manager().root_surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_isShowingCursor = false;
    }
 
@@ -99,7 +99,7 @@ void Splitter::on_event(const ui_core::Event& event)
    } else {
       switch (event.eventType) {
       case ui_core::Event::Type::MouseMoved: {
-         m_state.manager->dialog_manager().root().surface().set_cursor_icon(axis_to_cursor_icon(m_state.axis));
+         m_state.manager->popup_manager().root_surface().set_cursor_icon(axis_to_cursor_icon(m_state.axis));
          m_isShowingCursor = true;
          break;
       }
@@ -126,7 +126,7 @@ ui_core::IWidget& Splitter::set_following(ui_core::IWidgetPtr&& widget)
    return *m_following;
 }
 
-float Splitter::offset() const 
+float Splitter::offset() const
 {
    switch (m_state.offset_type) {
    case SplitterOffsetType::Preceeding:

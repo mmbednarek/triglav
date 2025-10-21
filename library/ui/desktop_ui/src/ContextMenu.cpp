@@ -1,6 +1,6 @@
 #include "ContextMenu.hpp"
 
-#include "DialogManager.hpp"
+#include "PopupManager.hpp"
 
 namespace triglav::desktop_ui {
 
@@ -33,7 +33,7 @@ void ContextMenu::on_event(const ui_core::Event& event)
    if (event.eventType == ui_core::Event::Type::MousePressed) {
       const auto mouse_payload = std::get<ui_core::Event::Mouse>(event.data);
       if (m_menuDialog != nullptr) {
-         m_state.manager->dialog_manager().close_popup(m_menuDialog);
+         m_state.manager->popup_manager().close_popup(m_menuDialog);
          m_menuDialog = nullptr;
       } else if (mouse_payload.button == desktop::MouseButton::Right) {
          MenuList::State child_state{
@@ -45,7 +45,7 @@ void ContextMenu::on_event(const ui_core::Event& event)
          const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
          const auto size = temporary_menu->desired_size({});
 
-         auto& popup = m_state.manager->dialog_manager().create_popup_dialog(event.globalMousePosition, size);
+         auto& popup = m_state.manager->popup_manager().create_popup_dialog(event.globalMousePosition, size);
          popup.create_root_widget<MenuList>(MenuList::State{child_state});
          popup.initialize();
          m_menuDialog = &popup;
@@ -57,7 +57,7 @@ void ContextMenu::on_event(const ui_core::Event& event)
 
 void ContextMenu::on_clicked(Name /*name*/, const MenuItem& /*item*/)
 {
-   m_state.manager->dialog_manager().close_popup(m_menuDialog);
+   m_state.manager->popup_manager().close_popup(m_menuDialog);
    m_menuDialog = nullptr;
 }
 

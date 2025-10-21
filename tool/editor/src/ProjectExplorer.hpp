@@ -1,8 +1,8 @@
 #pragma once
 
-#include "triglav/ui_core/IWidget.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TreeController.hpp"
+#include "triglav/ui_core/IWidget.hpp"
 
 #include <map>
 #include <string>
@@ -15,7 +15,7 @@ class ProjectExplorer : public ui_core::ProxyWidget
    using Self = ProjectExplorer;
    struct State
    {
-	   desktop_ui::DesktopUIManager* manager;
+      desktop_ui::DesktopUIManager* manager;
    };
 
    ProjectExplorer(ui_core::Context& context, State state, ui_core::IWidget* parent);

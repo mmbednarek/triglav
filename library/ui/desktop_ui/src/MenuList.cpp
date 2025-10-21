@@ -1,7 +1,7 @@
 #include "MenuList.hpp"
 
 #include "DesktopUI.hpp"
-#include "DialogManager.hpp"
+#include "PopupManager.hpp"
 
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/ui_core/Context.hpp"
@@ -97,7 +97,7 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
 void MenuList::remove_from_viewport()
 {
    if (m_subMenu != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_subMenu);
+      m_state.manager->popup_manager().close_popup(m_subMenu);
       m_subMenu = nullptr;
    }
    for (const auto label : m_labels) {
@@ -131,7 +131,7 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
    m_hoveredItem = new_hovered_item;
 
    if (m_subMenu != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_subMenu);
+      m_state.manager->popup_manager().close_popup(m_subMenu);
       m_subMenu = nullptr;
    }
 
@@ -170,7 +170,7 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
       const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
       const auto size = temporary_menu->desired_size({});
 
-      auto& popup = m_state.manager->dialog_manager().create_popup_dialog(offset, size);
+      auto& popup = m_state.manager->popup_manager().create_popup_dialog(offset, size);
       popup.create_root_widget<MenuList>(State{child_state});
       popup.initialize();
       m_subMenu = &popup;

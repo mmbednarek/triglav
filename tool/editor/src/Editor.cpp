@@ -15,16 +15,17 @@ Editor::Editor(desktop::InputArgs& args, desktop::IDisplay& display) :
 
 void Editor::initialize()
 {
-   m_dialogManager =
-      std::make_unique<desktop_ui::DialogManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
-                                                  m_app.resource_manager(), Vector2{1280, 720}, "Triglav Editor"_strv);
+   m_dialog = std::make_unique<desktop_ui::Dialog>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
+                                                   m_app.resource_manager(), Vector2{1280, 720}, "Triglav Editor"_strv);
+   m_dialogManager = std::make_unique<desktop_ui::PopupManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(),
+                                                                m_app.glyph_cache(), m_app.resource_manager(), m_dialog->surface());
 
-   m_rootWidget = &m_dialogManager->root().create_root_widget<RootWidget>({
+   m_rootWidget = &m_dialog->create_root_widget<RootWidget>({
       .dialogManager = m_dialogManager.get(),
       .editor = this,
    });
 
-   m_dialogManager->root().initialize();
+   m_dialog->initialize();
 }
 
 int Editor::run()
@@ -33,8 +34,9 @@ int Editor::run()
 
    this->initialize();
 
-   while (!m_dialogManager->should_close() && !m_shouldClose) {
+   while (!m_dialog->should_close() && !m_shouldClose) {
       m_dialogManager->tick();
+      m_dialog->update();
       m_app.tick();
    }
 

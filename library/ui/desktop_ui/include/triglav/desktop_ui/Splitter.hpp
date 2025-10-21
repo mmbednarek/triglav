@@ -11,8 +11,8 @@ class DesktopUIManager;
 
 enum class SplitterOffsetType
 {
-    Preceeding,
-    Following,
+   Preceeding,
+   Following,
 };
 
 class Splitter final : public ui_core::BaseWidget

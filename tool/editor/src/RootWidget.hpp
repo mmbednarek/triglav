@@ -19,7 +19,7 @@ class RootWidget final : public ui_core::ProxyWidget
    using Self = RootWidget;
    struct State
    {
-      desktop_ui::DialogManager* dialogManager;
+      desktop_ui::PopupManager* dialogManager;
       Editor* editor;
    };
 

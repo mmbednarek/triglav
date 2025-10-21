@@ -5,9 +5,9 @@
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/ContextMenu.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
-#include "triglav/desktop_ui/DialogManager.hpp"
 #include "triglav/desktop_ui/DropDownMenu.hpp"
 #include "triglav/desktop_ui/MenuBar.hpp"
+#include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TabView.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
@@ -33,7 +33,7 @@ using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
 using triglav::desktop::WindowAttribute;
 using triglav::desktop_ui::Dialog;
-using triglav::desktop_ui::DialogManager;
+using triglav::desktop_ui::PopupManager;
 using triglav::desktop_ui::TREE_ROOT;
 using triglav::font::FontManger;
 using triglav::io::CommandLine;
@@ -127,13 +127,15 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initialWidth = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_defaultWidth));
    const auto initialHeight = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_defaultHeight));
 
-   DialogManager dialogManager(instance, *device, display, glyphCache, resourceManager, {initialWidth, initialHeight},
-                               "Desktop UI Example"_strv);
+   auto rootDialog = std::make_unique<Dialog>(instance, *device, display, glyphCache, resourceManager,
+                                              triglav::Vector2i{initialWidth, initialHeight}, "Desktop UI Example"_strv);
 
-   triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties::get_default(),
-                                                          dialogManager.root().surface(), dialogManager);
+   PopupManager dialogManager(instance, *device, display, glyphCache, resourceManager, rootDialog->surface());
 
-   auto& globalVerLayout = dialogManager.root().create_root_widget<triglav::ui_core::VerticalLayout>({
+   triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties::get_default(), rootDialog->surface(),
+                                                          dialogManager);
+
+   auto& globalVerLayout = rootDialog->create_root_widget<triglav::ui_core::VerticalLayout>({
       .padding = {0.0f, 0.0f, 0.0f, 0.0f},
       .separation = 0.0f,
    });
@@ -344,10 +346,11 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .extended_items = {container_item},
    });
 
-   dialogManager.root().initialize();
+   rootDialog->initialize();
 
-   while (!dialogManager.should_close()) {
+   while (!rootDialog->should_close()) {
       dialogManager.tick();
+      rootDialog->update();
       display.dispatch_messages();
 
       triglav::threading::Scheduler::the().tick();

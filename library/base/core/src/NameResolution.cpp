@@ -43,6 +43,7 @@ std::map<Name, std::string_view> KnownNames{
    {"core.view_properties"_name, "core.view_properties"sv},
    {"core.view_properties.staging"_name, "core.view_properties.staging"sv},
    {"debug_lines"_name, "debug_lines"sv},
+   {"dialog_render_ui"_name, "dialog_render_ui"sv},
    {"edit"_name, "edit"sv},
    {"edit.redo"_name, "edit.redo"sv},
    {"edit.undo"_name, "edit.undo"sv},

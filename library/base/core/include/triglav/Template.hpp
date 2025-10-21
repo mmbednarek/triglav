@@ -2,6 +2,7 @@
 
 #include <span>
 #include <utility>
+#include <variant>
 
 namespace triglav {
 
