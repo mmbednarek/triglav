@@ -10,9 +10,7 @@ void RenderViewport::initialize()
    this->build_render_job(render_job);
 }
 
-void RenderViewport::update()
-{
-}
+void RenderViewport::update() {}
 
 void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 {

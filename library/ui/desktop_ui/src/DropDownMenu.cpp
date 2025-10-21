@@ -1,10 +1,10 @@
 #include "DropDownMenu.hpp"
 
+#include "PopupManager.hpp"
+
 #include "triglav/Ranges.hpp"
 #include "triglav/ui_core/widget/Button.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
-
-#include "DialogManager.hpp"
 
 #include <memory>
 #include <utility>
@@ -218,7 +218,7 @@ void DropDownMenu::set_selected_item(const u32 index)
    m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
 
    if (m_currentPopup != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_currentPopup);
+      m_state.manager->popup_manager().close_popup(m_currentPopup);
       m_currentPopup = nullptr;
    }
 }
@@ -226,7 +226,7 @@ void DropDownMenu::set_selected_item(const u32 index)
 void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
    if (m_currentPopup != nullptr) {
-      m_state.manager->dialog_manager().close_popup(m_currentPopup);
+      m_state.manager->popup_manager().close_popup(m_currentPopup);
       m_currentPopup = nullptr;
       m_context.viewport().set_sprite_texture_region(m_downArrow, {0, 0, 64, 64});
       return;
@@ -237,8 +237,8 @@ void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_c
    const auto desiredDims = selector->desired_size({m_dimensions.x, 1024});
 
    // TODO: Add ability to update context.
-   auto& popup = m_state.manager->dialog_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
-                                                                       {m_dimensions.z, desiredDims.y});
+   auto& popup = m_state.manager->popup_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
+                                                                      {m_dimensions.z, desiredDims.y});
    popup.create_root_widget<DropDownSelector>({this});
    popup.initialize();
    m_currentPopup = &popup;

@@ -5,8 +5,8 @@
 
 #include <map>
 #include <optional>
-#include <string>
 #include <ranges>
+#include <string>
 
 namespace triglav::resource {
 

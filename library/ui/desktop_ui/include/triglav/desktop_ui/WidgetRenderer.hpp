@@ -22,12 +22,15 @@ class WidgetRenderer
  public:
    using Self = WidgetRenderer;
 
-   WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyphCache,
-                  resource::ResourceManager& resourceManager, graphics_api::Device& device);
+   WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager,
+                  graphics_api::Device& device);
 
-   void create_update_job(render_core::BuildContext& ctx);
+   void create_update_job(render_core::BuildContext& ctx) const;
    void create_render_job(render_core::BuildContext& ctx, Name output_render_target);
-   void add_widget_to_viewport(Vector2i resolution);
+   void prepare_resources(render_core::JobGraph& graph, u32 frame_index);
+
+   void add_widget_to_viewport(Vector2i resolution) const;
+   void remove_widget_from_viewport() const;
 
    void on_mouse_enter(Vector2 position);
    void on_mouse_move(Vector2 position);
@@ -38,6 +41,8 @@ class WidgetRenderer
    void on_text_input(Rune rune) const;
 
    ui_core::IWidget& set_root_widget(ui_core::IWidgetPtr&& content);
+   [[nodiscard]] bool is_empty() const;
+   [[nodiscard]] ui_core::Viewport& ui_viewport();
 
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
@@ -45,18 +50,13 @@ class WidgetRenderer
       return dynamic_cast<T&>(this->set_root_widget(std::make_unique<T>(m_context, std::forward<typename T::State>(state), nullptr)));
    }
 
-
  private:
    desktop::ISurface& m_surface;
 
    ui_core::Viewport m_uiViewport;
    renderer::UpdateUserInterfaceJob m_updateUiJob;
-   render_core::PipelineCache m_pipelineCache;
    ui_core::Context m_context;
    ui_core::IWidgetPtr m_rootWidget{};
-   u32 m_frameIndex{0};
-   bool m_shouldClose{false};
-   bool m_isInitialized{false};
    Vector2 m_mousePosition{};
 
    TG_SINK(desktop::ISurface, OnMouseEnter);

@@ -6,15 +6,15 @@ namespace triglav::editor {
 
 class RenderViewport
 {
-public:
+ public:
    RenderViewport();
 
    void initialize();
    void update();
    void build_render_job(render_core::BuildContext& ctx);
 
-private:
+ private:
    render_core::JobGraph& m_jobGraph;
 };
 
-}
+}// namespace triglav::editor

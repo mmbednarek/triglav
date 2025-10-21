@@ -4,11 +4,10 @@
 #include "LevelEditor.hpp"
 #include "ProjectExplorer.hpp"
 
-#include "triglav/desktop_ui/DialogManager.hpp"
 #include "triglav/desktop_ui/MenuBar.hpp"
+#include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TabView.hpp"
-#include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 
 namespace triglav::editor {
@@ -20,7 +19,7 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
     ui_core::ProxyWidget(context, parent),
     m_context(context),
     m_state(state),
-    m_desktopUIManager(desktop_ui::ThemeProperties::get_default(), m_state.dialogManager->root().surface(), *m_state.dialogManager),
+    m_desktopUIManager(desktop_ui::ThemeProperties::get_default(), m_state.dialogManager->root_surface(), *m_state.dialogManager),
     TG_CONNECT(m_menuBarController, OnClicked, on_clicked_menu_bar)
 {
    auto& globalLayout = this->create_content<ui_core::VerticalLayout>({

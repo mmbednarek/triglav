@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/desktop_ui/DialogManager.hpp"
+#include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/launcher/Application.hpp"
 
 namespace triglav::editor {
@@ -18,7 +18,8 @@ class Editor
 
  private:
    launcher::Application m_app;
-   std::unique_ptr<desktop_ui::DialogManager> m_dialogManager;
+   std::unique_ptr<desktop_ui::Dialog> m_dialog;
+   std::unique_ptr<desktop_ui::PopupManager> m_dialogManager;
    RootWidget* m_rootWidget{};
    bool m_shouldClose = false;
 };
