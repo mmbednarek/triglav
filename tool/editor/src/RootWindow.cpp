@@ -80,6 +80,17 @@ void RootWindow::update()
    if (!m_widgetRenderer.ui_viewport().should_redraw())
       return;
 
+   if (m_shouldUpdateViewport) {
+      m_device.await_all();
+
+      auto& renderCtx = m_jobGraph.replace_job("render_dialog"_name);
+      this->build_rendering_job(renderCtx);
+      m_jobGraph.rebuild_job("render_dialog"_name);
+      m_shouldUpdateViewport = false;
+
+      m_renderSurface.recreate_present_jobs();
+   }
+
    m_renderSurface.await_for_frame(m_frameIndex);
 
    m_jobGraph.build_semaphores();
@@ -122,6 +133,9 @@ void RootWindow::on_resize(const Vector2i size)
 void RootWindow::set_render_viewport(RenderViewport* viewport)
 {
    m_renderViewport = viewport;
+   if (m_isInitialized) {
+      m_shouldUpdateViewport = true;
+   }
 }
 
 desktop::ISurface& RootWindow::surface() const

@@ -489,7 +489,7 @@ Status Device::submit_command_list(const CommandList& commandList, const Semapho
    auto& queue = m_queueManager.next_queue(commandList.work_types());
    auto queueAccessor = queue.access();
 
-   if (vkQueueSubmit(*queueAccessor, 1, &submitInfo, vulkanFence) != VK_SUCCESS) {
+   if (auto status = vkQueueSubmit(*queueAccessor, 1, &submitInfo, vulkanFence); status != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 

@@ -60,6 +60,7 @@ class RootWindow
    u32 m_frameIndex{0};
    bool m_shouldClose{false};
    bool m_isInitialized{false};
+   bool m_shouldUpdateViewport{false};
 
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);
