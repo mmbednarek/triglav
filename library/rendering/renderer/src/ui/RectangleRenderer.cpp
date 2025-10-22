@@ -87,6 +87,7 @@ void RectangleRenderer::on_removed_rectangle(const RectId rectId)
 
 void RectangleRenderer::set_object(const u32 index, const RectPrimitive& prim)
 {
+   assert(index <= g_drawCallBufferSize);
    m_stagingInsertions[m_stagingInsertionsTop].dstIndex = index;
    m_stagingInsertions[m_stagingInsertionsTop].primitive = prim;
    m_stagingInsertionsTop++;
@@ -94,6 +95,8 @@ void RectangleRenderer::set_object(const u32 index, const RectPrimitive& prim)
 
 void RectangleRenderer::move_object(const u32 src, const u32 dst)
 {
+   assert(src <= g_drawCallBufferSize);
+   assert(dst <= g_drawCallBufferSize);
    m_stagingRemovals[m_stagingRemovalsTop].srcID = src;
    m_stagingRemovals[m_stagingRemovalsTop].dstID = dst;
    m_stagingRemovalsTop++;

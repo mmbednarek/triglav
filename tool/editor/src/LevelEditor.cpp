@@ -1,10 +1,15 @@
 #include "LevelEditor.hpp"
 
 #include "LevelViewport.hpp"
+#include "RootWindow.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
-#include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
+#include "triglav/renderer/stage/GBufferStage.hpp"
+#include "triglav/renderer/stage/ShadingStage.hpp"
+#include "triglav/renderer/stage/ShadowMapStage.hpp"
+#include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
@@ -14,9 +19,33 @@ namespace triglav::editor {
 
 using namespace name_literals;
 
+namespace {
+
+renderer::Config get_default_config()
+{
+   renderer::Config result{};
+   result.ambientOcclusion = renderer::AmbientOcclusionMethod::ScreenSpace;
+   result.antialiasing = renderer::AntialiasingMethod::FastApproximate;
+   result.shadowCasting = renderer::ShadowCastingMethod::ShadowMap;
+   result.isBloomEnabled = true;
+   result.isUIHidden = false;
+   result.isSmoothCameraEnabled = true;
+   result.isRenderingParticles = false;
+
+   return result;
+}
+
+}// namespace
+
 LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ProxyWidget(context, parent),
-    m_state(state)
+    m_state(state),
+    m_scene(context.resource_manager()),
+    m_bindlessScene(m_state.rootWindow->device(), context.resource_manager(), m_scene),
+    m_config(get_default_config()),
+    m_updateViewParamsJob(m_scene),
+    m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
+    m_renderingJob(m_config)
 {
    auto& layout = this->create_content<ui_core::VerticalLayout>({});
    auto& toolbar = layout.create_child<ui_core::RectBox>({
@@ -80,7 +109,16 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    });
    m_toolRadioGroup.add_check_box(&scale_btn);
 
-   m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow);
+   m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow, *this);
+
+   m_scene.load_level("level/wierd_tube.level"_rc);
+   m_bindlessScene.write_object_to_buffer();
+   m_scene.update_shadow_maps();
+
+   m_renderingJob.emplace_stage<renderer::stage::GBufferStage>(m_state.rootWindow->device(), m_bindlessScene);
+   m_renderingJob.emplace_stage<renderer::stage::AmbientOcclusionStage>(m_state.rootWindow->device());
+   m_renderingJob.emplace_stage<renderer::stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
+   m_renderingJob.emplace_stage<renderer::stage::ShadingStage>();
 }
 
 }// namespace triglav::editor

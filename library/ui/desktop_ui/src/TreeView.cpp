@@ -154,7 +154,7 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parentId) const
 
    Measure measure{
       .size = {2 * g_globalPadding + 2 * g_itemPadding + max_width,
-               2 * g_globalPadding + (2 * g_itemPadding + max_width) * static_cast<float>(total_count)},
+               2 * g_globalPadding + (2 * g_itemPadding + max_height) * static_cast<float>(total_count)},
       .item_size = {max_width, max_height},
       .total_count = total_count,
    };

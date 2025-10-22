@@ -16,7 +16,7 @@ struct PostProcessingPushConstants
 
 using namespace name_literals;
 
-PostProcessStage::PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJob) :
+PostProcessStage::PostProcessStage(UpdateUserInterfaceJob* updateUserInterfaceJob) :
     m_updateUserInterfaceJob(updateUserInterfaceJob)
 {
 }
@@ -41,8 +41,8 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config&
 
    ctx.draw_full_screen_quad();
 
-   if (!config.isUIHidden) {
-      m_updateUserInterfaceJob.render_ui(ctx);
+   if (m_updateUserInterfaceJob != nullptr && !config.isUIHidden) {
+      m_updateUserInterfaceJob->render_ui(ctx);
    }
 
    ctx.end_render_pass();

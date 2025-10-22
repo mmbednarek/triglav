@@ -38,6 +38,9 @@ void RootWindow::initialize()
 
    auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
    m_widgetRenderer.create_update_job(updateUiCtx);
+   if (m_renderViewport != nullptr) {
+      m_renderViewport->build_update_job(updateUiCtx);
+   }
 
    auto& renderCtx = m_jobGraph.add_job("render_dialog"_name);
    this->build_rendering_job(renderCtx);
@@ -136,6 +139,11 @@ void RootWindow::set_render_viewport(RenderViewport* viewport)
    if (m_isInitialized) {
       m_shouldUpdateViewport = true;
    }
+}
+
+graphics_api::Device& RootWindow::device() const
+{
+   return m_device;
 }
 
 desktop::ISurface& RootWindow::surface() const

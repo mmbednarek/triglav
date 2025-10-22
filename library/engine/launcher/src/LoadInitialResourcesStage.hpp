@@ -19,7 +19,6 @@ class LoadInitialResourcesStage : public IStage
 
  private:
    std::atomic_bool m_completed{};
-
    TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
 };
 
