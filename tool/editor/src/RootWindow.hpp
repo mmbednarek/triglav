@@ -41,6 +41,7 @@ class RootWindow
       return m_widgetRenderer.create_root_widget<T>(std::forward<typename T::State>(state));
    }
 
+   [[nodiscard]] graphics_api::Device& device() const;
    [[nodiscard]] desktop::ISurface& surface() const;
    [[nodiscard]] bool should_close() const;
 

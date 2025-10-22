@@ -3,7 +3,7 @@
 #include "../UpdateViewParamsJob.hpp"
 #include "IStage.hpp"
 
-#include <BindlessScene.hpp>
+#include "triglav/render_core/RenderCore.hpp"
 
 namespace triglav::renderer {
 class Scene;

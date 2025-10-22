@@ -82,23 +82,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_infoDialog.add_to_viewport({}, {0, 0, resolution.width, resolution.height});
    m_scene.load_level("level/wierd_tube.level"_rc);
 
-   {
-      // quickly copy visible sceen objects
-      const auto copyObjectsCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
-      GAPI_CHECK_STATUS(copyObjectsCmdList.begin());
-
-      m_bindlessScene.on_update_scene(copyObjectsCmdList);
-
-      GAPI_CHECK_STATUS(copyObjectsCmdList.finish());
-
-      const auto fence = GAPI_CHECK(m_device.create_fence());
-      fence.await();
-
-      const graphics_api::SemaphoreArray empty;
-      GAPI_CHECK_STATUS(m_device.submit_command_list(copyObjectsCmdList, empty, empty, &fence, graphics_api::WorkType::Transfer));
-
-      fence.await();
-   }
+   m_bindlessScene.write_object_to_buffer();
 
    if (m_rayTracingScene.has_value()) {
       m_rayTracingScene->build_acceleration_structures();
@@ -113,7 +97,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
       m_renderingJob.emplace_stage<stage::RayTracingStage>(*m_rayTracingScene);
    }
    m_renderingJob.emplace_stage<stage::ShadingStage>();
-   m_renderingJob.emplace_stage<stage::PostProcessStage>(m_updateUserInterfaceJob);
+   m_renderingJob.emplace_stage<stage::PostProcessStage>(&m_updateUserInterfaceJob);
 
    auto& updateViewParamsCtx = m_jobGraph.add_job(UpdateViewParamsJob::JobName);
    m_updateViewParamsJob.build_job(updateViewParamsCtx);

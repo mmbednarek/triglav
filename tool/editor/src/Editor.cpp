@@ -4,9 +4,12 @@
 
 #include "triglav/String.hpp"
 
+#include <chrono>
+
 namespace triglav::editor {
 
 using namespace string_literals;
+using namespace std::chrono_literals;
 
 Editor::Editor(desktop::InputArgs& args, desktop::IDisplay& display) :
     m_app(args, display)
@@ -35,9 +38,14 @@ int Editor::run()
    this->initialize();
 
    while (!m_rootWindow->should_close() && !m_shouldClose) {
+      auto frame_start = std::chrono::steady_clock::now();
       m_dialogManager->tick();
       m_rootWindow->update();
       m_app.tick();
+      auto frame_end = std::chrono::steady_clock::now();
+
+      // Limit tick to 60 fps
+      std::this_thread::sleep_for(17ms - (frame_end - frame_start));
    }
 
    m_app.gfx_device().await_all();

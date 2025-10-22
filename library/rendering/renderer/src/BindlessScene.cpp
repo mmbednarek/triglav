@@ -25,6 +25,7 @@ constexpr auto encode_material_id(const u32 templateID, const u32 instanceID)
 BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resourceManager, Scene& scene) :
     m_resourceManager(resourceManager),
     m_scene(scene),
+    m_device(device),
     m_sceneObjectStage(device, STAGING_BUFFER_ELEM_COUNT),
     m_sceneObjects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect),
     m_combinedVertexBuffer(device, VERTEX_BUFFER_SIZE),
@@ -84,6 +85,24 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
                        static_cast<u32>(m_pendingObjects.size() * sizeof(BindlessSceneObject)));
 
    m_pendingObjects.clear();
+}
+
+void BindlessScene::write_object_to_buffer()
+{
+   const auto copyObjectsCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+   GAPI_CHECK_STATUS(copyObjectsCmdList.begin());
+
+   this->on_update_scene(copyObjectsCmdList);
+
+   GAPI_CHECK_STATUS(copyObjectsCmdList.finish());
+
+   const auto fence = GAPI_CHECK(m_device.create_fence());
+   fence.await();
+
+   const graphics_api::SemaphoreArray empty;
+   GAPI_CHECK_STATUS(m_device.submit_command_list(copyObjectsCmdList, empty, empty, &fence, graphics_api::WorkType::Transfer));
+
+   fence.await();
 }
 
 gapi::Buffer& BindlessScene::combined_vertex_buffer()

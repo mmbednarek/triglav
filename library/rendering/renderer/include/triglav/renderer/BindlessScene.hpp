@@ -8,7 +8,6 @@
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
-#include <glm/vec3.hpp>
 #include <vector>
 
 namespace triglav::renderer {
@@ -76,6 +75,8 @@ class BindlessScene
    void on_object_added_to_scene(const SceneObject& object);
    void on_update_scene(const graphics_api::CommandList& cmdList);
 
+   void write_object_to_buffer();
+
    [[nodiscard]] graphics_api::Buffer& combined_vertex_buffer();
    [[nodiscard]] graphics_api::Buffer& combined_index_buffer();
    [[nodiscard]] graphics_api::Buffer& scene_object_buffer();
@@ -94,6 +95,7 @@ class BindlessScene
    // References
    resource::ResourceManager& m_resourceManager;
    Scene& m_scene;
+   graphics_api::Device& m_device;
 
    // Caches and temporary buffers
    std::vector<SceneObject> m_pendingObjects;

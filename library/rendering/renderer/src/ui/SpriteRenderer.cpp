@@ -13,8 +13,8 @@ using namespace render_core::literals;
 using graphics_api::BufferUsage;
 using ui_core::SpriteId;
 
-constexpr auto g_insertionBufferSize = 32;
-constexpr auto g_removalBufferSize = 32;
+constexpr auto g_insertionBufferSize = 128;
+constexpr auto g_removalBufferSize = 128;
 constexpr auto g_drawCallBufferSize = 512;
 
 constexpr auto g_csGroupSize = 256;
@@ -86,6 +86,8 @@ void SpriteRenderer::on_removed_sprite(const SpriteId id)
 
 void SpriteRenderer::set_object(const u32 index, const SpritePrimitive& prim)
 {
+   assert(index <= g_drawCallBufferSize);
+   assert(m_stagingInsertionsTop < g_insertionBufferSize);
    m_stagingInsertions[m_stagingInsertionsTop].dstIndex = index;
    m_stagingInsertions[m_stagingInsertionsTop].primitive = prim;
    m_stagingInsertionsTop++;
@@ -93,6 +95,9 @@ void SpriteRenderer::set_object(const u32 index, const SpritePrimitive& prim)
 
 void SpriteRenderer::move_object(const u32 src, const u32 dst)
 {
+   assert(src <= g_drawCallBufferSize);
+   assert(dst <= g_drawCallBufferSize);
+   assert(m_stagingRemovalsTop < g_removalBufferSize);
    m_stagingRemovals[m_stagingRemovalsTop].srcID = src;
    m_stagingRemovals[m_stagingRemovalsTop].dstID = dst;
    m_stagingRemovalsTop++;
