@@ -27,6 +27,8 @@ class LevelEditor final : public ui_core::ProxyWidget
 
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
+   [[nodiscard]] renderer::Scene& scene();
+
  private:
    State m_state;
    desktop_ui::RadioGroup m_toolRadioGroup;

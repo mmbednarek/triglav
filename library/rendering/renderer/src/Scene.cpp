@@ -25,12 +25,13 @@ Scene::Scene(resource::ResourceManager& resourceManager) :
 {
 }
 
-void Scene::update(graphics_api::Resolution& resolution)
+void Scene::update(const graphics_api::Resolution& resolution)
 {
    const auto [width, height] = resolution;
    m_camera.set_viewport_size(static_cast<float>(width), static_cast<float>(height));
 
    event_OnViewportChange.publish(resolution);
+   this->send_view_changed();
 }
 
 void Scene::add_object(SceneObject object)

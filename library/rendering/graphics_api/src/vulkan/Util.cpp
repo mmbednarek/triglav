@@ -686,7 +686,8 @@ VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags)
 
    if (usageFlags & TextureUsage::DepthStencilAttachment) {
       outFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
-   } else if (usageFlags & TextureUsage::Sampled || usageFlags & TextureUsage::ColorAttachment || usageFlags & TextureUsage::Storage) {
+   } else if (usageFlags & TextureUsage::Sampled || usageFlags & TextureUsage::ColorAttachment || usageFlags & TextureUsage::Storage ||
+              usageFlags & TextureUsage::TransferDst) {
       outFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
    }
 

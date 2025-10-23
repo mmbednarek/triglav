@@ -126,6 +126,13 @@ void BarrierInsertionPass::visit(const detail::cmd::CopyTextureRegion& cmd)
    this->default_visit(cmd);
 }
 
+void BarrierInsertionPass::visit(const detail::cmd::BlitTexture& cmd)
+{
+   this->setup_texture_barrier(cmd.srcTexture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.dstTexture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
+   this->default_visit(cmd);
+}
+
 void BarrierInsertionPass::visit(const detail::cmd::FillBuffer& cmd)
 {
    this->setup_buffer_barrier(cmd.buffName, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);

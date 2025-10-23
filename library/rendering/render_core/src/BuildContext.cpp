@@ -290,6 +290,8 @@ void BuildContext::bind_index_buffer(const BufferRef buffRef)
 
 void BuildContext::begin_render_pass_raw(const Name passName, const std::span<Name> renderTargets)
 {
+   m_workTypes |= gapi::WorkType::Graphics;
+
    for (const auto rtName : renderTargets) {
       const auto& rtTexture = this->declaration<detail::decl::Texture>(rtName);
       const auto& renderTarget = m_renderTargets.at(rtName);
@@ -784,6 +786,18 @@ void BuildContext::copy_texture_region(const TextureRef srcTex, const Vector2i s
    this->add_command<detail::cmd::CopyTextureRegion>(srcTex, srcOffset, dstTex, dstOffset, size);
 
    m_workTypes |= gapi::WorkType::Transfer;
+}
+
+void BuildContext::blit_texture(TextureRef srcTex, TextureRef dstTex)
+{
+   m_activePipelineStages = gapi::PipelineStage::Transfer;
+
+   this->prepare_texture(srcTex, gapi::TextureState::TransferSrc, gapi::TextureUsage::TransferSrc);
+   this->prepare_texture(dstTex, gapi::TextureState::TransferDst, gapi::TextureUsage::TransferDst);
+
+   this->add_command<detail::cmd::BlitTexture>(srcTex, dstTex);
+
+   m_workTypes |= gapi::WorkType::Graphics;
 }
 
 void BuildContext::declare_flag(const Name flagName)

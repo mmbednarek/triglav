@@ -41,12 +41,15 @@ class JobGraph
             ResourceStorage& resourceStorage, Vector2i screenSize);
 
    BuildContext& add_job(Name jobName);
+   BuildContext& add_job(Name jobName, Vector2i screenSize);
    BuildContext& replace_job(Name jobName);
+   BuildContext& replace_job(Name jobName, Vector2i screenSize);
    void add_external_job(Name jobName);
    void set_screen_size(Vector2i screenSize);
 
    void add_dependency(Name target, Name dependency);
    void add_dependency_to_previous_frame(Name target, Name dependency);
+   void add_dependency_to_previous_frame(Name targetDep);
    void build_jobs(Name targetJob);
    void rebuild_job(Name job);
    [[nodiscard]] graphics_api::Semaphore& semaphore(Name waitJob, Name signalJob, u32 frameIndex);
