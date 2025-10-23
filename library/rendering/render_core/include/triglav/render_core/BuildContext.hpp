@@ -141,6 +141,7 @@ class BuildContext
    void copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer);
    void copy_texture(TextureRef srcTex, TextureRef dstTex);
    void copy_texture_region(TextureRef srcTex, Vector2i srcOffset, TextureRef dstTex, Vector2i dstOffset, Vector2i size);
+   void blit_texture(TextureRef srcTex, TextureRef dstTex);
 
    // Conditional commands
    void declare_flag(Name flagName);

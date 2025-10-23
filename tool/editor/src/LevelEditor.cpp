@@ -119,6 +119,13 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    m_renderingJob.emplace_stage<renderer::stage::AmbientOcclusionStage>(m_state.rootWindow->device());
    m_renderingJob.emplace_stage<renderer::stage::ShadowMapStage>(m_scene, m_bindlessScene, m_updateViewParamsJob);
    m_renderingJob.emplace_stage<renderer::stage::ShadingStage>();
+
+   m_scene.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
+}
+
+[[nodiscard]] renderer::Scene& LevelEditor::scene()
+{
+   return m_scene;
 }
 
 }// namespace triglav::editor

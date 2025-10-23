@@ -19,6 +19,7 @@ Vector2 LevelViewport::desired_size(const Vector2 parentSize) const
 void LevelViewport::add_to_viewport(const Vector4 dimensions, Vector4 /*croppingMask*/)
 {
    m_dimensions = dimensions;
+   m_levelEditor.scene().update(graphics_api::Resolution{static_cast<u32>(dimensions.z), static_cast<u32>(dimensions.w)});
    m_renderViewport = std::make_unique<RenderViewport>(m_levelEditor, dimensions);
    m_rootWindow.set_render_viewport(m_renderViewport.get());
 }

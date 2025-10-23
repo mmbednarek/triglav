@@ -19,7 +19,12 @@ JobGraph::JobGraph(graphics_api::Device& device, resource::ResourceManager& reso
 
 BuildContext& JobGraph::add_job(const Name jobName)
 {
-   auto [buildCtx, ok] = m_contexts.emplace(jobName, BuildContext(m_device, m_resourceManager, m_screenSize));
+   return this->add_job(jobName, m_screenSize);
+}
+
+BuildContext& JobGraph::add_job(Name jobName, Vector2i screenSize)
+{
+   auto [buildCtx, ok] = m_contexts.emplace(jobName, BuildContext(m_device, m_resourceManager, screenSize));
    assert(ok);
 
    return buildCtx->second;
@@ -27,8 +32,13 @@ BuildContext& JobGraph::add_job(const Name jobName)
 
 BuildContext& JobGraph::replace_job(const Name jobName)
 {
+   return this->replace_job(jobName, m_screenSize);
+}
+
+BuildContext& JobGraph::replace_job(Name jobName, Vector2i screenSize)
+{
    m_contexts.erase(jobName);
-   return this->add_job(jobName);
+   return this->add_job(jobName, screenSize);
 }
 
 void JobGraph::add_external_job(Name jobName)
@@ -49,6 +59,11 @@ void JobGraph::add_dependency(const Name target, const Name dependency)
 void JobGraph::add_dependency_to_previous_frame(const Name target, const Name dependency)
 {
    m_interframeDependencies.emplace(target, dependency);
+}
+
+void JobGraph::add_dependency_to_previous_frame(Name targetDep)
+{
+   this->add_dependency_to_previous_frame(targetDep, targetDep);
 }
 
 void JobGraph::enable_flag(const Name job, const Name flag)

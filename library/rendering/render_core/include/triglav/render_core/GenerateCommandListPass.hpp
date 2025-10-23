@@ -40,6 +40,7 @@ class GenerateCommandListPass
    void visit(const detail::cmd::CopyBuffer& cmd) const;
    void visit(const detail::cmd::CopyTexture& cmd) const;
    void visit(const detail::cmd::CopyTextureRegion& cmd) const;
+   void visit(const detail::cmd::BlitTexture& cmd) const;
    void visit(const detail::cmd::PlaceTextureBarrier& cmd) const;
    void visit(const detail::cmd::PlaceBufferBarrier& cmd) const;
    void visit(const detail::cmd::FillBuffer& cmd) const;

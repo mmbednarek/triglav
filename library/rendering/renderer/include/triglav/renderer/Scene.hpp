@@ -35,7 +35,7 @@ class Scene
 
    explicit Scene(resource::ResourceManager& resourceManager);
 
-   void update(graphics_api::Resolution& resolution);
+   void update(const graphics_api::Resolution& resolution);
    void add_object(SceneObject object);
    void load_level(LevelName name);
    void set_camera(glm::vec3 position, glm::quat orientation);

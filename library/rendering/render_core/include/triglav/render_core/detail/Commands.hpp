@@ -168,6 +168,12 @@ struct CopyTextureRegion
    Vector2i size;
 };
 
+struct BlitTexture
+{
+   TextureRef srcTexture;
+   TextureRef dstTexture;
+};
+
 struct FillBuffer
 {
    Name buffName{};
@@ -258,9 +264,9 @@ using Command =
    std::variant<cmd::BindGraphicsPipeline, cmd::BindComputePipeline, cmd::BindRayTracingPipeline, cmd::DrawPrimitives,
                 cmd::DrawIndexedPrimitives, cmd::DrawIndexedIndirectWithCount, cmd::DrawIndirectWithCount, cmd::Dispatch,
                 cmd::DispatchIndirect, cmd::BindDescriptors, cmd::BindVertexBuffer, cmd::BindIndexBuffer, cmd::CopyTextureToBuffer,
-                cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::CopyTextureRegion, cmd::PlaceTextureBarrier,
-                cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass, cmd::IfEnabledCond, cmd::IfDisabledCond,
-                cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant, cmd::TraceRays, cmd::ResetQueries,
-                cmd::QueryTimestamp, cmd::BeginQuery, cmd::EndQuery, cmd::SetViewport>;
+                cmd::CopyBufferToTexture, cmd::CopyBuffer, cmd::CopyTexture, cmd::CopyTextureRegion, cmd::BlitTexture,
+                cmd::PlaceTextureBarrier, cmd::PlaceBufferBarrier, cmd::FillBuffer, cmd::BeginRenderPass, cmd::EndRenderPass,
+                cmd::IfEnabledCond, cmd::IfDisabledCond, cmd::EndIfCond, cmd::ExportTexture, cmd::ExportBuffer, cmd::PushConstant,
+                cmd::TraceRays, cmd::ResetQueries, cmd::QueryTimestamp, cmd::BeginQuery, cmd::EndQuery, cmd::SetViewport>;
 
 }// namespace triglav::render_core::detail

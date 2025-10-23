@@ -138,6 +138,24 @@ void GenerateCommandListPass::visit(const detail::cmd::CopyTextureRegion& cmd) c
                                      graphics_api::TextureState::TransferDst, cmd.dstOffset, cmd.size);
 }
 
+void GenerateCommandListPass::visit(const detail::cmd::BlitTexture& cmd) const
+{
+   auto& srcTex = m_context.resolve_texture_ref(m_resourceStorage, cmd.srcTexture, m_frameIndex);
+   auto& dstTex = m_context.resolve_texture_ref(m_resourceStorage, cmd.dstTexture, m_frameIndex);
+   m_commandList.blit_texture(srcTex,
+                              graphics_api::TextureRegion{
+                                 .offsetMin = {0, 0},
+                                 .offsetMax = {srcTex.resolution().width, srcTex.resolution().height},
+                                 .mipLevel = 0,
+                              },
+                              dstTex,
+                              graphics_api::TextureRegion{
+                                 .offsetMin = {0, 0},
+                                 .offsetMax = {dstTex.resolution().width, dstTex.resolution().height},
+                                 .mipLevel = 0,
+                              });
+}
+
 void GenerateCommandListPass::visit(const detail::cmd::PlaceTextureBarrier& cmd) const
 {
    graphics_api::TextureBarrierInfo info{};
