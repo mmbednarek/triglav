@@ -82,7 +82,7 @@ std::map<Name, std::string_view> KnownNames{
    {"job.acquire_swapchain_image"_name, "job.acquire_swapchain_image"sv},
    {"job.copy_present_image"_name, "job.copy_present_image"sv},
    {"job.present_swapchain_image"_name, "job.present_swapchain_image"sv},
-   {"lato/regular"_name, "lato/regular"sv},
+   {"lato/light"_name, "lato/light"sv},
    {"level/wierd_tube"_name, "level/wierd_tube"sv},
    {"location"_name, "location"sv},
    {"location.orientation"_name, "location.orientation"sv},

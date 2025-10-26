@@ -16,6 +16,7 @@ WidgetRenderer::WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCac
     TG_CONNECT(m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
     TG_CONNECT(m_surface, OnKeyIsPressed, on_key_is_pressed),
+    TG_CONNECT(m_surface, OnKeyIsReleased, on_key_is_released),
     TG_CONNECT(m_surface, OnTextInput, on_text_input)
 {
 }
@@ -120,6 +121,20 @@ void WidgetRenderer::on_key_is_pressed(desktop::Key key) const
 
    ui_core::Event event;
    event.eventType = ui_core::Event::Type::KeyPressed;
+   event.mousePosition = m_mousePosition;
+   event.globalMousePosition = m_mousePosition;
+   event.parentSize = m_surface.dimension();
+   event.data.emplace<ui_core::Event::Keyboard>(key);
+   m_rootWidget->on_event(event);
+}
+
+void WidgetRenderer::on_key_is_released(desktop::Key key) const
+{
+   if (m_rootWidget == nullptr)
+      return;
+
+   ui_core::Event event;
+   event.eventType = ui_core::Event::Type::KeyReleased;
    event.mousePosition = m_mousePosition;
    event.globalMousePosition = m_mousePosition;
    event.parentSize = m_surface.dimension();

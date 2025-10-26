@@ -104,6 +104,7 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
    m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f, static_cast<float>(M_PI) / 2.0f - 0.01f);
 
    this->camera().set_orientation(glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}});
+   this->send_view_changed();
 }
 
 void Scene::add_bounding_box(const geometry::BoundingBox& box)
