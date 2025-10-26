@@ -56,7 +56,7 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
       .tabNames = {"Level Editor"},
       .activeTab = 0,
    });
-   leftTabView.create_child<LevelEditor>({
+   m_levelEditor = &leftTabView.create_child<LevelEditor>({
       .manager = &m_desktopUIManager,
       .rootWindow = m_state.editor->root_window(),
    });
@@ -76,6 +76,12 @@ void RootWidget::on_clicked_menu_bar(const Name itemName, const desktop_ui::Menu
    if (itemName == "file.close"_name) {
       m_state.editor->close();
    }
+}
+
+void RootWidget::tick(const float delta_time) const
+{
+   assert(m_levelEditor != nullptr);
+   m_levelEditor->tick(delta_time);
 }
 
 }// namespace triglav::editor

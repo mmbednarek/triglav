@@ -17,13 +17,8 @@ void RenderViewport::build_update_job(render_core::BuildContext& ctx)
 
 void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 {
-   // ctx.declare_render_target("render_viewport.out"_name, GAPI_FORMAT(RGBA, UNorm8));
-
-   // ctx.begin_render_pass("viewport_render"_name, "render_viewport.out"_name);
-   // ctx.clear_color("render_viewport.out"_name, {1, 0, 1, 1});
-   // ctx.end_render_pass();
-
    ctx.declare_screen_size_texture("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.add_texture_usage("render_viewport.out"_name, graphics_api::TextureUsage::Sampled);
 
    m_levelEditor.m_renderingJob.build_job(ctx);
 
@@ -33,7 +28,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
                       graphics_api::TextureUsage::TransferSrc);
 }
 
-void RenderViewport::update(render_core::JobGraph& graph, u32 frameIndex, float deltaTime)
+void RenderViewport::update(render_core::JobGraph& graph, const u32 frameIndex, const float deltaTime)
 {
    m_levelEditor.m_updateViewParamsJob.prepare_frame(graph, frameIndex, deltaTime);
 }

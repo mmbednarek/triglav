@@ -21,6 +21,8 @@ using namespace name_literals;
 
 namespace {
 
+constexpr Vector2 ICON_SIZE{20.0f, 20.0f};
+
 renderer::Config get_default_config()
 {
    renderer::Config result{};
@@ -68,7 +70,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    });
    select_btn.create_content<ui_core::Image>({
       .texture = "texture/ui_atlas.tex"_rc,
-      .maxSize = Vector2{16.0f, 16.0f},
+      .maxSize = ICON_SIZE,
       .region = Vector4{192, 64, 64, 64},
    });
    m_toolRadioGroup.add_check_box(&select_btn);
@@ -80,7 +82,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    });
    move_btn.create_content<ui_core::Image>({
       .texture = "texture/ui_atlas.tex"_rc,
-      .maxSize = Vector2{16.0f, 16.0f},
+      .maxSize = ICON_SIZE,
       .region = Vector4{0, 64, 64, 64},
    });
    m_toolRadioGroup.add_check_box(&move_btn);
@@ -92,7 +94,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    });
    rotate_btn.create_content<ui_core::Image>({
       .texture = "texture/ui_atlas.tex"_rc,
-      .maxSize = Vector2{16.0f, 16.0f},
+      .maxSize = ICON_SIZE,
       .region = Vector4{64, 64, 64, 64},
    });
    m_toolRadioGroup.add_check_box(&rotate_btn);
@@ -104,7 +106,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    });
    scale_btn.create_content<ui_core::Image>({
       .texture = "texture/ui_atlas.tex"_rc,
-      .maxSize = Vector2{16.0f, 16.0f},
+      .maxSize = ICON_SIZE,
       .region = Vector4{128, 64, 64, 64},
    });
    m_toolRadioGroup.add_check_box(&scale_btn);
@@ -126,6 +128,13 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
 [[nodiscard]] renderer::Scene& LevelEditor::scene()
 {
    return m_scene;
+}
+
+void LevelEditor::tick(const float delta_time) const
+{
+   if (m_viewport != nullptr) {
+      m_viewport->tick(delta_time);
+   }
 }
 
 }// namespace triglav::editor

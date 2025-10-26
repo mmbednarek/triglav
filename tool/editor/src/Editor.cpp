@@ -37,15 +37,25 @@ int Editor::run()
 
    this->initialize();
 
+   float delta_time = 0.017f;
    while (!m_rootWindow->should_close() && !m_shouldClose) {
       auto frame_start = std::chrono::steady_clock::now();
       m_dialogManager->tick();
       m_rootWindow->update();
       m_app.tick();
+      m_rootWidget->tick(delta_time);
+
       auto frame_end = std::chrono::steady_clock::now();
 
+      const auto frame_duration = frame_end - frame_start;
+
       // Limit tick to 60 fps
-      std::this_thread::sleep_for(17ms - (frame_end - frame_start));
+      if (frame_duration < 17ms) {
+         delta_time = 0.017f;
+         std::this_thread::sleep_for(17ms - frame_duration);
+      } else {
+         delta_time = static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(frame_duration).count()) / 1000000.0f;
+      }
    }
 
    m_app.gfx_device().await_all();

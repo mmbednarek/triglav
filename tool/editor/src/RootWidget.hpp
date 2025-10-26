@@ -12,6 +12,7 @@ class MenuBar;
 namespace triglav::editor {
 
 class Editor;
+class LevelEditor;
 
 class RootWidget final : public ui_core::ProxyWidget
 {
@@ -26,6 +27,7 @@ class RootWidget final : public ui_core::ProxyWidget
    RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
    void on_clicked_menu_bar(Name itemName, const desktop_ui::MenuItem& item) const;
+   void tick(float delta_time) const;
 
  private:
    ui_core::Context& m_context;
@@ -33,6 +35,7 @@ class RootWidget final : public ui_core::ProxyWidget
    desktop_ui::DesktopUIManager m_desktopUIManager;
    desktop_ui::MenuController m_menuBarController;
    desktop_ui::MenuBar* m_menuBar;
+   LevelEditor* m_levelEditor;
 
    TG_SINK(desktop_ui::MenuController, OnClicked);
 };
