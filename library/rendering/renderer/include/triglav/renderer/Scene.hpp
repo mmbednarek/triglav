@@ -6,6 +6,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/event/Delegate.hpp"
+#include "triglav/geometry/BVHTree.hpp"
 #include "triglav/render_objects/Mesh.hpp"
 
 #include <glm/gtc/quaternion.hpp>
@@ -22,6 +23,17 @@ struct SceneObject
    Transform3D transform;
 
    [[nodiscard]] Matrix4x4 model_matrix() const;
+};
+
+struct SceneObjectRef
+{
+   SceneObject* object;
+   geometry::BoundingBox bbox;
+
+   [[nodiscard]] const geometry::BoundingBox& bounding_box() const
+   {
+      return bbox;
+   }
 };
 
 class Scene
@@ -50,8 +62,11 @@ class Scene
    [[nodiscard]] float yaw() const;
    [[nodiscard]] float pitch() const;
 
+   void update_bvh();
    void update_orientation(float delta_yaw, float delta_pitch);
-   void add_bounding_box(const geometry::BoundingBox& box);
+   void add_bounding_box(const geometry::BoundingBox& box) const;
+   [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
+   const SceneObject* trace_ray(const geometry::Ray& ray) const;
 
  private:
    resource::ResourceManager& m_resourceManager;
@@ -61,6 +76,7 @@ class Scene
    glm::quat m_directionalLightOrientation{glm::vec3{geometry::g_pi * 0.1f, 0, geometry::g_pi * 1.5f}};
    std::array<OrthoCamera, 3> m_directionalShadowMapCameras{};
    std::vector<SceneObject> m_objects{};
+   geometry::BVHTree<SceneObjectRef> m_tree;
 };
 
 }// namespace triglav::renderer

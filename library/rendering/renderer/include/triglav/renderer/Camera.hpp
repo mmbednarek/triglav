@@ -12,6 +12,7 @@ class Camera final : public CameraBase
    [[nodiscard]] const glm::mat4& projection_matrix() const override;
    [[nodiscard]] float to_linear_depth(float depth) const override;
    [[nodiscard]] OrthoCameraProperties calculate_shadow_map(glm::quat lightOrientation, float frustumRange, float backExtension) const;
+   [[nodiscard]] geometry::Ray viewport_ray(Vector2 coord, float distance = 100.0f) const;
 
  private:
    float m_viewportAspect{1.0f};

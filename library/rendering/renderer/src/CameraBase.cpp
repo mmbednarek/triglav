@@ -128,6 +128,21 @@ bool CameraBase::is_bounding_box_visible(const geometry::BoundingBox& boundingBo
    return min.x <= 1.0f && max.x >= -1.0f && min.y <= 1.0f && max.y >= -1.0f && min.z <= 1.0f && max.z >= 0.0f;
 }
 
+Vector3 CameraBase::forward_vector() const
+{
+   return m_orientation * Vector3{0, 1, 0};
+}
+
+Vector3 CameraBase::right_vector() const
+{
+   return m_orientation * Vector3{1, 0, 0};
+}
+
+Vector3 CameraBase::down_vector() const
+{
+   return m_orientation * Vector3{0, 0, 1};
+}
+
 const glm::mat4& CameraBase::view_matrix() const
 {
    if (not m_hasCachedViewMatrix) {

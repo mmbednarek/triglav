@@ -113,7 +113,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
 
    m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow, *this);
 
-   m_scene.load_level("level/wierd_tube.level"_rc);
+   m_scene.load_level("level/example.level"_rc);
    m_bindlessScene.write_object_to_buffer();
    m_scene.update_shadow_maps();
 

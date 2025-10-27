@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -22,6 +23,20 @@ using Quaternion = glm::quat;
 
 // (x, y, width, height)
 using Rect = Vector4;
+
+enum class Axis : u32
+{
+   X = 0,
+   Y = 1,
+   Z = 2,
+   W = 3
+};
+
+[[nodiscard]] constexpr float vector3_component(const Vector3 vec, const Axis axis)
+{
+   return std::bit_cast<std::array<float, 3>>(vec)[static_cast<u32>(axis)];
+}
+
 
 [[nodiscard]] constexpr Vector2 rect_position(const Rect& r)
 {

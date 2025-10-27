@@ -28,7 +28,6 @@ Transform3D Transform3D::from_matrix(const Matrix4x4& matrix)
 
 Matrix4x4 Transform3D::to_matrix() const
 {
-   [[maybe_unused]] const auto rotMat = glm::mat4_cast(this->rotation);
    return glm::translate(glm::mat4(1.0f), this->translation) * glm::mat4_cast(this->rotation) * glm::scale(glm::mat4(1.0f), this->scale);
 }
 
