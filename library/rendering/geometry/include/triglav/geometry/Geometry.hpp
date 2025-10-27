@@ -71,10 +71,39 @@ struct VertexData
    std::vector<MaterialRange> ranges;
 };
 
+struct Ray
+{
+   Vector3 origin;
+   Vector3 direction;
+   float distance;
+};
+
 struct BoundingBox
 {
-   glm::vec3 min;
-   glm::vec3 max;
+   Vector3 min;
+   Vector3 max;
+
+   [[nodiscard]] constexpr Vector3 centroid() const
+   {
+      return (max + min) * 0.5f;
+   }
+
+   [[nodiscard]] constexpr bool intersect(const Ray& ray) const
+   {
+      const float tx1 = (min.x - ray.origin.x) / ray.direction.x;
+      const float tx2 = (max.x - ray.origin.x) / ray.direction.x;
+      float t_min = std::min(tx1, tx2);
+      float t_max = std::max(tx1, tx2);
+      const float ty1 = (min.y - ray.origin.y) / ray.direction.y;
+      const float ty2 = (max.y - ray.origin.y) / ray.direction.y;
+      t_min = std::max(t_min, std::min(ty1, ty2));
+      t_max = std::min(t_max, std::max(ty1, ty2));
+      const float tz1 = (min.z - ray.origin.z) / ray.direction.z;
+      const float tz2 = (max.z - ray.origin.z) / ray.direction.z;
+      t_min = std::max(t_min, std::min(tz1, tz2));
+      t_max = std::min(t_max, std::max(tz1, tz2));
+      return t_max >= t_min && t_min < ray.distance && t_max > 0;
+   }
 };
 
 struct MeshData

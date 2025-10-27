@@ -16,6 +16,7 @@ constexpr Vector2 DEFAULT_DIMENSIONS{1280, 720};
 RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
                        render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager) :
     m_device(device),
+    m_resourceManager(resourceManager),
     m_surface(display.create_surface("Triglav Editor"_strv, DEFAULT_DIMENSIONS, desktop::WindowAttribute::Default)),
     m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resourceStorage(device),
@@ -170,6 +171,11 @@ graphics_api::Device& RootWindow::device() const
 desktop::ISurface& RootWindow::surface() const
 {
    return *m_surface;
+}
+
+resource::ResourceManager& RootWindow::resource_manager() const
+{
+   return m_resourceManager;
 }
 
 bool RootWindow::should_close() const

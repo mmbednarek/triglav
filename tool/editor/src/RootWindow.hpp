@@ -43,12 +43,14 @@ class RootWindow
 
    [[nodiscard]] graphics_api::Device& device() const;
    [[nodiscard]] desktop::ISurface& surface() const;
+   [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] bool should_close() const;
 
  private:
    void build_rendering_job(render_core::BuildContext& ctx);
 
    graphics_api::Device& m_device;
+   resource::ResourceManager& m_resourceManager;
 
    std::shared_ptr<desktop::ISurface> m_surface;
    graphics_api::Surface m_graphicsSurface;

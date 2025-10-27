@@ -1,4 +1,5 @@
 geometry_sources = files([
+  'include/triglav/geometry/BVHTree.hpp',
   'include/triglav/geometry/DebugMesh.hpp',
   'include/triglav/geometry/Geometry.hpp',
   'include/triglav/geometry/Mesh.hpp',
@@ -29,3 +30,5 @@ geometry = declare_dependency(
   link_with: geometry_lib,
   dependencies: geometry_pub_deps,
 )
+
+subdir('test')

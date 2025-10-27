@@ -38,6 +38,7 @@ void Scene::add_object(SceneObject object)
 {
    auto& emplacedObj = m_objects.emplace_back(object);
    event_OnObjectAddedToScene.publish(emplacedObj);
+   this->update_bvh();
 }
 
 void Scene::load_level(const LevelName name)
@@ -90,6 +91,30 @@ float Scene::pitch() const
    return m_pitch;
 }
 
+void Scene::update_bvh()
+{
+   std::vector<SceneObjectRef> objects{m_objects.size()};
+   std::ranges::transform(m_objects, objects.begin(), [this](SceneObject& object) {
+      Transform3D t(object.transform);
+      t.rotation = Quaternion{1, 0, 0, 0};
+      const auto mat = t.to_matrix();
+
+      const auto& mesh = m_resourceManager.get(object.model);
+      auto new_min = mat * Vector4{mesh.boundingBox.min, 1.0f};
+      auto new_max = mat * Vector4{mesh.boundingBox.max, 1.0f};
+
+      return SceneObjectRef{
+         .object = &object,
+         .bbox =
+            {
+               .min{new_min},
+               .max{new_max},
+            },
+      };
+   });
+   m_tree.build(objects);
+}
+
 void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
 {
    m_yaw += delta_yaw;
@@ -107,9 +132,22 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
    this->send_view_changed();
 }
 
-void Scene::add_bounding_box(const geometry::BoundingBox& box)
+void Scene::add_bounding_box(const geometry::BoundingBox& box) const
 {
    event_OnAddedBoundingBox.publish(box);
+}
+
+const geometry::BVHTree<SceneObjectRef>& Scene::bvh() const
+{
+   return m_tree;
+}
+
+const SceneObject* Scene::trace_ray(const geometry::Ray& ray) const
+{
+   const auto* result = this->bvh().traverse(ray);
+   if (result == nullptr)
+      return nullptr;
+   return result->object;
 }
 
 void Scene::update_shadow_maps()

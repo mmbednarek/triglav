@@ -1,5 +1,6 @@
 #include "LevelViewport.hpp"
 
+#include "../../../../../../.conan2/p/b/boost685345d9ed20d/p/include/boost/algorithm/minmax_element.hpp"
 #include "RootWindow.hpp"
 
 #include <spdlog/spdlog.h>
@@ -130,11 +131,22 @@ void LevelViewport::on_key_released(const ui_core::Event& /*event*/, const ui_co
    }
 }
 
-void LevelViewport::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& mouse)
+void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse)
 {
    if (mouse.button == desktop::MouseButton::Right) {
       m_isMoving = true;
       m_rootWindow.surface().lock_cursor();
+   } else if (mouse.button == desktop::MouseButton::Left) {
+      const auto normalized_pos = event.mousePosition / rect_size(m_dimensions);
+      const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
+
+      const auto ray = m_levelEditor.scene().camera().viewport_ray(viewport_coord);
+      const auto result = m_levelEditor.scene().trace_ray(ray);
+      if (result != nullptr) {
+         spdlog::info("BVH Hit! {}", m_rootWindow.resource_manager().lookup_name(result->model).value_or("unknown"));
+      } else {
+         spdlog::info("No Hit");
+      }
    }
 }
 

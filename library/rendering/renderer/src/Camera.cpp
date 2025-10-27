@@ -98,4 +98,19 @@ OrthoCameraProperties Camera::calculate_shadow_map(const glm::quat lightOrientat
    };
 }
 
+geometry::Ray Camera::viewport_ray(const Vector2 coord, const float distance) const
+{
+   const auto near_place_mid = this->position() + this->forward_vector() * this->near_plane();
+   const auto near_height_half = std::tan(m_angle / 2) * this->near_plane();
+   const auto near_width_half = near_height_half * m_viewportAspect;
+
+   const auto origin = near_place_mid + coord.x * near_width_half * this->right_vector() + coord.y * near_height_half * this->down_vector();
+
+   return {
+      .origin = origin,
+      .direction = normalize(origin - this->position()),
+      .distance = distance,
+   };
+}
+
 }// namespace triglav::renderer
