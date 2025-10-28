@@ -25,6 +25,10 @@ Key translate_key(const WPARAM keyCode)
       return Key::S;
    case 'D':
       return Key::D;
+   case 'Q':
+      return Key::Q;
+   case 'E':
+      return Key::E;
    case VK_BACK:
       return Key::Backspace;
    case VK_SPACE:
