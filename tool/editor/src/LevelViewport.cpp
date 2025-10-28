@@ -1,6 +1,5 @@
 #include "LevelViewport.hpp"
 
-#include "../../../../../../.conan2/p/b/boost685345d9ed20d/p/include/boost/algorithm/minmax_element.hpp"
 #include "RootWindow.hpp"
 
 #include <spdlog/spdlog.h>
@@ -23,9 +22,9 @@ LevelViewport::CamMovement to_cam_movement(const desktop::Key key)
    case desktop::Key::D:
       return LevelViewport::CamMovement::Right;
    case desktop::Key::Q:
-      return LevelViewport::CamMovement::Up;
-   case desktop::Key::E:
       return LevelViewport::CamMovement::Down;
+   case desktop::Key::E:
+      return LevelViewport::CamMovement::Up;
    default:
       return LevelViewport::CamMovement::None;
    }

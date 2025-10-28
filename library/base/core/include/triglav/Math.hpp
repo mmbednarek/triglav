@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
