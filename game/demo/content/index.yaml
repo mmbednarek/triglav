@@ -31,9 +31,9 @@ resources:
   - name: bindless_geometry_hi_zbuffer.cshader
     source: shader/bindless_geometry/hi_z_comp.spv
   - name: editor/object_selection.fshader
-    source: editor/object_selection_fs.spv
+    source: shader/editor/object_selection_fs.spv
   - name: editor/object_selection.vshader
-    source: editor/object_selection_vs.spv
+    source: shader/editor/object_selection_vs.spv
   - name: blur.cshader
     source: shader/misc/blur_rgba.spv
   - name: blur/sc.cshader

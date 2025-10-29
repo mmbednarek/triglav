@@ -79,8 +79,11 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*
 #endif
 
    auto display = triglav::desktop::get_display();
+#if NDEBUG
    try {
+#endif// NDEBUG
       return triglav_main(inputArgs, *display);
+#if NDEBUG
    } catch (const std::exception& e) {
       spdlog::error("desktop-main: exception occurred: {}, exiting...", e.what());
       return EXIT_FAILURE;
@@ -88,4 +91,5 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*
       spdlog::error("desktop-main: unknown exception occurred, exiting...");
       return EXIT_FAILURE;
    }
+#endif// NDEBUG
 }
