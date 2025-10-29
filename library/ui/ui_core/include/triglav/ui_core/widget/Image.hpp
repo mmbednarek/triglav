@@ -5,6 +5,8 @@
 
 #include "triglav/Name.hpp"
 
+#include <optional>
+
 namespace triglav::ui_core {
 
 class Context;

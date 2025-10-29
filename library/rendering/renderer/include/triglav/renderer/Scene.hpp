@@ -36,6 +36,12 @@ struct SceneObjectRef
    }
 };
 
+struct RayHit
+{
+   float distance;
+   const SceneObject* object;
+};
+
 class Scene
 {
  public:
@@ -66,7 +72,7 @@ class Scene
    void update_orientation(float delta_yaw, float delta_pitch);
    void add_bounding_box(const geometry::BoundingBox& box) const;
    [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
-   const SceneObject* trace_ray(const geometry::Ray& ray) const;
+   RayHit trace_ray(const geometry::Ray& ray) const;
 
  private:
    resource::ResourceManager& m_resourceManager;

@@ -4,6 +4,8 @@
 #include "triglav/Name.hpp"
 #include "triglav/String.hpp"
 
+#include <optional>
+
 namespace triglav::ui_core {
 
 using TextId = u32;

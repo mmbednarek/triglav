@@ -3,7 +3,7 @@
 #include "../IWidget.hpp"
 #include "../Primitives.hpp"
 
-#include "triglav/Name.hpp"
+#include <optional>
 
 namespace triglav::ui_core {
 

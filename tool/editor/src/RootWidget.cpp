@@ -17,7 +17,6 @@ using namespace string_literals;
 
 RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
-    m_context(context),
     m_state(state),
     m_desktopUIManager(desktop_ui::ThemeProperties::get_default(), m_state.dialogManager->root_surface(), *m_state.dialogManager),
     TG_CONNECT(m_menuBarController, OnClicked, on_clicked_menu_bar)

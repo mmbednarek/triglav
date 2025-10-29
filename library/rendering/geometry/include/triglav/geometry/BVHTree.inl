@@ -79,27 +79,36 @@ BVHNode<TPayload>* build_node(std::span<TPayload> data, const Axis axis)
 }
 
 template<PayloadWithAABB TPayload>
-BVHNode<TPayload>* traverse_node(BVHNode<TPayload>* node, const Ray& ray)
+BVHHit<TPayload> traverse_node(BVHNode<TPayload>* node, const Ray& ray)
 {
    if (std::holds_alternative<TPayload>(node->payload)) {
       auto& payload = std::get<TPayload>(node->payload);
       auto bb = payload.bounding_box();
-      if (!bb.intersect(ray)) {
-         return nullptr;
+      const auto bb_intersect = bb.intersect(ray);
+      if (!bb_intersect.has_value()) {
+         return {INFINITY, nullptr};
       }
-      return node;
+      return {bb_intersect->x, &std::get<TPayload>(node->payload)};
    }
 
    const auto& bb = std::get<BoundingBox>(node->payload);
-   if (!bb.intersect(ray)) {
-      return nullptr;
+   if (!bb.does_intersect(ray)) {
+      return {INFINITY, nullptr};
    }
 
-   if (auto* left_node = traverse_node(node->left, ray); left_node != nullptr) {
+   const auto left_node = traverse_node(node->left, ray);
+   const auto right_node = traverse_node(node->right, ray);
+   if (right_node.distance < 0 && left_node.payload != nullptr) {
       return left_node;
    }
+   if (left_node.distance < 0 && right_node.payload != nullptr) {
+      return right_node;
+   }
 
-   return traverse_node(node->right, ray);
+   if (left_node.distance < right_node.distance) {
+      return left_node;
+   }
+   return right_node;
 }
 
 }// namespace detail
@@ -141,12 +150,9 @@ void BVHTree<TPayload>::clear()
 }
 
 template<PayloadWithAABB TPayload>
-TPayload* BVHTree<TPayload>::traverse(const Ray& ray) const
+BVHHit<TPayload> BVHTree<TPayload>::traverse(const Ray& ray) const
 {
-   auto* node = detail::traverse_node(m_root, ray);
-   if (node == nullptr)
-      return nullptr;
-   return &std::get<TPayload>(node->payload);
+   return detail::traverse_node(m_root, ray);
 }
 
 }// namespace triglav::geometry

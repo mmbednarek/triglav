@@ -142,12 +142,12 @@ const geometry::BVHTree<SceneObjectRef>& Scene::bvh() const
    return m_tree;
 }
 
-const SceneObject* Scene::trace_ray(const geometry::Ray& ray) const
+RayHit Scene::trace_ray(const geometry::Ray& ray) const
 {
-   const auto* result = this->bvh().traverse(ray);
-   if (result == nullptr)
-      return nullptr;
-   return result->object;
+   const auto hit = this->bvh().traverse(ray);
+   if (hit.payload == nullptr)
+      return {INFINITY, nullptr};
+   return {hit.distance, hit.payload->object};
 }
 
 void Scene::update_shadow_maps()

@@ -5,6 +5,7 @@
 #include "triglav/String.hpp"
 
 #include <chrono>
+#include <thread>
 
 namespace triglav::editor {
 
@@ -20,8 +21,8 @@ void Editor::initialize()
 {
    m_rootWindow = std::make_unique<RootWindow>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
                                                m_app.resource_manager());
-   m_dialogManager = std::make_unique<desktop_ui::PopupManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(),
-                                                                m_app.glyph_cache(), m_app.resource_manager(), m_rootWindow->surface());
+   m_dialogManager = std::make_unique<desktop_ui::PopupManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.glyph_cache(),
+                                                                m_app.resource_manager(), m_rootWindow->surface());
 
    m_rootWidget = &m_rootWindow->create_root_widget<RootWidget>({
       .dialogManager = m_dialogManager.get(),

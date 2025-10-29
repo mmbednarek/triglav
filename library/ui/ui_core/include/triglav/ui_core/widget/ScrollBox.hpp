@@ -2,6 +2,8 @@
 
 #include "../IWidget.hpp"
 
+#include <optional>
+
 namespace triglav::ui_core {
 
 class ScrollBox final : public ContainerWidget

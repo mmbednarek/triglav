@@ -50,7 +50,7 @@ class SpriteRenderer
  public:
    using Self = SpriteRenderer;
 
-   SpriteRenderer(graphics_api::Device& device, ui_core::Viewport& viewport, resource::ResourceManager& resourceManager);
+   SpriteRenderer(ui_core::Viewport& viewport, resource::ResourceManager& resourceManager);
 
    void on_added_sprite(ui_core::SpriteId id, const ui_core::Sprite& sprite);
    void on_updated_sprite(ui_core::SpriteId id, const ui_core::Sprite& sprite);
@@ -66,8 +66,6 @@ class SpriteRenderer
  private:
    [[nodiscard]] u32 get_texture_id(TextureName name);
 
-   graphics_api::Device& m_device;
-   ui_core::Viewport& m_viewport;
    resource::ResourceManager& m_resourceManager;
    std::vector<render_core::TextureRef> m_textures;
    std::map<TextureName, u32> m_textureIDs;

@@ -50,7 +50,7 @@ class RectangleRenderer
  public:
    using Self = RectangleRenderer;
 
-   RectangleRenderer(graphics_api::Device& device, ui_core::Viewport& viewport);
+   RectangleRenderer(ui_core::Viewport& viewport);
 
    void on_added_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
    void on_updated_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
@@ -64,8 +64,6 @@ class RectangleRenderer
    void build_render_ui(render_core::BuildContext& ctx);
 
  private:
-   graphics_api::Device& m_device;
-   ui_core::Viewport& m_viewport;
    std::array<UpdateList<ui_core::RectId, RectPrimitive>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameUpdates;
 
    RectWriteData* m_stagingInsertions;

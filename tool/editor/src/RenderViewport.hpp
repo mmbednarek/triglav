@@ -18,9 +18,13 @@ class RenderViewport
 
    [[nodiscard]] Vector4 dimensions() const;
 
+   void set_selection_matrix(const Matrix4x4& mat);
+
  private:
    LevelEditor& m_levelEditor;
    Vector4 m_dimensions{};
+   Matrix4x4 m_selectionMatrix{0};
+   u32 m_selectionMatrixUpdates = 0;
 };
 
 }// namespace triglav::editor
