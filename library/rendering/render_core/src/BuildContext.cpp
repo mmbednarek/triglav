@@ -727,6 +727,12 @@ void BuildContext::fill_buffer_raw(const Name buffName, const void* ptr, const M
    m_workTypes |= gapi::WorkType::Transfer;
 }
 
+void BuildContext::init_buffer_raw(const Name buffName, const void* ptr, const MemorySize size)
+{
+   this->declare_buffer(buffName, size);
+   this->fill_buffer_raw(buffName, ptr, size);
+}
+
 void BuildContext::copy_texture_to_buffer(const TextureRef srcTex, const BufferRef dstBuff)
 {
    m_activePipelineStages = gapi::PipelineStage::Transfer;

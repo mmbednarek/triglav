@@ -136,6 +136,7 @@ class BuildContext
 
    // Transfer
    void fill_buffer_raw(Name buffName, const void* ptr, MemorySize size);
+   void init_buffer_raw(Name buffName, const void* ptr, MemorySize size);
    void copy_texture_to_buffer(TextureRef srcTex, BufferRef dstBuff);
    void copy_buffer_to_texture(BufferRef srcBuff, TextureRef dstTex);
    void copy_buffer(BufferRef srcBuffer, BufferRef dstBuffer);

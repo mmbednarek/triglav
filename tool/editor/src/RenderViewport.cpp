@@ -1,5 +1,7 @@
 #include "RenderViewport.hpp"
 
+#include "triglav/geometry/DebugMesh.hpp"
+
 namespace triglav::editor {
 
 using namespace name_literals;
@@ -15,14 +17,51 @@ void RenderViewport::build_update_job(render_core::BuildContext& ctx)
    m_levelEditor.m_updateViewParamsJob.build_job(ctx);
 }
 
+struct EditorOverlayUniformBuffer
+{
+   Matrix4x4 select_object_transform;
+};
+
 void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 {
    ctx.declare_screen_size_texture("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
-   ctx.add_texture_usage("render_viewport.out"_name, graphics_api::TextureUsage::Sampled);
+   // ctx.declare_buffer("render_viewport"_name);
+   // ctx.add_texture_usage("render_viewport.out"_name, graphics_api::TextureUsage::Sampled);
+
+   const auto box_mesh = geometry::create_box({1.0f, 1.0f, 1.0f});
+   const auto vert_data = box_mesh.to_vertex_data();
+
+   std::vector<Vector3> vertices(vert_data.vertices.size());
+   std::ranges::transform(vert_data.vertices, vertices.begin(), [&](const geometry::Vertex& v) { return v.location; });
+   ctx.init_buffer_raw("render_viewport.box_vertices"_name, vertices.data(), vertices.size() * sizeof(float));
+   ctx.init_buffer_raw("render_viewport.box_indices"_name, vert_data.indices.data(), vert_data.indices.size() * sizeof(float));
+
+   Matrix4x4 iden{1};
+   ctx.init_buffer("render_viewport.ubo"_name, iden);
 
    m_levelEditor.m_renderingJob.build_job(ctx);
 
    ctx.blit_texture("shading.color"_name, "render_viewport.out"_name);
+
+   ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
+
+   ctx.bind_vertex_shader("editor/object_selection.vshader"_rc);
+
+   ctx.bind_vertex_buffer("render_viewport.box_vertices"_name);
+   ctx.bind_index_buffer("render_viewport.box_indices"_name);
+
+   ctx.bind_uniform_buffer(0, "core.view_properties"_name);
+   ctx.bind_uniform_buffer(1, "render_viewport.ubo"_name);
+
+   triglav::render_core::VertexLayout layout(sizeof(Vector3));
+   layout.add("position"_name, GAPI_FORMAT(RGB, Float32), 0);
+   ctx.bind_vertex_layout(layout);
+
+   ctx.bind_fragment_shader("editor/object_selection.fshader"_rc);
+
+   ctx.draw_primitives(vertices.size(), 0, 1, 0);
+
+   ctx.end_render_pass();
 
    ctx.export_texture("render_viewport.out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
                       graphics_api::TextureUsage::TransferSrc);
