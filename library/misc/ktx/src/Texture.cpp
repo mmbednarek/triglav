@@ -1,5 +1,6 @@
 #include "Texture.hpp"
 
+#include <cstdlib>
 #include <utility>
 extern "C"
 {

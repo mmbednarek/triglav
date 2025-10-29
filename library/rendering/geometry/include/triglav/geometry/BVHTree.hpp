@@ -20,6 +20,13 @@ struct BVHNode
 };
 
 template<PayloadWithAABB TPayload>
+struct BVHHit
+{
+   float distance;
+   TPayload* payload;
+};
+
+template<PayloadWithAABB TPayload>
 class BVHTree
 {
  public:
@@ -34,7 +41,7 @@ class BVHTree
 
    void build(std::span<TPayload> data);
    void clear();
-   TPayload* traverse(const Ray& ray) const;
+   BVHHit<TPayload> traverse(const Ray& ray) const;
 
  private:
    BVHNode<TPayload>* m_root{};

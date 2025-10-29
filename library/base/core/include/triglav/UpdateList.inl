@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <ranges>
 
 namespace triglav {
 

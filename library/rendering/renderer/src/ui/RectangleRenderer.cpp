@@ -55,9 +55,7 @@ RectPrimitive to_primitive(const ui_core::Rectangle& rect)
 
 }// namespace
 
-RectangleRenderer::RectangleRenderer(graphics_api::Device& device, ui_core::Viewport& viewport) :
-    m_device(device),
-    m_viewport(viewport),
+RectangleRenderer::RectangleRenderer(ui_core::Viewport& viewport) :
     TG_CONNECT(viewport, OnAddedRectangle, on_added_rectangle),
     TG_CONNECT(viewport, OnUpdatedRectangle, on_updated_rectangle),
     TG_CONNECT(viewport, OnRemovedRectangle, on_removed_rectangle)

@@ -66,6 +66,7 @@ void LevelViewport::on_event(const ui_core::Event& event)
 
 void LevelViewport::tick(const float delta_time)
 {
+   bool should_update_sm = false;
    const auto cam_orientation = m_levelEditor.scene().camera().orientation();
    if (m_camMovement != CamMovement::None) {
       Vector3 direction{};
@@ -99,15 +100,22 @@ void LevelViewport::tick(const float delta_time)
          break;
       }
 
-      m_levelEditor.scene().set_camera(m_levelEditor.scene().camera().position() + 10.0f * delta_time * (cam_orientation * direction),
+      m_levelEditor.scene().set_camera(m_levelEditor.scene().camera().position() + 20.0f * delta_time * (cam_orientation * direction),
                                        cam_orientation);
+      should_update_sm = true;
    }
 
    const auto diff = delta_time * m_mouseMotion;
    m_levelEditor.scene().update_orientation(diff.x, diff.y);
-   m_mouseMotion += m_mouseMotion * (static_cast<float>(pow(0.5f, 50.0f * delta_time)) - 1.0f);
+   m_mouseMotion += m_mouseMotion * (std::pow(0.5f, 50.0f * delta_time) - 1.0f);
    if (m_mouseMotion.x < 0.001f && m_mouseMotion.y < 0.001f) {
       m_mouseMotion = {};
+   } else {
+      should_update_sm = true;
+   }
+
+   if (should_update_sm) {
+      m_levelEditor.scene().update_shadow_maps();
    }
 }
 
@@ -140,11 +148,18 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
 
       const auto ray = m_levelEditor.scene().camera().viewport_ray(viewport_coord);
-      const auto result = m_levelEditor.scene().trace_ray(ray);
-      if (result != nullptr) {
-         spdlog::info("BVH Hit! {}", m_rootWindow.resource_manager().lookup_name(result->model).value_or("unknown"));
-      } else {
-         spdlog::info("No Hit");
+      const auto hit = m_levelEditor.scene().trace_ray(ray);
+      if (hit.object != nullptr) {
+         const auto& mesh = m_rootWindow.resource_manager().get(hit.object->model);
+
+         spdlog::info("Hit! Distance: {}", hit.distance);
+
+         const Transform3D transform{
+            .rotation = {1, 0, 0, 0},
+            .scale = hit.object->transform.scale * mesh.boundingBox.scale(),
+            .translation = hit.object->transform.translation + mesh.boundingBox.min * hit.object->transform.scale,
+         };
+         m_renderViewport->set_selection_matrix(transform.to_matrix());
       }
    }
 }

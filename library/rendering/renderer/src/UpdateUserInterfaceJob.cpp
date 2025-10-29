@@ -10,8 +10,8 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
                                                ui_core::Viewport& viewport, resource::ResourceManager& resourceManager) :
     m_device(device),
     m_viewport(viewport),
-    m_rectangleRenderer(m_device, viewport),
-    m_spriteRenderer(m_device, viewport, resourceManager),
+    m_rectangleRenderer(viewport),
+    m_spriteRenderer(viewport, resourceManager),
     m_textRenderer(m_device, glyphCache, viewport)
 {
 }

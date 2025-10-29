@@ -2,12 +2,10 @@
 
 namespace triglav::desktop_ui {
 
-PopupManager::PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-                           render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager,
-                           desktop::ISurface& rootSurface) :
+PopupManager::PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyphCache,
+                           resource::ResourceManager& resourceManager, desktop::ISurface& rootSurface) :
     m_instance(instance),
     m_device(device),
-    m_display(display),
     m_glyphCache(glyphCache),
     m_resourceManager(resourceManager),
     m_rootSurface(rootSurface)

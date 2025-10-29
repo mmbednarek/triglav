@@ -30,7 +30,6 @@ class RootWidget final : public ui_core::ProxyWidget
    void tick(float delta_time) const;
 
  private:
-   ui_core::Context& m_context;
    State m_state;
    desktop_ui::DesktopUIManager m_desktopUIManager;
    desktop_ui::MenuController m_menuBarController;

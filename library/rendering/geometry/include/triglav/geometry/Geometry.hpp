@@ -6,6 +6,7 @@
 #include <cmath>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <optional>
 
 namespace triglav::geometry {
 
@@ -88,7 +89,7 @@ struct BoundingBox
       return (max + min) * 0.5f;
    }
 
-   [[nodiscard]] constexpr bool intersect(const Ray& ray) const
+   [[nodiscard]] constexpr std::optional<Vector2> intersect(const Ray& ray) const
    {
       const float tx1 = (min.x - ray.origin.x) / ray.direction.x;
       const float tx2 = (max.x - ray.origin.x) / ray.direction.x;
@@ -102,7 +103,20 @@ struct BoundingBox
       const float tz2 = (max.z - ray.origin.z) / ray.direction.z;
       t_min = std::max(t_min, std::min(tz1, tz2));
       t_max = std::min(t_max, std::max(tz1, tz2));
-      return t_max >= t_min && t_min < ray.distance && t_max > 0;
+      if (t_max >= t_min && t_min < ray.distance && t_max > 0) {
+         return Vector2{t_min, t_max};
+      }
+      return std::nullopt;
+   }
+
+   [[nodiscard]] constexpr bool does_intersect(const Ray& ray) const
+   {
+      return this->intersect(ray).has_value();
+   }
+
+   [[nodiscard]] Vector3 scale() const
+   {
+      return max - min;
    }
 };
 

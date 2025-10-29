@@ -5,7 +5,7 @@
 
 namespace triglav::desktop_ui {
 
-constexpr float g_splitterSize = 10.0f;
+constexpr float g_splitterSize = 6.0f;
 
 namespace {
 

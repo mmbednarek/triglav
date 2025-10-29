@@ -52,9 +52,7 @@ SpritePrimitive to_primitive(const ui_core::Sprite& sprite, const u32 imageID, c
 
 }// namespace
 
-SpriteRenderer::SpriteRenderer(graphics_api::Device& device, ui_core::Viewport& viewport, resource::ResourceManager& resourceManager) :
-    m_device(device),
-    m_viewport(viewport),
+SpriteRenderer::SpriteRenderer(ui_core::Viewport& viewport, resource::ResourceManager& resourceManager) :
     m_resourceManager(resourceManager),
     TG_CONNECT(viewport, OnAddedSprite, on_added_sprite),
     TG_CONNECT(viewport, OnUpdatedSprite, on_updated_sprite),

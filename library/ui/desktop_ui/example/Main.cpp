@@ -130,7 +130,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    auto rootDialog = std::make_unique<Dialog>(instance, *device, display, glyphCache, resourceManager,
                                               triglav::Vector2i{initialWidth, initialHeight}, "Desktop UI Example"_strv);
 
-   PopupManager dialogManager(instance, *device, display, glyphCache, resourceManager, rootDialog->surface());
+   PopupManager dialogManager(instance, *device, glyphCache, resourceManager, rootDialog->surface());
 
    triglav::desktop_ui::DesktopUIManager desktopUiManager(triglav::desktop_ui::ThemeProperties::get_default(), rootDialog->surface(),
                                                           dialogManager);
