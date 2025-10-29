@@ -4,6 +4,8 @@
 
 #include "triglav/render_core/JobGraph.hpp"
 
+#include <vector>
+
 namespace triglav::editor {
 
 class RenderViewport

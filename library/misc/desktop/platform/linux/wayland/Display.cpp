@@ -33,9 +33,9 @@ Key map_key(const u32 key)
    case 32:
       return Key::D;
    case 18:
-      return Key::Q;
-   case 16:
       return Key::E;
+   case 16:
+      return Key::Q;
    case 57:
       return Key::Space;
    case 59:

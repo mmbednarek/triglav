@@ -32,9 +32,9 @@ float Camera::to_linear_depth(const float depth) const
 
 OrthoCameraProperties Camera::calculate_shadow_map(const glm::quat lightOrientation, const float frustumRange, float backExtension) const
 {
-   const auto rightVec = this->orientation() * glm::vec3(1.0f, 0.0f, 0.0f);
-   const auto forwardVec = this->orientation() * glm::vec3(0.0f, 1.0f, 0.0f);
-   const auto upVec = this->orientation() * glm::vec3(0.0f, 0.0f, 1.0f);
+   const auto rightVec = this->right_vector();
+   const auto forwardVec = this->forward_vector();
+   const auto upVec = this->down_vector();
 
    const auto nearPlanePoint = this->position() + forwardVec * this->near_plane();
    const auto farPlanePoint = this->position() + forwardVec * frustumRange;
