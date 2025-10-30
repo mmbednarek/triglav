@@ -33,28 +33,25 @@ VSOutput vs_main(VSInput input)
     output.position = mul(g_view_properties.proj, view_space_pos);
     output.screen_coord = 0.5*(output.position.xy / output.position.w + float2(1, 1));
     output.depth = output.position.z / output.position.w;
-//     output.screen_coord = float2(0, 0);
-//     output.screen_coord = output.position.xy;
     return output;
 }
 
 typealias FSInput = VSOutput;
 
 [[vk::binding(2)]]
-Sampler2D<float4> g_back_texture;
+cbuffer ToolColor {
+    float4 g_color;
+};
 
 [[vk::binding(3)]]
 Sampler2D<float> g_depth;
 
 [shader("fragment")]
 float4 fs_main(FSInput input) : SV_Target0 {
-    const float4 color = g_back_texture.Sample(float2(input.screen_coord.x, input.screen_coord.y));
-//     const float4 inverted = common::to_linear_color(float4(float3(1) - common::correct_gamma(color).xyz, 1));
-
     const float depth = g_depth.Sample(input.screen_coord);
     if (depth+0.00001 > input.depth) {
-        return float4(1, 0.5, 0, 1);
+        return g_color;
     } else {
-        return float4(1, 0.5, 0, 0.1);
+        return float4(g_color.xyz, 0.1);
     }
 }

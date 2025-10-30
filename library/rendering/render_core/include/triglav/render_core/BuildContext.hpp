@@ -80,6 +80,7 @@ class BuildContext
    void bind_texture(BindingIndex index, TextureRef texRef);
    void bind_sampled_texture_array(BindingIndex index, std::span<const TextureRef> texRefs);
    void bind_uniform_buffer(BindingIndex index, BufferRef buffRef);
+   void bind_uniform_buffer(BindingIndex index, BufferRef buffRef, u32 offset, u32 size);
    void bind_uniform_buffers(BindingIndex index, std::span<const BufferRef> buffers);
    void bind_storage_buffer(BindingIndex index, BufferRef buffRef);
 

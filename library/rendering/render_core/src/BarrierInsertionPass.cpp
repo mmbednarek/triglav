@@ -65,6 +65,8 @@ void BarrierInsertionPass::visit(const detail::cmd::BindDescriptors& cmd)
                this->setup_texture_barrier(desc.texRef, gapi::TextureState::ShaderRead, stageFlags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBuffer>) {
                this->setup_buffer_barrier(desc.buffRef, gapi::BufferAccess::UniformRead, stageFlags);
+            } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferRange>) {
+               this->setup_buffer_barrier(desc.buffRef, gapi::BufferAccess::UniformRead, stageFlags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferArray>) {
                for (const auto& buffRef : desc.buffers) {
                   this->setup_buffer_barrier(buffRef, gapi::BufferAccess::UniformRead, stageFlags);

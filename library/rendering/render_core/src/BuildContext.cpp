@@ -218,6 +218,20 @@ void BuildContext::bind_uniform_buffer(const BindingIndex index, const BufferRef
    this->set_descriptor<detail::descriptor::UniformBuffer>(index, m_activePipelineStages, buffRef);
 }
 
+void BuildContext::bind_uniform_buffer(BindingIndex index, BufferRef buffRef, u32 offset, u32 size)
+{
+   this->prepare_buffer(buffRef, gapi::BufferUsage::UniformBuffer);
+
+   ++m_descriptorCounts.uniformBufferCount;
+
+   DescriptorInfo descriptor;
+   descriptor.pipelineStages = m_activePipelineStages;
+   descriptor.descriptorType = gapi::DescriptorType::UniformBuffer;
+   this->set_pipeline_state_descriptor(m_activePipelineStages, index, descriptor);
+
+   this->set_descriptor<detail::descriptor::UniformBufferRange>(index, m_activePipelineStages, buffRef, offset, size);
+}
+
 void BuildContext::bind_uniform_buffers(const BindingIndex index, const std::span<const BufferRef> buffers)
 {
    for (const auto& buffer : buffers) {
@@ -392,6 +406,9 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
                writer.set_texture_view_only(static_cast<u32>(index), this->resolve_texture_view_ref(storage, desc.texRef, frameIndex));
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBuffer>) {
                writer.set_raw_uniform_buffer(static_cast<u32>(index), this->resolve_buffer_ref(storage, desc.buffRef, frameIndex));
+            } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferRange>) {
+               writer.set_raw_uniform_buffer(static_cast<u32>(index), this->resolve_buffer_ref(storage, desc.buffRef, frameIndex),
+                                             desc.offset, desc.size);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferArray>) {
                std::vector<const gapi::Buffer*> buffers;
                buffers.reserve(desc.buffers.size());
