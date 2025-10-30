@@ -52,9 +52,9 @@ float4 fs_main(FSInput input) : SV_Target0 {
 //     const float4 inverted = common::to_linear_color(float4(float3(1) - common::correct_gamma(color).xyz, 1));
 
     const float depth = g_depth.Sample(input.screen_coord);
-    if (depth > input.depth) {
+    if (depth+0.00001 > input.depth) {
         return float4(1, 0.5, 0, 1);
     } else {
-        return lerp(float4(1, 0.5, 0, 1), color, 0.9);
+        return float4(1, 0.5, 0, 0.1);
     }
 }
