@@ -7,6 +7,59 @@ namespace triglav::editor {
 using namespace name_literals;
 using namespace render_core::literals;
 
+namespace {
+
+template<u32 CRingCount>
+auto create_arrow_mesh(Vector3 origin, float shaft_radius, float shaft_height, float cone_radius, float cone_height)
+{
+   static constexpr auto VERTEX_COUNT = 3 + 3 * CRingCount;
+   static constexpr auto INDEX_COUNT = 5 * 3 * CRingCount;
+   static constexpr auto ORIGIN_IDX = 0;
+   static constexpr auto MID_IDX = 1;
+   static constexpr auto TOP_IDX = 2;
+   static constexpr auto SHAFT_BOTTOM_IDX = 3;
+   static constexpr auto SHAFT_TOP_IDX = 3 + CRingCount;
+   static constexpr auto CONE_IDX = 3 + 2*CRingCount;
+
+   std::array<Vector3, VERTEX_COUNT> vertices;
+   std::array<u32, INDEX_COUNT> indices;
+   vertices[ORIGIN_IDX] = origin;
+   vertices[MID_IDX] = origin + Vector3(0, 0, shaft_height);
+   vertices[TOP_IDX] = origin + Vector3(0, 0, shaft_height + cone_height);
+
+   for (int i = 0; i < CRingCount; ++i) {
+      const auto next = (i + 1) % CRingCount;
+      const float angle = i * (2 * g_pi / CRingCount);
+      vertices[SHAFT_BOTTOM_IDX + i] = origin + Vector3(shaft_radius * std::sin(angle), shaft_radius * std::cos(angle), 0);
+      vertices[SHAFT_TOP_IDX + i] = origin + Vector3(shaft_radius * std::sin(angle), shaft_radius * std::cos(angle), shaft_height);
+      vertices[CONE_IDX + i] = origin + Vector3(cone_radius * std::sin(angle), cone_radius * std::cos(angle), shaft_height);
+
+      // Shaft back
+      indices[3 * i] = SHAFT_BOTTOM_IDX + i;
+      indices[3 * i + 1] = ORIGIN_IDX;
+      indices[3 * i + 2] = SHAFT_BOTTOM_IDX + next;
+
+      indices[3 * CRingCount + 6 * i] = SHAFT_BOTTOM_IDX + i;
+      indices[3 * CRingCount + 6 * i + 1] = SHAFT_BOTTOM_IDX + next;
+      indices[3 * CRingCount + 6 * i + 2] = SHAFT_TOP_IDX + i;
+      indices[3 * CRingCount + 6 * i + 3] = SHAFT_BOTTOM_IDX + next;
+      indices[3 * CRingCount + 6 * i + 4] = SHAFT_TOP_IDX + next;
+      indices[3 * CRingCount + 6 * i + 5] = SHAFT_TOP_IDX + i;
+
+      indices[9 * CRingCount + 3 * i] = CONE_IDX + i;
+      indices[9 * CRingCount + 3 * i + 1] = MID_IDX;
+      indices[9 * CRingCount + 3 * i + 2] = CONE_IDX + next;
+
+      indices[12 * CRingCount + 3 * i] = CONE_IDX + i;
+      indices[12 * CRingCount + 3 * i + 1] = CONE_IDX + next;
+      indices[12 * CRingCount + 3 * i + 2] = TOP_IDX;
+   }
+
+   return std::make_pair(vertices, indices);
+}
+
+}// namespace
+
 RenderViewport::RenderViewport(LevelEditor& levelEditor, const Vector4 dimensions) :
     m_levelEditor(levelEditor),
     m_dimensions(dimensions)
@@ -27,11 +80,13 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
 
-   static constexpr std::array vertices{
-      Vector3{0, 0, 1}, Vector3{0, 1, 1}, Vector3{0, 0, 0}, Vector3{0, 1, 0},
-      Vector3{1, 0, 1}, Vector3{1, 1, 1}, Vector3{1, 0, 0}, Vector3{1, 1, 0},
-   };
-   static constexpr std::array<u32, 24> indices{0, 1, 1, 3, 3, 2, 2, 0, 4, 5, 5, 7, 7, 6, 6, 4, 0, 4, 1, 5, 2, 6, 3, 7};
+   const auto [vertices, indices] = create_arrow_mesh<24>({0, 0, 0}, 0.2f, 2.0f, 0.6f, 1.5f);
+
+   // static constexpr std::array vertices{
+   //    Vector3{0, 0, 1}, Vector3{0, 1, 1}, Vector3{0, 0, 0}, Vector3{0, 1, 0},
+   //    Vector3{1, 0, 1}, Vector3{1, 1, 1}, Vector3{1, 0, 0}, Vector3{1, 1, 0},
+   // };
+   // static constexpr std::array<u32, 24> indices{0, 1, 1, 3, 3, 2, 2, 0, 4, 5, 5, 7, 7, 6, 6, 4, 0, 4, 1, 5, 2, 6, 3, 7};
 
    ctx.init_buffer_raw("render_viewport.box_vertices"_name, vertices.data(), vertices.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.box_indices"_name, indices.data(), indices.size() * sizeof(u32));
@@ -44,6 +99,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.copy_buffer("render_viewport.ubo.staging"_name, "render_viewport.ubo"_name);
 
    ctx.blit_texture("shading.color"_name, "render_viewport.out"_name);
+
 
    ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
 
@@ -65,7 +121,8 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.bind_samplable_texture(2, "shading.color"_name);
    ctx.bind_samplable_texture(3, "gbuffer.depth"_name);
 
-   ctx.set_vertex_topology(graphics_api::VertexTopology::LineList);
+   // ctx.set_vertex_topology(graphics_api::VertexTopology::LineList);
+   ctx.set_is_blending_enabled(true);
 
    ctx.draw_indexed_primitives(static_cast<u32>(indices.size()), 0, 0);
 
