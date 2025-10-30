@@ -40,6 +40,7 @@ class DescriptorWriter
    void set_storage_buffer(uint32_t binding, const Buffer& buffer);
    void set_storage_buffer(uint32_t binding, const Buffer& buffer, u32 offset, u32 size);
    void set_raw_uniform_buffer(uint32_t binding, const Buffer& buffer);
+   void set_raw_uniform_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size);
    void set_uniform_buffer_array(uint32_t binding, std::span<const Buffer*> buffers);
    void set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct);
 

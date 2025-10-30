@@ -31,6 +31,13 @@ struct UniformBuffer
    BufferRef buffRef{};
 };
 
+struct UniformBufferRange
+{
+   BufferRef buffRef{};
+   u32 offset{};
+   u32 size{};
+};
+
 struct StorageBuffer
 {
    BufferRef buffRef{};
@@ -48,9 +55,9 @@ struct AccelerationStructure
 
 }// namespace descriptor
 
-using Descriptor =
-   std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::SampledTextureArray, descriptor::Texture,
-                descriptor::UniformBuffer, descriptor::UniformBufferArray, descriptor::StorageBuffer, descriptor::AccelerationStructure>;
+using Descriptor = std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::SampledTextureArray, descriptor::Texture,
+                                descriptor::UniformBuffer, descriptor::UniformBufferRange, descriptor::UniformBufferArray,
+                                descriptor::StorageBuffer, descriptor::AccelerationStructure>;
 
 struct DescriptorAndStage
 {

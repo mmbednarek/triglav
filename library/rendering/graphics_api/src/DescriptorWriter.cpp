@@ -70,6 +70,17 @@ void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buff
    writeDescriptorSet.pBufferInfo = bufferInfo;
 }
 
+void DescriptorWriter::set_raw_uniform_buffer(const u32 binding, const Buffer& buffer, const u32 offset, const u32 size)
+{
+   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+
+   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
+   bufferInfo->offset = offset;
+   bufferInfo->range = size;
+   bufferInfo->buffer = buffer.vulkan_buffer();
+   writeDescriptorSet.pBufferInfo = bufferInfo;
+}
+
 void DescriptorWriter::set_uniform_buffer_array(const uint32_t binding, const std::span<const Buffer*> buffers)
 {
    auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);

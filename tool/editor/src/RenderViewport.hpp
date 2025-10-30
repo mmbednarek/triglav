@@ -18,13 +18,24 @@ class RenderViewport
 
    [[nodiscard]] Vector4 dimensions() const;
 
-   void set_selection_matrix(const Matrix4x4& mat);
+   void set_selection_matrix(u32 index, const Matrix4x4& mat);
 
  private:
    LevelEditor& m_levelEditor;
    Vector4 m_dimensions{};
-   Matrix4x4 m_selectionMatrix{0};
-   u32 m_selectionMatrixUpdates = 0;
+   u32 m_updates = 0;
+   std::array<Matrix4x4, 4> m_matrices{
+      Matrix4x4{0},
+      Matrix4x4{0},
+      Matrix4x4{0},
+      Matrix4x4{0},
+   };
+   std::array<Vector4, 4> m_colors{
+      Vector4(1, 0.5, 0, 1),
+      Vector4(1, 0.09, 0.09, 1),
+      Vector4(0.09, 1, 0.25, 1),
+      Vector4(0.01, 0.25, 1, 1),
+   };
 };
 
 }// namespace triglav::editor

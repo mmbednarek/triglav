@@ -116,6 +116,9 @@ void LevelViewport::tick(const float delta_time)
 
    if (should_update_sm) {
       m_levelEditor.scene().update_shadow_maps();
+      if (m_selectedObject != nullptr) {
+         this->update_viewport_helpers(m_selectedObject);
+      }
    }
 }
 
@@ -138,6 +141,39 @@ void LevelViewport::on_key_released(const ui_core::Event& /*event*/, const ui_co
    }
 }
 
+void LevelViewport::update_viewport_helpers(const renderer::SceneObject* object) const
+{
+   const auto& mesh = m_rootWindow.resource_manager().get(object->model);
+   auto obj_distance = glm::length(object->transform.translation - m_levelEditor.scene().camera().position());
+
+   const Transform3D select_transform{
+      .rotation = {1, 0, 0, 0},
+      .scale = object->transform.scale * mesh.boundingBox.scale(),
+      .translation = object->transform.translation + mesh.boundingBox.min * object->transform.scale,
+   };
+   m_renderViewport->set_selection_matrix(0, select_transform.to_matrix());
+
+   const Transform3D transform_x_axis{
+      .rotation = glm::quat{Vector3{0.5 * std::numbers::pi, 0, 0}},
+      .scale = Vector3{0.025f} * obj_distance,
+      .translation = object->transform.translation,
+   };
+   m_renderViewport->set_selection_matrix(1, transform_x_axis.to_matrix());
+
+   const Transform3D transform_y_axis{
+      .rotation = glm::quat{Vector3{0.5 * std::numbers::pi, 0, 0.5 * std::numbers::pi}},
+      .scale = Vector3{0.025f} * obj_distance,
+      .translation = object->transform.translation,
+   };
+   m_renderViewport->set_selection_matrix(2, transform_y_axis.to_matrix());
+
+   const Transform3D transform_z_axis{
+      .rotation = glm::quat{Vector3{std::numbers::pi, 0, 0}},
+      .scale = Vector3{0.025f} * obj_distance,
+      .translation = object->transform.translation,
+   };
+   m_renderViewport->set_selection_matrix(3, transform_z_axis.to_matrix());
+}
 void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse)
 {
    if (mouse.button == desktop::MouseButton::Right) {
@@ -150,16 +186,8 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       const auto ray = m_levelEditor.scene().camera().viewport_ray(viewport_coord);
       const auto hit = m_levelEditor.scene().trace_ray(ray);
       if (hit.object != nullptr) {
-         const auto& mesh = m_rootWindow.resource_manager().get(hit.object->model);
-
-         spdlog::info("Hit! Distance: {}", hit.distance);
-
-         const Transform3D transform{
-            .rotation = {1, 0, 0, 0},
-            .scale = hit.object->transform.scale * mesh.boundingBox.scale(),
-            .translation = hit.object->transform.translation + mesh.boundingBox.min * hit.object->transform.scale,
-         };
-         m_renderViewport->set_selection_matrix(transform.to_matrix());
+         m_selectedObject = hit.object;
+         update_viewport_helpers(m_selectedObject);
       }
    }
 }

@@ -38,9 +38,10 @@ TEST(BVHTest, BasicTree)
    tree.build(objects);
 
    const auto hit = tree.traverse({.origin = {-5, -3, -3}, .direction = {1, 0, 0}, .distance = 10.0f});
-   EXPECT_NE(hit, nullptr);
-   EXPECT_EQ(hit->label, "B");
+   EXPECT_NE(hit.payload, nullptr);
+   EXPECT_EQ(hit.payload->label, "B");
 
    const auto miss = tree.traverse({.origin = {-5, 0, 0}, .direction = {-1, 0, 0}, .distance = 10.0f});
-   EXPECT_EQ(miss, nullptr);
+   EXPECT_EQ(miss.distance, INFINITY);
+   EXPECT_EQ(miss.payload, nullptr);
 }
