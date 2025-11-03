@@ -108,4 +108,11 @@ struct Transform3D
    [[nodiscard]] Matrix4x4 to_matrix() const;
 };
 
+[[nodiscard]] constexpr MemorySize align_size(const MemorySize size, const MemorySize alignment) {
+   const auto offset = size % alignment;
+   if (offset == 0)
+      return size;
+   return size - offset + alignment;
+}
+
 }// namespace triglav

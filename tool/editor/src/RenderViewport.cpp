@@ -1,6 +1,9 @@
 #include "RenderViewport.hpp"
 
 #include "ToolMeshes.hpp"
+#include "RootWindow.hpp"
+
+#include "triglav/Ranges.hpp"
 
 namespace triglav::editor {
 
@@ -12,13 +15,14 @@ namespace {
 render_core::VertexLayout g_singleVertexLayout =
    render_core::VertexLayout(sizeof(Vector3)).add("position"_name, GAPI_FORMAT(RGB, Float32), 0);
 
-void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count,
+void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count, MemorySize color_stride, MemorySize matrix_stride,
                  const graphics_api::VertexTopology topology, bool enable_blending)
 {
    ctx.bind_vertex_shader("editor/object_selection.vshader"_rc);
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
-   ctx.bind_uniform_buffer(1, "render_viewport.matrices"_name, index * sizeof(Matrix4x4), sizeof(Matrix4x4));
+   ctx.bind_uniform_buffer(1, "render_viewport.colors"_name, static_cast<u32>(index * color_stride), sizeof(Vector4));
+   ctx.bind_uniform_buffer(2, "render_viewport.matrices"_name, static_cast<u32>(index * matrix_stride), sizeof(Matrix4x4));
 
    ctx.bind_vertex_layout(g_singleVertexLayout);
 
@@ -26,7 +30,6 @@ void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name
    ctx.bind_index_buffer(indices);
 
    ctx.bind_fragment_shader("editor/object_selection.fshader"_rc);
-   ctx.bind_uniform_buffer(2, "render_viewport.colors"_name, index * sizeof(Vector4), sizeof(Vector4));
    ctx.bind_samplable_texture(3, "gbuffer.depth"_name);
 
    ctx.set_vertex_topology(topology);
@@ -65,11 +68,15 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.arrow_vertices"_name, vertices_arrow.data(), vertices_arrow.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.arrow_indices"_name, indices_arrow.data(), indices_arrow.size() * sizeof(u32));
 
-   ctx.declare_staging_buffer("render_viewport.colors.staging"_name, sizeof(m_colors));
-   ctx.declare_buffer("render_viewport.colors"_name, sizeof(m_colors));
+   const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
 
-   ctx.declare_staging_buffer("render_viewport.matrices.staging"_name, sizeof(m_matrices));
-   ctx.declare_buffer("render_viewport.matrices"_name, sizeof(m_matrices));
+   const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
+   ctx.declare_staging_buffer("render_viewport.colors.staging"_name, color_align * m_colors.size());
+   ctx.declare_buffer("render_viewport.colors"_name, color_align * m_colors.size());
+
+   const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
+   ctx.declare_staging_buffer("render_viewport.matrices.staging"_name, matrix_align * m_matrices.size());
+   ctx.declare_buffer("render_viewport.matrices"_name, matrix_align * m_matrices.size());
 
    m_levelEditor.m_renderingJob.build_job(ctx);
 
@@ -80,15 +87,15 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 
    ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
 
-   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 1, indices_arrow.size(),
-               graphics_api::VertexTopology::TriangleList, false);
-   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 2, indices_arrow.size(),
-               graphics_api::VertexTopology::TriangleList, false);
-   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 3, indices_arrow.size(),
-               graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 1, static_cast<u32>(indices_arrow.size()),
+               color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 2, static_cast<u32>(indices_arrow.size()),
+               color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 3, static_cast<u32>(indices_arrow.size()),
+               color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
 
-   render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, 0, indices_box.size(),
-               graphics_api::VertexTopology::LineList, true);
+   render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, 0, static_cast<u32>(indices_box.size()),
+               color_align, matrix_align, graphics_api::VertexTopology::LineList, true);
 
    ctx.end_render_pass();
 
@@ -101,10 +108,20 @@ void RenderViewport::update(render_core::JobGraph& graph, const u32 frameIndex, 
    m_levelEditor.m_updateViewParamsJob.prepare_frame(graph, frameIndex, deltaTime);
 
    if (m_updates < render_core::FRAMES_IN_FLIGHT_COUNT) {
+	   const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
+	   const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
+	   const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
+
       const auto matrices_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.matrices.staging"_name, frameIndex).map_memory());
-      matrices_mapping.cast<decltype(m_matrices)>() = m_matrices;
+      for (const auto& [index, matrix] : Enumerate(m_matrices)) {
+         std::memcpy(static_cast<char*>(*matrices_mapping) + matrix_align * index, &m_matrices[index], sizeof(Matrix4x4));
+      }
+
       const auto colors_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.colors.staging"_name, frameIndex).map_memory());
-      colors_mapping.cast<decltype(m_colors)>() = m_colors;
+      for (const auto& [index, color] : Enumerate(m_colors)) {
+         std::memcpy(static_cast<char*>(*colors_mapping) + color_align * index, &m_colors[index], sizeof(Color));
+      }
+
       ++m_updates;
    }
 }

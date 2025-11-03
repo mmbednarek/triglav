@@ -49,7 +49,7 @@ class LevelViewport final : public ui_core::BaseWidget
    CamMovement m_camMovement{CamMovement::None};
    bool m_isMoving{false};
    Vector2 m_mouseMotion{};
-   const renderer::SceneObject* m_selectedObject;
+   const renderer::SceneObject* m_selectedObject{};
 
    TG_SINK(desktop::ISurface, OnMouseRelativeMove);
 };

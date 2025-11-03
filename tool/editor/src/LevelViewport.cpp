@@ -3,6 +3,7 @@
 #include "RootWindow.hpp"
 
 #include <spdlog/spdlog.h>
+#include <numeric>
 
 namespace triglav::editor {
 
@@ -154,21 +155,21 @@ void LevelViewport::update_viewport_helpers(const renderer::SceneObject* object)
    m_renderViewport->set_selection_matrix(0, select_transform.to_matrix());
 
    const Transform3D transform_x_axis{
-      .rotation = glm::quat{Vector3{0.5 * std::numbers::pi, 0, 0}},
+      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };
    m_renderViewport->set_selection_matrix(1, transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = glm::quat{Vector3{0.5 * std::numbers::pi, 0, 0.5 * std::numbers::pi}},
+      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };
    m_renderViewport->set_selection_matrix(2, transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = glm::quat{Vector3{std::numbers::pi, 0, 0}},
+      .rotation = glm::quat{Vector3{g_pi, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };

@@ -647,6 +647,22 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
    return std::move(*ktxTex);
 }
 
+const DeviceLimits& Device::limits() const
+{
+   static std::optional<DeviceLimits> limits;
+   if (limits.has_value()) {
+      return *limits;
+   }
+
+   limits.emplace(DeviceLimits{});
+
+   VkPhysicalDeviceProperties props;
+   vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
+
+   limits->min_uniform_buffer_alignment = props.limits.minUniformBufferOffsetAlignment;
+   return *limits;
+}
+
 MemorySize Device::min_storage_buffer_alignment() const
 {
    VkPhysicalDeviceProperties props;
