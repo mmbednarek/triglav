@@ -41,6 +41,10 @@ DECLARE_VLK_WRAPPED_OBJECT(Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(DebugUtilsMessengerEXT, Instance)
 #endif
 
+struct DeviceLimits {
+   MemorySize min_uniform_buffer_alignment{};
+};
+
 namespace vulkan {
 using PhysicalDevice = VkPhysicalDevice;
 }// namespace vulkan
@@ -90,6 +94,7 @@ class Device
    [[nodiscard]] SamplerCache& sampler_cache();
    [[nodiscard]] DeviceFeatureFlags enabled_features() const;
    [[nodiscard]] Result<ktx::Texture> export_ktx_texture(const Texture& texture);
+   [[nodiscard]] const DeviceLimits& limits() const;
 
    void await_all() const;
 
