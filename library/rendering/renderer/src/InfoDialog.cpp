@@ -81,7 +81,7 @@ class HideablePanel final : public ui_core::IWidget
        })),
        m_labelText(m_labelLayout.create_child<ui_core::TextBox>({
           .fontSize = 20,
-          .typeface = "segoeui/bold.typeface"_rc,
+          .typeface = "fonts/segoeui/bold.typeface"_rc,
           .content = state.label,
           .color = {1.0f, 1.0f, 0.4f, 1.0f},
           .verticalAlignment = ui_core::VerticalAlignment::Center,
@@ -200,7 +200,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
 
    m_title = &titleLayout.create_child<ui_core::TextBox>({
       .fontSize = 24,
-      .typeface = "cantarell/bold.typeface"_rc,
+      .typeface = "fonts/cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
       .horizontalAlignment = ui_core::HorizontalAlignment::Center,
@@ -241,7 +241,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
       for (const auto& [name, content] : group) {
          leftPanel.create_child<ui_core::TextBox>({
             .fontSize = 18,
-            .typeface = "segoeui.typeface"_rc,
+            .typeface = "fonts/segoeui/regular.typeface"_rc,
             .content = content,
             .color = {1.0f, 1.0f, 1.0f, 1.0f},
             .horizontalAlignment = ui_core::HorizontalAlignment::Right,
@@ -249,7 +249,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, 
 
          m_values[name] = &rightPanel.create_child<ui_core::TextBox>({
             .fontSize = 18,
-            .typeface = "segoeui.typeface"_rc,
+            .typeface = "fonts/segoeui/regular.typeface"_rc,
             .content = "none",
             .color = {1.0f, 1.0f, 0.4f, 1.0f},
             .horizontalAlignment = ui_core::HorizontalAlignment::Left,

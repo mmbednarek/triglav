@@ -41,7 +41,8 @@ DECLARE_VLK_WRAPPED_OBJECT(Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(DebugUtilsMessengerEXT, Instance)
 #endif
 
-struct DeviceLimits {
+struct DeviceLimits
+{
    MemorySize min_uniform_buffer_alignment{};
 };
 

@@ -49,7 +49,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
 
    triglav::ui_core::Text titleText{
       .content = "Triglav Render Demo",
-      .typefaceName = "cantarell/bold.typeface"_rc,
+      .typefaceName = "fonts/cantarell/bold.typeface"_rc,
       .fontSize = 36,
       .position = {64.0f, 80.0f},
       .color = {0.13f, 0.39f, 0.78f, 1.0f},
@@ -59,7 +59,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
 
    triglav::ui_core::Text descText{
       .content = "Loading Resources",
-      .typefaceName = "cantarell.typeface"_rc,
+      .typefaceName = "fonts/cantarell/regular.typeface"_rc,
       .fontSize = 24,
       .position = {64.0f, 160.0f},
       .color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),

@@ -31,4 +31,22 @@ Matrix4x4 Transform3D::to_matrix() const
    return glm::translate(glm::mat4(1.0f), this->translation) * glm::mat4_cast(this->rotation) * glm::scale(glm::mat4(1.0f), this->scale);
 }
 
+Vector3 find_closest_point_between_lines(const Vector3 origin_a, const Vector3 dir_a, const Vector3 origin_b, const Vector3 dir_b)
+{
+   const auto r = origin_b - origin_a;
+   const auto aa = glm::dot(dir_a, dir_a);
+   const auto ab = glm::dot(dir_a, dir_b);
+   const auto bb = glm::dot(dir_b, dir_b);
+
+   const auto ra = glm::dot(r, dir_a);
+   const auto rb = glm::dot(r, dir_b);
+
+   const auto t = rb * ab / bb - ra;
+   const auto s = ab * ab / bb - aa;
+   if (s == 0) {
+      return origin_a;
+   }
+   return origin_a + (t / s) * dir_a;
+}
+
 }// namespace triglav

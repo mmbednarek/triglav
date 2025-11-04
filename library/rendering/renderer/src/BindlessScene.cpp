@@ -27,6 +27,7 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_scene(scene),
     m_device(device),
     m_sceneObjectStage(device, STAGING_BUFFER_ELEM_COUNT),
+    m_transformStage(device, STAGING_BUFFER_ELEM_COUNT),
     m_sceneObjects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect),
     m_combinedVertexBuffer(device, VERTEX_BUFFER_SIZE),
     m_combinedIndexBuffer(device, INDEX_BUFFER_SIZE),
@@ -34,24 +35,35 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_materialPropsAlbedoTex(device, 10),
     m_materialPropsAlbedoNormalTex(device, 10),
     m_materialPropsAllTex(device, 10),
-    TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene)
+    TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene),
+    TG_CONNECT(scene, OnObjectChangedTransform, on_object_changed_transform)
 {
    TG_SET_DEBUG_NAME(m_sceneObjects.buffer(), "bindless_scene.scene_objects");
    TG_SET_DEBUG_NAME(m_sceneObjectStage.buffer(), "bindless_scene.scene_objects.staging");
+   TG_SET_DEBUG_NAME(m_transformStage.buffer(), "bindless_scene.object_transform.staging");
    TG_SET_DEBUG_NAME(m_countBuffer.buffer(), "bindless_scene.count_buffer");
    TG_SET_DEBUG_NAME(m_combinedIndexBuffer.buffer(), "bindless_scene.combined_index_buffer");
    TG_SET_DEBUG_NAME(m_combinedVertexBuffer.buffer(), "bindless_scene.combined_vertex_buffer");
 }
 
-void BindlessScene::on_object_added_to_scene(ObjectID object_id, const SceneObject& object)
+void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const SceneObject& object)
 {
    m_pendingObjects.emplace_back(object_id, object);
+   m_shouldWriteObjects = true;
+}
+
+void BindlessScene::on_object_changed_transform(const ObjectID object_id, const Transform3D& transform)
+{
+   m_pendingTransform.emplace_back(object_id, transform);
+   m_shouldWriteObjects = true;
 }
 
 void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
 {
-   if (m_pendingObjects.empty())
+   if (m_pendingObjects.empty() && m_pendingTransform.empty())
       return;
+
+   const auto initial_scene_object_count = m_writtenSceneObjectCount;
 
    {
       // TODO: Increase object buffer if necessary
@@ -79,17 +91,39 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
       }
    }
 
-   *m_countBuffer = static_cast<u32>(m_writtenSceneObjectCount);
+   {
+      assert(m_pendingTransform.size() < STAGING_BUFFER_ELEM_COUNT);
+      auto mapping{GAPI_CHECK(m_transformStage.buffer().map_memory())};
 
-   cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0,
-                       static_cast<u32>(m_writtenObjectCount * sizeof(BindlessSceneObject)),
-                       static_cast<u32>(m_pendingObjects.size() * sizeof(BindlessSceneObject)));
+      u32 stage_index = 0;
+      for (const auto& [object_id, transform] : m_pendingTransform) {
+         const auto dst_index = m_objectMapping.at(object_id);
+         const auto mat = transform.to_matrix();
+         mapping.write_offset(&mat, sizeof(Matrix4x4), stage_index * sizeof(Matrix4x4));
+         cmdList.copy_buffer(m_transformStage.buffer(), m_sceneObjects.buffer(), stage_index * sizeof(Matrix4x4),
+                             dst_index * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform), sizeof(Matrix4x4));
+         ++stage_index;
+      }
 
-   m_pendingObjects.clear();
+      m_pendingTransform.clear();
+   }
+
+   if (!m_pendingObjects.empty()) {
+      *m_countBuffer = static_cast<u32>(m_writtenSceneObjectCount);
+
+      cmdList.copy_buffer(m_sceneObjectStage.buffer(), m_sceneObjects.buffer(), 0,
+                          static_cast<u32>(initial_scene_object_count * sizeof(BindlessSceneObject)),
+                          static_cast<u32>(m_pendingObjects.size() * sizeof(BindlessSceneObject)));
+      m_pendingObjects.clear();
+   }
 }
 
-void BindlessScene::write_object_to_buffer()
+void BindlessScene::write_objects_to_buffer()
 {
+   if (!m_shouldWriteObjects)
+      return;
+   m_shouldWriteObjects = false;
+
    const auto copyObjectsCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
    GAPI_CHECK_STATUS(copyObjectsCmdList.begin());
 

@@ -49,3 +49,10 @@ TEST(MathTest, BasicCase)
       EXPECT_TRUE(vec3_equals(decodedTransform.translation, transform.translation));
    }
 }
+
+TEST(MathTest, ClosestPoint)
+{
+   const auto result =
+      triglav::find_closest_point_between_lines({0, 0, 0}, glm::normalize(Vector3{1, 1, 0}), {1, 0, 0}, glm::normalize(Vector3{-1, 1, 0}));
+   EXPECT_EQ(result, Vector3(0.5, 0.5, 0));
+}

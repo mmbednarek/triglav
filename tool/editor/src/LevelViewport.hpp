@@ -51,6 +51,9 @@ class LevelViewport final : public ui_core::BaseWidget
    bool m_isMoving{false};
    Vector2 m_mouseMotion{};
    const renderer::SceneObject* m_selectedObject{};
+   renderer::ObjectID m_selectedObjectID{};
+   std::optional<Axis> m_transformAxis;
+   Vector3 m_translationOffset{};
 
    geometry::BoundingBox m_arrow_x_bb{};
    geometry::BoundingBox m_arrow_y_bb{};

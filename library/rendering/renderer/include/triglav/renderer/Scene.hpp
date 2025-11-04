@@ -14,6 +14,8 @@
 
 namespace triglav::renderer {
 
+using ObjectID = u32;
+
 class ModelRenderer;
 class Renderer;
 
@@ -29,6 +31,7 @@ struct SceneObjectRef
 {
    SceneObject* object;
    geometry::BoundingBox bbox;
+   ObjectID id;
 
    [[nodiscard]] const geometry::BoundingBox& bounding_box() const
    {
@@ -39,10 +42,9 @@ struct SceneObjectRef
 struct RayHit
 {
    float distance;
+   ObjectID id;
    const SceneObject* object;
 };
-
-using ObjectID = u32;
 
 class Scene
 {

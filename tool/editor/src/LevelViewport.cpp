@@ -160,7 +160,7 @@ void LevelViewport::update_viewport_helpers(const renderer::SceneObject* object)
    m_renderViewport->set_selection_matrix(0, select_transform.to_matrix());
 
    const Transform3D transform_x_axis{
-      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0}},
+      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };
@@ -168,7 +168,7 @@ void LevelViewport::update_viewport_helpers(const renderer::SceneObject* object)
    m_arrow_x_bb = arrow_bb.transform(transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
+      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };
@@ -196,7 +196,25 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       const auto hit = m_levelEditor.scene().trace_ray(ray);
       if (hit.object != nullptr) {
          m_selectedObject = hit.object;
+         m_selectedObjectID = hit.id;
          update_viewport_helpers(m_selectedObject);
+      }
+
+      if (m_arrow_x_bb.intersect(ray)) {
+         m_transformAxis = Axis::X;
+      } else if (m_arrow_y_bb.intersect(ray)) {
+         m_transformAxis = Axis::Y;
+      } else if (m_arrow_z_bb.intersect(ray)) {
+         m_transformAxis = Axis::Z;
+      } else {
+         m_transformAxis.reset();
+      }
+
+      if (m_transformAxis.has_value()) {
+         const auto& transform = m_selectedObject->transform;
+         const auto closest =
+            find_closest_point_between_lines(transform.translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
+         m_translationOffset = transform.translation - closest;
       }
    }
 }
@@ -207,6 +225,7 @@ void LevelViewport::on_mouse_released(const ui_core::Event& /*event*/, const ui_
    m_camMovement = CamMovement::None;
    m_mouseMotion = {};
    m_rootWindow.surface().unlock_cursor();
+   m_transformAxis.reset();
 }
 
 void LevelViewport::on_mouse_moved(const ui_core::Event& event)
@@ -214,6 +233,16 @@ void LevelViewport::on_mouse_moved(const ui_core::Event& event)
    const auto normalized_pos = event.mousePosition / rect_size(m_dimensions);
    const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
    const auto ray = m_levelEditor.scene().camera().viewport_ray(viewport_coord);
+
+   if (m_transformAxis.has_value()) {
+      auto transform = m_selectedObject->transform;
+      const auto closest =
+         find_closest_point_between_lines(transform.translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
+      transform.translation = closest + m_translationOffset;
+      m_levelEditor.scene().set_transform(m_selectedObjectID, transform);
+      this->update_viewport_helpers(m_selectedObject);
+      return;
+   }
 
    if (m_arrow_x_bb.intersect(ray)) {
       m_renderViewport->set_color(1, COLOR_X_AXIS_HOVER);

@@ -82,7 +82,7 @@ Renderer::Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& sur
    m_infoDialog.add_to_viewport({}, {0, 0, resolution.width, resolution.height});
    m_scene.load_level("level/wierd_tube.level"_rc);
 
-   m_bindlessScene.write_object_to_buffer();
+   m_bindlessScene.write_objects_to_buffer();
 
    if (m_rayTracingScene.has_value()) {
       m_rayTracingScene->build_acceleration_structures();

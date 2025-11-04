@@ -73,9 +73,10 @@ class BindlessScene
    BindlessScene(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene);
 
    void on_object_added_to_scene(ObjectID object_id, const SceneObject& object);
+   void on_object_changed_transform(ObjectID object_id, const Transform3D& transform);
    void on_update_scene(const graphics_api::CommandList& cmdList);
 
-   void write_object_to_buffer();
+   void write_objects_to_buffer();
 
    [[nodiscard]] graphics_api::Buffer& combined_vertex_buffer();
    [[nodiscard]] graphics_api::Buffer& combined_index_buffer();
@@ -99,6 +100,7 @@ class BindlessScene
 
    // Caches and temporary buffers
    std::vector<std::pair<ObjectID, SceneObject>> m_pendingObjects;
+   std::vector<std::pair<ObjectID, Transform3D>> m_pendingTransform;
    std::map<ObjectID, MemorySize> m_objectMapping;
    std::map<MeshName, BindlessMeshInfo> m_models;
    std::map<TextureName, u32> m_textureIds;
@@ -106,9 +108,11 @@ class BindlessScene
    std::vector<render_core::TextureRef> m_sceneTextureRefs;
    std::optional<graphics_api::Pipeline> m_scenePipeline;
    bool m_shouldUpdatePSO{false};
+   bool m_shouldWriteObjects{false};
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_sceneObjectStage;
+   graphics_api::StagingArray<Matrix4x4> m_transformStage;
    graphics_api::StorageArray<BindlessSceneObject> m_sceneObjects;
    graphics_api::VertexArray<geometry::Vertex> m_combinedVertexBuffer;
    graphics_api::IndexArray m_combinedIndexBuffer;
@@ -119,7 +123,6 @@ class BindlessScene
 
    // Buffer write counts
    MemorySize m_writtenSceneObjectCount{0};
-   MemorySize m_writtenObjectCount{0};
    MemorySize m_writtenVertexCount{0};
    MemorySize m_writtenIndexCount{0};
    MemorySize m_writtenMaterialProperty_AlbedoTex{0};
@@ -128,6 +131,7 @@ class BindlessScene
 
    // Sinks
    TG_SINK(Scene, OnObjectAddedToScene);
+   TG_SINK(Scene, OnObjectChangedTransform);
 };
 
 }// namespace triglav::renderer
