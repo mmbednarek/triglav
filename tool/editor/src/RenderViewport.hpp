@@ -8,6 +8,20 @@
 
 namespace triglav::editor {
 
+constexpr auto ARROW_HEIGHT = 4.3f;
+constexpr auto TIP_HEIGHT = 1.3f;
+constexpr auto SHAFT_HEIGHT = ARROW_HEIGHT - TIP_HEIGHT;
+constexpr auto SHAFT_RADIUS = 0.08f;
+constexpr auto TIP_RADIUS = 0.25f;
+
+constexpr auto COLOR_X_AXIS = Color(1, 0.09, 0.09, 1);
+constexpr auto COLOR_Y_AXIS = Color(0.04, 1, 0.20, 1);
+constexpr auto COLOR_Z_AXIS = Color(0.01, 0.25, 1, 1);
+
+constexpr auto COLOR_X_AXIS_HOVER = Color(1, 0.39, 0.39, 1);
+constexpr auto COLOR_Y_AXIS_HOVER = Color(0.34, 1, 0.50, 1);
+constexpr auto COLOR_Z_AXIS_HOVER = Color(0.31, 0.55, 1, 1);
+
 class RenderViewport
 {
  public:
@@ -19,6 +33,7 @@ class RenderViewport
    [[nodiscard]] Vector4 dimensions() const;
 
    void set_selection_matrix(u32 index, const Matrix4x4& mat);
+   void set_color(u32 index, const Color& color);
 
  private:
    LevelEditor& m_levelEditor;
@@ -30,11 +45,11 @@ class RenderViewport
       Matrix4x4{0},
       Matrix4x4{0},
    };
-   std::array<Vector4, 4> m_colors{
-      Vector4(1, 0.5, 0, 1),
-      Vector4(1, 0.09, 0.09, 1),
-      Vector4(0.09, 1, 0.25, 1),
-      Vector4(0.01, 0.25, 1, 1),
+   std::array<Color, 4> m_colors{
+      Color(1, 0.5, 0, 1),
+      Color(1, 0.09, 0.09, 1),
+      Color(0.09, 1, 0.25, 1),
+      Color(0.01, 0.25, 1, 1),
    };
 };
 

@@ -72,7 +72,7 @@ class BindlessScene
 
    BindlessScene(graphics_api::Device& device, resource::ResourceManager& resourceManager, Scene& scene);
 
-   void on_object_added_to_scene(const SceneObject& object);
+   void on_object_added_to_scene(ObjectID object_id, const SceneObject& object);
    void on_update_scene(const graphics_api::CommandList& cmdList);
 
    void write_object_to_buffer();
@@ -98,7 +98,8 @@ class BindlessScene
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers
-   std::vector<SceneObject> m_pendingObjects;
+   std::vector<std::pair<ObjectID, SceneObject>> m_pendingObjects;
+   std::map<ObjectID, MemorySize> m_objectMapping;
    std::map<MeshName, BindlessMeshInfo> m_models;
    std::map<TextureName, u32> m_textureIds;
    std::vector<const graphics_api::Texture*> m_sceneTextures;

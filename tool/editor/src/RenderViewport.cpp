@@ -1,7 +1,7 @@
 #include "RenderViewport.hpp"
 
-#include "ToolMeshes.hpp"
 #include "RootWindow.hpp"
+#include "ToolMeshes.hpp"
 
 #include "triglav/Ranges.hpp"
 
@@ -15,8 +15,8 @@ namespace {
 render_core::VertexLayout g_singleVertexLayout =
    render_core::VertexLayout(sizeof(Vector3)).add("position"_name, GAPI_FORMAT(RGB, Float32), 0);
 
-void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count, MemorySize color_stride, MemorySize matrix_stride,
-                 const graphics_api::VertexTopology topology, bool enable_blending)
+void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count,
+                 MemorySize color_stride, MemorySize matrix_stride, const graphics_api::VertexTopology topology, bool enable_blending)
 {
    ctx.bind_vertex_shader("editor/object_selection.vshader"_rc);
 
@@ -64,7 +64,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.box_vertices"_name, vertices_box.data(), vertices_box.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.box_indices"_name, indices_box.data(), indices_box.size() * sizeof(u32));
 
-   const auto [vertices_arrow, indices_arrow] = create_arrow_mesh<12>({0, 0, 0}, 0.08f, 3.0f, 0.25f, 1.3f);
+   const auto [vertices_arrow, indices_arrow] = create_arrow_mesh<12>({0, 0, 0}, SHAFT_RADIUS, SHAFT_HEIGHT, TIP_RADIUS, TIP_HEIGHT);
    ctx.init_buffer_raw("render_viewport.arrow_vertices"_name, vertices_arrow.data(), vertices_arrow.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.arrow_indices"_name, indices_arrow.data(), indices_arrow.size() * sizeof(u32));
 
@@ -108,9 +108,9 @@ void RenderViewport::update(render_core::JobGraph& graph, const u32 frameIndex, 
    m_levelEditor.m_updateViewParamsJob.prepare_frame(graph, frameIndex, deltaTime);
 
    if (m_updates < render_core::FRAMES_IN_FLIGHT_COUNT) {
-	   const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
-	   const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
-	   const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
+      const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
+      const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
+      const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
 
       const auto matrices_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.matrices.staging"_name, frameIndex).map_memory());
       for (const auto& [index, matrix] : Enumerate(m_matrices)) {
@@ -134,6 +134,12 @@ void RenderViewport::update(render_core::JobGraph& graph, const u32 frameIndex, 
 void RenderViewport::set_selection_matrix(const u32 index, const Matrix4x4& mat)
 {
    m_matrices[index] = mat;
+   m_updates = 0;
+}
+
+void RenderViewport::set_color(u32 index, const Color& color)
+{
+   m_colors[index] = color;
    m_updates = 0;
 }
 

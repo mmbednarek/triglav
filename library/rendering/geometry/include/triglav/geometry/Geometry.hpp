@@ -114,6 +114,40 @@ struct BoundingBox
       return this->intersect(ray).has_value();
    }
 
+   [[nodiscard]] BoundingBox transform(const Matrix4x4& mat) const
+   {
+      std::array<Vector4, 8> points{
+          Vector4{min.x, min.y, min.z, 1.0f},
+          Vector4{min.x, min.y, max.z, 1.0f},
+          Vector4{min.x, max.y, min.z, 1.0f},
+          Vector4{min.x, max.y, max.z, 1.0f},
+          Vector4{max.x, min.y, min.z, 1.0f},
+          Vector4{max.x, min.y, max.z, 1.0f},
+          Vector4{max.x, max.y, min.z, 1.0f},
+          Vector4{max.x, max.y, max.z, 1.0f},
+      };
+
+      Vector3 bb_min{INFINITY, INFINITY, INFINITY};
+      Vector3 bb_max{-INFINITY, -INFINITY, -INFINITY};
+      for (const auto& p : points) {
+         Vector4 r = mat * p;
+         r /= r.w;
+
+         bb_min = {
+             std::min(bb_min.x, r.x),
+             std::min(bb_min.y, r.y),
+             std::min(bb_min.z, r.z),
+         };
+         bb_max = {
+             std::max(bb_max.x, r.x),
+             std::max(bb_max.y, r.y),
+             std::max(bb_max.z, r.z),
+         };
+      }
+
+      return BoundingBox{bb_min, bb_max};
+   }
+
    [[nodiscard]] Vector3 scale() const
    {
       return max - min;
