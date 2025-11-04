@@ -34,11 +34,23 @@ void Scene::update(const graphics_api::Resolution& resolution)
    this->send_view_changed();
 }
 
-void Scene::add_object(SceneObject object)
+ObjectID Scene::add_object(SceneObject object)
 {
-   auto& emplacedObj = m_objects.emplace_back(object);
-   event_OnObjectAddedToScene.publish(emplacedObj);
+   const auto object_id = static_cast<ObjectID>(m_objects.size());
+
+   auto& emplacedObj = m_objects.emplace_back(std::move(object));
+   event_OnObjectAddedToScene.publish(object_id, emplacedObj);
    this->update_bvh();
+
+   return object_id;
+}
+
+void Scene::set_transform(const ObjectID object_id, const Transform3D& transform)
+{
+   m_objects[object_id].transform = transform;
+   this->update_bvh();
+
+   event_OnObjectChangedTransform.publish(object_id, transform);
 }
 
 void Scene::load_level(const LevelName name)

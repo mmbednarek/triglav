@@ -43,9 +43,9 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
    TG_SET_DEBUG_NAME(m_combinedVertexBuffer.buffer(), "bindless_scene.combined_vertex_buffer");
 }
 
-void BindlessScene::on_object_added_to_scene(const SceneObject& object)
+void BindlessScene::on_object_added_to_scene(ObjectID object_id, const SceneObject& object)
 {
-   m_pendingObjects.emplace_back(object);
+   m_pendingObjects.emplace_back(object_id, object);
 }
 
 void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
@@ -57,8 +57,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
       // TODO: Increase object buffer if necessary
       assert(m_pendingObjects.size() < STAGING_BUFFER_ELEM_COUNT);
       auto mapping{GAPI_CHECK(m_sceneObjectStage.buffer().map_memory())};
-      for (const auto& pendingObject : m_pendingObjects) {
-         auto& meshInfo = this->get_mesh_info(cmdList, pendingObject.model);
+      for (const auto& [object_id, pending_object] : m_pendingObjects) {
+         auto& meshInfo = this->get_mesh_info(cmdList, pending_object.model);
          // TODO: Add model if doesn't exists.
 
          BindlessSceneObject object;
@@ -70,10 +70,11 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
          object.boundingBoxMin = meshInfo.boundingBoxMin;
          object.boundingBoxMax = meshInfo.boundingBoxMax;
          object.materialID = meshInfo.materialID;
-         object.transform = pendingObject.model_matrix();
-         object.normalTransform = glm::transpose(glm::inverse(glm::mat3(pendingObject.model_matrix())));
+         object.transform = pending_object.model_matrix();
+         object.normalTransform = glm::transpose(glm::inverse(glm::mat3(pending_object.model_matrix())));
 
          mapping.write_offset(&object, sizeof(BindlessSceneObject), m_writtenSceneObjectCount * sizeof(BindlessSceneObject));
+         m_objectMapping[object_id] = m_writtenSceneObjectCount;
          ++m_writtenSceneObjectCount;
       }
    }

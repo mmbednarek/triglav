@@ -42,10 +42,13 @@ struct RayHit
    const SceneObject* object;
 };
 
+using ObjectID = u32;
+
 class Scene
 {
  public:
-   TG_EVENT(OnObjectAddedToScene, const SceneObject&)
+   TG_EVENT(OnObjectAddedToScene, ObjectID, const SceneObject&)
+   TG_EVENT(OnObjectChangedTransform, ObjectID, const Transform3D&)
    TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
@@ -54,7 +57,8 @@ class Scene
    explicit Scene(resource::ResourceManager& resourceManager);
 
    void update(const graphics_api::Resolution& resolution);
-   void add_object(SceneObject object);
+   ObjectID add_object(SceneObject object);
+   void set_transform(ObjectID object_id, const Transform3D& trasnform);
    void load_level(LevelName name);
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
