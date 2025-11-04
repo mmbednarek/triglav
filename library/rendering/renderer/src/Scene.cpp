@@ -106,7 +106,7 @@ float Scene::pitch() const
 void Scene::update_bvh()
 {
    std::vector<SceneObjectRef> objects{m_objects.size()};
-   std::ranges::transform(m_objects, objects.begin(), [this](SceneObject& object) {
+   std::ranges::transform(m_objects, objects.begin(), [this, index = 0u](SceneObject& object) mutable {
       Transform3D t(object.transform);
       t.rotation = Quaternion{1, 0, 0, 0};
       const auto mat = t.to_matrix();
@@ -122,6 +122,7 @@ void Scene::update_bvh()
                .min{new_min},
                .max{new_max},
             },
+         .id = index++,
       };
    });
    m_tree.build(objects);
@@ -158,8 +159,8 @@ RayHit Scene::trace_ray(const geometry::Ray& ray) const
 {
    const auto hit = this->bvh().traverse(ray);
    if (hit.payload == nullptr)
-      return {INFINITY, nullptr};
-   return {hit.distance, hit.payload->object};
+      return {INFINITY, ~0u, nullptr};
+   return {hit.distance, hit.payload->id, hit.payload->object};
 }
 
 void Scene::update_shadow_maps()

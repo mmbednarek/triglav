@@ -33,7 +33,36 @@ enum class Axis : u32
    W = 3
 };
 
-[[nodiscard]] constexpr float vector3_component(const Vector3 vec, const Axis axis)
+[[nodiscard]] constexpr Vector3 axis_forward_vec3(const Axis axis)
+{
+   switch (axis) {
+   case Axis::X:
+      return {1, 0, 0};
+   case Axis::Y:
+      return {0, 1, 0};
+   case Axis::Z:
+      return {0, 0, 01};
+   default:
+      return {0, 0, 0};
+   }
+}
+
+[[nodiscard]] constexpr float& vector3_component(Vector3& vec, const Axis axis)
+{
+   static float def_res = 0.0f;
+   switch (axis) {
+   case Axis::X:
+      return vec.x;
+   case Axis::Y:
+      return vec.y;
+   case Axis::Z:
+      return vec.z;
+   default:
+      return def_res;
+   }
+}
+
+[[nodiscard]] constexpr float vector3_component(const Vector3& vec, const Axis axis)
 {
    return std::bit_cast<std::array<float, 3>>(vec)[static_cast<u32>(axis)];
 }
@@ -108,11 +137,14 @@ struct Transform3D
    [[nodiscard]] Matrix4x4 to_matrix() const;
 };
 
-[[nodiscard]] constexpr MemorySize align_size(const MemorySize size, const MemorySize alignment) {
+[[nodiscard]] constexpr MemorySize align_size(const MemorySize size, const MemorySize alignment)
+{
    const auto offset = size % alignment;
    if (offset == 0)
       return size;
    return size - offset + alignment;
 }
+
+[[nodiscard]] Vector3 find_closest_point_between_lines(Vector3 origin_a, Vector3 dir_a, Vector3 origin_b, Vector3 dir_b);
 
 }// namespace triglav

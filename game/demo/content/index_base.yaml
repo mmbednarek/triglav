@@ -2,14 +2,18 @@
 version: 1
 resources:
   # Fonts
-  - name: "cantarell.typeface"
-    source: "fonts/cantarell.ttf"
-  - name: "cantarell/bold.typeface"
+  - name: "fonts/cantarell/regular.typeface"
+    source: "fonts/cantarell_regular.ttf"
+  - name: "fonts/cantarell/bold.typeface"
     source: "fonts/cantarell_bold.ttf"
-  - name: "lato/light.typeface"
+  - name: "fonts/lato/light.typeface"
     source: "fonts/lato_light.ttf"
-  - name: "lato/regular.typeface"
+  - name: "fonts/lato/regular.typeface"
     source: "fonts/lato_regular.ttf"
+  - name: "fonts/inter/regular.typeface"
+    source: "fonts/inter_regular.ttf"
+  - name: "fonts/inter/light.typeface"
+    source: "fonts/inter_light.ttf"
   # Rectangle shaders
   - name: "rectangle/insertion.cshader"
     source: "shader/ui/rectangle_insertion_cs.spv"

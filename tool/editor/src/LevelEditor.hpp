@@ -28,7 +28,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] renderer::Scene& scene();
-   void tick(float delta_time) const;
+   void tick(float delta_time);
 
  private:
    State m_state;

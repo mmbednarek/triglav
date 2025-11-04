@@ -114,7 +114,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow, *this);
 
    m_scene.load_level("demo.level"_rc);
-   m_bindlessScene.write_object_to_buffer();
+   m_bindlessScene.write_objects_to_buffer();
    m_scene.update_shadow_maps();
 
    m_renderingJob.emplace_stage<renderer::stage::GBufferStage>(m_state.rootWindow->device(), m_bindlessScene);
@@ -130,8 +130,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
    return m_scene;
 }
 
-void LevelEditor::tick(const float delta_time) const
+void LevelEditor::tick(const float delta_time)
 {
+   m_bindlessScene.write_objects_to_buffer();
    if (m_viewport != nullptr) {
       m_viewport->tick(delta_time);
    }
