@@ -1,6 +1,6 @@
 #include "RenderViewport.hpp"
 
-#include "RootWindow.hpp"
+#include "../RootWindow.hpp"
 #include "ToolMeshes.hpp"
 
 #include "triglav/Ranges.hpp"

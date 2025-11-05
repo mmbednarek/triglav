@@ -1,6 +1,6 @@
 #include "RootWindow.hpp"
 
-#include "RenderViewport.hpp"
+#include "level_editor/RenderViewport.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 
 #include <spdlog/spdlog.h>

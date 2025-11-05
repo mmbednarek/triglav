@@ -13,6 +13,18 @@ namespace triglav::editor {
 class LevelViewport;
 class RootWindow;
 
+class ILevelEditorTool
+{
+ public:
+   virtual ~ILevelEditorTool() = default;
+
+   virtual void on_mouse_moved(const ui_core::Event& event) = 0;
+   virtual void on_mouse_pressed(const ui_core::Event& event, desktop::MouseButton button) = 0;
+   virtual void on_mouse_released(const ui_core::Event& event, desktop::MouseButton button) = 0;
+
+ private:
+};
+
 class LevelEditor final : public ui_core::ProxyWidget
 {
    friend class RenderViewport;

@@ -1,7 +1,7 @@
 #include "LevelEditor.hpp"
 
 #include "LevelViewport.hpp"
-#include "RootWindow.hpp"
+#include "../RootWindow.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
