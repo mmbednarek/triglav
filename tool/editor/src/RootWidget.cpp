@@ -1,7 +1,7 @@
 #include "RootWidget.hpp"
 
 #include "Editor.hpp"
-#include "LevelEditor.hpp"
+#include "level_editor/LevelEditor.hpp"
 #include "ProjectExplorer.hpp"
 
 #include "triglav/desktop_ui/MenuBar.hpp"

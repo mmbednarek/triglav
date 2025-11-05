@@ -1,6 +1,6 @@
 #include "LevelViewport.hpp"
 
-#include "RootWindow.hpp"
+#include "../RootWindow.hpp"
 
 #include <numeric>
 #include <spdlog/spdlog.h>
@@ -193,13 +193,6 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
 
       const auto ray = m_levelEditor.scene().camera().viewport_ray(viewport_coord);
-      const auto hit = m_levelEditor.scene().trace_ray(ray);
-      if (hit.object != nullptr) {
-         m_selectedObject = hit.object;
-         m_selectedObjectID = hit.id;
-         update_viewport_helpers(m_selectedObject);
-      }
-
       if (m_arrow_x_bb.intersect(ray)) {
          m_transformAxis = Axis::X;
       } else if (m_arrow_y_bb.intersect(ray)) {
@@ -208,6 +201,13 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
          m_transformAxis = Axis::Z;
       } else {
          m_transformAxis.reset();
+
+         const auto hit = m_levelEditor.scene().trace_ray(ray);
+         if (hit.object != nullptr) {
+            m_selectedObject = hit.object;
+            m_selectedObjectID = hit.id;
+            update_viewport_helpers(m_selectedObject);
+         }
       }
 
       if (m_transformAxis.has_value()) {

@@ -100,8 +100,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
          const auto dst_index = m_objectMapping.at(object_id);
          const auto mat = transform.to_matrix();
          mapping.write_offset(&mat, sizeof(Matrix4x4), stage_index * sizeof(Matrix4x4));
-         cmdList.copy_buffer(m_transformStage.buffer(), m_sceneObjects.buffer(), stage_index * sizeof(Matrix4x4),
-                             dst_index * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform), sizeof(Matrix4x4));
+         cmdList.copy_buffer(m_transformStage.buffer(), m_sceneObjects.buffer(), static_cast<u32>(stage_index * sizeof(Matrix4x4)),
+                             static_cast<u32>(dst_index * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform)), sizeof(Matrix4x4));
          ++stage_index;
       }
 
