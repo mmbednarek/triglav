@@ -34,13 +34,14 @@ class LevelViewport final : public ui_core::BaseWidget
 
    void on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& kb);
    void on_key_released(const ui_core::Event& event, const ui_core::Event::Keyboard& kb);
-   void update_viewport_helpers(const renderer::SceneObject* object);
+   void update_view() const;
    void on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
    void on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
-   void on_mouse_moved(const ui_core::Event& event);
+   void on_mouse_moved(const ui_core::Event& event) const;
    void on_mouse_relative_move(Vector2 difference);
 
    [[nodiscard]] Vector4 dimensions() const;
+   [[nodiscard]] RenderViewport& render_viewport() const;
 
  private:
    Vector4 m_dimensions{};
@@ -50,14 +51,6 @@ class LevelViewport final : public ui_core::BaseWidget
    CamMovement m_camMovement{CamMovement::None};
    bool m_isMoving{false};
    Vector2 m_mouseMotion{};
-   const renderer::SceneObject* m_selectedObject{};
-   renderer::ObjectID m_selectedObjectID{};
-   std::optional<Axis> m_transformAxis;
-   Vector3 m_translationOffset{};
-
-   geometry::BoundingBox m_arrow_x_bb{};
-   geometry::BoundingBox m_arrow_y_bb{};
-   geometry::BoundingBox m_arrow_z_bb{};
 
    TG_SINK(desktop::ISurface, OnMouseRelativeMove);
 };

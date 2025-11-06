@@ -131,6 +131,7 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
    }
    builder.vertex_topology(state.vertexTopology);
    builder.depth_test_mode(state.depthTestMode);
+   builder.line_width(state.lineWidth);
 
    for (const auto pushConstant : state.pushConstants) {
       builder.push_constant(pushConstant.flags, pushConstant.size);

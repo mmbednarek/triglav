@@ -13,6 +13,11 @@ void RadioGroup::add_check_box(CheckBox* cb)
 
 void RadioGroup::set_active(const CheckBox* activeCb) const
 {
+   const auto it = std::ranges::find(m_checkBoxes, activeCb);
+   if (it != m_checkBoxes.end()) {
+      event_OnSelection.publish(it - m_checkBoxes.begin());
+   }
+
    for (CheckBox* checkBox : m_checkBoxes) {
       checkBox->set_state(checkBox == activeCb);
    }

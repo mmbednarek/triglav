@@ -1,5 +1,10 @@
 #pragma once
 
+#include "ILevelEditorTool.hpp"
+#include "RotationTool.hpp"
+#include "SelectionTool.hpp"
+#include "TranslationTool.hpp"
+
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/renderer/BindlessScene.hpp"
 #include "triglav/renderer/OcclusionCulling.hpp"
@@ -12,18 +17,6 @@ namespace triglav::editor {
 
 class LevelViewport;
 class RootWindow;
-
-class ILevelEditorTool
-{
- public:
-   virtual ~ILevelEditorTool() = default;
-
-   virtual void on_mouse_moved(const ui_core::Event& event) = 0;
-   virtual void on_mouse_pressed(const ui_core::Event& event, desktop::MouseButton button) = 0;
-   virtual void on_mouse_released(const ui_core::Event& event, desktop::MouseButton button) = 0;
-
- private:
-};
 
 class LevelEditor final : public ui_core::ProxyWidget
 {
@@ -41,6 +34,15 @@ class LevelEditor final : public ui_core::ProxyWidget
 
    [[nodiscard]] renderer::Scene& scene();
    void tick(float delta_time);
+   const renderer::SceneObject* selected_object() const;
+   renderer::ObjectID selected_object_id() const;
+   LevelViewport& viewport() const;
+   ILevelEditorTool& tool() const;
+   SelectionTool& selection_tool();
+   [[nodiscard]] RootWindow& root_window() const;
+   void on_selected_tool(u32 id);
+
+   void set_selected_object(renderer::ObjectID id);
 
  private:
    State m_state;
@@ -51,7 +53,16 @@ class LevelEditor final : public ui_core::ProxyWidget
    renderer::UpdateViewParamsJob m_updateViewParamsJob;
    renderer::OcclusionCulling m_occlusionCulling;
    renderer::RenderingJob m_renderingJob;
+   const renderer::SceneObject* m_selectedObject{};
+   renderer::ObjectID m_selectedObjectID{};
    LevelViewport* m_viewport;
+   SelectionTool m_selectionTool;
+   TranslationTool m_translationTool;
+   RotationTool m_rotationTool;
+
+   ILevelEditorTool* m_currentTool = nullptr;
+
+   TG_SINK(desktop_ui::RadioGroup, OnSelection);
 };
 
 }// namespace triglav::editor

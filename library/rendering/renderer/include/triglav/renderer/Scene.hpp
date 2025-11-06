@@ -70,6 +70,7 @@ class Scene
    [[nodiscard]] Camera& camera();
    [[nodiscard]] const OrthoCamera& shadow_map_camera(u32 index) const;
    [[nodiscard]] u32 directional_shadow_map_count() const;
+   const SceneObject& object(ObjectID id) const;
 
    [[nodiscard]] float yaw() const;
    [[nodiscard]] float pitch() const;

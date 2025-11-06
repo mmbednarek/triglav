@@ -118,6 +118,7 @@ PipelineHash GraphicPipelineState::hash() const
    result += 4276381 * static_cast<u32>(vertexTopology);
    result += 2723521 * static_cast<u32>(depthTestMode);
    result += 6378731 * static_cast<u32>(isBlendingEnabled);
+   result += 61075103 * static_cast<u32>(lineWidth * 10.0f);
 
    for (const auto [index, pushConstant] : Enumerate(this->pushConstants)) {
       result += PUSH_CONSTANT_PRIMES[index] * pushConstant.hash();

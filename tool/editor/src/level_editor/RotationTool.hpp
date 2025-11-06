@@ -6,10 +6,10 @@ namespace triglav::editor {
 
 class LevelEditor;
 
-class TranslationTool final : public ILevelEditorTool
+class RotationTool : public ILevelEditorTool
 {
  public:
-   explicit TranslationTool(LevelEditor& levelEditor);
+   explicit RotationTool(LevelEditor& levelEditor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;
@@ -21,9 +21,9 @@ class TranslationTool final : public ILevelEditorTool
    LevelEditor& m_levelEditor;
 
    std::optional<Axis> m_transformAxis;
-   geometry::BoundingBox m_arrow_x_bb{};
-   geometry::BoundingBox m_arrow_y_bb{};
-   geometry::BoundingBox m_arrow_z_bb{};
+   geometry::BoundingBox m_rotator_x_bb{};
+   geometry::BoundingBox m_rotator_y_bb{};
+   geometry::BoundingBox m_rotator_z_bb{};
 
    Vector3 m_translationOffset{};
 };

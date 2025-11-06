@@ -64,6 +64,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& begin_vertex_layout_raw(u32 strideSize);
    GraphicsPipelineBuilder& color_attachment(ColorFormat format);
    GraphicsPipelineBuilder& depth_attachment(ColorFormat format);
+   GraphicsPipelineBuilder& line_width(float lineWidth);
 
    [[nodiscard]] Result<Pipeline> build() const;
 
@@ -82,6 +83,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    VkCullModeFlags m_cullMode = VK_CULL_MODE_FRONT_BIT;
    DepthTestMode m_depthTestMode{DepthTestMode::Disabled};
    bool m_blendingEnabled{true};
+   float m_lineWidth{1.0f};
    std::vector<ColorFormat> m_colorAttachmentFormats;
    std::optional<ColorFormat> m_depthAttachmentFormat;
 

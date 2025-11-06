@@ -6,10 +6,10 @@ namespace triglav::editor {
 
 class LevelEditor;
 
-class TranslationTool final : public ILevelEditorTool
+class SelectionTool final : public ILevelEditorTool
 {
  public:
-   explicit TranslationTool(LevelEditor& levelEditor);
+   explicit SelectionTool(LevelEditor& levelEditor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;
@@ -19,13 +19,13 @@ class TranslationTool final : public ILevelEditorTool
 
  private:
    LevelEditor& m_levelEditor;
-
-   std::optional<Axis> m_transformAxis;
-   geometry::BoundingBox m_arrow_x_bb{};
-   geometry::BoundingBox m_arrow_y_bb{};
-   geometry::BoundingBox m_arrow_z_bb{};
-
-   Vector3 m_translationOffset{};
 };
 
 }// namespace triglav::editor
+// Created by ego on 6.11.2025.
+//
+
+#ifndef TRIGLAV_SELECTIONTOOL_HPP
+#define TRIGLAV_SELECTIONTOOL_HPP
+
+#endif// TRIGLAV_SELECTIONTOOL_HPP

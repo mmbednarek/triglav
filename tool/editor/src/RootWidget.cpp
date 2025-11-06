@@ -1,8 +1,8 @@
 #include "RootWidget.hpp"
 
 #include "Editor.hpp"
-#include "level_editor/LevelEditor.hpp"
 #include "ProjectExplorer.hpp"
+#include "level_editor/LevelEditor.hpp"
 
 #include "triglav/desktop_ui/MenuBar.hpp"
 #include "triglav/desktop_ui/PopupManager.hpp"

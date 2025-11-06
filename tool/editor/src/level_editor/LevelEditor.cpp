@@ -1,7 +1,7 @@
 #include "LevelEditor.hpp"
 
-#include "LevelViewport.hpp"
 #include "../RootWindow.hpp"
+#include "LevelViewport.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
@@ -39,7 +39,7 @@ renderer::Config get_default_config()
 
 }// namespace
 
-LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent) :
+LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
     ProxyWidget(context, parent),
     m_state(state),
     m_scene(context.resource_manager()),
@@ -47,7 +47,12 @@ LevelEditor::LevelEditor(ui_core::Context& context, State state, ui_core::IWidge
     m_config(get_default_config()),
     m_updateViewParamsJob(m_scene),
     m_occlusionCulling(m_updateViewParamsJob, m_bindlessScene),
-    m_renderingJob(m_config)
+    m_renderingJob(m_config),
+    m_selectionTool(*this),
+    m_translationTool(*this),
+    m_rotationTool(*this),
+    m_currentTool(&m_selectionTool),
+    TG_CONNECT(m_toolRadioGroup, OnSelection, on_selected_tool)
 {
    auto& layout = this->create_content<ui_core::VerticalLayout>({});
    auto& toolbar = layout.create_child<ui_core::RectBox>({
@@ -136,6 +141,62 @@ void LevelEditor::tick(const float delta_time)
    if (m_viewport != nullptr) {
       m_viewport->tick(delta_time);
    }
+}
+
+const renderer::SceneObject* LevelEditor::selected_object() const
+{
+   return m_selectedObject;
+}
+
+renderer::ObjectID LevelEditor::selected_object_id() const
+{
+   return m_selectedObjectID;
+}
+
+LevelViewport& LevelEditor::viewport() const
+{
+   assert(m_viewport != nullptr);
+   return *m_viewport;
+}
+
+ILevelEditorTool& LevelEditor::tool() const
+{
+   return *m_currentTool;
+}
+
+SelectionTool& LevelEditor::selection_tool()
+{
+   return m_selectionTool;
+}
+
+RootWindow& LevelEditor::root_window() const
+{
+   return *m_state.rootWindow;
+}
+
+void LevelEditor::on_selected_tool(const u32 id)
+{
+   m_currentTool->on_left_tool();
+   switch (id) {
+   case 0:
+      m_currentTool = &m_selectionTool;
+      break;
+   case 1:
+      m_currentTool = &m_translationTool;
+      break;
+   case 2:
+      m_currentTool = &m_rotationTool;
+      break;
+   default:
+      break;
+   }
+   m_viewport->update_view();
+}
+
+void LevelEditor::set_selected_object(const renderer::ObjectID id)
+{
+   m_selectedObject = &scene().object(id);
+   m_selectedObjectID = id;
 }
 
 }// namespace triglav::editor

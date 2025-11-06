@@ -12,6 +12,10 @@ class CheckBox;
 class RadioGroup
 {
  public:
+   using Self = RadioGroup;
+
+   TG_EVENT(OnSelection, u32)
+
    void add_check_box(CheckBox* cb);
    void set_active(const CheckBox* activeCb) const;
 
