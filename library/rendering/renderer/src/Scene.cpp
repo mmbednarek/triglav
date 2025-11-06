@@ -93,6 +93,11 @@ u32 Scene::directional_shadow_map_count() const
    return static_cast<u32>(m_directionalShadowMapCameras.size());
 }
 
+const SceneObject& Scene::object(const ObjectID id) const
+{
+   return m_objects[id];
+}
+
 float Scene::yaw() const
 {
    return m_yaw;

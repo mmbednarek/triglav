@@ -656,6 +656,11 @@ void BuildContext::set_viewport(const Vector4 dimensions, const float minDepth, 
    this->add_command<detail::cmd::SetViewport>(dimensions, minDepth, maxDepth);
 }
 
+void BuildContext::set_line_width(const float width)
+{
+   m_graphicPipelineState.lineWidth = width;
+}
+
 void BuildContext::draw_primitives(const u32 vertexCount, const u32 vertexOffset, u32 instanceCount, u32 instanceOffset)
 {
    this->handle_pending_graphic_state();

@@ -61,7 +61,6 @@ std::map<Name, std::string_view> KnownNames{
    {"file.recent_files.b"_name, "file.recent_files.b"sv},
    {"file.recent_files.c"_name, "file.recent_files.c"sv},
    {"file.save"_name, "file.save"sv},
-   {"fonts/cantarell"_name, "fonts/cantarell"sv},
    {"fonts/cantarell/bold"_name, "fonts/cantarell/bold"sv},
    {"fonts/cantarell/regular"_name, "fonts/cantarell/regular"sv},
    {"fonts/inter/light"_name, "fonts/inter/light"sv},

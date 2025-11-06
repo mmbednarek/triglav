@@ -68,6 +68,10 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.arrow_vertices"_name, vertices_arrow.data(), vertices_arrow.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.arrow_indices"_name, indices_arrow.data(), indices_arrow.size() * sizeof(u32));
 
+   const auto [vertices_ring, indices_ring] = create_ring_mesh<32>(6.0f);
+   ctx.init_buffer_raw("render_viewport.ring_vertices"_name, vertices_ring.data(), vertices_ring.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.ring_indices"_name, indices_ring.data(), indices_ring.size() * sizeof(u32));
+
    const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
 
    const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
@@ -87,15 +91,26 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 
    ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
 
-   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 1, static_cast<u32>(indices_arrow.size()),
-               color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
-   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 2, static_cast<u32>(indices_arrow.size()),
-               color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
-   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, 3, static_cast<u32>(indices_arrow.size()),
-               color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, OVERLAY_ARROW_X,
+               static_cast<u32>(indices_arrow.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, OVERLAY_ARROW_Y,
+               static_cast<u32>(indices_arrow.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, OVERLAY_ARROW_Z,
+               static_cast<u32>(indices_arrow.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
 
-   render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, 0, static_cast<u32>(indices_box.size()),
-               color_align, matrix_align, graphics_api::VertexTopology::LineList, true);
+   ctx.set_line_width(5.0f);
+
+   render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_X,
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, false);
+   render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_Y,
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, false);
+   render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_Z,
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, false);
+
+   ctx.set_line_width(2.0f);
+
+   render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, OVERLAY_SELECTION_BOX,
+               static_cast<u32>(indices_box.size()), color_align, matrix_align, graphics_api::VertexTopology::LineList, true);
 
    ctx.end_render_pass();
 

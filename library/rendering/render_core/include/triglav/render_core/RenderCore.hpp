@@ -87,6 +87,7 @@ struct GraphicPipelineState
    graphics_api::VertexTopology vertexTopology{graphics_api::VertexTopology::TriangleList};
    graphics_api::DepthTestMode depthTestMode{graphics_api::DepthTestMode::Enabled};
    std::vector<PushConstantDesc> pushConstants;
+   float lineWidth{1.0f};
    bool isBlendingEnabled{true};
 
    [[nodiscard]] PipelineHash hash() const;

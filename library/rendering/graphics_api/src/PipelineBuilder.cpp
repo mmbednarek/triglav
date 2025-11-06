@@ -306,6 +306,12 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_attachment(ColorFormat f
    return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::line_width(const float lineWidth)
+{
+   m_lineWidth = lineWidth;
+   return *this;
+}
+
 constexpr std::array g_dynamicStates{
    VK_DYNAMIC_STATE_VIEWPORT,
    VK_DYNAMIC_STATE_SCISSOR,
@@ -356,7 +362,7 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    rasterizationStateInfo.depthClampEnable = VK_FALSE;
    rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
    rasterizationStateInfo.polygonMode = m_polygonMode;
-   rasterizationStateInfo.lineWidth = 2.0f;
+   rasterizationStateInfo.lineWidth = m_lineWidth;
    rasterizationStateInfo.cullMode = m_cullMode;
    rasterizationStateInfo.frontFace = m_frontFace;
    rasterizationStateInfo.depthBiasEnable = VK_FALSE;

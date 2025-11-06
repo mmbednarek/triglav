@@ -62,4 +62,19 @@ auto create_arrow_mesh(const Vector3 origin, const float shaft_radius, const flo
    return std::make_pair(vertices, indices);
 }
 
+template<u32 CSegmentCount>
+auto create_ring_mesh(const float radius)
+{
+   std::array<Vector3, CSegmentCount> vertices;
+   std::array<u32, CSegmentCount + 1> indices;
+   indices[CSegmentCount] = 0;
+   for (u32 i = 0; i < CSegmentCount; ++i) {
+      const float angle = i * (2 * g_pi / CSegmentCount);
+      vertices[i] = Vector3(radius * cos(angle), radius * sin(angle), 0);
+      indices[i] = i;
+   }
+   return std::make_pair(vertices, indices);
+}
+
+
 }// namespace triglav::editor

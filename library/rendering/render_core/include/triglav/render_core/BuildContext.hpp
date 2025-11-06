@@ -122,6 +122,7 @@ class BuildContext
    void set_depth_test_mode(graphics_api::DepthTestMode mode);
    void set_is_blending_enabled(bool enabled);
    void set_viewport(Vector4 dimensions, float minDepth, float maxDepth);
+   void set_line_width(float width);
 
    void draw_primitives(u32 vertexCount, u32 vertexOffset, u32 instanceCount = 1, u32 instanceOffset = 0);
    void draw_indexed_primitives(u32 indexCount, u32 indexOffset, u32 vertexOffset);
