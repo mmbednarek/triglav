@@ -128,7 +128,7 @@ constexpr auto g_pi = 3.14159265358979323846f;
 
 struct Transform3D
 {
-   Quaternion rotation;
+   Vector3 rotation;
    Vector3 scale;
    Vector3 translation;
 
@@ -146,5 +146,7 @@ struct Transform3D
 }
 
 [[nodiscard]] Vector3 find_closest_point_between_lines(Vector3 origin_a, Vector3 dir_a, Vector3 origin_b, Vector3 dir_b);
+[[nodiscard]] Vector3 find_closest_point_on_line(Vector3 origin, Vector3 dir, Vector3 point);
+[[nodiscard]] Vector3 find_point_on_aa_surface(Vector3 origin, Vector3 dir, Axis axis_surface, float surface);
 
 }// namespace triglav

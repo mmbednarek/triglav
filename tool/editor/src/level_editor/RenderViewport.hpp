@@ -13,6 +13,8 @@ constexpr auto TIP_HEIGHT = 1.3f;
 constexpr auto SHAFT_HEIGHT = ARROW_HEIGHT - TIP_HEIGHT;
 constexpr auto SHAFT_RADIUS = 0.08f;
 constexpr auto TIP_RADIUS = 0.25f;
+constexpr auto ROTATOR_RADIUS = 4.0f;
+constexpr auto ROTATOR_WIDTH = 0.5f;
 
 constexpr auto COLOR_X_AXIS = Color(1, 0.09, 0.09, 1);
 constexpr auto COLOR_Y_AXIS = Color(0.04, 1, 0.20, 1);

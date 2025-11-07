@@ -56,3 +56,9 @@ TEST(MathTest, ClosestPoint)
       triglav::find_closest_point_between_lines({0, 0, 0}, glm::normalize(Vector3{1, 1, 0}), {1, 0, 0}, glm::normalize(Vector3{-1, 1, 0}));
    EXPECT_EQ(result, Vector3(0.5, 0.5, 0));
 }
+
+TEST(MathTest, ClosestPointToLine)
+{
+   const auto result = triglav::find_closest_point_on_line({0, 0, 0}, glm::normalize(Vector3{1, 1, 0}), Vector3{1, 2, 0});
+   EXPECT_TRUE(glm::dot(result - Vector3(1.5, 1.5, 0), Vector3{1, 1, 1}) < 0.001f);
+}
