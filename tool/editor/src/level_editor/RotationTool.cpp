@@ -9,6 +9,27 @@
 
 namespace triglav::editor {
 
+namespace {
+
+float angle_from_vector(const Vector3 vec, const Axis rotation_axis)
+{
+   switch (rotation_axis) {
+   case Axis::X:
+      return std::atan2(vec.z, vec.y);
+      break;
+   case Axis::Y:
+      return std::atan2(vec.x, vec.z);
+      break;
+   case Axis::Z:
+      return std::atan2(vec.y, vec.x);
+      break;
+   default:
+      return 0.0f;
+   }
+}
+
+}// namespace
+
 RotationTool::RotationTool(LevelEditor& levelEditor) :
     m_levelEditor(levelEditor)
 {
@@ -21,29 +42,14 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
 
    const auto* object = m_levelEditor.selected_object();
    const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   auto centroid = mesh.boundingBox.centroid();
-   auto translation = object->transform.translation + centroid * object->transform.scale;
+   const auto centroid = mesh.boundingBox.centroid();
+   const auto translation = object->transform.translation + centroid * object->transform.scale;
 
-   auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(translation, *m_rotationAxis));
+   const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(translation, *m_rotationAxis));
    const auto difference = normalize(point - translation);
 
-   auto euler = object->transform.rotation;
-
-   switch (*m_rotationAxis) {
-   case Axis::X:
-      m_oldAngle = euler.x;
-      m_baseAngle = std::atan2(difference.z, difference.y);
-      break;
-   case Axis::Y:
-      m_oldAngle = euler.y;
-      m_baseAngle = std::atan2(difference.z, difference.x);
-      break;
-   case Axis::Z:
-      m_oldAngle = euler.z;
-      m_baseAngle = std::atan2(difference.y, difference.x);
-      break;
-   }
-
+   m_startingRotation = object->transform.rotation;
+   m_baseAngle = angle_from_vector(difference, *m_rotationAxis);
    m_isBeingUsed = true;
 
    return true;
@@ -64,26 +70,16 @@ void RotationTool::on_mouse_moved(Vector2 position)
 
       auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(translation, *m_rotationAxis));
       const auto difference = normalize(point - translation);
-
-      float angle{};
-      switch (*m_rotationAxis) {
-      case Axis::X:
-         angle = std::atan2(difference.z, difference.y);
-         break;
-      case Axis::Y:
-         angle = std::atan2(difference.z, difference.x);
-         break;
-      case Axis::Z:
-         angle = std::atan2(difference.y, difference.x);
-         break;
-      }
-
+      const float angle = angle_from_vector(difference, *m_rotationAxis);
       const float angle_diff = angle - m_baseAngle;
 
       auto transform = m_levelEditor.selected_object()->transform;
-      vector3_component(transform.rotation, *m_rotationAxis) = m_oldAngle + angle_diff;
-      spdlog::info("Euler components {} {} {}", transform.rotation.x, transform.rotation.y, transform.rotation.z);
+      transform.rotation = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotationAxis)) * m_startingRotation;
       m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
+
+      auto euler = glm::eulerAngles(transform.rotation);
+      spdlog::info("Euler components {} {} {}", euler.x, euler.y, euler.z);
+
       return;
    }
 
@@ -130,8 +126,12 @@ void RotationTool::on_mouse_moved(Vector2 position)
       case Axis::Z:
          m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ROTATOR_Z, COLOR_Z_AXIS_HOVER);
          break;
+      default:
+         break;
       }
       m_rotationAxis = axis;
+   } else {
+      m_rotationAxis.reset();
    }
 }
 
@@ -154,7 +154,7 @@ void RotationTool::on_view_updated()
    const auto obj_distance = glm::length(object->transform.translation - m_levelEditor.scene().camera().position());
 
    const Transform3D transform_x_axis{
-      .rotation = Vector3{0.5 * g_pi, 0.5 * g_pi, 0},
+      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -162,7 +162,7 @@ void RotationTool::on_view_updated()
    m_rotator_x_bb = rotator_bb.transform(transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = Vector3{0.5 * g_pi, 0, 0},
+      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -170,7 +170,7 @@ void RotationTool::on_view_updated()
    m_rotator_y_bb = rotator_bb.transform(transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = Vector3{0, 0, 0},
+      .rotation = Quaternion{Vector3{0, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -181,6 +181,7 @@ void RotationTool::on_view_updated()
 void RotationTool::on_use_end()
 {
    m_isBeingUsed = false;
+   m_rotationAxis.reset();
 }
 
 void RotationTool::on_left_tool()

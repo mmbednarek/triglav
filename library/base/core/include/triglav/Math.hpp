@@ -128,7 +128,7 @@ constexpr auto g_pi = 3.14159265358979323846f;
 
 struct Transform3D
 {
-   Vector3 rotation;
+   Quaternion rotation;
    Vector3 scale;
    Vector3 translation;
 

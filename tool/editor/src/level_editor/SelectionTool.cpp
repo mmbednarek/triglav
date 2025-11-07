@@ -29,7 +29,7 @@ void SelectionTool::on_view_updated()
 
    const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
    const Transform3D select_transform{
-      .rotation = {0, 0, 0},
+      .rotation = {1, 0, 0, 0},
       .scale = object->transform.scale * mesh.boundingBox.scale(),
       .translation = object->transform.translation + mesh.boundingBox.min * object->transform.scale,
    };
