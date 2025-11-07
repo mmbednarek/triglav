@@ -38,7 +38,8 @@ void serialize_transform(ryml::NodeRef& node, const Transform3D& transform)
 
    auto rotationNode = node["rotation"];
    rotationNode |= ryml::MAP;
-   serialize_vector4(rotationNode, {transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w});
+   glm::quat rotation{transform.rotation};
+   serialize_vector4(rotationNode, {rotation.x, rotation.y, rotation.z, rotation.w});
 
    auto scaleNode = node["scale"];
    scaleNode |= ryml::MAP;

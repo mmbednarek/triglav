@@ -74,7 +74,7 @@ void TranslationTool::on_view_updated()
    const auto obj_distance = glm::length(object->transform.translation - m_levelEditor.scene().camera().position());
 
    const Transform3D transform_x_axis{
-      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
+      .rotation = Vector3{0.5 * g_pi, 0.5 * g_pi, 0},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };
@@ -82,7 +82,7 @@ void TranslationTool::on_view_updated()
    m_arrow_x_bb = arrow_bb.transform(transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = glm::quat{Vector3{0.5 * g_pi, 0, 0}},
+      .rotation = Vector3{0.5 * g_pi, 0, 0},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };
@@ -90,7 +90,7 @@ void TranslationTool::on_view_updated()
    m_arrow_y_bb = arrow_bb.transform(transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = glm::quat{Vector3{g_pi, 0, 0}},
+      .rotation = Vector3{g_pi, 0, 0},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = object->transform.translation,
    };

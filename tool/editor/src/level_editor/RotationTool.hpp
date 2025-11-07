@@ -20,10 +20,13 @@ class RotationTool : public ILevelEditorTool
  private:
    LevelEditor& m_levelEditor;
 
-   std::optional<Axis> m_transformAxis;
+   std::optional<Axis> m_rotationAxis;
    geometry::BoundingBox m_rotator_x_bb{};
    geometry::BoundingBox m_rotator_y_bb{};
    geometry::BoundingBox m_rotator_z_bb{};
+   float m_baseAngle{};
+   float m_oldAngle{};
+   bool m_isBeingUsed{false};
 
    Vector3 m_translationOffset{};
 };

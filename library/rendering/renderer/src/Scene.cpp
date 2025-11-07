@@ -113,7 +113,7 @@ void Scene::update_bvh()
    std::vector<SceneObjectRef> objects{m_objects.size()};
    std::ranges::transform(m_objects, objects.begin(), [this, index = 0u](SceneObject& object) mutable {
       Transform3D t(object.transform);
-      t.rotation = Quaternion{1, 0, 0, 0};
+      t.rotation = {0, 0, 0};
       const auto mat = t.to_matrix();
 
       const auto& mesh = m_resourceManager.get(object.model);

@@ -68,7 +68,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.arrow_vertices"_name, vertices_arrow.data(), vertices_arrow.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.arrow_indices"_name, indices_arrow.data(), indices_arrow.size() * sizeof(u32));
 
-   const auto [vertices_ring, indices_ring] = create_ring_mesh<32>(6.0f);
+   const auto [vertices_ring, indices_ring] = create_ring_mesh<32>(ROTATOR_RADIUS);
    ctx.init_buffer_raw("render_viewport.ring_vertices"_name, vertices_ring.data(), vertices_ring.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.ring_indices"_name, indices_ring.data(), indices_ring.size() * sizeof(u32));
 
