@@ -54,10 +54,9 @@ Transform3D parse_transformation(const ryml::ConstNodeRef node)
    const auto scale = node["scale"];
 
    const auto rotationVec4 = parse_vector4(rotation);
-   const auto rotationEuler = glm::eulerAngles(glm::quat{rotationVec4.w, rotationVec4.x, rotationVec4.y, rotationVec4.z});
 
    return Transform3D{
-      .rotation = rotationEuler,
+      .rotation = glm::quat{rotationVec4.w, rotationVec4.x, rotationVec4.y, rotationVec4.z},
       .scale = parse_vector3(scale),
       .translation = parse_vector3(translation),
    };
