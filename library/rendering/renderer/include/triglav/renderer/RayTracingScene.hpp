@@ -3,6 +3,7 @@
 #include "Camera.hpp"
 #include "Scene.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/geometry/Mesh.hpp"
 #include "triglav/graphics_api/ReplicatedBuffer.hpp"
 #include "triglav/graphics_api/ray_tracing/AccelerationStructurePool.hpp"
@@ -41,6 +42,7 @@ struct ObjectDesc
 
 class RayTracingScene
 {
+   TG_DEFINE_LOG_CATEGORY(RayTracingScene)
    friend stage::RayTracingStage;
 
  public:

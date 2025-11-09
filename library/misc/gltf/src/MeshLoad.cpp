@@ -7,7 +7,7 @@
 #include "triglav/Ranges.hpp"
 #include "triglav/io/LimitedReader.hpp"
 
-#include <fmt/core.h>
+#include <format>
 #include <ranges>
 #include <unordered_map>
 
@@ -71,7 +71,7 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 meshIndex, cons
 
    std::map<u32, geometry::Index> indexToName;
    for (const auto& [index, name] : materials) {
-      indexToName[index] = dstMesh.add_group(geometry::MeshGroup{.name = fmt::format("group{}", index), .material = name});
+      indexToName[index] = dstMesh.add_group(geometry::MeshGroup{.name = std::format("group{}", index), .material = name});
    }
 
    std::unordered_map<Vector3, geometry::Index> uniquePositionMap;

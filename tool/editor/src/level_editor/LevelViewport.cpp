@@ -3,7 +3,6 @@
 #include "../RootWindow.hpp"
 
 #include <numeric>
-#include <spdlog/spdlog.h>
 
 namespace triglav::editor {
 

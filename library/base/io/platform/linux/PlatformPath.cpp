@@ -2,7 +2,7 @@
 
 #include <climits>
 #include <cstdlib>
-#include <fmt/core.h>
+#include <format>
 #include <pwd.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -43,7 +43,7 @@ Result<Path> home_directory()
 
 std::string sub_directory(const std::string_view path, const std::string_view directory)
 {
-   return fmt::format("{}/{}", path, directory);
+   return std::format("{}/{}", path, directory);
 }
 
 char path_seperator()

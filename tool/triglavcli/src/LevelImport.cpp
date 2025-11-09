@@ -10,7 +10,7 @@
 #include "triglav/render_objects/Material.hpp"
 #include "triglav/world/Level.hpp"
 
-#include <fmt/core.h>
+#include <print>
 #include <ryml.hpp>
 #include <utility>
 
@@ -113,7 +113,7 @@ class LevelImporter
       const auto& srcSampler = m_glbFile.document->samplers.at(srcTexture.sampler);
 
       auto textureNameStr =
-         srcTexture.name.empty() ? fmt::format("{}.tex{}", strip_extension(m_props.srcPath.basename()), textureID) : srcTexture.name;
+         srcTexture.name.empty() ? std::format("{}.tex{}", strip_extension(m_props.srcPath.basename()), textureID) : srcTexture.name;
       for (char& ch : textureNameStr) {
          ch = static_cast<char>(std::tolower(ch));
       }
@@ -145,7 +145,7 @@ class LevelImporter
             return std::nullopt;
          }
       } else {
-         fmt::print(stderr, "triglav-cli: Failed to import texture {}, no URI or buffer view provided\n", textureNameStr);
+         std::print(stderr, "triglav-cli: Failed to import texture {}, no URI or buffer view provided\n", textureNameStr);
          return std::nullopt;
       }
 
@@ -202,7 +202,7 @@ class LevelImporter
       }
 
       auto materialNameStr =
-         srcMaterial.name.empty() ? fmt::format("{}.mat{}", strip_extension(m_props.srcPath.basename()), materialID) : srcMaterial.name;
+         srcMaterial.name.empty() ? std::format("{}.mat{}", strip_extension(m_props.srcPath.basename()), materialID) : srcMaterial.name;
       for (char& ch : materialNameStr) {
          ch = static_cast<char>(std::tolower(ch));
       }
@@ -213,7 +213,7 @@ class LevelImporter
 
       const auto dstPath = m_projectInfo.content_path(importPath);
       if (!m_props.shouldOverride && dstPath.exists()) {
-         fmt::print(stderr, "triglav-cli: Failed to import material to {}, file exists\n", dstPath.string());
+         std::print(stderr, "triglav-cli: Failed to import material to {}, file exists\n", dstPath.string());
          return std::nullopt;
       }
 
@@ -232,7 +232,7 @@ class LevelImporter
          return std::nullopt;
       }
 
-      fmt::print(stderr, "triglav-cli: Imported material to {}\n", importPath);
+      std::print(stderr, "triglav-cli: Imported material to {}\n", importPath);
 
       if (!add_resource_to_index(importPath)) {
          return std::nullopt;
@@ -249,7 +249,7 @@ class LevelImporter
          return m_importedMeshes.at(meshID);
       }
 
-      auto meshNameStr = name.value_or(fmt::format("{}.mesh{}", strip_extension(m_props.srcPath.basename()), meshID));
+      auto meshNameStr = name.value_or(std::format("{}.mesh{}", strip_extension(m_props.srcPath.basename()), meshID));
       for (char& ch : meshNameStr) {
          ch = static_cast<char>(std::tolower(ch));
       }
@@ -260,7 +260,7 @@ class LevelImporter
 
       const auto dstPath = m_projectInfo.content_path(importPath);
       if (!m_props.shouldOverride && dstPath.exists()) {
-         fmt::print(stderr, "triglav-cli: Failed to import mesh to {}, file exists\n", dstPath.string());
+         std::print(stderr, "triglav-cli: Failed to import mesh to {}, file exists\n", dstPath.string());
          return std::nullopt;
       }
 
@@ -276,7 +276,7 @@ class LevelImporter
       write_mesh_to_file(gltfMesh, dstPath);
       m_importedMeshes.emplace(meshID, rcName);
 
-      fmt::print(stderr, "triglav-cli: Importing mesh to {}\n", importPath);
+      std::print(stderr, "triglav-cli: Importing mesh to {}\n", importPath);
 
       if (!add_resource_to_index(importPath)) {
          return std::nullopt;
@@ -288,7 +288,7 @@ class LevelImporter
    [[nodiscard]] bool import_scene()
    {
       if (!m_props.shouldOverride && m_props.dstPath.exists()) {
-         fmt::print(stderr, "triglav-cli: Failed to import scene, file exists");
+         std::print(stderr, "triglav-cli: Failed to import scene, file exists");
          return false;
       }
 
@@ -321,7 +321,7 @@ class LevelImporter
          }
 
          world::StaticMesh mesh;
-         mesh.name = glbNode.name.value_or(fmt::format("static_mesh{}", nodeID));
+         mesh.name = glbNode.name.value_or(std::format("static_mesh{}", nodeID));
          mesh.transform = transform;
          mesh.meshName = *meshName;
 
@@ -332,7 +332,7 @@ class LevelImporter
       level.add_node("root"_name, std::move(rootNode));
 
       if (!level.save_to_file(m_props.dstPath)) {
-         fmt::print(stderr, "triglav-cli: Failed to save level file\n");
+         std::print(stderr, "triglav-cli: Failed to save level file\n");
          return false;
       }
 
@@ -351,17 +351,17 @@ class LevelImporter
 
 bool import_level(const LevelImportProps& props)
 {
-   fmt::print(stderr, "triglav-cli: Importing level to {}\n", props.dstPath.string());
+   std::print(stderr, "triglav-cli: Importing level to {}\n", props.dstPath.string());
 
    auto projectInfo = load_active_project_info();
    if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: Failed to load project info\n");
+      std::print(stderr, "triglav-cli: Failed to load project info\n");
       return false;
    }
 
    auto glbFile = gltf::open_glb_file(props.srcPath);
    if (!glbFile.has_value()) {
-      fmt::print(stderr, "triglav-cli: Failed to load GLB file\n");
+      std::print(stderr, "triglav-cli: Failed to load GLB file\n");
       return false;
    }
 

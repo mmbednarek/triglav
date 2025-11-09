@@ -10,8 +10,8 @@ extern "C"
 #include <ktx.h>
 #include <ktxvulkan.h>
 }
-#include <fmt/core.h>
 #include <memory>
+#include <print>
 
 namespace triglav::ktx {
 
@@ -257,7 +257,7 @@ Vector2u Texture::dimensions() const
 
 void Texture::print_debug_info() const
 {
-   fmt::print(stderr, "Format: {}\n", static_cast<u32>(ktxTexture2_GetVkFormat(reinterpret_cast<ktxTexture2*>(m_ktxTexture))));
+   std::println(stderr, "Format: {}", static_cast<u32>(ktxTexture2_GetVkFormat(reinterpret_cast<ktxTexture2*>(m_ktxTexture))));
 }
 
 void Texture::generate_mipmaps() const {}

@@ -4,12 +4,15 @@
 #include "Surface.hpp"
 #include "vulkan/ObjectWrapper.hpp"
 
+#include "triglav/Logging.hpp"
+
 namespace triglav::graphics_api {
 
 DECLARE_VLK_WRAPPED_OBJECT(Instance)
 
 class Instance
 {
+   TG_DEFINE_LOG_CATEGORY(VulkanInstance)
  public:
    explicit Instance(vulkan::Instance&& instance);
 

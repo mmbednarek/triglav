@@ -16,7 +16,7 @@ elif host_machine.system() == 'windows'
     subdir('platform/windows')
 endif
 
-threading_deps = [core, spdlog]
+threading_deps = [core]
 threading_incl = include_directories(['include', 'include/triglav/threading'])
 
 threading_lib = static_library('threading',

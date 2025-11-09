@@ -2,6 +2,7 @@
 
 #include "RenderCore.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
@@ -18,6 +19,7 @@ namespace triglav::render_core {
 
 class PipelineCache
 {
+   TG_DEFINE_LOG_CATEGORY(PipelineCache)
  public:
    PipelineCache(graphics_api::Device& device, resource::ResourceManager& resourceManager);
 

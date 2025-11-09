@@ -2,7 +2,7 @@
 
 #include "vulkan/Util.hpp"
 
-#include <spdlog/spdlog.h>
+#include "triglav/String.hpp"
 
 #define TG_ENABLE_SYNC_VALIDATION 0
 
@@ -65,26 +65,28 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(const VkDebugUtilsMess
                                                           VkDebugUtilsMessageTypeFlagsEXT /*messageType*/,
                                                           const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* /*pUserData*/)
 {
-   spdlog::level::level_enum logLevel{spdlog::level::off};
+   using namespace string_literals;
+
+   LogLevel log_level{};
 
    switch (messageSeverity) {
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-      logLevel = spdlog::level::trace;
+      log_level = LogLevel::Debug;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-      logLevel = spdlog::level::info;
+      log_level = LogLevel::Info;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-      logLevel = spdlog::level::warn;
+      log_level = LogLevel::Warning;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-      logLevel = spdlog::level::err;
+      log_level = LogLevel::Error;
       break;
    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_FLAG_BITS_MAX_ENUM_EXT:
       break;
    }
 
-   spdlog::log(logLevel, "vk-validation: {}", pCallbackData->pMessage);
+   log_message(log_level, "VulkanValidation"_strv, "{}", pCallbackData->pMessage);
    return VK_FALSE;
 }
 
@@ -112,7 +114,7 @@ Instance::Instance(vulkan::Instance&& instance) :
    debugMessengerInfo.pUserData = nullptr;
 
    if (const auto res = m_debugMessenger.construct(&debugMessengerInfo); res != VK_SUCCESS) {
-      spdlog::error("failed to enable validation layers: {}", static_cast<i32>(res));
+      log_error("failed to enable validation layers: {}", static_cast<i32>(res));
    }
 
 #endif

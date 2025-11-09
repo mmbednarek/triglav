@@ -1,6 +1,6 @@
 #include "Path.hpp"
 
-#include <fmt/core.h>
+#include <format>
 #include <shlobj.h>
 #include <windows.h>
 
@@ -48,7 +48,7 @@ Result<Path> home_directory()
 
 std::string sub_directory(const std::string_view path, const std::string_view directory)
 {
-   return fmt::format("{}\\{}", path, directory);
+   return std::format("{}\\{}", path, directory);
 }
 
 char path_seperator()

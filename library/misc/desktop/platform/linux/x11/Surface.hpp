@@ -2,6 +2,7 @@
 
 #include <X11/Xlib.h>
 
+#include "triglav/Logging.hpp"
 #include "triglav/desktop/ISurface.hpp"
 
 namespace triglav::desktop::x11 {
@@ -10,6 +11,7 @@ class Display;
 
 class Surface final : public ISurface
 {
+   TG_DEFINE_LOG_CATEGORY(X11Surface)
  public:
    // Top level window
    Surface(Display& display, Window window, Dimension dimension);

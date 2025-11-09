@@ -6,8 +6,6 @@
 #include "triglav/render_objects/Mesh.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::renderer {
 
 namespace gapi = graphics_api;
@@ -44,7 +42,7 @@ void RayTracingScene::build_acceleration_structures()
       return;
    }
 
-   spdlog::info("Updating acceleration structures...");
+   log_info("Updating acceleration structures...");
    m_mustUpdateAccelerationStructures = false;
 
    auto asUpdateCmdList = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));

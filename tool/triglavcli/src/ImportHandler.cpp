@@ -12,7 +12,8 @@
 #include "triglav/world/Level.hpp"
 
 #include <algorithm>
-#include <fmt/core.h>
+#include <format>
+#include <iostream>
 
 namespace triglav::tool::cli {
 
@@ -34,7 +35,7 @@ std::string create_dst_resource_path(const ProjectInfo& projectInfo, const io::P
 std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_view purposeStr)
 {
    if (purposeStr.empty()) {
-      fmt::print(stderr, "warning: no texture purpose provided defaulting to albedo\n");
+      std::print(std::cerr, "warning: no texture purpose provided defaulting to albedo\n");
       return asset::TexturePurpose::Albedo;
    }
 
@@ -57,7 +58,7 @@ std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_vie
       return asset::TexturePurpose::Roughness;
    }
 
-   fmt::print(stderr, "error: unknown texture purpose '{}'\n", purposeStr);
+   std::print(std::cerr, "error: unknown texture purpose '{}'\n", purposeStr);
    return std::nullopt;
 }
 
@@ -65,7 +66,7 @@ ExitStatus handle_level_from_glb(const CmdArgs_import& args)
 {
    auto projectInfo = load_active_project_info();
    if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
@@ -92,7 +93,7 @@ ExitStatus handle_mesh_import(const CmdArgs_import& args)
 {
    auto projectInfo = load_active_project_info();
    if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
@@ -130,42 +131,42 @@ std::optional<asset::SamplerProperties> parse_sampler_properties(const std::vect
       if (key == "minfilter") {
          auto filter = asset::filter_type_from_string(value);
          if (!filter.has_value()) {
-            fmt::print(stderr, "invalid filter type: '{}'\n", value);
+            std::print(std::cerr, "invalid filter type: '{}'\n", value);
             return std::nullopt;
          }
          samplerProperties.minFilter = filter.value();
       } else if (key == "magfilter") {
          auto filter = asset::filter_type_from_string(option.substr(sep + 1));
          if (!filter.has_value()) {
-            fmt::print(stderr, "invalid filter type: '{}'\n", value);
+            std::print(std::cerr, "invalid filter type: '{}'\n", value);
             return std::nullopt;
          }
          samplerProperties.magFilter = filter.value();
       } else if (key == "addressmode.u") {
          auto addressMode = asset::texture_address_mode_from_string(option.substr(sep + 1));
          if (!addressMode.has_value()) {
-            fmt::print(stderr, "invalid address mode: '{}'\n", value);
+            std::print(std::cerr, "invalid address mode: '{}'\n", value);
             return std::nullopt;
          }
          samplerProperties.addressModeU = addressMode.value();
       } else if (key == "addressmode.v") {
          auto addressMode = asset::texture_address_mode_from_string(option.substr(sep + 1));
          if (!addressMode.has_value()) {
-            fmt::print(stderr, "invalid address mode: '{}'\n", value);
+            std::print(std::cerr, "invalid address mode: '{}'\n", value);
             return std::nullopt;
          }
          samplerProperties.addressModeV = addressMode.value();
       } else if (key == "addressmode.w") {
          auto addressMode = asset::texture_address_mode_from_string(option.substr(sep + 1));
          if (!addressMode.has_value()) {
-            fmt::print(stderr, "invalid address mode: '{}'\n", value);
+            std::print(std::cerr, "invalid address mode: '{}'\n", value);
             return std::nullopt;
          }
          samplerProperties.addressModeW = addressMode.value();
       } else if (key == "anisotropy") {
          samplerProperties.enableAnisotropy = option.substr(sep + 1) == "true" ? true : false;
       } else {
-         fmt::print(stderr, "invalid sampler option key: '{}'\n", key);
+         std::print(std::cerr, "invalid sampler option key: '{}'\n", key);
          return std::nullopt;
       }
    }
@@ -177,7 +178,7 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
 {
    auto projectInfo = load_active_project_info();
    if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
@@ -220,7 +221,7 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
 ExitStatus handle_import(const CmdArgs_import& args)
 {
    if (args.positionalArgs.size() != 1) {
-      fmt::print(stderr, "must provide an input file\n");
+      std::print(std::cerr, "must provide an input file\n");
       return EXIT_SUCCESS;
    }
 

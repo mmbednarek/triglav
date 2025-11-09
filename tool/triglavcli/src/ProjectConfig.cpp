@@ -1,6 +1,6 @@
 #include "ProjectConfig.hpp"
 
-#include <fmt/core.h>
+#include <format>
 #include <ranges>
 
 namespace triglav::tool::cli {
@@ -53,18 +53,30 @@ io::Path ProjectInfo::content_path(const std::string_view resourcePath) const
 
 std::string ProjectInfo::default_import_path(const ResourceType resType, const std::string_view basename) const
 {
+   std::string result;
    switch (resType) {
    case ResourceType::Texture:
-      return fmt::format(fmt::runtime(this->importSettings.texturePath), fmt::arg("basename", basename));
+      result = this->importSettings.texturePath;
+      break;
    case ResourceType::Mesh:
-      return fmt::format(fmt::runtime(this->importSettings.meshPath), fmt::arg("basename", basename));
+      result = this->importSettings.meshPath;
+      break;
    case ResourceType::Level:
-      return fmt::format(fmt::runtime(this->importSettings.levelPath), fmt::arg("basename", basename));
+      result = this->importSettings.levelPath;
+      break;
    case ResourceType::Material:
-      return fmt::format(fmt::runtime(this->importSettings.materialPath), fmt::arg("basename", basename));
+      result = this->importSettings.materialPath;
+      break;
    default:
       return "";
    }
+
+   auto index = result.find("{basename}");
+   while (index != std::string::npos) {
+      result.replace(index, 10, basename);
+      index = result.find("{basename}");
+   }
+   return result;
 }
 
 void ProjectConfig::deserialize(const rapidjson::Value& value)

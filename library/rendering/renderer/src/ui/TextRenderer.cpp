@@ -5,8 +5,6 @@
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::renderer::ui {
 
 constexpr u32 g_maxTextUpdateCount = 256;

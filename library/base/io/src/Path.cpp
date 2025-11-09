@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <fmt/format.h>
 #include <ranges>
 #include <utility>
 

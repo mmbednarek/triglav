@@ -5,7 +5,6 @@
 #include "triglav/Format.hpp"
 #include "triglav/String.hpp"
 
-#include <spdlog/spdlog.h>
 #include <windowsx.h>
 
 namespace triglav::desktop {
@@ -140,7 +139,7 @@ HWND create_window(const HINSTANCE instance, const StringView title, const Vecto
       /*botton*/ dimension.y,
    };
    if (!AdjustWindowRectEx(&rect, style, false, styleEx)) {
-      spdlog::error("failed to calculate window size");
+      log_message(LogLevel::Error, StringView{"WindowsSurface"}, "failed to calculate window size");
       return nullptr;
    }
 
@@ -352,7 +351,7 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       break;
    }
    case WM_INPUT: {
-      spdlog::info("WM_INPUT event!");
+      log_info("WM_INPUT event!");
       break;
    }
    case WM_SETFOCUS: {

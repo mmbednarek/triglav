@@ -2,6 +2,7 @@
 
 #include "ISurface.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/String.hpp"
 
 #include <memory>
@@ -16,6 +17,7 @@ class Display;
 
 class Surface : public ISurface, std::enable_shared_from_this<Surface>
 {
+   TG_DEFINE_LOG_CATEGORY(WindowsSurface)
  public:
    Surface(Display& display, StringView title, Vector2i dimension, WindowAttributeFlags flags, bool isPopup);
    ~Surface() override;

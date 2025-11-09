@@ -3,7 +3,7 @@
 #include "triglav/asset/Asset.hpp"
 #include "triglav/io/File.hpp"
 
-#include <fmt/core.h>
+#include <print>
 #include <triglav/ktx/Texture.hpp>
 
 namespace triglav::tool::cli {
@@ -61,8 +61,8 @@ ExitStatus handle_inspect(const CmdArgs_inspect& args)
       return EXIT_FAILURE;
    }
 
-   fmt::print("TRIGLAV ASSET FILE\n");
-   fmt::print("asset type: {}\n\n", asset_type_to_string(header->type));
+   std::print("TRIGLAV ASSET FILE\n");
+   std::print("asset type: {}\n\n", asset_type_to_string(header->type));
 
    if (header->type == ResourceType::Mesh) {
       auto mesh = asset::decode_mesh(**fileHandle);
@@ -70,28 +70,28 @@ ExitStatus handle_inspect(const CmdArgs_inspect& args)
          return EXIT_FAILURE;
       }
 
-      fmt::print("vertex count: {}\n", mesh->vertexData.vertices.size());
-      fmt::print("index count: {}\n", mesh->vertexData.indices.size());
-      fmt::print("bounding box min: ({}, {}, {})\n", mesh->boundingBox.min.x, mesh->boundingBox.min.y, mesh->boundingBox.min.z);
-      fmt::print("bounding box max: ({}, {}, {})\n", mesh->boundingBox.max.x, mesh->boundingBox.max.y, mesh->boundingBox.max.z);
+      std::print("vertex count: {}\n", mesh->vertexData.vertices.size());
+      std::print("index count: {}\n", mesh->vertexData.indices.size());
+      std::print("bounding box min: ({}, {}, {})\n", mesh->boundingBox.min.x, mesh->boundingBox.min.y, mesh->boundingBox.min.z);
+      std::print("bounding box max: ({}, {}, {})\n", mesh->boundingBox.max.x, mesh->boundingBox.max.y, mesh->boundingBox.max.z);
    }
    if (header->type == ResourceType::Texture) {
       auto decodedTex = asset::decode_texture(**fileHandle);
       if (!decodedTex.has_value()) {
-         fmt::print(stderr, "failed to decode texture\n");
+         std::print(stderr, "failed to decode texture\n");
          return EXIT_FAILURE;
       }
 
       const auto dims = decodedTex->texture.dimensions();
 
-      fmt::print("purpose: {}\n", texture_purpose_to_string(decodedTex->purpose));
-      fmt::print("magfilter: {}\n", asset::filter_type_to_string(decodedTex->samplerProps.magFilter));
-      fmt::print("minfilter: {}\n", asset::filter_type_to_string(decodedTex->samplerProps.minFilter));
-      fmt::print("addressmod.u: {}\n", asset::texture_address_mode_to_string(decodedTex->samplerProps.addressModeU));
-      fmt::print("addressmod.v: {}\n", asset::texture_address_mode_to_string(decodedTex->samplerProps.addressModeV));
-      fmt::print("addressmod.w: {}\n", asset::texture_address_mode_to_string(decodedTex->samplerProps.addressModeW));
-      fmt::print("anisotropy: {}\n", decodedTex->samplerProps.enableAnisotropy ? "true" : "false");
-      fmt::print("dimensions: {} {}\n", dims.x, dims.y);
+      std::print("purpose: {}\n", texture_purpose_to_string(decodedTex->purpose));
+      std::print("magfilter: {}\n", asset::filter_type_to_string(decodedTex->samplerProps.magFilter));
+      std::print("minfilter: {}\n", asset::filter_type_to_string(decodedTex->samplerProps.minFilter));
+      std::print("addressmod.u: {}\n", asset::texture_address_mode_to_string(decodedTex->samplerProps.addressModeU));
+      std::print("addressmod.v: {}\n", asset::texture_address_mode_to_string(decodedTex->samplerProps.addressModeV));
+      std::print("addressmod.w: {}\n", asset::texture_address_mode_to_string(decodedTex->samplerProps.addressModeW));
+      std::print("anisotropy: {}\n", decodedTex->samplerProps.enableAnisotropy ? "true" : "false");
+      std::print("dimensions: {} {}\n", dims.x, dims.y);
    }
 
    return EXIT_SUCCESS;

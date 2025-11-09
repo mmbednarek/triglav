@@ -20,7 +20,6 @@
 #include <chrono>
 #include <cmath>
 #include <glm/glm.hpp>
-#include <spdlog/spdlog.h>
 
 using triglav::ResourceType;
 using triglav::desktop::Key;
@@ -336,7 +335,7 @@ void Renderer::recreate_jobs()
 {
    m_device.await_all();
 
-   spdlog::info("Recreating rendering job...");
+   log_info("Recreating rendering job...");
 
    m_jobGraph.set_screen_size(m_renderSurface.resolution());
 

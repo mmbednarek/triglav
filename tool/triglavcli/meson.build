@@ -20,7 +20,6 @@ triglavcli_sources = files([
 
 triglavcli_deps = [
   geometry,
-  fmt,
   asset,
   gltf,
   stbi,

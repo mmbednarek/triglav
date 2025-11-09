@@ -6,8 +6,6 @@
 #include "triglav/io/DisplacedStream.hpp"
 #include "triglav/ktx/Texture.hpp"
 
-#include <fmt/core.h>
-
 namespace triglav::asset {
 
 constexpr u32 g_magicNumber = 0x53414754;

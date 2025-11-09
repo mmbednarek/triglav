@@ -1,7 +1,5 @@
 #include "widget/ScrollBox.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::ui_core {
 
 constexpr auto g_scrollFactor = 6.0f;
