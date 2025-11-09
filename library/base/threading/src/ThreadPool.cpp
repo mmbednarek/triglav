@@ -3,7 +3,6 @@
 #include "SafeAccess.hpp"
 
 #include <algorithm>
-#include <spdlog/spdlog.h>
 
 namespace triglav::threading {
 
@@ -53,7 +52,6 @@ void ThreadPool::thread_entrypoint(const ThreadID threadId)
    } catch (...) {
       log_error("Unknown exception occurred, exiting...");
       flush_logs();
-      LogManager::the().flush();
       std::exit(EXIT_FAILURE);
    }
 }

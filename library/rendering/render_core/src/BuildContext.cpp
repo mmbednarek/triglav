@@ -12,7 +12,6 @@
 #include "triglav/resource/ResourceManager.hpp"
 
 #include <cstring>
-#include <fmt/core.h>
 
 namespace triglav::render_core {
 

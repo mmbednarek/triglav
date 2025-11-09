@@ -11,7 +11,7 @@ geometry_sources = files([
   'src/Parser.cpp',
 ])
 
-geometry_pub_deps = [glm, graphics_api, io, fmt]
+geometry_pub_deps = [glm, graphics_api, io]
 
 geometry_priv_deps = geometry_pub_deps
 geometry_priv_deps += cgal

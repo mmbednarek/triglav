@@ -4,6 +4,7 @@
 #include "RayTracing.hpp"
 
 #include "triglav/Int.hpp"
+#include "triglav/Logging.hpp"
 #include "triglav/ObjectPool.hpp"
 
 #include <map>
@@ -20,6 +21,7 @@ class AccelerationStructure;
 
 class AccelerationStructurePool
 {
+   TG_DEFINE_LOG_CATEGORY(AccelerationStructurePool)
  public:
    struct Node
    {

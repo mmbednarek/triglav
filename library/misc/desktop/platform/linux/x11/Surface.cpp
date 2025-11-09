@@ -4,7 +4,6 @@
 #include "Display.hpp"
 
 #include <X11/cursorfont.h>
-#include <spdlog/spdlog.h>
 
 namespace triglav::desktop::x11 {
 
@@ -63,7 +62,7 @@ Key map_key(const KeyCode keyCode)
       return Key::DownArrow;
    }
 
-   spdlog::warn("unknown keycode: {}", keyCode);
+   log_message(LogLevel::Warning, StringView{"X11Surface"}, "unknown keycode: {}", keyCode);
    return Key::Unknown;
 }
 
@@ -140,7 +139,7 @@ Dimension Surface::dimension() const
 
 void Surface::set_cursor_icon(const CursorIcon icon)
 {
-   spdlog::info("calling set_cursor_icon: {}", static_cast<int>(icon));
+   log_info("calling set_cursor_icon: {}", static_cast<int>(icon));
 
    if (m_currentCursor != 0) {
       XFreeCursor(m_display.x11_display(), m_currentCursor);

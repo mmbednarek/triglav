@@ -5,7 +5,8 @@
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/io/File.hpp"
 
-#include <fmt/core.h>
+#include <format>
+#include <iostream>
 #include <stbi/stb_image.h>
 
 namespace triglav::tool::cli {
@@ -70,7 +71,7 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
    int texWidth, texHeight, texChannels;
    stbi_uc* pixels = stbi_load_from_callbacks(&callbacks, &streamData, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
    if (pixels == nullptr) {
-      fmt::print(stderr, "triglav-cli: Failed to load image from memory\n");
+      std::print(std::cerr, "triglav-cli: Failed to load image from memory\n");
       return std::nullopt;
    }
 
@@ -87,11 +88,11 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
 bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableStream& stream)
 {
    if (!props.shouldOverride && props.dstPath.exists()) {
-      fmt::print(stderr, "triglav-cli: Failed to import texture to {}, file exists", props.dstPath.string());
+      std::print(std::cerr, "triglav-cli: Failed to import texture to {}, file exists", props.dstPath.string());
       return false;
    }
 
-   fmt::print(stderr, "triglav-cli: Importing texture to {}\n", props.dstPath.string());
+   std::print(std::cerr, "triglav-cli: Importing texture to {}\n", props.dstPath.string());
 
    auto data = load_image_data(stream);
    if (!data.has_value()) {

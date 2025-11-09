@@ -12,8 +12,6 @@
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::desktop_ui {
 
 using namespace std::chrono_literals;

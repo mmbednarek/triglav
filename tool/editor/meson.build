@@ -30,7 +30,6 @@ editor_deps = [
     geometry,
     desktop,
     threading,
-    fmt,
     shaders,
     desktop_ui,
 ]

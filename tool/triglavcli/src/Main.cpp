@@ -3,8 +3,8 @@
 #include "triglav/Int.hpp"
 
 #include <cstdlib>
-#include <fmt/core.h>
 #include <optional>
+#include <print>
 #include <string>
 #include <string_view>
 
@@ -14,14 +14,14 @@ using triglav::tool::cli::ExitStatus;
 ExitStatus main(const int argc, const char** argv)
 {
    if (argc < 2) {
-      fmt::print(stderr, "triglav-cli: not enough arguments\n\n");
+      std::print(stderr, "triglav-cli: not enough arguments\n\n");
       triglav::tool::cli::handle_help({});
       return EXIT_FAILURE;
    }
 
    const auto command = triglav::tool::cli::command_from_string(argv[1]);
    if (!command.has_value()) {
-      fmt::print(stderr, "triglav-cli: unknown command '{}'\n\n", argv[1]);
+      std::print(stderr, "triglav-cli: unknown command '{}'\n\n", argv[1]);
       triglav::tool::cli::handle_help({});
       return EXIT_FAILURE;
    }

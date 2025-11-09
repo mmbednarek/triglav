@@ -8,7 +8,7 @@ endif
 
 desktop_main_lib = static_library('desktop_main',
                           sources : desktop_main_sources,
-                          dependencies : [core, desktop, spdlog],
+                          dependencies : [core, desktop],
 )
 
 desktop_main = declare_dependency(

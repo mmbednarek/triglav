@@ -1,12 +1,11 @@
 #include "GameInstance.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/resource/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
-
-#include <spdlog/spdlog.h>
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -23,6 +22,8 @@ constexpr auto g_maxThreads = 64;
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
+   using namespace triglav::string_literals;
+
    // Parse program arguments
    CommandLine::the().parse(args.arg_count, args.args);
 
@@ -36,9 +37,11 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initialWidth = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_defaultWidth));
    const auto initialHeight = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_defaultHeight));
 
-   spdlog::info("content path: {}", PathManager::the().content_path().string());
-   spdlog::info("build path: {}", PathManager::the().build_path().string());
-   spdlog::info("initializing renderer");
+   std::string_view content_path{PathManager::the().content_path().string()};
+   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "content path: {}", content_path);
+   std::string_view build_path{PathManager::the().build_path().string()};
+   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "build path: {}", build_path);
+   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "initializing renderer");
 
    demo::GameInstance instance(display, {initialWidth, initialHeight});
    instance.loop(display);

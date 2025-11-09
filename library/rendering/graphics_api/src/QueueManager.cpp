@@ -7,8 +7,6 @@
 
 #include <stdexcept>
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::graphics_api {
 
 namespace {

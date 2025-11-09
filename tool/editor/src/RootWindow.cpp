@@ -3,8 +3,6 @@
 #include "level_editor/RenderViewport.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::editor {
 
 using namespace name_literals;
@@ -130,8 +128,6 @@ void RootWindow::on_close()
 
 void RootWindow::on_resize(const Vector2i size)
 {
-   spdlog::info("Resize event: {} {}", size.x, size.y);
-
    m_device.await_all();
 
    m_jobGraph.set_screen_size(size);

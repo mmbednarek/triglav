@@ -4,8 +4,6 @@
 
 #include "triglav/io/File.hpp"
 
-#include <fmt/core.h>
-
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

@@ -4,7 +4,7 @@
 
 #include "triglav/io/File.hpp"
 
-#include <fmt/core.h>
+#include <print>
 
 namespace c4 {
 inline c4::substr to_substr(std::string& s) noexcept
@@ -117,7 +117,7 @@ bool add_resource_to_index(const std::string_view name)
 {
    auto projectInfo = load_active_project_info();
    if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+      std::print(stderr, "triglav-cli: No active project found\n");
       return false;
    }
 

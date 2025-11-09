@@ -14,7 +14,6 @@
 
 #include <array>
 #include <span>
-#include <spdlog/spdlog.h>
 
 namespace triglav::renderer {
 

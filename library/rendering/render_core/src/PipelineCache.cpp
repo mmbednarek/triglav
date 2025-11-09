@@ -6,8 +6,6 @@
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::render_core {
 
 namespace gapi = graphics_api;
@@ -39,7 +37,7 @@ graphics_api::Pipeline& PipelineCache::get_graphics_pipeline(const GraphicPipeli
       return it->second;
    }
 
-   spdlog::debug("pso-cache: creating new graphics PSO (hash: {}).", hash);
+   log_debug("creating new graphics PSO (hash: {}).", hash);
 
    auto [pipelineIt, ok] = m_pipelines.emplace(hash, this->create_graphics_pso(state));
    assert(ok);
@@ -55,7 +53,7 @@ graphics_api::Pipeline& PipelineCache::get_compute_pipeline(const ComputePipelin
       return it->second;
    }
 
-   spdlog::debug("pso-cache: creating new compute PSO (hash: {}).", hash);
+   log_debug("creating new compute PSO (hash: {}).", hash);
 
    auto [pipelineIt, ok] = m_pipelines.emplace(hash, this->create_compute_pso(state));
    assert(ok);
@@ -71,7 +69,7 @@ graphics_api::ray_tracing::RayTracingPipeline& PipelineCache::get_ray_tracing_ps
       return it->second;
    }
 
-   spdlog::debug("pso-cache: creating new ray tracing PSO (hash: {}).", hash);
+   log_debug("creating new ray tracing PSO (hash: {}).", hash);
 
    auto [pipelineIt, ok] = m_rayTracingPipelines.emplace(hash, this->create_ray_tracing_pso(state));
    assert(ok);
@@ -87,7 +85,7 @@ graphics_api::ray_tracing::ShaderBindingTable& PipelineCache::get_shader_binding
       return it->second;
    }
 
-   spdlog::debug("pso-cache: creating shader binding table (hash: {}).", hash);
+   log_debug("creating shader binding table (hash: {}).", hash);
 
    auto [pipelineIt, ok] = m_rayTracingShaderBindingTables.emplace(hash, this->create_ray_tracing_shader_binding_table(state));
    assert(ok);

@@ -1,6 +1,6 @@
 desktop_sources = files([])
 
-desktop_deps = [vulkan, spdlog, core, event]
+desktop_deps = [vulkan, core, event]
 
 if host_machine.system() == 'linux'
     desktop_deps += wayland_client

@@ -3,7 +3,6 @@
 #include "triglav/render_core/BuildContext.hpp"
 
 #include "WidgetRenderer.hpp"
-#include <spdlog/spdlog.h>
 
 namespace triglav::desktop_ui {
 
@@ -109,8 +108,6 @@ void Dialog::on_close()
 
 void Dialog::on_resize(const Vector2i size)
 {
-   spdlog::info("Resize event: {} {}", size.x, size.y);
-
    m_device.await_all();
 
    m_jobGraph.set_screen_size(size);

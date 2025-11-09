@@ -6,8 +6,8 @@
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
-#include <fmt/core.h>
 #include <gtest/gtest.h>
+#include <print>
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -42,11 +42,11 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    resourceManager.load_asset_list("content/index.yaml"_path);
 
-   fmt::print("Loading resources\n");
+   std::println("Loading resources");
 
    awaiter.await();
 
-   fmt::print("Finished loading resources\n");
+   std::println("Finished loading resources");
 
    int status = 0;
 

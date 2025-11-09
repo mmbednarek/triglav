@@ -4,7 +4,6 @@
 #include "Device.hpp"
 
 #include <ranges>
-#include <spdlog/spdlog.h>
 
 namespace triglav::graphics_api::ray_tracing {
 
@@ -23,8 +22,8 @@ AccelerationStructurePool::~AccelerationStructurePool()
 
 AccelerationStructure* AccelerationStructurePool::acquire_acceleration_structure(const AccelerationStructureType type, MemorySize size)
 {
-   spdlog::trace("as-pool: Acquiring {} acceleration structure, requested size {}",
-                 type == AccelerationStructureType::TopLevel ? "top level" : "bottom level", size);
+   log_debug("as-pool: Acquiring {} acceleration structure, requested size {}",
+             type == AccelerationStructureType::TopLevel ? "top level" : "bottom level", size);
 
    AccelerationStructure* result{};
    auto it = m_freeAccelerationStructures.upper_bound(size);
@@ -43,7 +42,7 @@ AccelerationStructure* AccelerationStructurePool::acquire_acceleration_structure
 
 void AccelerationStructurePool::release_acceleration_structure(AccelerationStructure* as)
 {
-   spdlog::trace("as-pool: Releasing acceleration structure");
+   log_debug("as-pool: Releasing acceleration structure");
    m_freeAccelerationStructures.emplace(m_sections.at(as).size, as);
 }
 

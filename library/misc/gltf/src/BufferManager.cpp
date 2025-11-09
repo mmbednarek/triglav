@@ -1,6 +1,6 @@
 #include "BufferManager.hpp"
 
-#include <fmt/core.h>
+#include <format>
 #include <stdexcept>
 
 namespace triglav::gltf {
@@ -12,7 +12,7 @@ BufferManager::BufferManager(Document& document, io::IFile* binaryChunk, const M
       if (buffer.uri.has_value()) {
          auto fileHandle = io::open_file(io::Path(*buffer.uri), io::FileOpenMode::Read);
          if (!fileHandle.has_value()) {
-            throw std::runtime_error(fmt::format("gltf::BufferManager: could not open buffer {}", *buffer.uri));
+            throw std::runtime_error(std::format("gltf::BufferManager: could not open buffer {}", *buffer.uri));
          }
          m_buffers.emplace_back(BufferWithOffset{fileHandle->get(), 0});
          m_ownedFiles.emplace_back(std::move(*fileHandle));

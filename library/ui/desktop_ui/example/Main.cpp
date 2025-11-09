@@ -27,8 +27,6 @@
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
-#include <spdlog/spdlog.h>
-
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
 using triglav::desktop::WindowAttribute;

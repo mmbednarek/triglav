@@ -13,6 +13,7 @@
 #include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/desktop/Desktop.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
@@ -34,6 +35,7 @@ namespace triglav::renderer {
 
 class Renderer
 {
+   TG_DEFINE_LOG_CATEGORY(Renderer)
  public:
    enum class Moving
    {

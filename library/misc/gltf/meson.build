@@ -10,7 +10,7 @@ gltf_sources = files([
 ])
 
 gltf_deps_pub = [core, io, geometry]
-gltf_deps_priv = [core, fmt, json_util, io, geometry, fmt, render_objects]
+gltf_deps_priv = [core, json_util, io, geometry, render_objects]
 gltf_incl = include_directories(['include', 'include/triglav/gltf'])
 
 gltf_lib = static_library('gltf',
