@@ -4,7 +4,6 @@
 #include "api/CursorShape.h"
 
 #include <cassert>
-#include <spdlog/spdlog.h>
 
 namespace triglav::desktop::wayland {
 
@@ -151,17 +150,17 @@ void Surface::on_toplevel_close() const
 
 void Surface::on_popup_configure(Vector2i position, Vector2i size)
 {
-   spdlog::info("wayland: on popup configure (position: ({}, {}), size: ({}, {}))", position.x, position.y, size.x, size.y);
+   log_debug("on popup configure (position: ({}, {}), size: ({}, {}))", position.x, position.y, size.x, size.y);
 }
 
 void Surface::on_popup_done()
 {
-   spdlog::info("wayland: on popup done");
+   log_debug("on popup done");
 }
 
 void Surface::on_popup_repositioned(u32 token)
 {
-   spdlog::info("wayland: on popup repositioned: {}", token);
+   log_debug("on popup repositioned: {}", token);
 }
 
 void Surface::lock_cursor()

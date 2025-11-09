@@ -10,8 +10,6 @@
 #include "triglav/threading/ThreadPool.hpp"
 #include "triglav/threading/Threading.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::launcher {
 
 using namespace name_literals;
@@ -37,9 +35,9 @@ Application::~Application()
 
 void Application::complete_stage()
 {
-   spdlog::info("launcher: completing stage {}", launch_stage_to_string(m_currentStage).to_std());
+   log_info("completing stage {}", launch_stage_to_string(m_currentStage).to_std());
    m_currentStage = static_cast<LaunchStage>(static_cast<int>(m_currentStage) + 1);
-   spdlog::info("launcher: starting stage {}", launch_stage_to_string(m_currentStage).to_std());
+   log_info("starting stage {}", launch_stage_to_string(m_currentStage).to_std());
 
    switch (m_currentStage) {
 #define TG_STAGE(name)                                \
@@ -65,6 +63,8 @@ void Application::intitialize()
       }
 
       this->tick();
+
+      LogManager::the().flush();
    }
 }
 

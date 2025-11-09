@@ -2,6 +2,7 @@
 
 #include "RootWidget.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/String.hpp"
 
 #include <chrono>
@@ -15,6 +16,7 @@ using namespace std::chrono_literals;
 Editor::Editor(desktop::InputArgs& args, desktop::IDisplay& display) :
     m_app(args, display)
 {
+   LogManager::the().register_listener<StdOutLogger>();
 }
 
 void Editor::initialize()
@@ -30,6 +32,8 @@ void Editor::initialize()
    });
 
    m_rootWindow->initialize();
+
+   log_info("Initialization complete");
 }
 
 int Editor::run()
@@ -45,6 +49,8 @@ int Editor::run()
       m_rootWindow->update();
       m_app.tick();
       m_rootWidget->tick(delta_time);
+
+      LogManager::the().flush();
 
       auto frame_end = std::chrono::steady_clock::now();
 

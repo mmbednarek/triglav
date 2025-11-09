@@ -7,6 +7,8 @@ extern "C"
 #include "api/XdgShell.h"
 }
 
+#include "triglav/Logging.hpp"
+
 #include <optional>
 
 namespace triglav::desktop::wayland {
@@ -15,6 +17,7 @@ class Display;
 
 class Surface : public ISurface
 {
+   TG_DEFINE_LOG_CATEGORY(WaylandSurface)
    friend Display;
 
  public:

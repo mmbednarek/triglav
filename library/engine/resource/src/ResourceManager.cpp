@@ -13,7 +13,6 @@
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <ryml.hpp>
-#include <spdlog/spdlog.h>
 
 #include <map>
 #include <string>
@@ -35,36 +34,36 @@ ResourceManager::ResourceManager(graphics_api::Device& device, font::FontManger&
 void ResourceManager::load_asset_list(const io::Path& path)
 {
    if (m_loadContext != nullptr) {
-      spdlog::error("Loading assets already in progress");
+      log_error("Loading assets already in progress");
       return;
    }
    m_loadContext = LoadContext::from_asset_list(path);
    if (m_loadContext == nullptr) {
-      spdlog::error("Failed to open asset file list");
+      log_error("Failed to open asset file list");
       return;
    }
 
-   spdlog::info("Loading {} assets", m_loadContext->total_assets());
+   log_info("Loading {} assets", m_loadContext->total_assets());
    this->load_next_stage();
 }
 
 void ResourceManager::load_next_stage()
 {
    if (m_loadContext == nullptr) {
-      spdlog::error("Cannot load stage: no asset loading in progress");
+      log_error("Cannot load stage: no asset loading in progress");
       return;
    }
 
    auto& stage = m_loadContext->next_stage();
 
-   spdlog::info("Loading {} assets in stage {}", stage.resourceList.size(), m_loadContext->current_stage_id());
+   log_info("Loading {} assets in stage {}", stage.resourceList.size(), m_loadContext->current_stage_id());
 
    auto buildPath = PathManager::the().build_path();
    auto contentPath = PathManager::the().content_path();
 
    for (const auto& [nameStr, source, props] : stage.resourceList) {
       if (props.get_bool("rt_only"_name) && !(m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing)) {
-         spdlog::info("Skipped asset {}, ray tracing is disabled", nameStr);
+         log_info("Skipped asset {}, ray tracing is disabled", nameStr);
          this->on_finished_loading_resource(make_rc_name(nameStr), true);
          continue;
       }
@@ -74,7 +73,7 @@ void ResourceManager::load_next_stage()
          resourcePath = contentPath.sub(source);
 
          if (not resourcePath.exists()) {
-            spdlog::error("failed to load resource: {}, file not found", source);
+            log_error("failed to load resource: {}, file not found", source);
             continue;
          }
       }
@@ -87,8 +86,8 @@ void ResourceManager::load_next_stage()
 
 void ResourceManager::load_asset(const ResourceName assetName, const io::Path& path, const ResourceProperties& props)
 {
-   spdlog::info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
-                m_nameRegistry.lookup_resource_name(assetName).value_or("UNKNOWN"));
+   log_info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
+            m_nameRegistry.lookup_resource_name(assetName).value_or("UNKNOWN"));
 
    this->event_OnStartedLoadingAsset.publish(assetName);
 
@@ -118,13 +117,13 @@ bool ResourceManager::is_name_registered(const ResourceName assetName) const
 void ResourceManager::on_finished_loading_resource(ResourceName resourceName, const bool skipped)
 {
    if (m_loadContext == nullptr) {
-      spdlog::error("Cannot load stage: no asset loading in progress");
+      log_error("Cannot load stage: no asset loading in progress");
       return;
    }
 
    if (skipped == false) {
-      spdlog::info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
-                   m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
+      log_info("[THREAD: {}] [{}/{}] Successfully loaded {}", threading::this_thread_id(), m_loadContext->total_loaded_assets(),
+               m_loadContext->total_assets(), m_nameRegistry.lookup_resource_name(resourceName).value_or("UNKNOWN"));
       this->event_OnFinishedLoadingAsset.publish(resourceName, m_loadContext->total_loaded_assets(), m_loadContext->total_assets());
    }
 
@@ -132,11 +131,11 @@ void ResourceManager::on_finished_loading_resource(ResourceName resourceName, co
 
    switch (result) {
    case FinishLoadingAssetResult::FinishedStage:
-      spdlog::info("Loading stage {} DONE", m_loadContext->current_stage_id());
+      log_info("Loading stage {} DONE", m_loadContext->current_stage_id());
       this->load_next_stage();
       break;
    case FinishLoadingAssetResult::FinishedLoadingAssets:
-      spdlog::info("Loading assets DONE");
+      log_info("Loading assets DONE");
       m_loadContext.reset();
       this->event_OnLoadedAssets.publish();
       break;

@@ -6,6 +6,7 @@
 #include "Resource.hpp"
 
 #include "LoadContext.hpp"
+#include "triglav/Logging.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/font/FontManager.hpp"
@@ -24,6 +25,7 @@ namespace triglav::resource {
 
 class ResourceManager
 {
+   TG_DEFINE_LOG_CATEGORY(ResourceManager)
  public:
    TG_EVENT(OnStartedLoadingAsset, ResourceName)
    TG_EVENT(OnFinishedLoadingAsset, ResourceName, u32, u32)

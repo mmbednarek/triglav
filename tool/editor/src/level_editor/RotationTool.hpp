@@ -2,12 +2,15 @@
 
 #include "ILevelEditorTool.hpp"
 
+#include "triglav/Logging.hpp"
+
 namespace triglav::editor {
 
 class LevelEditor;
 
-class RotationTool : public ILevelEditorTool
+class RotationTool final : public ILevelEditorTool
 {
+   TG_DEFINE_LOG_CATEGORY(RotationTool)
  public:
    explicit RotationTool(LevelEditor& levelEditor);
 
@@ -27,8 +30,6 @@ class RotationTool : public ILevelEditorTool
    float m_baseAngle{};
    Quaternion m_startingRotation{};
    bool m_isBeingUsed{false};
-
-   Vector3 m_translationOffset{};
 };
 
 }// namespace triglav::editor

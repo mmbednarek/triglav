@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "triglav/Int.hpp"
+#include "triglav/Logging.hpp"
 
 #include "DoubleBufferQueue.hpp"
 #include "Threading.hpp"
@@ -16,6 +17,7 @@ namespace triglav::threading {
 
 class ThreadPool
 {
+   TG_DEFINE_LOG_CATEGORY(ThreadPool)
  public:
    using Job = std::function<void()>;
 

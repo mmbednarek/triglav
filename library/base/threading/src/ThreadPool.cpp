@@ -47,10 +47,13 @@ void ThreadPool::thread_entrypoint(const ThreadID threadId)
          this->thread_routine();
       }
    } catch (std::exception& e) {
-      spdlog::error("thread-pool: exception occurred: {}, exiting...", e.what());
+      log_error("Exception occurred: {}, exiting...", e.what());
+      flush_logs();
       std::exit(EXIT_FAILURE);
    } catch (...) {
-      spdlog::error("thread-pool: unknown exception occurred, exiting...");
+      log_error("Unknown exception occurred, exiting...");
+      flush_logs();
+      LogManager::the().flush();
       std::exit(EXIT_FAILURE);
    }
 }

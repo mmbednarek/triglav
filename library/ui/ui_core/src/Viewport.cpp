@@ -2,7 +2,6 @@
 
 #include "Primitives.hpp"
 
-#include <spdlog/spdlog.h>
 #include <utility>
 
 namespace triglav::ui_core {
@@ -18,7 +17,7 @@ TextId Viewport::add_text(Text&& text)
    auto [it, added] = m_texts.emplace(textId, std::move(text));
    assert(added);
 
-   spdlog::info("ui-viewport: add text: {}", textId);
+   log_debug("Add text: {}", textId);
 
    this->event_OnAddedText.publish(textId, it->second);
    m_needsRedraw = true;
@@ -47,7 +46,7 @@ void Viewport::set_text_position(TextId textId, const Vector2 position, const Re
    textPrim.position = position;
    textPrim.crop = crop;
 
-   // spdlog::info("ui-viewport: text: {} = (position: {}, {}, crop: {}, {}, {}, {})", textId, position.x, position.y, crop.x, crop.y,
+   // log_debug("text: {} = (position: {}, {}, crop: {}, {}, {}, {})", textId, position.x, position.y, crop.x, crop.y,
    // crop.z, crop.w);
 
    this->event_OnUpdatedText.publish(textId, textPrim);
@@ -62,7 +61,7 @@ void Viewport::set_text_color(const TextId textId, const Color color)
       return;
    textPrim.color = color;
 
-   // spdlog::info("ui-viewport: text: {} = (color: {}, {}, {}, {})", textId, color.x, color.y, color.z, color.w);
+   // log_debug("text: {} = (color: {}, {}, {}, {})", textId, color.x, color.y, color.z, color.w);
 
    this->event_OnUpdatedText.publish(textId, textPrim);
    m_needsRedraw = true;
@@ -70,7 +69,7 @@ void Viewport::set_text_color(const TextId textId, const Color color)
 
 void Viewport::remove_text(const TextId textId)
 {
-   spdlog::info("ui-viewport: removing text: {}", textId);
+   log_debug("Removing text: {}", textId);
    this->event_OnRemovedText.publish(textId);
    m_texts.erase(textId);
    m_needsRedraw = true;
@@ -82,7 +81,7 @@ RectId Viewport::add_rectangle(Rectangle&& rect)
    auto [it, added] = m_rectangles.emplace(rectId, rect);
    assert(added);
 
-   spdlog::info("ui-viewport: add rectangle: {}", rectId);
+   log_debug("Add rectangle: {}", rectId);
 
    this->event_OnAddedRectangle.publish(rectId, it->second);
    m_needsRedraw = true;
@@ -96,7 +95,7 @@ void Viewport::set_rectangle_dims(const RectId rectId, const Rect dims, const Re
    if (rect.rect == dims && rect.crop == crop)
       return;
 
-   // spdlog::info("ui-viewport: rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", rectId, dims.x, dims.y, dims.z, dims.w, crop.x,
+   // log_debug("rect: {} = (dims: {}, {}, {}, {}, crop: {}, {}, {}, {})", rectId, dims.x, dims.y, dims.z, dims.w, crop.x,
    // crop.y, crop.z, crop.w);
 
    rect.rect = dims;
@@ -111,7 +110,7 @@ void Viewport::set_rectangle_color(RectId rectId, const Vector4 color)
    if (rect.color == color)
       return;
 
-   // spdlog::info("ui-viewport: rect: {} = (color: {}, {}, {}, {})", rectId, color.x, color.y, color.z, color.w);
+   // log_debug("rect: {} = (color: {}, {}, {}, {})", rectId, color.x, color.y, color.z, color.w);
 
    rect.color = color;
    this->event_OnUpdatedRectangle.publish(rectId, rect);
@@ -121,7 +120,7 @@ void Viewport::set_rectangle_color(RectId rectId, const Vector4 color)
 void Viewport::remove_rectangle(RectId rectId)
 {
    assert(rectId != 0);
-   spdlog::info("ui-viewport: removing rect: {}", rectId);
+   log_debug("Removing rect: {}", rectId);
 
    event_OnRemovedRectangle.publish(rectId);
    m_rectangles.erase(rectId);
