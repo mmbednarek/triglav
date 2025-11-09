@@ -214,8 +214,7 @@ Display::Display() :
       xkb_state_update_mask(display->m_xkbState, mods_depressed, mods_latched, mods_locked, 0, 0, group);
    };
 
-   m_keyboardListener.repeat_info = [](void* /*data*/, wl_keyboard* /*wl_keyboard*/, const i32 rate, const i32 delay) {
-      std::cout << "repeat info rate: " << rate << ", delay: " << delay << '\n';
+   m_keyboardListener.repeat_info = [](void* /*data*/, wl_keyboard* /*wl_keyboard*/, const i32 /*rate*/, const i32 /*delay*/) {
       // TODO: Handle
    };
 

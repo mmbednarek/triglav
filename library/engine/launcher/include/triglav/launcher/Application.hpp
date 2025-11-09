@@ -1,6 +1,7 @@
 #pragma once
 #include "Launcher.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/graphics_api/Device.hpp"
@@ -17,6 +18,8 @@ namespace triglav::launcher {
 
 class Application
 {
+   TG_DEFINE_LOG_CATEGORY(AppLauncher)
+
 #define TG_STAGE(name) friend name##Stage;
    TG_LAUNCH_STAGES
 #undef TG_STAGE

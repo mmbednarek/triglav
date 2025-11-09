@@ -2,6 +2,7 @@
 
 #include "RootWindow.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/launcher/Application.hpp"
 
@@ -11,6 +12,7 @@ class RootWidget;
 
 class Editor
 {
+   TG_DEFINE_LOG_CATEGORY(Editor)
  public:
    explicit Editor(desktop::InputArgs& args, desktop::IDisplay& display);
 

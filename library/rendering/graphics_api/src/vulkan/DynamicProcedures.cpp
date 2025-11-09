@@ -1,5 +1,7 @@
 #include "vulkan/DynamicProcedures.hpp"
 
+#include <mutex>
+
 namespace triglav::graphics_api::vulkan {
 
 void DynamicProcedures::init(VkDevice vulkanDevice)

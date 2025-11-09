@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#include <format>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -150,3 +151,17 @@ struct Transform3D
 [[nodiscard]] Vector3 find_point_on_aa_surface(Vector3 origin, Vector3 dir, Axis axis_surface, float surface);
 
 }// namespace triglav
+
+template<>
+struct std::formatter<triglav::Vector3>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::Vector3& obj, std::format_context& ctx) const
+   {
+      return std::format_to(ctx.out(), "{}, {}, {}", obj.x, obj.y, obj.z);
+   }
+};

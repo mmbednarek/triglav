@@ -5,8 +5,6 @@
 #include "RenderViewport.hpp"
 #include "src/RootWindow.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::editor {
 
 namespace {
@@ -77,8 +75,7 @@ void RotationTool::on_mouse_moved(Vector2 position)
       transform.rotation = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotationAxis)) * m_startingRotation;
       m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
 
-      auto euler = glm::eulerAngles(transform.rotation);
-      spdlog::info("Euler components {} {} {}", euler.x, euler.y, euler.z);
+      log_info("Euler components {}", glm::eulerAngles(transform.rotation));
 
       return;
    }

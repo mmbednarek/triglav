@@ -2,6 +2,7 @@
 
 #include "Primitives.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/event/Delegate.hpp"
 
@@ -11,6 +12,7 @@ namespace triglav::ui_core {
 
 class Viewport
 {
+   TG_DEFINE_LOG_CATEGORY(UI_Viewport)
  public:
    TG_EVENT(OnAddedText, TextId, const Text&)
    TG_EVENT(OnUpdatedText, TextId, const Text&)
