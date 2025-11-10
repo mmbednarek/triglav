@@ -2,10 +2,12 @@
 
 #include "ILevelEditorTool.hpp"
 #include "RotationTool.hpp"
+#include "ScalingTool.hpp"
 #include "SelectionTool.hpp"
 #include "TranslationTool.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
+#include "triglav/desktop_ui/DropDownMenu.hpp"
 #include "triglav/renderer/BindlessScene.hpp"
 #include "triglav/renderer/OcclusionCulling.hpp"
 #include "triglav/renderer/RenderingJob.hpp"
@@ -36,11 +38,13 @@ class LevelEditor final : public ui_core::ProxyWidget
    void tick(float delta_time);
    const renderer::SceneObject* selected_object() const;
    renderer::ObjectID selected_object_id() const;
+   [[nodiscard]] Vector3 selected_object_position(std::optional<Vector3> position = std::nullopt) const;
    LevelViewport& viewport() const;
    ILevelEditorTool& tool() const;
    SelectionTool& selection_tool();
    [[nodiscard]] RootWindow& root_window() const;
    void on_selected_tool(u32 id);
+   void on_origin_selected(u32 id) const;
 
    void set_selected_object(renderer::ObjectID id);
 
@@ -59,10 +63,13 @@ class LevelEditor final : public ui_core::ProxyWidget
    SelectionTool m_selectionTool;
    TranslationTool m_translationTool;
    RotationTool m_rotationTool;
+   ScalingTool m_scalingTool;
+   desktop_ui::DropDownMenu* m_originSelector;
 
    ILevelEditorTool* m_currentTool = nullptr;
 
    TG_SINK(desktop_ui::RadioGroup, OnSelection);
+   TG_OPT_SINK(desktop_ui::DropDownMenu, OnSelected);
 };
 
 }// namespace triglav::editor

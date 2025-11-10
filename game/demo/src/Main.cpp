@@ -27,6 +27,9 @@ int triglav_main(InputArgs& args, IDisplay& display)
    // Parse program arguments
    CommandLine::the().parse(args.arg_count, args.args);
 
+   // Initialize logger
+   triglav::LogManager::the().register_listener<triglav::StdOutLogger>();
+
    // Assign ID to the main thread
    triglav::threading::set_thread_id(triglav::threading::g_mainThread);
 

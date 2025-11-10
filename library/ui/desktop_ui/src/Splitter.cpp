@@ -20,6 +20,19 @@ desktop::CursorIcon axis_to_cursor_icon(const ui_core::Axis axis)
    return desktop::CursorIcon::Arrow;
 }
 
+float calculate_offset(const SplitterOffsetType type, const float offset, const ui_core::Axis axis, const Vector2 size)
+{
+   switch (type) {
+   case SplitterOffsetType::Preceeding:
+      return offset;
+   case SplitterOffsetType::Following: {
+      const auto dim = ui_core::parallel(size, axis);
+      return dim - offset - g_splitterSize;
+   }
+   }
+   return 0.0f;
+}
+
 }// namespace
 
 Splitter::Splitter(ui_core::Context& ctx, const State state, ui_core::IWidget* parent) :
@@ -31,9 +44,9 @@ Splitter::Splitter(ui_core::Context& ctx, const State state, ui_core::IWidget* p
 
 Vector2 Splitter::desired_size(const Vector2 parentSize) const
 {
-   const auto preceding_size = m_preceding->desired_size(make_vec(this->offset(), ortho(parentSize)));
-   const auto following_size =
-      m_following->desired_size(make_vec(parallel(parentSize) - g_splitterSize - this->offset(), ortho(parentSize)));
+   const float offset = calculate_offset(m_state.offset_type, m_state.offset, m_state.axis, parentSize);
+   const auto preceding_size = m_preceding->desired_size(make_vec(offset, ortho(parentSize)));
+   const auto following_size = m_following->desired_size(make_vec(parallel(parentSize) - g_splitterSize - offset, ortho(parentSize)));
    return make_vec(parallel(preceding_size) + parallel(following_size) + g_splitterSize,
                    std::max(ortho(preceding_size), ortho(following_size)));
 }
@@ -128,15 +141,7 @@ ui_core::IWidget& Splitter::set_following(ui_core::IWidgetPtr&& widget)
 
 float Splitter::offset() const
 {
-   switch (m_state.offset_type) {
-   case SplitterOffsetType::Preceeding:
-      return m_state.offset;
-   case SplitterOffsetType::Following: {
-      const auto size = parallel(rect_size(m_dimensions));
-      return size - m_state.offset - g_splitterSize;
-   }
-   }
-   return 0.0f;
+   return calculate_offset(m_state.offset_type, m_state.offset, m_state.axis, rect_size(m_dimensions));
 }
 
 void Splitter::add_offset(const float diff)

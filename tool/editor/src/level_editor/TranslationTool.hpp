@@ -25,7 +25,8 @@ class TranslationTool final : public ILevelEditorTool
    geometry::BoundingBox m_arrow_y_bb{};
    geometry::BoundingBox m_arrow_z_bb{};
 
-   Vector3 m_translationOffset{};
+   Vector3 m_startingPosition{};
+   Vector3 m_startingHit{};
 };
 
 }// namespace triglav::editor

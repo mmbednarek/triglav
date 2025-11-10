@@ -39,13 +39,15 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
       return false;
 
    const auto* object = m_levelEditor.selected_object();
-   const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   const auto centroid = mesh.boundingBox.centroid();
-   const auto translation = object->transform.translation + centroid * object->transform.scale;
+   // const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
+   // const auto centroid = mesh.boundingBox.centroid();
+   // const auto translation = object->transform.translation + centroid * object->transform.scale;
+   auto position = m_levelEditor.selected_object_position();
 
-   const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(translation, *m_rotationAxis));
-   const auto difference = normalize(point - translation);
+   const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(position, *m_rotationAxis));
+   const auto difference = normalize(point - position);
 
+   m_startingTranslation = object->transform.translation;
    m_startingRotation = object->transform.rotation;
    m_baseAngle = angle_from_vector(difference, *m_rotationAxis);
    m_isBeingUsed = true;
@@ -62,21 +64,22 @@ void RotationTool::on_mouse_moved(Vector2 position)
    if (m_isBeingUsed) {
       assert(m_rotationAxis.has_value());
       const auto* object = m_levelEditor.selected_object();
-      const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-      auto centroid = mesh.boundingBox.centroid();
-      auto translation = object->transform.translation + centroid * object->transform.scale;
+      // const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
+      // auto centroid = mesh.boundingBox.centroid();
+      // auto translation = object->transform.translation + centroid * object->transform.scale;
+      const auto obj_position = m_levelEditor.selected_object_position(m_startingTranslation);
 
-      auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(translation, *m_rotationAxis));
-      const auto difference = normalize(point - translation);
+      auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(obj_position, *m_rotationAxis));
+      const auto difference = normalize(point - obj_position);
       const float angle = angle_from_vector(difference, *m_rotationAxis);
       const float angle_diff = angle - m_baseAngle;
 
-      auto transform = m_levelEditor.selected_object()->transform;
-      transform.rotation = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotationAxis)) * m_startingRotation;
+      auto quat_rot = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotationAxis));
+
+      auto transform = object->transform;
+      transform.translation = obj_position + quat_rot * (m_startingTranslation - obj_position);
+      transform.rotation = quat_rot * m_startingRotation;
       m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
-
-      log_info("Euler components {}", glm::eulerAngles(transform.rotation));
-
       return;
    }
 
@@ -143,17 +146,18 @@ void RotationTool::on_view_updated()
    m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ROTATOR_Y, COLOR_Y_AXIS);
    m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ROTATOR_Z, COLOR_Z_AXIS);
 
-   const auto* object = m_levelEditor.selected_object();
-   const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   auto centroid = mesh.boundingBox.centroid();
-   auto translation = object->transform.translation + centroid * object->transform.scale;
+   // const auto* object = m_levelEditor.selected_object();
+   // const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
+   // auto centroid = mesh.boundingBox.centroid();
+   // auto translation = object->transform.translation + centroid * object->transform.scale;
+   auto obj_position = m_levelEditor.selected_object_position();
 
-   const auto obj_distance = glm::length(object->transform.translation - m_levelEditor.scene().camera().position());
+   const auto obj_distance = glm::length(obj_position - m_levelEditor.scene().camera().position());
 
    const Transform3D transform_x_axis{
       .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
       .scale = Vector3{0.025f} * obj_distance,
-      .translation = translation,
+      .translation = obj_position,
    };
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_ROTATOR_X, transform_x_axis.to_matrix());
    m_rotator_x_bb = rotator_bb.transform(transform_x_axis.to_matrix());
@@ -161,7 +165,7 @@ void RotationTool::on_view_updated()
    const Transform3D transform_y_axis{
       .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
-      .translation = translation,
+      .translation = obj_position,
    };
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_ROTATOR_Y, transform_y_axis.to_matrix());
    m_rotator_y_bb = rotator_bb.transform(transform_y_axis.to_matrix());
@@ -169,7 +173,7 @@ void RotationTool::on_view_updated()
    const Transform3D transform_z_axis{
       .rotation = Quaternion{Vector3{0, 0, 0}},
       .scale = Vector3{0.025f} * obj_distance,
-      .translation = translation,
+      .translation = obj_position,
    };
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_ROTATOR_Z, transform_z_axis.to_matrix());
    m_rotator_z_bb = rotator_bb.transform(transform_z_axis.to_matrix());

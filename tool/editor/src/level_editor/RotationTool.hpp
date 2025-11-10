@@ -28,6 +28,7 @@ class RotationTool final : public ILevelEditorTool
    geometry::BoundingBox m_rotator_y_bb{};
    geometry::BoundingBox m_rotator_z_bb{};
    float m_baseAngle{};
+   Vector3 m_startingTranslation{};
    Quaternion m_startingRotation{};
    bool m_isBeingUsed{false};
 };

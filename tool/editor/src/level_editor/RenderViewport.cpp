@@ -60,7 +60,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
 
-   const auto [vertices_box, indices_box] = create_box_mesh();
+   const auto [vertices_box, indices_box] = create_box_mesh({0, 0, 0}, {1, 1, 1});
    ctx.init_buffer_raw("render_viewport.box_vertices"_name, vertices_box.data(), vertices_box.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.box_indices"_name, indices_box.data(), indices_box.size() * sizeof(u32));
 
@@ -71,6 +71,10 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    const auto [vertices_ring, indices_ring] = create_ring_mesh<32>(ROTATOR_RADIUS);
    ctx.init_buffer_raw("render_viewport.ring_vertices"_name, vertices_ring.data(), vertices_ring.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.ring_indices"_name, indices_ring.data(), indices_ring.size() * sizeof(u32));
+
+   const auto [vertices_scaler, indices_scaler] = create_scaler_mesh<12>({0, 0, 0}, SHAFT_RADIUS, SHAFT_HEIGHT, BOX_SIZE);
+   ctx.init_buffer_raw("render_viewport.scaler_vertices"_name, vertices_scaler.data(), vertices_scaler.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.scaler_indices"_name, indices_scaler.data(), indices_scaler.size() * sizeof(u32));
 
    const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
 
@@ -101,13 +105,20 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.set_line_width(5.0f);
 
    render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_X,
-               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, false);
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, true);
    render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_Y,
-               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, false);
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, true);
    render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_Z,
-               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, false);
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, true);
 
    ctx.set_line_width(2.0f);
+
+   render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_X,
+               static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_Y,
+               static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_Z,
+               static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
 
    render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, OVERLAY_SELECTION_BOX,
                static_cast<u32>(indices_box.size()), color_align, matrix_align, graphics_api::VertexTopology::LineList, true);

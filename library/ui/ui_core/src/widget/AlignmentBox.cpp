@@ -4,11 +4,18 @@ namespace triglav::ui_core {
 
 namespace {
 
-Vector2 calculate_content_offset(const HorizontalAlignment horizontalAlignment, const VerticalAlignment verticalAlignment,
-                                 const Vector2 parentSize, const Vector2 contentSize)
+Vector2 calculate_content_offset(const std::optional<HorizontalAlignment> horizontalAlignment,
+                                 const std::optional<VerticalAlignment> verticalAlignment, const Vector2 parentSize,
+                                 const Vector2 contentSize)
 {
-   return {calculate_alignment(horizontalAlignment, parentSize.x, contentSize.x),
-           calculate_alignment(verticalAlignment, parentSize.y, contentSize.y)};
+   Vector2 result{0, 0};
+   if (horizontalAlignment.has_value()) {
+      result.x = calculate_alignment(*horizontalAlignment, parentSize.x, contentSize.x);
+   }
+   if (verticalAlignment.has_value()) {
+      result.y = calculate_alignment(*verticalAlignment, parentSize.y, contentSize.y);
+   }
+   return result;
 }
 
 }// namespace
@@ -21,12 +28,23 @@ AlignmentBox::AlignmentBox(Context& ctx, State state, IWidget* parent) :
 
 Vector2 AlignmentBox::desired_size(const Vector2 parentSize) const
 {
-   return parentSize;
+   if (m_state.horizontalAlignment.has_value() && m_state.verticalAlignment.has_value())
+      return parentSize;
+
+   auto result = m_content->desired_size(parentSize);
+   if (m_state.horizontalAlignment.has_value()) {
+      result.x = parentSize.x;
+   }
+   if (m_state.verticalAlignment.has_value()) {
+      result.y = parentSize.y;
+   }
+
+   return result;
 }
 
 void AlignmentBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   const Vector2 parentSize{dimensions.z, dimensions.w};
+   const Vector2 parentSize = rect_size(dimensions);
    const Vector2 size = m_content->desired_size(parentSize);
    const Vector2 offset = calculate_content_offset(m_state.horizontalAlignment, m_state.verticalAlignment, parentSize, size);
    m_content->add_to_viewport({dimensions.x + offset.x, dimensions.y + offset.y, size.x, size.y}, croppingMask);

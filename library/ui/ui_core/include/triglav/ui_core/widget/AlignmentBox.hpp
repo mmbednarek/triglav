@@ -14,8 +14,8 @@ class AlignmentBox final : public ContainerWidget
  public:
    struct State
    {
-      HorizontalAlignment horizontalAlignment;
-      VerticalAlignment verticalAlignment;
+      std::optional<HorizontalAlignment> horizontalAlignment;
+      std::optional<VerticalAlignment> verticalAlignment;
    };
 
    AlignmentBox(Context& ctx, State state, IWidget* parent);

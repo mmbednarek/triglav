@@ -30,10 +30,6 @@ resources:
     source: shader/bindless_geometry/depth_prepass_vertex.spv
   - name: bindless_geometry_hi_zbuffer.cshader
     source: shader/bindless_geometry/hi_z_comp.spv
-  - name: editor/object_selection.fshader
-    source: shader/editor/object_selection_fs.spv
-  - name: editor/object_selection.vshader
-    source: shader/editor/object_selection_vs.spv
   - name: blur.cshader
     source: shader/misc/blur_rgba.spv
   - name: blur/sc.cshader
@@ -58,8 +54,16 @@ resources:
     source: shader/misc/full_screen_vs.spv
   - name: demo.level
     source: level/demo.yaml
+  - name: editor/object_selection.fshader
+    source: shader/editor/object_selection_fs.spv
+  - name: editor/object_selection.vshader
+    source: shader/editor/object_selection_vs.spv
   - name: example.mesh
     source: model/example.mesh
+  - name: fonts/segoeui/bold.typeface
+    source: fonts/segoeui_bold.ttf
+  - name: fonts/segoeui/regular.typeface
+    source: fonts/segoeui_regular.ttf
   - name: gold.mat
     source: material/gold.yaml
   - name: gold.tex
@@ -166,10 +170,6 @@ resources:
     source: shader/ray_tracing/shadow_miss.spv
     properties:
       rt_only: on
-  - name: fonts/segoeui/regular.typeface
-    source: fonts/segoeui_regular.ttf
-  - name: fonts/segoeui/bold.typeface
-    source: fonts/segoeui_bold.ttf
   - name: shading.fshader
     source: shader/pass/shading.spv
   - name: skybox.fshader

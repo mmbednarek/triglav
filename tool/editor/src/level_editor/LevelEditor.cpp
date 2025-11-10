@@ -10,9 +10,12 @@
 #include "triglav/renderer/stage/ShadingStage.hpp"
 #include "triglav/renderer/stage/ShadowMapStage.hpp"
 #include "triglav/ui_core/Context.hpp"
+#include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
+#include "triglav/ui_core/widget/SizeLimit.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 namespace triglav::editor {
@@ -21,7 +24,8 @@ using namespace name_literals;
 
 namespace {
 
-constexpr Vector2 ICON_SIZE{20.0f, 20.0f};
+constexpr Vector2 ICON_SIZE{22.0f, 22.0f};
+constexpr float TOOLBAR_HEIGHT = 48.0f;
 
 renderer::Config get_default_config()
 {
@@ -51,6 +55,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_selectionTool(*this),
     m_translationTool(*this),
     m_rotationTool(*this),
+    m_scalingTool(*this),
     m_currentTool(&m_selectionTool),
     TG_CONNECT(m_toolRadioGroup, OnSelection, on_selected_tool)
 {
@@ -62,11 +67,19 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .borderWidth = 0.0f,
    });
 
-   auto& toolbar_layout = toolbar.create_content<ui_core::HorizontalLayout>({
-      .padding = {8.0f, 6.0f, 8.0f, 6.0f},
-      .separation = 4.0f,
-      .gravity = ui_core::HorizontalAlignment::Left,
-   });
+   auto& toolbar_layout = toolbar
+                             .create_content<ui_core::SizeLimit>({
+                                .max_size = {4096, TOOLBAR_HEIGHT},
+                             })
+                             .create_content<ui_core::AlignmentBox>({
+                                .horizontalAlignment = std::nullopt,
+                                .verticalAlignment = ui_core::VerticalAlignment::Center,
+                             })
+                             .create_content<ui_core::HorizontalLayout>({
+                                .padding = {8.0f, 6.0f, 8.0f, 6.0f},
+                                .separation = 4.0f,
+                                .gravity = ui_core::HorizontalAlignment::Left,
+                             });
 
    auto& select_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
       .manager = m_state.manager,
@@ -116,6 +129,62 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    });
    m_toolRadioGroup.add_check_box(&scale_btn);
 
+   // Separation
+   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+   toolbar_layout
+      .create_child<ui_core::RectBox>({
+         .color = {0.2f, 0.2f, 0.2f, 1.0f},
+      })
+      .create_content<ui_core::EmptySpace>({
+         .size = {2.0f, ICON_SIZE.y},
+      });
+
+   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+   toolbar_layout
+      .create_child<ui_core::SizeLimit>({
+         .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+      })
+      .create_content<ui_core::AlignmentBox>({
+         .horizontalAlignment = std::nullopt,
+         .verticalAlignment = ui_core::VerticalAlignment::Center,
+      })
+      .create_content<ui_core::Image>({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .maxSize = ICON_SIZE,
+         .region = Vector4{4 * 64, 0, 64, 64},
+      });
+
+   m_originSelector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+      .manager = m_state.manager,
+      .items = {"Origin", "Centroid", "World"},
+      .selectedItem = 0,
+   });
+   TG_CONNECT_OPT(*m_originSelector, OnSelected, on_origin_selected);
+
+   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+   toolbar_layout
+      .create_child<ui_core::SizeLimit>({
+         .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+      })
+      .create_content<ui_core::AlignmentBox>({
+         .horizontalAlignment = std::nullopt,
+         .verticalAlignment = ui_core::VerticalAlignment::Center,
+      })
+      .create_content<ui_core::Image>({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .maxSize = ICON_SIZE,
+         .region = Vector4{4 * 64, 64, 64, 64},
+      });
+
+   toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+      .manager = m_state.manager,
+      .items = {"Off", "0.25", "0.5", "1", "2", "4"},
+      .selectedItem = 0,
+   });
+
    m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow, *this);
 
    m_scene.load_level("demo.level"_rc);
@@ -153,6 +222,25 @@ renderer::ObjectID LevelEditor::selected_object_id() const
    return m_selectedObjectID;
 }
 
+Vector3 LevelEditor::selected_object_position(const std::optional<Vector3> position) const
+{
+   const auto* object = this->selected_object();
+   const auto translation = position.value_or(object->transform.translation);
+
+   switch (m_originSelector->selected_item()) {
+   case 0:
+      return translation;
+   case 1: {
+      const auto& mesh = this->root_window().resource_manager().get(object->model);
+      const auto centroid = mesh.boundingBox.centroid();
+      return translation + centroid * object->transform.scale;
+   }
+   default:
+      break;
+   }
+   return {0, 0, 0};
+}
+
 LevelViewport& LevelEditor::viewport() const
 {
    assert(m_viewport != nullptr);
@@ -187,9 +275,17 @@ void LevelEditor::on_selected_tool(const u32 id)
    case 2:
       m_currentTool = &m_rotationTool;
       break;
+   case 3:
+      m_currentTool = &m_scalingTool;
+      break;
    default:
       break;
    }
+   m_viewport->update_view();
+}
+
+void LevelEditor::on_origin_selected(u32 /*id*/) const
+{
    m_viewport->update_view();
 }
 
