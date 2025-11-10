@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="256"
+   width="512"
    height="256"
-   viewBox="0 0 256 256"
+   viewBox="0 0 512 256"
    version="1.1"
    id="svg1"
    inkscape:export-filename="ui_atlas.png"
@@ -27,11 +27,11 @@
      inkscape:deskcolor="#000000"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="1.8411456"
-     inkscape:cx="-95.321088"
-     inkscape:cy="41.821788"
+     inkscape:zoom="3.6822912"
+     inkscape:cx="204.08489"
+     inkscape:cy="21.454034"
      inkscape:window-width="2560"
-     inkscape:window-height="1406"
+     inkscape:window-height="1408"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -155,8 +155,8 @@
        refY="0"
        orient="auto-start-reverse"
        inkscape:stockid="Rounded arrow"
-       markerWidth="0.4"
-       markerHeight="0.4"
+       markerWidth="0.40000001"
+       markerHeight="0.40000001"
        viewBox="0 0 1 1"
        inkscape:isstock="true"
        inkscape:collect="always"
@@ -192,18 +192,18 @@
      inkscape:groupmode="layer"
      id="layer1">
     <path
-       style="fill:none;stroke:#dadada;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
-       d="m 8,20 l 20,20 q 4,4 8,0 l 20,-20"
+       style="fill:none;fill-opacity:1;stroke:#dadada;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 8,20 20,20 q 4,4 8,0 L 56,20"
        id="arrow-down"
        sodipodi:nodetypes="cccc" />
     <path
        style="fill:none;fill-opacity:1;stroke:#dadada;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="m 72,44 l 20,-20 q 4,-4 8,0 l 20,20"
+       d="M 72,44 92,24 q 4,-4 8,0 l 20,20"
        id="arrow-up"
        sodipodi:nodetypes="cccc" />
     <path
        style="fill:none;fill-opacity:1;stroke:#dadada;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-       d="m 172,8 l -20,20 q -4,4 0,8 l 20,20"
+       d="m 172,8 -20,20 q -4,4 0,8 l 20,20"
        id="arrow-left"
        sodipodi:nodetypes="cccc" />
     <path
@@ -212,12 +212,12 @@
        id="arrow-right"
        sodipodi:nodetypes="cccc" />
     <path
-       style="fill:none;stroke:#d9d9d9;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#ConcaveTriangle);marker-end:url(#marker9)"
-       d="m 16, 96 h 32"
+       style="fill:none;stroke:#d9d9d9;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#ConcaveTriangle);marker-end:url(#marker9)"
+       d="M 16,96 H 48"
        id="move-hor" />
     <path
        style="fill:none;stroke:#d9d9d9;stroke-width:5;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker6);marker-end:url(#marker5)"
-       d="M 32,80 v 32"
+       d="m 32,80 v 32"
        id="move-vert" />
     <path
        style="fill:none;stroke:#d9d9d9;stroke-width:6;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#RoundedArrow);paint-order:stroke fill markers"
@@ -408,5 +408,53 @@
          x="214.35248"
          y="234.8443"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:32px;font-family:'Liberation Mono';-inkscape-font-specification:'Liberation Mono Bold';fill:#d9d9d9;fill-opacity:1">?</tspan></text>
+    <circle
+       style="fill:none;stroke:#d9d9d9;stroke-width:5;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-dashoffset:9.12;paint-order:stroke fill markers"
+       id="path2"
+       cx="288.09363"
+       cy="32.461739"
+       r="20.833576" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 259.64826,33.045292 h 15.54721"
+       id="path3" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="m 301.40874,33.286611 h 14.5226"
+       id="path3-36" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="M 287.84484,4.2283049 V 20.472495"
+       id="path3-3" />
+    <path
+       style="fill:none;stroke:#d9d9d9;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
+       d="M 288.15666,45.101059 V 61.516017"
+       id="path3-3-1" />
+    <ellipse
+       style="fill:#d9d9d9;fill-opacity:1;stroke:none;stroke-width:18.6033;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-dashoffset:9.12;stroke-opacity:1;paint-order:stroke fill markers"
+       id="path4"
+       cx="287.7757"
+       cy="32.698864"
+       rx="5.4416461"
+       ry="5.3591514" />
+    <path
+       style="fill:#d9d9d9;fill-opacity:1;stroke:none;stroke-width:0.88258px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 264.73323,83.230069 h 11.01728 v 15.221782 c 0.59533,14.903379 24.53361,13.606989 24.95047,1.016894 V 82.721626 l 10.80902,0 V 100.6551 c -3.31335,24.85952 -44.00961,24.31055 -46.94625,-1.016875 z"
+       id="path11"
+       sodipodi:nodetypes="ccccccccc" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:2.14735;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-dashoffset:9.12;stroke-opacity:1;paint-order:stroke fill markers"
+       id="rect12"
+       width="8.875577"
+       height="14.014317"
+       x="265.80045"
+       y="70.739532" />
+    <rect
+       style="fill:none;fill-opacity:1;stroke:#d9d9d9;stroke-width:2.02869;stroke-linejoin:bevel;stroke-miterlimit:3.8;stroke-dasharray:none;stroke-dashoffset:9.12;stroke-opacity:1;paint-order:stroke fill markers"
+       id="rect12-1"
+       width="8.7094698"
+       height="12.746954"
+       x="301.78857"
+       y="71.081215" />
   </g>
 </svg>

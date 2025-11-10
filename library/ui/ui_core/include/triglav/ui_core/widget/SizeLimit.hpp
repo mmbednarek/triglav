@@ -9,30 +9,24 @@ namespace triglav::ui_core {
 
 class Context;
 
-class AlignmentBox final : public ContainerWidget
+class SizeLimit final : public ContainerWidget
 {
  public:
    struct State
    {
-      std::optional<HorizontalAlignment> horizontalAlignment;
-      std::optional<VerticalAlignment> verticalAlignment;
+      Vector2 max_size;
    };
 
-   AlignmentBox(Context& ctx, State state, IWidget* parent);
+   SizeLimit(Context& ctx, State state, IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
    void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
    void remove_from_viewport() override;
 
-   void on_child_state_changed(IWidget& widget) override;
-
    void on_event(const Event& event) override;
 
  private:
    State m_state;
-   Vector4 m_parentDimensions{};
-   Vector4 m_croppingMask{};
-   bool m_isMouseInside = false;
 };
 
 }// namespace triglav::ui_core

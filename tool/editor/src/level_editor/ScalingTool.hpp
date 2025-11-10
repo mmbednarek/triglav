@@ -8,11 +8,11 @@ namespace triglav::editor {
 
 class LevelEditor;
 
-class RotationTool final : public ILevelEditorTool
+class ScalingTool final : public ILevelEditorTool
 {
-   TG_DEFINE_LOG_CATEGORY(RotationTool)
+   TG_DEFINE_LOG_CATEGORY(ScalingTool)
  public:
-   explicit RotationTool(LevelEditor& levelEditor);
+   explicit ScalingTool(LevelEditor& levelEditor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;
@@ -23,14 +23,15 @@ class RotationTool final : public ILevelEditorTool
  private:
    LevelEditor& m_levelEditor;
 
-   std::optional<Axis> m_rotationAxis;
-   geometry::BoundingBox m_rotator_x_bb{};
-   geometry::BoundingBox m_rotator_y_bb{};
-   geometry::BoundingBox m_rotator_z_bb{};
-   float m_baseAngle{};
+   std::optional<Axis> m_transformAxis;
+   geometry::BoundingBox m_scaler_x_bb{};
+   geometry::BoundingBox m_scaler_y_bb{};
+   geometry::BoundingBox m_scaler_z_bb{};
+
    Vector3 m_startingTranslation{};
-   Quaternion m_startingRotation{};
-   bool m_isBeingUsed{false};
+   Vector3 m_startingPosition{};
+   Vector3 m_startingClosest{};
+   Vector3 m_baseScale{};
 };
 
 }// namespace triglav::editor

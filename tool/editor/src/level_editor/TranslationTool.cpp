@@ -1,5 +1,6 @@
 #include "TranslationTool.hpp"
 
+#include "../../../../../../../.conan2/p/b/boost685345d9ed20d/p/include/boost/algorithm/minmax_element.hpp"
 #include "../RootWindow.hpp"
 #include "LevelViewport.hpp"
 
@@ -22,12 +23,9 @@ bool TranslationTool::on_use_start(const geometry::Ray& ray)
       return false;
    }
 
-   const auto* object = m_levelEditor.selected_object();
-   const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   const auto centroid = mesh.boundingBox.centroid();
-   const auto translation = object->transform.translation + centroid * object->transform.scale;
-   const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
-   m_translationOffset = translation - closest;
+   m_startingPosition = m_levelEditor.selected_object()->transform.translation;
+   m_startingHit = find_closest_point_between_lines(m_levelEditor.selected_object_position(), axis_forward_vec3(*m_transformAxis),
+                                                    ray.origin, ray.direction);
    return true;
 }
 
@@ -39,34 +37,32 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
 
    if (m_transformAxis.has_value()) {
       const auto* object = m_levelEditor.selected_object();
-      const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-      const auto centroid = mesh.boundingBox.centroid();
-      const auto translation = object->transform.translation + centroid * object->transform.scale;
-
       auto transform = object->transform;
-      const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
-      transform.translation = closest + m_translationOffset - centroid * object->transform.scale;
+      transform.translation = m_startingPosition +
+                              find_closest_point_between_lines(m_levelEditor.selected_object_position(),
+                                                               axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction) -
+                              m_startingHit;
       m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
       m_levelEditor.viewport().update_view();
       return;
    }
 
    if (m_arrow_x_bb.intersect(ray)) {
-      m_levelEditor.viewport().render_viewport().set_color(1, COLOR_X_AXIS_HOVER);
+      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ARROW_X, COLOR_X_AXIS_HOVER);
    } else {
-      m_levelEditor.viewport().render_viewport().set_color(1, COLOR_X_AXIS);
+      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ARROW_X, COLOR_X_AXIS);
    }
 
    if (m_arrow_y_bb.intersect(ray)) {
-      m_levelEditor.viewport().render_viewport().set_color(2, COLOR_Y_AXIS_HOVER);
+      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ARROW_Y, COLOR_Y_AXIS_HOVER);
    } else {
-      m_levelEditor.viewport().render_viewport().set_color(2, COLOR_Y_AXIS);
+      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ARROW_Y, COLOR_Y_AXIS);
    }
 
    if (m_arrow_z_bb.intersect(ray)) {
-      m_levelEditor.viewport().render_viewport().set_color(3, COLOR_Z_AXIS_HOVER);
+      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ARROW_Z, COLOR_Z_AXIS_HOVER);
    } else {
-      m_levelEditor.viewport().render_viewport().set_color(3, COLOR_Z_AXIS);
+      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ARROW_Z, COLOR_Z_AXIS);
    }
 }
 
@@ -77,12 +73,8 @@ void TranslationTool::on_view_updated()
       .max{TIP_RADIUS, TIP_RADIUS, ARROW_HEIGHT},
    };
 
-   const auto* object = m_levelEditor.selected_object();
-   const auto obj_distance = glm::length(object->transform.translation - m_levelEditor.scene().camera().position());
-
-   const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   const auto centroid = mesh.boundingBox.centroid();
-   const auto translation = object->transform.translation + centroid * object->transform.scale;
+   const auto translation = m_levelEditor.selected_object_position();
+   const auto obj_distance = glm::length(translation - m_levelEditor.scene().camera().position());
 
    const Transform3D transform_x_axis{
       .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
@@ -116,9 +108,9 @@ void TranslationTool::on_use_end()
 
 void TranslationTool::on_left_tool()
 {
-   m_levelEditor.viewport().render_viewport().set_selection_matrix(1, Matrix4x4{0});
-   m_levelEditor.viewport().render_viewport().set_selection_matrix(2, Matrix4x4{0});
-   m_levelEditor.viewport().render_viewport().set_selection_matrix(3, Matrix4x4{0});
+   m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_ARROW_X, Matrix4x4{0});
+   m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_ARROW_Y, Matrix4x4{0});
+   m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_ARROW_Z, Matrix4x4{0});
 }
 
 }// namespace triglav::editor

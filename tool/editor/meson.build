@@ -8,6 +8,8 @@ editor_sources = files([
                            'src/level_editor/RenderViewport.hpp',
                            'src/level_editor/RotationTool.cpp',
                            'src/level_editor/RotationTool.hpp',
+                           'src/level_editor/ScalingTool.cpp',
+                           'src/level_editor/ScalingTool.hpp',
                            'src/level_editor/SelectionTool.hpp',
                            'src/level_editor/SelectionTool.cpp',
                            'src/level_editor/ToolMeshes.hpp',

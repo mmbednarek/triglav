@@ -30,11 +30,11 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
       .borderWidth = 0.0f,
    });
    auto& layout = m_rect->create_content<ui_core::VerticalLayout>({
-      .padding = {0.0f, 10.0f, 0.0f, 10.0f},
+      .padding = {0.0f, 6.0f, 0.0f, 6.0f},
       .separation = 0.0f,
    });
    layout.create_child<ui_core::TextBox>({
-      .fontSize = 16,
+      .fontSize = 14,
       .typeface = TG_THEME_VAL(base_typeface),
       .content = m_state.label,
       .color = {1, 1, 1, 1},
@@ -154,11 +154,11 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
 {
    const auto& props = m_state.manager->properties();
    auto& layout = m_rect.create_content<ui_core::VerticalLayout>({
-      .padding{15.0f, 15.0f, 15.0f, 15.0f},
+      .padding{8.0f, 8.0f, 8.0f, 8.0f},
       .separation = 0.0f,
    });
    m_label = &layout.create_child<ui_core::TextBox>({
-      .fontSize = props.button.font_size,
+      .fontSize = 14,
       .typeface = props.base_typeface,
       .content = m_state.items[m_state.selectedItem],
       .color = props.foreground_color,
@@ -167,9 +167,17 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
    });
 }
 
-Vector2 DropDownMenu::desired_size(const Vector2 parentSize) const
+Vector2 DropDownMenu::desired_size(const Vector2 /*parentSize*/) const
 {
-   return m_rect.desired_size(parentSize);
+   Vector2 max{0, 0};
+   const auto& atlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), 14});
+   for (const auto& val : m_state.items) {
+      auto measure = atlas.measure_text(val.view());
+      max.x = std::max(max.x, measure.width);
+      max.y = std::max(max.y, measure.height);
+   }
+
+   return {24.0f + max.x + max.y, 16.0f + max.y};
 }
 
 void DropDownMenu::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
@@ -210,6 +218,11 @@ void DropDownMenu::on_child_state_changed(IWidget& /*widget*/)
    m_rect.add_to_viewport(m_dimensions, m_croppingMask);
 }
 
+u32 DropDownMenu::selected_item() const
+{
+   return m_state.selectedItem;
+}
+
 void DropDownMenu::set_selected_item(const u32 index)
 {
    m_state.selectedItem = index;
@@ -221,6 +234,8 @@ void DropDownMenu::set_selected_item(const u32 index)
       m_state.manager->popup_manager().close_popup(m_currentPopup);
       m_currentPopup = nullptr;
    }
+
+   event_OnSelected.publish(index);
 }
 
 void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)

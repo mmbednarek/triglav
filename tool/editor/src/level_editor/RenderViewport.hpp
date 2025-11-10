@@ -13,6 +13,7 @@ constexpr auto TIP_HEIGHT = 1.3f;
 constexpr auto SHAFT_HEIGHT = ARROW_HEIGHT - TIP_HEIGHT;
 constexpr auto SHAFT_RADIUS = 0.08f;
 constexpr auto TIP_RADIUS = 0.25f;
+constexpr auto BOX_SIZE = 0.25f;
 constexpr auto ROTATOR_RADIUS = 4.0f;
 constexpr auto ROTATOR_WIDTH = 0.5f;
 
@@ -61,10 +62,8 @@ class RenderViewport
       Matrix4x4{0},
    };
    std::array<Color, OVERLAY_COUNT> m_colors{
-      Color(1, 0.5, 0, 1),
-      Color(1, 0.09, 0.09, 1),
-      Color(0.09, 1, 0.25, 1),
-      Color(0.01, 0.25, 1, 1),
+      Color(1, 0.5, 0, 1), COLOR_X_AXIS, COLOR_Y_AXIS, COLOR_Z_AXIS, COLOR_X_AXIS,
+      COLOR_Y_AXIS,        COLOR_Z_AXIS, COLOR_X_AXIS, COLOR_Y_AXIS, COLOR_Z_AXIS,
    };
 };
 
