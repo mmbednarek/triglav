@@ -9,12 +9,12 @@ nodes:
           rotation: {x: 0, y: 0, z: 0, w: 1}
           scale: {x: 10, y: 10, z: 10}
       - type: static_mesh
-        name: "pine"
-        mesh: "pine.mesh"
+        name: "arrow"
+        mesh: "mesh/arrow.mesh"
         transform:
-          translation: {x: 12.0, y: -20.0, z: -0.0}
+          translation: {x: -32.0, y: -20.0, z: -0.0}
           rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 50.0, y: 50.0, z: 50.0}
+          scale: {x: 1.0, y: 1.0, z: 1.0}
       - type: static_mesh
         name: "column_0"
         mesh: "column.mesh"

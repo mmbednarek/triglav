@@ -45,6 +45,8 @@ class LevelEditor final : public ui_core::ProxyWidget
    [[nodiscard]] RootWindow& root_window() const;
    void on_selected_tool(u32 id);
    void on_origin_selected(u32 id) const;
+   float snap_offset(float offset) const;
+   Vector3 snap_offset(Vector3 offset) const;
 
    void set_selected_object(renderer::ObjectID id);
 
@@ -65,6 +67,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    RotationTool m_rotationTool;
    ScalingTool m_scalingTool;
    desktop_ui::DropDownMenu* m_originSelector;
+   desktop_ui::DropDownMenu* m_snapSelector;
 
    ILevelEditorTool* m_currentTool = nullptr;
 

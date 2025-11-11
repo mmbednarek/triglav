@@ -76,6 +76,10 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.scaler_vertices"_name, vertices_scaler.data(), vertices_scaler.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.scaler_indices"_name, indices_scaler.data(), indices_scaler.size() * sizeof(u32));
 
+   const auto [vertices_cube, indices_cube] = create_filled_box_mesh({-BOX_SIZE, -BOX_SIZE, -BOX_SIZE}, {BOX_SIZE, BOX_SIZE, BOX_SIZE});
+   ctx.init_buffer_raw("render_viewport.cube_vertices"_name, vertices_cube.data(), vertices_cube.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.cube_indices"_name, indices_cube.data(), indices_cube.size() * sizeof(u32));
+
    const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
 
    const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
@@ -119,6 +123,8 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
                static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
    render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_Z,
                static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.cube_vertices"_name, "render_viewport.cube_indices"_name, OVERLAY_SCALER_XYZ,
+               static_cast<u32>(indices_cube.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
 
    render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, OVERLAY_SELECTION_BOX,
                static_cast<u32>(indices_box.size()), color_align, matrix_align, graphics_api::VertexTopology::LineList, true);
