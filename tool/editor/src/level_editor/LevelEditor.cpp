@@ -179,7 +179,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .region = Vector4{4 * 64, 64, 64, 64},
       });
 
-   toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+   m_snapSelector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
       .manager = m_state.manager,
       .items = {"Off", "0.25", "0.5", "1", "2", "4"},
       .selectedItem = 0,
@@ -287,6 +287,28 @@ void LevelEditor::on_selected_tool(const u32 id)
 void LevelEditor::on_origin_selected(u32 /*id*/) const
 {
    m_viewport->update_view();
+}
+
+float LevelEditor::snap_offset(const float offset) const
+{
+   static constexpr float values[] = {0.0f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f};
+
+   if (m_snapSelector->selected_item() == 0)
+      return offset;
+
+   const float step = values[m_snapSelector->selected_item()];
+   return std::round(offset / step) * step;
+}
+
+Vector3 LevelEditor::snap_offset(const Vector3 offset) const
+{
+   if (m_snapSelector->selected_item() == 0)
+      return offset;
+
+   const auto length = glm::length(offset);
+   const auto norm = offset / length;
+
+   return snap_offset(length) * norm;
 }
 
 void LevelEditor::set_selected_object(const renderer::ObjectID id)

@@ -38,10 +38,11 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
    if (m_transformAxis.has_value()) {
       const auto* object = m_levelEditor.selected_object();
       auto transform = object->transform;
-      transform.translation = m_startingPosition +
-                              find_closest_point_between_lines(m_levelEditor.selected_object_position(),
-                                                               axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction) -
-                              m_startingHit;
+      transform.translation =
+         m_startingPosition +
+         m_levelEditor.snap_offset(find_closest_point_between_lines(m_levelEditor.selected_object_position(),
+                                                                    axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction) -
+                                   m_startingHit);
       m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
       m_levelEditor.viewport().update_view();
       return;

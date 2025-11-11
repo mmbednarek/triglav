@@ -162,6 +162,20 @@ struct std::formatter<triglav::Vector3>
 
    auto format(const triglav::Vector3& obj, std::format_context& ctx) const
    {
-      return std::format_to(ctx.out(), "{}, {}, {}", obj.x, obj.y, obj.z);
+      return std::format_to(ctx.out(), "(X: {}, Y: {}, Z: {})", obj.x, obj.y, obj.z);
+   }
+};
+template<>
+struct std::formatter<triglav::Quaternion>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::Quaternion& obj, std::format_context& ctx) const
+   {
+      auto angles = glm::degrees(glm::eulerAngles(obj));
+      return std::format_to(ctx.out(), "(Yaw: {}, Pitch: {}, Roll: {})", angles.x, angles.y, angles.z);
    }
 };

@@ -72,7 +72,7 @@ void RotationTool::on_mouse_moved(Vector2 position)
       auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(obj_position, *m_rotationAxis));
       const auto difference = normalize(point - obj_position);
       const float angle = angle_from_vector(difference, *m_rotationAxis);
-      const float angle_diff = angle - m_baseAngle;
+      const float angle_diff = m_levelEditor.snap_offset((angle - m_baseAngle) / (0.25f * g_pi)) * (0.25f * g_pi);
 
       auto quat_rot = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotationAxis));
 

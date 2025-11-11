@@ -166,6 +166,7 @@ class LevelImporter
 
       const auto& srcMaterial = m_glbFile.document->materials.at(materialID);
       if (!srcMaterial.pbrMetallicRoughness.baseColorTexture.has_value()) {
+         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned", materialID);
          return std::nullopt;
       }
 

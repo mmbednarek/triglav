@@ -14,15 +14,10 @@ ScalingTool::ScalingTool(LevelEditor& levelEditor) :
 
 bool ScalingTool::on_use_start(const geometry::Ray& ray)
 {
-   if (m_scaler_x_bb.intersect(ray)) {
-      m_transformAxis = Axis::X;
-   } else if (m_scaler_y_bb.intersect(ray)) {
-      m_transformAxis = Axis::Y;
-   } else if (m_scaler_z_bb.intersect(ray)) {
-      m_transformAxis = Axis::Z;
-   } else {
+   if (!m_transformAxis.has_value())
       return false;
-   }
+
+   m_isBeingUsed = true;
 
    const auto* object = m_levelEditor.selected_object();
    const auto translation = m_levelEditor.selected_object_position();
@@ -40,50 +35,73 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
    const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
    const auto ray = m_levelEditor.scene().camera().viewport_ray(viewport_coord);
 
-   if (m_transformAxis.has_value()) {
+   if (m_isBeingUsed) {
+      const auto axis = m_transformAxis.value();
+
       const auto* object = m_levelEditor.selected_object();
       const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
       const auto translation = m_levelEditor.selected_object_position();
-
       auto transform = object->transform;
       const auto scale = 0.5f * mesh.boundingBox.scale() * m_baseScale;
 
-      auto x1 = vector3_component(m_startingClosest - translation, *m_transformAxis);
+      Vector3 scale_direction = {1, 0, 0};
+      float final_scale = 0.0f;
 
-      const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
-      auto x2 = vector3_component(closest - translation, *m_transformAxis);
+      if (axis == Axis::W) {
+         const auto point_position = find_closest_point_on_line(ray.origin, ray.direction, m_startingPosition);
+         scale_direction = glm::normalize(Vector3{1, 1, 1});
+         auto x2 = glm::length(point_position - m_startingPosition);
+         const auto scale_comp = glm::length(scale);
+         const auto diff = std::max(x2, MIN_SCALE - scale_comp);
+         final_scale = m_levelEditor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;
+      } else {
+         scale_direction = axis_forward_vec3(axis);
 
-      const auto scale_comp = vector3_component(scale, *m_transformAxis);
-      const auto diff = std::max(std::abs(x2 - x1), MIN_SCALE - scale_comp);
-      const auto final_scale = (scale_comp + diff) / scale_comp;
+         auto x1 = std::abs(vector3_component(m_startingClosest - translation, axis));
+         const auto closest = find_closest_point_between_lines(translation, scale_direction, ray.origin, ray.direction);
+         auto x2 = std::abs(vector3_component(closest - translation, axis));
+         const auto scale_comp = vector3_component(scale, axis);
 
-      Vector3 translation_diff = m_startingTranslation - m_startingPosition;
-      vector3_component(translation_diff, *m_transformAxis) *= final_scale;
+         const auto diff = std::max(x2 - x1, MIN_SCALE - scale_comp);
+         final_scale = m_levelEditor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;
+      }
+
+      auto rot_inv = glm::inverse(transform.rotation);
+      scale_direction = rot_inv * scale_direction;
+
+      scale_direction = glm::abs(scale_direction);
+
+      Vector3 scale_vec = scale_direction * final_scale + Vector3{1, 1, 1};
+
+      Vector3 translation_diff = (m_startingTranslation - m_startingPosition) * scale_vec;
 
       transform.translation = m_startingPosition + translation_diff;
-      transform.scale = m_baseScale;
-      vector3_component(transform.scale, *m_transformAxis) *= final_scale;
+      transform.scale = m_baseScale * scale_vec;
       m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
       m_levelEditor.viewport().update_view();
       return;
    }
 
-   if (m_scaler_x_bb.intersect(ray)) {
-      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_X, COLOR_X_AXIS_HOVER);
-   } else {
-      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_X, COLOR_X_AXIS);
-   }
+   m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_X, COLOR_X_AXIS);
+   m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Y, COLOR_Y_AXIS);
+   m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Z, COLOR_Z_AXIS);
+   m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_XYZ, COLOR_XYZ_AXIS);
 
-   if (m_scaler_y_bb.intersect(ray)) {
-      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Y, COLOR_Y_AXIS_HOVER);
-   } else {
-      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Y, COLOR_Y_AXIS);
-   }
-
-   if (m_scaler_z_bb.intersect(ray)) {
-      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Z, COLOR_Z_AXIS_HOVER);
-   } else {
-      m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Z, COLOR_Z_AXIS);
+   if (m_transformAxis = get_transform_axis(ray); m_transformAxis.has_value()) {
+      switch (*m_transformAxis) {
+      case Axis::X:
+         m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_X, COLOR_X_AXIS_HOVER);
+         break;
+      case Axis::Y:
+         m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Y, COLOR_Y_AXIS_HOVER);
+         break;
+      case Axis::Z:
+         m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_Z, COLOR_Z_AXIS_HOVER);
+         break;
+      case Axis::W:
+         m_levelEditor.viewport().render_viewport().set_color(OVERLAY_SCALER_XYZ, COLOR_XYZ_AXIS_HOVER);
+         break;
+      }
    }
 }
 
@@ -92,6 +110,11 @@ void ScalingTool::on_view_updated()
    static constexpr geometry::BoundingBox scaler_bb{
       .min{-BOX_SIZE, -BOX_SIZE, 0.0f},
       .max{BOX_SIZE, BOX_SIZE, BOX_SIZE + SHAFT_HEIGHT},
+   };
+
+   static constexpr geometry::BoundingBox scaler_all_axis_bb{
+      .min{-BOX_SIZE, -BOX_SIZE, -BOX_SIZE},
+      .max{BOX_SIZE, BOX_SIZE, BOX_SIZE},
    };
 
    const auto translation = m_levelEditor.selected_object_position();
@@ -120,10 +143,19 @@ void ScalingTool::on_view_updated()
    };
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_SCALER_Z, transform_z_axis.to_matrix());
    m_scaler_z_bb = scaler_bb.transform(transform_z_axis.to_matrix());
+
+   const Transform3D transform_xyz_axis{
+      .rotation = Quaternion{Vector3{0, 0, 0}},
+      .scale = Vector3{0.025f} * obj_distance,
+      .translation = translation,
+   };
+   m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_SCALER_XYZ, transform_xyz_axis.to_matrix());
+   m_scaler_xyz_bb = scaler_all_axis_bb.transform(transform_xyz_axis.to_matrix());
 }
 
 void ScalingTool::on_use_end()
 {
+   m_isBeingUsed = false;
    m_transformAxis.reset();
 }
 
@@ -132,6 +164,25 @@ void ScalingTool::on_left_tool()
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_SCALER_X, Matrix4x4{0});
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_SCALER_Y, Matrix4x4{0});
    m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_SCALER_Z, Matrix4x4{0});
+   m_levelEditor.viewport().render_viewport().set_selection_matrix(OVERLAY_SCALER_XYZ, Matrix4x4{0});
+}
+
+std::optional<Axis> ScalingTool::get_transform_axis(const geometry::Ray& ray) const
+{
+   if (m_scaler_xyz_bb.intersect(ray)) {
+      return Axis::W;
+   }
+   if (m_scaler_x_bb.intersect(ray)) {
+      return Axis::X;
+   }
+   if (m_scaler_y_bb.intersect(ray)) {
+      return Axis::Y;
+   }
+   if (m_scaler_z_bb.intersect(ray)) {
+      return Axis::Z;
+   }
+
+   return std::nullopt;
 }
 
 }// namespace triglav::editor

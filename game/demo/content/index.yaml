@@ -92,6 +92,8 @@ resources:
     source: material/stone.mat
   - name: material/tubemtl.mat
     source: material/tubemtl.mat
+  - name: mesh/arrow.mesh
+    source: mesh/arrow.mesh
   - name: mesh/cone.mesh
     source: mesh/cone.mesh
   - name: mesh/cube.mesh
