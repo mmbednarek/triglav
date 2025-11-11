@@ -100,8 +100,8 @@ void LevelViewport::tick(const float delta_time)
          break;
       }
 
-      m_levelEditor.scene().set_camera(m_levelEditor.scene().camera().position() + 20.0f * delta_time * (cam_orientation * direction),
-                                       cam_orientation);
+      m_levelEditor.scene().set_camera(
+         m_levelEditor.scene().camera().position() + m_levelEditor.speed() * delta_time * (cam_orientation * direction), cam_orientation);
       should_update_sm = true;
    }
 

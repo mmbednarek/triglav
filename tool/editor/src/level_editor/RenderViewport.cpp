@@ -76,7 +76,8 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.scaler_vertices"_name, vertices_scaler.data(), vertices_scaler.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.scaler_indices"_name, indices_scaler.data(), indices_scaler.size() * sizeof(u32));
 
-   const auto [vertices_cube, indices_cube] = create_filled_box_mesh({-BOX_SIZE, -BOX_SIZE, -BOX_SIZE}, {BOX_SIZE, BOX_SIZE, BOX_SIZE});
+   const auto [vertices_cube, indices_cube] =
+      create_filled_box_mesh({-SCALING_CUBE, -SCALING_CUBE, -SCALING_CUBE}, {SCALING_CUBE, SCALING_CUBE, SCALING_CUBE});
    ctx.init_buffer_raw("render_viewport.cube_vertices"_name, vertices_cube.data(), vertices_cube.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.cube_indices"_name, indices_cube.data(), indices_cube.size() * sizeof(u32));
 

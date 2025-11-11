@@ -47,6 +47,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    void on_origin_selected(u32 id) const;
    float snap_offset(float offset) const;
    Vector3 snap_offset(Vector3 offset) const;
+   float speed() const;
 
    void set_selected_object(renderer::ObjectID id);
 
@@ -68,6 +69,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    ScalingTool m_scalingTool;
    desktop_ui::DropDownMenu* m_originSelector;
    desktop_ui::DropDownMenu* m_snapSelector;
+   desktop_ui::DropDownMenu* m_speedSelector;
 
    ILevelEditorTool* m_currentTool = nullptr;
 

@@ -47,26 +47,26 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
       .manager = &m_desktopUIManager,
       .offset = 300,
       .axis = ui_core::Axis::Horizontal,
-      .offset_type = desktop_ui::SplitterOffsetType::Following,
+      .offset_type = desktop_ui::SplitterOffsetType::Preceeding,
    });
 
    auto& leftTabView = splitter.create_preceding<desktop_ui::TabView>({
       .manager = &m_desktopUIManager,
-      .tabNames = {"Level Editor"},
+      .tabNames = {"Project Explorer"},
       .activeTab = 0,
    });
-   m_levelEditor = &leftTabView.create_child<LevelEditor>({
+   leftTabView.create_child<ProjectExplorer>({
       .manager = &m_desktopUIManager,
-      .rootWindow = m_state.editor->root_window(),
    });
 
    auto& rightTabView = splitter.create_following<desktop_ui::TabView>({
       .manager = &m_desktopUIManager,
-      .tabNames = {"Project Explorer"},
+      .tabNames = {"Level Editor"},
       .activeTab = 0,
    });
-   rightTabView.create_child<ProjectExplorer>({
+   m_levelEditor = &rightTabView.create_child<LevelEditor>({
       .manager = &m_desktopUIManager,
+      .rootWindow = m_state.editor->root_window(),
    });
 }
 

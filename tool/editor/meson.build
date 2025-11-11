@@ -2,6 +2,8 @@ editor_sources = files([
                            'src/level_editor/ILevelEditorTool.hpp',
                            'src/level_editor/LevelEditor.cpp',
                            'src/level_editor/LevelEditor.hpp',
+                           'src/level_editor/LevelEditorSidePanel.cpp',
+                           'src/level_editor/LevelEditorSidePanel.hpp',
                            'src/level_editor/LevelViewport.hpp',
                            'src/level_editor/LevelViewport.cpp',
                            'src/level_editor/RenderViewport.cpp',

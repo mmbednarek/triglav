@@ -1,10 +1,12 @@
 #include "LevelEditor.hpp"
 
 #include "../RootWindow.hpp"
+#include "LevelEditorSidePanel.hpp"
 #include "LevelViewport.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
+#include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
 #include "triglav/renderer/stage/GBufferStage.hpp"
 #include "triglav/renderer/stage/ShadingStage.hpp"
@@ -59,8 +61,19 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_currentTool(&m_selectionTool),
     TG_CONNECT(m_toolRadioGroup, OnSelection, on_selected_tool)
 {
-   auto& layout = this->create_content<ui_core::VerticalLayout>({});
-   auto& toolbar = layout.create_child<ui_core::RectBox>({
+   auto& splitter = this->create_content<desktop_ui::Splitter>({
+      .manager = m_state.manager,
+      .offset = 200,
+      .axis = ui_core::Axis::Horizontal,
+      .offset_type = desktop_ui::SplitterOffsetType::Following,
+   });
+
+   splitter.create_following<LevelEditorSidePanel>({
+      .manager = m_state.manager,
+   });
+
+   auto& left_layout = splitter.create_preceding<ui_core::VerticalLayout>({});
+   auto& toolbar = left_layout.create_child<ui_core::RectBox>({
       .color = TG_THEME_VAL(background_color_brighter),
       .borderRadius = {0, 0, 0, 0},
       .borderColor = palette::NO_COLOR,
@@ -185,7 +198,29 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .selectedItem = 0,
    });
 
-   m_viewport = &layout.emplace_child<LevelViewport>(&layout, *m_state.rootWindow, *this);
+   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+   toolbar_layout
+      .create_child<ui_core::SizeLimit>({
+         .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+      })
+      .create_content<ui_core::AlignmentBox>({
+         .horizontalAlignment = std::nullopt,
+         .verticalAlignment = ui_core::VerticalAlignment::Center,
+      })
+      .create_content<ui_core::Image>({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .maxSize = ICON_SIZE,
+         .region = Vector4{4 * 64, 2 * 64, 64, 64},
+      });
+
+   m_speedSelector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+      .manager = m_state.manager,
+      .items = {"8.0", "16.0", "32.0", "64.0", "128.0"},
+      .selectedItem = 1,
+   });
+
+   m_viewport = &left_layout.emplace_child<LevelViewport>(&left_layout, *m_state.rootWindow, *this);
 
    m_scene.load_level("demo.level"_rc);
    m_bindlessScene.write_objects_to_buffer();
@@ -309,6 +344,12 @@ Vector3 LevelEditor::snap_offset(const Vector3 offset) const
    const auto norm = offset / length;
 
    return snap_offset(length) * norm;
+}
+
+float LevelEditor::speed() const
+{
+   static constexpr float values[] = {8.0f, 16.0f, 32.0f, 64.0f, 128.0f};
+   return values[m_speedSelector->selected_item()];
 }
 
 void LevelEditor::set_selected_object(const renderer::ObjectID id)

@@ -34,6 +34,7 @@ class ScalingTool final : public ILevelEditorTool
 
    Vector3 m_startingTranslation{};
    Vector3 m_startingPosition{};
+   Vector3 m_startingPoint{};
    Vector3 m_startingClosest{};
    Vector3 m_baseScale{};
 };

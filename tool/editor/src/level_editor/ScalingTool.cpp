@@ -24,6 +24,7 @@ bool ScalingTool::on_use_start(const geometry::Ray& ray)
    const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
    m_startingTranslation = object->transform.translation;
    m_startingPosition = translation;
+   m_startingPoint = find_closest_point_on_line(ray.origin, ray.direction, translation);
    m_startingClosest = closest;
    m_baseScale = object->transform.scale;
    return true;
@@ -48,11 +49,14 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
       float final_scale = 0.0f;
 
       if (axis == Axis::W) {
-         const auto point_position = find_closest_point_on_line(ray.origin, ray.direction, m_startingPosition);
          scale_direction = glm::normalize(Vector3{1, 1, 1});
+
+         auto x1 = glm::length(m_startingPoint - m_startingPosition);
+
+         const auto point_position = find_closest_point_on_line(ray.origin, ray.direction, m_startingPosition);
          auto x2 = glm::length(point_position - m_startingPosition);
          const auto scale_comp = glm::length(scale);
-         const auto diff = std::max(x2, MIN_SCALE - scale_comp);
+         const auto diff = std::max(x2 - x1, MIN_SCALE - scale_comp);
          final_scale = m_levelEditor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;
       } else {
          scale_direction = axis_forward_vec3(axis);
@@ -113,8 +117,8 @@ void ScalingTool::on_view_updated()
    };
 
    static constexpr geometry::BoundingBox scaler_all_axis_bb{
-      .min{-BOX_SIZE, -BOX_SIZE, -BOX_SIZE},
-      .max{BOX_SIZE, BOX_SIZE, BOX_SIZE},
+      .min{-2 * SCALING_CUBE, -2 * SCALING_CUBE, -2 * SCALING_CUBE},
+      .max{2 * SCALING_CUBE, 2 * SCALING_CUBE, 2 * SCALING_CUBE},
    };
 
    const auto translation = m_levelEditor.selected_object_position();
