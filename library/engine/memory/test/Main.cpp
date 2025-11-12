@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "triglav/test_util/GTest.hpp"
 
 int main(int argc, char** argv)
 {

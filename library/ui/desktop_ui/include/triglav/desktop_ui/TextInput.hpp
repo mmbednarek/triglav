@@ -23,7 +23,7 @@ class TextInput final : public ui_core::IWidget
    {
       DesktopUIManager* manager;
       String text;
-      float width{250.0f};
+      Color border_color = {0.1f, 0.1f, 0.1f, 1.0f};
    };
 
    TextInput(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
@@ -40,8 +40,8 @@ class TextInput final : public ui_core::IWidget
 
    ui_core::Context& m_context;
    State m_state;
-   ui_core::RectBox m_rect;
 
+   ui_core::RectId m_backgroundRect{};
    ui_core::TextId m_textPrim{};
    ui_core::RectId m_caretBox{};
    bool m_isCarretVisible{false};

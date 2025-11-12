@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include "triglav/Name.hpp"
+#include "triglav/test_util/GTest.hpp"
 
 using triglav::MaterialName;
 using triglav::ResourceName;

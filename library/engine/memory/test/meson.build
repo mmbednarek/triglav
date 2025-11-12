@@ -3,7 +3,7 @@ memory_test_sources = files(
     'Main.cpp',
 )
 
-memory_test_deps = [memory, gtest]
+memory_test_deps = [memory, test_util]
 
 memory_test = executable('memory_test',
                             sources : memory_test_sources,

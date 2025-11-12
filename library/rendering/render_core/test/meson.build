@@ -10,7 +10,7 @@ render_core_test_file_deps = []
 subdir('content')
 
 render_core_test_deps = [render_core,
-                         gtest,
+                         test_util,
                          desktop,
 ]
 

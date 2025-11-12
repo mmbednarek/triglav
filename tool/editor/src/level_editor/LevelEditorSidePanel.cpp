@@ -1,8 +1,7 @@
 #include "LevelEditorSidePanel.hpp"
 
 #include "triglav/desktop_ui/TextInput.hpp"
-#include "triglav/ui_core/widget/EmptySpace.hpp"
-#include "triglav/ui_core/widget/HorizontalLayout.hpp"
+#include "triglav/ui_core/widget/GridLayout.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
@@ -34,9 +33,11 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .verticalAlignment = ui_core::VerticalAlignment::Top,
    });
 
-   auto& translate_layout = layout.create_child<ui_core::HorizontalLayout>({
-      .padding = {},
-      .separation = 5.0f,
+   auto& translate_layout = layout.create_child<ui_core::GridLayout>({
+      .column_ratios = {0.4, 0.2, 0.2, 0.2},
+      .row_ratios = {1.0},
+      .horizontal_spacing = 10.0f,
+      .vertical_spacing = 10.0f,
    });
 
    translate_layout.create_child<ui_core::TextBox>({
@@ -50,19 +51,17 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    translate_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0.0",
-      .width = 40.0f,
+      .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
    });
-
    translate_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0.0",
-      .width = 40.0f,
+      .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
    });
-
    translate_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0.0",
-      .width = 40.0f,
+      .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
    });
 }
 

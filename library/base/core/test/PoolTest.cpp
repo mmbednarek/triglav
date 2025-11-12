@@ -1,6 +1,6 @@
 #include "triglav/ObjectPool.hpp"
+#include "triglav/test_util/GTest.hpp"
 
-#include <gtest/gtest.h>
 #include <random>
 
 using triglav::default_constructor;

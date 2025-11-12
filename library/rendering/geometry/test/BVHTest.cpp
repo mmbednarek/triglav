@@ -1,6 +1,5 @@
-#include <gtest/gtest.h>
-
 #include "triglav/geometry/BVHTree.hpp"
+#include "triglav/test_util/GTest.hpp"
 
 #include <string>
 
