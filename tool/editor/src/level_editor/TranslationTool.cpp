@@ -1,6 +1,5 @@
 #include "TranslationTool.hpp"
 
-#include "../../../../../../../.conan2/p/b/boost685345d9ed20d/p/include/boost/algorithm/minmax_element.hpp"
 #include "../RootWindow.hpp"
 #include "LevelViewport.hpp"
 

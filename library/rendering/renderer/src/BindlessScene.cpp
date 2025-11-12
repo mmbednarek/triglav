@@ -107,7 +107,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmdList)
          cmdList.copy_buffer(m_transformStage.buffer(), m_sceneObjects.buffer(),
                              static_cast<u32>(stage_index * transforms.size() * sizeof(Matrix4x4)),
                              static_cast<u32>(dst_index * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform)),
-                             transforms.size() * sizeof(Matrix4x4));
+                             static_cast<u32>(transforms.size() * sizeof(Matrix4x4)));
          ++stage_index;
       }
 
