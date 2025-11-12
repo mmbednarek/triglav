@@ -6,17 +6,16 @@
 #include "triglav/Ranges.hpp"
 #include "triglav/geometry/DebugMesh.hpp"
 #include "triglav/graphics_api/DescriptorLayoutCache.hpp"
-#include "triglav/graphics_api/ray_tracing/AccelerationStructure.hpp"
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/render_core/BuildContext.hpp"
+#include "triglav/test_util/GTest.hpp"
 
 #include <cstring>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
-#include <gtest/gtest.h>
 #ifdef TG_ENABLE_RENDERDOC
 #include <renderdoc_app.h>
 #endif

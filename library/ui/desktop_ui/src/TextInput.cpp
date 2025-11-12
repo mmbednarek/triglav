@@ -17,20 +17,12 @@ namespace triglav::desktop_ui {
 using namespace std::chrono_literals;
 using namespace string_literals;
 
-constexpr Vector2 g_textMargin{8, 15};
+constexpr Vector2 g_textMargin{8, 10};
 constexpr float g_carretMargin{12};
 
 TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_core::IWidget* /*parent*/) :
     m_context(ctx),
     m_state(state),
-    m_rect(ctx,
-           {
-              .color = m_state.manager->properties().text_input.bg_inactive,
-              .borderRadius = {5.0f, 5.0f, 5.0f, 5.0f},
-              .borderColor = {0.1f, 0.1f, 0.1f, 1.f},
-              .borderWidth = 1.0f,
-           },
-           this),
     m_caretPosition(static_cast<u32>(m_state.text.rune_count()))
 {
    const auto& props = m_state.manager->properties();
@@ -39,31 +31,37 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
    const auto measure = glyphAtlas.measure_text("0"_strv);
 
    m_textSize = {measure.width, measure.height};
-
-   m_rect.create_content<ui_core::EmptySpace>({
-      .size{m_state.width, 2 * g_textMargin.y + measure.height},
-   });
 }
 
-Vector2 TextInput::desired_size(const Vector2 /*parentSize*/) const
+Vector2 TextInput::desired_size(const Vector2 parentSize) const
 {
-   return {m_state.width, m_textSize.y + 30.0};
+   return {parentSize.x, m_textSize.y + 2 * g_textMargin.y};
 }
 
 void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
 {
-   m_rect.add_to_viewport(dimensions, croppingMask);
-
    if (!do_regions_intersect(dimensions, croppingMask)) {
-      if (m_caretBox != 0) {
-         m_context.viewport().remove_rectangle(m_caretBox);
-         m_caretBox = 0;
-      }
+      m_context.viewport().remove_rectangle_safe(m_backgroundRect);
+      m_context.viewport().remove_rectangle_safe(m_caretBox);
+
       if (m_textPrim != 0) {
          m_context.viewport().remove_text(m_textPrim);
          m_textPrim = 0;
       }
       return;
+   }
+
+   if (m_backgroundRect == 0) {
+      m_backgroundRect = m_context.viewport().add_rectangle({
+         .rect = dimensions,
+         .color = TG_THEME_VAL(text_input.bg_inactive),
+         .borderRadius = {8, 8, 8, 8},
+         .borderColor = m_state.border_color,
+         .crop = croppingMask,
+         .borderWidth = 1.0f,
+      });
+   } else {
+      m_context.viewport().set_rectangle_dims(m_backgroundRect, dimensions, croppingMask);
    }
 
    const Vector4 caretDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1, dimensions.w - 2 * g_carretMargin};
@@ -94,7 +92,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
       m_textPrim = m_context.viewport().add_text(ui_core::Text{
          .content = m_state.text,
          .typefaceName = props.base_typeface,
-         .fontSize = props.button.font_size,
+         .fontSize = props.button.font_size - 1,
          .position = textPos,
          .color = props.foreground_color,
          .crop = textCrop,
@@ -109,10 +107,11 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
 
 void TextInput::remove_from_viewport()
 {
+   m_context.viewport().remove_rectangle(m_backgroundRect);
    m_context.viewport().remove_rectangle(m_caretBox);
    m_context.viewport().remove_text(m_textPrim);
-   m_rect.remove_from_viewport();
 
+   m_backgroundRect = 0;
    m_caretBox = 0;
    m_textPrim = 0;
 }
@@ -127,7 +126,7 @@ void TextInput::on_event(const ui_core::Event& event)
    switch (event.eventType) {
    case ui_core::Event::Type::MousePressed: {
       m_isActive = true;
-      m_rect.set_color(m_state.manager->properties().text_input.bg_active);
+      m_context.viewport().set_rectangle_color(m_backgroundRect, TG_THEME_VAL(text_input.bg_active));
       m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
       auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size});
       m_caretPosition = glyphAtlas.find_rune_index(m_state.text.view(), event.mousePosition.x - g_textMargin.x - m_textOffset);
@@ -139,12 +138,12 @@ void TextInput::on_event(const ui_core::Event& event)
    }
    case ui_core::Event::Type::MouseEntered:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Edit);
-      m_rect.set_color(m_state.manager->properties().text_input.bg_hover);
+      m_context.viewport().set_rectangle_color(m_backgroundRect, TG_THEME_VAL(text_input.bg_hover));
       break;
    case ui_core::Event::Type::MouseLeft:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
-      m_rect.set_color(m_state.manager->properties().text_input.bg_inactive);
+      m_context.viewport().set_rectangle_color(m_backgroundRect, TG_THEME_VAL(text_input.bg_inactive));
       m_context.viewport().set_rectangle_color(m_caretBox, {0, 0, 0, 0});
       m_isActive = false;
       if (m_timeoutHandle.has_value()) {

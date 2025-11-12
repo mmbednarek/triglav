@@ -7,7 +7,7 @@ core_test_sources = files(
     'UpdateListTest.cpp',
 )
 
-core_test_deps = [core, gtest]
+core_test_deps = [core, test_util]
 
 core_test = executable('core_test',
                        sources : core_test_sources,

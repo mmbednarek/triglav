@@ -1,6 +1,8 @@
 subdir('external/mikktspace')
 subdir('external/stbi')
 
+subdir('misc/test_util')
+
 subdir('base/core')
 subdir('base/io')
 subdir('engine/memory')

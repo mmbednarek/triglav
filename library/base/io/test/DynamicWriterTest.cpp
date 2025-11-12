@@ -1,7 +1,7 @@
 #include "triglav/io/DynamicWriter.hpp"
+#include "triglav/test_util/GTest.hpp"
 
 #include <cstring>
-#include <gtest/gtest.h>
 
 using triglav::u8;
 using triglav::io::DynamicWriter;

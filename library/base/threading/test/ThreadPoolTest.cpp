@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+#include "triglav/test_util/GTest.hpp"
 
 #include "triglav/threading/ThreadPool.hpp"
 

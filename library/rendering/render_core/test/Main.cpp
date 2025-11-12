@@ -4,9 +4,9 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+#include "triglav/test_util/GTest.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
-#include <gtest/gtest.h>
 #include <print>
 
 using triglav::desktop::IDisplay;

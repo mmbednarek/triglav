@@ -1,7 +1,6 @@
 #include "triglav/String.hpp"
 #include "triglav/Format.hpp"
-
-#include <gtest/gtest.h>
+#include "triglav/test_util/GTest.hpp"
 
 using namespace triglav::string_literals;
 

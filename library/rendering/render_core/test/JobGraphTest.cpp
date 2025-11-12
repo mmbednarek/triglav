@@ -1,9 +1,8 @@
-#include <gtest/gtest.h>
-
 #include "TestingSupport.hpp"
 
 #include "triglav/Ranges.hpp"
 #include "triglav/render_core/JobGraph.hpp"
+#include "triglav/test_util/GTest.hpp"
 
 #include <iostream>
 
