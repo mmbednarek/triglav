@@ -63,7 +63,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
       .manager = m_state.manager,
-      .offset = 200,
+      .offset = 260,
       .axis = ui_core::Axis::Horizontal,
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });

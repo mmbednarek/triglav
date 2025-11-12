@@ -27,12 +27,20 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
    });
 
    m_menuBarController.add_submenu("file"_name, "File"_strv);
+   m_menuBarController.add_subitem("file"_name, "file.save"_name, "Save"_strv);
+   m_menuBarController.add_subitem("file"_name, "file.save_all"_name, "Save All"_strv);
    m_menuBarController.add_subitem("file"_name, "file.import"_name, "Import Asset"_strv);
+   m_menuBarController.add_seperator("file"_name);
+   m_menuBarController.add_subitem("file"_name, "file.properties"_name, "Project Properties"_strv);
    m_menuBarController.add_subitem("file"_name, "file.close"_name, "Close"_strv);
 
    m_menuBarController.add_submenu("edit"_name, "Edit"_strv);
    m_menuBarController.add_subitem("edit"_name, "edit.undo"_name, "Undo"_strv);
    m_menuBarController.add_subitem("edit"_name, "edit.redo"_name, "Redo"_strv);
+   m_menuBarController.add_seperator("edit"_name);
+   m_menuBarController.add_subitem("edit"_name, "edit.duplicate"_name, "Duplicate"_strv);
+   m_menuBarController.add_subitem("edit"_name, "edit.cut"_name, "Cut"_strv);
+   m_menuBarController.add_subitem("edit"_name, "edit.delete"_name, "Delete"_strv);
 
    m_menuBarController.add_submenu("help"_name, "Help"_strv);
    m_menuBarController.add_subitem("help"_name, "help.repository"_name, "Github Repository"_strv);
@@ -45,28 +53,28 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
 
    auto& splitter = globalLayout.create_child<desktop_ui::Splitter>({
       .manager = &m_desktopUIManager,
-      .offset = 300,
+      .offset = 260,
       .axis = ui_core::Axis::Horizontal,
-      .offset_type = desktop_ui::SplitterOffsetType::Preceeding,
+      .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
    auto& leftTabView = splitter.create_preceding<desktop_ui::TabView>({
       .manager = &m_desktopUIManager,
-      .tabNames = {"Project Explorer"},
+      .tabNames = {"Level Editor"},
       .activeTab = 0,
    });
-   leftTabView.create_child<ProjectExplorer>({
+   m_levelEditor = &leftTabView.create_child<LevelEditor>({
       .manager = &m_desktopUIManager,
+      .rootWindow = m_state.editor->root_window(),
    });
 
    auto& rightTabView = splitter.create_following<desktop_ui::TabView>({
       .manager = &m_desktopUIManager,
-      .tabNames = {"Level Editor"},
+      .tabNames = {"Project Explorer"},
       .activeTab = 0,
    });
-   m_levelEditor = &rightTabView.create_child<LevelEditor>({
+   rightTabView.create_child<ProjectExplorer>({
       .manager = &m_desktopUIManager,
-      .rootWindow = m_state.editor->root_window(),
    });
 }
 

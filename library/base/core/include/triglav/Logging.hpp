@@ -81,7 +81,7 @@ class LogManager
       }
 
       LogHeader new_header(header);
-      new_header.log_size = end.size;
+      new_header.log_size = static_cast<u32>(end.size);
 
       std::memcpy(m_buffer.data() + m_offset, &new_header, sizeof(LogHeader));
 
@@ -112,7 +112,7 @@ void log_message(const LogLevel level, const StringView category, std::format_st
    LogHeader header;
    header.level = level;
    header.timestamp = std::chrono::system_clock::now();
-   header.category_size = category.size();
+   header.category_size = static_cast<u32>(category.size());
 
    LogManager::the().write_formatted(header, category.data(), fmt, std::forward<TArgs>(args)...);
 }
