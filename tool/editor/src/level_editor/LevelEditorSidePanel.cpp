@@ -34,8 +34,8 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    });
 
    auto& translate_layout = layout.create_child<ui_core::GridLayout>({
-      .column_ratios = {0.4, 0.2, 0.2, 0.2},
-      .row_ratios = {1.0},
+      .column_ratios = {0.3f, 0.233f, 0.233f, 0.233f},
+      .row_ratios = {1.0f},
       .horizontal_spacing = 10.0f,
       .vertical_spacing = 10.0f,
    });
@@ -48,19 +48,27 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .horizontalAlignment = ui_core::HorizontalAlignment::Left,
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
+    
+   static constexpr auto num_only = [](const Rune r) -> bool {
+      return std::isdigit(r) || r == '.';
+   };
+
    translate_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0.0",
+      .filter_func = num_only,
       .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
    });
    translate_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0.0",
+      .filter_func = num_only,
       .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
    });
    translate_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0.0",
+      .filter_func = num_only,
       .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
    });
 }

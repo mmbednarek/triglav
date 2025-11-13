@@ -6,6 +6,7 @@
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/Primitives.hpp"
+#include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 
 namespace triglav::ui_core {
@@ -23,6 +24,7 @@ class TextInput final : public ui_core::IWidget
    {
       DesktopUIManager* manager;
       String text;
+      std::function<bool(Rune)> filter_func = [](Rune) { return true; };
       Color border_color = {0.1f, 0.1f, 0.1f, 1.0f};
    };
 
@@ -34,16 +36,22 @@ class TextInput final : public ui_core::IWidget
    void on_event(const ui_core::Event& event) override;
    void update_carret_state();
 
+   void on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
+   void on_mouse_entered(const ui_core::Event& event);
+   void on_mouse_left(const ui_core::Event& event);
+   void on_text_input(const ui_core::Event& event, const ui_core::Event::TextInput& text_input);
+   void on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard);
+
  private:
    void recalculate_caret_offset(bool removal = false);
-   void update_text_position() const;
+   void update_text_position();
 
    ui_core::Context& m_context;
    State m_state;
 
-   ui_core::RectId m_backgroundRect{};
-   ui_core::TextId m_textPrim{};
-   ui_core::RectId m_caretBox{};
+   ui_core::RectInstance m_backgroundRect;
+   ui_core::TextInstance m_textPrim;
+   ui_core::RectInstance m_caretBox;
    bool m_isCarretVisible{false};
    u32 m_caretPosition{};
    Vector4 m_dimensions{};

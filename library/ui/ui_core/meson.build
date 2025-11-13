@@ -13,6 +13,7 @@ ui_core_sources = files([
   'include/triglav/ui_core/widget/VerticalLayout.hpp',
   'include/triglav/ui_core/Context.hpp',
   'include/triglav/ui_core/IWidget.hpp',
+  'include/triglav/ui_core/PrimitiveHelpers.hpp',
   'include/triglav/ui_core/Primitives.hpp',
   'include/triglav/ui_core/UICore.hpp',
   'include/triglav/ui_core/Viewport.hpp',
@@ -30,6 +31,7 @@ ui_core_sources = files([
   'src/widget/VerticalLayout.cpp',
   'src/Context.cpp',
   'src/IWidget.cpp',
+  'src/PrimitiveHelpers.cpp',
   'src/Viewport.cpp',
 ])
 
