@@ -19,6 +19,7 @@ namespace triglav::editor {
 
 class LevelViewport;
 class RootWindow;
+class LevelEditorSidePanel;
 
 class LevelEditor final : public ui_core::ProxyWidget
 {
@@ -48,6 +49,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    float snap_offset(float offset) const;
    Vector3 snap_offset(Vector3 offset) const;
    float speed() const;
+   void finish_using_tool() const;
 
    void set_selected_object(renderer::ObjectID id);
 
@@ -67,6 +69,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    TranslationTool m_translationTool;
    RotationTool m_rotationTool;
    ScalingTool m_scalingTool;
+   LevelEditorSidePanel* m_sidePanel;
    desktop_ui::DropDownMenu* m_originSelector;
    desktop_ui::DropDownMenu* m_snapSelector;
    desktop_ui::DropDownMenu* m_speedSelector;

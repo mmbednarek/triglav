@@ -23,7 +23,6 @@ constexpr float g_carretMargin{6};
 TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_core::IWidget* /*parent*/) :
     m_context(ctx),
     m_state(state),
-    m_caretPosition(static_cast<u32>(m_state.text.rune_count())),
     m_backgroundRect{
        .color = TG_THEME_VAL(text_input.bg_inactive),
        .border_radius = {8, 8, 8, 8},
@@ -41,7 +40,8 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
        .border_radius = {},
        .border_color = {},
        .border_width = 0.0f,
-    }
+    },
+    m_caretPosition(static_cast<u32>(m_state.text.rune_count()))
 {
    const auto& props = m_state.manager->properties();
 
@@ -69,8 +69,8 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
 
    m_backgroundRect.add(m_context, dimensions, croppingMask);
 
-   const Vector4 caretDims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1, dimensions.w - 2 * g_carretMargin};
-   m_caretBox.add(m_context, caretDims, croppingMask);
+   const Vector4 caret_dims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1, dimensions.w - 2 * g_carretMargin};
+   m_caretBox.add(m_context, caret_dims, croppingMask);
 
    m_textXPosition = dimensions.x + g_textMargin.x;
    m_dimensions = dimensions;
@@ -188,6 +188,19 @@ void TextInput::update_carret_state()
    m_timeoutHandle = threading::Scheduler::the().register_timeout(duration, [this]() { this->update_carret_state(); });
 }
 
+void TextInput::set_content(const StringView content)
+{
+   m_state.text = content;
+   m_textOffset = 0;
+   m_textPrim.set_content(m_context, m_state.text.view());
+   this->update_text_position();
+}
+
+const String& TextInput::content() const
+{
+   return m_state.text;
+}
+
 void TextInput::recalculate_caret_offset(const bool removal)
 {
    float caretOffset = 0.0f;
@@ -201,7 +214,7 @@ void TextInput::recalculate_caret_offset(const bool removal)
    if (m_caretPosition != 0) {
       const auto substr = m_state.text.subview(0, static_cast<i32>(m_caretPosition));
 
-      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size});
+      auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size - 1});
       const auto measure = glyphAtlas.measure_text(substr);
 
       caretOffset = measure.width;
@@ -234,7 +247,7 @@ void TextInput::recalculate_caret_offset(const bool removal)
 void TextInput::update_text_position()
 {
    const Vector2 textPos{m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y};
-   Vector4 textCrop{m_dimensions.x + g_textMargin.x, m_dimensions.y, m_dimensions.x + m_dimensions.z - g_textMargin.x, m_dimensions.y + m_dimensions.w};
+   Vector4 textCrop{m_dimensions.x + g_textMargin.x, m_dimensions.y, m_dimensions.z - 2 * g_textMargin.x, m_dimensions.w};
    textCrop = min_area(textCrop, m_croppingMask);
 
    m_textPrim.add(m_context, textPos, textCrop);

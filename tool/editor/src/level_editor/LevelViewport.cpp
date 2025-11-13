@@ -171,6 +171,7 @@ void LevelViewport::on_mouse_released(const ui_core::Event& /*event*/, const ui_
    m_mouseMotion = {};
    m_rootWindow.surface().unlock_cursor();
    m_levelEditor.tool().on_use_end();
+   m_levelEditor.finish_using_tool();
 }
 
 void LevelViewport::on_mouse_moved(const ui_core::Event& event) const
