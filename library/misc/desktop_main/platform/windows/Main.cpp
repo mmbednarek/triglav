@@ -55,6 +55,25 @@ InputArgs construct_input_args()
    return {const_cast<const char**>(args), count};
 }
 
+void enable_virtual_terminal_processing()
+{
+   HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+   if (handle == INVALID_HANDLE_VALUE) {
+      return;
+   }
+
+   DWORD dw_mode = 0;
+   if (!GetConsoleMode(handle, &dw_mode)) {
+      return;
+   }
+
+   dw_mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+   if (!SetConsoleMode(handle, dw_mode)) {
+      return;
+   }
+}
+
 void create_debug_console()
 {
    FILE* conin = stdin;
@@ -66,6 +85,8 @@ void create_debug_console()
    freopen_s(&conout, "CONOUT$", "w", stdout);
    freopen_s(&conerr, "CONOUT$", "w", stderr);
    SetConsoleTitleW(L"Triglav Debug Console");
+
+   enable_virtual_terminal_processing();
 }
 
 }// namespace
