@@ -68,8 +68,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
-   splitter.create_following<LevelEditorSidePanel>({
+   m_sidePanel = &splitter.create_following<LevelEditorSidePanel>({
       .manager = m_state.manager,
+      .editor = this,
    });
 
    auto& left_layout = splitter.create_preceding<ui_core::VerticalLayout>({});
@@ -352,10 +353,19 @@ float LevelEditor::speed() const
    return values[m_speedSelector->selected_item()];
 }
 
+void LevelEditor::finish_using_tool() const
+{
+   if (m_selectedObject != nullptr) {
+      m_sidePanel->on_changed_selected_object(*m_selectedObject);
+   }
+}
+
 void LevelEditor::set_selected_object(const renderer::ObjectID id)
 {
    m_selectedObject = &scene().object(id);
    m_selectedObjectID = id;
+
+   m_sidePanel->on_changed_selected_object(*m_selectedObject);
 }
 
 }// namespace triglav::editor

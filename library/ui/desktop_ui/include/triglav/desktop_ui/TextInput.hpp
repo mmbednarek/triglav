@@ -5,8 +5,8 @@
 #include "triglav/String.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
-#include "triglav/ui_core/Primitives.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
+#include "triglav/ui_core/Primitives.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 
 namespace triglav::ui_core {
@@ -19,6 +19,8 @@ class TextInput final : public ui_core::IWidget
 {
  public:
    using Self = TextInput;
+
+   TG_EVENT(OnSubmit)
 
    struct State
    {
@@ -35,6 +37,8 @@ class TextInput final : public ui_core::IWidget
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void update_carret_state();
+   void set_content(StringView content);
+   [[nodiscard]] const String& content() const;
 
    void on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
    void on_mouse_entered(const ui_core::Event& event);

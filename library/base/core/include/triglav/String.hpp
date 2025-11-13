@@ -104,6 +104,8 @@ class String
    [[nodiscard]] iterator begin() const;
    [[nodiscard]] iterator end() const;
 
+   [[nodiscard]] std::string to_std() const;
+
  private:
    void grow_to(MemorySize newSize);
    void resize(MemorySize newSize);

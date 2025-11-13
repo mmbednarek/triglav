@@ -1,10 +1,15 @@
 #include "LevelEditorSidePanel.hpp"
 
+#include "LevelEditor.hpp"
+#include "triglav/Format.hpp"
+#include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/ui_core/widget/GridLayout.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
+
+#include <glm/gtx/euler_angles.hpp>
 
 namespace triglav::editor {
 
@@ -21,7 +26,7 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
                      })
                      .create_content<ui_core::VerticalLayout>({
                         .padding = {10.0f, 10.0f, 10.0f, 10.0f},
-                        .separation = 5.0f,
+                        .separation = 15.0f,
                      });
 
    layout.create_child<ui_core::TextBox>({
@@ -33,14 +38,14 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .verticalAlignment = ui_core::VerticalAlignment::Top,
    });
 
-   auto& translate_layout = layout.create_child<ui_core::GridLayout>({
+   auto& transform_layout = layout.create_child<ui_core::GridLayout>({
       .column_ratios = {0.3f, 0.233f, 0.233f, 0.233f},
-      .row_ratios = {1.0f},
+      .row_ratios = {0.333f, 0.333f, 0.333f},
       .horizontal_spacing = 10.0f,
       .vertical_spacing = 10.0f,
    });
 
-   translate_layout.create_child<ui_core::TextBox>({
+   transform_layout.create_child<ui_core::TextBox>({
       .fontSize = TG_THEME_VAL(base_font_size),
       .typeface = TG_THEME_VAL(base_typeface),
       .content = "Translate",
@@ -48,29 +53,141 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .horizontalAlignment = ui_core::HorizontalAlignment::Left,
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
-    
-   static constexpr auto num_only = [](const Rune r) -> bool {
-      return std::isdigit(r) || r == '.';
-   };
 
-   translate_layout.create_child<desktop_ui::TextInput>({
+   static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
+
+   m_translateX = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
-      .text = "0.0",
+      .text = "0",
       .filter_func = num_only,
       .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
    });
-   translate_layout.create_child<desktop_ui::TextInput>({
+   m_translateY = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
-      .text = "0.0",
+      .text = "0",
       .filter_func = num_only,
       .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
    });
-   translate_layout.create_child<desktop_ui::TextInput>({
+   m_translateZ = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
-      .text = "0.0",
+      .text = "0",
       .filter_func = num_only,
       .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
    });
+
+   transform_layout.create_child<ui_core::TextBox>({
+      .fontSize = TG_THEME_VAL(base_font_size),
+      .typeface = TG_THEME_VAL(base_typeface),
+      .content = "Rotate",
+      .color = TG_THEME_VAL(foreground_color),
+      .horizontalAlignment = ui_core::HorizontalAlignment::Left,
+      .verticalAlignment = ui_core::VerticalAlignment::Center,
+   });
+
+   m_rotateX = &transform_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
+   });
+   m_rotateY = &transform_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
+   });
+   m_rotateZ = &transform_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
+   });
+
+   transform_layout.create_child<ui_core::TextBox>({
+      .fontSize = TG_THEME_VAL(base_font_size),
+      .typeface = TG_THEME_VAL(base_typeface),
+      .content = "Scale",
+      .color = TG_THEME_VAL(foreground_color),
+      .horizontalAlignment = ui_core::HorizontalAlignment::Left,
+      .verticalAlignment = ui_core::VerticalAlignment::Center,
+   });
+
+   m_scaleX = &transform_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
+   });
+   m_scaleY = &transform_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
+   });
+   m_scaleZ = &transform_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
+   });
+
+   auto& button = layout.create_child<desktop_ui::Button>({
+      .manager = m_state.manager,
+      .label = "Update",
+   });
+   TG_CONNECT_OPT(button, OnClick, apply_position);
+}
+
+void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
+{
+   const auto x = format("{}", object.transform.translation.x);
+   const auto y = format("{}", object.transform.translation.y);
+   const auto z = format("{}", object.transform.translation.z);
+
+   m_translateX->set_content(x.view());
+   m_translateY->set_content(y.view());
+   m_translateZ->set_content(z.view());
+
+   const auto angles = glm::eulerAngles(object.transform.rotation);
+   const auto yaw = format("{}", glm::degrees(angles.x));
+   const auto pitch = format("{}", glm::degrees(angles.y));
+   const auto roll = format("{}", glm::degrees(angles.z));
+
+   m_rotateX->set_content(yaw.view());
+   m_rotateY->set_content(pitch.view());
+   m_rotateZ->set_content(roll.view());
+
+   const auto scale_x = format("{}", object.transform.scale.x);
+   const auto scale_y = format("{}", object.transform.scale.y);
+   const auto scale_z = format("{}", object.transform.scale.z);
+
+   m_scaleX->set_content(scale_x.view());
+   m_scaleY->set_content(scale_y.view());
+   m_scaleZ->set_content(scale_z.view());
+}
+
+void LevelEditorSidePanel::apply_position(desktop::MouseButton /*mouse_button*/) const
+{
+   assert(m_state.editor);
+
+   const float x = std::stof(m_translateX->content().to_std());
+   const float y = std::stof(m_translateY->content().to_std());
+   const float z = std::stof(m_translateZ->content().to_std());
+
+   const float yaw = std::stof(m_rotateX->content().to_std());
+   const float pitch = std::stof(m_rotateY->content().to_std());
+   const float roll = std::stof(m_rotateZ->content().to_std());
+
+   const float scale_x = std::stof(m_scaleX->content().to_std());
+   const float scale_y = std::stof(m_scaleY->content().to_std());
+   const float scale_z = std::stof(m_scaleZ->content().to_std());
+
+   Transform3D transform{};
+   transform.translation = Vector3{x, y, z};
+   transform.rotation = glm::normalize(Quaternion{Vector3{glm::radians(yaw), glm::radians(pitch), glm::radians(roll)}});
+   transform.scale = Vector3{scale_x, scale_y, scale_z};
+
+   m_state.editor->scene().set_transform(m_state.editor->selected_object_id(), transform);
 }
 
 }// namespace triglav::editor

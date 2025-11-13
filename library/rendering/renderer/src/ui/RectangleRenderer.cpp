@@ -16,7 +16,7 @@ using ui_core::RectId;
 
 // Staging insertion buffer
 // GPU insertion buffer
-constexpr auto g_insertionBufferSize = 32;
+constexpr auto g_insertionBufferSize = 64;
 
 // Staging removal buffer
 // GPU removal buffer

@@ -1,6 +1,7 @@
 #include "String.hpp"
 
 #include <cassert>
+#include <string>
 #include <utility>
 
 namespace triglav {
@@ -327,6 +328,11 @@ String::iterator String::begin() const
 String::iterator String::end() const
 {
    return {data(), data() + m_size, true};
+}
+
+std::string String::to_std() const
+{
+   return {data(), data() + m_size};
 }
 
 void String::grow_to(const MemorySize newSize)
