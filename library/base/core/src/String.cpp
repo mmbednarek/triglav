@@ -1,7 +1,6 @@
 #include "String.hpp"
 
 #include <cassert>
-#include <string>
 #include <utility>
 
 namespace triglav {
