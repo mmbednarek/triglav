@@ -19,7 +19,9 @@
    TG_DEFINE_EVENT(MouseScrolled, on_mouse_scrolled, Scroll)  \
    TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)      \
    TG_DEFINE_EVENT(KeyReleased, on_key_released, Keyboard)    \
-   TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)
+   TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)       \
+   TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_actiated)         \
+   TG_DEFINE_EVENT_NO_PAYLOAD(Deactivated, on_deactiated)
 
 namespace triglav::ui_core {
 
