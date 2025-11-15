@@ -61,6 +61,8 @@ enum class Key
    Space,
    Unknown,
    Backspace,
+   Tab,
+   Escape,
 
    LeftArrow,
    UpArrow,

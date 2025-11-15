@@ -30,10 +30,13 @@ class GridLayout final : public LayoutWidget
    void on_event(const Event& event) override;
 
  private:
+   std::optional<MemorySize> find_active_child() const;
+
    State m_state;
    Vector4 m_dimensions;
    u32 m_lastRow = 0;
    u32 m_lastCol = 0;
+   std::optional<MemorySize> m_activeChild{};
 };
 
 }// namespace triglav::ui_core

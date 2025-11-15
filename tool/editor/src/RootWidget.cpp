@@ -91,4 +91,22 @@ void RootWidget::tick(const float delta_time) const
    m_levelEditor->tick(delta_time);
 }
 
+void RootWidget::on_event(const ui_core::Event& event)
+{
+   if (m_context.active_widget() != nullptr) {
+      if (event.eventType == ui_core::Event::Type::MousePressed) {
+         if (!is_point_inside(m_context.active_area(), event.globalMousePosition)) {
+            m_context.set_active_widget(nullptr, {});
+         }
+      } else if (event.eventType == ui_core::Event::Type::TextInput || event.eventType == ui_core::Event::Type::KeyPressed) {
+         ui_core::Event sub_event(event);
+         sub_event.mousePosition = event.globalMousePosition - rect_position(m_context.active_area());
+         sub_event.isForwardedToActive = true;
+         m_context.active_widget()->on_event(sub_event);
+      }
+   }
+
+   ProxyWidget::on_event(event);
+}
+
 }// namespace triglav::editor

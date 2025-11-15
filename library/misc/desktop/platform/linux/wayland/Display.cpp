@@ -22,6 +22,10 @@ namespace {
 Key map_key(const u32 key)
 {
    switch (key) {
+   case 1:
+      return Key::Escape;
+   case 15:
+      return Key::Tab;
    case 14:
       return Key::Backspace;
    case 17:

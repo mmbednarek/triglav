@@ -101,6 +101,7 @@ class String
    void shrink_by(MemorySize runeCount);
    void insert_rune_at(u32 position, Rune rune);
    void remove_rune_at(u32 position);
+   void remove_range(u32 first_rune, u32 last_rune);
 
    [[nodiscard]] iterator begin() const;
    [[nodiscard]] iterator end() const;

@@ -2,12 +2,12 @@
 
 #include "DesktopUI.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/String.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/Primitives.hpp"
-#include "triglav/ui_core/widget/RectBox.hpp"
 
 namespace triglav::ui_core {
 class TextBox;
@@ -17,6 +17,7 @@ namespace triglav::desktop_ui {
 
 class TextInput final : public ui_core::IWidget
 {
+   TG_DEFINE_LOG_CATEGORY(TextInput)
  public:
    using Self = TextInput;
 
@@ -41,23 +42,36 @@ class TextInput final : public ui_core::IWidget
    [[nodiscard]] const String& content() const;
 
    void on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
+   void on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
+   void on_mouse_moved(const ui_core::Event& event);
    void on_mouse_entered(const ui_core::Event& event);
    void on_mouse_left(const ui_core::Event& event);
    void on_text_input(const ui_core::Event& event, const ui_core::Event::TextInput& text_input);
    void on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard);
+   void on_activated(const ui_core::Event& event);
+   void on_deactivated(const ui_core::Event& event);
 
  private:
    void recalculate_caret_offset(bool removal = false);
    void update_text_position();
+   void update_selection_box();
+   Vector4 text_cropping_mask() const;
+   u32 rune_index_from_offset(float offset) const;
+   void disable_caret();
+   void enable_caret();
+   void remove_selected();
 
    ui_core::Context& m_context;
    State m_state;
 
    ui_core::RectInstance m_backgroundRect;
+   ui_core::RectInstance m_selectionRect;
    ui_core::TextInstance m_textPrim;
    ui_core::RectInstance m_caretBox;
    bool m_isCarretVisible{false};
+   bool m_isSelecting{false};
    u32 m_caretPosition{};
+   u32 m_selectedCount{};
    Vector4 m_dimensions{};
    Vector4 m_croppingMask{};
    Vector2 m_textSize{};

@@ -122,6 +122,11 @@ constexpr auto g_pi = 3.14159265358979323846f;
    return a.x <= (b.x + b.z) && (a.x + a.z) >= b.x && a.y <= (b.y + b.w) && (a.y + a.w) >= b.y;
 }
 
+[[nodiscard]] inline bool is_point_inside(const Rect area, const Vector2 point)
+{
+   return point.x >= area.x && point.y >= area.y && point.x < (area.x + area.z) && point.y < (area.y + area.w);
+}
+
 [[nodiscard]] inline Vector4 min_area(const Vector4 lhs, const Vector4 rhs)
 {
    return {std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::min(lhs.z, rhs.z), std::min(lhs.w, rhs.w)};
