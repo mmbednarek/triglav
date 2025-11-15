@@ -26,7 +26,7 @@ class TriglavEngine(ConanFile):
         self.requires("gtest/1.14.0")
         self.requires("glm/0.9.9.8")
         self.requires("rapidyaml/0.5.0")
-        self.requires("rapidjson/1.1.0")
+        self.requires("rapidjson/cci.20230929")
         self.requires("ktx/4.3.2")
 
     def configure(self):

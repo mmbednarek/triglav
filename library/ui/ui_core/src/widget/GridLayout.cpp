@@ -1,5 +1,7 @@
 #include "widget/GridLayout.hpp"
 
+#include "Context.hpp"
+
 namespace triglav::ui_core {
 
 GridLayout::GridLayout(Context& context, State state, IWidget* parent) :
@@ -144,6 +146,35 @@ void GridLayout::on_event(const Event& event)
    if (index < m_children.size()) {
       m_children[index]->on_event(sub_event);
    }
+
+   if (event.eventType == Event::Type::KeyPressed && std::get<Event::Keyboard>(event.data).key == desktop::Key::Tab) {
+      m_activeChild = this->find_active_child();
+      if (!m_activeChild.has_value()) {
+         m_activeChild = m_lastCol + m_state.column_ratios.size() * m_lastRow;
+      }
+      m_activeChild = (*m_activeChild + 1) % m_children.size();
+
+      Event activate_event(event);
+      activate_event.eventType = Event::Type::Activated;
+      m_children[*m_activeChild]->on_event(activate_event);
+
+      if (m_context.active_widget() != m_children[*m_activeChild].get()) {
+         m_activeChild = (*m_activeChild + 1) % m_children.size();
+         m_children[*m_activeChild]->on_event(activate_event);
+      }
+   }
+}
+
+std::optional<MemorySize> GridLayout::find_active_child() const
+{
+   MemorySize index = 0;
+   for (const auto& child : m_children) {
+      if (child.get() == m_context.active_widget()) {
+         return index;
+      }
+      ++index;
+   }
+   return std::nullopt;
 }
 
 }// namespace triglav::ui_core

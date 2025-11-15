@@ -4,13 +4,8 @@
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/threading/Scheduler.hpp"
 #include "triglav/ui_core/Context.hpp"
-#include "triglav/ui_core/Primitives.hpp"
-#include "triglav/ui_core/UICore.hpp"
-#include "triglav/ui_core/Viewport.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
-#include "triglav/ui_core/widget/TextBox.hpp"
-#include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 namespace triglav::desktop_ui {
 
@@ -29,10 +24,16 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
        .border_color = m_state.border_color,
        .border_width = 1.0f,
     },
+    m_selectionRect{
+       .color = {0.5, 0.5, 0.5, 1.0},
+       .border_radius = {0, 0, 0, 0},
+       .border_color = palette::NO_COLOR,
+       .border_width = 0.0f,
+    },
     m_textPrim{
        .content = m_state.text,
        .typeface_name = TG_THEME_VAL(base_typeface),
-       .font_size = TG_THEME_VAL(button.font_size - 1),
+       .font_size = TG_THEME_VAL(button.font_size) - 1,
        .color = TG_THEME_VAL(foreground_color),
     },
     m_caretBox{
@@ -69,6 +70,8 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
 
    m_backgroundRect.add(m_context, dimensions, croppingMask);
 
+   this->update_selection_box();
+
    const Vector4 caret_dims{dimensions.x + g_textMargin.x, dimensions.y + g_carretMargin, 1, dimensions.w - 2 * g_carretMargin};
    m_caretBox.add(m_context, caret_dims, croppingMask);
 
@@ -93,15 +96,38 @@ void TextInput::on_event(const ui_core::Event& event)
 
 void TextInput::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
 {
-   m_isActive = true;
-   m_backgroundRect.set_color(m_context, TG_THEME_VAL(text_input.bg_active));
-   m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
-   auto& glyphAtlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), TG_THEME_VAL(button.font_size)});
-   m_caretPosition = glyphAtlas.find_rune_index(m_state.text.view(), event.mousePosition.x - g_textMargin.x - m_textOffset);
-   if (!m_timeoutHandle.has_value()) {
-      this->update_carret_state();
+   m_caretPosition = this->rune_index_from_offset(event.mousePosition.x);
+   this->on_activated(event);
+   m_selectedCount = 0;
+   m_isSelecting = true;
+   this->update_selection_box();
+}
+
+void TextInput::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
+{
+   m_isSelecting = false;
+}
+
+void TextInput::on_mouse_moved(const ui_core::Event& event)
+{
+   if (!m_isSelecting)
+      return;
+
+   const auto index = this->rune_index_from_offset(event.mousePosition.x);
+   if (index == m_caretPosition) {
+      return;
    }
-   this->recalculate_caret_offset();
+
+   this->disable_caret();
+
+   if (index < m_caretPosition) {
+      m_selectedCount += m_caretPosition - index;
+      m_caretPosition = index;
+   } else {
+      m_selectedCount = index - m_caretPosition;
+   }
+
+   this->update_selection_box();
 }
 
 void TextInput::on_mouse_entered(const ui_core::Event& /*event*/)
@@ -112,24 +138,23 @@ void TextInput::on_mouse_entered(const ui_core::Event& /*event*/)
 
 void TextInput::on_mouse_left(const ui_core::Event& /*event*/)
 {
-   m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
-   m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
-   m_backgroundRect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
-   m_caretBox.set_color(m_context, {0, 0, 0, 0});
-   m_isActive = false;
-   if (m_timeoutHandle.has_value()) {
-      threading::Scheduler::the().cancel(*m_timeoutHandle);
-      m_timeoutHandle.reset();
+   if (!m_isActive) {
+      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+      m_backgroundRect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
    }
 }
 
-void TextInput::on_text_input(const ui_core::Event& /*event*/, const ui_core::Event::TextInput& text_input)
+void TextInput::on_text_input(const ui_core::Event& event, const ui_core::Event::TextInput& text_input)
 {
+   if (!m_isActive || !event.isForwardedToActive)
+      return;
+
    const auto rune = text_input.inputRune;
    if (font::Charset::European.contains(rune) && m_state.filter_func(rune)) {
       if (m_state.text.is_empty()) {
          this->update_text_position();
       }
+      this->remove_selected();
 
       m_state.text.insert_rune_at(m_caretPosition, rune);
       ++m_caretPosition;
@@ -138,11 +163,10 @@ void TextInput::on_text_input(const ui_core::Event& /*event*/, const ui_core::Ev
    }
 }
 
-void TextInput::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Keyboard& keyboard)
+void TextInput::on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard)
 {
-   if (!m_isActive) {
+   if (!m_isActive || !event.isForwardedToActive)
       return;
-   }
 
    switch (keyboard.key) {
    case desktop::Key::LeftArrow:
@@ -158,10 +182,15 @@ void TextInput::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::E
       this->recalculate_caret_offset();
       break;
    case desktop::Key::Backspace: {
-      if (!m_state.text.is_empty() && m_caretPosition != 0) {
-         m_caretPosition--;
-         m_state.text.remove_rune_at(m_caretPosition);
-         this->recalculate_caret_offset(true);
+      if (!m_state.text.is_empty()) {
+         if (m_selectedCount != 0) {
+            this->remove_selected();
+         } else if (m_caretPosition != 0) {
+            m_caretPosition--;
+            m_state.text.remove_rune_at(m_caretPosition);
+            this->recalculate_caret_offset(true);
+         }
+
          if (m_state.text.is_empty()) {
             m_textPrim.remove(m_context);
          } else {
@@ -170,9 +199,35 @@ void TextInput::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::E
       }
       break;
    }
+   case desktop::Key::Escape: {
+      this->on_deactivated(event);
+      break;
+   }
    default:
       break;
    }
+}
+
+void TextInput::on_activated(const ui_core::Event& /*event*/)
+{
+   this->enable_caret();
+   if (m_isActive)
+      return;
+
+   m_isActive = true;
+   m_context.set_active_widget(this, m_dimensions);
+
+   m_backgroundRect.set_color(m_context, TG_THEME_VAL(text_input.bg_active));
+   m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
+}
+
+void TextInput::on_deactivated(const ui_core::Event& /*event*/)
+{
+   m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+   m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
+   m_backgroundRect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
+   m_isActive = false;
+   this->disable_caret();
 }
 
 void TextInput::update_carret_state()
@@ -247,10 +302,66 @@ void TextInput::recalculate_caret_offset(const bool removal)
 void TextInput::update_text_position()
 {
    const Vector2 textPos{m_textXPosition + m_textOffset, m_dimensions.y + m_textSize.y + g_textMargin.y};
-   Vector4 textCrop{m_dimensions.x + g_textMargin.x, m_dimensions.y, m_dimensions.z - 2 * g_textMargin.x, m_dimensions.w};
-   textCrop = min_area(textCrop, m_croppingMask);
+   m_textPrim.add(m_context, textPos, this->text_cropping_mask());
+}
 
-   m_textPrim.add(m_context, textPos, textCrop);
+void TextInput::update_selection_box()
+{
+   if (m_selectedCount == 0) {
+      m_selectionRect.remove(m_context);
+      return;
+   }
+
+   const auto offset_text = m_state.text.subview(0, static_cast<i32>(m_caretPosition));
+   const auto selected_text = m_state.text.subview(static_cast<i32>(m_caretPosition), static_cast<i32>(m_caretPosition + m_selectedCount));
+
+   auto& atlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), TG_THEME_VAL(button.font_size) - 1});
+   const auto offset_measure = atlas.measure_text(offset_text);
+   const auto selected_measure = atlas.measure_text(selected_text);
+
+   m_selectionRect.add(m_context,
+                       {m_dimensions.x + g_textMargin.x + offset_measure.width + m_textOffset, m_dimensions.y + 0.5f * g_textMargin.y,
+                        selected_measure.width, m_dimensions.w - g_textMargin.y},
+                       this->text_cropping_mask());
+}
+
+Vector4 TextInput::text_cropping_mask() const
+{
+   const Vector4 textCrop{m_dimensions.x + g_textMargin.x, m_dimensions.y, m_dimensions.z - 2 * g_textMargin.x, m_dimensions.w};
+   return min_area(textCrop, m_croppingMask);
+}
+
+u32 TextInput::rune_index_from_offset(const float offset) const
+{
+   auto& atlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), TG_THEME_VAL(button.font_size) - 1});
+   return atlas.find_rune_index(m_state.text.view(), offset - g_textMargin.x - m_textOffset);
+}
+
+void TextInput::disable_caret()
+{
+   m_caretBox.set_color(m_context, {0, 0, 0, 0});
+   if (m_timeoutHandle.has_value()) {
+      threading::Scheduler::the().cancel(*m_timeoutHandle);
+      m_timeoutHandle.reset();
+   }
+}
+
+void TextInput::enable_caret()
+{
+   if (!m_timeoutHandle.has_value()) {
+      this->update_carret_state();
+   }
+   this->recalculate_caret_offset();
+}
+
+void TextInput::remove_selected()
+{
+   if (m_selectedCount == 0)
+      return;
+   m_state.text.remove_range(m_caretPosition, m_caretPosition + m_selectedCount);
+   m_selectedCount = 0;
+   this->update_selection_box();
+   this->enable_caret();
 }
 
 }// namespace triglav::desktop_ui

@@ -1,5 +1,7 @@
 #include "DesktopUI.hpp"
 
+#include "triglav/ui_core/IWidget.hpp"
+
 namespace triglav::desktop_ui {
 
 using namespace name_literals;

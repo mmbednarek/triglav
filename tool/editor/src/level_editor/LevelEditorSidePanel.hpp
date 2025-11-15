@@ -44,6 +44,8 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
    desktop_ui::TextInput* m_scaleY;
    desktop_ui::TextInput* m_scaleZ;
 
+   ui_core::TextBox* m_meshLabel;
+
    TG_OPT_SINK(desktop_ui::Button, OnClick);
 };
 

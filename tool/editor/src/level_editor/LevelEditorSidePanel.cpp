@@ -1,6 +1,8 @@
 #include "LevelEditorSidePanel.hpp"
 
 #include "LevelEditor.hpp"
+#include "LevelViewport.hpp"
+#include "src/RootWindow.hpp"
 #include "triglav/Format.hpp"
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
@@ -12,6 +14,10 @@
 #include <glm/gtx/euler_angles.hpp>
 
 namespace triglav::editor {
+
+constexpr Color RED_OUTLINE{1.0f, 0.28f, 0.28f, 1.0f};
+constexpr Color GREEN_OUTLINE{0.35f, 1.0f, 0.35f, 1.0f};
+constexpr Color BLUE_OUTLINE{0.17f, 0.5f, 1.0f, 1.0f};
 
 LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
@@ -41,8 +47,8 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    auto& transform_layout = layout.create_child<ui_core::GridLayout>({
       .column_ratios = {0.3f, 0.233f, 0.233f, 0.233f},
       .row_ratios = {0.333f, 0.333f, 0.333f},
-      .horizontal_spacing = 10.0f,
-      .vertical_spacing = 10.0f,
+      .horizontal_spacing = 5.0f,
+      .vertical_spacing = 5.0f,
    });
 
    transform_layout.create_child<ui_core::TextBox>({
@@ -60,19 +66,19 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
+      .border_color = RED_OUTLINE,
    });
    m_translateY = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
+      .border_color = GREEN_OUTLINE,
    });
    m_translateZ = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
+      .border_color = BLUE_OUTLINE,
    });
 
    transform_layout.create_child<ui_core::TextBox>({
@@ -88,19 +94,19 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
+      .border_color = RED_OUTLINE,
    });
    m_rotateY = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
+      .border_color = GREEN_OUTLINE,
    });
    m_rotateZ = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
+      .border_color = BLUE_OUTLINE,
    });
 
    transform_layout.create_child<ui_core::TextBox>({
@@ -116,19 +122,19 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {1.0f, 0.0f, 0.0f, 1.0f},
+      .border_color = RED_OUTLINE,
    });
    m_scaleY = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {0.0f, 1.0f, 0.0f, 1.0f},
+      .border_color = GREEN_OUTLINE,
    });
    m_scaleZ = &transform_layout.create_child<desktop_ui::TextInput>({
       .manager = m_state.manager,
       .text = "0",
       .filter_func = num_only,
-      .border_color = {0.0f, 0.0f, 1.0f, 1.0f},
+      .border_color = BLUE_OUTLINE,
    });
 
    auto& button = layout.create_child<desktop_ui::Button>({
@@ -136,6 +142,15 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .label = "Update",
    });
    TG_CONNECT_OPT(button, OnClick, apply_position);
+
+   m_meshLabel = &layout.create_child<ui_core::TextBox>({
+      .fontSize = TG_THEME_VAL(base_font_size),
+      .typeface = TG_THEME_VAL(base_typeface),
+      .content = "Mesh:",
+      .color = TG_THEME_VAL(foreground_color),
+      .horizontalAlignment = ui_core::HorizontalAlignment::Left,
+      .verticalAlignment = ui_core::VerticalAlignment::Center,
+   });
 }
 
 void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
@@ -164,6 +179,10 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    m_scaleX->set_content(scale_x.view());
    m_scaleY->set_content(scale_y.view());
    m_scaleZ->set_content(scale_z.view());
+
+   std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
+   auto content = triglav::format("Mesh: {}", mesh_path);
+   m_meshLabel->set_content(content.view());
 }
 
 void LevelEditorSidePanel::apply_position(desktop::MouseButton /*mouse_button*/) const
@@ -188,6 +207,7 @@ void LevelEditorSidePanel::apply_position(desktop::MouseButton /*mouse_button*/)
    transform.scale = Vector3{scale_x, scale_y, scale_z};
 
    m_state.editor->scene().set_transform(m_state.editor->selected_object_id(), transform);
+   m_state.editor->viewport().update_view();
 }
 
 }// namespace triglav::editor

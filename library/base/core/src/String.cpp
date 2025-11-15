@@ -275,26 +275,31 @@ void String::insert_rune_at(const u32 position, const Rune rune)
 
 void String::remove_rune_at(const u32 position)
 {
-   auto* runeStart = this->data();
-   skip_runes(runeStart, runeStart + m_size, position);
+   this->remove_range(position, position + 1);
+}
 
-   auto* runeEnd = runeStart;
-   skip_runes(runeEnd, this->data() + m_size, 1);
+void String::remove_range(const u32 first_rune, const u32 last_rune)
+{
+   auto* start = this->data();
+   skip_runes(start, start + m_size, first_rune);
 
-   const auto runeSize = runeEnd - runeStart;
-   const auto remainingSize = (this->data() + m_size) - runeEnd;
-   std::memmove(runeStart, runeEnd, remainingSize);
+   auto* end = start;
+   skip_runes(end, this->data() + m_size, last_rune - first_rune);
 
-   const auto oldSize = m_size;
-   const auto newSize = m_size - runeSize;
+   const auto data_size = end - start;
+   const auto remaining_size = (this->data() + m_size) - end;
+   std::memmove(start, end, remaining_size);
 
-   if (oldSize > g_smallStringCapacity && newSize <= g_smallStringCapacity) {
+   const auto old_size = m_size;
+   const auto new_size = m_size - data_size;
+
+   if (old_size > g_smallStringCapacity && new_size <= g_smallStringCapacity) {
       const auto* ptr = this->data();
-      std::memcpy(m_smallPayload.data(), ptr, newSize);
+      std::memcpy(m_smallPayload.data(), ptr, new_size);
       delete[] ptr;
    }
 
-   m_size = newSize;
+   m_size = new_size;
 }
 
 void String::shrink_by(const MemorySize runeCount)

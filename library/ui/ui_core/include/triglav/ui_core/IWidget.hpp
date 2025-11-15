@@ -20,8 +20,8 @@
    TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)      \
    TG_DEFINE_EVENT(KeyReleased, on_key_released, Keyboard)    \
    TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)       \
-   TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_actiated)         \
-   TG_DEFINE_EVENT_NO_PAYLOAD(Deactivated, on_deactiated)
+   TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_activated)        \
+   TG_DEFINE_EVENT_NO_PAYLOAD(Deactivated, on_deactivated)
 
 namespace triglav::ui_core {
 
@@ -68,6 +68,7 @@ struct Event
    Vector2 parentSize;
    Vector2 mousePosition;
    Vector2 globalMousePosition;
+   bool isForwardedToActive = false;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 };
 

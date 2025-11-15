@@ -5,7 +5,6 @@
 #include "triglav/ui_core/IWidget.hpp"
 
 #include <map>
-#include <string>
 
 namespace triglav::editor {
 
