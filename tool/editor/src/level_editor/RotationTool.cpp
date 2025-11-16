@@ -3,6 +3,7 @@
 #include "LevelEditor.hpp"
 #include "LevelViewport.hpp"
 #include "RenderViewport.hpp"
+#include "SetTransformAction.hpp"
 #include "src/RootWindow.hpp"
 
 namespace triglav::editor {
@@ -44,8 +45,7 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
    const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(position, *m_rotationAxis));
    const auto difference = normalize(point - position);
 
-   m_startingTranslation = object->transform.translation;
-   m_startingRotation = object->transform.rotation;
+   m_startingTransform = object->transform;
    m_baseAngle = angle_from_vector(difference, *m_rotationAxis);
    m_isBeingUsed = true;
 
@@ -61,18 +61,18 @@ void RotationTool::on_mouse_moved(Vector2 position)
    if (m_isBeingUsed) {
       assert(m_rotationAxis.has_value());
       const auto* object = m_levelEditor.selected_object();
-      const auto obj_position = m_levelEditor.selected_object_position(m_startingTranslation);
+      const auto obj_position = m_levelEditor.selected_object_position(m_startingTransform.translation);
 
       auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(obj_position, *m_rotationAxis));
-      const auto difference = normalize(point - obj_position);
+      const auto difference = glm::normalize(point - obj_position);
       const float angle = angle_from_vector(difference, *m_rotationAxis);
       const float angle_diff = m_levelEditor.snap_offset((angle - m_baseAngle) / (0.25f * g_pi)) * (0.25f * g_pi);
 
       auto quat_rot = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotationAxis));
 
       auto transform = object->transform;
-      transform.translation = obj_position + quat_rot * (m_startingTranslation - obj_position);
-      transform.rotation = quat_rot * m_startingRotation;
+      transform.translation = obj_position + quat_rot * (m_startingTransform.translation - obj_position);
+      transform.rotation = quat_rot * m_startingTransform.rotation;
       m_levelEditor.set_selected_transform(transform);
       m_levelEditor.viewport().update_view();
       return;
@@ -171,8 +171,13 @@ void RotationTool::on_view_updated()
 
 void RotationTool::on_use_end()
 {
-   m_isBeingUsed = false;
-   m_rotationAxis.reset();
+   if (m_isBeingUsed) {
+      m_isBeingUsed = false;
+      m_rotationAxis.reset();
+
+      m_levelEditor.history_manager().emplace_action<SetTransformAction>(m_levelEditor, m_levelEditor.selected_object_id(),
+                                                                         m_startingTransform, m_levelEditor.selected_object()->transform);
+   }
 }
 
 void RotationTool::on_left_tool()

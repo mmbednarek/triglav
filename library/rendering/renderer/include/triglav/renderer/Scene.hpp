@@ -15,6 +15,7 @@
 namespace triglav::renderer {
 
 using ObjectID = u32;
+constexpr ObjectID UNSELECTED_OBJECT = ~0u;
 
 class ModelRenderer;
 class Renderer;
