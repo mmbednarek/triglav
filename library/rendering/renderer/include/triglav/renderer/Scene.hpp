@@ -60,7 +60,7 @@ class Scene
 
    void update(const graphics_api::Resolution& resolution);
    ObjectID add_object(SceneObject object);
-   void set_transform(ObjectID object_id, const Transform3D& trasnform);
+   void set_transform(ObjectID object_id, const Transform3D& transform);
    void load_level(LevelName name);
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();

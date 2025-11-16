@@ -7,10 +7,6 @@
 #include <cmath>
 #include <glm/gtc/quaternion.hpp>
 
-#ifndef M_PI
-#define M_PI 3.1415926535897932384626433832795
-#endif
-
 using triglav::ResourceType;
 
 namespace triglav::renderer {
@@ -112,21 +108,10 @@ void Scene::update_bvh()
 {
    std::vector<SceneObjectRef> objects{m_objects.size()};
    std::ranges::transform(m_objects, objects.begin(), [this, index = 0u](SceneObject& object) mutable {
-      Transform3D t(object.transform);
-      t.rotation = {1, 0, 0, 0};
-      const auto mat = t.to_matrix();
-
       const auto& mesh = m_resourceManager.get(object.model);
-      auto new_min = mat * Vector4{mesh.boundingBox.min, 1.0f};
-      auto new_max = mat * Vector4{mesh.boundingBox.max, 1.0f};
-
       return SceneObjectRef{
          .object = &object,
-         .bbox =
-            {
-               .min{new_min},
-               .max{new_max},
-            },
+         .bbox = mesh.boundingBox.transform(object.transform.to_matrix()),
          .id = index++,
       };
    });
@@ -137,14 +122,14 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
 {
    m_yaw += delta_yaw;
    while (m_yaw < 0) {
-      m_yaw += static_cast<float>(2 * M_PI);
+      m_yaw += static_cast<float>(2 * g_pi);
    }
-   while (m_yaw >= static_cast<float>(2 * M_PI)) {
-      m_yaw -= static_cast<float>(2 * M_PI);
+   while (m_yaw >= static_cast<float>(2 * g_pi)) {
+      m_yaw -= static_cast<float>(2 * g_pi);
    }
 
    m_pitch += delta_pitch;
-   m_pitch = std::clamp(m_pitch, -static_cast<float>(M_PI) / 2.0f + 0.01f, static_cast<float>(M_PI) / 2.0f - 0.01f);
+   m_pitch = std::clamp(m_pitch, -static_cast<float>(g_pi) / 2.0f + 0.01f, static_cast<float>(g_pi) / 2.0f - 0.01f);
 
    this->camera().set_orientation(glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}});
    this->send_view_changed();

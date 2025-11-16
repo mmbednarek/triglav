@@ -85,6 +85,7 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
 void TextInput::remove_from_viewport()
 {
    m_backgroundRect.remove(m_context);
+   m_selectionRect.remove(m_context);
    m_caretBox.remove(m_context);
    m_textPrim.remove(m_context);
 }

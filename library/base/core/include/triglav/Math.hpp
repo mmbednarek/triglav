@@ -42,7 +42,7 @@ enum class Axis : u32
    case Axis::Y:
       return {0, 1, 0};
    case Axis::Z:
-      return {0, 0, 01};
+      return {0, 0, 1};
    default:
       return {0, 0, 0};
    }

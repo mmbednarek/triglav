@@ -55,9 +55,8 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
 
          const auto point_position = find_closest_point_on_line(ray.origin, ray.direction, m_startingPosition);
          auto x2 = glm::length(point_position - m_startingPosition);
-         const auto scale_comp = glm::length(scale);
-         const auto diff = std::max(x2 - x1, MIN_SCALE - scale_comp);
-         final_scale = m_levelEditor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;
+         const auto diff = std::max(x2 - x1, MIN_SCALE - 1.0f);
+         final_scale = m_levelEditor.snap_offset(diff);
       } else {
          scale_direction = axis_forward_vec3(axis);
 
@@ -68,12 +67,11 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
 
          const auto diff = std::max(x2 - x1, MIN_SCALE - scale_comp);
          final_scale = m_levelEditor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;
+
+         auto rot_inv = glm::inverse(transform.rotation);
+         scale_direction = rot_inv * scale_direction;
+         scale_direction = glm::abs(scale_direction);
       }
-
-      auto rot_inv = glm::inverse(transform.rotation);
-      scale_direction = rot_inv * scale_direction;
-
-      scale_direction = glm::abs(scale_direction);
 
       Vector3 scale_vec = scale_direction * final_scale + Vector3{1, 1, 1};
 
@@ -81,7 +79,7 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
 
       transform.translation = m_startingPosition + translation_diff;
       transform.scale = m_baseScale * scale_vec;
-      m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
+      m_levelEditor.set_selected_transform(transform);
       m_levelEditor.viewport().update_view();
       return;
    }
@@ -117,8 +115,8 @@ void ScalingTool::on_view_updated()
    };
 
    static constexpr geometry::BoundingBox scaler_all_axis_bb{
-      .min{-2 * SCALING_CUBE, -2 * SCALING_CUBE, -2 * SCALING_CUBE},
-      .max{2 * SCALING_CUBE, 2 * SCALING_CUBE, 2 * SCALING_CUBE},
+      .min{-4 * SCALING_CUBE, -4 * SCALING_CUBE, -4 * SCALING_CUBE},
+      .max{4 * SCALING_CUBE, 4 * SCALING_CUBE, 4 * SCALING_CUBE},
    };
 
    const auto translation = m_levelEditor.selected_object_position();

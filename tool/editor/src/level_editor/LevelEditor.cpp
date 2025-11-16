@@ -359,6 +359,11 @@ void LevelEditor::finish_using_tool() const
       m_sidePanel->on_changed_selected_object(*m_selectedObject);
    }
 }
+void LevelEditor::set_selected_transform(const Transform3D& transform)
+{
+   m_scene.set_transform(m_selectedObjectID, transform);
+   m_sidePanel->on_changed_selected_object(*m_selectedObject);
+}
 
 void LevelEditor::set_selected_object(const renderer::ObjectID id)
 {
