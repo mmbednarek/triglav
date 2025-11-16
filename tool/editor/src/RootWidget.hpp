@@ -26,9 +26,8 @@ class RootWidget final : public ui_core::ProxyWidget
 
    RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
-   void on_clicked_menu_bar(Name itemName, const desktop_ui::MenuItem& item) const;
+   void on_clicked_menu_bar(Name item_name, const desktop_ui::MenuItem& item) const;
    void tick(float delta_time) const;
-   void on_event(const ui_core::Event& event) override;
 
  private:
    State m_state;

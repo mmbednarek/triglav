@@ -385,4 +385,20 @@ HistoryManager& LevelEditor::history_manager()
    return m_historyManager;
 }
 
+void LevelEditor::on_event(const ui_core::Event& event)
+{
+   ui_core::visit_event<void>(*this, event);
+   ProxyWidget::on_event(event);
+}
+
+void LevelEditor::on_undo(const ui_core::Event& /*event*/)
+{
+   m_historyManager.undo();
+}
+
+void LevelEditor::on_redo(const ui_core::Event& /*event*/)
+{
+   m_historyManager.redo();
+}
+
 }// namespace triglav::editor

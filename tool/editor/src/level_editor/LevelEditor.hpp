@@ -54,6 +54,9 @@ class LevelEditor final : public ui_core::ProxyWidget
    void set_selected_transform(const Transform3D& transform);
    void set_selected_object(renderer::ObjectID id);
    HistoryManager& history_manager();
+   void on_event(const ui_core::Event& event) override;
+   void on_undo(const ui_core::Event& event);
+   void on_redo(const ui_core::Event& event);
 
  private:
    State m_state;

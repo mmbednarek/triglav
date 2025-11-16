@@ -231,6 +231,13 @@ void TextInput::on_deactivated(const ui_core::Event& /*event*/)
    this->disable_caret();
 }
 
+void TextInput::on_select_all(const ui_core::Event& /*event*/)
+{
+   m_caretPosition = 0;
+   m_selectedCount = m_state.text.size();
+   this->update_selection_box();
+}
+
 void TextInput::update_carret_state()
 {
    m_isCarretVisible = !m_isCarretVisible;
