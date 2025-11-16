@@ -66,6 +66,7 @@ enum class Key
    Control,
    Shift,
    Alt,
+   Enter,
 
    LeftArrow,
    UpArrow,

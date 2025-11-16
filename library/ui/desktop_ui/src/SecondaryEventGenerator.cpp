@@ -14,7 +14,8 @@ void SecondaryEventGenerator::on_event(const ui_core::Event& event)
    ui_core::visit_event<void>(*this, event);
 
    if (m_context.active_widget() != nullptr) {
-      if (event.eventType == ui_core::Event::Type::TextInput || event.eventType == ui_core::Event::Type::KeyPressed) {
+      if (event.eventType == ui_core::Event::Type::TextInput || event.eventType == ui_core::Event::Type::KeyPressed ||
+          event.eventType == ui_core::Event::Type::MouseMoved) {
          ui_core::Event sub_event(event);
          sub_event.mousePosition = event.globalMousePosition - rect_position(m_context.active_area());
          sub_event.isForwardedToActive = true;

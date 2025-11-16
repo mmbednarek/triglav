@@ -111,8 +111,18 @@ void TextInput::on_mouse_released(const ui_core::Event& /*event*/, const ui_core
 
 void TextInput::on_mouse_moved(const ui_core::Event& event)
 {
-   if (!m_isSelecting)
+   if (!m_isSelecting || !event.isForwardedToActive)
       return;
+
+   if (event.globalMousePosition.x < m_dimensions.x && m_textOffset < 0.0f) {
+      m_textOffset += 0.2f;
+      this->update_text_position();
+      this->update_selection_box();
+   } else if (event.globalMousePosition.x > m_dimensions.x + m_dimensions.w) {
+      m_textOffset -= 0.2f;
+      this->update_text_position();
+      this->update_selection_box();
+   }
 
    const auto index = this->rune_index_from_offset(event.mousePosition.x);
    if (index == m_caretPosition) {
@@ -200,6 +210,8 @@ void TextInput::on_key_pressed(const ui_core::Event& event, const ui_core::Event
       }
       break;
    }
+   case desktop::Key::Enter:
+      [[fallthrough]];
    case desktop::Key::Escape: {
       this->on_deactivated(event);
       break;
@@ -229,6 +241,7 @@ void TextInput::on_deactivated(const ui_core::Event& /*event*/)
    m_backgroundRect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
    m_isActive = false;
    this->disable_caret();
+   event_OnTextChanged.publish(m_state.text.view());
 }
 
 void TextInput::on_select_all(const ui_core::Event& /*event*/)
@@ -255,6 +268,8 @@ void TextInput::set_content(const StringView content)
 {
    m_state.text = content;
    m_textOffset = 0;
+   m_caretPosition = 0;
+   m_selectedCount = 0;
    m_textPrim.set_content(m_context, m_state.text.view());
    this->update_text_position();
 }

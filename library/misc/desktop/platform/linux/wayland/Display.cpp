@@ -36,6 +36,8 @@ Key map_key(const u32 key)
       return Key::E;
    case 21:
       return Key::Y;
+   case 28:
+      return Key::Enter;
    case 29:
       return Key::Control;
    case 31:
