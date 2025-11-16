@@ -74,6 +74,14 @@ void Display::dispatch_messages()
                surface->dispatch_close();
             }
          }
+         break;
+      }
+      case ConfigureNotify: {
+         auto surface = this->surface_by_window(event.xconfigure.window);
+         if (surface) {
+            surface->dispatch_resize({event.xconfigure.width, event.xconfigure.height});
+         }
+         break;
       }
       }
    }
@@ -103,7 +111,7 @@ std::shared_ptr<ISurface> Display::create_surface(const StringView title, const 
    XMapWindow(m_display, window);
    XSelectInput(m_display, window,
                 ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
-                   LeaveNotify);
+                   LeaveNotify | StructureNotifyMask);
    XSetWMProtocols(m_display, window, &m_wmDeleteAtom, 1);
 
    auto surface = std::make_shared<Surface>(*this, window, dimensions);

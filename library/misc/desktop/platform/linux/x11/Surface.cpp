@@ -265,6 +265,12 @@ void Surface::dispatch_close() const
    event_OnClose.publish();
 }
 
+void Surface::dispatch_resize(Vector2i new_size)
+{
+   m_dimension = {new_size.x, new_size.y};
+   event_OnResize.publish(new_size);
+}
+
 void Surface::tick() const
 {
    if (m_isCursorLocked) {
