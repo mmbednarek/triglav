@@ -74,7 +74,7 @@ void cs_main(uint3 groupID: SV_GroupID, uint3 threadID : SV_GroupThreadID)
         drawCall.atlasID = g_sharedUpdateInfo.atlasID;
         drawCall.color = g_sharedUpdateInfo.color;
         drawCall.crop = g_sharedUpdateInfo.crop;
-        drawCall.position = g_sharedUpdateInfo.position;
+        drawCall.position = round(g_sharedUpdateInfo.position);
 
         g_outDrawCalls[g_sharedUpdateInfo.dstDrawCall] = drawCall;
     }
