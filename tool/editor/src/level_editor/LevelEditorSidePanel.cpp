@@ -5,7 +5,6 @@
 #include "SetTransformAction.hpp"
 #include "src/RootWindow.hpp"
 #include "triglav/Format.hpp"
-#include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/ui_core/widget/GridLayout.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
@@ -19,6 +18,33 @@ namespace triglav::editor {
 constexpr Color RED_OUTLINE{1.0f, 0.28f, 0.28f, 1.0f};
 constexpr Color GREEN_OUTLINE{0.35f, 1.0f, 0.35f, 1.0f};
 constexpr Color BLUE_OUTLINE{0.17f, 0.5f, 1.0f, 1.0f};
+
+TransposeInput::TransposeInput(ui_core::Context& context, State state, IWidget* parent) :
+    ui_core::ProxyWidget(context, parent),
+    m_state(state)
+{
+   static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
+
+   m_textInput = &this->create_content<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "0",
+      .filter_func = num_only,
+      .border_color = m_state.border_color,
+   });
+
+   TG_CONNECT_OPT(*m_textInput, OnTextChanged, on_text_changed);
+}
+
+void TransposeInput::on_text_changed(const StringView text) const
+{
+   *m_state.destination = std::stof(String(text).to_std());
+   m_state.side_panel->apply_transform();
+}
+
+void TransposeInput::set_content(const StringView text) const
+{
+   m_textInput->set_content(text);
+}
 
 LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
@@ -61,25 +87,23 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
 
-   static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
-
-   m_translateX = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_translateX = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = RED_OUTLINE,
+      .destination = &m_pendingTranslate.x,
    });
-   m_translateY = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_translateY = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = GREEN_OUTLINE,
+      .destination = &m_pendingTranslate.y,
    });
-   m_translateZ = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_translateZ = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = BLUE_OUTLINE,
+      .destination = &m_pendingTranslate.z,
    });
 
    transform_layout.create_child<ui_core::TextBox>({
@@ -91,23 +115,23 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
 
-   m_rotateX = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_rotateX = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = RED_OUTLINE,
+      .destination = &m_pendingRotation.x,
    });
-   m_rotateY = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_rotateY = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = GREEN_OUTLINE,
+      .destination = &m_pendingRotation.y,
    });
-   m_rotateZ = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_rotateZ = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = BLUE_OUTLINE,
+      .destination = &m_pendingRotation.z,
    });
 
    transform_layout.create_child<ui_core::TextBox>({
@@ -119,30 +143,24 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .verticalAlignment = ui_core::VerticalAlignment::Center,
    });
 
-   m_scaleX = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_scaleX = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = RED_OUTLINE,
+      .destination = &m_pendingScale.x,
    });
-   m_scaleY = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_scaleY = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = GREEN_OUTLINE,
+      .destination = &m_pendingScale.y,
    });
-   m_scaleZ = &transform_layout.create_child<desktop_ui::TextInput>({
+   m_scaleZ = &transform_layout.create_child<TransposeInput>({
       .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
+      .side_panel = this,
       .border_color = BLUE_OUTLINE,
+      .destination = &m_pendingScale.z,
    });
-
-   auto& button = layout.create_child<desktop_ui::Button>({
-      .manager = m_state.manager,
-      .label = "Update",
-   });
-   TG_CONNECT_OPT(button, OnClick, apply_position);
 
    m_meshLabel = &layout.create_child<ui_core::TextBox>({
       .fontSize = TG_THEME_VAL(base_font_size),
@@ -154,8 +172,12 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    });
 }
 
-void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
+void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object)
 {
+   m_pendingTranslate = object.transform.translation;
+   m_pendingRotation = glm::eulerAngles(object.transform.rotation);
+   m_pendingScale = object.transform.scale;
+
    const auto x = format("{}", object.transform.translation.x);
    const auto y = format("{}", object.transform.translation.y);
    const auto z = format("{}", object.transform.translation.z);
@@ -164,10 +186,9 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    m_translateY->set_content(y.view());
    m_translateZ->set_content(z.view());
 
-   const auto angles = glm::eulerAngles(object.transform.rotation);
-   const auto yaw = format("{}", glm::degrees(angles.x));
-   const auto pitch = format("{}", glm::degrees(angles.y));
-   const auto roll = format("{}", glm::degrees(angles.z));
+   const auto yaw = format("{}", glm::degrees(m_pendingRotation.x));
+   const auto pitch = format("{}", glm::degrees(m_pendingRotation.y));
+   const auto roll = format("{}", glm::degrees(m_pendingRotation.z));
 
    m_rotateX->set_content(yaw.view());
    m_rotateY->set_content(pitch.view());
@@ -186,26 +207,17 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    m_meshLabel->set_content(content.view());
 }
 
-void LevelEditorSidePanel::apply_position(desktop::MouseButton /*mouse_button*/) const
+void LevelEditorSidePanel::apply_transform() const
 {
    assert(m_state.editor);
 
-   const float x = std::stof(m_translateX->content().to_std());
-   const float y = std::stof(m_translateY->content().to_std());
-   const float z = std::stof(m_translateZ->content().to_std());
-
-   const float yaw = std::stof(m_rotateX->content().to_std());
-   const float pitch = std::stof(m_rotateY->content().to_std());
-   const float roll = std::stof(m_rotateZ->content().to_std());
-
-   const float scale_x = std::stof(m_scaleX->content().to_std());
-   const float scale_y = std::stof(m_scaleY->content().to_std());
-   const float scale_z = std::stof(m_scaleZ->content().to_std());
+   if (m_state.editor->selected_object() == nullptr)
+      return;
 
    Transform3D transform{};
-   transform.translation = Vector3{x, y, z};
-   transform.rotation = glm::normalize(Quaternion{Vector3{glm::radians(yaw), glm::radians(pitch), glm::radians(roll)}});
-   transform.scale = Vector3{scale_x, scale_y, scale_z};
+   transform.translation = m_pendingTranslate;
+   transform.rotation = Quaternion{m_pendingRotation};
+   transform.scale = m_pendingScale;
 
    m_state.editor->history_manager().emplace_action<SetTransformAction>(*m_state.editor, m_state.editor->selected_object_id(),
                                                                         m_state.editor->selected_object()->transform, transform);

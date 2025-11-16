@@ -2,6 +2,8 @@
 
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
+#include "triglav/desktop_ui/TextInput.hpp"
+#include "triglav/event/Delegate.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
@@ -13,6 +15,32 @@ class TextInput;
 namespace triglav::editor {
 
 class LevelEditor;
+class LevelEditorSidePanel;
+
+class TransposeInput final : public ui_core::ProxyWidget
+{
+ public:
+   using Self = TransposeInput;
+
+   struct State
+   {
+      desktop_ui::DesktopUIManager* manager{};
+      LevelEditorSidePanel* side_panel;
+      Color border_color{};
+      float* destination;
+   };
+
+   TransposeInput(ui_core::Context& context, State state, IWidget* parent);
+
+   void on_text_changed(StringView text) const;
+   void set_content(StringView text) const;
+
+ private:
+   State m_state;
+   desktop_ui::TextInput* m_textInput{};
+
+   TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
+};
 
 class LevelEditorSidePanel final : public ui_core::ProxyWidget
 {
@@ -27,26 +55,28 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
 
    LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent);
 
-   void on_changed_selected_object(const renderer::SceneObject& object) const;
-   void apply_position(desktop::MouseButton mouse_button) const;
+   void on_changed_selected_object(const renderer::SceneObject& object);
+   void apply_transform() const;
 
  private:
    State m_state;
-   desktop_ui::TextInput* m_translateX;
-   desktop_ui::TextInput* m_translateY;
-   desktop_ui::TextInput* m_translateZ;
+   TransposeInput* m_translateX;
+   TransposeInput* m_translateY;
+   TransposeInput* m_translateZ;
 
-   desktop_ui::TextInput* m_rotateX;
-   desktop_ui::TextInput* m_rotateY;
-   desktop_ui::TextInput* m_rotateZ;
+   TransposeInput* m_rotateX;
+   TransposeInput* m_rotateY;
+   TransposeInput* m_rotateZ;
 
-   desktop_ui::TextInput* m_scaleX;
-   desktop_ui::TextInput* m_scaleY;
-   desktop_ui::TextInput* m_scaleZ;
+   TransposeInput* m_scaleX;
+   TransposeInput* m_scaleY;
+   TransposeInput* m_scaleZ;
 
    ui_core::TextBox* m_meshLabel;
 
-   TG_OPT_SINK(desktop_ui::Button, OnClick);
+   Vector3 m_pendingTranslate;
+   Vector3 m_pendingRotation;
+   Vector3 m_pendingScale;
 };
 
 }// namespace triglav::editor
