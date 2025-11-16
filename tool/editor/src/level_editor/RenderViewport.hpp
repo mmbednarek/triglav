@@ -14,7 +14,7 @@ constexpr auto SHAFT_HEIGHT = ARROW_HEIGHT - TIP_HEIGHT;
 constexpr auto SHAFT_RADIUS = 0.08f;
 constexpr auto TIP_RADIUS = 0.25f;
 constexpr auto BOX_SIZE = 0.25f;
-constexpr auto SCALING_CUBE = 0.5f;
+constexpr auto SCALING_CUBE = 0.25f;
 constexpr auto ROTATOR_RADIUS = 4.0f;
 constexpr auto ROTATOR_WIDTH = 0.5f;
 

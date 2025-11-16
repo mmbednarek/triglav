@@ -28,10 +28,12 @@ void SelectionTool::on_view_updated()
    const renderer::SceneObject* object = m_levelEditor.selected_object();
 
    const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
+   auto corrected_bb = mesh.boundingBox.transform(object->transform.to_matrix());
+
    const Transform3D select_transform{
       .rotation = {1, 0, 0, 0},
-      .scale = object->transform.scale * mesh.boundingBox.scale(),
-      .translation = object->transform.translation + mesh.boundingBox.min * object->transform.scale,
+      .scale = corrected_bb.scale(),
+      .translation = corrected_bb.min,
    };
    m_levelEditor.viewport().render_viewport().set_selection_matrix(0, select_transform.to_matrix());
 }

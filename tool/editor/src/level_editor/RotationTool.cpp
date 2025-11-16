@@ -39,9 +39,6 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
       return false;
 
    const auto* object = m_levelEditor.selected_object();
-   // const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   // const auto centroid = mesh.boundingBox.centroid();
-   // const auto translation = object->transform.translation + centroid * object->transform.scale;
    auto position = m_levelEditor.selected_object_position();
 
    const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(position, *m_rotationAxis));
@@ -64,9 +61,6 @@ void RotationTool::on_mouse_moved(Vector2 position)
    if (m_isBeingUsed) {
       assert(m_rotationAxis.has_value());
       const auto* object = m_levelEditor.selected_object();
-      // const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-      // auto centroid = mesh.boundingBox.centroid();
-      // auto translation = object->transform.translation + centroid * object->transform.scale;
       const auto obj_position = m_levelEditor.selected_object_position(m_startingTranslation);
 
       auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotationAxis, vector3_component(obj_position, *m_rotationAxis));
@@ -79,7 +73,8 @@ void RotationTool::on_mouse_moved(Vector2 position)
       auto transform = object->transform;
       transform.translation = obj_position + quat_rot * (m_startingTranslation - obj_position);
       transform.rotation = quat_rot * m_startingRotation;
-      m_levelEditor.scene().set_transform(m_levelEditor.selected_object_id(), transform);
+      m_levelEditor.set_selected_transform(transform);
+      m_levelEditor.viewport().update_view();
       return;
    }
 
@@ -146,12 +141,7 @@ void RotationTool::on_view_updated()
    m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ROTATOR_Y, COLOR_Y_AXIS);
    m_levelEditor.viewport().render_viewport().set_color(OVERLAY_ROTATOR_Z, COLOR_Z_AXIS);
 
-   // const auto* object = m_levelEditor.selected_object();
-   // const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
-   // auto centroid = mesh.boundingBox.centroid();
-   // auto translation = object->transform.translation + centroid * object->transform.scale;
    auto obj_position = m_levelEditor.selected_object_position();
-
    const auto obj_distance = glm::length(obj_position - m_levelEditor.scene().camera().position());
 
    const Transform3D transform_x_axis{

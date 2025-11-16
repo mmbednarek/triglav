@@ -50,6 +50,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    Vector3 snap_offset(Vector3 offset) const;
    float speed() const;
    void finish_using_tool() const;
+   void set_selected_transform(const Transform3D& transform);
 
    void set_selected_object(renderer::ObjectID id);
 
