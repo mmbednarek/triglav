@@ -50,6 +50,7 @@ class TextInput final : public ui_core::IWidget
    void on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard);
    void on_activated(const ui_core::Event& event);
    void on_deactivated(const ui_core::Event& event);
+   void on_select_all(const ui_core::Event& event);
 
  private:
    void recalculate_caret_offset(bool removal = false);

@@ -2,6 +2,7 @@
 
 #include "LevelEditor.hpp"
 #include "LevelViewport.hpp"
+#include "SetTransformAction.hpp"
 #include "src/RootWindow.hpp"
 #include "triglav/Format.hpp"
 #include "triglav/desktop_ui/Button.hpp"
@@ -205,6 +206,9 @@ void LevelEditorSidePanel::apply_position(desktop::MouseButton /*mouse_button*/)
    transform.translation = Vector3{x, y, z};
    transform.rotation = glm::normalize(Quaternion{Vector3{glm::radians(yaw), glm::radians(pitch), glm::radians(roll)}});
    transform.scale = Vector3{scale_x, scale_y, scale_z};
+
+   m_state.editor->history_manager().emplace_action<SetTransformAction>(*m_state.editor, m_state.editor->selected_object_id(),
+                                                                        m_state.editor->selected_object()->transform, transform);
 
    m_state.editor->scene().set_transform(m_state.editor->selected_object_id(), transform);
    m_state.editor->viewport().update_view();

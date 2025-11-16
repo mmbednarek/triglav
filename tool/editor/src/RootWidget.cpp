@@ -6,6 +6,7 @@
 
 #include "triglav/desktop_ui/MenuBar.hpp"
 #include "triglav/desktop_ui/PopupManager.hpp"
+#include "triglav/desktop_ui/SecondaryEventGenerator.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TabView.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
@@ -21,7 +22,8 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
     m_desktopUIManager(desktop_ui::ThemeProperties::get_default(), m_state.dialogManager->root_surface(), *m_state.dialogManager),
     TG_CONNECT(m_menuBarController, OnClicked, on_clicked_menu_bar)
 {
-   auto& globalLayout = this->create_content<ui_core::VerticalLayout>({
+   auto& event_gen = this->emplace_content<desktop_ui::SecondaryEventGenerator>(m_context, this);
+   auto& globalLayout = event_gen.create_content<ui_core::VerticalLayout>({
       .padding = {},
       .separation = 0.0f,
    });
@@ -78,16 +80,26 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
    });
 }
 
-void RootWidget::on_clicked_menu_bar(const Name itemName, const desktop_ui::MenuItem& /*item*/) const
+void RootWidget::on_clicked_menu_bar(const Name item_name, const desktop_ui::MenuItem& /*item*/) const
 {
-   if (itemName == "file.close"_name) {
+   switch (item_name) {
+   case "file.close"_name:
       m_state.editor->close();
+      break;
+   case "edit.undo"_name: {
+      ui_core::Event event{};
+      event.eventType = ui_core::Event::Type::Undo;
+      m_levelEditor->on_event(event);
+      break;
    }
-   if (itemName == "edit.undo"_name) {
-      m_levelEditor->history_manager().undo();
+   case "edit.redo"_name: {
+      ui_core::Event event{};
+      event.eventType = ui_core::Event::Type::Redo;
+      m_levelEditor->on_event(event);
+      break;
    }
-   if (itemName == "edit.redo"_name) {
-      m_levelEditor->history_manager().redo();
+   default:
+      break;
    }
 }
 
@@ -95,24 +107,6 @@ void RootWidget::tick(const float delta_time) const
 {
    assert(m_levelEditor != nullptr);
    m_levelEditor->tick(delta_time);
-}
-
-void RootWidget::on_event(const ui_core::Event& event)
-{
-   if (m_context.active_widget() != nullptr) {
-      if (event.eventType == ui_core::Event::Type::MousePressed) {
-         if (!is_point_inside(m_context.active_area(), event.globalMousePosition)) {
-            m_context.set_active_widget(nullptr, {});
-         }
-      } else if (event.eventType == ui_core::Event::Type::TextInput || event.eventType == ui_core::Event::Type::KeyPressed) {
-         ui_core::Event sub_event(event);
-         sub_event.mousePosition = event.globalMousePosition - rect_position(m_context.active_area());
-         sub_event.isForwardedToActive = true;
-         m_context.active_widget()->on_event(sub_event);
-      }
-   }
-
-   ProxyWidget::on_event(event);
 }
 
 }// namespace triglav::editor

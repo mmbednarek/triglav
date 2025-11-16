@@ -63,6 +63,9 @@ enum class Key
    Backspace,
    Tab,
    Escape,
+   Control,
+   Shift,
+   Alt,
 
    LeftArrow,
    UpArrow,

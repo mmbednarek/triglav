@@ -28,18 +28,28 @@ Key map_key(const u32 key)
       return Key::Tab;
    case 14:
       return Key::Backspace;
+   case 16:
+      return Key::Q;
    case 17:
       return Key::W;
+   case 18:
+      return Key::E;
+   case 21:
+      return Key::Y;
+   case 29:
+      return Key::Control;
    case 31:
       return Key::S;
    case 30:
       return Key::A;
    case 32:
       return Key::D;
-   case 18:
-      return Key::E;
-   case 16:
-      return Key::Q;
+   case 42:
+      return Key::Shift;
+   case 44:
+      return Key::Z;
+   case 56:
+      return Key::Alt;
    case 57:
       return Key::Space;
    case 59:
