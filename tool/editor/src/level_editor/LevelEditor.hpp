@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../HistoryManager.hpp"
 #include "ILevelEditorTool.hpp"
 #include "RotationTool.hpp"
 #include "ScalingTool.hpp"
@@ -51,8 +52,8 @@ class LevelEditor final : public ui_core::ProxyWidget
    float speed() const;
    void finish_using_tool() const;
    void set_selected_transform(const Transform3D& transform);
-
    void set_selected_object(renderer::ObjectID id);
+   HistoryManager& history_manager();
 
  private:
    State m_state;
@@ -64,7 +65,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    renderer::OcclusionCulling m_occlusionCulling;
    renderer::RenderingJob m_renderingJob;
    const renderer::SceneObject* m_selectedObject{};
-   renderer::ObjectID m_selectedObjectID{};
+   renderer::ObjectID m_selectedObjectID{renderer::UNSELECTED_OBJECT};
    LevelViewport* m_viewport;
    SelectionTool m_selectionTool;
    TranslationTool m_translationTool;
@@ -74,6 +75,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    desktop_ui::DropDownMenu* m_originSelector;
    desktop_ui::DropDownMenu* m_snapSelector;
    desktop_ui::DropDownMenu* m_speedSelector;
+   HistoryManager m_historyManager;
 
    ILevelEditorTool* m_currentTool = nullptr;
 

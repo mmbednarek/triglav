@@ -83,6 +83,12 @@ void RootWidget::on_clicked_menu_bar(const Name itemName, const desktop_ui::Menu
    if (itemName == "file.close"_name) {
       m_state.editor->close();
    }
+   if (itemName == "edit.undo"_name) {
+      m_levelEditor->history_manager().undo();
+   }
+   if (itemName == "edit.redo"_name) {
+      m_levelEditor->history_manager().redo();
+   }
 }
 
 void RootWidget::tick(const float delta_time) const

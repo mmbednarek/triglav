@@ -25,7 +25,7 @@ class TranslationTool final : public ILevelEditorTool
    geometry::BoundingBox m_arrow_y_bb{};
    geometry::BoundingBox m_arrow_z_bb{};
 
-   Vector3 m_startingPosition{};
+   Transform3D m_startingTransform;
    Vector3 m_startingHit{};
 };
 

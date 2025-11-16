@@ -2,6 +2,7 @@
 
 #include "../RootWindow.hpp"
 #include "LevelViewport.hpp"
+#include "SetTransformAction.hpp"
 
 namespace triglav::editor {
 
@@ -22,7 +23,7 @@ bool TranslationTool::on_use_start(const geometry::Ray& ray)
       return false;
    }
 
-   m_startingPosition = m_levelEditor.selected_object()->transform.translation;
+   m_startingTransform = m_levelEditor.selected_object()->transform;
    m_startingHit = find_closest_point_between_lines(m_levelEditor.selected_object_position(), axis_forward_vec3(*m_transformAxis),
                                                     ray.origin, ray.direction);
    return true;
@@ -38,7 +39,7 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
       const auto* object = m_levelEditor.selected_object();
       auto transform = object->transform;
       transform.translation =
-         m_startingPosition +
+         m_startingTransform.translation +
          m_levelEditor.snap_offset(find_closest_point_between_lines(m_levelEditor.selected_object_position(),
                                                                     axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction) -
                                    m_startingHit);
@@ -103,7 +104,11 @@ void TranslationTool::on_view_updated()
 
 void TranslationTool::on_use_end()
 {
-   m_transformAxis.reset();
+   if (m_transformAxis.has_value()) {
+      m_levelEditor.history_manager().emplace_action<SetTransformAction>(m_levelEditor, m_levelEditor.selected_object_id(),
+                                                                         m_startingTransform, m_levelEditor.selected_object()->transform);
+      m_transformAxis.reset();
+   }
 }
 
 void TranslationTool::on_left_tool()

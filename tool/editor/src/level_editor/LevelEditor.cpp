@@ -361,16 +361,28 @@ void LevelEditor::finish_using_tool() const
 }
 void LevelEditor::set_selected_transform(const Transform3D& transform)
 {
+   if (m_selectedObjectID == renderer::UNSELECTED_OBJECT)
+      return;
+
    m_scene.set_transform(m_selectedObjectID, transform);
    m_sidePanel->on_changed_selected_object(*m_selectedObject);
 }
 
 void LevelEditor::set_selected_object(const renderer::ObjectID id)
 {
-   m_selectedObject = &scene().object(id);
    m_selectedObjectID = id;
 
-   m_sidePanel->on_changed_selected_object(*m_selectedObject);
+   if (id == renderer::UNSELECTED_OBJECT) {
+      m_selectedObject = nullptr;
+   } else {
+      m_selectedObject = &scene().object(id);
+      m_sidePanel->on_changed_selected_object(*m_selectedObject);
+   }
+}
+
+HistoryManager& LevelEditor::history_manager()
+{
+   return m_historyManager;
 }
 
 }// namespace triglav::editor

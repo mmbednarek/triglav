@@ -2,6 +2,7 @@
 
 #include "../RootWindow.hpp"
 #include "LevelViewport.hpp"
+#include "SetTransformAction.hpp"
 
 namespace triglav::editor {
 
@@ -22,11 +23,10 @@ bool ScalingTool::on_use_start(const geometry::Ray& ray)
    const auto* object = m_levelEditor.selected_object();
    const auto translation = m_levelEditor.selected_object_position();
    const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transformAxis), ray.origin, ray.direction);
-   m_startingTranslation = object->transform.translation;
+   m_startingTransform = object->transform;
    m_startingPosition = translation;
    m_startingPoint = find_closest_point_on_line(ray.origin, ray.direction, translation);
    m_startingClosest = closest;
-   m_baseScale = object->transform.scale;
    return true;
 }
 
@@ -43,7 +43,7 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
       const auto& mesh = m_levelEditor.root_window().resource_manager().get(object->model);
       const auto translation = m_levelEditor.selected_object_position();
       auto transform = object->transform;
-      const auto scale = 0.5f * mesh.boundingBox.scale() * m_baseScale;
+      const auto scale = 0.5f * mesh.boundingBox.scale() * m_startingTransform.scale;
 
       Vector3 scale_direction = {1, 0, 0};
       float final_scale = 0.0f;
@@ -75,10 +75,10 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
 
       Vector3 scale_vec = scale_direction * final_scale + Vector3{1, 1, 1};
 
-      Vector3 translation_diff = (m_startingTranslation - m_startingPosition) * scale_vec;
+      Vector3 translation_diff = (m_startingTransform.translation - m_startingPosition) * scale_vec;
 
       transform.translation = m_startingPosition + translation_diff;
-      transform.scale = m_baseScale * scale_vec;
+      transform.scale = m_startingTransform.scale * scale_vec;
       m_levelEditor.set_selected_transform(transform);
       m_levelEditor.viewport().update_view();
       return;
@@ -157,8 +157,13 @@ void ScalingTool::on_view_updated()
 
 void ScalingTool::on_use_end()
 {
-   m_isBeingUsed = false;
-   m_transformAxis.reset();
+   if (m_isBeingUsed) {
+      m_isBeingUsed = false;
+      m_transformAxis.reset();
+
+      m_levelEditor.history_manager().emplace_action<SetTransformAction>(m_levelEditor, m_levelEditor.selected_object_id(),
+                                                                         m_startingTransform, m_levelEditor.selected_object()->transform);
+   }
 }
 
 void ScalingTool::on_left_tool()

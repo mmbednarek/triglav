@@ -32,11 +32,10 @@ class ScalingTool final : public ILevelEditorTool
    geometry::BoundingBox m_scaler_z_bb{};
    geometry::BoundingBox m_scaler_xyz_bb{};
 
-   Vector3 m_startingTranslation{};
+   Transform3D m_startingTransform{};
    Vector3 m_startingPosition{};
    Vector3 m_startingPoint{};
    Vector3 m_startingClosest{};
-   Vector3 m_baseScale{};
 };
 
 }// namespace triglav::editor
