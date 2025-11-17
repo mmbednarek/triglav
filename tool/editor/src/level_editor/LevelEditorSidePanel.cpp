@@ -216,7 +216,7 @@ void LevelEditorSidePanel::apply_transform() const
 
    Transform3D transform{};
    transform.translation = m_pending_translate;
-   transform.rotation = Quaternion{m_pending_rotation};
+   transform.rotation = Quaternion{glm::radians(m_pending_rotation)};
    transform.scale = m_pending_scale;
 
    m_state.editor->history_manager().emplace_action<SetTransformAction>(*m_state.editor, m_state.editor->selected_object_id(),
