@@ -12,7 +12,7 @@ TEST(HeapAllocatorTest, Default)
 {
    std::mt19937 rng(2000);
    std::uniform_int_distribution dist(1, 1024);
-   std::uniform_int_distribution condDist(0, 3);
+   std::uniform_int_distribution cond_dist(0, 3);
    std::vector<triglav::memory::Area> allocations;
 
    HeapAllocator allocator{1 << 14};
@@ -26,29 +26,29 @@ TEST(HeapAllocatorTest, Default)
 
       allocations.emplace_back(size, *offset);
 
-      if (condDist(rng) == 0 && !allocations.empty()) {
-         std::uniform_int_distribution<size_t> allocRange(0, allocations.size() - 1);
-         auto it = allocations.begin() + allocRange(rng);
+      if (cond_dist(rng) == 0 && !allocations.empty()) {
+         std::uniform_int_distribution<size_t> alloc_range(0, allocations.size() - 1);
+         auto it = allocations.begin() + alloc_range(rng);
          allocator.free(*it);
          allocations.erase(it);
       }
 
       // Verify integrity
-      triglav::MemorySize totalSize{};
-      for (const auto& [_, itemSize] : allocator.free_list()) {
-         totalSize += itemSize;
+      triglav::MemorySize total_size{};
+      for (const auto& [_, item_size] : allocator.free_list()) {
+         total_size += item_size;
       }
       for (const auto& area : allocations) {
-         totalSize += area.size;
+         total_size += area.size;
       }
 
-      ASSERT_EQ(totalSize, 1ull << 14);
+      ASSERT_EQ(total_size, 1ull << 14);
 
       // Verify there is no continuity between free list items
-      triglav::MemorySize lastOffset{~0ull};
-      for (const auto& [itemOffset, itemSize] : allocator.free_list()) {
-         ASSERT_NE(lastOffset, itemOffset);
-         lastOffset = itemOffset + itemSize;
+      triglav::MemorySize last_offset{~0ull};
+      for (const auto& [item_offset, item_size] : allocator.free_list()) {
+         ASSERT_NE(last_offset, item_offset);
+         last_offset = item_offset + item_size;
       }
    }
 

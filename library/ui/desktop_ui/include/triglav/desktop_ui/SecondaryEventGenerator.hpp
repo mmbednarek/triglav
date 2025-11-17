@@ -27,7 +27,7 @@ class SecondaryEventGenerator final : public ui_core::ProxyWidget
    void on_key_released(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard);
 
  private:
-   ModifierFlags m_modifierState;
+   ModifierFlags m_modifier_state;
 };
 
 }// namespace triglav::desktop_ui

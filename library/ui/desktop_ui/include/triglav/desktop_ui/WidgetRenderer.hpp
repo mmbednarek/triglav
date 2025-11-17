@@ -22,7 +22,7 @@ class WidgetRenderer
  public:
    using Self = WidgetRenderer;
 
-   WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager,
+   WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager,
                   graphics_api::Device& device);
 
    void create_update_job(render_core::BuildContext& ctx) const;
@@ -54,11 +54,11 @@ class WidgetRenderer
  private:
    desktop::ISurface& m_surface;
 
-   ui_core::Viewport m_uiViewport;
-   renderer::UpdateUserInterfaceJob m_updateUiJob;
+   ui_core::Viewport m_ui_viewport;
+   renderer::UpdateUserInterfaceJob m_update_ui_job;
    ui_core::Context m_context;
-   ui_core::IWidgetPtr m_rootWidget{};
-   Vector2 m_mousePosition{};
+   ui_core::IWidgetPtr m_root_widget{};
+   Vector2 m_mouse_position{};
 
    TG_SINK(desktop::ISurface, OnMouseEnter);
    TG_SINK(desktop::ISurface, OnMouseMove);

@@ -37,27 +37,28 @@ namespace {
 
 constexpr triglav::Vector2i DefaultSize{800, 600};
 
-void execute_build_context(BuildContext& buildContext, ResourceStorage& storage)
+void execute_build_context(BuildContext& build_context, ResourceStorage& storage)
 {
-   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
 
-   const auto job = buildContext.build_job(pipelineCache, storage);
+   const auto job = build_context.build_job(pipeline_cache, storage);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
 
-   const gapi::SemaphoreArray emptyList;
-   job.execute(0, emptyList, emptyList, &fence);
+   const gapi::SemaphoreArray empty_list;
+   job.execute(0, empty_list, empty_list, &fence);
 
    fence.await();
 }
 
-[[nodiscard]] bool compare_stream_with_buffer(triglav::io::IReader& reader, const triglav::u8* buffData, const triglav::MemorySize buffSize)
+[[nodiscard]] bool compare_stream_with_buffer(triglav::io::IReader& reader, const triglav::u8* buff_data,
+                                              const triglav::MemorySize buff_size)
 {
    static constexpr triglav::MemorySize CHUNK_SIZE{1024};
 
    std::array<triglav::u8, CHUNK_SIZE> chunk{};
-   triglav::MemorySize bufferOffset = 0;
+   triglav::MemorySize buffer_offset = 0;
 
    while (true) {
       const auto res = reader.read(chunk);
@@ -65,17 +66,17 @@ void execute_build_context(BuildContext& buildContext, ResourceStorage& storage)
          return false;
       }
 
-      const auto cmpSize = std::min(buffSize - bufferOffset, *res);
+      const auto cmp_size = std::min(buff_size - buffer_offset, *res);
 
-      if (std::memcmp(chunk.data(), buffData + bufferOffset, cmpSize) != 0) {
+      if (std::memcmp(chunk.data(), buff_data + buffer_offset, cmp_size) != 0) {
          return false;
       }
 
-      if (cmpSize != CHUNK_SIZE) {
+      if (cmp_size != CHUNK_SIZE) {
          return true;
       }
 
-      bufferOffset += cmpSize;
+      buffer_offset += cmp_size;
    }
 }
 
@@ -87,13 +88,13 @@ triglav::u8 abs_diff(const triglav::u8 x, const triglav::u8 y)
    return y - x;
 }
 
-[[nodiscard]] bool compare_stream_with_buffer_with_tolerance(triglav::io::IReader& reader, const triglav::u8* buffData,
-                                                             const triglav::MemorySize buffSize, const triglav::u8 tolerance)
+[[nodiscard]] bool compare_stream_with_buffer_with_tolerance(triglav::io::IReader& reader, const triglav::u8* buff_data,
+                                                             const triglav::MemorySize buff_size, const triglav::u8 tolerance)
 {
    static constexpr triglav::MemorySize CHUNK_SIZE{1024};
 
    std::array<triglav::u8, CHUNK_SIZE> chunk{};
-   triglav::MemorySize bufferOffset = 0;
+   triglav::MemorySize buffer_offset = 0;
 
    while (true) {
       const auto res = reader.read(chunk);
@@ -101,19 +102,19 @@ triglav::u8 abs_diff(const triglav::u8 x, const triglav::u8 y)
          return false;
       }
 
-      const auto cmpSize = std::min(buffSize - bufferOffset, *res);
+      const auto cmp_size = std::min(buff_size - buffer_offset, *res);
 
-      for (const auto i : triglav::Range(0u, cmpSize)) {
-         if (abs_diff(chunk[i], buffData[bufferOffset + i]) > tolerance) {
+      for (const auto i : triglav::Range(0u, cmp_size)) {
+         if (abs_diff(chunk[i], buff_data[buffer_offset + i]) > tolerance) {
             return false;
          }
       }
 
-      if (cmpSize != CHUNK_SIZE) {
+      if (cmp_size != CHUNK_SIZE) {
          return true;
       }
 
-      bufferOffset += cmpSize;
+      buffer_offset += cmp_size;
    }
 }
 
@@ -132,11 +133,11 @@ void write_buffer(triglav::graphics_api::Buffer& buffer, T value)
 }
 
 [[maybe_unused]]
-void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_view fileName = "test_output.dat")
+void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_view file_name = "test_output.dat")
 {
-   const auto outFile = triglav::io::open_file(triglav::io::Path{fileName}, triglav::io::FileOpenMode::Create);
-   assert(outFile.has_value());
-   const auto write_res = (*outFile)->write(buffer);
+   const auto out_file = triglav::io::open_file(triglav::io::Path{file_name}, triglav::io::FileOpenMode::Create);
+   assert(out_file.has_value());
+   const auto write_res = (*out_file)->write(buffer);
    assert(write_res.has_value());
 }
 
@@ -144,28 +145,28 @@ void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_vi
 
 TEST(BuildContext, BasicCompute)
 {
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    // Declare resources
-   buildContext.declare_texture("test.basic_compute.pattern_texture"_name, {64, 64}, GAPI_FORMAT(RGBA, UNorm8));
-   buildContext.declare_staging_buffer("test.basic_compute.output_buffer"_name, 64 * 64 * sizeof(int));
+   build_context.declare_texture("test.basic_compute.pattern_texture"_name, {64, 64}, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_staging_buffer("test.basic_compute.output_buffer"_name, 64 * 64 * sizeof(int));
 
    // Run compute
-   buildContext.bind_compute_shader("testing/basic_compute.cshader"_rc);
-   buildContext.bind_rw_texture(0, "test.basic_compute.pattern_texture"_name);
-   buildContext.dispatch({4, 4, 1});
+   build_context.bind_compute_shader("testing/basic_compute.cshader"_rc);
+   build_context.bind_rw_texture(0, "test.basic_compute.pattern_texture"_name);
+   build_context.dispatch({4, 4, 1});
 
    // Copy texture to output buffer
-   buildContext.copy_texture_to_buffer("test.basic_compute.pattern_texture"_name, "test.basic_compute.output_buffer"_name);
+   build_context.copy_texture_to_buffer("test.basic_compute.pattern_texture"_name, "test.basic_compute.output_buffer"_name);
 
    // Run commands
    ResourceStorage storage(TestingSupport::device());
-   execute_build_context(buildContext, storage);
+   execute_build_context(build_context, storage);
 
    // Verify pixel values
-   auto& outBuffer = storage.buffer("test.basic_compute.output_buffer"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u32*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.basic_compute.output_buffer"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u32*>(*mapped_memory);
 
    for (const auto y : triglav::Range(0, 64)) {
       for (const auto x : triglav::Range(0, 64)) {
@@ -180,65 +181,65 @@ TEST(BuildContext, BasicGraphics)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{64, 64};
-   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+   static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_sized_render_target("test.basic_graphics.render_target"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
-   buildContext.declare_staging_buffer("test.basic_graphics.output_buffer"_name, bufferSize);
-   buildContext.declare_buffer("test.basic_graphics.vertex_buffer"_name, 6 * sizeof(triglav::Vector4));
-   buildContext.declare_buffer("test.basic_graphics.uniform_buffer"_name, sizeof(triglav::Vector4));
+   build_context.declare_sized_render_target("test.basic_graphics.render_target"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_staging_buffer("test.basic_graphics.output_buffer"_name, buffer_size);
+   build_context.declare_buffer("test.basic_graphics.vertex_buffer"_name, 6 * sizeof(triglav::Vector4));
+   build_context.declare_buffer("test.basic_graphics.uniform_buffer"_name, sizeof(triglav::Vector4));
 
    // Fill buffers with values
-   buildContext.fill_buffer("test.basic_graphics.vertex_buffer"_name, std::array{
-                                                                         triglav::Vector4{-0.5f, -0.5f, 0.0f, 1.0f},
-                                                                         triglav::Vector4{-0.5f, 0.5f, 0.0f, 1.0f},
-                                                                         triglav::Vector4{0.5f, 0.5f, 0.0f, 1.0f},
-                                                                         triglav::Vector4{-0.5f, -0.5f, 0.0f, 1.0f},
-                                                                         triglav::Vector4{0.5f, 0.5f, 0.0f, 1.0f},
-                                                                         triglav::Vector4{0.5f, -0.5f, 0.0f, 1.0f},
-                                                                      });
+   build_context.fill_buffer("test.basic_graphics.vertex_buffer"_name, std::array{
+                                                                          triglav::Vector4{-0.5f, -0.5f, 0.0f, 1.0f},
+                                                                          triglav::Vector4{-0.5f, 0.5f, 0.0f, 1.0f},
+                                                                          triglav::Vector4{0.5f, 0.5f, 0.0f, 1.0f},
+                                                                          triglav::Vector4{-0.5f, -0.5f, 0.0f, 1.0f},
+                                                                          triglav::Vector4{0.5f, 0.5f, 0.0f, 1.0f},
+                                                                          triglav::Vector4{0.5f, -0.5f, 0.0f, 1.0f},
+                                                                       });
 
-   buildContext.fill_buffer("test.basic_graphics.uniform_buffer"_name, triglav::Vector4{0, 0, 1, 1});
+   build_context.fill_buffer("test.basic_graphics.uniform_buffer"_name, triglav::Vector4{0, 0, 1, 1});
 
    {
       // Define render pass
-      RenderPassScope scope(buildContext, "test.basic_graphics.render_pass"_name, "test.basic_graphics.render_target"_name);
+      RenderPassScope scope(build_context, "test.basic_graphics.render_pass"_name, "test.basic_graphics.render_target"_name);
 
       // Define vertex shader, layout and input buffer
-      buildContext.bind_vertex_shader("testing/basic_graphics.vshader"_rc);
+      build_context.bind_vertex_shader("testing/basic_graphics.vshader"_rc);
 
       triglav::render_core::VertexLayout layout(sizeof(triglav::Vector4));
       layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
-      buildContext.bind_vertex_layout(layout);
+      build_context.bind_vertex_layout(layout);
 
-      buildContext.bind_vertex_buffer("test.basic_graphics.vertex_buffer"_name);
+      build_context.bind_vertex_buffer("test.basic_graphics.vertex_buffer"_name);
 
       // Bind fragment shader and ubo
-      buildContext.bind_fragment_shader("testing/basic_graphics.fshader"_rc);
+      build_context.bind_fragment_shader("testing/basic_graphics.fshader"_rc);
 
-      buildContext.bind_uniform_buffer(0, "test.basic_graphics.uniform_buffer"_name);
+      build_context.bind_uniform_buffer(0, "test.basic_graphics.uniform_buffer"_name);
 
       // Draw
-      buildContext.draw_primitives(6, 0);
+      build_context.draw_primitives(6, 0);
    }
 
    // Copy the render target to staging buffer
-   buildContext.copy_texture_to_buffer("test.basic_graphics.render_target"_name, "test.basic_graphics.output_buffer"_name);
+   build_context.copy_texture_to_buffer("test.basic_graphics.render_target"_name, "test.basic_graphics.output_buffer"_name);
 
    ResourceStorage storage(TestingSupport::device());
-   execute_build_context(buildContext, storage);
+   execute_build_context(build_context, storage);
 
-   auto& outBuffer = storage.buffer("test.basic_graphics.output_buffer"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.basic_graphics.output_buffer"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expectedBitmap = open_file(Path{"content/basic_graphics_expected_bitmap.dat"}, FileOpenMode::Read);
-   ASSERT_TRUE(expectedBitmap.has_value());
+   const auto expected_bitmap = open_file(Path{"content/basic_graphics_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expected_bitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+   ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
 }
 
 TEST(BuildContext, BasicDepth)
@@ -247,14 +248,14 @@ TEST(BuildContext, BasicDepth)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{256, 256};
-   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+   static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
-   auto boxMesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
-   boxMesh.triangulate();
-   const auto boxMeshData = boxMesh.to_vertex_data();
+   auto box_mesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
+   box_mesh.triangulate();
+   const auto box_mesh_data = box_mesh.to_vertex_data();
 
    const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
    const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
@@ -262,58 +263,58 @@ TEST(BuildContext, BasicDepth)
    const auto offset = glm::translate(transform, triglav::Vector3{-2.0f, -2.0f, 1.3f});
 
    // Declare resources
-   buildContext.declare_sized_render_target("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
-   buildContext.declare_sized_depth_target("test.basic_depth.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
-   buildContext.declare_staging_buffer("test.basic_depth.output_buffer"_name, bufferSize);
-   buildContext.declare_buffer("test.basic_depth.vertex_buffer"_name, boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
-   buildContext.declare_buffer("test.basic_depth.index_buffer"_name, boxMeshData.indices.size() * sizeof(triglav::u32));
-   buildContext.declare_buffer("test.basic_depth.uniform_buffer"_name, 2 * sizeof(triglav::Matrix4x4));
+   build_context.declare_sized_render_target("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_sized_depth_target("test.basic_depth.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
+   build_context.declare_staging_buffer("test.basic_depth.output_buffer"_name, buffer_size);
+   build_context.declare_buffer("test.basic_depth.vertex_buffer"_name, box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
+   build_context.declare_buffer("test.basic_depth.index_buffer"_name, box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.declare_buffer("test.basic_depth.uniform_buffer"_name, 2 * sizeof(triglav::Matrix4x4));
 
    // Fill buffers with values
-   buildContext.fill_buffer_raw("test.basic_depth.vertex_buffer"_name, boxMeshData.vertices.data(),
-                                boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
-   buildContext.fill_buffer_raw("test.basic_depth.index_buffer"_name, boxMeshData.indices.data(),
-                                boxMeshData.indices.size() * sizeof(triglav::u32));
-   buildContext.fill_buffer("test.basic_depth.uniform_buffer"_name, std::array{transform, offset});
+   build_context.fill_buffer_raw("test.basic_depth.vertex_buffer"_name, box_mesh_data.vertices.data(),
+                                 box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
+   build_context.fill_buffer_raw("test.basic_depth.index_buffer"_name, box_mesh_data.indices.data(),
+                                 box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.fill_buffer("test.basic_depth.uniform_buffer"_name, std::array{transform, offset});
 
    {
       // Define render pass
-      RenderPassScope scope(buildContext, "test.basic_depth.render_pass"_name, "test.basic_depth.render_target"_name,
+      RenderPassScope scope(build_context, "test.basic_depth.render_pass"_name, "test.basic_depth.render_target"_name,
                             "test.basic_depth.depth_target"_name);
 
       // Define vertex shader, layout and input buffer
-      buildContext.bind_vertex_shader("testing/basic_depth.vshader"_rc);
+      build_context.bind_vertex_shader("testing/basic_depth.vshader"_rc);
 
-      buildContext.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
+      build_context.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
 
       triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
       layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
-      buildContext.bind_vertex_layout(layout);
+      build_context.bind_vertex_layout(layout);
 
-      buildContext.bind_vertex_buffer("test.basic_depth.vertex_buffer"_name);
-      buildContext.bind_index_buffer("test.basic_depth.index_buffer"_name);
+      build_context.bind_vertex_buffer("test.basic_depth.vertex_buffer"_name);
+      build_context.bind_index_buffer("test.basic_depth.index_buffer"_name);
 
       // Bind fragment shader and texture
-      buildContext.bind_fragment_shader("testing/basic_depth.fshader"_rc);
+      build_context.bind_fragment_shader("testing/basic_depth.fshader"_rc);
 
       // Draw
-      buildContext.draw_indexed_primitives(static_cast<u32>(boxMeshData.indices.size()), 0, 0, 2, 0);
+      build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.indices.size()), 0, 0, 2, 0);
    }
 
    // Copy the render target to staging buffer
-   buildContext.copy_texture_to_buffer("test.basic_depth.render_target"_name, "test.basic_depth.output_buffer"_name);
+   build_context.copy_texture_to_buffer("test.basic_depth.render_target"_name, "test.basic_depth.output_buffer"_name);
 
    ResourceStorage storage(TestingSupport::device());
-   execute_build_context(buildContext, storage);
+   execute_build_context(build_context, storage);
 
-   auto& outBuffer = storage.buffer("test.basic_depth.output_buffer"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.basic_depth.output_buffer"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expectedBitmap = open_file(Path{"content/basic_depth_expected_bitmap.dat"}, FileOpenMode::Read);
-   ASSERT_TRUE(expectedBitmap.has_value());
+   const auto expected_bitmap = open_file(Path{"content/basic_depth_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expected_bitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expectedBitmap, pixels, bufferSize, 0x02));
+   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
 }
 
 TEST(BuildContext, BasicTexture)
@@ -328,62 +329,62 @@ TEST(BuildContext, BasicTexture)
       triglav::Vector2 uv;
    };
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{128, 128};
-   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+   static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_sized_render_target("test.basic_texture.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
-   buildContext.declare_staging_buffer("test.basic_texture.output_buffer"_name, bufferSize);
-   buildContext.declare_buffer("test.basic_texture.vertex_buffer"_name, 3 * sizeof(Vertex));
+   build_context.declare_sized_render_target("test.basic_texture.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_staging_buffer("test.basic_texture.output_buffer"_name, buffer_size);
+   build_context.declare_buffer("test.basic_texture.vertex_buffer"_name, 3 * sizeof(Vertex));
 
-   static constexpr float sqrtOfThree = 1.73205f;
-   static constexpr float yOffset = 1.0f - 0.5f * sqrtOfThree;
+   static constexpr float sqrt_of_three = 1.73205f;
+   static constexpr float y_offset = 1.0f - 0.5f * sqrt_of_three;
 
    // Fill buffers with values
-   buildContext.fill_buffer("test.basic_texture.vertex_buffer"_name, std::array{
-                                                                        Vertex{{-1.0f, 1.0f - yOffset}, {0.0f, 1.0f}},
-                                                                        Vertex{{1.0f, 1.0f - yOffset}, {1.0f, 1.0f}},
-                                                                        Vertex{{0.0f, -1.0 + yOffset}, {0.5f, 0.0f}},
-                                                                     });
+   build_context.fill_buffer("test.basic_texture.vertex_buffer"_name, std::array{
+                                                                         Vertex{{-1.0f, 1.0f - y_offset}, {0.0f, 1.0f}},
+                                                                         Vertex{{1.0f, 1.0f - y_offset}, {1.0f, 1.0f}},
+                                                                         Vertex{{0.0f, -1.0 + y_offset}, {0.5f, 0.0f}},
+                                                                      });
 
    {
       // Define render pass
-      RenderPassScope scope(buildContext, "test.basic_texture.render_pass"_name, "test.basic_texture.render_target"_name);
+      RenderPassScope scope(build_context, "test.basic_texture.render_pass"_name, "test.basic_texture.render_target"_name);
 
       // Define vertex shader, layout and input buffer
-      buildContext.bind_vertex_shader("testing/basic_texture.vshader"_rc);
+      build_context.bind_vertex_shader("testing/basic_texture.vshader"_rc);
 
       triglav::render_core::VertexLayout layout(sizeof(Vertex));
       layout.add("position"_name, GAPI_FORMAT(RG, Float32), offsetof(Vertex, position));
       layout.add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(Vertex, uv));
-      buildContext.bind_vertex_layout(layout);
+      build_context.bind_vertex_layout(layout);
 
-      buildContext.bind_vertex_buffer("test.basic_texture.vertex_buffer"_name);
+      build_context.bind_vertex_buffer("test.basic_texture.vertex_buffer"_name);
 
       // Bind fragment shader and texture
-      buildContext.bind_fragment_shader("testing/basic_texture.fshader"_rc);
-      buildContext.bind_samplable_texture(0, "testing/sample.tex"_rc);
+      build_context.bind_fragment_shader("testing/basic_texture.fshader"_rc);
+      build_context.bind_samplable_texture(0, "testing/sample.tex"_rc);
 
       // Draw
-      buildContext.draw_primitives(3, 0);
+      build_context.draw_primitives(3, 0);
    }
 
    // Copy the render target to staging buffer
-   buildContext.copy_texture_to_buffer("test.basic_texture.render_target"_name, "test.basic_texture.output_buffer"_name);
+   build_context.copy_texture_to_buffer("test.basic_texture.render_target"_name, "test.basic_texture.output_buffer"_name);
 
    ResourceStorage storage(TestingSupport::device());
-   execute_build_context(buildContext, storage);
+   execute_build_context(build_context, storage);
 
-   auto& outBuffer = storage.buffer("test.basic_texture.output_buffer"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.basic_texture.output_buffer"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expectedBitmap = open_file(Path{"content/basic_texture_expected_bitmap.dat"}, FileOpenMode::Read);
-   ASSERT_TRUE(expectedBitmap.has_value());
+   const auto expected_bitmap = open_file(Path{"content/basic_texture_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expected_bitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+   ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
 }
 
 TEST(BuildContext, MultiplePasses)
@@ -392,44 +393,45 @@ TEST(BuildContext, MultiplePasses)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{128, 128};
-   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+   static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_sized_render_target("test.multiple_passes.render_target.first"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
-   buildContext.declare_sized_render_target("test.multiple_passes.render_target.second"_name, dims, GAPI_FORMAT(RGBA, sRGB));
-   buildContext.declare_staging_buffer("test.multiple_passes.output_buffer"_name, bufferSize);
+   build_context.declare_sized_render_target("test.multiple_passes.render_target.first"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_sized_render_target("test.multiple_passes.render_target.second"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_staging_buffer("test.multiple_passes.output_buffer"_name, buffer_size);
 
    {
       // First Pass
-      RenderPassScope scope(buildContext, "test.multiple_passes.render_pass.first"_name, "test.multiple_passes.render_target.first"_name);
-      buildContext.bind_fragment_shader("testing/multiple_passes_first.fshader"_rc);
-      buildContext.draw_full_screen_quad();
+      RenderPassScope scope(build_context, "test.multiple_passes.render_pass.first"_name, "test.multiple_passes.render_target.first"_name);
+      build_context.bind_fragment_shader("testing/multiple_passes_first.fshader"_rc);
+      build_context.draw_full_screen_quad();
    }
    {
       // Second pass
-      RenderPassScope scope(buildContext, "test.multiple_passes.render_pass.second"_name, "test.multiple_passes.render_target.second"_name);
-      buildContext.bind_fragment_shader("testing/multiple_passes_second.fshader"_rc);
-      buildContext.bind_samplable_texture(0, "test.multiple_passes.render_target.first"_name);
-      buildContext.draw_full_screen_quad();
+      RenderPassScope scope(build_context, "test.multiple_passes.render_pass.second"_name,
+                            "test.multiple_passes.render_target.second"_name);
+      build_context.bind_fragment_shader("testing/multiple_passes_second.fshader"_rc);
+      build_context.bind_samplable_texture(0, "test.multiple_passes.render_target.first"_name);
+      build_context.draw_full_screen_quad();
    }
 
    // Copy the render target to staging buffer
-   buildContext.copy_texture_to_buffer("test.multiple_passes.render_target.second"_name, "test.multiple_passes.output_buffer"_name);
+   build_context.copy_texture_to_buffer("test.multiple_passes.render_target.second"_name, "test.multiple_passes.output_buffer"_name);
 
    ResourceStorage storage(TestingSupport::device());
-   execute_build_context(buildContext, storage);
+   execute_build_context(build_context, storage);
 
-   auto& outBuffer = storage.buffer("test.multiple_passes.output_buffer"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.multiple_passes.output_buffer"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expectedBitmap = open_file(Path{"content/multiple_passes_expected_bitmap.dat"}, FileOpenMode::Read);
-   ASSERT_TRUE(expectedBitmap.has_value());
+   const auto expected_bitmap = open_file(Path{"content/multiple_passes_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expected_bitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer(**expectedBitmap, pixels, bufferSize));
+   ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
 }
 
 TEST(BuildContext, DepthTargetSample)
@@ -438,121 +440,121 @@ TEST(BuildContext, DepthTargetSample)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
-   auto boxMesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
-   boxMesh.triangulate();
-   const auto boxMeshData = boxMesh.to_vertex_data();
+   auto box_mesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
+   box_mesh.triangulate();
+   const auto box_mesh_data = box_mesh.to_vertex_data();
 
    const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
    const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
    const auto transform = perspective * view;
 
    static constexpr triglav::Vector2i dims{256, 256};
-   static constexpr triglav::MemorySize bufferSize{sizeof(int) * dims.x * dims.y};
+   static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   buildContext.declare_sized_depth_target("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
-   buildContext.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
-   buildContext.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, bufferSize);
-   buildContext.declare_buffer("test.depth_target_sample.vertex_buffer"_name,
-                               boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
-   buildContext.declare_buffer("test.depth_target_sample.index_buffer"_name, boxMeshData.indices.size() * sizeof(triglav::u32));
-   buildContext.declare_buffer("test.depth_target_sample.uniform_buffer"_name, sizeof(triglav::Matrix4x4));
+   build_context.declare_sized_depth_target("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
+   build_context.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, buffer_size);
+   build_context.declare_buffer("test.depth_target_sample.vertex_buffer"_name,
+                                box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
+   build_context.declare_buffer("test.depth_target_sample.index_buffer"_name, box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.declare_buffer("test.depth_target_sample.uniform_buffer"_name, sizeof(triglav::Matrix4x4));
 
-   buildContext.fill_buffer_raw("test.depth_target_sample.vertex_buffer"_name, boxMeshData.vertices.data(),
-                                boxMeshData.vertices.size() * sizeof(triglav::geometry::Vertex));
-   buildContext.fill_buffer_raw("test.depth_target_sample.index_buffer"_name, boxMeshData.indices.data(),
-                                boxMeshData.indices.size() * sizeof(triglav::u32));
-   buildContext.fill_buffer("test.depth_target_sample.uniform_buffer"_name, transform);
+   build_context.fill_buffer_raw("test.depth_target_sample.vertex_buffer"_name, box_mesh_data.vertices.data(),
+                                 box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
+   build_context.fill_buffer_raw("test.depth_target_sample.index_buffer"_name, box_mesh_data.indices.data(),
+                                 box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.fill_buffer("test.depth_target_sample.uniform_buffer"_name, transform);
 
    {
       // Define render pass
-      RenderPassScope scope(buildContext, "test.depth_target_sample.depth_pass"_name, "test.depth_target_sample.depth_target"_name);
+      RenderPassScope scope(build_context, "test.depth_target_sample.depth_pass"_name, "test.depth_target_sample.depth_target"_name);
 
       // Define vertex shader, layout and input buffer
-      buildContext.bind_vertex_shader("testing/depth_target_sample/draw.vshader"_rc);
+      build_context.bind_vertex_shader("testing/depth_target_sample/draw.vshader"_rc);
 
-      buildContext.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
+      build_context.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
 
       triglav::render_core::VertexLayout layout(sizeof(triglav::geometry::Vertex));
       layout.add("location"_name, GAPI_FORMAT(RGB, Float32), offsetof(triglav::geometry::Vertex, location));
-      buildContext.bind_vertex_layout(layout);
+      build_context.bind_vertex_layout(layout);
 
-      buildContext.bind_vertex_buffer("test.depth_target_sample.vertex_buffer"_name);
-      buildContext.bind_index_buffer("test.depth_target_sample.index_buffer"_name);
+      build_context.bind_vertex_buffer("test.depth_target_sample.vertex_buffer"_name);
+      build_context.bind_index_buffer("test.depth_target_sample.index_buffer"_name);
 
       // Bind fragment shader and texture
-      buildContext.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
+      build_context.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
 
       // Draw
-      buildContext.draw_indexed_primitives(static_cast<u32>(boxMeshData.indices.size()), 0, 0, 1, 0);
+      build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.indices.size()), 0, 0, 1, 0);
    }
    {
       // Second pass
-      RenderPassScope scope(buildContext, "test.depth_target_sample.render_pass"_name, "test.depth_target_sample.render_target"_name);
-      buildContext.bind_fragment_shader("testing/depth_target_sample/sample.fshader"_rc);
-      buildContext.bind_samplable_texture(0, "test.depth_target_sample.depth_target"_name);
-      buildContext.draw_full_screen_quad();
+      RenderPassScope scope(build_context, "test.depth_target_sample.render_pass"_name, "test.depth_target_sample.render_target"_name);
+      build_context.bind_fragment_shader("testing/depth_target_sample/sample.fshader"_rc);
+      build_context.bind_samplable_texture(0, "test.depth_target_sample.depth_target"_name);
+      build_context.draw_full_screen_quad();
    }
 
    // Copy the render target to staging buffer
-   buildContext.copy_texture_to_buffer("test.depth_target_sample.render_target"_name, "test.depth_target_sample.output_buffer"_name);
+   build_context.copy_texture_to_buffer("test.depth_target_sample.render_target"_name, "test.depth_target_sample.output_buffer"_name);
 
    ResourceStorage storage(TestingSupport::device());
-   execute_build_context(buildContext, storage);
+   execute_build_context(build_context, storage);
 
-   auto& outBuffer = storage.buffer("test.depth_target_sample.output_buffer"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.depth_target_sample.output_buffer"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expectedBitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileOpenMode::Read);
-   ASSERT_TRUE(expectedBitmap.has_value());
+   const auto expected_bitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expected_bitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expectedBitmap, pixels, bufferSize, 0x02));
+   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
 }
 
 TEST(BuildContext, Conditions)
 {
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
-   buildContext.declare_flag("copy_from_alpha"_name);
+   build_context.declare_flag("copy_from_alpha"_name);
 
-   buildContext.declare_buffer("test.conditions.alpha"_name, sizeof(int));
-   buildContext.declare_buffer("test.conditions.beta"_name, sizeof(int));
-   buildContext.declare_staging_buffer("test.conditions.dst"_name, sizeof(int));
+   build_context.declare_buffer("test.conditions.alpha"_name, sizeof(int));
+   build_context.declare_buffer("test.conditions.beta"_name, sizeof(int));
+   build_context.declare_staging_buffer("test.conditions.dst"_name, sizeof(int));
 
-   buildContext.fill_buffer("test.conditions.alpha"_name, 7);
-   buildContext.fill_buffer("test.conditions.beta"_name, 13);
+   build_context.fill_buffer("test.conditions.alpha"_name, 7);
+   build_context.fill_buffer("test.conditions.beta"_name, 13);
 
-   buildContext.if_enabled("copy_from_alpha"_name);
-   buildContext.copy_buffer("test.conditions.alpha"_name, "test.conditions.dst"_name);
-   buildContext.end_if();
+   build_context.if_enabled("copy_from_alpha"_name);
+   build_context.copy_buffer("test.conditions.alpha"_name, "test.conditions.dst"_name);
+   build_context.end_if();
 
-   buildContext.if_disabled("copy_from_alpha"_name);
-   buildContext.copy_buffer("test.conditions.beta"_name, "test.conditions.dst"_name);
-   buildContext.end_if();
+   build_context.if_disabled("copy_from_alpha"_name);
+   build_context.copy_buffer("test.conditions.beta"_name, "test.conditions.dst"_name);
+   build_context.end_if();
 
-   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
 
    ResourceStorage storage(TestingSupport::device());
 
-   auto job = buildContext.build_job(pipelineCache, storage);
+   auto job = build_context.build_job(pipeline_cache, storage);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
 
    job.enable_flag("copy_from_alpha"_name);
 
-   const gapi::SemaphoreArray emptyList;
-   job.execute(0, emptyList, emptyList, &fence);
+   const gapi::SemaphoreArray empty_list;
+   job.execute(0, empty_list, empty_list, &fence);
 
    fence.await();
 
    ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditions.dst"_name, 0)), 7);
 
    job.disable_flag("copy_from_alpha"_name);
-   job.execute(1, emptyList, emptyList, &fence);
+   job.execute(1, empty_list, empty_list, &fence);
 
    fence.await();
 
@@ -563,71 +565,71 @@ TEST(BuildContext, CopyFromLastFrame)
 {
    using namespace triglav::render_core::literals;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
-   buildContext.declare_flag("has_buffer_changed"_name);
-   buildContext.declare_flag("copy_to_user"_name);
+   build_context.declare_flag("has_buffer_changed"_name);
+   build_context.declare_flag("copy_to_user"_name);
 
-   buildContext.declare_staging_buffer("test.copy_from_last_frame.user_buffer"_name, sizeof(int));
-   buildContext.declare_buffer("test.copy_from_last_frame.data_buffer"_name, sizeof(int));
+   build_context.declare_staging_buffer("test.copy_from_last_frame.user_buffer"_name, sizeof(int));
+   build_context.declare_buffer("test.copy_from_last_frame.data_buffer"_name, sizeof(int));
 
    // If changed copy from the used buffer
-   buildContext.if_enabled("has_buffer_changed"_name);
-   buildContext.copy_buffer("test.copy_from_last_frame.user_buffer"_name, "test.copy_from_last_frame.data_buffer"_name);
-   buildContext.end_if();
+   build_context.if_enabled("has_buffer_changed"_name);
+   build_context.copy_buffer("test.copy_from_last_frame.user_buffer"_name, "test.copy_from_last_frame.data_buffer"_name);
+   build_context.end_if();
 
    // If not changed copy from the previous frame
-   buildContext.if_disabled("has_buffer_changed"_name);
-   buildContext.copy_buffer("test.copy_from_last_frame.data_buffer"_last_frame, "test.copy_from_last_frame.data_buffer"_name);
-   buildContext.end_if();
+   build_context.if_disabled("has_buffer_changed"_name);
+   build_context.copy_buffer("test.copy_from_last_frame.data_buffer"_last_frame, "test.copy_from_last_frame.data_buffer"_name);
+   build_context.end_if();
 
-   buildContext.bind_compute_shader("testing/increase_number.cshader"_rc);
-   buildContext.bind_storage_buffer(0, "test.copy_from_last_frame.data_buffer"_name);
-   buildContext.dispatch({1, 1, 1});
+   build_context.bind_compute_shader("testing/increase_number.cshader"_rc);
+   build_context.bind_storage_buffer(0, "test.copy_from_last_frame.data_buffer"_name);
+   build_context.dispatch({1, 1, 1});
 
-   buildContext.if_enabled("copy_to_user"_name);
-   buildContext.copy_buffer("test.copy_from_last_frame.data_buffer"_name, "test.copy_from_last_frame.user_buffer"_name);
-   buildContext.end_if();
+   build_context.if_enabled("copy_to_user"_name);
+   build_context.copy_buffer("test.copy_from_last_frame.data_buffer"_name, "test.copy_from_last_frame.user_buffer"_name);
+   build_context.end_if();
 
-   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
    ResourceStorage storage(TestingSupport::device());
-   auto job = buildContext.build_job(pipelineCache, storage);
+   auto job = build_context.build_job(pipeline_cache, storage);
 
    write_buffer(storage.buffer("test.copy_from_last_frame.user_buffer"_name, 0), 36);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
 
-   const gapi::SemaphoreArray emptyList;
+   const gapi::SemaphoreArray empty_list;
 
-   const auto firstSem = GAPI_CHECK(TestingSupport::device().create_semaphore());
-   const auto secondSem = GAPI_CHECK(TestingSupport::device().create_semaphore());
-   const auto thirdSem = GAPI_CHECK(TestingSupport::device().create_semaphore());
+   const auto first_sem = GAPI_CHECK(TestingSupport::device().create_semaphore());
+   const auto second_sem = GAPI_CHECK(TestingSupport::device().create_semaphore());
+   const auto third_sem = GAPI_CHECK(TestingSupport::device().create_semaphore());
 
-   gapi::SemaphoreArray listFirst;
-   listFirst.add_semaphore(firstSem);
-   gapi::SemaphoreArray listSecond;
-   listSecond.add_semaphore(secondSem);
-   gapi::SemaphoreArray listThird;
-   listThird.add_semaphore(thirdSem);
+   gapi::SemaphoreArray list_first;
+   list_first.add_semaphore(first_sem);
+   gapi::SemaphoreArray list_second;
+   list_second.add_semaphore(second_sem);
+   gapi::SemaphoreArray list_third;
+   list_third.add_semaphore(third_sem);
 
    job.enable_flag("has_buffer_changed"_name);
 
-   job.execute(0, emptyList, listFirst, nullptr);
+   job.execute(0, empty_list, list_first, nullptr);
 
    job.disable_flag("has_buffer_changed"_name);
 
    for ([[maybe_unused]] const auto _ : triglav::Range(0, 10)) {
-      job.execute(1, listFirst, listSecond, nullptr);
-      job.execute(2, listSecond, listThird, nullptr);
-      job.execute(0, listThird, listFirst, &fence);
+      job.execute(1, list_first, list_second, nullptr);
+      job.execute(2, list_second, list_third, nullptr);
+      job.execute(0, list_third, list_first, &fence);
 
       fence.await();
    }
 
    job.enable_flag("copy_to_user"_name);
 
-   job.execute(1, listFirst, emptyList, &fence);
+   job.execute(1, list_first, empty_list, &fence);
 
    fence.await();
 
@@ -638,35 +640,35 @@ TEST(BuildContext, ConditionalBarrier)
 {
    using namespace triglav::render_core::literals;
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
-   buildContext.declare_flag("increase_number"_name);
-   buildContext.init_buffer("test.conditional_barrier.data"_name, 5);
+   build_context.declare_flag("increase_number"_name);
+   build_context.init_buffer("test.conditional_barrier.data"_name, 5);
 
-   buildContext.if_enabled("increase_number"_name);
-   buildContext.bind_compute_shader("testing/increase_number.cshader"_rc);
-   buildContext.bind_storage_buffer(0, "test.conditional_barrier.data"_name);
-   buildContext.dispatch({1, 1, 1});
-   buildContext.end_if();
+   build_context.if_enabled("increase_number"_name);
+   build_context.bind_compute_shader("testing/increase_number.cshader"_rc);
+   build_context.bind_storage_buffer(0, "test.conditional_barrier.data"_name);
+   build_context.dispatch({1, 1, 1});
+   build_context.end_if();
 
-   buildContext.declare_staging_buffer("test.conditional_barrier.user"_name, sizeof(int));
-   buildContext.copy_buffer("test.conditional_barrier.data"_name, "test.conditional_barrier.user"_name);
+   build_context.declare_staging_buffer("test.conditional_barrier.user"_name, sizeof(int));
+   build_context.copy_buffer("test.conditional_barrier.data"_name, "test.conditional_barrier.user"_name);
 
-   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
    ResourceStorage storage(TestingSupport::device());
-   auto job = buildContext.build_job(pipelineCache, storage);
+   auto job = build_context.build_job(pipeline_cache, storage);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
 
-   const gapi::SemaphoreArray emptyList;
+   const gapi::SemaphoreArray empty_list;
 
-   job.execute(0, emptyList, emptyList, &fence);
+   job.execute(0, empty_list, empty_list, &fence);
    fence.await();
    ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditional_barrier.user"_name, 0)), 5);
 
    job.enable_flag("increase_number"_name);
-   job.execute(0, emptyList, emptyList, &fence);
+   job.execute(0, empty_list, empty_list, &fence);
    fence.await();
    ASSERT_EQ(read_buffer<int>(storage.buffer("test.conditional_barrier.user"_name, 0)), 6);
 }
@@ -679,50 +681,51 @@ TEST(BuildContext, BasicRayTracing)
    using triglav::io::open_file;
    using triglav::io::Path;
 
-   gapi::BufferHeap asBufferHeap(TestingSupport::device(), gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer);
-   rt::AccelerationStructurePool asPool(TestingSupport::device());
+   gapi::BufferHeap as_buffer_heap(TestingSupport::device(), gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer);
+   rt::AccelerationStructurePool as_pool(TestingSupport::device());
 
-   rt::GeometryBuildContext bottomLevelCtx(TestingSupport::device(), asPool, asBufferHeap);
+   rt::GeometryBuildContext bottom_level_ctx(TestingSupport::device(), as_pool, as_buffer_heap);
 
-   auto boxMesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
-   boxMesh.triangulate();
-   const auto boxMeshData =
-      boxMesh.upload_to_device(TestingSupport::device(), gapi::BufferUsage::TransferDst | gapi::BufferUsage::AccelerationStructureRead);
+   auto box_mesh = triglav::geometry::create_box({2.0f, 2.0f, 2.0f});
+   box_mesh.triangulate();
+   const auto box_mesh_data =
+      box_mesh.upload_to_device(TestingSupport::device(), gapi::BufferUsage::TransferDst | gapi::BufferUsage::AccelerationStructureRead);
 
-   bottomLevelCtx.add_triangle_buffer(boxMeshData.mesh.vertices.buffer(), boxMeshData.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
-                                      sizeof(triglav::geometry::Vertex), static_cast<u32>(boxMeshData.mesh.vertices.count()),
-                                      static_cast<u32>(boxMeshData.mesh.indices.count() / 3));
+   bottom_level_ctx.add_triangle_buffer(box_mesh_data.mesh.vertices.buffer(), box_mesh_data.mesh.indices.buffer(),
+                                        GAPI_FORMAT(RGB, Float32), sizeof(triglav::geometry::Vertex),
+                                        static_cast<u32>(box_mesh_data.mesh.vertices.count()),
+                                        static_cast<u32>(box_mesh_data.mesh.indices.count() / 3));
 
-   auto* boxAS = bottomLevelCtx.commit_triangles();
+   auto* box_as = bottom_level_ctx.commit_triangles();
 
-   auto buildBLCmdList = GAPI_CHECK(TestingSupport::device().create_command_list(gapi::WorkType::Compute));
-   GAPI_CHECK_STATUS(buildBLCmdList.begin(gapi::SubmitType::OneTime));
-   bottomLevelCtx.build_acceleration_structures(buildBLCmdList);
-   GAPI_CHECK_STATUS(buildBLCmdList.finish());
-   GAPI_CHECK_STATUS(TestingSupport::device().submit_command_list_one_time(buildBLCmdList));
+   auto build_blcmd_list = GAPI_CHECK(TestingSupport::device().create_command_list(gapi::WorkType::Compute));
+   GAPI_CHECK_STATUS(build_blcmd_list.begin(gapi::SubmitType::OneTime));
+   bottom_level_ctx.build_acceleration_structures(build_blcmd_list);
+   GAPI_CHECK_STATUS(build_blcmd_list.finish());
+   GAPI_CHECK_STATUS(TestingSupport::device().submit_command_list_one_time(build_blcmd_list));
 
-   rt::GeometryBuildContext topLevelCtx(TestingSupport::device(), asPool, asBufferHeap);
+   rt::GeometryBuildContext top_level_ctx(TestingSupport::device(), as_pool, as_buffer_heap);
 
-   rt::InstanceBuilder instanceBuilder(TestingSupport::device());
-   instanceBuilder.add_instance(*boxAS, triglav::Matrix4x4(1), 0);
-   auto instanceBuffer = instanceBuilder.build_buffer();
+   rt::InstanceBuilder instance_builder(TestingSupport::device());
+   instance_builder.add_instance(*box_as, triglav::Matrix4x4(1), 0);
+   auto instance_buffer = instance_builder.build_buffer();
 
-   topLevelCtx.add_instance_buffer(instanceBuffer, 1);
+   top_level_ctx.add_instance_buffer(instance_buffer, 1);
 
-   auto* topLevelAS = topLevelCtx.commit_instances();
+   auto* top_level_as = top_level_ctx.commit_instances();
 
-   auto buildTLCmdList = GAPI_CHECK(TestingSupport::device().create_command_list(gapi::WorkType::Compute));
-   GAPI_CHECK_STATUS(buildTLCmdList.begin(gapi::SubmitType::OneTime));
-   topLevelCtx.build_acceleration_structures(buildTLCmdList);
-   GAPI_CHECK_STATUS(buildTLCmdList.finish());
-   GAPI_CHECK_STATUS(TestingSupport::device().submit_command_list_one_time(buildTLCmdList));
+   auto build_tlcmd_list = GAPI_CHECK(TestingSupport::device().create_command_list(gapi::WorkType::Compute));
+   GAPI_CHECK_STATUS(build_tlcmd_list.begin(gapi::SubmitType::OneTime));
+   top_level_ctx.build_acceleration_structures(build_tlcmd_list);
+   GAPI_CHECK_STATUS(build_tlcmd_list.finish());
+   GAPI_CHECK_STATUS(TestingSupport::device().submit_command_list_one_time(build_tlcmd_list));
 
-   static constexpr triglav::MemorySize bufferSize{sizeof(int) * DefaultSize.x * DefaultSize.y};
+   static constexpr triglav::MemorySize buffer_size{sizeof(int) * DefaultSize.x * DefaultSize.y};
 
-   BuildContext buildContext(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
+   BuildContext build_context(TestingSupport::device(), TestingSupport::resource_manager(), DefaultSize);
 
-   buildContext.declare_screen_size_texture("test.basic_ray_tracing.target"_name, GAPI_FORMAT(RGBA, UNorm8));
-   buildContext.declare_staging_buffer("test.basic_ray_tracing.output"_name, bufferSize);
+   build_context.declare_screen_size_texture("test.basic_ray_tracing.target"_name, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_staging_buffer("test.basic_ray_tracing.output"_name, buffer_size);
 
    const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
    const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::g_pi),
@@ -730,60 +733,60 @@ TEST(BuildContext, BasicRayTracing)
 
    struct ViewProperties
    {
-      triglav::Matrix4x4 projInverse;
-      triglav::Matrix4x4 viewInverse;
+      triglav::Matrix4x4 proj_inverse;
+      triglav::Matrix4x4 view_inverse;
    };
 
-   buildContext.init_buffer("test.basic_ray_tracing.view_props"_name, ViewProperties{inverse(perspective), inverse(view)});
+   build_context.init_buffer("test.basic_ray_tracing.view_props"_name, ViewProperties{inverse(perspective), inverse(view)});
 
-   buildContext.bind_rt_generation_shader("testing/rt/basic_rgen.rgenshader"_rc);
-   buildContext.bind_acceleration_structure(0, *topLevelAS);
-   buildContext.bind_rw_texture(1, "test.basic_ray_tracing.target"_name);
-   buildContext.bind_uniform_buffer(2, "test.basic_ray_tracing.view_props"_name);
+   build_context.bind_rt_generation_shader("testing/rt/basic_rgen.rgenshader"_rc);
+   build_context.bind_acceleration_structure(0, *top_level_as);
+   build_context.bind_rw_texture(1, "test.basic_ray_tracing.target"_name);
+   build_context.bind_uniform_buffer(2, "test.basic_ray_tracing.view_props"_name);
 
-   buildContext.bind_rt_closest_hit_shader("testing/rt/basic_rchit.rchitshader"_rc);
-   buildContext.bind_rt_miss_shader("testing/rt/basic_rmiss.rmissshader"_rc);
+   build_context.bind_rt_closest_hit_shader("testing/rt/basic_rchit.rchitshader"_rc);
+   build_context.bind_rt_miss_shader("testing/rt/basic_rmiss.rmissshader"_rc);
 
-   triglav::render_core::RayTracingShaderGroup rtGenGroup{};
-   rtGenGroup.type = triglav::render_core::RayTracingShaderGroupType::General;
-   rtGenGroup.generalShader.emplace("testing/rt/basic_rgen.rgenshader"_rc);
-   buildContext.bind_rt_shader_group(rtGenGroup);
+   triglav::render_core::RayTracingShaderGroup rt_gen_group{};
+   rt_gen_group.type = triglav::render_core::RayTracingShaderGroupType::General;
+   rt_gen_group.general_shader.emplace("testing/rt/basic_rgen.rgenshader"_rc);
+   build_context.bind_rt_shader_group(rt_gen_group);
 
-   triglav::render_core::RayTracingShaderGroup rtMissGroup{};
-   rtMissGroup.type = triglav::render_core::RayTracingShaderGroupType::General;
-   rtMissGroup.generalShader.emplace("testing/rt/basic_rmiss.rmissshader"_rc);
-   buildContext.bind_rt_shader_group(rtMissGroup);
+   triglav::render_core::RayTracingShaderGroup rt_miss_group{};
+   rt_miss_group.type = triglav::render_core::RayTracingShaderGroupType::General;
+   rt_miss_group.general_shader.emplace("testing/rt/basic_rmiss.rmissshader"_rc);
+   build_context.bind_rt_shader_group(rt_miss_group);
 
-   triglav::render_core::RayTracingShaderGroup rtClosestHitGroup{};
-   rtClosestHitGroup.type = triglav::render_core::RayTracingShaderGroupType::Triangles;
-   rtClosestHitGroup.closestHitShader.emplace("testing/rt/basic_rchit.rchitshader"_rc);
-   buildContext.bind_rt_shader_group(rtClosestHitGroup);
+   triglav::render_core::RayTracingShaderGroup rt_closest_hit_group{};
+   rt_closest_hit_group.type = triglav::render_core::RayTracingShaderGroupType::Triangles;
+   rt_closest_hit_group.closest_hit_shader.emplace("testing/rt/basic_rchit.rchitshader"_rc);
+   build_context.bind_rt_shader_group(rt_closest_hit_group);
 
-   buildContext.trace_rays({DefaultSize.x, DefaultSize.y, 1});
+   build_context.trace_rays({DefaultSize.x, DefaultSize.y, 1});
 
-   buildContext.copy_texture_to_buffer("test.basic_ray_tracing.target"_name, "test.basic_ray_tracing.output"_name);
+   build_context.copy_texture_to_buffer("test.basic_ray_tracing.target"_name, "test.basic_ray_tracing.output"_name);
 
-   PipelineCache pipelineCache(TestingSupport::device(), TestingSupport::resource_manager());
+   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
 
    ResourceStorage storage(TestingSupport::device());
-   auto job = buildContext.build_job(pipelineCache, storage);
+   auto job = build_context.build_job(pipeline_cache, storage);
 
    const auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
    fence.await();
 
-   const gapi::SemaphoreArray emptyList;
-   job.execute(0, emptyList, emptyList, &fence);
+   const gapi::SemaphoreArray empty_list;
+   job.execute(0, empty_list, empty_list, &fence);
 
    fence.await();
 
-   auto& outBuffer = storage.buffer("test.basic_ray_tracing.output"_name, 0);
-   const auto mappedMemory = GAPI_CHECK(outBuffer.map_memory());
-   const auto* pixels = static_cast<triglav::u8*>(*mappedMemory);
+   auto& out_buffer = storage.buffer("test.basic_ray_tracing.output"_name, 0);
+   const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
+   const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expectedBitmap = open_file(Path{"content/basic_ray_tracing_expected_bitmap.dat"}, FileOpenMode::Read);
-   ASSERT_TRUE(expectedBitmap.has_value());
+   const auto expected_bitmap = open_file(Path{"content/basic_ray_tracing_expected_bitmap.dat"}, FileOpenMode::Read);
+   ASSERT_TRUE(expected_bitmap.has_value());
 
-   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expectedBitmap, pixels, bufferSize, 0x02));
+   ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
 }
 
 #endif

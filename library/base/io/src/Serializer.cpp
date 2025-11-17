@@ -29,7 +29,7 @@ Result<void> Serializer::write_float32(const float value)
 
 Result<void> Serializer::add_padding(const u32 alignment)
 {
-   const auto mod = m_bytesWritten % alignment;
+   const auto mod = m_bytes_written % alignment;
    if (mod != 0) {
       const auto padding = alignment - mod;
 

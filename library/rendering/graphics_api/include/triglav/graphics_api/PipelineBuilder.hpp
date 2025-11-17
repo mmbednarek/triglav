@@ -16,17 +16,17 @@ class PipelineBuilderBase
    explicit PipelineBuilderBase(Device& device);
 
    Index add_shader(const Shader& shader);
-   void add_descriptor_binding(DescriptorType descriptorType, PipelineStageFlags shaderStages, u32 descriptorCount);
-   void add_push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset = 0);
+   void add_descriptor_binding(DescriptorType descriptor_type, PipelineStageFlags shader_stages, u32 descriptor_count);
+   void add_push_constant(PipelineStageFlags shader_stages, size_t size, size_t offset = 0);
 
  protected:
    [[nodiscard]] Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> build_pipeline_layout() const;
 
    Device& m_device;
-   std::vector<VkDescriptorSetLayoutBinding> m_vulkanDescriptorBindings{};
-   std::vector<VkPushConstantRange> m_pushConstantRanges{};
-   std::vector<VkPipelineShaderStageCreateInfo> m_shaderStageInfos;
-   bool m_usePushDescriptors{false};
+   std::vector<VkDescriptorSetLayoutBinding> m_vulkan_descriptor_bindings{};
+   std::vector<VkPushConstantRange> m_push_constant_ranges{};
+   std::vector<VkPipelineShaderStageCreateInfo> m_shader_stage_infos;
+   bool m_use_push_descriptors{false};
 };
 
 class ComputePipelineBuilder : public PipelineBuilderBase
@@ -35,8 +35,8 @@ class ComputePipelineBuilder : public PipelineBuilderBase
    explicit ComputePipelineBuilder(Device& device);
 
    ComputePipelineBuilder& compute_shader(const Shader& shader);
-   ComputePipelineBuilder& descriptor_binding(DescriptorType descriptorType);
-   ComputePipelineBuilder& push_constant(PipelineStage shaderStage, size_t size, size_t offset = 0);
+   ComputePipelineBuilder& descriptor_binding(DescriptorType descriptor_type);
+   ComputePipelineBuilder& push_constant(PipelineStage shader_stage, size_t size, size_t offset = 0);
    ComputePipelineBuilder& use_push_descriptors(bool enabled);
 
    [[nodiscard]] Result<Pipeline> build() const;
@@ -51,9 +51,9 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& vertex_shader(const Shader& shader);
    GraphicsPipelineBuilder& vertex_attribute(const ColorFormat& format, size_t offset);
    GraphicsPipelineBuilder& end_vertex_layout();
-   GraphicsPipelineBuilder& descriptor_binding(DescriptorType descriptorType, PipelineStage shaderStage);
-   GraphicsPipelineBuilder& descriptor_binding_array(DescriptorType descriptorType, PipelineStage shaderStage, u32 descriptorCount);
-   GraphicsPipelineBuilder& push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset = 0);
+   GraphicsPipelineBuilder& descriptor_binding(DescriptorType descriptor_type, PipelineStage shader_stage);
+   GraphicsPipelineBuilder& descriptor_binding_array(DescriptorType descriptor_type, PipelineStage shader_stage, u32 descriptor_count);
+   GraphicsPipelineBuilder& push_constant(PipelineStageFlags shader_stages, size_t size, size_t offset = 0);
    GraphicsPipelineBuilder& enable_depth_test(bool enabled);
    GraphicsPipelineBuilder& depth_test_mode(DepthTestMode mode);
    GraphicsPipelineBuilder& enable_blending(bool enabled);
@@ -61,10 +61,10 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& vertex_topology(VertexTopology topology);
    GraphicsPipelineBuilder& rasterization_method(RasterizationMethod method);
    GraphicsPipelineBuilder& culling(Culling cull);
-   GraphicsPipelineBuilder& begin_vertex_layout_raw(u32 strideSize);
+   GraphicsPipelineBuilder& begin_vertex_layout_raw(u32 stride_size);
    GraphicsPipelineBuilder& color_attachment(ColorFormat format);
    GraphicsPipelineBuilder& depth_attachment(ColorFormat format);
-   GraphicsPipelineBuilder& line_width(float lineWidth);
+   GraphicsPipelineBuilder& line_width(float line_width);
 
    [[nodiscard]] Result<Pipeline> build() const;
 
@@ -75,17 +75,17 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    }
 
  private:
-   uint32_t m_vertexLocation{0};
-   uint32_t m_vertexBinding{0};
-   VkPolygonMode m_polygonMode = VK_POLYGON_MODE_FILL;
-   VkPrimitiveTopology m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-   VkFrontFace m_frontFace = VK_FRONT_FACE_CLOCKWISE;
-   VkCullModeFlags m_cullMode = VK_CULL_MODE_FRONT_BIT;
-   DepthTestMode m_depthTestMode{DepthTestMode::Disabled};
-   bool m_blendingEnabled{true};
-   float m_lineWidth{1.0f};
-   std::vector<ColorFormat> m_colorAttachmentFormats;
-   std::optional<ColorFormat> m_depthAttachmentFormat;
+   uint32_t m_vertex_location{0};
+   uint32_t m_vertex_binding{0};
+   VkPolygonMode m_polygon_mode = VK_POLYGON_MODE_FILL;
+   VkPrimitiveTopology m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+   VkFrontFace m_front_face = VK_FRONT_FACE_CLOCKWISE;
+   VkCullModeFlags m_cull_mode = VK_CULL_MODE_FRONT_BIT;
+   DepthTestMode m_depth_test_mode{DepthTestMode::Disabled};
+   bool m_blending_enabled{true};
+   float m_line_width{1.0f};
+   std::vector<ColorFormat> m_color_attachment_formats;
+   std::optional<ColorFormat> m_depth_attachment_format;
 
    std::vector<VkVertexInputBindingDescription> m_bindings{};
    std::vector<VkVertexInputAttributeDescription> m_attributes{};

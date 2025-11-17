@@ -37,9 +37,9 @@ constexpr MemorySize calculate_rune_count(const char* data, const MemorySize siz
    return 4;
 }
 
-constexpr void encode_rune_to_buffer(const Rune rune, char* buffer, const MemorySize byteCount)
+constexpr void encode_rune_to_buffer(const Rune rune, char* buffer, const MemorySize byte_count)
 {
-   switch (byteCount) {
+   switch (byte_count) {
    case 0:
       break;
    case 1:
@@ -65,18 +65,18 @@ constexpr void encode_rune_to_buffer(const Rune rune, char* buffer, const Memory
    }
 }
 
-constexpr u32 byte_count_from_initial_byte(u8 initialByte)
+constexpr u32 byte_count_from_initial_byte(u8 initial_byte)
 {
-   u32 byteCount = 1;
-   initialByte <<= 2;
-   while ((initialByte & 0x80) != 0) {
-      ++byteCount;
-      initialByte <<= 1;
+   u32 byte_count = 1;
+   initial_byte <<= 2;
+   while ((initial_byte & 0x80) != 0) {
+      ++byte_count;
+      initial_byte <<= 1;
    }
-   return byteCount;
+   return byte_count;
 }
 
-constexpr Rune decode_rune_from_buffer(const char*& buffer, [[maybe_unused]] const char* endPtr)
+constexpr Rune decode_rune_from_buffer(const char*& buffer, [[maybe_unused]] const char* end_ptr)
 {
    const auto ch = static_cast<u8>(*buffer);
    if ((ch & 0x80) == 0) {
@@ -84,15 +84,15 @@ constexpr Rune decode_rune_from_buffer(const char*& buffer, [[maybe_unused]] con
       return ch;
    }
 
-   const u32 byteCount = byte_count_from_initial_byte(ch);
-   const u32 bitsInByte = 6 - byteCount;
-   const u8 mask = (1 << bitsInByte) - 1;
+   const u32 byte_count = byte_count_from_initial_byte(ch);
+   const u32 bits_in_byte = 6 - byte_count;
+   const u8 mask = (1 << bits_in_byte) - 1;
 
    Rune result = ch & mask;
 
-   for (u32 i = 0; i < byteCount; ++i) {
+   for (u32 i = 0; i < byte_count; ++i) {
       ++buffer;
-      assert(buffer != endPtr);
+      assert(buffer != end_ptr);
       assert((*buffer & 0xc0) == 0x80);
 
       result = (result << 6) | (*buffer & 0x3f);
@@ -103,11 +103,11 @@ constexpr Rune decode_rune_from_buffer(const char*& buffer, [[maybe_unused]] con
 }
 
 template<typename T>
-constexpr void skip_runes(T& buffer, T endPtr, u32 runeCount)
+constexpr void skip_runes(T& buffer, T end_ptr, u32 rune_count)
 {
-   while (buffer != endPtr && (runeCount != 0 || !is_rune_initial_byte(*buffer))) {
+   while (buffer != end_ptr && (rune_count != 0 || !is_rune_initial_byte(*buffer))) {
       if (is_rune_initial_byte(*buffer)) {
-         --runeCount;
+         --rune_count;
       }
       ++buffer;
    }

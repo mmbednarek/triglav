@@ -2,18 +2,18 @@
 
 namespace triglav::resource {
 
-void NameRegistry::register_resource(ResourceName resourceName, const std::string_view nameStr)
+void NameRegistry::register_resource(ResourceName resource_name, const std::string_view name_str)
 {
-   auto RW_registeredResourceNames = m_registeredResourceNames.access();
-   RW_registeredResourceNames->emplace(resourceName, std::string{nameStr});
+   auto RW_registered_resource_names = m_registered_resource_names.access();
+   RW_registered_resource_names->emplace(resource_name, std::string{name_str});
 }
 
-std::optional<std::string> NameRegistry::lookup_resource_name(ResourceName resourceName) const
+std::optional<std::string> NameRegistry::lookup_resource_name(ResourceName resource_name) const
 {
-   auto RW_registeredResourceNames = m_registeredResourceNames.read_access();
+   auto RW_registered_resource_names = m_registered_resource_names.read_access();
 
-   auto it = RW_registeredResourceNames->find(resourceName);
-   if (it == RW_registeredResourceNames->end()) {
+   auto it = RW_registered_resource_names->find(resource_name);
+   if (it == RW_registered_resource_names->end()) {
       return std::nullopt;
    }
 

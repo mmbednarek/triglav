@@ -9,18 +9,18 @@ namespace triglav::tool::cli {
 
 struct TextureImportProps
 {
-   io::Path srcPath;
-   io::Path dstPath;
+   io::Path src_path;
+   io::Path dst_path;
    asset::TexturePurpose purpose;
-   asset::SamplerProperties samplerProperties;
-   bool shouldCompress{};
-   bool hasMipMaps{};
-   bool shouldOverride{};
+   asset::SamplerProperties sampler_properties;
+   bool should_compress{};
+   bool has_mip_maps{};
+   bool should_override{};
 };
 
 struct ImageData
 {
-   std::vector<uint32_t> imageData;
+   std::vector<uint32_t> image_data;
    Vector2u size;
 };
 

@@ -8,39 +8,39 @@ namespace descriptor {
 
 struct RWTexture
 {
-   TextureRef texRef;
+   TextureRef tex_ref;
 };
 
 struct SamplableTexture
 {
-   TextureRef texRef;
+   TextureRef tex_ref;
 };
 
 struct Texture
 {
-   TextureRef texRef;
+   TextureRef tex_ref;
 };
 
 struct SampledTextureArray
 {
-   std::vector<TextureRef> texRefs;
+   std::vector<TextureRef> tex_refs;
 };
 
 struct UniformBuffer
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
 };
 
 struct UniformBufferRange
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
    u32 offset{};
    u32 size{};
 };
 
 struct StorageBuffer
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
 };
 
 struct UniformBufferArray
@@ -50,7 +50,7 @@ struct UniformBufferArray
 
 struct AccelerationStructure
 {
-   graphics_api::ray_tracing::AccelerationStructure* accelerationStructure;
+   graphics_api::ray_tracing::AccelerationStructure* acceleration_structure;
 };
 
 }// namespace descriptor

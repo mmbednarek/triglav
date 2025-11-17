@@ -24,8 +24,8 @@ class MenuList final : public ui_core::BaseWidget
    {
       DesktopUIManager* manager;
       MenuController* controller;
-      Name listName;
-      Vector2 screenOffset;
+      Name list_name;
+      Vector2 screen_offset;
    };
 
    struct Measure
@@ -39,8 +39,8 @@ class MenuList final : public ui_core::BaseWidget
 
    MenuList(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
@@ -56,14 +56,14 @@ class MenuList final : public ui_core::BaseWidget
    std::vector<ui_core::TextId> m_labels;
    std::vector<ui_core::SpriteId> m_icons;
    std::vector<ui_core::RectId> m_separators;
-   std::map<float, Name> m_heightToItem;
-   ui_core::RectId m_backgroundId;
-   ui_core::RectId m_hoverRectId{};
-   Vector4 m_croppingMask;
-   Name m_hoveredItem = 0;
-   Dialog* m_subMenu = nullptr;
+   std::map<float, Name> m_height_to_item;
+   ui_core::RectId m_background_id;
+   ui_core::RectId m_hover_rect_id{};
+   Vector4 m_cropping_mask;
+   Name m_hovered_item = 0;
+   Dialog* m_sub_menu = nullptr;
 
-   mutable std::optional<Measure> m_cachedMeasure{};
+   mutable std::optional<Measure> m_cached_measure{};
 };
 
 }// namespace triglav::desktop_ui

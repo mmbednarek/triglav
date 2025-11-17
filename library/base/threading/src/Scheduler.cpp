@@ -4,7 +4,7 @@ namespace triglav::threading {
 
 TimerHandle Scheduler::register_timeout(const Duration duration, std::function<void()> func)
 {
-   TimerHandle handle = m_topHandle++;
+   TimerHandle handle = m_top_handle++;
    m_callbacks.emplace(handle, std::move(func));
    m_timers.emplace(std::chrono::steady_clock::now() + duration, handle);
    return handle;

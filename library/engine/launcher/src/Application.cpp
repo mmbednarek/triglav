@@ -21,11 +21,11 @@ Application::Application(const desktop::InputArgs& args, desktop::IDisplay& disp
    io::CommandLine::the().parse(args.arg_count, args.args);
 
    // Assign ID to the main thread
-   threading::set_thread_id(threading::g_mainThread);
+   threading::set_thread_id(threading::g_main_thread);
 
    // Initialize global thread pool
-   const auto threadCount = io::CommandLine::the().arg_int("threadCount"_name).value_or(8);
-   threading::ThreadPool::the().initialize(std::clamp(threadCount, 0, 8));
+   const auto thread_count = io::CommandLine::the().arg_int("threadCount"_name).value_or(8);
+   threading::ThreadPool::the().initialize(std::clamp(thread_count, 0, 8));
 }
 
 Application::~Application()
@@ -35,11 +35,11 @@ Application::~Application()
 
 void Application::complete_stage()
 {
-   log_info("completing stage {}", launch_stage_to_string(m_currentStage).to_std());
-   m_currentStage = static_cast<LaunchStage>(static_cast<int>(m_currentStage) + 1);
-   log_info("starting stage {}", launch_stage_to_string(m_currentStage).to_std());
+   log_info("completing stage {}", launch_stage_to_string(m_current_stage).to_std());
+   m_current_stage = static_cast<LaunchStage>(static_cast<int>(m_current_stage) + 1);
+   log_info("starting stage {}", launch_stage_to_string(m_current_stage).to_std());
 
-   switch (m_currentStage) {
+   switch (m_current_stage) {
 #define TG_STAGE(name)                                \
    case LaunchStage::name: {                          \
       m_stage = std::make_unique<name##Stage>(*this); \
@@ -57,7 +57,7 @@ void Application::intitialize()
 {
    this->complete_stage();
 
-   while (m_currentStage != LaunchStage::Complete) {
+   while (m_current_stage != LaunchStage::Complete) {
       if (m_stage != nullptr) {
          m_stage->tick();
       }
@@ -76,7 +76,7 @@ void Application::tick() const
 
 bool Application::is_init_complete() const
 {
-   return m_currentStage == LaunchStage::Complete;
+   return m_current_stage == LaunchStage::Complete;
 }
 
 desktop::IDisplay& Application::display() const
@@ -86,27 +86,27 @@ desktop::IDisplay& Application::display() const
 
 font::FontManger& Application::font_manager()
 {
-   return m_fontManager;
+   return m_font_manager;
 }
 
 graphics_api::Instance& Application::gfx_instance() const
 {
-   return *m_gfxInstance;
+   return *m_gfx_instance;
 }
 
 graphics_api::Device& Application::gfx_device() const
 {
-   return *m_gfxDevice;
+   return *m_gfx_device;
 }
 
 resource::ResourceManager& Application::resource_manager() const
 {
-   return *m_resourceManager;
+   return *m_resource_manager;
 }
 
 render_core::GlyphCache& Application::glyph_cache() const
 {
-   return *m_glyphCache;
+   return *m_glyph_cache;
 }
 
 }// namespace triglav::launcher

@@ -14,7 +14,7 @@ class Mouse
    void tick();
 
  private:
-   int m_fileDescriptor;
+   int m_file_descriptor;
 };
 
 }// namespace triglav::desktop::x11

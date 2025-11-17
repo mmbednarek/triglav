@@ -7,12 +7,12 @@ namespace triglav::graphics_api {
 class DescriptorView
 {
  public:
-   DescriptorView(VkDescriptorSet descriptorSet);
+   DescriptorView(VkDescriptorSet descriptor_set);
 
    [[nodiscard]] VkDescriptorSet vulkan_descriptor_set() const;
 
  private:
-   VkDescriptorSet m_descriptorSet{};
+   VkDescriptorSet m_descriptor_set{};
 };
 
 }// namespace triglav::graphics_api

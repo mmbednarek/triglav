@@ -4,7 +4,7 @@ namespace triglav::launcher {
 
 using namespace string_literals;
 
-constexpr std::array g_launchStageNames{
+constexpr std::array g_launch_stage_names{
    "Uninitialized"_strv,
 #define TG_STAGE(name) #name##_strv,
    TG_LAUNCH_STAGES
@@ -14,7 +14,7 @@ constexpr std::array g_launchStageNames{
 
 StringView launch_stage_to_string(const LaunchStage stage)
 {
-   return g_launchStageNames[static_cast<MemorySize>(stage)];
+   return g_launch_stage_names[static_cast<MemorySize>(stage)];
 }
 
 IStage::IStage(Application& application) :

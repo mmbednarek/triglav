@@ -16,16 +16,16 @@ class BufferHeap
  public:
    struct Node
    {
-      Index chunkCount;
-      bool isFree;
+      Index chunk_count;
+      bool is_free;
       Node* next;
    };
 
    struct Page
    {
       std::unique_ptr<Buffer> buffer;
-      Index availableChunks;
-      Node* headNode;
+      Index available_chunks;
+      Node* head_node;
    };
 
    struct Section
@@ -36,7 +36,7 @@ class BufferHeap
       Node* node;
    };
 
-   BufferHeap(Device& device, BufferUsageFlags usageFlags, MemorySize chunkCountPerPage = 8192);
+   BufferHeap(Device& device, BufferUsageFlags usage_flags, MemorySize chunk_count_per_page = 8192);
    ~BufferHeap();
 
    BufferHeap(const BufferHeap& other) = delete;
@@ -44,12 +44,12 @@ class BufferHeap
    BufferHeap& operator=(const BufferHeap& other) = delete;
    BufferHeap& operator=(BufferHeap&& other) noexcept = delete;
 
-   Section allocate_section(MemorySize requiredSize);
+   Section allocate_section(MemorySize required_size);
    void release_section(const Section& section);
 
  private:
    Page& allocate_page();
-   std::vector<Page>::iterator find_available_page(std::vector<Page>::iterator start, Index chunkCount);
+   std::vector<Page>::iterator find_available_page(std::vector<Page>::iterator start, Index chunk_count);
 
    // References
    Device& m_device;
@@ -58,8 +58,8 @@ class BufferHeap
    std::vector<Page> m_pages;
 
    // State
-   BufferUsageFlags m_usageFlags;
-   MemorySize m_chunkCount;
+   BufferUsageFlags m_usage_flags;
+   MemorySize m_chunk_count;
 };
 
 }// namespace triglav::graphics_api

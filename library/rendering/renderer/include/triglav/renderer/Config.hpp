@@ -87,17 +87,17 @@ enum class ShadowCastingMethod
 
 struct Config
 {
-   AmbientOcclusionMethod ambientOcclusion;
+   AmbientOcclusionMethod ambient_occlusion;
    AntialiasingMethod antialiasing;
-   ShadowCastingMethod shadowCasting;
-   bool isBloomEnabled;
-   bool isUIHidden;
-   bool isSmoothCameraEnabled;
-   bool isRenderingParticles;
+   ShadowCastingMethod shadow_casting;
+   bool is_bloom_enabled;
+   bool is_uihidden;
+   bool is_smooth_camera_enabled;
+   bool is_rendering_particles;
 
    [[nodiscard]] bool is_any_rt_feature_enabled() const
    {
-      return this->ambientOcclusion == AmbientOcclusionMethod::RayTraced || this->shadowCasting == ShadowCastingMethod::RayTracing;
+      return this->ambient_occlusion == AmbientOcclusionMethod::RayTraced || this->shadow_casting == ShadowCastingMethod::RayTracing;
    }
 };
 

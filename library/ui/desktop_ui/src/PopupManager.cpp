@@ -2,36 +2,36 @@
 
 namespace triglav::desktop_ui {
 
-PopupManager::PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyphCache,
-                           resource::ResourceManager& resourceManager, desktop::ISurface& rootSurface) :
+PopupManager::PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
+                           resource::ResourceManager& resource_manager, desktop::ISurface& root_surface) :
     m_instance(instance),
     m_device(device),
-    m_glyphCache(glyphCache),
-    m_resourceManager(resourceManager),
-    m_rootSurface(rootSurface)
+    m_glyph_cache(glyph_cache),
+    m_resource_manager(resource_manager),
+    m_root_surface(root_surface)
 {
 }
 
 Dialog& PopupManager::create_popup_dialog(const Vector2i offset, const Vector2u dimensions)
 {
-   std::unique_lock lk{m_popupMtx};
+   std::unique_lock lk{m_popup_mtx};
    const auto& popup = m_popups.emplace_back(
-      std::make_unique<Dialog>(m_instance, m_device, m_rootSurface, m_glyphCache, m_resourceManager, dimensions, offset));
+      std::make_unique<Dialog>(m_instance, m_device, m_root_surface, m_glyph_cache, m_resource_manager, dimensions, offset));
    return *popup;
 }
 
 void PopupManager::tick()
 {
-   std::unique_lock lk{m_popupMtx};
+   std::unique_lock lk{m_popup_mtx};
 
-   if (!m_popupsToErase.empty()) {
+   if (!m_popups_to_erase.empty()) {
       m_device.await_all();
 
-      for (const auto& dialog : m_popupsToErase) {
+      for (const auto& dialog : m_popups_to_erase) {
          auto it = std::ranges::find_if(m_popups, [dialog](const auto& popup) { return popup.get() == dialog; });
          m_popups.erase(it);
       }
-      m_popupsToErase.clear();
+      m_popups_to_erase.clear();
    }
 
    for (const auto& popup : m_popups) {
@@ -44,13 +44,13 @@ void PopupManager::close_popup(Dialog* dialog)
    assert(dialog != nullptr);
    dialog->uninitialize();
 
-   std::unique_lock lk{m_popupMtx};
-   m_popupsToErase.emplace_back(dialog);
+   std::unique_lock lk{m_popup_mtx};
+   m_popups_to_erase.emplace_back(dialog);
 }
 
 desktop::ISurface& PopupManager::root_surface() const
 {
-   return m_rootSurface;
+   return m_root_surface;
 }
 
 }// namespace triglav::desktop_ui

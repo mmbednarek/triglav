@@ -8,7 +8,7 @@
 namespace triglav::render_core {
 
 template<typename TObject>
-TObject checkResult(std::expected<TObject, graphics_api::Status>&& object)
+TObject check_result(std::expected<TObject, graphics_api::Status>&& object)
 {
    if (not object.has_value()) {
       throw std::runtime_error("failed to init graphics_api object");
@@ -16,7 +16,7 @@ TObject checkResult(std::expected<TObject, graphics_api::Status>&& object)
    return std::move(object.value());
 }
 
-inline void checkStatus(const graphics_api::Status status)
+inline void check_status(const graphics_api::Status status)
 {
    if (status != graphics_api::Status::Success) {
       throw std::runtime_error("failed to init graphics_api object");
@@ -31,9 +31,9 @@ constexpr auto FRAMES_IN_FLIGHT_COUNT = 3;
 
 struct DescriptorInfo
 {
-   graphics_api::PipelineStageFlags pipelineStages;
-   graphics_api::DescriptorType descriptorType{graphics_api::DescriptorType::UniformBuffer};
-   u32 descriptorCount{1};
+   graphics_api::PipelineStageFlags pipeline_stages;
+   graphics_api::DescriptorType descriptor_type{graphics_api::DescriptorType::UniformBuffer};
+   u32 descriptor_count{1};
 
    [[nodiscard]] PipelineHash hash() const;
 };
@@ -41,7 +41,7 @@ struct DescriptorInfo
 struct DescriptorState
 {
    std::array<DescriptorInfo, MAX_DESCRIPTOR_COUNT> descriptors;
-   u32 descriptorCount{};
+   u32 descriptor_count{};
 
    [[nodiscard]] PipelineHash hash() const;
 };
@@ -78,25 +78,25 @@ struct PushConstantDesc
 
 struct GraphicPipelineState
 {
-   std::optional<VertexShaderName> vertexShader;
-   std::optional<FragmentShaderName> fragmentShader;
-   VertexLayout vertexLayout;
-   DescriptorState descriptorState;
-   std::vector<graphics_api::ColorFormat> renderTargetFormats;
-   std::optional<graphics_api::ColorFormat> depthTargetFormat;
-   graphics_api::VertexTopology vertexTopology{graphics_api::VertexTopology::TriangleList};
-   graphics_api::DepthTestMode depthTestMode{graphics_api::DepthTestMode::Enabled};
-   std::vector<PushConstantDesc> pushConstants;
-   float lineWidth{1.0f};
-   bool isBlendingEnabled{true};
+   std::optional<VertexShaderName> vertex_shader;
+   std::optional<FragmentShaderName> fragment_shader;
+   VertexLayout vertex_layout;
+   DescriptorState descriptor_state;
+   std::vector<graphics_api::ColorFormat> render_target_formats;
+   std::optional<graphics_api::ColorFormat> depth_target_format;
+   graphics_api::VertexTopology vertex_topology{graphics_api::VertexTopology::TriangleList};
+   graphics_api::DepthTestMode depth_test_mode{graphics_api::DepthTestMode::Enabled};
+   std::vector<PushConstantDesc> push_constants;
+   float line_width{1.0f};
+   bool is_blending_enabled{true};
 
    [[nodiscard]] PipelineHash hash() const;
 };
 
 struct ComputePipelineState
 {
-   std::optional<ComputeShaderName> computeShader;
-   DescriptorState descriptorState;
+   std::optional<ComputeShaderName> compute_shader;
+   DescriptorState descriptor_state;
 
    [[nodiscard]] PipelineHash hash() const;
 };
@@ -111,21 +111,21 @@ enum class RayTracingShaderGroupType
 struct RayTracingShaderGroup
 {
    RayTracingShaderGroupType type;
-   std::optional<ResourceName> generalShader;
-   std::optional<RayClosestHitShaderName> closestHitShader;
+   std::optional<ResourceName> general_shader;
+   std::optional<RayClosestHitShaderName> closest_hit_shader;
 
    [[nodiscard]] PipelineHash hash() const;
 };
 
 struct RayTracingPipelineState
 {
-   std::optional<RayGenShaderName> rayGenShader;
-   std::vector<RayClosestHitShaderName> rayClosestHitShaders;
-   std::vector<RayMissShaderName> rayMissShaders;
-   DescriptorState descriptorState;
-   std::vector<PushConstantDesc> pushConstants;
-   u32 maxRecursion{1};
-   std::vector<RayTracingShaderGroup> shaderGroups;
+   std::optional<RayGenShaderName> ray_gen_shader;
+   std::vector<RayClosestHitShaderName> ray_closest_hit_shaders;
+   std::vector<RayMissShaderName> ray_miss_shaders;
+   DescriptorState descriptor_state;
+   std::vector<PushConstantDesc> push_constants;
+   u32 max_recursion{1};
+   std::vector<RayTracingShaderGroup> shader_groups;
 
    void reset();
    [[nodiscard]] std::vector<Name> shader_bindings() const;
@@ -145,7 +145,7 @@ struct External
 struct TextureMip
 {
    Name name;
-   u32 mipLevel;
+   u32 mip_level;
 };
 
 using TextureRef = std::variant<TextureName, Name, FromLastFrame, External, TextureMip, const graphics_api::Texture*>;
@@ -153,28 +153,28 @@ using BufferRef = std::variant<const graphics_api::Buffer*, Name, FromLastFrame,
 
 struct ExecutionBarrier
 {
-   graphics_api::PipelineStageFlags srcStageFlags{};
-   graphics_api::PipelineStageFlags dstStageFlags{};
+   graphics_api::PipelineStageFlags src_stage_flags{};
+   graphics_api::PipelineStageFlags dst_stage_flags{};
 };
 
 struct BufferBarrier
 {
-   BufferRef bufferRef;
-   graphics_api::PipelineStageFlags srcStageFlags{};
-   graphics_api::PipelineStageFlags dstStageFlags{};
-   graphics_api::BufferAccessFlags srcBufferAccess{};
-   graphics_api::BufferAccessFlags dstBufferAccess{};
+   BufferRef buffer_ref;
+   graphics_api::PipelineStageFlags src_stage_flags{};
+   graphics_api::PipelineStageFlags dst_stage_flags{};
+   graphics_api::BufferAccessFlags src_buffer_access{};
+   graphics_api::BufferAccessFlags dst_buffer_access{};
 };
 
 struct TextureBarrier
 {
-   TextureRef textureRef;
-   graphics_api::PipelineStageFlags srcStageFlags{};
-   graphics_api::PipelineStageFlags dstStageFlags{};
-   graphics_api::TextureState srcState{};
-   graphics_api::TextureState dstState{};
-   u32 baseMipLevel{0};
-   u32 mipLevelCount{1};
+   TextureRef texture_ref;
+   graphics_api::PipelineStageFlags src_stage_flags{};
+   graphics_api::PipelineStageFlags dst_stage_flags{};
+   graphics_api::TextureState src_state{};
+   graphics_api::TextureState dst_state{};
+   u32 base_mip_level{0};
+   u32 mip_level_count{1};
 };
 
 inline u32 calculate_mip_count(const Vector2i& dims)
@@ -182,9 +182,9 @@ inline u32 calculate_mip_count(const Vector2i& dims)
    return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;
 }
 
-inline Name make_rt_shader_name(const ResourceName resName)
+inline Name make_rt_shader_name(const ResourceName res_name)
 {
-   return resName.name() * static_cast<u64>(resName.type());
+   return res_name.name() * static_cast<u64>(res_name.type());
 }
 
 namespace literals {

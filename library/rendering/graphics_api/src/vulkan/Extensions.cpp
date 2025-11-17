@@ -1,7 +1,7 @@
 #include "vulkan/Extensions.hpp"
 
-VkResult vkCreateDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-                                        const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+VkResult vkCreateDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* p_create_info,
+                                        const VkAllocationCallbacks* p_allocator, VkDebugUtilsMessengerEXT* p_debug_messenger)
 {
    const auto func =
       reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT"));
@@ -9,16 +9,16 @@ VkResult vkCreateDebugUtilsMessengerEXT(const VkInstance instance, const VkDebug
       return VK_ERROR_EXTENSION_NOT_PRESENT;
    }
 
-   return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+   return func(instance, p_create_info, p_allocator, p_debug_messenger);
 }
 
-void vkDestroyDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerEXT debugMessenger,
-                                     const VkAllocationCallbacks* pAllocator)
+void vkDestroyDebugUtilsMessengerEXT(const VkInstance instance, const VkDebugUtilsMessengerEXT debug_messenger,
+                                     const VkAllocationCallbacks* p_allocator)
 {
    const auto func =
       reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT"));
    if (func == nullptr)
       return;
 
-   func(instance, debugMessenger, pAllocator);
+   func(instance, debug_messenger, p_allocator);
 }

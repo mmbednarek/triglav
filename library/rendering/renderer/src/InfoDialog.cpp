@@ -20,7 +20,7 @@ namespace triglav::renderer {
 using namespace name_literals;
 using namespace string_literals;
 
-constexpr std::array g_metricsLabels{
+constexpr std::array g_metrics_labels{
    std::tuple{"metrics.fps"_name, "Framerate"_strv},
    std::tuple{"metrics.fps_min"_name, "Framerate Min"_strv},
    std::tuple{"metrics.fps_max"_name, "Framerate Max"_strv},
@@ -29,21 +29,21 @@ constexpr std::array g_metricsLabels{
    std::tuple{"metrics.gpu_time"_name, "GPU Render Time"_strv},
 };
 
-constexpr std::array g_locationLabels{
+constexpr std::array g_location_labels{
    std::tuple{"location.position"_name, "Position"_strv},
    std::tuple{"location.orientation"_name, "Orientation"_strv},
 };
 
-constexpr std::array g_featureLabels{
+constexpr std::array g_feature_labels{
    std::tuple{"features.ao"_name, "Ambient Occlusion"_strv},    std::tuple{"features.aa"_name, "Anti-Aliasing"_strv},
    std::tuple{"features.shadows"_name, "Shadows"_strv},         std::tuple{"features.bloom"_name, "Bloom"_strv},
    std::tuple{"features.debug_lines"_name, "Debug Lines"_strv}, std::tuple{"features.smooth_camera"_name, "Smooth Camera"_strv},
 };
 
-constexpr std::array g_labelGroups{
-   std::tuple{"Metrics"_strv, std::span{g_metricsLabels.data(), g_metricsLabels.size()}},
-   std::tuple{"Location"_strv, std::span{g_locationLabels.data(), g_locationLabels.size()}},
-   std::tuple{"Features"_strv, std::span{g_featureLabels.data(), g_featureLabels.size()}},
+constexpr std::array g_label_groups{
+   std::tuple{"Metrics"_strv, std::span{g_metrics_labels.data(), g_metrics_labels.size()}},
+   std::tuple{"Location"_strv, std::span{g_location_labels.data(), g_location_labels.size()}},
+   std::tuple{"Features"_strv, std::span{g_feature_labels.data(), g_feature_labels.size()}},
 };
 
 class HideablePanel final : public ui_core::IWidget
@@ -62,51 +62,51 @@ class HideablePanel final : public ui_core::IWidget
    HideablePanel(ui_core::Context& ctx, const State& state, ui_core::IWidget* parent) :
        m_state(state),
        m_parent(parent),
-       m_verticalLayout(ctx,
-                        {
-                           .padding = state.padding,
-                           .separation = state.separation,
-                        },
-                        this),
-       m_labelBox(m_verticalLayout.create_child<ui_core::Button>({})),
-       m_labelLayout(m_labelBox.create_content<ui_core::HorizontalLayout>({
+       m_vertical_layout(ctx,
+                         {
+                            .padding = state.padding,
+                            .separation = state.separation,
+                         },
+                         this),
+       m_label_box(m_vertical_layout.create_child<ui_core::Button>({})),
+       m_label_layout(m_label_box.create_content<ui_core::HorizontalLayout>({
           .separation = 10.0f,
           .gravity = ui_core::HorizontalAlignment::Center,
        })),
-       m_image(m_labelLayout.create_child<ui_core::Image>({
+       m_image(m_label_layout.create_child<ui_core::Image>({
           .texture = "texture/ui_images.tex"_rc,
-          .maxSize = Vector2{20, 20},
+          .max_size = Vector2{20, 20},
           .region = Vector4{400, 0, 200, 200},
        })),
-       m_labelText(m_labelLayout.create_child<ui_core::TextBox>({
-          .fontSize = 20,
+       m_label_text(m_label_layout.create_child<ui_core::TextBox>({
+          .font_size = 20,
           .typeface = "fonts/segoeui/bold.typeface"_rc,
           .content = state.label,
           .color = {1.0f, 1.0f, 0.4f, 1.0f},
-          .verticalAlignment = ui_core::VerticalAlignment::Center,
+          .vertical_alignment = ui_core::VerticalAlignment::Center,
        })),
-       m_content(m_verticalLayout.create_child<ui_core::HideableWidget>({
-          .isHidden = false,
+       m_content(m_vertical_layout.create_child<ui_core::HideableWidget>({
+          .is_hidden = false,
        })),
-       TG_CONNECT(m_labelBox, OnClick, on_click),
-       TG_CONNECT(m_labelBox, OnEnter, on_enter),
-       TG_CONNECT(m_labelBox, OnLeave, on_leave)
+       TG_CONNECT(m_label_box, OnClick, on_click),
+       TG_CONNECT(m_label_box, OnEnter, on_enter),
+       TG_CONNECT(m_label_box, OnLeave, on_leave)
    {
    }
 
-   [[nodiscard]] Vector2 desired_size(const Vector2 parentSize) const override
+   [[nodiscard]] Vector2 desired_size(const Vector2 parent_size) const override
    {
-      return m_verticalLayout.desired_size(parentSize);
+      return m_vertical_layout.desired_size(parent_size);
    }
 
-   void add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask) override
+   void add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask) override
    {
-      m_verticalLayout.add_to_viewport(dimensions, croppingMask);
+      m_vertical_layout.add_to_viewport(dimensions, cropping_mask);
    }
 
    void remove_from_viewport() override
    {
-      m_verticalLayout.remove_from_viewport();
+      m_vertical_layout.remove_from_viewport();
    }
 
    template<ui_core::ConstructableWidget TChild>
@@ -124,12 +124,12 @@ class HideablePanel final : public ui_core::IWidget
 
    void on_event(const ui_core::Event& event) override
    {
-      return m_verticalLayout.on_event(event);
+      return m_vertical_layout.on_event(event);
    }
 
-   void on_click(const desktop::MouseButton /*mouseButton*/) const
+   void on_click(const desktop::MouseButton /*mouse_button*/) const
    {
-      if (m_content.state().isHidden) {
+      if (m_content.state().is_hidden) {
          m_image.set_region({400, 0, 200, 200});
          m_content.set_is_hidden(false);
       } else {
@@ -140,7 +140,7 @@ class HideablePanel final : public ui_core::IWidget
 
    void on_enter() const
    {
-      m_labelText.set_color({1.0f, 1.0f, 0.8f, 1.0f});
+      m_label_text.set_color({1.0f, 1.0f, 0.8f, 1.0f});
       if (m_state.surface != nullptr) {
          m_state.surface->set_cursor_icon(desktop::CursorIcon::Hand);
       }
@@ -148,7 +148,7 @@ class HideablePanel final : public ui_core::IWidget
 
    void on_leave() const
    {
-      m_labelText.set_color({1.0f, 1.0f, 0.4f, 1.0f});
+      m_label_text.set_color({1.0f, 1.0f, 0.4f, 1.0f});
       if (m_state.surface != nullptr) {
          m_state.surface->set_cursor_icon(desktop::CursorIcon::Arrow);
       }
@@ -157,11 +157,11 @@ class HideablePanel final : public ui_core::IWidget
  private:
    State m_state;
    ui_core::IWidget* m_parent;
-   ui_core::VerticalLayout m_verticalLayout;
-   ui_core::Button& m_labelBox;
-   ui_core::HorizontalLayout& m_labelLayout;
+   ui_core::VerticalLayout m_vertical_layout;
+   ui_core::Button& m_label_box;
+   ui_core::HorizontalLayout& m_label_layout;
    ui_core::Image& m_image;
-   ui_core::TextBox& m_labelText;
+   ui_core::TextBox& m_label_text;
    ui_core::HideableWidget& m_content;
 
    TG_SINK(ui_core::Button, OnClick);
@@ -169,214 +169,214 @@ class HideablePanel final : public ui_core::IWidget
    TG_SINK(ui_core::Button, OnLeave);
 };
 
-InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& configManager, desktop::ISurface& surface) :
-    m_configManager(configManager),
+InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager, desktop::ISurface& surface) :
+    m_config_manager(config_manager),
     m_surface(surface),
-    m_rootBox(context,
-              ui_core::RectBox::State{
-                 .color = {0.0, 0.0f, 0.0f, 0.75f},
-              },
-              this),
-    TG_CONNECT(m_configManager, OnPropertyChanged, on_config_property_changed)
+    m_root_box(context,
+               ui_core::RectBox::State{
+                  .color = {0.0, 0.0f, 0.0f, 0.75f},
+               },
+               this),
+    TG_CONNECT(m_config_manager, OnPropertyChanged, on_config_property_changed)
 {
-   auto& viewport = m_rootBox.create_content<ui_core::VerticalLayout>({
+   auto& viewport = m_root_box.create_content<ui_core::VerticalLayout>({
       .padding = {25.0f, 25.0f, 25.0f, 25.0f},
       .separation = 10.0f,
    });
 
-   auto& titleButton = viewport.create_child<ui_core::Button>({});
+   auto& title_button = viewport.create_child<ui_core::Button>({});
 
-   auto& titleLayout = titleButton.create_content<ui_core::HorizontalLayout>({
+   auto& title_layout = title_button.create_content<ui_core::HorizontalLayout>({
       .separation = 5.0f,
       .gravity = ui_core::HorizontalAlignment::Center,
    });
 
-   titleLayout.create_child<ui_core::Image>({
+   title_layout.create_child<ui_core::Image>({
       .texture = "texture/ui_images.tex"_rc,
-      .maxSize = Vector2{32, 32},
+      .max_size = Vector2{32, 32},
       .region = Vector4{0, 0, 200, 200},
    });
 
-   m_title = &titleLayout.create_child<ui_core::TextBox>({
-      .fontSize = 24,
+   m_title = &title_layout.create_child<ui_core::TextBox>({
+      .font_size = 24,
       .typeface = "fonts/cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
-      .horizontalAlignment = ui_core::HorizontalAlignment::Center,
-      .verticalAlignment = ui_core::VerticalAlignment::Center,
+      .horizontal_alignment = ui_core::HorizontalAlignment::Center,
+      .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
 
-   TG_CONNECT_OPT(titleButton, OnClick, on_title_clicked);
-   TG_CONNECT_OPT(titleButton, OnEnter, on_title_enter);
-   TG_CONNECT_OPT(titleButton, OnLeave, on_title_leave);
+   TG_CONNECT_OPT(title_button, OnClick, on_title_clicked);
+   TG_CONNECT_OPT(title_button, OnEnter, on_title_enter);
+   TG_CONNECT_OPT(title_button, OnLeave, on_title_leave);
 
    viewport.create_child<ui_core::EmptySpace>({
       .size = {1.0f, 4.0f},
    });
 
-   for (const auto& [groupLabel, group] : g_labelGroups) {
+   for (const auto& [group_label, group] : g_label_groups) {
       auto& panel = viewport.create_child<HideablePanel>({
          .separation = 8.0f,
-         .label = groupLabel,
+         .label = group_label,
          .surface = &m_surface,
       });
 
-      auto& labelBox = panel.create_child<ui_core::HorizontalLayout>({
+      auto& label_box = panel.create_child<ui_core::HorizontalLayout>({
          .padding = {0.0f, 15.0f, 0.0f, 10.0f},
          .separation = 10.0f,
          .gravity = ui_core::HorizontalAlignment::Center,
       });
 
-      auto& leftPanel = labelBox.create_child<ui_core::VerticalLayout>({
+      auto& left_panel = label_box.create_child<ui_core::VerticalLayout>({
          .padding = {0, 0.0f, 5.0f, 0.0f},
          .separation = 10.0f,
       });
 
-      auto& rightPanel = labelBox.create_child<ui_core::VerticalLayout>({
+      auto& right_panel = label_box.create_child<ui_core::VerticalLayout>({
          .padding = {5.0f, 0.0f, 0, 0.0f},
          .separation = 10.0f,
       });
 
       for (const auto& [name, content] : group) {
-         leftPanel.create_child<ui_core::TextBox>({
-            .fontSize = 18,
+         left_panel.create_child<ui_core::TextBox>({
+            .font_size = 18,
             .typeface = "fonts/segoeui/regular.typeface"_rc,
             .content = content,
             .color = {1.0f, 1.0f, 1.0f, 1.0f},
-            .horizontalAlignment = ui_core::HorizontalAlignment::Right,
+            .horizontal_alignment = ui_core::HorizontalAlignment::Right,
          });
 
-         m_values[name] = &rightPanel.create_child<ui_core::TextBox>({
-            .fontSize = 18,
+         m_values[name] = &right_panel.create_child<ui_core::TextBox>({
+            .font_size = 18,
             .typeface = "fonts/segoeui/regular.typeface"_rc,
             .content = "none",
             .color = {1.0f, 1.0f, 0.4f, 1.0f},
-            .horizontalAlignment = ui_core::HorizontalAlignment::Left,
+            .horizontal_alignment = ui_core::HorizontalAlignment::Left,
          });
       }
    }
 }
 
-Vector2 InfoDialog::desired_size(const Vector2 parentSize) const
+Vector2 InfoDialog::desired_size(const Vector2 parent_size) const
 {
-   return m_rootBox.desired_size(parentSize);
+   return m_root_box.desired_size(parent_size);
 }
 
-void InfoDialog::add_to_viewport(Vector4 /*dimensions*/, const Vector4 croppingMask)
+void InfoDialog::add_to_viewport(Vector4 /*dimensions*/, const Vector4 cropping_mask)
 {
    const auto size = this->desired_size({600, 1200});
-   m_croppingMask = croppingMask;
-   m_rootBox.add_to_viewport({m_dialogOffset.x, m_dialogOffset.y, size.x, size.y}, croppingMask);
+   m_cropping_mask = cropping_mask;
+   m_root_box.add_to_viewport({m_dialog_offset.x, m_dialog_offset.y, size.x, size.y}, cropping_mask);
 }
 
 void InfoDialog::remove_from_viewport()
 {
-   m_rootBox.remove_from_viewport();
+   m_root_box.remove_from_viewport();
 }
 
 void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
 {
-   this->add_to_viewport({}, m_croppingMask);
+   this->add_to_viewport({}, m_cropping_mask);
 }
 
 void InfoDialog::on_event(const ui_core::Event& event)
 {
    const auto size = this->desired_size({600, 1200});
-   const auto position = event.mousePosition - m_dialogOffset;
+   const auto position = event.mouse_position - m_dialog_offset;
    if (position.x > size.x || position.y > size.y) {
       return;
    }
 
-   ui_core::Event subEvent{event};
-   subEvent.parentSize = {600, 1200};
-   subEvent.mousePosition = position;
+   ui_core::Event sub_event{event};
+   sub_event.parent_size = {600, 1200};
+   sub_event.mouse_position = position;
 
-   m_rootBox.on_event(subEvent);
+   m_root_box.on_event(sub_event);
 
-   if (event.eventType == ui_core::Event::Type::MouseReleased) {
-      if (m_isDragging) {
-         m_isDragging = false;
-         m_dragOffset.reset();
+   if (event.event_type == ui_core::Event::Type::MouseReleased) {
+      if (m_is_dragging) {
+         m_is_dragging = false;
+         m_drag_offset.reset();
          m_surface.set_cursor_icon(desktop::CursorIcon::Arrow);
       }
-   } else if (event.eventType == ui_core::Event::Type::MouseMoved) {
-      if (!m_isDragging)
+   } else if (event.event_type == ui_core::Event::Type::MouseMoved) {
+      if (!m_is_dragging)
          return;
 
-      if (!m_dragOffset.has_value()) {
-         m_dragOffset.emplace(m_dialogOffset - event.mousePosition);
+      if (!m_drag_offset.has_value()) {
+         m_drag_offset.emplace(m_dialog_offset - event.mouse_position);
       }
 
-      m_dialogOffset = event.mousePosition + *m_dragOffset;
-      this->add_to_viewport({}, m_croppingMask);
+      m_dialog_offset = event.mouse_position + *m_drag_offset;
+      this->add_to_viewport({}, m_cropping_mask);
    }
 }
 
 void InfoDialog::set_fps(const float value) const
 {
-   const auto framerateStr = format("{:.1f}", value);
-   m_values.at("metrics.fps"_name)->set_content(framerateStr.view());
+   const auto framerate_str = format("{:.1f}", value);
+   m_values.at("metrics.fps"_name)->set_content(framerate_str.view());
 }
 
 void InfoDialog::set_min_fps(const float value) const
 {
-   const auto framerateStr = format("{:.1f}", value);
-   m_values.at("metrics.fps_min"_name)->set_content(framerateStr.view());
+   const auto framerate_str = format("{:.1f}", value);
+   m_values.at("metrics.fps_min"_name)->set_content(framerate_str.view());
 }
 
 void InfoDialog::set_max_fps(const float value) const
 {
-   const auto framerateMaxStr = format("{:.1f}", value);
-   m_values.at("metrics.fps_max"_name)->set_content(framerateMaxStr.view());
+   const auto framerate_max_str = format("{:.1f}", value);
+   m_values.at("metrics.fps_max"_name)->set_content(framerate_max_str.view());
 }
 
 void InfoDialog::set_avg_fps(const float value) const
 {
-   const auto framerateAvgStr = format("{:.1f}", value);
-   m_values.at("metrics.fps_avg"_name)->set_content(framerateAvgStr.view());
+   const auto framerate_avg_str = format("{:.1f}", value);
+   m_values.at("metrics.fps_avg"_name)->set_content(framerate_avg_str.view());
 }
 
 void InfoDialog::set_gpu_time(const float value) const
 {
-   const auto gBufferGpuTimeStr = format("{:.2f}ms", value);
-   m_values.at("metrics.gpu_time"_name)->set_content(gBufferGpuTimeStr.view());
+   const auto g_buffer_gpu_time_str = format("{:.2f}ms", value);
+   m_values.at("metrics.gpu_time"_name)->set_content(g_buffer_gpu_time_str.view());
 }
 
 void InfoDialog::set_triangle_count(const u32 value) const
 {
-   const auto primitiveCountStr = format("{}", value);
-   m_values.at("metrics.triangles"_name)->set_content(primitiveCountStr.view());
+   const auto primitive_count_str = format("{}", value);
+   m_values.at("metrics.triangles"_name)->set_content(primitive_count_str.view());
 }
 
 void InfoDialog::set_camera_pos(const Vector3 value) const
 {
-   const auto positionStr = format("{:.2f}, {:.2f}, {:.2f}", value.x, value.y, value.z);
-   m_values.at("location.position"_name)->set_content(positionStr.view());
+   const auto position_str = format("{:.2f}, {:.2f}, {:.2f}", value.x, value.y, value.z);
+   m_values.at("location.position"_name)->set_content(position_str.view());
 }
 
 void InfoDialog::set_orientation(const Vector2 value) const
 {
-   const auto orientationStr = format("{:.2f}, {:.2f}", value.x, value.y);
-   m_values.at("location.orientation"_name)->set_content(orientationStr.view());
+   const auto orientation_str = format("{:.2f}, {:.2f}", value.x, value.y);
+   m_values.at("location.orientation"_name)->set_content(orientation_str.view());
 }
 
 void InfoDialog::on_config_property_changed(const ConfigProperty property, const Config& config) const
 {
    switch (property) {
    case ConfigProperty::AmbientOcclusion:
-      m_values.at("features.ao"_name)->set_content(ambient_occlusion_method_to_string(config.ambientOcclusion));
+      m_values.at("features.ao"_name)->set_content(ambient_occlusion_method_to_string(config.ambient_occlusion));
       break;
    case ConfigProperty::Antialiasing:
       m_values.at("features.aa"_name)->set_content(antialiasing_method_to_string(config.antialiasing));
       break;
    case ConfigProperty::ShadowCasting:
-      m_values.at("features.shadows"_name)->set_content(shadow_casting_method_to_string(config.shadowCasting));
+      m_values.at("features.shadows"_name)->set_content(shadow_casting_method_to_string(config.shadow_casting));
       break;
    case ConfigProperty::IsBloomEnabled:
-      m_values.at("features.bloom"_name)->set_content(config.isBloomEnabled ? "On"_strv : "Off"_strv);
+      m_values.at("features.bloom"_name)->set_content(config.is_bloom_enabled ? "On"_strv : "Off"_strv);
       break;
    case ConfigProperty::IsSmoothCameraEnabled:
-      m_values.at("features.smooth_camera"_name)->set_content(config.isSmoothCameraEnabled ? "On"_strv : "Off"_strv);
+      m_values.at("features.smooth_camera"_name)->set_content(config.is_smooth_camera_enabled ? "On"_strv : "Off"_strv);
       break;
    default:
       break;
@@ -385,17 +385,17 @@ void InfoDialog::on_config_property_changed(const ConfigProperty property, const
 
 void InfoDialog::init_config_labels() const
 {
-   const auto& config = m_configManager.config();
-   m_values.at("features.ao"_name)->set_content(ambient_occlusion_method_to_string(config.ambientOcclusion));
+   const auto& config = m_config_manager.config();
+   m_values.at("features.ao"_name)->set_content(ambient_occlusion_method_to_string(config.ambient_occlusion));
    m_values.at("features.aa"_name)->set_content(antialiasing_method_to_string(config.antialiasing));
-   m_values.at("features.shadows"_name)->set_content(shadow_casting_method_to_string(config.shadowCasting));
-   m_values.at("features.bloom"_name)->set_content(config.isBloomEnabled ? "On"_strv : "Off"_strv);
-   m_values.at("features.smooth_camera"_name)->set_content(config.isSmoothCameraEnabled ? "On"_strv : "Off"_strv);
+   m_values.at("features.shadows"_name)->set_content(shadow_casting_method_to_string(config.shadow_casting));
+   m_values.at("features.bloom"_name)->set_content(config.is_bloom_enabled ? "On"_strv : "Off"_strv);
+   m_values.at("features.smooth_camera"_name)->set_content(config.is_smooth_camera_enabled ? "On"_strv : "Off"_strv);
 }
 
 void InfoDialog::on_title_clicked(desktop::MouseButton /*button*/)
 {
-   m_isDragging = true;
+   m_is_dragging = true;
    m_surface.set_cursor_icon(desktop::CursorIcon::Move);
 }
 

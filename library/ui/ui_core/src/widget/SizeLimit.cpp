@@ -8,16 +8,16 @@ SizeLimit::SizeLimit(Context& ctx, State state, IWidget* parent) :
 {
 }
 
-Vector2 SizeLimit::desired_size(const Vector2 parentSize) const
+Vector2 SizeLimit::desired_size(const Vector2 parent_size) const
 {
    const auto child =
-      m_content->desired_size(Vector2{std::min(parentSize.x, m_state.max_size.x), std::min(parentSize.y, m_state.max_size.y)});
+      m_content->desired_size(Vector2{std::min(parent_size.x, m_state.max_size.x), std::min(parent_size.y, m_state.max_size.y)});
    return {std::min(child.x, m_state.max_size.x), std::min(child.y, m_state.max_size.y)};
 }
 
-void SizeLimit::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void SizeLimit::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   m_content->add_to_viewport(dimensions, croppingMask);
+   m_content->add_to_viewport(dimensions, cropping_mask);
 }
 
 void SizeLimit::remove_from_viewport()

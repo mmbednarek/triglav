@@ -18,8 +18,8 @@ using Pipeline = WrappedObject<VkPipeline, vkCreateGraphicsPipelines, vkDestroyP
 class Pipeline
 {
  public:
-   Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorSetLayout descriptorSetLayout,
-            PipelineType pipelineType);
+   Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorSetLayout descriptor_set_layout,
+            PipelineType pipeline_type);
 
    [[nodiscard]] VkPipeline vulkan_pipeline() const;
    [[nodiscard]] const vulkan::PipelineLayout& layout() const;
@@ -29,8 +29,8 @@ class Pipeline
  private:
    vulkan::PipelineLayout m_layout;
    vulkan::Pipeline m_pipeline;
-   vulkan::DescriptorSetLayout m_descriptorSetLayout;
-   PipelineType m_pipelineType;
+   vulkan::DescriptorSetLayout m_descriptor_set_layout;
+   PipelineType m_pipeline_type;
 };
 
 }// namespace triglav::graphics_api

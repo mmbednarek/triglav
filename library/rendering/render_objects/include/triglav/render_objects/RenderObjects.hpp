@@ -12,7 +12,7 @@ struct UniformBufferObject
    alignas(16) glm::mat4 view;
    alignas(16) glm::mat4 proj;
    alignas(16) glm::mat4 normal;
-   alignas(4) glm::vec3 viewPos;
+   alignas(4) glm::vec3 view_pos;
 };
 
 struct SpriteUBO

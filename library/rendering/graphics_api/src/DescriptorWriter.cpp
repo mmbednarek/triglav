@@ -12,9 +12,9 @@
 
 namespace triglav::graphics_api {
 
-DescriptorWriter::DescriptorWriter(Device& device, const DescriptorView& descView) :
+DescriptorWriter::DescriptorWriter(Device& device, const DescriptorView& desc_view) :
     m_device(device),
-    m_descriptorSet(descView.vulkan_descriptor_set())
+    m_descriptor_set(desc_view.vulkan_descriptor_set())
 {
 }
 
@@ -25,13 +25,13 @@ DescriptorWriter::DescriptorWriter(Device& device) :
 
 DescriptorWriter::~DescriptorWriter()
 {
-   if (m_descriptorSet == nullptr)
+   if (m_descriptor_set == nullptr)
       return;
 
    this->update();
 
-   // for (const auto& write : m_descriptorWrites) {
-   //    if (write.descriptorType == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
+   // for (const auto& write : m_descriptor_writes) {
+   //    if (write.descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER) {
    //       delete[] write.pImageInfo;
    //    }
    // }
@@ -39,67 +39,67 @@ DescriptorWriter::~DescriptorWriter()
 
 void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer)
 {
-   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+   auto& write_descriptor_set = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
-   bufferInfo->offset = 0;
-   bufferInfo->range = buffer.size();
-   bufferInfo->buffer = buffer.vulkan_buffer();
-   writeDescriptorSet.pBufferInfo = bufferInfo;
+   auto buffer_info = m_descriptor_buffer_info_pool.acquire_object();
+   buffer_info->offset = 0;
+   buffer_info->range = buffer.size();
+   buffer_info->buffer = buffer.vulkan_buffer();
+   write_descriptor_set.pBufferInfo = buffer_info;
 }
 
 void DescriptorWriter::set_storage_buffer(uint32_t binding, const Buffer& buffer, u32 offset, u32 size)
 {
-   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+   auto& write_descriptor_set = this->write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
-   bufferInfo->offset = offset;
-   bufferInfo->range = size;
-   bufferInfo->buffer = buffer.vulkan_buffer();
-   writeDescriptorSet.pBufferInfo = bufferInfo;
+   auto buffer_info = m_descriptor_buffer_info_pool.acquire_object();
+   buffer_info->offset = offset;
+   buffer_info->range = size;
+   buffer_info->buffer = buffer.vulkan_buffer();
+   write_descriptor_set.pBufferInfo = buffer_info;
 }
 
 void DescriptorWriter::set_raw_uniform_buffer(const uint32_t binding, const Buffer& buffer)
 {
-   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+   auto& write_descriptor_set = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
-   bufferInfo->offset = 0;
-   bufferInfo->range = buffer.size();
-   bufferInfo->buffer = buffer.vulkan_buffer();
-   writeDescriptorSet.pBufferInfo = bufferInfo;
+   auto buffer_info = m_descriptor_buffer_info_pool.acquire_object();
+   buffer_info->offset = 0;
+   buffer_info->range = buffer.size();
+   buffer_info->buffer = buffer.vulkan_buffer();
+   write_descriptor_set.pBufferInfo = buffer_info;
 }
 
 void DescriptorWriter::set_raw_uniform_buffer(const u32 binding, const Buffer& buffer, const u32 offset, const u32 size)
 {
-   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+   auto& write_descriptor_set = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 
-   auto bufferInfo = m_descriptorBufferInfoPool.acquire_object();
-   bufferInfo->offset = offset;
-   bufferInfo->range = size;
-   bufferInfo->buffer = buffer.vulkan_buffer();
-   writeDescriptorSet.pBufferInfo = bufferInfo;
+   auto buffer_info = m_descriptor_buffer_info_pool.acquire_object();
+   buffer_info->offset = offset;
+   buffer_info->range = size;
+   buffer_info->buffer = buffer.vulkan_buffer();
+   write_descriptor_set.pBufferInfo = buffer_info;
 }
 
 void DescriptorWriter::set_uniform_buffer_array(const uint32_t binding, const std::span<const Buffer*> buffers)
 {
-   auto& writeDescriptorSet = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-   writeDescriptorSet.descriptorCount = static_cast<uint32_t>(buffers.size());
+   auto& write_descriptor_set = this->write_binding(binding, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+   write_descriptor_set.descriptorCount = static_cast<uint32_t>(buffers.size());
 
-   auto* bufferInfos = new VkDescriptorBufferInfo[buffers.size()];
+   auto* buffer_infos = new VkDescriptorBufferInfo[buffers.size()];
    for (const auto [i, buffer] : Enumerate(buffers)) {
-      bufferInfos[i].offset = 0;
-      bufferInfos[i].range = buffer->size();
-      bufferInfos[i].buffer = buffer->vulkan_buffer();
+      buffer_infos[i].offset = 0;
+      buffer_infos[i].range = buffer->size();
+      buffer_infos[i].buffer = buffer->vulkan_buffer();
    }
-   writeDescriptorSet.pBufferInfo = bufferInfos;
+   write_descriptor_set.pBufferInfo = buffer_infos;
 }
 
 namespace {
 
-VkImageLayout texture_usage_flags_to_vulkan_image_layout(const TextureUsageFlags usageFlags)
+VkImageLayout texture_usage_flags_to_vulkan_image_layout(const TextureUsageFlags usage_flags)
 {
-   if (usageFlags & TextureUsage::DepthStencilAttachment) {
+   if (usage_flags & TextureUsage::DepthStencilAttachment) {
       return VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
    }
    return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -109,170 +109,170 @@ VkImageLayout texture_usage_flags_to_vulkan_image_layout(const TextureUsageFlags
 
 void DescriptorWriter::set_sampled_texture(const uint32_t binding, const Texture& texture, const Sampler& sampler)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
-   imageInfo->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
-   imageInfo->imageView = texture.vulkan_image_view();
-   imageInfo->sampler = sampler.vulkan_sampler();
+   auto image_info = m_descriptor_image_info_pool.acquire_object();
+   image_info->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
+   image_info->imageView = texture.vulkan_image_view();
+   image_info->sampler = sampler.vulkan_sampler();
 
-   writeDescriptorSet.pImageInfo = imageInfo;
+   write_descriptor_set.pImageInfo = image_info;
 }
 
 void DescriptorWriter::set_texture_only(uint32_t binding, const Texture& texture)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 
-   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
-   imageInfo->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
-   imageInfo->imageView = texture.vulkan_image_view();
+   auto image_info = m_descriptor_image_info_pool.acquire_object();
+   image_info->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
+   image_info->imageView = texture.vulkan_image_view();
 
-   writeDescriptorSet.pImageInfo = imageInfo;
+   write_descriptor_set.pImageInfo = image_info;
 }
 
 void DescriptorWriter::set_texture_view_only(const u32 binding, const TextureView& texture)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
 
-   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
-   imageInfo->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
-   imageInfo->imageView = texture.vulkan_image_view();
+   auto image_info = m_descriptor_image_info_pool.acquire_object();
+   image_info->imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
+   image_info->imageView = texture.vulkan_image_view();
 
-   writeDescriptorSet.pImageInfo = imageInfo;
+   write_descriptor_set.pImageInfo = image_info;
 }
 
 void DescriptorWriter::set_texture_array(const u32 binding, const std::span<const Texture*> textures)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 
-   writeDescriptorSet.descriptorCount = static_cast<u32>(textures.size());
+   write_descriptor_set.descriptorCount = static_cast<u32>(textures.size());
 
    auto* images = new VkDescriptorImageInfo[textures.size()];
    for (u32 i = 0; i < textures.size(); ++i) {
-      auto& imageDesc = images[i];
+      auto& image_desc = images[i];
       auto& texture = *textures[i];
 
-      imageDesc.imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
-      imageDesc.imageView = texture.vulkan_image_view();
-      imageDesc.sampler = m_device.sampler_cache().find_sampler(texture.sampler_properties()).vulkan_sampler();
+      image_desc.imageLayout = texture_usage_flags_to_vulkan_image_layout(texture.usage_flags());
+      image_desc.imageView = texture.vulkan_image_view();
+      image_desc.sampler = m_device.sampler_cache().find_sampler(texture.sampler_properties()).vulkan_sampler();
    }
 
-   writeDescriptorSet.pImageInfo = images;
+   write_descriptor_set.pImageInfo = images;
 }
 
 void DescriptorWriter::set_storage_image(uint32_t binding, const Texture& texture)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
-   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
-   imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-   imageInfo->imageView = texture.vulkan_image_view();
+   auto image_info = m_descriptor_image_info_pool.acquire_object();
+   image_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+   image_info->imageView = texture.vulkan_image_view();
 
-   writeDescriptorSet.pImageInfo = imageInfo;
+   write_descriptor_set.pImageInfo = image_info;
 }
 
 void DescriptorWriter::set_storage_image_view(const uint32_t binding, const TextureView& texture)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
 
-   auto imageInfo = m_descriptorImageInfoPool.acquire_object();
-   imageInfo->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-   imageInfo->imageView = texture.vulkan_image_view();
+   auto image_info = m_descriptor_image_info_pool.acquire_object();
+   image_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+   image_info->imageView = texture.vulkan_image_view();
 
-   writeDescriptorSet.pImageInfo = imageInfo;
+   write_descriptor_set.pImageInfo = image_info;
 }
 
-void DescriptorWriter::set_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& accStruct)
+void DescriptorWriter::set_acceleration_structure(const u32 binding, const ray_tracing::AccelerationStructure& acc_struct)
 {
-   auto& writeDescriptorSet = write_binding(binding, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
+   auto& write_descriptor_set = write_binding(binding, VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_KHR);
 
-   auto asInfo = m_descriptorAccelerationStructurePool.acquire_object();
-   asInfo->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
-   asInfo->accelerationStructureCount = 1;
-   asInfo->pAccelerationStructures = &accStruct.vulkan_acceleration_structure();
+   auto as_info = m_descriptor_acceleration_structure_pool.acquire_object();
+   as_info->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET_ACCELERATION_STRUCTURE_KHR;
+   as_info->accelerationStructureCount = 1;
+   as_info->pAccelerationStructures = &acc_struct.vulkan_acceleration_structure();
 
-   writeDescriptorSet.pNext = asInfo;
+   write_descriptor_set.pNext = as_info;
 }
 
-VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescriptorType descType)
+VkWriteDescriptorSet& DescriptorWriter::write_binding(const u32 binding, VkDescriptorType desc_type)
 {
    assert(binding < 16);
 
-   if (m_topBinding < binding) {
-      m_topBinding = binding;
+   if (m_top_binding < binding) {
+      m_top_binding = binding;
    }
 
-   auto& writeDescriptorSet = m_descriptorWrites[binding];
+   auto& write_descriptor_set = m_descriptor_writes[binding];
 
-   if (writeDescriptorSet.pNext != nullptr) {
-      m_descriptorAccelerationStructurePool.release_object(
-         static_cast<const VkWriteDescriptorSetAccelerationStructureKHR*>(writeDescriptorSet.pNext));
-      writeDescriptorSet.pNext = nullptr;
+   if (write_descriptor_set.pNext != nullptr) {
+      m_descriptor_acceleration_structure_pool.release_object(
+         static_cast<const VkWriteDescriptorSetAccelerationStructureKHR*>(write_descriptor_set.pNext));
+      write_descriptor_set.pNext = nullptr;
    }
-   if (writeDescriptorSet.pBufferInfo != nullptr) {
-      if (writeDescriptorSet.descriptorCount > 1) {
-         delete[] writeDescriptorSet.pBufferInfo;
+   if (write_descriptor_set.pBufferInfo != nullptr) {
+      if (write_descriptor_set.descriptorCount > 1) {
+         delete[] write_descriptor_set.pBufferInfo;
       } else {
-         m_descriptorBufferInfoPool.release_object(writeDescriptorSet.pBufferInfo);
+         m_descriptor_buffer_info_pool.release_object(write_descriptor_set.pBufferInfo);
       }
-      writeDescriptorSet.pBufferInfo = nullptr;
+      write_descriptor_set.pBufferInfo = nullptr;
    }
-   if (writeDescriptorSet.pImageInfo != nullptr) {
-      if (writeDescriptorSet.descriptorCount > 1) {
-         delete[] writeDescriptorSet.pImageInfo;
+   if (write_descriptor_set.pImageInfo != nullptr) {
+      if (write_descriptor_set.descriptorCount > 1) {
+         delete[] write_descriptor_set.pImageInfo;
       } else {
-         m_descriptorImageInfoPool.release_object(writeDescriptorSet.pImageInfo);
+         m_descriptor_image_info_pool.release_object(write_descriptor_set.pImageInfo);
       }
-      writeDescriptorSet.pImageInfo = nullptr;
+      write_descriptor_set.pImageInfo = nullptr;
    }
 
-   writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-   writeDescriptorSet.dstSet = m_descriptorSet;
-   writeDescriptorSet.dstBinding = binding;
-   writeDescriptorSet.dstArrayElement = 0;
-   writeDescriptorSet.descriptorCount = 1;
-   writeDescriptorSet.descriptorType = descType;
+   write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+   write_descriptor_set.dstSet = m_descriptor_set;
+   write_descriptor_set.dstBinding = binding;
+   write_descriptor_set.dstArrayElement = 0;
+   write_descriptor_set.descriptorCount = 1;
+   write_descriptor_set.descriptorType = desc_type;
 
-   return writeDescriptorSet;
+   return write_descriptor_set;
 }
 
 VkDescriptorSet DescriptorWriter::vulkan_descriptor_set() const
 {
-   return m_descriptorSet;
+   return m_descriptor_set;
 }
 
 std::span<VkWriteDescriptorSet> DescriptorWriter::vulkan_descriptor_writes()
 {
-   return {m_descriptorWrites.data(), m_topBinding + 1};
+   return {m_descriptor_writes.data(), m_top_binding + 1};
 }
 
 void DescriptorWriter::update()
 {
-   assert(m_descriptorSet != nullptr);
-   vkUpdateDescriptorSets(m_device.vulkan_device(), m_topBinding + 1, m_descriptorWrites.data(), 0, nullptr);
+   assert(m_descriptor_set != nullptr);
+   vkUpdateDescriptorSets(m_device.vulkan_device(), m_top_binding + 1, m_descriptor_writes.data(), 0, nullptr);
 }
 
 DescriptorWriter::DescriptorWriter(DescriptorWriter&& other) noexcept :
     m_device(other.m_device),
-    m_descriptorSet(std::exchange(other.m_descriptorSet, nullptr)),
-    m_topBinding(std::exchange(other.m_topBinding, 0)),
-    m_descriptorBufferInfoPool(std::move(other.m_descriptorBufferInfoPool)),
-    m_descriptorImageInfoPool(std::move(other.m_descriptorImageInfoPool)),
-    m_descriptorWrites(std::move(other.m_descriptorWrites))
+    m_descriptor_set(std::exchange(other.m_descriptor_set, nullptr)),
+    m_top_binding(std::exchange(other.m_top_binding, 0)),
+    m_descriptor_buffer_info_pool(std::move(other.m_descriptor_buffer_info_pool)),
+    m_descriptor_image_info_pool(std::move(other.m_descriptor_image_info_pool)),
+    m_descriptor_writes(std::move(other.m_descriptor_writes))
 {
 }
 
 DescriptorWriter& DescriptorWriter::operator=(DescriptorWriter&& other) noexcept
 {
-   m_descriptorSet = std::exchange(other.m_descriptorSet, nullptr);
-   m_topBinding = std::exchange(other.m_topBinding, 0);
-   m_descriptorWrites = other.m_descriptorWrites;
+   m_descriptor_set = std::exchange(other.m_descriptor_set, nullptr);
+   m_top_binding = std::exchange(other.m_top_binding, 0);
+   m_descriptor_writes = other.m_descriptor_writes;
    return *this;
 }
 
 void DescriptorWriter::reset_count()
 {
-   m_topBinding = 0;
+   m_top_binding = 0;
 }
 
 }// namespace triglav::graphics_api

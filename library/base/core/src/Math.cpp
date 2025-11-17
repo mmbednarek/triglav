@@ -20,9 +20,9 @@ Transform3D Transform3D::from_matrix(const Matrix4x4& matrix)
 
    const Vector3 scale(glm::length(vec1), glm::length(vec2), glm::length(vec3));
 
-   const glm::mat3 rotMat{vec1 / scale.x, vec2 / scale.y, vec3 / scale.z};
+   const glm::mat3 rot_mat{vec1 / scale.x, vec2 / scale.y, vec3 / scale.z};
 
-   const auto rotation{glm::normalize(glm::quat_cast(rotMat))};
+   const auto rotation{glm::normalize(glm::quat_cast(rot_mat))};
    return Transform3D{.rotation = rotation / sign(rotation.w), .scale = scale, .translation = translation};
 }
 

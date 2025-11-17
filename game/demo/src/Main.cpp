@@ -15,10 +15,10 @@ using triglav::threading::ThreadPool;
 
 using namespace triglav::name_literals;
 
-constexpr auto g_defaultWidth = 1920;
-constexpr auto g_defaultHeight = 1080;
-constexpr auto g_minThreads = 1;
-constexpr auto g_maxThreads = 64;
+constexpr auto g_default_width = 1920;
+constexpr auto g_default_height = 1080;
+constexpr auto g_min_threads = 1;
+constexpr auto g_max_threads = 64;
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
@@ -31,14 +31,14 @@ int triglav_main(InputArgs& args, IDisplay& display)
    triglav::LogManager::the().register_listener<triglav::StdOutLogger>();
 
    // Assign ID to the main thread
-   triglav::threading::set_thread_id(triglav::threading::g_mainThread);
+   triglav::threading::set_thread_id(triglav::threading::g_main_thread);
 
    // Initialize global thread pool
-   const auto threadCount = CommandLine::the().arg_int("threadCount"_name).value_or(8);
-   ThreadPool::the().initialize(std::clamp(threadCount, g_minThreads, g_maxThreads));
+   const auto thread_count = CommandLine::the().arg_int("threadCount"_name).value_or(8);
+   ThreadPool::the().initialize(std::clamp(thread_count, g_min_threads, g_max_threads));
 
-   const auto initialWidth = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_defaultWidth));
-   const auto initialHeight = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_defaultHeight));
+   const auto initial_width = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_default_width));
+   const auto initial_height = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_default_height));
 
    std::string_view content_path{PathManager::the().content_path().string()};
    triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "content path: {}", content_path);
@@ -46,7 +46,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "build path: {}", build_path);
    triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "initializing renderer");
 
-   demo::GameInstance instance(display, {initialWidth, initialHeight});
+   demo::GameInstance instance(display, {initial_width, initial_height});
    instance.loop(display);
 
    ThreadPool::the().quit();

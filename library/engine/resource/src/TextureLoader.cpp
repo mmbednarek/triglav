@@ -24,22 +24,22 @@ graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Devi
    assert(header.has_value());
    assert(header->type == ResourceType::Texture);
 
-   const auto decodedTex = asset::decode_texture(**file);
-   assert(decodedTex.has_value());
+   const auto decoded_tex = asset::decode_texture(**file);
+   assert(decoded_tex.has_value());
 
    auto texture = GAPI_CHECK(device.create_texture_from_ktx(
-      decodedTex->texture, TextureUsage::Sampled | TextureUsage::TransferDst | TextureUsage::TransferSrc, TextureState::ShaderRead));
+      decoded_tex->texture, TextureUsage::Sampled | TextureUsage::TransferDst | TextureUsage::TransferSrc, TextureState::ShaderRead));
 
-   const auto& sampler = decodedTex->samplerProps;
-   texture.sampler_properties().minFilter = static_cast<graphics_api::FilterType>(sampler.minFilter);
-   texture.sampler_properties().magFilter = static_cast<graphics_api::FilterType>(sampler.magFilter);
-   texture.sampler_properties().addressU = static_cast<graphics_api::TextureAddressMode>(sampler.addressModeU);
-   texture.sampler_properties().addressV = static_cast<graphics_api::TextureAddressMode>(sampler.addressModeV);
-   texture.sampler_properties().addressW = static_cast<graphics_api::TextureAddressMode>(sampler.addressModeW);
-   texture.sampler_properties().enableAnisotropy = sampler.enableAnisotropy;
-   texture.sampler_properties().minLod = 0.0f;
-   texture.sampler_properties().maxLod = static_cast<float>(texture.mip_count());
-   texture.sampler_properties().mipBias = 0.0f;
+   const auto& sampler = decoded_tex->sampler_props;
+   texture.sampler_properties().min_filter = static_cast<graphics_api::FilterType>(sampler.min_filter);
+   texture.sampler_properties().mag_filter = static_cast<graphics_api::FilterType>(sampler.mag_filter);
+   texture.sampler_properties().address_u = static_cast<graphics_api::TextureAddressMode>(sampler.address_mode_u);
+   texture.sampler_properties().address_v = static_cast<graphics_api::TextureAddressMode>(sampler.address_mode_v);
+   texture.sampler_properties().address_w = static_cast<graphics_api::TextureAddressMode>(sampler.address_mode_w);
+   texture.sampler_properties().enable_anisotropy = sampler.enable_anisotropy;
+   texture.sampler_properties().min_lod = 0.0f;
+   texture.sampler_properties().max_lod = static_cast<float>(texture.mip_count());
+   texture.sampler_properties().mip_bias = 0.0f;
 
    return texture;
 }

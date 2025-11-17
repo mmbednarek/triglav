@@ -10,11 +10,11 @@ namespace triglav::launcher {
 LoadInitialResourcesStage::LoadInitialResourcesStage(Application& app) :
     IStage(app)
 {
-   app.m_resourceManager = std::make_unique<resource::ResourceManager>(*app.m_gfxDevice, app.m_fontManager);
-   app.m_glyphCache = std::make_unique<render_core::GlyphCache>(*app.m_gfxDevice, *app.m_resourceManager);
+   app.m_resource_manager = std::make_unique<resource::ResourceManager>(*app.m_gfx_device, app.m_font_manager);
+   app.m_glyph_cache = std::make_unique<render_core::GlyphCache>(*app.m_gfx_device, *app.m_resource_manager);
 
-   TG_CONNECT_OPT(*app.m_resourceManager, OnLoadedAssets, on_loaded_assets);
-   app.m_resourceManager->load_asset_list(resource::PathManager::the().content_path().sub("index_base.yaml"));
+   TG_CONNECT_OPT(*app.m_resource_manager, OnLoadedAssets, on_loaded_assets);
+   app.m_resource_manager->load_asset_list(resource::PathManager::the().content_path().sub("index_base.yaml"));
 }
 
 void LoadInitialResourcesStage::tick()

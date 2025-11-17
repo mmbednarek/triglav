@@ -7,15 +7,15 @@ namespace triglav::render_core {
 u64 GlyphProperties::hash() const
 {
    GlyphCache::Hash result{typeface.name()};
-   result += 9251446933U * static_cast<u32>(fontSize);
+   result += 9251446933U * static_cast<u32>(font_size);
    return result;
 }
 
 // GlyphCache
 
-GlyphCache::GlyphCache(graphics_api::Device& device, resource::ResourceManager& resourceManager) :
+GlyphCache::GlyphCache(graphics_api::Device& device, resource::ResourceManager& resource_manager) :
     m_device(device),
-    m_resourceManager(resourceManager)
+    m_resource_manager(resource_manager)
 {
 }
 
@@ -27,12 +27,12 @@ const GlyphAtlas& GlyphCache::find_glyph_atlas(const GlyphProperties& properties
       return it->second;
    }
 
-   auto& typeface = m_resourceManager.get(properties.typeface);
-   auto [atlasIt, ok] = m_atlases.emplace(hash, GlyphAtlas(m_device, typeface, font::Charset::European, properties.fontSize,
-                                                           19 * properties.fontSize, 19 * properties.fontSize));
+   auto& typeface = m_resource_manager.get(properties.typeface);
+   auto [atlas_it, ok] = m_atlases.emplace(hash, GlyphAtlas(m_device, typeface, font::Charset::European, properties.font_size,
+                                                            19 * properties.font_size, 19 * properties.font_size));
    assert(ok);
 
-   return atlasIt->second;
+   return atlas_it->second;
 }
 
 }// namespace triglav::render_core

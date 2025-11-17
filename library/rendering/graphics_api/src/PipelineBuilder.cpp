@@ -23,60 +23,60 @@ Index PipelineBuilderBase::add_shader(const Shader& shader)
    info.pName = shader.name().data();
    info.stage = vulkan::to_vulkan_shader_stage(shader.stage());
 
-   const auto index = m_shaderStageInfos.size();
+   const auto index = m_shader_stage_infos.size();
 
-   m_shaderStageInfos.emplace_back(info);
+   m_shader_stage_infos.emplace_back(info);
 
    return index;
 }
 
-void PipelineBuilderBase::add_descriptor_binding(const DescriptorType descriptorType, const PipelineStageFlags shaderStages,
-                                                 const u32 descriptorCount)
+void PipelineBuilderBase::add_descriptor_binding(const DescriptorType descriptor_type, const PipelineStageFlags shader_stages,
+                                                 const u32 descriptor_count)
 {
-   VkDescriptorSetLayoutBinding layoutBinding{};
-   layoutBinding.descriptorCount = descriptorCount;
-   layoutBinding.binding = static_cast<u32>(m_vulkanDescriptorBindings.size());
-   layoutBinding.descriptorType = vulkan::to_vulkan_descriptor_type(descriptorType);
-   layoutBinding.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStages);
-   m_vulkanDescriptorBindings.emplace_back(layoutBinding);
+   VkDescriptorSetLayoutBinding layout_binding{};
+   layout_binding.descriptorCount = descriptor_count;
+   layout_binding.binding = static_cast<u32>(m_vulkan_descriptor_bindings.size());
+   layout_binding.descriptorType = vulkan::to_vulkan_descriptor_type(descriptor_type);
+   layout_binding.stageFlags = vulkan::to_vulkan_shader_stage_flags(shader_stages);
+   m_vulkan_descriptor_bindings.emplace_back(layout_binding);
 }
 
-void PipelineBuilderBase::add_push_constant(const PipelineStageFlags shaderStages, const size_t size, const size_t offset)
+void PipelineBuilderBase::add_push_constant(const PipelineStageFlags shader_stages, const size_t size, const size_t offset)
 {
    VkPushConstantRange range;
    range.offset = static_cast<u32>(offset);
    range.size = static_cast<u32>(size);
-   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(shaderStages);
-   m_pushConstantRanges.emplace_back(range);
+   range.stageFlags = vulkan::to_vulkan_shader_stage_flags(shader_stages);
+   m_push_constant_ranges.emplace_back(range);
 }
 
 Result<std::tuple<vulkan::DescriptorSetLayout, vulkan::PipelineLayout>> PipelineBuilderBase::build_pipeline_layout() const
 {
-   VkDescriptorSetLayoutCreateInfo descriptorSetLayoutInfo{};
-   descriptorSetLayoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-   descriptorSetLayoutInfo.bindingCount = static_cast<u32>(m_vulkanDescriptorBindings.size());
-   descriptorSetLayoutInfo.pBindings = m_vulkanDescriptorBindings.data();
-   if (m_usePushDescriptors) {
-      descriptorSetLayoutInfo.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
+   VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info{};
+   descriptor_set_layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+   descriptor_set_layout_info.bindingCount = static_cast<u32>(m_vulkan_descriptor_bindings.size());
+   descriptor_set_layout_info.pBindings = m_vulkan_descriptor_bindings.data();
+   if (m_use_push_descriptors) {
+      descriptor_set_layout_info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT_KHR;
    }
 
-   vulkan::DescriptorSetLayout descriptorSetLayout(m_device.vulkan_device());
-   if (descriptorSetLayout.construct(&descriptorSetLayoutInfo) != VK_SUCCESS)
+   vulkan::DescriptorSetLayout descriptor_set_layout(m_device.vulkan_device());
+   if (descriptor_set_layout.construct(&descriptor_set_layout_info) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-   pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-   pipelineLayoutInfo.setLayoutCount = 1;
-   pipelineLayoutInfo.pSetLayouts = &(*descriptorSetLayout);
-   pipelineLayoutInfo.pushConstantRangeCount = static_cast<u32>(m_pushConstantRanges.size());
-   pipelineLayoutInfo.pPushConstantRanges = m_pushConstantRanges.data();
+   VkPipelineLayoutCreateInfo pipeline_layout_info{};
+   pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+   pipeline_layout_info.setLayoutCount = 1;
+   pipeline_layout_info.pSetLayouts = &(*descriptor_set_layout);
+   pipeline_layout_info.pushConstantRangeCount = static_cast<u32>(m_push_constant_ranges.size());
+   pipeline_layout_info.pPushConstantRanges = m_push_constant_ranges.data();
 
-   vulkan::PipelineLayout pipelineLayout(m_device.vulkan_device());
-   if (const auto res = pipelineLayout.construct(&pipelineLayoutInfo); res != VK_SUCCESS) {
+   vulkan::PipelineLayout pipeline_layout(m_device.vulkan_device());
+   if (const auto res = pipeline_layout.construct(&pipeline_layout_info); res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return std::make_tuple(std::move(descriptorSetLayout), std::move(pipelineLayout));
+   return std::make_tuple(std::move(descriptor_set_layout), std::move(pipeline_layout));
 }
 
 // -------------------------
@@ -95,21 +95,21 @@ ComputePipelineBuilder& ComputePipelineBuilder::compute_shader(const Shader& sha
    return *this;
 }
 
-ComputePipelineBuilder& ComputePipelineBuilder::descriptor_binding(DescriptorType descriptorType)
+ComputePipelineBuilder& ComputePipelineBuilder::descriptor_binding(DescriptorType descriptor_type)
 {
-   this->add_descriptor_binding(descriptorType, PipelineStage::ComputeShader, 1);
+   this->add_descriptor_binding(descriptor_type, PipelineStage::ComputeShader, 1);
    return *this;
 }
 
-ComputePipelineBuilder& ComputePipelineBuilder::push_constant(PipelineStage shaderStage, size_t size, size_t offset)
+ComputePipelineBuilder& ComputePipelineBuilder::push_constant(PipelineStage shader_stage, size_t size, size_t offset)
 {
-   this->add_push_constant(shaderStage, size, offset);
+   this->add_push_constant(shader_stage, size, offset);
    return *this;
 }
 
 Result<Pipeline> ComputePipelineBuilder::build() const
 {
-   if (m_shaderStageInfos.size() != 1) {
+   if (m_shader_stage_infos.size() != 1) {
       return std::unexpected{Status::InvalidShaderStage};
    }
 
@@ -117,28 +117,28 @@ Result<Pipeline> ComputePipelineBuilder::build() const
    if (not layouts.has_value()) {
       return std::unexpected(layouts.error());
    }
-   auto&& [descriptorSetLayout, pipelineLayout] = *layouts;
+   auto&& [descriptor_set_layout, pipeline_layout] = *layouts;
 
-   VkComputePipelineCreateInfo pipelineCreateInfo{VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
-   pipelineCreateInfo.stage = m_shaderStageInfos.front();
-   pipelineCreateInfo.layout = *pipelineLayout;
+   VkComputePipelineCreateInfo pipeline_create_info{VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO};
+   pipeline_create_info.stage = m_shader_stage_infos.front();
+   pipeline_create_info.layout = *pipeline_layout;
 
    vulkan::Pipeline pipeline(m_device.vulkan_device());
 
-   VkPipeline vulkanPipeline;
-   VkResult result = vkCreateComputePipelines(m_device.vulkan_device(), nullptr, 1, &pipelineCreateInfo, nullptr, &vulkanPipeline);
+   VkPipeline vulkan_pipeline;
+   VkResult result = vkCreateComputePipelines(m_device.vulkan_device(), nullptr, 1, &pipeline_create_info, nullptr, &vulkan_pipeline);
    if (result != VK_SUCCESS) {
       return std::unexpected{Status::PSOCreationFailed};
    }
 
-   pipeline.take_ownership(vulkanPipeline);
+   pipeline.take_ownership(vulkan_pipeline);
 
-   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout), PipelineType::Compute};
+   return Pipeline{std::move(pipeline_layout), std::move(pipeline), std::move(descriptor_set_layout), PipelineType::Compute};
 }
 
 ComputePipelineBuilder& ComputePipelineBuilder::use_push_descriptors(bool enabled)
 {
-   m_usePushDescriptors = enabled;
+   m_use_push_descriptors = enabled;
    return *this;
 }
 
@@ -167,66 +167,66 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_shader(const Shader& sh
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_attribute(const ColorFormat& format, const size_t offset)
 {
-   VkVertexInputAttributeDescription vertexAttribute{};
-   vertexAttribute.binding = m_vertexBinding;
-   vertexAttribute.location = m_vertexLocation;
-   vertexAttribute.format = *vulkan::to_vulkan_color_format(format);
-   vertexAttribute.offset = static_cast<u32>(offset);
-   m_attributes.emplace_back(vertexAttribute);
+   VkVertexInputAttributeDescription vertex_attribute{};
+   vertex_attribute.binding = m_vertex_binding;
+   vertex_attribute.location = m_vertex_location;
+   vertex_attribute.format = *vulkan::to_vulkan_color_format(format);
+   vertex_attribute.offset = static_cast<u32>(offset);
+   m_attributes.emplace_back(vertex_attribute);
 
-   ++m_vertexLocation;
+   ++m_vertex_location;
 
    return *this;
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::end_vertex_layout()
 {
-   ++m_vertexBinding;
-   m_vertexLocation = 0;
+   ++m_vertex_binding;
+   m_vertex_location = 0;
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding(const DescriptorType descriptorType, const PipelineStage shaderStage)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding(const DescriptorType descriptor_type, const PipelineStage shader_stage)
 {
-   this->add_descriptor_binding(descriptorType, shaderStage, 1);
+   this->add_descriptor_binding(descriptor_type, shader_stage, 1);
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding_array(DescriptorType descriptorType, PipelineStage shaderStage,
-                                                                           u32 descriptorCount)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::descriptor_binding_array(DescriptorType descriptor_type, PipelineStage shader_stage,
+                                                                           u32 descriptor_count)
 {
-   this->add_descriptor_binding(descriptorType, shaderStage, descriptorCount);
+   this->add_descriptor_binding(descriptor_type, shader_stage, descriptor_count);
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::push_constant(const PipelineStageFlags shaderStages, const size_t size,
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::push_constant(const PipelineStageFlags shader_stages, const size_t size,
                                                                 const size_t offset)
 {
-   this->add_push_constant(shaderStages, size, offset);
+   this->add_push_constant(shader_stages, size, offset);
    return *this;
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::enable_depth_test(const bool enabled)
 {
-   m_depthTestMode = enabled ? DepthTestMode::Enabled : DepthTestMode::Disabled;
+   m_depth_test_mode = enabled ? DepthTestMode::Enabled : DepthTestMode::Disabled;
    return *this;
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_test_mode(const DepthTestMode mode)
 {
-   m_depthTestMode = mode;
+   m_depth_test_mode = mode;
    return *this;
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::enable_blending(const bool enabled)
 {
-   m_blendingEnabled = enabled;
+   m_blending_enabled = enabled;
    return *this;
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::use_push_descriptors(bool enabled)
 {
-   m_usePushDescriptors = enabled;
+   m_use_push_descriptors = enabled;
    return *this;
 }
 
@@ -234,19 +234,19 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_topology(const VertexTo
 {
    switch (topology) {
    case VertexTopology::TriangleList:
-      m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+      m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
       break;
    case VertexTopology::TriangleFan:
-      m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+      m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
       break;
    case VertexTopology::TriangleStrip:
-      m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+      m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
       break;
    case VertexTopology::LineStrip:
-      m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+      m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
       break;
    case VertexTopology::LineList:
-      m_primitiveTopology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+      m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
       break;
    }
    return *this;
@@ -256,13 +256,13 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::rasterization_method(const Ras
 {
    switch (method) {
    case RasterizationMethod::Point:
-      m_polygonMode = VK_POLYGON_MODE_POINT;
+      m_polygon_mode = VK_POLYGON_MODE_POINT;
       break;
    case RasterizationMethod::Line:
-      m_polygonMode = VK_POLYGON_MODE_LINE;
+      m_polygon_mode = VK_POLYGON_MODE_LINE;
       break;
    case RasterizationMethod::Fill:
-      m_polygonMode = VK_POLYGON_MODE_FILL;
+      m_polygon_mode = VK_POLYGON_MODE_FILL;
       break;
    }
    return *this;
@@ -272,23 +272,23 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::culling(const Culling cull)
 {
    switch (cull) {
    case Culling::Clockwise:
-      m_cullMode = VK_CULL_MODE_FRONT_BIT;
+      m_cull_mode = VK_CULL_MODE_FRONT_BIT;
       break;
    case Culling::CounterClockwise:
-      m_cullMode = VK_CULL_MODE_BACK_BIT;
+      m_cull_mode = VK_CULL_MODE_BACK_BIT;
       break;
    case Culling::None:
-      m_cullMode = VK_CULL_MODE_NONE;
+      m_cull_mode = VK_CULL_MODE_NONE;
       break;
    }
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::begin_vertex_layout_raw(const u32 strideSize)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::begin_vertex_layout_raw(const u32 stride_size)
 {
    VkVertexInputBindingDescription binding{};
-   binding.binding = m_vertexBinding;
-   binding.stride = strideSize;
+   binding.binding = m_vertex_binding;
+   binding.stride = stride_size;
    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
    m_bindings.emplace_back(binding);
    return *this;
@@ -296,45 +296,45 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::begin_vertex_layout_raw(const 
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::color_attachment(ColorFormat format)
 {
-   m_colorAttachmentFormats.emplace_back(format);
+   m_color_attachment_formats.emplace_back(format);
    return *this;
 }
 
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_attachment(ColorFormat format)
 {
-   m_depthAttachmentFormat.emplace(format);
+   m_depth_attachment_format.emplace(format);
    return *this;
 }
 
-GraphicsPipelineBuilder& GraphicsPipelineBuilder::line_width(const float lineWidth)
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::line_width(const float line_width)
 {
-   m_lineWidth = lineWidth;
+   m_line_width = line_width;
    return *this;
 }
 
-constexpr std::array g_dynamicStates{
+constexpr std::array g_dynamic_states{
    VK_DYNAMIC_STATE_VIEWPORT,
    VK_DYNAMIC_STATE_SCISSOR,
 };
 
 Result<Pipeline> GraphicsPipelineBuilder::build() const
 {
-   VkPipelineDynamicStateCreateInfo dynamicStateInfo{};
-   dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-   dynamicStateInfo.dynamicStateCount = static_cast<u32>(g_dynamicStates.size());
-   dynamicStateInfo.pDynamicStates = g_dynamicStates.data();
+   VkPipelineDynamicStateCreateInfo dynamic_state_info{};
+   dynamic_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+   dynamic_state_info.dynamicStateCount = static_cast<u32>(g_dynamic_states.size());
+   dynamic_state_info.pDynamicStates = g_dynamic_states.data();
 
-   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-   vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-   vertexInputInfo.vertexBindingDescriptionCount = static_cast<u32>(m_bindings.size());
-   vertexInputInfo.pVertexBindingDescriptions = m_bindings.data();
-   vertexInputInfo.vertexAttributeDescriptionCount = static_cast<u32>(m_attributes.size());
-   vertexInputInfo.pVertexAttributeDescriptions = m_attributes.data();
+   VkPipelineVertexInputStateCreateInfo vertex_input_info{};
+   vertex_input_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+   vertex_input_info.vertexBindingDescriptionCount = static_cast<u32>(m_bindings.size());
+   vertex_input_info.pVertexBindingDescriptions = m_bindings.data();
+   vertex_input_info.vertexAttributeDescriptionCount = static_cast<u32>(m_attributes.size());
+   vertex_input_info.pVertexAttributeDescriptions = m_attributes.data();
 
-   VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
-   inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-   inputAssemblyInfo.topology = m_primitiveTopology;
-   inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
+   VkPipelineInputAssemblyStateCreateInfo input_assembly_info{};
+   input_assembly_info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+   input_assembly_info.topology = m_primitive_topology;
+   input_assembly_info.primitiveRestartEnable = VK_FALSE;
 
    Resolution resolution{800, 800};
 
@@ -350,113 +350,113 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    scissor.offset = {0, 0};
    scissor.extent = VkExtent2D{resolution.width, resolution.height};
 
-   VkPipelineViewportStateCreateInfo viewportStateInfo{};
-   viewportStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-   viewportStateInfo.scissorCount = 1;
-   viewportStateInfo.pScissors = &scissor;
-   viewportStateInfo.viewportCount = 1;
-   viewportStateInfo.pViewports = &viewport;
+   VkPipelineViewportStateCreateInfo viewport_state_info{};
+   viewport_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+   viewport_state_info.scissorCount = 1;
+   viewport_state_info.pScissors = &scissor;
+   viewport_state_info.viewportCount = 1;
+   viewport_state_info.pViewports = &viewport;
 
-   VkPipelineRasterizationStateCreateInfo rasterizationStateInfo{};
-   rasterizationStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-   rasterizationStateInfo.depthClampEnable = VK_FALSE;
-   rasterizationStateInfo.rasterizerDiscardEnable = VK_FALSE;
-   rasterizationStateInfo.polygonMode = m_polygonMode;
-   rasterizationStateInfo.lineWidth = m_lineWidth;
-   rasterizationStateInfo.cullMode = m_cullMode;
-   rasterizationStateInfo.frontFace = m_frontFace;
-   rasterizationStateInfo.depthBiasEnable = VK_FALSE;
-   rasterizationStateInfo.depthBiasConstantFactor = 0.0f;
-   rasterizationStateInfo.depthBiasClamp = 0.0f;
-   rasterizationStateInfo.depthBiasSlopeFactor = 0.0f;
+   VkPipelineRasterizationStateCreateInfo rasterization_state_info{};
+   rasterization_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+   rasterization_state_info.depthClampEnable = VK_FALSE;
+   rasterization_state_info.rasterizerDiscardEnable = VK_FALSE;
+   rasterization_state_info.polygonMode = m_polygon_mode;
+   rasterization_state_info.lineWidth = m_line_width;
+   rasterization_state_info.cullMode = m_cull_mode;
+   rasterization_state_info.frontFace = m_front_face;
+   rasterization_state_info.depthBiasEnable = VK_FALSE;
+   rasterization_state_info.depthBiasConstantFactor = 0.0f;
+   rasterization_state_info.depthBiasClamp = 0.0f;
+   rasterization_state_info.depthBiasSlopeFactor = 0.0f;
 
-   VkPipelineMultisampleStateCreateInfo multisamplingInfo{};
-   multisamplingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-   multisamplingInfo.sampleShadingEnable = false;
-   multisamplingInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-   multisamplingInfo.minSampleShading = 1.0f;
+   VkPipelineMultisampleStateCreateInfo multisampling_info{};
+   multisampling_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+   multisampling_info.sampleShadingEnable = false;
+   multisampling_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+   multisampling_info.minSampleShading = 1.0f;
 
-   std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments{};
-   for ([[maybe_unused]] const auto& _ : m_colorAttachmentFormats) {
-      VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-      colorBlendAttachment.colorWriteMask =
+   std::vector<VkPipelineColorBlendAttachmentState> color_blend_attachments{};
+   for ([[maybe_unused]] const auto& _ : m_color_attachment_formats) {
+      VkPipelineColorBlendAttachmentState color_blend_attachment{};
+      color_blend_attachment.colorWriteMask =
          VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-      colorBlendAttachment.blendEnable = m_blendingEnabled;
-      colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-      colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-      colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-      colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-      colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
-      colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_MAX;
-      colorBlendAttachments.emplace_back(colorBlendAttachment);
+      color_blend_attachment.blendEnable = m_blending_enabled;
+      color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+      color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+      color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+      color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+      color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_DST_ALPHA;
+      color_blend_attachment.alphaBlendOp = VK_BLEND_OP_MAX;
+      color_blend_attachments.emplace_back(color_blend_attachment);
    }
 
-   VkPipelineColorBlendStateCreateInfo colorBlendingInfo{};
-   colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-   colorBlendingInfo.logicOpEnable = not m_blendingEnabled;
-   colorBlendingInfo.logicOp = VK_LOGIC_OP_COPY;
-   colorBlendingInfo.attachmentCount = static_cast<u32>(colorBlendAttachments.size());
-   colorBlendingInfo.pAttachments = colorBlendAttachments.data();
-   colorBlendingInfo.blendConstants[0] = 0.0f;
-   colorBlendingInfo.blendConstants[1] = 0.0f;
-   colorBlendingInfo.blendConstants[2] = 0.0f;
-   colorBlendingInfo.blendConstants[3] = 0.0f;
+   VkPipelineColorBlendStateCreateInfo color_blending_info{};
+   color_blending_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+   color_blending_info.logicOpEnable = not m_blending_enabled;
+   color_blending_info.logicOp = VK_LOGIC_OP_COPY;
+   color_blending_info.attachmentCount = static_cast<u32>(color_blend_attachments.size());
+   color_blending_info.pAttachments = color_blend_attachments.data();
+   color_blending_info.blendConstants[0] = 0.0f;
+   color_blending_info.blendConstants[1] = 0.0f;
+   color_blending_info.blendConstants[2] = 0.0f;
+   color_blending_info.blendConstants[3] = 0.0f;
 
-   VkPipelineDepthStencilStateCreateInfo depthStencilStateInfo{};
-   depthStencilStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-   depthStencilStateInfo.depthTestEnable = m_depthTestMode != DepthTestMode::Disabled;
-   depthStencilStateInfo.depthWriteEnable = m_depthTestMode == DepthTestMode::Enabled;
-   depthStencilStateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-   depthStencilStateInfo.depthBoundsTestEnable = false;
-   depthStencilStateInfo.stencilTestEnable = false;
+   VkPipelineDepthStencilStateCreateInfo depth_stencil_state_info{};
+   depth_stencil_state_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+   depth_stencil_state_info.depthTestEnable = m_depth_test_mode != DepthTestMode::Disabled;
+   depth_stencil_state_info.depthWriteEnable = m_depth_test_mode == DepthTestMode::Enabled;
+   depth_stencil_state_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+   depth_stencil_state_info.depthBoundsTestEnable = false;
+   depth_stencil_state_info.stencilTestEnable = false;
 
    auto layouts = this->build_pipeline_layout();
    if (not layouts.has_value()) {
       return std::unexpected(layouts.error());
    }
-   auto&& [descriptorSetLayout, pipelineLayout] = *layouts;
+   auto&& [descriptor_set_layout, pipeline_layout] = *layouts;
 
 
-   VkPipelineRenderingCreateInfo renderingInfo{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
+   VkPipelineRenderingCreateInfo rendering_info{VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO};
 
-   std::vector<VkFormat> colorAttachmentFormats;
-   for (const auto& colorFormat : m_colorAttachmentFormats) {
-      colorAttachmentFormats.emplace_back(GAPI_CHECK(vulkan::to_vulkan_color_format(colorFormat)));
+   std::vector<VkFormat> color_attachment_formats;
+   for (const auto& color_format : m_color_attachment_formats) {
+      color_attachment_formats.emplace_back(GAPI_CHECK(vulkan::to_vulkan_color_format(color_format)));
    }
 
-   renderingInfo.colorAttachmentCount = static_cast<u32>(colorAttachmentFormats.size());
-   renderingInfo.pColorAttachmentFormats = colorAttachmentFormats.data();
-   if (m_depthAttachmentFormat.has_value()) {
-      renderingInfo.depthAttachmentFormat = GAPI_CHECK(vulkan::to_vulkan_color_format(*m_depthAttachmentFormat));
+   rendering_info.colorAttachmentCount = static_cast<u32>(color_attachment_formats.size());
+   rendering_info.pColorAttachmentFormats = color_attachment_formats.data();
+   if (m_depth_attachment_format.has_value()) {
+      rendering_info.depthAttachmentFormat = GAPI_CHECK(vulkan::to_vulkan_color_format(*m_depth_attachment_format));
    }
 
-   VkGraphicsPipelineCreateInfo pipelineInfo{};
-   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-   pipelineInfo.layout = *pipelineLayout;
-   pipelineInfo.stageCount = static_cast<uint32_t>(m_shaderStageInfos.size());
-   pipelineInfo.pStages = m_shaderStageInfos.data();
-   pipelineInfo.pMultisampleState = &multisamplingInfo;
-   pipelineInfo.pDynamicState = &dynamicStateInfo;
-   pipelineInfo.pRasterizationState = &rasterizationStateInfo;
-   pipelineInfo.pViewportState = &viewportStateInfo;
-   pipelineInfo.pColorBlendState = &colorBlendingInfo;
-   pipelineInfo.pVertexInputState = &vertexInputInfo;
-   pipelineInfo.pInputAssemblyState = &inputAssemblyInfo;
-   pipelineInfo.pDepthStencilState = &depthStencilStateInfo;
-   pipelineInfo.renderPass = nullptr;
-   pipelineInfo.subpass = 0;
-   pipelineInfo.basePipelineHandle = nullptr;
-   pipelineInfo.basePipelineIndex = -1;
-   if (!m_colorAttachmentFormats.empty() || m_depthAttachmentFormat.has_value()) {
-      pipelineInfo.pNext = &renderingInfo;
+   VkGraphicsPipelineCreateInfo pipeline_info{};
+   pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+   pipeline_info.layout = *pipeline_layout;
+   pipeline_info.stageCount = static_cast<uint32_t>(m_shader_stage_infos.size());
+   pipeline_info.pStages = m_shader_stage_infos.data();
+   pipeline_info.pMultisampleState = &multisampling_info;
+   pipeline_info.pDynamicState = &dynamic_state_info;
+   pipeline_info.pRasterizationState = &rasterization_state_info;
+   pipeline_info.pViewportState = &viewport_state_info;
+   pipeline_info.pColorBlendState = &color_blending_info;
+   pipeline_info.pVertexInputState = &vertex_input_info;
+   pipeline_info.pInputAssemblyState = &input_assembly_info;
+   pipeline_info.pDepthStencilState = &depth_stencil_state_info;
+   pipeline_info.renderPass = nullptr;
+   pipeline_info.subpass = 0;
+   pipeline_info.basePipelineHandle = nullptr;
+   pipeline_info.basePipelineIndex = -1;
+   if (!m_color_attachment_formats.empty() || m_depth_attachment_format.has_value()) {
+      pipeline_info.pNext = &rendering_info;
    }
 
    vulkan::Pipeline pipeline(m_device.vulkan_device());
-   if (const auto res = pipeline.construct(nullptr, 1, &pipelineInfo); res != VK_SUCCESS) {
+   if (const auto res = pipeline.construct(nullptr, 1, &pipeline_info); res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return Pipeline{std::move(pipelineLayout), std::move(pipeline), std::move(descriptorSetLayout), PipelineType::Graphics};
+   return Pipeline{std::move(pipeline_layout), std::move(pipeline), std::move(descriptor_set_layout), PipelineType::Graphics};
 }
 
 }// namespace triglav::graphics_api

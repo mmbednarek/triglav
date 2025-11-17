@@ -24,10 +24,10 @@ class LevelViewport final : public ui_core::BaseWidget
    };
 
    using Self = LevelViewport;
-   LevelViewport(IWidget* parent, RootWindow& rootWindow, LevelEditor& levelEditor);
+   LevelViewport(IWidget* parent, RootWindow& root_window, LevelEditor& level_editor);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void tick(float delta_time);
@@ -45,12 +45,12 @@ class LevelViewport final : public ui_core::BaseWidget
 
  private:
    Vector4 m_dimensions{};
-   RootWindow& m_rootWindow;
-   LevelEditor& m_levelEditor;
-   std::unique_ptr<RenderViewport> m_renderViewport;
-   CamMovement m_camMovement{CamMovement::None};
-   bool m_isMoving{false};
-   Vector2 m_mouseMotion{};
+   RootWindow& m_root_window;
+   LevelEditor& m_level_editor;
+   std::unique_ptr<RenderViewport> m_render_viewport;
+   CamMovement m_cam_movement{CamMovement::None};
+   bool m_is_moving{false};
+   Vector2 m_mouse_motion{};
 
    TG_SINK(desktop::ISurface, OnMouseRelativeMove);
 };

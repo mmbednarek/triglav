@@ -17,8 +17,8 @@ class PathManager
    [[nodiscard]] static PathManager& the();
 
  private:
-   threading::SafeReadWriteAccess<std::optional<io::Path>> m_cachedContentPath;
-   threading::SafeReadWriteAccess<std::optional<io::Path>> m_cachedBuildPath;
+   threading::SafeReadWriteAccess<std::optional<io::Path>> m_cached_content_path;
+   threading::SafeReadWriteAccess<std::optional<io::Path>> m_cached_build_path;
 };
 
 }// namespace triglav::resource

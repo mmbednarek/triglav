@@ -14,44 +14,44 @@ namespace {
 InputArgs construct_input_args()
 {
    int count{};
-   LPWSTR* cmdArgsW = CommandLineToArgvW(GetCommandLineW(), &count);
-   if (cmdArgsW == nullptr) {
+   LPWSTR* cmd_args_w = CommandLineToArgvW(GetCommandLineW(), &count);
+   if (cmd_args_w == nullptr) {
       return {nullptr, 0};
    }
 
-   int argBufferSize = 0;
+   int arg_buffer_size = 0;
    for (int i = 0; i < count; ++i) {
-      const auto byteCount = WideCharToMultiByte(CP_UTF8, 0, cmdArgsW[i], -1, nullptr, 0, nullptr, nullptr);
-      if (byteCount == 0) {
-         LocalFree(cmdArgsW);
+      const auto byte_count = WideCharToMultiByte(CP_UTF8, 0, cmd_args_w[i], -1, nullptr, 0, nullptr, nullptr);
+      if (byte_count == 0) {
+         LocalFree(cmd_args_w);
          return {nullptr, 0};
       }
 
-      argBufferSize += byteCount + 1;
+      arg_buffer_size += byte_count + 1;
    }
 
    auto* args = new char*[count + 1];
-   auto* argBuffer = new char[argBufferSize];
+   auto* arg_buffer = new char[arg_buffer_size];
 
-   char* arg = argBuffer;
+   char* arg = arg_buffer;
    for (int i = 0; i < count; ++i) {
       args[i] = arg;
-      const auto bytesWritten = WideCharToMultiByte(CP_UTF8, 0, cmdArgsW[i], -1, arg, argBufferSize, nullptr, nullptr);
-      if (bytesWritten == 0) {
+      const auto bytes_written = WideCharToMultiByte(CP_UTF8, 0, cmd_args_w[i], -1, arg, arg_buffer_size, nullptr, nullptr);
+      if (bytes_written == 0) {
          delete[] args;
-         delete[] argBuffer;
-         LocalFree(cmdArgsW);
+         delete[] arg_buffer;
+         LocalFree(cmd_args_w);
          return {nullptr, 0};
       }
 
-      const auto argLen = bytesWritten + 1;
-      arg += argLen;
-      argBufferSize -= argLen;
+      const auto arg_len = bytes_written + 1;
+      arg += arg_len;
+      arg_buffer_size -= arg_len;
    }
 
    args[count] = nullptr;
 
-   LocalFree(cmdArgsW);
+   LocalFree(cmd_args_w);
    return {const_cast<const char**>(args), count};
 }
 
@@ -91,9 +91,9 @@ void create_debug_console()
 
 }// namespace
 
-int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*lpCmdLine*/, int /*nCmdShow*/)
+int WINAPI WinMain(HINSTANCE /*h_instance*/, HINSTANCE /*h_prev_instance*/, PSTR /*lp_cmd_line*/, int /*n_cmd_show*/)
 {
-   InputArgs inputArgs{construct_input_args()};
+   InputArgs input_args{construct_input_args()};
 
 #if !NDEBUG
    create_debug_console();
@@ -103,7 +103,7 @@ int WINAPI WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*
 #if NDEBUG
    try {
 #endif// NDEBUG
-      return triglav_main(inputArgs, *display);
+      return triglav_main(input_args, *display);
 #if NDEBUG
    } catch (const std::exception& e) {
       triglav::log_message(triglav::LogLevel::Error, triglav::StringView{"DesktopMain-Windows"},

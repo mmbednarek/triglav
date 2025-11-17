@@ -19,11 +19,11 @@ struct ViewProperties
 {
    alignas(16) Matrix4x4 view;
    alignas(16) Matrix4x4 projection;
-   alignas(16) Matrix4x4 invertedView;
-   alignas(16) Matrix4x4 invertedProjection;
+   alignas(16) Matrix4x4 inverted_view;
+   alignas(16) Matrix4x4 inverted_projection;
    alignas(16) Matrix4x4 orientation;
-   float nearPlane;
-   float farPlane;
+   float near_plane;
+   float far_plane;
 };
 
 class UpdateViewParamsJob
@@ -42,12 +42,12 @@ class UpdateViewParamsJob
    explicit UpdateViewParamsJob(Scene& scene);
 
    void build_job(render_core::BuildContext& ctx) const;
-   void prepare_frame(render_core::JobGraph& graph, u32 frameIndex, float deltaTime);
+   void prepare_frame(render_core::JobGraph& graph, u32 frame_index, float delta_time);
    void on_updated(const Camera& camera);
 
  private:
-   bool m_updatedViewProperties = true;
-   ViewProperties m_viewProperties{};
+   bool m_updated_view_properties = true;
+   ViewProperties m_view_properties{};
 
    TG_SINK(Scene, OnViewUpdated);
 };

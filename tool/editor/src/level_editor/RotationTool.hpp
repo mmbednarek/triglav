@@ -12,7 +12,7 @@ class RotationTool final : public ILevelEditorTool
 {
    TG_DEFINE_LOG_CATEGORY(RotationTool)
  public:
-   explicit RotationTool(LevelEditor& levelEditor);
+   explicit RotationTool(LevelEditor& level_editor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;
@@ -21,17 +21,17 @@ class RotationTool final : public ILevelEditorTool
    void on_left_tool() override;
 
  private:
-   LevelEditor& m_levelEditor;
+   LevelEditor& m_level_editor;
 
-   std::optional<Axis> m_rotationAxis;
+   std::optional<Axis> m_rotation_axis;
    geometry::BoundingBox m_rotator_x_bb{};
    geometry::BoundingBox m_rotator_y_bb{};
    geometry::BoundingBox m_rotator_z_bb{};
-   float m_baseAngle{};
-   Transform3D m_startingTransform;
-   // Vector3 m_startingTranslation{};
-   // Quaternion m_startingRotation{};
-   bool m_isBeingUsed{false};
+   float m_base_angle{};
+   Transform3D m_starting_transform;
+   // Vector3 m_starting_translation{};
+   // Quaternion m_starting_rotation{};
+   bool m_is_being_used{false};
 };
 
 }// namespace triglav::editor

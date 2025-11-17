@@ -18,7 +18,7 @@ namespace triglav::renderer::stage {
 class GBufferStage final : public IStage
 {
  public:
-   GBufferStage(graphics_api::Device& device, BindlessScene& bindlessScene);
+   GBufferStage(graphics_api::Device& device, BindlessScene& bindless_scene);
 
    void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
@@ -27,11 +27,11 @@ class GBufferStage final : public IStage
    void build_geometry(render_core::BuildContext& ctx) const;
 
  private:
-   void draw_objects_with_material_template(render_core::BuildContext& ctx, render_core::BufferRef visibleObjects,
-                                            FragmentShaderName fsName, u32 materialTemplateIndex) const;
+   void draw_objects_with_material_template(render_core::BuildContext& ctx, render_core::BufferRef visible_objects,
+                                            FragmentShaderName fs_name, u32 material_template_index) const;
 
    render_objects::GpuMesh m_mesh;
-   BindlessScene& m_bindlessScene;
+   BindlessScene& m_bindless_scene;
 };
 
 }// namespace triglav::renderer::stage

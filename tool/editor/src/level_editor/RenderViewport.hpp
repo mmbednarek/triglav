@@ -49,10 +49,10 @@ constexpr auto OVERLAY_COUNT = 11;
 class RenderViewport
 {
  public:
-   explicit RenderViewport(LevelEditor& levelEditor, Vector4 dimensions);
+   explicit RenderViewport(LevelEditor& level_editor, Vector4 dimensions);
    void build_update_job(render_core::BuildContext& ctx);
    void build_render_job(render_core::BuildContext& ctx);
-   void update(render_core::JobGraph& graph, u32 frameIndex, float deltaTime);
+   void update(render_core::JobGraph& graph, u32 frame_index, float delta_time);
 
    [[nodiscard]] Vector4 dimensions() const;
 
@@ -60,7 +60,7 @@ class RenderViewport
    void set_color(u32 index, const Color& color);
 
  private:
-   LevelEditor& m_levelEditor;
+   LevelEditor& m_level_editor;
    Vector4 m_dimensions{};
    u32 m_updates = 0;
    std::array<Matrix4x4, OVERLAY_COUNT> m_matrices{

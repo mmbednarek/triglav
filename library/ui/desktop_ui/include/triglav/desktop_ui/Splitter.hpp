@@ -30,8 +30,8 @@ class Splitter final : public ui_core::BaseWidget
 
    Splitter(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
@@ -59,11 +59,11 @@ class Splitter final : public ui_core::BaseWidget
    State m_state;
    ui_core::IWidgetPtr m_preceding;
    ui_core::IWidgetPtr m_following;
-   bool m_isMoving{false};
-   bool m_isShowingCursor{false};
-   float m_lastMousePos{};
+   bool m_is_moving{false};
+   bool m_is_showing_cursor{false};
+   float m_last_mouse_pos{};
    Vector4 m_dimensions{};
-   Vector4 m_croppingMask{};
+   Vector4 m_cropping_mask{};
    ui_core::RectId m_background{};
 };
 

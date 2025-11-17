@@ -16,7 +16,7 @@ class AmbientOcclusionStage final : public IStage
    void fill_sample_buffer();
 
  private:
-   graphics_api::Buffer m_sampleBuffer;
+   graphics_api::Buffer m_sample_buffer;
 };
 
 }// namespace triglav::renderer::stage

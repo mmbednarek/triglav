@@ -56,7 +56,7 @@ using MaterialProperties = std::variant<MTProperties_Basic, MTProperties_NormalM
 
 struct Material
 {
-   MaterialTemplate materialTemplate;
+   MaterialTemplate material_template;
    MaterialProperties properties;
 
    void deserialize_yaml(const c4::yml::ConstNodeRef& node);

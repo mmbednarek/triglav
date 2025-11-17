@@ -15,10 +15,10 @@ constexpr TreeItemId TREE_ROOT = 0;
 
 struct TreeItem
 {
-   TextureName iconName;
-   Vector4 iconRegion;
+   TextureName icon_name;
+   Vector4 icon_region;
    String label;
-   bool hasChildren;
+   bool has_children;
 };
 
 class ITreeController
@@ -39,7 +39,7 @@ class TreeController final : public ITreeController
  private:
    std::map<TreeItemId, std::vector<TreeItemId>> m_hierarchy;
    std::map<TreeItemId, TreeItem> m_items;
-   TreeItemId m_topId = 1;
+   TreeItemId m_top_id = 1;
 };
 
 }// namespace triglav::desktop_ui

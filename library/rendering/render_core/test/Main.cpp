@@ -32,15 +32,15 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    triglav::test::TestingSupport::the().m_device = device.get();
 
-   triglav::font::FontManger fontManager;
-   ResourceManager resourceManager(*device, fontManager);
-   triglav::test::TestingSupport::the().m_resourceManager = &resourceManager;
+   triglav::font::FontManger font_manager;
+   ResourceManager resource_manager(*device, font_manager);
+   triglav::test::TestingSupport::the().m_resource_manager = &resource_manager;
 
    triglav::test::TestingSupport::the().initialize_render_doc();
 
-   LoadAssetsAwaiter awaiter(resourceManager);
+   LoadAssetsAwaiter awaiter(resource_manager);
 
-   resourceManager.load_asset_list("content/index.yaml"_path);
+   resource_manager.load_asset_list("content/index.yaml"_path);
 
    std::println("Loading resources");
 

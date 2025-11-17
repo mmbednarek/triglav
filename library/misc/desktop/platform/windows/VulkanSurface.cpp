@@ -7,16 +7,16 @@
 
 namespace triglav::desktop {
 
-VkResult create_vulkan_surface(const VkInstance instance, const ISurface* surfaceIFace, const VkAllocationCallbacks* pAllocator,
-                               VkSurfaceKHR* pSurface)
+VkResult create_vulkan_surface(const VkInstance instance, const ISurface* surface_iface, const VkAllocationCallbacks* p_allocator,
+                               VkSurfaceKHR* p_surface)
 {
-   auto* surface = dynamic_cast<const Surface*>(surfaceIFace);
+   auto* surface = dynamic_cast<const Surface*>(surface_iface);
 
-   VkWin32SurfaceCreateInfoKHR surfaceInfo{VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
-   surfaceInfo.hinstance = surface->winapi_instance();
-   surfaceInfo.hwnd = surface->winapi_window_handle();
+   VkWin32SurfaceCreateInfoKHR surface_info{VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
+   surface_info.hinstance = surface->winapi_instance();
+   surface_info.hwnd = surface->winapi_window_handle();
 
-   return vkCreateWin32SurfaceKHR(instance, &surfaceInfo, pAllocator, pSurface);
+   return vkCreateWin32SurfaceKHR(instance, &surface_info, p_allocator, p_surface);
 }
 
 const char* vulkan_extension_name(const IDisplay* /*display*/)

@@ -28,29 +28,29 @@ class ShaderBindingTableBuilder
    io::DynamicWriter m_writer;
    Device& m_device;
    RayTracingPipeline& m_pipeline;
-   std::vector<u8> m_handleBuffer;
-   MemorySize m_handleSize{};
-   MemorySize m_handleAlignment{};
-   MemorySize m_groupAlignment{};
-   PipelineStage m_lastStage{PipelineStage::None};
+   std::vector<u8> m_handle_buffer;
+   MemorySize m_handle_size{};
+   MemorySize m_handle_alignment{};
+   MemorySize m_group_alignment{};
+   PipelineStage m_last_stage{PipelineStage::None};
 
-   MemorySize m_genRaysOffset{};
-   MemorySize m_missOffset{};
-   MemorySize m_hitOffset{};
-   MemorySize m_callableOffset{};
+   MemorySize m_gen_rays_offset{};
+   MemorySize m_miss_offset{};
+   MemorySize m_hit_offset{};
+   MemorySize m_callable_offset{};
 
-   Index m_genRaysCount{};
-   Index m_missCount{};
-   Index m_hitCount{};
-   Index m_callableCount{};
+   Index m_gen_rays_count{};
+   Index m_miss_count{};
+   Index m_hit_count{};
+   Index m_callable_count{};
 };
 
 class ShaderBindingTable
 {
  public:
-   ShaderBindingTable(Buffer buffer, const VkStridedDeviceAddressRegionKHR& genRaysRegion,
-                      const VkStridedDeviceAddressRegionKHR& missRegion, const VkStridedDeviceAddressRegionKHR& hitRegion,
-                      const VkStridedDeviceAddressRegionKHR& callableRegion);
+   ShaderBindingTable(Buffer buffer, const VkStridedDeviceAddressRegionKHR& gen_rays_region,
+                      const VkStridedDeviceAddressRegionKHR& miss_region, const VkStridedDeviceAddressRegionKHR& hit_region,
+                      const VkStridedDeviceAddressRegionKHR& callable_region);
 
    [[nodiscard]] const VkStridedDeviceAddressRegionKHR& gen_rays_region() const;
    [[nodiscard]] const VkStridedDeviceAddressRegionKHR& miss_region() const;
@@ -59,10 +59,10 @@ class ShaderBindingTable
 
  private:
    Buffer m_buffer;
-   VkStridedDeviceAddressRegionKHR m_genRaysRegion;
-   VkStridedDeviceAddressRegionKHR m_missRegion;
-   VkStridedDeviceAddressRegionKHR m_hitRegion;
-   VkStridedDeviceAddressRegionKHR m_callableRegion;
+   VkStridedDeviceAddressRegionKHR m_gen_rays_region;
+   VkStridedDeviceAddressRegionKHR m_miss_region;
+   VkStridedDeviceAddressRegionKHR m_hit_region;
+   VkStridedDeviceAddressRegionKHR m_callable_region;
 };
 
 }// namespace triglav::graphics_api::ray_tracing

@@ -4,10 +4,10 @@
 
 namespace triglav::ui_core {
 
-Context::Context(Viewport& viewport, render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager) :
+Context::Context(Viewport& viewport, render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager) :
     m_viewport(viewport),
-    m_glyphCache(glyphCache),
-    m_resourceManager(resourceManager)
+    m_glyph_cache(glyph_cache),
+    m_resource_manager(resource_manager)
 {
 }
 
@@ -18,37 +18,37 @@ Viewport& Context::viewport() const
 
 render_core::GlyphCache& Context::glyph_cache() const
 {
-   return m_glyphCache;
+   return m_glyph_cache;
 }
 
 resource::ResourceManager& Context::resource_manager() const
 {
-   return m_resourceManager;
+   return m_resource_manager;
 }
 
 void Context::set_active_widget(ui_core::IWidget* active_widget, const Vector4 active_area)
 {
-   if (m_activeWidget != nullptr) {
+   if (m_active_widget != nullptr) {
       Event deactivate_event{};
-      deactivate_event.eventType = Event::Type::Deactivated;
-      deactivate_event.globalMousePosition = {};
-      deactivate_event.mousePosition = {};
-      deactivate_event.parentSize = {};
-      m_activeWidget->on_event(deactivate_event);
+      deactivate_event.event_type = Event::Type::Deactivated;
+      deactivate_event.global_mouse_position = {};
+      deactivate_event.mouse_position = {};
+      deactivate_event.parent_size = {};
+      m_active_widget->on_event(deactivate_event);
    }
 
-   m_activeWidget = active_widget;
-   m_activeArea = active_area;
+   m_active_widget = active_widget;
+   m_active_area = active_area;
 }
 
 ui_core::IWidget* Context::active_widget() const
 {
-   return m_activeWidget;
+   return m_active_widget;
 }
 
 Vector4 Context::active_area() const
 {
-   return m_activeArea;
+   return m_active_area;
 }
 
 }// namespace triglav::ui_core

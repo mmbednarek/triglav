@@ -18,10 +18,10 @@ class OrthoCamera final : public CameraBase
 
  private:
    float m_aspect{1.0f};
-   float m_viewSpaceWidth{12.0f};
+   float m_view_space_width{12.0f};
 
-   mutable bool m_hasCachedProjectionMatrix{false};
-   mutable glm::mat4 m_projectionMat{};
+   mutable bool m_has_cached_projection_matrix{false};
+   mutable glm::mat4 m_projection_mat{};
 };
 
 }// namespace triglav::renderer

@@ -22,12 +22,12 @@ namespace ray_tracing {
 class AccelerationStructure;
 }
 
-constexpr auto g_maxBinding{16};
+constexpr auto g_max_binding{16};
 
 class DescriptorWriter
 {
  public:
-   DescriptorWriter(Device& device, const DescriptorView& descView);
+   DescriptorWriter(Device& device, const DescriptorView& desc_view);
    explicit DescriptorWriter(Device& device);
    ~DescriptorWriter();
 
@@ -42,7 +42,7 @@ class DescriptorWriter
    void set_raw_uniform_buffer(uint32_t binding, const Buffer& buffer);
    void set_raw_uniform_buffer(u32 binding, const Buffer& buffer, u32 offset, u32 size);
    void set_uniform_buffer_array(uint32_t binding, std::span<const Buffer*> buffers);
-   void set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& accStruct);
+   void set_acceleration_structure(uint32_t binding, const ray_tracing::AccelerationStructure& acc_struct);
 
    template<typename TValue>
    void set_uniform_buffer(const uint32_t binding, const TValue& buffer)
@@ -63,16 +63,16 @@ class DescriptorWriter
 
  private:
    void update();
-   VkWriteDescriptorSet& write_binding(u32 binding, VkDescriptorType descType);
+   VkWriteDescriptorSet& write_binding(u32 binding, VkDescriptorType desc_type);
 
    Device& m_device;
-   VkDescriptorSet m_descriptorSet{};
+   VkDescriptorSet m_descriptor_set{};
 
-   u32 m_topBinding{};
-   ObjectPool<VkDescriptorBufferInfo> m_descriptorBufferInfoPool{};
-   ObjectPool<VkDescriptorImageInfo> m_descriptorImageInfoPool{};
-   ObjectPool<VkWriteDescriptorSetAccelerationStructureKHR> m_descriptorAccelerationStructurePool{};
-   std::array<VkWriteDescriptorSet, g_maxBinding> m_descriptorWrites{};
+   u32 m_top_binding{};
+   ObjectPool<VkDescriptorBufferInfo> m_descriptor_buffer_info_pool{};
+   ObjectPool<VkDescriptorImageInfo> m_descriptor_image_info_pool{};
+   ObjectPool<VkWriteDescriptorSetAccelerationStructureKHR> m_descriptor_acceleration_structure_pool{};
+   std::array<VkWriteDescriptorSet, g_max_binding> m_descriptor_writes{};
 };
 
 }// namespace triglav::graphics_api

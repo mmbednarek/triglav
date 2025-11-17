@@ -32,8 +32,8 @@ class TreeView : public ui_core::BaseWidget
 
    TreeView(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
@@ -42,22 +42,22 @@ class TreeView : public ui_core::BaseWidget
 
  private:
    [[nodiscard]] std::pair<float, TreeItemId> index_from_mouse_position(Vector2 position) const;
-   [[nodiscard]] Measure get_measure(TreeItemId parentId = TREE_ROOT) const;
-   void draw_level(TreeItemId parentId, float offset_x, float& offset_y);
-   void remove_level(TreeItemId parentId);
+   [[nodiscard]] Measure get_measure(TreeItemId parent_id = TREE_ROOT) const;
+   void draw_level(TreeItemId parent_id, float offset_x, float& offset_y);
+   void remove_level(TreeItemId parent_id);
 
    ui_core::Context& m_context;
    State m_state;
    Vector4 m_dimensions{};
-   Vector4 m_croppingMask{};
+   Vector4 m_cropping_mask{};
    std::map<TreeItemId, ui_core::TextId> m_labels;
    std::map<TreeItemId, ui_core::SpriteId> m_icons;
    std::map<TreeItemId, ui_core::SpriteId> m_arrows;
-   std::map<float, TreeItemId> m_offsetToItemId;
-   ui_core::RectId m_itemHighlight{};
-   Vector4 m_highlightDims{};
+   std::map<float, TreeItemId> m_offset_to_item_id;
+   ui_core::RectId m_item_highlight{};
+   Vector4 m_highlight_dims{};
 
-   mutable std::optional<Measure> m_cachedMeasure{};
+   mutable std::optional<Measure> m_cached_measure{};
 };
 
 }// namespace triglav::desktop_ui

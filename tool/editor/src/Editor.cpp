@@ -21,17 +21,17 @@ Editor::Editor(desktop::InputArgs& args, desktop::IDisplay& display) :
 
 void Editor::initialize()
 {
-   m_rootWindow = std::make_unique<RootWindow>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
-                                               m_app.resource_manager());
-   m_dialogManager = std::make_unique<desktop_ui::PopupManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.glyph_cache(),
-                                                                m_app.resource_manager(), m_rootWindow->surface());
+   m_root_window = std::make_unique<RootWindow>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
+                                                m_app.resource_manager());
+   m_dialog_manager = std::make_unique<desktop_ui::PopupManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.glyph_cache(),
+                                                                 m_app.resource_manager(), m_root_window->surface());
 
-   m_rootWidget = &m_rootWindow->create_root_widget<RootWidget>({
-      .dialogManager = m_dialogManager.get(),
+   m_root_widget = &m_root_window->create_root_widget<RootWidget>({
+      .dialog_manager = m_dialog_manager.get(),
       .editor = this,
    });
 
-   m_rootWindow->initialize();
+   m_root_window->initialize();
 
    log_info("Initialization complete");
 }
@@ -43,12 +43,12 @@ int Editor::run()
    this->initialize();
 
    float delta_time = 0.017f;
-   while (!m_rootWindow->should_close() && !m_shouldClose) {
+   while (!m_root_window->should_close() && !m_should_close) {
       auto frame_start = std::chrono::steady_clock::now();
-      m_dialogManager->tick();
-      m_rootWindow->update();
+      m_dialog_manager->tick();
+      m_root_window->update();
       m_app.tick();
-      m_rootWidget->tick(delta_time);
+      m_root_widget->tick(delta_time);
 
       LogManager::the().flush();
 
@@ -72,12 +72,12 @@ int Editor::run()
 
 void Editor::close()
 {
-   m_shouldClose = true;
+   m_should_close = true;
 }
 
 RootWindow* Editor::root_window() const
 {
-   return m_rootWindow.get();
+   return m_root_window.get();
 }
 
 }// namespace triglav::editor

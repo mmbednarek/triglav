@@ -24,9 +24,9 @@ render_objects::GpuMesh create_skybox_mesh(graphics_api::Device& device)
 
 }// namespace
 
-GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindlessScene) :
+GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless_scene) :
     m_mesh(create_skybox_mesh(device)),
-    m_bindlessScene(bindlessScene)
+    m_bindless_scene(bindless_scene)
 {
 }
 
@@ -83,11 +83,11 @@ void GBufferStage::build_ground(render_core::BuildContext& ctx) const
    ctx.draw_primitives(4, 0);
 }
 
-static const auto bindlessGeoVertLayout = render_core::VertexLayout(sizeof(geometry::Vertex))
-                                             .add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                                             .add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                                             .add("normal"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                                             .add("tangent"_name, GAPI_FORMAT(RGBA, Float32), offsetof(geometry::Vertex, tangent));
+static const auto bindless_geo_vert_layout = render_core::VertexLayout(sizeof(geometry::Vertex))
+                                                .add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
+                                                .add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
+                                                .add("normal"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
+                                                .add("tangent"_name, GAPI_FORMAT(RGBA, Float32), offsetof(geometry::Vertex, tangent));
 
 void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 {
@@ -96,27 +96,27 @@ void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
    this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt2"_external, "bindless/render_mt2.fshader"_rc, 2);
 }
 
-void GBufferStage::draw_objects_with_material_template(render_core::BuildContext& ctx, const render_core::BufferRef visibleObjects,
-                                                       const FragmentShaderName fsName, const u32 materialTemplateIndex) const
+void GBufferStage::draw_objects_with_material_template(render_core::BuildContext& ctx, const render_core::BufferRef visible_objects,
+                                                       const FragmentShaderName fs_name, const u32 material_template_index) const
 {
    ctx.bind_vertex_shader("bindless_geometry.vshader"_rc);
 
-   ctx.bind_vertex_layout(bindlessGeoVertLayout);
+   ctx.bind_vertex_layout(bindless_geo_vert_layout);
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
-   ctx.bind_storage_buffer(1, visibleObjects);
+   ctx.bind_storage_buffer(1, visible_objects);
 
-   ctx.bind_fragment_shader(fsName);
+   ctx.bind_fragment_shader(fs_name);
 
-   ctx.bind_sampled_texture_array(2, m_bindlessScene.scene_texture_refs());
-   ctx.bind_storage_buffer(3, &m_bindlessScene.material_template_properties(materialTemplateIndex));
+   ctx.bind_sampled_texture_array(2, m_bindless_scene.scene_texture_refs());
+   ctx.bind_storage_buffer(3, &m_bindless_scene.material_template_properties(material_template_index));
 
-   ctx.bind_vertex_buffer(&m_bindlessScene.combined_vertex_buffer());
-   ctx.bind_index_buffer(&m_bindlessScene.combined_index_buffer());
+   ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
+   ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());
 
    ctx.set_is_blending_enabled(false);
 
-   ctx.draw_indexed_indirect_with_count(visibleObjects, "occlusion_culling.count_buffer"_external, 80, sizeof(BindlessSceneObject),
-                                        sizeof(u32) * materialTemplateIndex);
+   ctx.draw_indexed_indirect_with_count(visible_objects, "occlusion_culling.count_buffer"_external, 80, sizeof(BindlessSceneObject),
+                                        sizeof(u32) * material_template_index);
 }
 
 }// namespace triglav::renderer::stage

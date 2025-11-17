@@ -9,9 +9,9 @@
 namespace triglav {
 
 template<typename W, typename T>
-concept UpdateWriter = requires(W& writer, T obj, u32 srcIndex, u32 dstIndex) {
-   { writer.set_object(dstIndex, obj) };
-   { writer.move_object(srcIndex, dstIndex) };
+concept UpdateWriter = requires(W& writer, T obj, u32 src_index, u32 dst_index) {
+   { writer.set_object(dst_index, obj) };
+   { writer.move_object(src_index, dst_index) };
 };
 
 template<typename TKey, typename TValue>
@@ -30,11 +30,11 @@ class UpdateList
    [[nodiscard]] u32 remove_mapping_by_key(TKey key);
    [[nodiscard]] TKey remove_mapping_by_index(u32 index);
 
-   std::map<TKey, u32> m_keyToIndex;
-   std::map<u32, TKey> m_indexToKey;
+   std::map<TKey, u32> m_key_to_index;
+   std::map<u32, TKey> m_index_to_key;
    std::vector<std::pair<TKey, TValue>> m_additions;
    std::set<TKey> m_removals;
-   u32 m_indexCount{};
+   u32 m_index_count{};
 };
 
 }// namespace triglav

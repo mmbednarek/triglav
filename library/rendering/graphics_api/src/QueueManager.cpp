@@ -28,25 +28,25 @@ u32 work_type_flag_count(const WorkTypeFlags flags)
 }// namespace
 
 QueueManager::QueueManager(Device& device, const std::span<QueueFamilyInfo> infos) :
-    m_semaphoreFactory(device),
-    m_semaphorePool(m_semaphoreFactory),
-    m_fenceFactory(device),
-    m_fencePool(m_fenceFactory)
+    m_semaphore_factory(device),
+    m_semaphore_pool(m_semaphore_factory),
+    m_fence_factory(device),
+    m_fence_pool(m_fence_factory)
 {
-   m_queueIndices.fill(std::numeric_limits<u32>::max());
+   m_queue_indices.fill(std::numeric_limits<u32>::max());
 
-   std::array<u32, 16> queueCounts{};
-   queueCounts.fill(std::numeric_limits<u32>::max());
+   std::array<u32, 16> queue_counts{};
+   queue_counts.fill(std::numeric_limits<u32>::max());
 
    u32 index{};
    for (const auto& info : infos) {
-      m_queueGroups.emplace_back(std::make_unique<QueueGroup>(device, info));
-      for (u32 flagsInt = 1; flagsInt < 16; ++flagsInt) {
-         const WorkTypeFlags flags{flagsInt};
-         const auto flagCount = work_type_flag_count(flags);
-         if (info.flags & flags && queueCounts[flagsInt] >= flagCount) {
-            queueCounts[flagsInt] = flagCount;
-            m_queueIndices[flagsInt] = index;
+      m_queue_groups.emplace_back(std::make_unique<QueueGroup>(device, info));
+      for (u32 flags_int = 1; flags_int < 16; ++flags_int) {
+         const WorkTypeFlags flags{flags_int};
+         const auto flag_count = work_type_flag_count(flags);
+         if (info.flags & flags && queue_counts[flags_int] >= flag_count) {
+            queue_counts[flags_int] = flag_count;
+            m_queue_indices[flags_int] = index;
          }
       }
       ++index;
@@ -75,64 +75,65 @@ std::pair<QueueManager::SafeQueue&, ktx::VulkanDeviceInfo&> QueueManager::ktx_de
 
 Semaphore* QueueManager::aquire_semaphore()
 {
-   return m_semaphorePool.acquire_object();
+   return m_semaphore_pool.acquire_object();
 }
 
 void QueueManager::release_semaphore(const Semaphore* semaphore)
 {
-   m_semaphorePool.release_object(semaphore);
+   m_semaphore_pool.release_object(semaphore);
 }
 
 Fence* QueueManager::aquire_fence()
 {
-   return m_fencePool.acquire_object();
+   return m_fence_pool.acquire_object();
 }
 
 void QueueManager::release_fence(const Fence* fence)
 {
-   m_fencePool.release_object(fence);
+   m_fence_pool.release_object(fence);
 }
 
 QueueManager::QueueGroup::QueueGroup(Device& device, const QueueFamilyInfo& info) :
     m_device(device),
-    m_queues(info.queueCount),
+    m_queues(info.queue_count),
     m_flags(info.flags),
-    m_queueFamilyIndex(info.index)
+    m_queue_family_index(info.index)
 {
-   for (u32 i = 0; i < info.queueCount; ++i) {
+   for (u32 i = 0; i < info.queue_count; ++i) {
       auto& queue = m_queues[i];
       auto access = queue.access();
       vkGetDeviceQueue(device.vulkan_device(), info.index, i, &access.value());
       assert(*access);
    }
 
-   const auto commandPoolCount = threading::total_thread_count();
-   m_commandPools.reserve(commandPoolCount);
-   m_ktxDeviceInfos.reserve(commandPoolCount);
-   std::generate_n(std::back_inserter(m_commandPools), commandPoolCount, [this] { return vulkan::CommandPool{m_device.vulkan_device()}; });
+   const auto command_pool_count = threading::total_thread_count();
+   m_command_pools.reserve(command_pool_count);
+   m_ktxDeviceInfos.reserve(command_pool_count);
+   std::generate_n(std::back_inserter(m_command_pools), command_pool_count,
+                   [this] { return vulkan::CommandPool{m_device.vulkan_device()}; });
 
-   VkCommandPoolCreateInfo commandPoolInfo{};
-   commandPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-   commandPoolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-   commandPoolInfo.queueFamilyIndex = info.index;
+   VkCommandPoolCreateInfo command_pool_info{};
+   command_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+   command_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+   command_pool_info.queueFamilyIndex = info.index;
 
    // Construct a pool for every thread.
-   for (auto& commandPool : m_commandPools) {
-      if (const auto res = commandPool.construct(&commandPoolInfo); res != VK_SUCCESS) {
+   for (auto& command_pool : m_command_pools) {
+      if (const auto res = command_pool.construct(&command_pool_info); res != VK_SUCCESS) {
          throw std::runtime_error("failed to create command pool");
       }
       if (m_flags & WorkType::Graphics) {
-         m_ktxDeviceInfos.emplace_back(device.vulkan_physical_device(), device.vulkan_device(), *m_queues[0].access(), *commandPool);
+         m_ktxDeviceInfos.emplace_back(device.vulkan_physical_device(), device.vulkan_device(), *m_queues[0].access(), *command_pool);
       }
    }
 }
 
 QueueManager::SafeQueue& QueueManager::QueueGroup::next_queue()
 {
-   auto& queue = m_queues[m_nextQueue];
+   auto& queue = m_queues[m_next_queue];
 
-   u32 nextQueue = m_nextQueue.load();
-   while (not m_nextQueue.compare_exchange_strong(nextQueue, (nextQueue + 1) % m_queues.size()))
+   u32 next_queue = m_next_queue.load();
+   while (not m_next_queue.compare_exchange_strong(next_queue, (next_queue + 1) % m_queues.size()))
       ;
 
    return queue;
@@ -145,29 +146,29 @@ WorkTypeFlags QueueManager::QueueGroup::flags() const
 
 Result<CommandList> QueueManager::QueueGroup::create_command_list() const
 {
-   VkCommandBufferAllocateInfo allocateInfo{};
-   allocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-   allocateInfo.commandPool = *this->command_pool();
-   allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-   allocateInfo.commandBufferCount = 1;
+   VkCommandBufferAllocateInfo allocate_info{};
+   allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+   allocate_info.commandPool = *this->command_pool();
+   allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+   allocate_info.commandBufferCount = 1;
 
-   VkCommandBuffer commandBuffer;
-   if (vkAllocateCommandBuffers(m_device.vulkan_device(), &allocateInfo, &commandBuffer) != VK_SUCCESS) {
+   VkCommandBuffer command_buffer;
+   if (vkAllocateCommandBuffers(m_device.vulkan_device(), &allocate_info, &command_buffer) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return CommandList(m_device, commandBuffer, *this->command_pool(), m_flags);
+   return CommandList(m_device, command_buffer, *this->command_pool(), m_flags);
 }
 
 u32 QueueManager::QueueGroup::index() const
 {
-   return m_queueFamilyIndex;
+   return m_queue_family_index;
 }
 
 const vulkan::CommandPool& QueueManager::QueueGroup::command_pool() const
 {
    // Retrieve the pool assigned for this thread.
-   return m_commandPools[threading::this_thread_id()];
+   return m_command_pools[threading::this_thread_id()];
 }
 
 std::pair<QueueManager::SafeQueue&, ktx::VulkanDeviceInfo&> QueueManager::QueueGroup::ktx_device_info()
@@ -177,22 +178,22 @@ std::pair<QueueManager::SafeQueue&, ktx::VulkanDeviceInfo&> QueueManager::QueueG
 
 QueueManager::QueueGroup& QueueManager::queue_group(const WorkTypeFlags type)
 {
-   const auto id = m_queueIndices[type.value];
-   if (id >= m_queueGroups.size()) {
+   const auto id = m_queue_indices[type.value];
+   if (id >= m_queue_groups.size()) {
       throw std::runtime_error("unsupported queue type");
    }
 
-   return *m_queueGroups[id];
+   return *m_queue_groups[id];
 }
 
 const QueueManager::QueueGroup& QueueManager::queue_group(const WorkTypeFlags type) const
 {
-   const auto id = m_queueIndices[type.value];
-   if (id >= m_queueGroups.size()) {
+   const auto id = m_queue_indices[type.value];
+   if (id >= m_queue_groups.size()) {
       throw std::runtime_error("unsupported queue type");
    }
 
-   return *m_queueGroups[id];
+   return *m_queue_groups[id];
 }
 
 QueueManager::SemaphoreFactory::SemaphoreFactory(Device& device) :

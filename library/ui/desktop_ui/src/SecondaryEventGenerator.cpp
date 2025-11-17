@@ -14,11 +14,11 @@ void SecondaryEventGenerator::on_event(const ui_core::Event& event)
    ui_core::visit_event<void>(*this, event);
 
    if (m_context.active_widget() != nullptr) {
-      if (event.eventType == ui_core::Event::Type::TextInput || event.eventType == ui_core::Event::Type::KeyPressed ||
-          event.eventType == ui_core::Event::Type::MouseMoved) {
+      if (event.event_type == ui_core::Event::Type::TextInput || event.event_type == ui_core::Event::Type::KeyPressed ||
+          event.event_type == ui_core::Event::Type::MouseMoved) {
          ui_core::Event sub_event(event);
-         sub_event.mousePosition = event.globalMousePosition - rect_position(m_context.active_area());
-         sub_event.isForwardedToActive = true;
+         sub_event.mouse_position = event.global_mouse_position - rect_position(m_context.active_area());
+         sub_event.is_forwarded_to_active = true;
          m_context.active_widget()->on_event(sub_event);
       }
    }
@@ -29,7 +29,7 @@ void SecondaryEventGenerator::on_event(const ui_core::Event& event)
 void SecondaryEventGenerator::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/) const
 {
    if (m_context.active_widget() != nullptr) {
-      if (!is_point_inside(m_context.active_area(), event.globalMousePosition)) {
+      if (!is_point_inside(m_context.active_area(), event.global_mouse_position)) {
          m_context.set_active_widget(nullptr, {});
       }
    }
@@ -53,11 +53,11 @@ static std::optional<Modifier> key_to_modifier(const desktop::Key key)
 void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard)
 {
    if (const auto mod = key_to_modifier(keyboard.key); mod.has_value()) {
-      m_modifierState |= *mod;
+      m_modifier_state |= *mod;
       return;
    }
 
-   if (m_modifierState == Modifier::Control) {
+   if (m_modifier_state == Modifier::Control) {
       switch (keyboard.key) {
       case desktop::Key::A: {
          const ui_core::Event select_all_event = event.sub_event(ui_core::Event::Type::SelectAll);
@@ -80,7 +80,7 @@ void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const 
    }
 
    if (m_context.active_widget() != nullptr) {
-      if (!is_point_inside(m_context.active_area(), event.globalMousePosition)) {
+      if (!is_point_inside(m_context.active_area(), event.global_mouse_position)) {
          m_context.set_active_widget(nullptr, {});
       }
    }
@@ -89,7 +89,7 @@ void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const 
 void SecondaryEventGenerator::on_key_released(const ui_core::Event& /*event*/, const ui_core::Event::Keyboard& keyboard)
 {
    if (const auto mod = key_to_modifier(keyboard.key); mod.has_value()) {
-      m_modifierState.remove_flag(*mod);
+      m_modifier_state.remove_flag(*mod);
    }
 }
 

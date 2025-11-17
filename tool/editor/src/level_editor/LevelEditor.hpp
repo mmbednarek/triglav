@@ -31,7 +31,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    struct State
    {
       desktop_ui::DesktopUIManager* manager;
-      RootWindow* rootWindow;
+      RootWindow* root_window;
    };
 
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
@@ -60,27 +60,27 @@ class LevelEditor final : public ui_core::ProxyWidget
 
  private:
    State m_state;
-   desktop_ui::RadioGroup m_toolRadioGroup;
+   desktop_ui::RadioGroup m_tool_radio_group;
    renderer::Scene m_scene;
-   renderer::BindlessScene m_bindlessScene;
+   renderer::BindlessScene m_bindless_scene;
    renderer::Config m_config;
-   renderer::UpdateViewParamsJob m_updateViewParamsJob;
-   renderer::OcclusionCulling m_occlusionCulling;
-   renderer::RenderingJob m_renderingJob;
-   const renderer::SceneObject* m_selectedObject{};
-   renderer::ObjectID m_selectedObjectID{renderer::UNSELECTED_OBJECT};
+   renderer::UpdateViewParamsJob m_update_view_params_job;
+   renderer::OcclusionCulling m_occlusion_culling;
+   renderer::RenderingJob m_rendering_job;
+   const renderer::SceneObject* m_selected_object{};
+   renderer::ObjectID m_selected_object_id{renderer::UNSELECTED_OBJECT};
    LevelViewport* m_viewport;
-   SelectionTool m_selectionTool;
-   TranslationTool m_translationTool;
-   RotationTool m_rotationTool;
-   ScalingTool m_scalingTool;
-   LevelEditorSidePanel* m_sidePanel;
-   desktop_ui::DropDownMenu* m_originSelector;
-   desktop_ui::DropDownMenu* m_snapSelector;
-   desktop_ui::DropDownMenu* m_speedSelector;
-   HistoryManager m_historyManager;
+   SelectionTool m_selection_tool;
+   TranslationTool m_translation_tool;
+   RotationTool m_rotation_tool;
+   ScalingTool m_scaling_tool;
+   LevelEditorSidePanel* m_side_panel;
+   desktop_ui::DropDownMenu* m_origin_selector;
+   desktop_ui::DropDownMenu* m_snap_selector;
+   desktop_ui::DropDownMenu* m_speed_selector;
+   HistoryManager m_history_manager;
 
-   ILevelEditorTool* m_currentTool = nullptr;
+   ILevelEditorTool* m_current_tool = nullptr;
 
    TG_SINK(desktop_ui::RadioGroup, OnSelection);
    TG_OPT_SINK(desktop_ui::DropDownMenu, OnSelected);

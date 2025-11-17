@@ -31,8 +31,8 @@ struct TextureCreateInfo
 {
    Format format;
    Vector2u dimensions;
-   bool generateMipmaps;
-   bool createMipLayers;
+   bool generate_mipmaps;
+   bool create_mip_layers;
 };
 
 enum class TextureTranscode
@@ -56,10 +56,10 @@ class Texture
    Texture(Texture&& other) noexcept;
    Texture& operator=(Texture&& other) noexcept;
 
-   [[nodiscard]] bool set_image_from_buffer(std::span<const u8> buffer, u32 mipLevel, u32 layer, u32 faceSlice) const;
+   [[nodiscard]] bool set_image_from_buffer(std::span<const u8> buffer, u32 mip_level, u32 layer, u32 face_slice) const;
    [[nodiscard]] bool write_to_stream(io::IWriter& writer) const;
    [[nodiscard]] bool write_to_file(const io::Path& path) const;
-   [[nodiscard]] bool compress(TextureCompression compression, bool isNormalMap) const;
+   [[nodiscard]] bool compress(TextureCompression compression, bool is_normal_map) const;
    [[nodiscard]] bool transcode(TextureTranscode transcode) const;
    [[nodiscard]] bool uncompress() const;
    [[nodiscard]] bool is_compressed() const;
@@ -69,7 +69,7 @@ class Texture
 
    static std::optional<Texture> create(const TextureCreateInfo& info);
    static std::optional<Texture> from_file(const io::Path& path);
-   static std::optional<Texture> from_stream(io::ISeekableStream& seekableStream);
+   static std::optional<Texture> from_stream(io::ISeekableStream& seekable_stream);
 
  private:
    ::ktxTexture* m_ktxTexture;

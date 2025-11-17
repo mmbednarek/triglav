@@ -20,11 +20,11 @@ namespace triglav::renderer::ui {
 struct RectPrimitive
 {
    Vector4 dimensions;
-   Vector4 borderRadius;
-   Vector4 borderColor;
-   Vector4 backgroundColor;
-   Vector4 croppingMask;
-   float borderWidth;
+   Vector4 border_radius;
+   Vector4 border_color;
+   Vector4 background_color;
+   Vector4 cropping_mask;
+   float border_width;
    u32 padding[3];
 };
 
@@ -33,7 +33,7 @@ static_assert(sizeof(RectPrimitive) % 16 == 0);
 struct RectWriteData
 {
    RectPrimitive primitive;
-   u32 dstIndex;
+   u32 dst_index;
    u32 padding[3];
 };
 
@@ -41,8 +41,8 @@ static_assert(sizeof(RectWriteData) % 16 == 0);
 
 struct RectCopyInfo
 {
-   u32 srcID;
-   u32 dstID;
+   u32 src_id;
+   u32 dst_id;
 };
 
 class RectangleRenderer
@@ -52,27 +52,27 @@ class RectangleRenderer
 
    RectangleRenderer(ui_core::Viewport& viewport);
 
-   void on_added_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
-   void on_updated_rectangle(ui_core::RectId rectId, const ui_core::Rectangle& rect);
-   void on_removed_rectangle(ui_core::RectId rectId);
+   void on_added_rectangle(ui_core::RectId rect_id, const ui_core::Rectangle& rect);
+   void on_updated_rectangle(ui_core::RectId rect_id, const ui_core::Rectangle& rect);
+   void on_removed_rectangle(ui_core::RectId rect_id);
 
    void set_object(u32 index, const RectPrimitive& prim);
    void move_object(u32 src, u32 dst);
 
-   void prepare_frame(render_core::JobGraph& graph, u32 frameIndex);
+   void prepare_frame(render_core::JobGraph& graph, u32 frame_index);
    void build_data_update(render_core::BuildContext& ctx) const;
    void build_render_ui(render_core::BuildContext& ctx);
 
  private:
-   std::array<UpdateList<ui_core::RectId, RectPrimitive>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frameUpdates;
+   std::array<UpdateList<ui_core::RectId, RectPrimitive>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frame_updates;
 
-   RectWriteData* m_stagingInsertions;
-   u32 m_stagingInsertionsTop{};
-   RectCopyInfo* m_stagingRemovals;
-   u32 m_stagingRemovalsTop{};
+   RectWriteData* m_staging_insertions;
+   u32 m_staging_insertions_top{};
+   RectCopyInfo* m_staging_removals;
+   u32 m_staging_removals_top{};
 
    // std::map<Name, RectangleData> m_rectangles;
-   std::mutex m_rectUpdateMtx;
+   std::mutex m_rect_update_mtx;
 
    TG_SINK(ui_core::Viewport, OnAddedRectangle);
    TG_SINK(ui_core::Viewport, OnUpdatedRectangle);

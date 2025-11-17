@@ -6,21 +6,21 @@
 
 namespace triglav::io {
 
-DynamicWriter::DynamicWriter(MemorySize initialCapacity) :
-    m_buffer(m_allocator.allocate(initialCapacity)),
-    m_currentCapacity(initialCapacity),
+DynamicWriter::DynamicWriter(MemorySize initial_capacity) :
+    m_buffer(m_allocator.allocate(initial_capacity)),
+    m_current_capacity(initial_capacity),
     m_position(0)
 {
 }
 
 DynamicWriter::~DynamicWriter()
 {
-   m_allocator.deallocate(m_buffer, m_currentCapacity);
+   m_allocator.deallocate(m_buffer, m_current_capacity);
 }
 
 DynamicWriter::DynamicWriter(const DynamicWriter& other) :
-    m_buffer(m_allocator.allocate(other.m_currentCapacity)),
-    m_currentCapacity(other.m_currentCapacity),
+    m_buffer(m_allocator.allocate(other.m_current_capacity)),
+    m_current_capacity(other.m_current_capacity),
     m_position(other.m_position)
 {
    std::memcpy(m_buffer, other.m_buffer, m_position);
@@ -32,16 +32,16 @@ DynamicWriter& DynamicWriter::operator=(const DynamicWriter& other)
       return *this;
    }
 
-   m_allocator.deallocate(m_buffer, m_currentCapacity);
-   m_buffer = m_allocator.allocate(other.m_currentCapacity);
-   m_currentCapacity = other.m_currentCapacity;
+   m_allocator.deallocate(m_buffer, m_current_capacity);
+   m_buffer = m_allocator.allocate(other.m_current_capacity);
+   m_current_capacity = other.m_current_capacity;
    m_position = other.m_position;
    return *this;
 }
 
 DynamicWriter::DynamicWriter(DynamicWriter&& other) noexcept :
     m_buffer(std::exchange(other.m_buffer, nullptr)),
-    m_currentCapacity(std::exchange(other.m_currentCapacity, 0)),
+    m_current_capacity(std::exchange(other.m_current_capacity, 0)),
     m_position(std::exchange(other.m_position, 0))
 {
 }
@@ -49,7 +49,7 @@ DynamicWriter::DynamicWriter(DynamicWriter&& other) noexcept :
 DynamicWriter& DynamicWriter::operator=(DynamicWriter&& other) noexcept
 {
    m_buffer = std::exchange(other.m_buffer, nullptr);
-   m_currentCapacity = std::exchange(other.m_currentCapacity, 0);
+   m_current_capacity = std::exchange(other.m_current_capacity, 0);
    m_position = std::exchange(other.m_position, 0);
 
    return *this;
@@ -57,9 +57,9 @@ DynamicWriter& DynamicWriter::operator=(DynamicWriter&& other) noexcept
 
 Result<MemorySize> DynamicWriter::write(const std::span<const u8> buffer)
 {
-   const auto prevPosition = m_position;
+   const auto prev_position = m_position;
    this->set_position(this->m_position + buffer.size());
-   std::memcpy(m_buffer + prevPosition, buffer.data(), buffer.size());
+   std::memcpy(m_buffer + prev_position, buffer.data(), buffer.size());
    return buffer.size();
 }
 
@@ -88,26 +88,26 @@ MemorySize DynamicWriter::size() const
 
 MemorySize DynamicWriter::capacity() const
 {
-   return m_currentCapacity;
+   return m_current_capacity;
 }
 
-void DynamicWriter::set_position(const MemorySize newPosition)
+void DynamicWriter::set_position(const MemorySize new_position)
 {
-   if (newPosition > m_currentCapacity) {
-      auto new_cap = std::max<MemorySize>(2 * m_currentCapacity, 128);
-      while (newPosition > new_cap) {
+   if (new_position > m_current_capacity) {
+      auto new_cap = std::max<MemorySize>(2 * m_current_capacity, 128);
+      while (new_position > new_cap) {
          new_cap *= 2;
       }
       auto* new_buff = m_allocator.allocate(new_cap);
 
       std::memcpy(new_buff, m_buffer, m_position);
 
-      m_allocator.deallocate(m_buffer, m_currentCapacity);
+      m_allocator.deallocate(m_buffer, m_current_capacity);
       m_buffer = new_buff;
-      m_currentCapacity = new_cap;
+      m_current_capacity = new_cap;
    }
 
-   m_position = newPosition;
+   m_position = new_position;
 }
 
 }// namespace triglav::io

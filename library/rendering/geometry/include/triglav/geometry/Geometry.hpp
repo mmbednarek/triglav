@@ -13,11 +13,11 @@ namespace triglav::geometry {
 
 using Index = uint32_t;
 
-constexpr Index g_invalidIndex = std::numeric_limits<Index>::max();
+constexpr Index g_invalid_index = std::numeric_limits<Index>::max();
 
 constexpr bool is_valid(const Index index)
 {
-   return index != g_invalidIndex;
+   return index != g_invalid_index;
 }
 
 struct Vertex
@@ -57,7 +57,7 @@ struct MaterialRange
 {
    size_t offset;
    size_t size;
-   MaterialName materialName;
+   MaterialName material_name;
 };
 
 struct DeviceMesh
@@ -152,8 +152,8 @@ struct BoundingBox
 
 struct MeshData
 {
-   VertexData vertexData;
-   BoundingBox boundingBox;
+   VertexData vertex_data;
+   BoundingBox bounding_box;
 };
 
 constexpr double g_pi = 3.1415926535897932;

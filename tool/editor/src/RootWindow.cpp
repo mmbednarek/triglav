@@ -12,16 +12,16 @@ using namespace render_core::literals;
 constexpr Vector2 DEFAULT_DIMENSIONS{1280, 720};
 
 RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-                       render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager) :
+                       render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager) :
     m_device(device),
-    m_resourceManager(resourceManager),
+    m_resource_manager(resource_manager),
     m_surface(display.create_surface("Triglav Editor"_strv, DEFAULT_DIMENSIONS, desktop::WindowAttribute::Default)),
-    m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
-    m_resourceStorage(device),
-    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, DEFAULT_DIMENSIONS, graphics_api::PresentMode::Immediate),
-    m_widgetRenderer(*m_surface, glyphCache, resourceManager, device),
-    m_pipelineCache(device, resourceManager),
-    m_jobGraph(device, resourceManager, m_pipelineCache, m_resourceStorage, DEFAULT_DIMENSIONS),
+    m_graphics_surface(GAPI_CHECK(instance.create_surface(*m_surface))),
+    m_resource_storage(device),
+    m_render_surface(device, *m_surface, m_graphics_surface, m_resource_storage, DEFAULT_DIMENSIONS, graphics_api::PresentMode::Immediate),
+    m_widget_renderer(*m_surface, glyph_cache, resource_manager, device),
+    m_pipeline_cache(device, resource_manager),
+    m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, DEFAULT_DIMENSIONS),
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnResize, on_resize)
 {
@@ -29,54 +29,54 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
 
 void RootWindow::initialize()
 {
-   if (m_isInitialized)
+   if (m_is_initialized)
       return;
-   if (m_widgetRenderer.is_empty())
+   if (m_widget_renderer.is_empty())
       return;
 
-   m_widgetRenderer.add_widget_to_viewport(m_surface->dimension());
+   m_widget_renderer.add_widget_to_viewport(m_surface->dimension());
 
-   assert(m_renderViewport != nullptr);
+   assert(m_render_viewport != nullptr);
 
-   auto& updateViewportCtx = m_jobGraph.add_job(renderer::UpdateViewParamsJob::JobName);
-   m_renderViewport->build_update_job(updateViewportCtx);
-   m_jobGraph.add_dependency_to_previous_frame(renderer::UpdateViewParamsJob::JobName);
+   auto& update_viewport_ctx = m_job_graph.add_job(renderer::UpdateViewParamsJob::JobName);
+   m_render_viewport->build_update_job(update_viewport_ctx);
+   m_job_graph.add_dependency_to_previous_frame(renderer::UpdateViewParamsJob::JobName);
 
-   auto& renderViewportCtx = m_jobGraph.add_job("render_viewport"_name, rect_size(m_renderViewport->dimensions()));
-   m_renderViewport->build_render_job(renderViewportCtx);
-   m_jobGraph.add_dependency("render_viewport"_name, renderer::UpdateViewParamsJob::JobName);
+   auto& render_viewport_ctx = m_job_graph.add_job("render_viewport"_name, rect_size(m_render_viewport->dimensions()));
+   m_render_viewport->build_render_job(render_viewport_ctx);
+   m_job_graph.add_dependency("render_viewport"_name, renderer::UpdateViewParamsJob::JobName);
 
-   auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
-   m_widgetRenderer.create_update_job(updateUiCtx);
-   m_jobGraph.add_dependency_to_previous_frame("update_ui"_name, "update_ui"_name);
+   auto& update_ui_ctx = m_job_graph.add_job("update_ui"_name);
+   m_widget_renderer.create_update_job(update_ui_ctx);
+   m_job_graph.add_dependency_to_previous_frame("update_ui"_name, "update_ui"_name);
 
-   auto& renderDialogCtx = m_jobGraph.add_job("render_dialog"_name);
-   this->build_rendering_job(renderDialogCtx);
-   m_jobGraph.add_dependency("render_dialog"_name, "render_viewport"_name);
-   m_jobGraph.add_dependency("render_dialog"_name, "update_ui"_name);
+   auto& render_dialog_ctx = m_job_graph.add_job("render_dialog"_name);
+   this->build_rendering_job(render_dialog_ctx);
+   m_job_graph.add_dependency("render_dialog"_name, "render_viewport"_name);
+   m_job_graph.add_dependency("render_dialog"_name, "update_ui"_name);
 
-   renderer::RenderSurface::add_present_jobs(m_jobGraph, "render_dialog"_name);
+   renderer::RenderSurface::add_present_jobs(m_job_graph, "render_dialog"_name);
 
-   m_jobGraph.build_jobs("render_dialog"_name);
+   m_job_graph.build_jobs("render_dialog"_name);
 
-   m_renderSurface.recreate_present_jobs();
+   m_render_surface.recreate_present_jobs();
 
-   m_isInitialized = true;
+   m_is_initialized = true;
 }
 
 void RootWindow::uninitialize() const
 {
-   m_widgetRenderer.remove_widget_from_viewport();
+   m_widget_renderer.remove_widget_from_viewport();
 }
 
 void RootWindow::build_rendering_job(render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
-   m_widgetRenderer.create_render_job(ctx, "core.color_out"_name);
+   m_widget_renderer.create_render_job(ctx, "core.color_out"_name);
 
-   if (m_renderViewport != nullptr) {
-      ctx.copy_texture_region("render_viewport.out"_external, {0, 0}, "core.color_out"_name, rect_position(m_renderViewport->dimensions()),
-                              rect_size(m_renderViewport->dimensions()));
+   if (m_render_viewport != nullptr) {
+      ctx.copy_texture_region("render_viewport.out"_external, {0, 0}, "core.color_out"_name, rect_position(m_render_viewport->dimensions()),
+                              rect_size(m_render_viewport->dimensions()));
    }
 
    ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
@@ -85,77 +85,77 @@ void RootWindow::build_rendering_job(render_core::BuildContext& ctx)
 
 void RootWindow::update()
 {
-   if (!m_isInitialized)
+   if (!m_is_initialized)
       return;
-   // if (!m_widgetRenderer.ui_viewport().should_redraw())
+   // if (!m_widget_renderer.ui_viewport().should_redraw())
    //    return;
 
-   if (m_shouldUpdateViewport) {
+   if (m_should_update_viewport) {
       m_device.await_all();
 
-      auto& renderViewportCtx = m_jobGraph.replace_job("render_viewport"_name, rect_size(m_renderViewport->dimensions()));
-      m_renderViewport->build_render_job(renderViewportCtx);
-      m_jobGraph.rebuild_job("render_viewport"_name);
+      auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(m_render_viewport->dimensions()));
+      m_render_viewport->build_render_job(render_viewport_ctx);
+      m_job_graph.rebuild_job("render_viewport"_name);
 
-      auto& renderDialogCtx = m_jobGraph.replace_job("render_dialog"_name);
-      this->build_rendering_job(renderDialogCtx);
-      m_jobGraph.rebuild_job("render_dialog"_name);
+      auto& render_dialog_ctx = m_job_graph.replace_job("render_dialog"_name);
+      this->build_rendering_job(render_dialog_ctx);
+      m_job_graph.rebuild_job("render_dialog"_name);
 
-      m_shouldUpdateViewport = false;
+      m_should_update_viewport = false;
 
-      m_renderSurface.recreate_present_jobs();
+      m_render_surface.recreate_present_jobs();
    }
 
-   m_renderSurface.await_for_frame(m_frameIndex);
+   m_render_surface.await_for_frame(m_frame_index);
 
-   m_jobGraph.build_semaphores();
+   m_job_graph.build_semaphores();
 
-   m_renderViewport->update(m_jobGraph, m_frameIndex, 0.017f);
+   m_render_viewport->update(m_job_graph, m_frame_index, 0.017f);
 
-   m_widgetRenderer.prepare_resources(m_jobGraph, m_frameIndex);
+   m_widget_renderer.prepare_resources(m_job_graph, m_frame_index);
 
-   m_jobGraph.execute("render_dialog"_name, m_frameIndex, nullptr);
+   m_job_graph.execute("render_dialog"_name, m_frame_index, nullptr);
 
-   m_renderSurface.present(m_jobGraph, m_frameIndex);
+   m_render_surface.present(m_job_graph, m_frame_index);
 
-   m_frameIndex = (m_frameIndex + 1) % 3;
+   m_frame_index = (m_frame_index + 1) % 3;
 }
 
 void RootWindow::on_close()
 {
-   m_shouldClose = true;
+   m_should_close = true;
 }
 
 void RootWindow::on_resize(const Vector2i size)
 {
    m_device.await_all();
 
-   m_jobGraph.set_screen_size(size);
-   m_widgetRenderer.ui_viewport().set_dimensions(size);
+   m_job_graph.set_screen_size(size);
+   m_widget_renderer.ui_viewport().set_dimensions(size);
 
-   m_widgetRenderer.add_widget_to_viewport(size);
-   m_shouldUpdateViewport = false;// already updating here
+   m_widget_renderer.add_widget_to_viewport(size);
+   m_should_update_viewport = false;// already updating here
 
-   auto& updateUiCtx = m_jobGraph.replace_job("update_ui"_name);
-   m_widgetRenderer.create_update_job(updateUiCtx);
-   m_jobGraph.rebuild_job("update_ui"_name);
+   auto& update_ui_ctx = m_job_graph.replace_job("update_ui"_name);
+   m_widget_renderer.create_update_job(update_ui_ctx);
+   m_job_graph.rebuild_job("update_ui"_name);
 
-   auto& renderViewportCtx = m_jobGraph.replace_job("render_viewport"_name, rect_size(m_renderViewport->dimensions()));
-   m_renderViewport->build_render_job(renderViewportCtx);
-   m_jobGraph.rebuild_job("render_viewport"_name);
+   auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(m_render_viewport->dimensions()));
+   m_render_viewport->build_render_job(render_viewport_ctx);
+   m_job_graph.rebuild_job("render_viewport"_name);
 
-   auto& renderCtx = m_jobGraph.replace_job("render_dialog"_name);
-   this->build_rendering_job(renderCtx);
-   m_jobGraph.rebuild_job("render_dialog"_name);
+   auto& render_ctx = m_job_graph.replace_job("render_dialog"_name);
+   this->build_rendering_job(render_ctx);
+   m_job_graph.rebuild_job("render_dialog"_name);
 
-   m_renderSurface.recreate_swapchain(size);
+   m_render_surface.recreate_swapchain(size);
 }
 
 void RootWindow::set_render_viewport(RenderViewport* viewport)
 {
-   m_renderViewport = viewport;
-   if (m_isInitialized) {
-      m_shouldUpdateViewport = true;
+   m_render_viewport = viewport;
+   if (m_is_initialized) {
+      m_should_update_viewport = true;
    }
 }
 
@@ -171,12 +171,12 @@ desktop::ISurface& RootWindow::surface() const
 
 resource::ResourceManager& RootWindow::resource_manager() const
 {
-   return m_resourceManager;
+   return m_resource_manager;
 }
 
 bool RootWindow::should_close() const
 {
-   return m_shouldClose;
+   return m_should_close;
 }
 
 }// namespace triglav::editor

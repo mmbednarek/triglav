@@ -25,16 +25,16 @@ class AccelerationStructurePool
  public:
    struct Node
    {
-      Index chunkCount;
-      bool isFree;
+      Index chunk_count;
+      bool is_free;
       Node* next;
    };
 
    struct Page
    {
       std::unique_ptr<Buffer> buffer;
-      Index availableChunks;
-      Node* headNode;
+      Index available_chunks;
+      Node* head_node;
    };
 
    explicit AccelerationStructurePool(Device& device);
@@ -50,9 +50,9 @@ class AccelerationStructurePool
 
  private:
    Device& m_device;
-   BufferHeap m_accStructHeap;
+   BufferHeap m_acc_struct_heap;
    std::map<const AccelerationStructure*, BufferHeap::Section> m_sections;
-   std::multimap<MemorySize, AccelerationStructure*> m_freeAccelerationStructures;
+   std::multimap<MemorySize, AccelerationStructure*> m_free_acceleration_structures;
 };
 
 }// namespace triglav::graphics_api::ray_tracing

@@ -7,8 +7,8 @@ namespace triglav::desktop {
 class ISurface;
 class IDisplay;
 
-VkResult create_vulkan_surface(VkInstance instance, const ISurface* surfaceIFace, const VkAllocationCallbacks* pAllocator,
-                               VkSurfaceKHR* pSurface);
+VkResult create_vulkan_surface(VkInstance instance, const ISurface* surface_iface, const VkAllocationCallbacks* p_allocator,
+                               VkSurfaceKHR* p_surface);
 const char* vulkan_extension_name(const IDisplay* display);
 
 }// namespace triglav::desktop

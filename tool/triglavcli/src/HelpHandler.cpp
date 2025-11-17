@@ -6,16 +6,16 @@
 
 namespace triglav::tool::cli {
 
-constexpr auto g_descOffset = 16;
+constexpr auto g_desc_offset = 16;
 
 namespace {
 
-void print_command(std::string_view commandName, std::string_view description)
+void print_command(std::string_view command_name, std::string_view description)
 {
-   assert(commandName.length() < g_descOffset);
-   std::print(stderr, "   {}", commandName);
-   const auto remainingOffset = g_descOffset - commandName.size();
-   for (auto i = 0u; i < remainingOffset; i++) {
+   assert(command_name.length() < g_desc_offset);
+   std::print(stderr, "   {}", command_name);
+   const auto remaining_offset = g_desc_offset - command_name.size();
+   for (auto i = 0u; i < remaining_offset; i++) {
       std::print(stderr, " ");
    }
    std::print(stderr, "{}\n", description);
