@@ -30,15 +30,15 @@ class DescriptorLayoutArray
 class DescriptorPool
 {
  public:
-   explicit DescriptorPool(vulkan::DescriptorPool descriptorPool);
+   explicit DescriptorPool(vulkan::DescriptorPool descriptor_pool);
 
-   [[nodiscard]] Status allocate_descriptors(std::span<VkDescriptorSetLayout> inLayouts, std::span<VkDescriptorSet> outSets);
+   [[nodiscard]] Status allocate_descriptors(std::span<VkDescriptorSetLayout> in_layouts, std::span<VkDescriptorSet> out_sets);
    [[nodiscard]] Status free_descriptors(std::span<VkDescriptorSet> sets);
 
-   [[nodiscard]] Result<DescriptorArray> allocate_array(const DescriptorLayoutArray& descriptorLayouts);
+   [[nodiscard]] Result<DescriptorArray> allocate_array(const DescriptorLayoutArray& descriptor_layouts);
 
  private:
-   vulkan::DescriptorPool m_descriptorPool;
+   vulkan::DescriptorPool m_descriptor_pool;
 };
 
 }// namespace triglav::graphics_api

@@ -69,23 +69,23 @@ asset::TextureAddressMode to_address_mode(const gltf::SamplerWrap wrap)
 
 asset::SamplerProperties to_sampler_properties(const gltf::Sampler& sampler)
 {
-   asset::SamplerProperties outSampler{};
-   outSampler.minFilter = to_filter_type(sampler.minFilter);
-   outSampler.magFilter = to_filter_type(sampler.magFilter);
-   outSampler.addressModeU = to_address_mode(sampler.wrapS);
-   outSampler.addressModeV = to_address_mode(sampler.wrapT);
-   outSampler.addressModeW = asset::TextureAddressMode::Clamp;
-   outSampler.enableAnisotropy = true;
-   return outSampler;
+   asset::SamplerProperties out_sampler{};
+   out_sampler.min_filter = to_filter_type(sampler.min_filter);
+   out_sampler.mag_filter = to_filter_type(sampler.mag_filter);
+   out_sampler.address_mode_u = to_address_mode(sampler.wrap_s);
+   out_sampler.address_mode_v = to_address_mode(sampler.wrap_t);
+   out_sampler.address_mode_w = asset::TextureAddressMode::Clamp;
+   out_sampler.enable_anisotropy = true;
+   return out_sampler;
 }
 
 std::string strip_extension(const std::string_view str)
 {
-   const auto dotAt = str.find_last_of('.');
-   if (dotAt == std::string_view::npos) {
+   const auto dot_at = str.find_last_of('.');
+   if (dot_at == std::string_view::npos) {
       return std::string{str};
    }
-   return std::string{str.substr(0, dotAt)};
+   return std::string{str.substr(0, dot_at)};
 }
 
 }// namespace
@@ -93,179 +93,179 @@ std::string strip_extension(const std::string_view str)
 class LevelImporter
 {
  public:
-   LevelImporter(LevelImportProps props, ProjectInfo&& projectInfo, gltf::GlbResource&& glbResource, const io::Path& glbSrcPath) :
+   LevelImporter(LevelImportProps props, ProjectInfo&& project_info, gltf::GlbResource&& glb_resource, const io::Path& glb_src_path) :
        m_props(std::move(props)),
-       m_projectInfo(std::move(projectInfo)),
-       m_glbFile(std::move(glbResource)),
-       m_glbSourcePath(glbSrcPath)
+       m_project_info(std::move(project_info)),
+       m_glb_file(std::move(glb_resource)),
+       m_glb_source_path(glb_src_path)
    {
    }
 
-   std::optional<TextureName> import_texture(const u32 textureID, const asset::TexturePurpose purpose)
+   std::optional<TextureName> import_texture(const u32 texture_id, const asset::TexturePurpose purpose)
    {
-      if (m_importedTextures.contains(textureID)) {
-         return m_importedTextures.at(textureID);
+      if (m_imported_textures.contains(texture_id)) {
+         return m_imported_textures.at(texture_id);
       }
 
-      const auto& srcTexture = m_glbFile.document->textures.at(textureID);
+      const auto& src_texture = m_glb_file.document->textures.at(texture_id);
 
-      const auto& srcImage = m_glbFile.document->images.at(srcTexture.source);
-      const auto& srcSampler = m_glbFile.document->samplers.at(srcTexture.sampler);
+      const auto& src_image = m_glb_file.document->images.at(src_texture.source);
+      const auto& src_sampler = m_glb_file.document->samplers.at(src_texture.sampler);
 
-      auto textureNameStr =
-         srcTexture.name.empty() ? std::format("{}.tex{}", strip_extension(m_props.srcPath.basename()), textureID) : srcTexture.name;
-      for (char& ch : textureNameStr) {
+      auto texture_name_str =
+         src_texture.name.empty() ? std::format("{}.tex{}", strip_extension(m_props.src_path.basename()), texture_id) : src_texture.name;
+      for (char& ch : texture_name_str) {
          ch = static_cast<char>(std::tolower(ch));
       }
 
-      auto importPath = m_projectInfo.default_import_path(ResourceType::Texture, textureNameStr);
-      const auto rcName = make_rc_name(importPath);
-      assert(rcName.type() == ResourceType::Texture);
+      auto import_path = m_project_info.default_import_path(ResourceType::Texture, texture_name_str);
+      const auto rc_name = make_rc_name(import_path);
+      assert(rc_name.type() == ResourceType::Texture);
 
-      const auto dstPath = m_projectInfo.content_path(importPath);
+      const auto dst_path = m_project_info.content_path(import_path);
 
-      TextureImportProps importProps{
-         .srcPath = "."_path,
-         .dstPath = dstPath,
+      TextureImportProps import_props{
+         .src_path = "."_path,
+         .dst_path = dst_path,
          .purpose = purpose,
-         .samplerProperties = to_sampler_properties(srcSampler),
-         .shouldCompress = true,
-         .hasMipMaps = true,
-         .shouldOverride = m_props.shouldOverride,
+         .sampler_properties = to_sampler_properties(src_sampler),
+         .should_compress = true,
+         .has_mip_maps = true,
+         .should_override = m_props.should_override,
       };
 
-      if (srcImage.uri.has_value()) {
-         importProps.srcPath = m_glbSourcePath.parent().sub(srcImage.uri.value());
-         if (!cli::import_texture(importProps)) {
+      if (src_image.uri.has_value()) {
+         import_props.src_path = m_glb_source_path.parent().sub(src_image.uri.value());
+         if (!cli::import_texture(import_props)) {
             return std::nullopt;
          }
-      } else if (srcImage.bufferView.has_value()) {
-         auto stream = m_glbFile.bufferManager.buffer_view_to_stream(*srcImage.bufferView);
-         if (!cli::import_texture_from_stream(importProps, stream)) {
+      } else if (src_image.buffer_view.has_value()) {
+         auto stream = m_glb_file.buffer_manager.buffer_view_to_stream(*src_image.buffer_view);
+         if (!cli::import_texture_from_stream(import_props, stream)) {
             return std::nullopt;
          }
       } else {
-         std::print(stderr, "triglav-cli: Failed to import texture {}, no URI or buffer view provided\n", textureNameStr);
+         std::print(stderr, "triglav-cli: Failed to import texture {}, no URI or buffer view provided\n", texture_name_str);
          return std::nullopt;
       }
 
-      if (!add_resource_to_index(importPath)) {
+      if (!add_resource_to_index(import_path)) {
          return std::nullopt;
       }
 
-      m_importedTextures.emplace(textureID, rcName);
+      m_imported_textures.emplace(texture_id, rc_name);
 
-      return rcName;
+      return rc_name;
    }
 
-   std::optional<MaterialName> import_material(const u32 materialID)
+   std::optional<MaterialName> import_material(const u32 material_id)
    {
-      if (m_importedMaterials.contains(materialID)) {
-         return m_importedMaterials.at(materialID);
+      if (m_imported_materials.contains(material_id)) {
+         return m_imported_materials.at(material_id);
       }
 
-      const auto& srcMaterial = m_glbFile.document->materials.at(materialID);
-      if (!srcMaterial.pbrMetallicRoughness.baseColorTexture.has_value()) {
-         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned", materialID);
+      const auto& src_material = m_glb_file.document->materials.at(material_id);
+      if (!src_material.pbr_metallic_roughness.base_color_texture.has_value()) {
+         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned", material_id);
          return std::nullopt;
       }
 
-      auto albedoTex = this->import_texture(srcMaterial.pbrMetallicRoughness.baseColorTexture->index, asset::TexturePurpose::Albedo);
-      if (!albedoTex.has_value()) {
+      auto albedo_tex = this->import_texture(src_material.pbr_metallic_roughness.base_color_texture->index, asset::TexturePurpose::Albedo);
+      if (!albedo_tex.has_value()) {
          return std::nullopt;
       }
 
-      render_objects::Material dstMaterial{};
-      if (srcMaterial.normalTexture.has_value()) {
-         dstMaterial.materialTemplate = render_objects::MaterialTemplate::NormalMap;
+      render_objects::Material dst_material{};
+      if (src_material.normal_texture.has_value()) {
+         dst_material.material_template = render_objects::MaterialTemplate::NormalMap;
 
-         auto normalTex = this->import_texture(srcMaterial.normalTexture->index, asset::TexturePurpose::NormalMap);
-         if (!normalTex.has_value()) {
+         auto normal_tex = this->import_texture(src_material.normal_texture->index, asset::TexturePurpose::NormalMap);
+         if (!normal_tex.has_value()) {
             return std::nullopt;
          }
 
          render_objects::MTProperties_NormalMap properties{
-            .albedo = *albedoTex,
-            .normal = *normalTex,
-            .roughness = srcMaterial.pbrMetallicRoughness.roughnessFactor,
-            .metallic = srcMaterial.pbrMetallicRoughness.metallicFactor,
+            .albedo = *albedo_tex,
+            .normal = *normal_tex,
+            .roughness = src_material.pbr_metallic_roughness.roughness_factor,
+            .metallic = src_material.pbr_metallic_roughness.metallic_factor,
          };
-         dstMaterial.properties = properties;
+         dst_material.properties = properties;
       } else {
-         dstMaterial.materialTemplate = render_objects::MaterialTemplate::Basic;
+         dst_material.material_template = render_objects::MaterialTemplate::Basic;
 
          render_objects::MTProperties_Basic properties{
-            .albedo = *albedoTex,
-            .roughness = srcMaterial.pbrMetallicRoughness.roughnessFactor,
-            .metallic = srcMaterial.pbrMetallicRoughness.metallicFactor,
+            .albedo = *albedo_tex,
+            .roughness = src_material.pbr_metallic_roughness.roughness_factor,
+            .metallic = src_material.pbr_metallic_roughness.metallic_factor,
          };
-         dstMaterial.properties = properties;
+         dst_material.properties = properties;
       }
 
-      auto materialNameStr =
-         srcMaterial.name.empty() ? std::format("{}.mat{}", strip_extension(m_props.srcPath.basename()), materialID) : srcMaterial.name;
-      for (char& ch : materialNameStr) {
+      auto material_name_str =
+         src_material.name.empty() ? std::format("{}.mat{}", strip_extension(m_props.src_path.basename()), material_id) : src_material.name;
+      for (char& ch : material_name_str) {
          ch = static_cast<char>(std::tolower(ch));
       }
 
-      auto importPath = m_projectInfo.default_import_path(ResourceType::Material, materialNameStr);
-      const auto rcName = make_rc_name(importPath);
-      assert(rcName.type() == ResourceType::Material);
+      auto import_path = m_project_info.default_import_path(ResourceType::Material, material_name_str);
+      const auto rc_name = make_rc_name(import_path);
+      assert(rc_name.type() == ResourceType::Material);
 
-      const auto dstPath = m_projectInfo.content_path(importPath);
-      if (!m_props.shouldOverride && dstPath.exists()) {
-         std::print(stderr, "triglav-cli: Failed to import material to {}, file exists\n", dstPath.string());
+      const auto dst_path = m_project_info.content_path(import_path);
+      if (!m_props.should_override && dst_path.exists()) {
+         std::print(stderr, "triglav-cli: Failed to import material to {}, file exists\n", dst_path.string());
          return std::nullopt;
       }
 
-      const auto file = io::open_file(dstPath, io::FileOpenMode::Create);
+      const auto file = io::open_file(dst_path, io::FileOpenMode::Create);
       if (!file.has_value()) {
          return std::nullopt;
       }
 
       ryml::Tree tree;
-      ryml::NodeRef treeRef{tree};
-      treeRef |= ryml::MAP;
-      dstMaterial.serialize_yaml(treeRef);
+      ryml::NodeRef tree_ref{tree};
+      tree_ref |= ryml::MAP;
+      dst_material.serialize_yaml(tree_ref);
 
       const auto str = ryml::emitrs_yaml<std::string>(tree);
       if (!(*file)->write({reinterpret_cast<const u8*>(str.data()), str.size()}).has_value()) {
          return std::nullopt;
       }
 
-      std::print(stderr, "triglav-cli: Imported material to {}\n", importPath);
+      std::print(stderr, "triglav-cli: Imported material to {}\n", import_path);
 
-      if (!add_resource_to_index(importPath)) {
+      if (!add_resource_to_index(import_path)) {
          return std::nullopt;
       }
 
-      m_importedMaterials.emplace(materialID, rcName.name());
+      m_imported_materials.emplace(material_id, rc_name.name());
 
-      return rcName;
+      return rc_name;
    }
 
-   [[nodiscard]] std::optional<MeshName> import_mesh(const std::optional<std::string>& name, const u32 meshID)
+   [[nodiscard]] std::optional<MeshName> import_mesh(const std::optional<std::string>& name, const u32 mesh_id)
    {
-      if (m_importedMeshes.contains(meshID)) {
-         return m_importedMeshes.at(meshID);
+      if (m_imported_meshes.contains(mesh_id)) {
+         return m_imported_meshes.at(mesh_id);
       }
 
-      auto meshNameStr = name.value_or(std::format("{}.mesh{}", strip_extension(m_props.srcPath.basename()), meshID));
-      for (char& ch : meshNameStr) {
+      auto mesh_name_str = name.value_or(std::format("{}.mesh{}", strip_extension(m_props.src_path.basename()), mesh_id));
+      for (char& ch : mesh_name_str) {
          ch = static_cast<char>(std::tolower(ch));
       }
 
-      auto importPath = m_projectInfo.default_import_path(ResourceType::Mesh, meshNameStr);
-      const auto rcName = make_rc_name(importPath);
-      assert(rcName.type() == ResourceType::Mesh);
+      auto import_path = m_project_info.default_import_path(ResourceType::Mesh, mesh_name_str);
+      const auto rc_name = make_rc_name(import_path);
+      assert(rc_name.type() == ResourceType::Mesh);
 
-      const auto dstPath = m_projectInfo.content_path(importPath);
-      if (!m_props.shouldOverride && dstPath.exists()) {
-         std::print(stderr, "triglav-cli: Failed to import mesh to {}, file exists\n", dstPath.string());
+      const auto dst_path = m_project_info.content_path(import_path);
+      if (!m_props.should_override && dst_path.exists()) {
+         std::print(stderr, "triglav-cli: Failed to import mesh to {}, file exists\n", dst_path.string());
          return std::nullopt;
       }
 
-      const auto& mesh = m_glbFile.document->meshes.at(meshID);
+      const auto& mesh = m_glb_file.document->meshes.at(mesh_id);
       for (const auto& prim : mesh.primitives) {
          if (!prim.material.has_value())
             continue;
@@ -273,66 +273,66 @@ class LevelImporter
             return std::nullopt;
       }
 
-      auto gltfMesh = gltf::mesh_from_document(*m_glbFile.document, meshID, m_glbFile.bufferManager, m_importedMaterials);
-      write_mesh_to_file(gltfMesh, dstPath);
-      m_importedMeshes.emplace(meshID, rcName);
+      auto gltf_mesh = gltf::mesh_from_document(*m_glb_file.document, mesh_id, m_glb_file.buffer_manager, m_imported_materials);
+      write_mesh_to_file(gltf_mesh, dst_path);
+      m_imported_meshes.emplace(mesh_id, rc_name);
 
-      std::print(stderr, "triglav-cli: Importing mesh to {}\n", importPath);
+      std::print(stderr, "triglav-cli: Importing mesh to {}\n", import_path);
 
-      if (!add_resource_to_index(importPath)) {
+      if (!add_resource_to_index(import_path)) {
          return std::nullopt;
       }
 
-      return rcName;
+      return rc_name;
    }
 
    [[nodiscard]] bool import_scene()
    {
-      if (!m_props.shouldOverride && m_props.dstPath.exists()) {
+      if (!m_props.should_override && m_props.dst_path.exists()) {
          std::print(stderr, "triglav-cli: Failed to import scene, file exists");
          return false;
       }
 
-      const auto& glbScene = m_glbFile.document->scenes[m_glbFile.document->scene];
+      const auto& glb_scene = m_glb_file.document->scenes[m_glb_file.document->scene];
 
-      world::LevelNode rootNode("root");
-      for (const u32 nodeID : glbScene.nodes) {
-         auto& glbNode = m_glbFile.document->nodes[nodeID];
+      world::LevelNode root_node("root");
+      for (const u32 node_id : glb_scene.nodes) {
+         auto& glb_node = m_glb_file.document->nodes[node_id];
 
-         if (!glbNode.mesh.has_value())
+         if (!glb_node.mesh.has_value())
             continue;
 
          auto transform = Transform3D::identity();
-         if (glbNode.matrix.has_value()) {
-            transform = Transform3D::from_matrix(glbNode.matrix.value());
+         if (glb_node.matrix.has_value()) {
+            transform = Transform3D::from_matrix(glb_node.matrix.value());
          }
-         if (glbNode.rotation.has_value()) {
-            transform.rotation = {glbNode.rotation->w, glbNode.rotation->x, glbNode.rotation->y, glbNode.rotation->z};
+         if (glb_node.rotation.has_value()) {
+            transform.rotation = {glb_node.rotation->w, glb_node.rotation->x, glb_node.rotation->y, glb_node.rotation->z};
          }
-         if (glbNode.translation.has_value()) {
-            transform.translation = glbNode.translation.value();
+         if (glb_node.translation.has_value()) {
+            transform.translation = glb_node.translation.value();
          }
-         if (glbNode.scale.has_value()) {
-            transform.scale = glbNode.scale.value();
+         if (glb_node.scale.has_value()) {
+            transform.scale = glb_node.scale.value();
          }
 
-         auto meshName = this->import_mesh(glbNode.name, *glbNode.mesh);
-         if (!meshName.has_value()) {
+         auto mesh_name = this->import_mesh(glb_node.name, *glb_node.mesh);
+         if (!mesh_name.has_value()) {
             return false;
          }
 
          world::StaticMesh mesh;
-         mesh.name = glbNode.name.value_or(std::format("static_mesh{}", nodeID));
+         mesh.name = glb_node.name.value_or(std::format("static_mesh{}", node_id));
          mesh.transform = transform;
-         mesh.meshName = *meshName;
+         mesh.mesh_name = *mesh_name;
 
-         rootNode.add_static_mesh(std::move(mesh));
+         root_node.add_static_mesh(std::move(mesh));
       }
 
       world::Level level;
-      level.add_node("root"_name, std::move(rootNode));
+      level.add_node("root"_name, std::move(root_node));
 
-      if (!level.save_to_file(m_props.dstPath)) {
+      if (!level.save_to_file(m_props.dst_path)) {
          std::print(stderr, "triglav-cli: Failed to save level file\n");
          return false;
       }
@@ -342,31 +342,31 @@ class LevelImporter
 
  private:
    LevelImportProps m_props;
-   ProjectInfo m_projectInfo;
-   gltf::GlbResource m_glbFile;
-   io::Path m_glbSourcePath;
-   std::map<u32, MeshName> m_importedMeshes;
-   std::map<u32, MaterialName> m_importedMaterials;
-   std::map<u32, TextureName> m_importedTextures;
+   ProjectInfo m_project_info;
+   gltf::GlbResource m_glb_file;
+   io::Path m_glb_source_path;
+   std::map<u32, MeshName> m_imported_meshes;
+   std::map<u32, MaterialName> m_imported_materials;
+   std::map<u32, TextureName> m_imported_textures;
 };
 
 bool import_level(const LevelImportProps& props)
 {
-   std::print(stderr, "triglav-cli: Importing level to {}\n", props.dstPath.string());
+   std::print(stderr, "triglav-cli: Importing level to {}\n", props.dst_path.string());
 
-   auto projectInfo = load_active_project_info();
-   if (!projectInfo.has_value()) {
+   auto project_info = load_active_project_info();
+   if (!project_info.has_value()) {
       std::print(stderr, "triglav-cli: Failed to load project info\n");
       return false;
    }
 
-   auto glbFile = gltf::open_glb_file(props.srcPath);
-   if (!glbFile.has_value()) {
+   auto glb_file = gltf::open_glb_file(props.src_path);
+   if (!glb_file.has_value()) {
       std::print(stderr, "triglav-cli: Failed to load GLB file\n");
       return false;
    }
 
-   LevelImporter importer(props, std::move(*projectInfo), std::move(*glbFile), props.srcPath);
+   LevelImporter importer(props, std::move(*project_info), std::move(*glb_file), props.src_path);
    if (!importer.import_scene()) {
       return false;
    }

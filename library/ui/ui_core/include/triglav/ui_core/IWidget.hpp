@@ -64,20 +64,20 @@ struct Event
 
    struct TextInput
    {
-      Rune inputRune;
+      Rune input_rune;
    };
 
-   Type eventType;
-   Vector2 parentSize;
-   Vector2 mousePosition;
-   Vector2 globalMousePosition;
-   bool isForwardedToActive = false;
+   Type event_type;
+   Vector2 parent_size;
+   Vector2 mouse_position;
+   Vector2 global_mouse_position;
+   bool is_forwarded_to_active = false;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 
    Event sub_event(const Type event_type) const
    {
       Event result = *this;
-      result.eventType = event_type;
+      result.event_type = event_type;
       result.data = std::monostate{};
       return result;
    }
@@ -112,7 +112,7 @@ concept AnyVisitor = TG_UI_EVENTS false;
 template<typename TResult, event_visitor_concepts::AnyVisitor<TResult> TEventVisitor>
 TResult visit_event(TEventVisitor& visitor, const Event& ev, NonVoid<TResult> default_result = {})
 {
-   switch (ev.eventType) {
+   switch (ev.event_type) {
 #define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD)                              \
    case Event::Type::NAME:                                                  \
       if constexpr (event_visitor_concepts::NAME<TEventVisitor, TResult>) { \
@@ -141,12 +141,12 @@ class IWidget
    virtual ~IWidget() = default;
 
    // Calculates widget's desired size based on parent's size.
-   [[nodiscard]] virtual Vector2 desired_size(Vector2 parentSize) const = 0;
+   [[nodiscard]] virtual Vector2 desired_size(Vector2 parent_size) const = 0;
 
    // Adds widget to the current viewport
    // If the widget has already been added, it
    // will be adjusted to the new parent's dimensions.
-   virtual void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) = 0;
+   virtual void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) = 0;
 
    // Removed the widget from current viewport.
    virtual void remove_from_viewport() = 0;
@@ -222,8 +222,8 @@ class ProxyWidget : public ContainerWidget
  public:
    ProxyWidget(Context& context, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const Event& event) override;
 };

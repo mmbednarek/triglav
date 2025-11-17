@@ -9,7 +9,7 @@ class LevelEditor;
 class SelectionTool final : public ILevelEditorTool
 {
  public:
-   explicit SelectionTool(LevelEditor& levelEditor);
+   explicit SelectionTool(LevelEditor& level_editor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;
@@ -18,7 +18,7 @@ class SelectionTool final : public ILevelEditorTool
    void on_left_tool() override;
 
  private:
-   LevelEditor& m_levelEditor;
+   LevelEditor& m_level_editor;
 };
 
 }// namespace triglav::editor

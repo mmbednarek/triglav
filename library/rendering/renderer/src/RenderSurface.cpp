@@ -14,65 +14,66 @@ namespace {
 
 Vector2u create_viewport_resolution(const graphics_api::Device& device, const graphics_api::Surface& surface, Vector2u resolution)
 {
-   const auto [minResolution, maxResolution] = device.get_surface_resolution_limits(surface);
-   resolution.x = std::clamp(resolution.x, minResolution.width, maxResolution.width);
-   resolution.y = std::clamp(resolution.y, minResolution.height, maxResolution.height);
+   const auto [min_resolution, max_resolution] = device.get_surface_resolution_limits(surface);
+   resolution.x = std::clamp(resolution.x, min_resolution.width, max_resolution.width);
+   resolution.y = std::clamp(resolution.y, min_resolution.height, max_resolution.height);
    return resolution;
 }
 
 }// namespace
 
-RenderSurface::RenderSurface(graphics_api::Device& device, desktop::ISurface& desktopSurface, graphics_api::Surface& surface,
-                             render_core::ResourceStorage& resourceStorage, const Vector2u resolution,
-                             const graphics_api::PresentMode presentMode) :
+RenderSurface::RenderSurface(graphics_api::Device& device, desktop::ISurface& desktop_surface, graphics_api::Surface& surface,
+                             render_core::ResourceStorage& resource_storage, const Vector2u resolution,
+                             const graphics_api::PresentMode present_mode) :
     m_device(device),
-    m_desktopSurface(desktopSurface),
+    m_desktop_surface(desktop_surface),
     m_surface(surface),
-    m_resourceStorage(resourceStorage),
+    m_resource_storage(resource_storage),
     m_resolution(create_viewport_resolution(device, surface, resolution)),
-    m_presentMode(presentMode),
+    m_present_mode(present_mode),
     m_swapchain(GAPI_CHECK(device.create_swapchain(surface, GAPI_FORMAT(BGRA, sRGB), graphics_api::ColorSpace::sRGB,
-                                                   {resolution.x, resolution.y}, m_presentMode))),
-    m_frameFences{GAPI_CHECK(device.create_fence()), GAPI_CHECK(device.create_fence()), GAPI_CHECK(device.create_fence())}
+                                                   {resolution.x, resolution.y}, m_present_mode))),
+    m_frame_fences{GAPI_CHECK(device.create_fence()), GAPI_CHECK(device.create_fence()), GAPI_CHECK(device.create_fence())}
 {
 }
 
-void RenderSurface::add_present_jobs(render_core::JobGraph& jobGraph, const Name externalJob)
+void RenderSurface::add_present_jobs(render_core::JobGraph& job_graph, const Name external_job)
 {
-   jobGraph.add_external_job("job.acquire_swapchain_image"_name);
-   jobGraph.add_external_job("job.copy_present_image"_name);
-   jobGraph.add_external_job("job.present_swapchain_image"_name);
+   job_graph.add_external_job("job.acquire_swapchain_image"_name);
+   job_graph.add_external_job("job.copy_present_image"_name);
+   job_graph.add_external_job("job.present_swapchain_image"_name);
 
-   jobGraph.add_dependency("job.copy_present_image"_name, "job.acquire_swapchain_image"_name);
-   jobGraph.add_dependency("job.copy_present_image"_name, externalJob);
-   jobGraph.add_dependency("job.present_swapchain_image"_name, "job.copy_present_image"_name);
+   job_graph.add_dependency("job.copy_present_image"_name, "job.acquire_swapchain_image"_name);
+   job_graph.add_dependency("job.copy_present_image"_name, external_job);
+   job_graph.add_dependency("job.present_swapchain_image"_name, "job.copy_present_image"_name);
 }
 
-void RenderSurface::await_for_frame(const u32 frameIndex) const
+void RenderSurface::await_for_frame(const u32 frame_index) const
 {
-   m_frameFences[frameIndex].await();
+   m_frame_fences[frame_index].await();
 }
 
-void RenderSurface::present(render_core::JobGraph& jobGraph, const u32 frameIndex)
+void RenderSurface::present(render_core::JobGraph& job_graph, const u32 frame_index)
 {
-   if (m_mustRecreateSwapchain) {
-      recreate_swapchain(m_desktopSurface.dimension());
+   if (m_must_recreate_swapchain) {
+      recreate_swapchain(m_desktop_surface.dimension());
    }
 
-   const auto [framebufferIndex, mustRecreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(
-      jobGraph.semaphore("job.copy_present_image"_name, "job.acquire_swapchain_image"_name, frameIndex)));
-   if (mustRecreate) {
-      m_mustRecreateSwapchain = true;
+   const auto [framebuffer_index, must_recreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(
+      job_graph.semaphore("job.copy_present_image"_name, "job.acquire_swapchain_image"_name, frame_index)));
+   if (must_recreate) {
+      m_must_recreate_swapchain = true;
    }
 
-   GAPI_CHECK_STATUS(m_device.submit_command_list(m_prePresentCommands[framebufferIndex * render_core::FRAMES_IN_FLIGHT_COUNT + frameIndex],
-                                                  jobGraph.wait_semaphores("job.copy_present_image"_name, frameIndex),
-                                                  jobGraph.signal_semaphores("job.copy_present_image"_name, frameIndex),
-                                                  &m_frameFences[frameIndex], graphics_api::WorkType::Presentation));
+   GAPI_CHECK_STATUS(
+      m_device.submit_command_list(m_pre_present_commands[framebuffer_index * render_core::FRAMES_IN_FLIGHT_COUNT + frame_index],
+                                   job_graph.wait_semaphores("job.copy_present_image"_name, frame_index),
+                                   job_graph.signal_semaphores("job.copy_present_image"_name, frame_index), &m_frame_fences[frame_index],
+                                   graphics_api::WorkType::Presentation));
 
-   const auto status = m_swapchain.present(jobGraph.wait_semaphores("job.present_swapchain_image"_name, frameIndex), framebufferIndex);
+   const auto status = m_swapchain.present(job_graph.wait_semaphores("job.present_swapchain_image"_name, frame_index), framebuffer_index);
    if (status == graphics_api::Status::OutOfDateSwapchain) {
-      m_mustRecreateSwapchain = true;
+      m_must_recreate_swapchain = true;
    } else {
       GAPI_CHECK_STATUS(status);
    }
@@ -80,50 +81,50 @@ void RenderSurface::present(render_core::JobGraph& jobGraph, const u32 frameInde
 
 void RenderSurface::recreate_present_jobs()
 {
-   m_prePresentCommands.clear();
-   m_prePresentCommands.reserve(m_swapchain.textures().size() * render_core::FRAMES_IN_FLIGHT_COUNT);
+   m_pre_present_commands.clear();
+   m_pre_present_commands.reserve(m_swapchain.textures().size() * render_core::FRAMES_IN_FLIGHT_COUNT);
 
-   for (const auto& swapchainTexture : m_swapchain.textures()) {
-      for (const u32 frameIndex : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
-         auto cmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics | graphics_api::WorkType::Transfer));
-         GAPI_CHECK_STATUS(cmdList.begin());
+   for (const auto& swapchain_texture : m_swapchain.textures()) {
+      for (const u32 frame_index : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
+         auto cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics | graphics_api::WorkType::Transfer));
+         GAPI_CHECK_STATUS(cmd_list.begin());
 
-         graphics_api::TextureBarrierInfo inBarrier{};
-         inBarrier.texture = &swapchainTexture;
-         inBarrier.sourceState = graphics_api::TextureState::Undefined;
-         inBarrier.targetState = graphics_api::TextureState::TransferDst;
-         inBarrier.baseMipLevel = 0;
-         inBarrier.mipLevelCount = 1;
-         cmdList.texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer, inBarrier);
+         graphics_api::TextureBarrierInfo in_barrier{};
+         in_barrier.texture = &swapchain_texture;
+         in_barrier.source_state = graphics_api::TextureState::Undefined;
+         in_barrier.target_state = graphics_api::TextureState::TransferDst;
+         in_barrier.base_mip_level = 0;
+         in_barrier.mip_level_count = 1;
+         cmd_list.texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer, in_barrier);
 
-         cmdList.copy_texture(m_resourceStorage.texture("core.color_out"_name, frameIndex), graphics_api::TextureState::TransferSrc,
-                              swapchainTexture, graphics_api::TextureState::TransferDst);
+         cmd_list.copy_texture(m_resource_storage.texture("core.color_out"_name, frame_index), graphics_api::TextureState::TransferSrc,
+                               swapchain_texture, graphics_api::TextureState::TransferDst);
 
-         graphics_api::TextureBarrierInfo outBarrier{};
-         outBarrier.texture = &swapchainTexture;
-         outBarrier.sourceState = graphics_api::TextureState::TransferDst;
-         outBarrier.targetState = graphics_api::TextureState::Present;
-         outBarrier.baseMipLevel = 0;
-         outBarrier.mipLevelCount = 1;
-         cmdList.texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::End, outBarrier);
+         graphics_api::TextureBarrierInfo out_barrier{};
+         out_barrier.texture = &swapchain_texture;
+         out_barrier.source_state = graphics_api::TextureState::TransferDst;
+         out_barrier.target_state = graphics_api::TextureState::Present;
+         out_barrier.base_mip_level = 0;
+         out_barrier.mip_level_count = 1;
+         cmd_list.texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::End, out_barrier);
 
-         GAPI_CHECK_STATUS(cmdList.finish());
+         GAPI_CHECK_STATUS(cmd_list.finish());
 
-         m_prePresentCommands.emplace_back(std::move(cmdList));
+         m_pre_present_commands.emplace_back(std::move(cmd_list));
       }
    }
 }
 
-void RenderSurface::recreate_swapchain(const Vector2u newResolution)
+void RenderSurface::recreate_swapchain(const Vector2u new_resolution)
 {
    m_device.await_all();
    m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_surface, m_swapchain.color_format(), graphics_api::ColorSpace::sRGB,
-                                                      {newResolution.x, newResolution.y}, m_presentMode, &m_swapchain));
+                                                      {new_resolution.x, new_resolution.y}, m_present_mode, &m_swapchain));
 
-   m_resolution = newResolution;
+   m_resolution = new_resolution;
 
    RenderSurface::recreate_present_jobs();
-   m_mustRecreateSwapchain = false;
+   m_must_recreate_swapchain = false;
 }
 
 Vector2u RenderSurface::resolution() const

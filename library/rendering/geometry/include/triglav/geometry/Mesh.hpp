@@ -33,7 +33,7 @@ class Mesh
    Index add_face_range(std::span<Index> vertices);
    template<typename... TVertices>
    Index add_face(TVertices... vertices);
-   Index add_group(MeshGroup meshGroup);
+   Index add_group(MeshGroup mesh_group);
    void set_face_uvs_range(Index face, std::span<glm::vec2> vertices);
    template<typename... TUVs>
    void set_face_uvs(Index face, TUVs... vertices);
@@ -41,13 +41,13 @@ class Mesh
    template<typename... TNormals>
    void set_face_normals(Index face, TNormals... vertices);
    void set_face_group(Index face, Index group);
-   void set_material(Index meshGroup, MaterialName material);
+   void set_material(Index mesh_group, MaterialName material);
 
    [[nodiscard]] BoundingBox calculate_bounding_box() const;
    [[nodiscard]] bool is_triangulated() const;
    [[nodiscard]] size_t vertex_count() const;
    [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device,
-                                             graphics_api::BufferUsageFlags usageFlags = graphics_api::BufferUsage::None) const;
+                                             graphics_api::BufferUsageFlags usage_flags = graphics_api::BufferUsage::None) const;
    [[nodiscard]] VertexData to_vertex_data() const;
 
    static Mesh from_file(const io::Path& path);
@@ -62,24 +62,24 @@ template<typename... TVertices>
 Index Mesh::add_face(TVertices... vertices)
 {
    static_assert(sizeof...(vertices) >= 3);
-   std::array<Index, sizeof...(vertices)> inVertices{static_cast<Index>(vertices)...};
-   return this->add_face_range(inVertices);
+   std::array<Index, sizeof...(vertices)> in_vertices{static_cast<Index>(vertices)...};
+   return this->add_face_range(in_vertices);
 }
 
 template<typename... TUVs>
 void Mesh::set_face_uvs(Index face, TUVs... vertices)
 {
    static_assert(sizeof...(vertices) >= 3);
-   std::array<glm::vec2, sizeof...(vertices)> inVertices{vertices...};
-   this->set_face_uvs_range(face, inVertices);
+   std::array<glm::vec2, sizeof...(vertices)> in_vertices{vertices...};
+   this->set_face_uvs_range(face, in_vertices);
 }
 
 template<typename... TNormals>
 void Mesh::set_face_normals(Index face, TNormals... vertices)
 {
    static_assert(sizeof...(vertices) >= 3);
-   std::array<glm::vec3, sizeof...(vertices)> inVertices{vertices...};
-   this->set_face_normals_range(face, inVertices);
+   std::array<glm::vec3, sizeof...(vertices)> in_vertices{vertices...};
+   this->set_face_normals_range(face, in_vertices);
 }
 
 }// namespace triglav::geometry

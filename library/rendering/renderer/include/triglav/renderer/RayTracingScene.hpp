@@ -29,15 +29,15 @@ class RayTracingStage;
 
 struct RayGenerationUboData
 {
-   glm::mat4 viewInverse;
-   glm::mat4 projInverse;
+   glm::mat4 view_inverse;
+   glm::mat4 proj_inverse;
 };
 using RayGenerationUbo = graphics_api::UniformReplicatedBuffer<RayGenerationUboData>;
 
 struct ObjectDesc
 {
-   graphics_api::BufferAddress indexBuffer;
-   graphics_api::BufferAddress vertexBuffer;
+   graphics_api::BufferAddress index_buffer;
+   graphics_api::BufferAddress vertex_buffer;
 };
 
 class RayTracingScene
@@ -55,7 +55,7 @@ class RayTracingScene
 
    explicit RayTracingScene(graphics_api::Device& device, resource::ResourceManager& resources, Scene& scene);
 
-   void render(graphics_api::CommandList& cmdList, const graphics_api::Texture& texture, const graphics_api::Texture& shadowsTexture);
+   void render(graphics_api::CommandList& cmd_list, const graphics_api::Texture& texture, const graphics_api::Texture& shadows_texture);
 
    void build_acceleration_structures();
 
@@ -63,21 +63,21 @@ class RayTracingScene
 
  private:
    graphics_api::Device& m_device;
-   resource::ResourceManager& m_resourceManager;
+   resource::ResourceManager& m_resource_manager;
    render_objects::Mesh& m_teapot;
    Scene& m_scene;
-   std::optional<graphics_api::Buffer> m_instanceListBuffer;
-   graphics_api::Buffer m_objectBuffer;
-   graphics_api::ray_tracing::InstanceBuilder m_instanceBuilder;
+   std::optional<graphics_api::Buffer> m_instance_list_buffer;
+   graphics_api::Buffer m_object_buffer;
+   graphics_api::ray_tracing::InstanceBuilder m_instance_builder;
 
-   graphics_api::BufferHeap m_scratchHeap;
-   graphics_api::ray_tracing::AccelerationStructurePool m_asPool;
-   graphics_api::ray_tracing::GeometryBuildContext m_buildBLContext;
-   graphics_api::ray_tracing::GeometryBuildContext m_buildTLContext;
-   bool m_mustUpdateAccelerationStructures{false};
+   graphics_api::BufferHeap m_scratch_heap;
+   graphics_api::ray_tracing::AccelerationStructurePool m_as_pool;
+   graphics_api::ray_tracing::GeometryBuildContext m_build_blcontext;
+   graphics_api::ray_tracing::GeometryBuildContext m_build_tlcontext;
+   bool m_must_update_acceleration_structures{false};
    std::vector<ObjectDesc> m_objects;
 
-   graphics_api::ray_tracing::AccelerationStructure* m_tlAccelerationStructure{};
+   graphics_api::ray_tracing::AccelerationStructure* m_tl_acceleration_structure{};
 
    TG_SINK(Scene, OnObjectAddedToScene);
 };

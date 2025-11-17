@@ -52,27 +52,27 @@ void BarrierInsertionPass::visit(const detail::cmd::BindDescriptors& cmd)
 {
    for (const auto& descriptor : cmd.descriptors) {
       std::visit(
-         [this, stageFlags = descriptor->stages]<typename TDescriptor>(const TDescriptor& desc) {
+         [this, stage_flags = descriptor->stages]<typename TDescriptor>(const TDescriptor& desc) {
             if constexpr (std::is_same_v<TDescriptor, detail::descriptor::RWTexture>) {
-               this->setup_texture_barrier(desc.texRef, gapi::TextureState::General, stageFlags);
+               this->setup_texture_barrier(desc.tex_ref, gapi::TextureState::General, stage_flags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SamplableTexture>) {
-               this->setup_texture_barrier(desc.texRef, gapi::TextureState::ShaderRead, stageFlags);
+               this->setup_texture_barrier(desc.tex_ref, gapi::TextureState::ShaderRead, stage_flags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::SampledTextureArray>) {
-               for (const auto& texRef : desc.texRefs) {
-                  this->setup_texture_barrier(texRef, gapi::TextureState::ShaderRead, stageFlags);
+               for (const auto& tex_ref : desc.tex_refs) {
+                  this->setup_texture_barrier(tex_ref, gapi::TextureState::ShaderRead, stage_flags);
                }
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::Texture>) {
-               this->setup_texture_barrier(desc.texRef, gapi::TextureState::ShaderRead, stageFlags);
+               this->setup_texture_barrier(desc.tex_ref, gapi::TextureState::ShaderRead, stage_flags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBuffer>) {
-               this->setup_buffer_barrier(desc.buffRef, gapi::BufferAccess::UniformRead, stageFlags);
+               this->setup_buffer_barrier(desc.buff_ref, gapi::BufferAccess::UniformRead, stage_flags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferRange>) {
-               this->setup_buffer_barrier(desc.buffRef, gapi::BufferAccess::UniformRead, stageFlags);
+               this->setup_buffer_barrier(desc.buff_ref, gapi::BufferAccess::UniformRead, stage_flags);
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::UniformBufferArray>) {
-               for (const auto& buffRef : desc.buffers) {
-                  this->setup_buffer_barrier(buffRef, gapi::BufferAccess::UniformRead, stageFlags);
+               for (const auto& buff_ref : desc.buffers) {
+                  this->setup_buffer_barrier(buff_ref, gapi::BufferAccess::UniformRead, stage_flags);
                }
             } else if constexpr (std::is_same_v<TDescriptor, detail::descriptor::StorageBuffer>) {
-               this->setup_buffer_barrier(desc.buffRef, gapi::BufferAccess::ShaderWrite, stageFlags);
+               this->setup_buffer_barrier(desc.buff_ref, gapi::BufferAccess::ShaderWrite, stage_flags);
             }
          },
          descriptor->descriptor);
@@ -83,120 +83,120 @@ void BarrierInsertionPass::visit(const detail::cmd::BindDescriptors& cmd)
 
 void BarrierInsertionPass::visit(const detail::cmd::BindVertexBuffer& cmd)
 {
-   this->setup_buffer_barrier(cmd.buffRef, gapi::BufferAccess::VertexRead, gapi::PipelineStage::VertexInput);
+   this->setup_buffer_barrier(cmd.buff_ref, gapi::BufferAccess::VertexRead, gapi::PipelineStage::VertexInput);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::BindIndexBuffer& cmd)
 {
-   this->setup_buffer_barrier(cmd.buffRef, gapi::BufferAccess::IndexRead, gapi::PipelineStage::VertexInput);
+   this->setup_buffer_barrier(cmd.buff_ref, gapi::BufferAccess::IndexRead, gapi::PipelineStage::VertexInput);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::CopyTextureToBuffer& cmd)
 {
-   this->setup_texture_barrier(cmd.srcTexture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
-   this->setup_buffer_barrier(cmd.dstBuffer, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.src_texture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
+   this->setup_buffer_barrier(cmd.dst_buffer, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::CopyBufferToTexture& cmd)
 {
-   this->setup_buffer_barrier(cmd.srcBuffer, gapi::BufferAccess::TransferRead, gapi::PipelineStage::Transfer);
-   this->setup_texture_barrier(cmd.dstTexture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
+   this->setup_buffer_barrier(cmd.src_buffer, gapi::BufferAccess::TransferRead, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.dst_texture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::CopyBuffer& cmd)
 {
-   this->setup_buffer_barrier(cmd.srcBuffer, gapi::BufferAccess::TransferRead, gapi::PipelineStage::Transfer);
-   this->setup_buffer_barrier(cmd.dstBuffer, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);
+   this->setup_buffer_barrier(cmd.src_buffer, gapi::BufferAccess::TransferRead, gapi::PipelineStage::Transfer);
+   this->setup_buffer_barrier(cmd.dst_buffer, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::CopyTexture& cmd)
 {
-   this->setup_texture_barrier(cmd.srcTexture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
-   this->setup_texture_barrier(cmd.dstTexture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.src_texture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.dst_texture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::CopyTextureRegion& cmd)
 {
-   this->setup_texture_barrier(cmd.srcTexture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
-   this->setup_texture_barrier(cmd.dstTexture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.src_texture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.dst_texture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::BlitTexture& cmd)
 {
-   this->setup_texture_barrier(cmd.srcTexture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
-   this->setup_texture_barrier(cmd.dstTexture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.src_texture, gapi::TextureState::TransferSrc, gapi::PipelineStage::Transfer);
+   this->setup_texture_barrier(cmd.dst_texture, gapi::TextureState::TransferDst, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::FillBuffer& cmd)
 {
-   this->setup_buffer_barrier(cmd.buffName, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);
+   this->setup_buffer_barrier(cmd.buff_name, gapi::BufferAccess::TransferWrite, gapi::PipelineStage::Transfer);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::BeginRenderPass& cmd)
 {
-   for (const Name target : cmd.renderTargets) {
-      const auto& renderTarget = m_context.m_renderTargets.at(target);
+   for (const Name target : cmd.render_targets) {
+      const auto& render_target = m_context.m_render_targets.at(target);
 
-      const auto isDepthTarget = renderTarget.flags & gapi::AttachmentAttribute::Depth;
-      const auto isImageLoaded = renderTarget.flags & gapi::AttachmentAttribute::LoadImage;
-      const auto isImageStored = renderTarget.flags & gapi::AttachmentAttribute::StoreImage;
-      const auto targetStage = isDepthTarget ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
-      const auto lastUsedStage = isDepthTarget ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
-      const auto textureState =
-         (isImageLoaded && !isImageStored) ? gapi::TextureState::ReadOnlyRenderTarget : gapi::TextureState::RenderTarget;
+      const auto is_depth_target = render_target.flags & gapi::AttachmentAttribute::Depth;
+      const auto is_image_loaded = render_target.flags & gapi::AttachmentAttribute::LoadImage;
+      const auto is_image_stored = render_target.flags & gapi::AttachmentAttribute::StoreImage;
+      const auto target_stage = is_depth_target ? gapi::PipelineStage::EarlyZ : gapi::PipelineStage::AttachmentOutput;
+      const auto last_used_stage = is_depth_target ? gapi::PipelineStage::LateZ : gapi::PipelineStage::AttachmentOutput;
+      const auto texture_state =
+         (is_image_loaded && !is_image_stored) ? gapi::TextureState::ReadOnlyRenderTarget : gapi::TextureState::RenderTarget;
 
-      this->setup_texture_barrier(target, textureState, targetStage, lastUsedStage);
+      this->setup_texture_barrier(target, texture_state, target_stage, last_used_stage);
    }
 
-   m_isWithinRenderPass = true;
+   m_is_within_render_pass = true;
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::EndRenderPass& cmd)
 {
-   m_isWithinRenderPass = false;
+   m_is_within_render_pass = false;
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::DrawIndexedIndirectWithCount& cmd)
 {
-   this->setup_buffer_barrier(cmd.drawCallBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
-   this->setup_buffer_barrier(cmd.countBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.draw_call_buffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.count_buffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::DrawIndirectWithCount& cmd)
 {
-   this->setup_buffer_barrier(cmd.drawCallBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
-   this->setup_buffer_barrier(cmd.countBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.draw_call_buffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.count_buffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::DispatchIndirect& cmd)
 {
-   this->setup_buffer_barrier(cmd.indirectBuffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
+   this->setup_buffer_barrier(cmd.indirect_buffer, gapi::BufferAccess::IndirectCmdRead, gapi::PipelineStage::DrawIndirect);
    this->default_visit(cmd);
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::ExportTexture& cmd)
 {
-   this->setup_texture_barrier(cmd.texName, cmd.state, cmd.pipelineStage);
+   this->setup_texture_barrier(cmd.tex_name, cmd.state, cmd.pipeline_stage);
    // no need to default visit
 }
 
 void BarrierInsertionPass::visit(const detail::cmd::ExportBuffer& /*cmd*/)
 {
-   // this->setup_buffer_barrier(cmd.buffName, adjust_buffer_access_to_work_type(cmd.access, m_context.work_types()),
-   //                            cmd.pipelineStage);
+   // this->setup_buffer_barrier(cmd.buff_name, adjust_buffer_access_to_work_type(cmd.access, m_context.work_types()),
+   //                            cmd.pipeline_stage);
    // no need to default visit
 }
 
@@ -210,98 +210,99 @@ std::vector<detail::Command>& BarrierInsertionPass::commands()
    return m_commands;
 }
 
-void BarrierInsertionPass::setup_texture_barrier(const TextureRef texRef, const graphics_api::TextureState targetState,
-                                                 const graphics_api::PipelineStageFlags targetStages,
-                                                 const std::optional<graphics_api::PipelineStage> lastUsedStage)
+void BarrierInsertionPass::setup_texture_barrier(const TextureRef tex_ref, const graphics_api::TextureState target_state,
+                                                 const graphics_api::PipelineStageFlags target_stages,
+                                                 const std::optional<graphics_api::PipelineStage> last_used_stage)
 {
-   if (!std::holds_alternative<Name>(texRef) && !std::holds_alternative<FromLastFrame>(texRef) &&
-       !std::holds_alternative<TextureMip>(texRef)) {
+   if (!std::holds_alternative<Name>(tex_ref) && !std::holds_alternative<FromLastFrame>(tex_ref) &&
+       !std::holds_alternative<TextureMip>(tex_ref)) {
       return;
    }
 
-   const Name texName = std::holds_alternative<Name>(texRef)            ? std::get<Name>(texRef)
-                        : std::holds_alternative<FromLastFrame>(texRef) ? std::get<FromLastFrame>(texRef).name
-                                                                        : std::get<TextureMip>(texRef).name;
+   const Name tex_name = std::holds_alternative<Name>(tex_ref)            ? std::get<Name>(tex_ref)
+                         : std::holds_alternative<FromLastFrame>(tex_ref) ? std::get<FromLastFrame>(tex_ref).name
+                                                                          : std::get<TextureMip>(tex_ref).name;
 
-   u32 baseMip = 0;
-   u32 mipCount = 1;
-   if (std::holds_alternative<TextureMip>(texRef)) {
-      baseMip = std::get<TextureMip>(texRef).mipLevel;
+   u32 base_mip = 0;
+   u32 mip_count = 1;
+   if (std::holds_alternative<TextureMip>(tex_ref)) {
+      base_mip = std::get<TextureMip>(tex_ref).mip_level;
    } else {
-      auto& texDecl = m_context.declaration<detail::decl::Texture>(texName);
-      if (texDecl.createMipLevels) {
-         mipCount = calculate_mip_count(texDecl.dimensions(m_context.screen_size()));
+      auto& tex_decl = m_context.declaration<detail::decl::Texture>(tex_name);
+      if (tex_decl.create_mip_levels) {
+         mip_count = calculate_mip_count(tex_decl.dimensions(m_context.screen_size()));
       }
    }
 
-   auto& tex = m_context.declaration<detail::decl::Texture>(texName);
+   auto& tex = m_context.declaration<detail::decl::Texture>(tex_name);
 
-   auto lateStage = targetStages;
-   if (lastUsedStage.has_value()) {
-      lateStage = *lastUsedStage;
+   auto late_stage = target_stages;
+   if (last_used_stage.has_value()) {
+      late_stage = *last_used_stage;
    }
-   const auto targetMemAccess = gapi::to_memory_access(targetState);
+   const auto target_mem_access = gapi::to_memory_access(target_state);
 
-   u32 localCount = 1;
-   for (u32 mipLevel = baseMip; mipLevel < (baseMip + mipCount); ++mipLevel) {
-      if (mipLevel < (baseMip + mipCount - 1) && tex.currentStatePerMip[mipLevel] == tex.currentStatePerMip[mipLevel + 1] &&
-          tex.lastStages[mipLevel] == tex.lastStages[mipLevel + 1]) {
-         ++localCount;
+   u32 local_count = 1;
+   for (u32 mip_level = base_mip; mip_level < (base_mip + mip_count); ++mip_level) {
+      if (mip_level < (base_mip + mip_count - 1) && tex.current_state_per_mip[mip_level] == tex.current_state_per_mip[mip_level + 1] &&
+          tex.last_stages[mip_level] == tex.last_stages[mip_level + 1]) {
+         ++local_count;
          continue;
       }
 
-      if (targetMemAccess == gapi::MemoryAccess::Write || tex.currentStatePerMip[mipLevel] != targetState ||
-          tex.lastTextureBarrier == nullptr || tex.lastTextureBarrier->baseMipLevel != baseMip ||
-          tex.lastTextureBarrier->mipLevelCount != mipCount) {
-         if (tex.lastStages[mipLevel] != 0) {
+      if (target_mem_access == gapi::MemoryAccess::Write || tex.current_state_per_mip[mip_level] != target_state ||
+          tex.last_texture_barrier == nullptr || tex.last_texture_barrier->base_mip_level != base_mip ||
+          tex.last_texture_barrier->mip_level_count != mip_count) {
+         if (tex.last_stages[mip_level] != 0) {
             auto barrier =
-               std::make_unique<TextureBarrier>(texName, tex.lastStages[mipLevel], targetStages, tex.currentStatePerMip[mipLevel],
-                                                targetState, mipLevel - localCount + 1, localCount);
-            tex.lastTextureBarrier =
+               std::make_unique<TextureBarrier>(tex_name, tex.last_stages[mip_level], target_stages, tex.current_state_per_mip[mip_level],
+                                                target_state, mip_level - local_count + 1, local_count);
+            tex.last_texture_barrier =
                this->add_command_before_render_pass<detail::cmd::PlaceTextureBarrier>(std::move(barrier)).barrier.get();
          }
 
-         for (u32 level = 0; level < localCount; ++level) {
-            tex.lastStages[mipLevel - localCount + 1 + level] = lateStage;
+         for (u32 level = 0; level < local_count; ++level) {
+            tex.last_stages[mip_level - local_count + 1 + level] = late_stage;
          }
-      } else if (tex.lastTextureBarrier != nullptr) {
-         tex.lastTextureBarrier->dstStageFlags |= targetStages;
-         for (u32 level = 0; level < localCount; ++level) {
-            tex.lastStages[mipLevel - localCount + 1 + level] |= lateStage;
+      } else if (tex.last_texture_barrier != nullptr) {
+         tex.last_texture_barrier->dst_stage_flags |= target_stages;
+         for (u32 level = 0; level < local_count; ++level) {
+            tex.last_stages[mip_level - local_count + 1 + level] |= late_stage;
          }
       }
 
-      for (u32 level = 0; level < localCount; ++level) {
-         tex.currentStatePerMip[mipLevel - localCount + 1 + level] = targetState;
+      for (u32 level = 0; level < local_count; ++level) {
+         tex.current_state_per_mip[mip_level - local_count + 1 + level] = target_state;
       }
-      localCount = 1;
+      local_count = 1;
    }
 }
 
-void BarrierInsertionPass::setup_buffer_barrier(const BufferRef buffRef, const graphics_api::BufferAccess targetAccess,
-                                                const graphics_api::PipelineStageFlags targetStages)
+void BarrierInsertionPass::setup_buffer_barrier(const BufferRef buff_ref, const graphics_api::BufferAccess target_access,
+                                                const graphics_api::PipelineStageFlags target_stages)
 {
-   if (!std::holds_alternative<Name>(buffRef) && !std::holds_alternative<FromLastFrame>(buffRef)) {
+   if (!std::holds_alternative<Name>(buff_ref) && !std::holds_alternative<FromLastFrame>(buff_ref)) {
       return;
    }
 
-   const Name buffName = std::holds_alternative<Name>(buffRef) ? std::get<Name>(buffRef) : std::get<FromLastFrame>(buffRef).name;
-   auto& buffer = m_context.declaration<detail::decl::Buffer>(buffName);
+   const Name buff_name = std::holds_alternative<Name>(buff_ref) ? std::get<Name>(buff_ref) : std::get<FromLastFrame>(buff_ref).name;
+   auto& buffer = m_context.declaration<detail::decl::Buffer>(buff_name);
 
-   if (to_memory_access(targetAccess) == gapi::MemoryAccess::Write || to_memory_access(buffer.currentAccess) == gapi::MemoryAccess::Write ||
-       buffer.lastBufferBarrier == nullptr) {
-      if (buffer.lastStages != 0) {
-         auto barrier = std::make_unique<BufferBarrier>(buffRef, buffer.lastStages, targetStages, buffer.currentAccess, targetAccess);
-         buffer.lastBufferBarrier = this->add_command_before_render_pass<detail::cmd::PlaceBufferBarrier>(std::move(barrier)).barrier.get();
+   if (to_memory_access(target_access) == gapi::MemoryAccess::Write ||
+       to_memory_access(buffer.current_access) == gapi::MemoryAccess::Write || buffer.last_buffer_barrier == nullptr) {
+      if (buffer.last_stages != 0) {
+         auto barrier = std::make_unique<BufferBarrier>(buff_ref, buffer.last_stages, target_stages, buffer.current_access, target_access);
+         buffer.last_buffer_barrier =
+            this->add_command_before_render_pass<detail::cmd::PlaceBufferBarrier>(std::move(barrier)).barrier.get();
       }
-      buffer.lastStages = targetStages;
-   } else if (buffer.lastBufferBarrier != nullptr) {
-      buffer.lastBufferBarrier->dstStageFlags |= targetStages;
-      buffer.lastBufferBarrier->dstBufferAccess |= targetAccess;
-      buffer.lastStages |= targetStages;
+      buffer.last_stages = target_stages;
+   } else if (buffer.last_buffer_barrier != nullptr) {
+      buffer.last_buffer_barrier->dst_stage_flags |= target_stages;
+      buffer.last_buffer_barrier->dst_buffer_access |= target_access;
+      buffer.last_stages |= target_stages;
    }
 
-   buffer.currentAccess = targetAccess;
+   buffer.current_access = target_access;
 }
 
 }// namespace triglav::render_core

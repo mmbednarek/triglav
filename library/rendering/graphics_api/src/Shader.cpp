@@ -27,11 +27,11 @@ PipelineStage Shader::stage() const
 
 void Shader::set_debug_name(const std::string_view name)
 {
-   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
-   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_module);
-   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_SHADER_MODULE;
-   debugUtilsObjectName.pObjectName = name.data();
-   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_module.parent(), &debugUtilsObjectName);
+   VkDebugUtilsObjectNameInfoEXT debug_utils_object_name{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
+   debug_utils_object_name.objectHandle = reinterpret_cast<u64>(*m_module);
+   debug_utils_object_name.objectType = VK_OBJECT_TYPE_SHADER_MODULE;
+   debug_utils_object_name.pObjectName = name.data();
+   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_module.parent(), &debug_utils_object_name);
    assert(result == VK_SUCCESS);
 }
 

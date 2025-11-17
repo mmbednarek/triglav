@@ -7,12 +7,12 @@ EmptySpace::EmptySpace(Context& /*ctx*/, const State state, IWidget* /*parent*/)
 {
 }
 
-Vector2 EmptySpace::desired_size(Vector2 /*parentSize*/) const
+Vector2 EmptySpace::desired_size(Vector2 /*parent_size*/) const
 {
    return m_state.size;
 }
 
-void EmptySpace::add_to_viewport(Vector4 /*dimensions*/, const Vector4 /*croppingMask*/) {}
+void EmptySpace::add_to_viewport(Vector4 /*dimensions*/, const Vector4 /*cropping_mask*/) {}
 
 void EmptySpace::remove_from_viewport() {}
 

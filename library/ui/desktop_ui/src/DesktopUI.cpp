@@ -46,10 +46,10 @@ ThemeProperties ThemeProperties::get_default()
    };
 }
 
-DesktopUIManager::DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialogManager) :
+DesktopUIManager::DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager) :
     m_properties(std::move(properties)),
     m_surface(surface),
-    m_popupManager(dialogManager)
+    m_popup_manager(dialog_manager)
 {
 }
 
@@ -70,7 +70,7 @@ desktop::ISurface& DesktopUIManager::surface()
 
 PopupManager& DesktopUIManager::popup_manager() const
 {
-   return m_popupManager;
+   return m_popup_manager;
 }
 
 }// namespace triglav::desktop_ui

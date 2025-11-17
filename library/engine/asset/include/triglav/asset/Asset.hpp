@@ -35,9 +35,9 @@ inline std::optional<FilterType> filter_type_from_string(const std::string_view 
    return std::nullopt;
 }
 
-inline std::string_view filter_type_to_string(const FilterType filterType)
+inline std::string_view filter_type_to_string(const FilterType filter_type)
 {
-   switch (filterType) {
+   switch (filter_type) {
    case FilterType::Linear:
       return "linear";
    case FilterType::NearestNeighbour:
@@ -70,9 +70,9 @@ inline std::optional<TextureAddressMode> texture_address_mode_from_string(const 
    return std::nullopt;
 }
 
-inline std::string_view texture_address_mode_to_string(const TextureAddressMode addressMode)
+inline std::string_view texture_address_mode_to_string(const TextureAddressMode address_mode)
 {
-   switch (addressMode) {
+   switch (address_mode) {
    case TextureAddressMode::Repeat:
       return "repeat";
    case TextureAddressMode::Mirror:
@@ -91,12 +91,12 @@ using EncodedSamplerProperties = u32;
 
 struct SamplerProperties
 {
-   FilterType minFilter{};
-   FilterType magFilter{};
-   TextureAddressMode addressModeU{};
-   TextureAddressMode addressModeV{};
-   TextureAddressMode addressModeW{};
-   bool enableAnisotropy{};
+   FilterType min_filter{};
+   FilterType mag_filter{};
+   TextureAddressMode address_mode_u{};
+   TextureAddressMode address_mode_v{};
+   TextureAddressMode address_mode_w{};
+   bool enable_anisotropy{};
 };
 
 enum class TextureFormat : u8
@@ -120,8 +120,8 @@ struct TextureHeader
 {
    TextureFormat format;
    TexturePurpose purpose;
-   MemorySize payloadSize;
-   EncodedSamplerProperties samplerProperties;
+   MemorySize payload_size;
+   EncodedSamplerProperties sampler_properties;
 };
 
 struct DecodedTexture
@@ -129,11 +129,11 @@ struct DecodedTexture
    ktx::Texture texture;
    TextureFormat format;
    TexturePurpose purpose;
-   SamplerProperties samplerProps;
+   SamplerProperties sampler_props;
 };
 
 EncodedSamplerProperties encode_sampler_properties(const SamplerProperties& properties);
-SamplerProperties decode_sampler_properties(EncodedSamplerProperties encodedProperties);
+SamplerProperties decode_sampler_properties(EncodedSamplerProperties encoded_properties);
 
 std::optional<AssetHeader> decode_header(io::IReader& reader);
 

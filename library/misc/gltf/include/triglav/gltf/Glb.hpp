@@ -20,16 +20,16 @@ struct GlbHeader
 
 struct GlbChunkHeader
 {
-   u32 chunkLength;
-   u32 chunkType;
+   u32 chunk_length;
+   u32 chunk_type;
 };
 
 struct GlbInfo
 {
-   MemorySize jsonSize;
-   MemorySize jsonOffset;
-   MemorySize binarySize;
-   MemorySize binaryOffset;
+   MemorySize json_size;
+   MemorySize json_offset;
+   MemorySize binary_size;
+   MemorySize binary_offset;
 };
 
 std::optional<GlbInfo> read_glb_info(io::ISeekableStream& stream);
@@ -37,8 +37,8 @@ std::optional<GlbInfo> read_glb_info(io::ISeekableStream& stream);
 struct GlbResource
 {
    std::unique_ptr<Document> document;
-   io::IFileUPtr glbFileHandle;
-   BufferManager bufferManager;
+   io::IFileUPtr glb_file_handle;
+   BufferManager buffer_manager;
 };
 
 std::optional<GlbResource> open_glb_file(const io::Path& path);

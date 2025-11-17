@@ -18,18 +18,18 @@ class TextBox final : public IWidget
  public:
    struct State
    {
-      i32 fontSize{};
+      i32 font_size{};
       TypefaceName typeface{};
       String content{};
       Vector4 color{};
-      HorizontalAlignment horizontalAlignment{};
-      VerticalAlignment verticalAlignment{};
+      HorizontalAlignment horizontal_alignment{};
+      VerticalAlignment vertical_alignment{};
    };
 
-   TextBox(Context& ctx, State initialState, IWidget* parent);
+   TextBox(Context& ctx, State initial_state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
 
    void set_content(StringView content);
@@ -39,11 +39,11 @@ class TextBox final : public IWidget
  private:
    [[nodiscard]] Vector2 calculate_desired_size() const;
 
-   Context& m_uiContext;
+   Context& m_ui_context;
    State m_state{};
    IWidget* m_parent;
    TextId m_id{};
-   mutable std::optional<Vector2> m_cachedDesiredSize{};
+   mutable std::optional<Vector2> m_cached_desired_size{};
 };
 
 }// namespace triglav::ui_core

@@ -31,12 +31,12 @@ class ResourceManager
    TG_EVENT(OnFinishedLoadingAsset, ResourceName, u32, u32)
    TG_EVENT(OnLoadedAssets)
 
-   explicit ResourceManager(graphics_api::Device& device, font::FontManger& fontManager);
+   explicit ResourceManager(graphics_api::Device& device, font::FontManger& font_manager);
 
    void load_asset_list(const io::Path& path);
 
-   void load_asset(ResourceName assetName, const io::Path& path, const ResourceProperties& props);
-   [[nodiscard]] bool is_name_registered(ResourceName assetName) const;
+   void load_asset(ResourceName asset_name, const io::Path& path, const ResourceProperties& props);
+   [[nodiscard]] bool is_name_registered(ResourceName asset_name) const;
 
    template<ResourceType CResourceType>
    auto& get(const TypedName<CResourceType> name)
@@ -52,7 +52,7 @@ class ResourceManager
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::GraphicsDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(*this, m_device, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
-         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_font(m_fontManager, path));
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_font(m_font_manager, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::StaticDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(*this, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Static) {
@@ -72,9 +72,9 @@ class ResourceManager
       container<CResourceType>().iterate_resources(func);
    }
 
-   void on_finished_loading_resource(ResourceName resourceName, bool skipped = false);
+   void on_finished_loading_resource(ResourceName resource_name, bool skipped = false);
 
-   std::optional<std::string> lookup_name(ResourceName resourceName) const;
+   std::optional<std::string> lookup_name(ResourceName resource_name) const;
 
    const NameRegistry& name_registry() const;
 
@@ -87,11 +87,11 @@ class ResourceManager
       return *static_cast<Container<CResourceType>*>(m_containers.at(CResourceType).get());
    }
 
-   std::unique_ptr<LoadContext> m_loadContext{};
+   std::unique_ptr<LoadContext> m_load_context{};
    std::map<ResourceType, std::unique_ptr<IContainer>> m_containers;
-   NameRegistry m_nameRegistry;
+   NameRegistry m_name_registry;
    graphics_api::Device& m_device;
-   font::FontManger& m_fontManager;
+   font::FontManger& m_font_manager;
 };
 
 }// namespace triglav::resource

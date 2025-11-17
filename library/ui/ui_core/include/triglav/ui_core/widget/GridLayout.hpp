@@ -24,8 +24,8 @@ class GridLayout final : public LayoutWidget
 
    GridLayout(Context& context, State state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const Event& event) override;
 
@@ -34,9 +34,9 @@ class GridLayout final : public LayoutWidget
 
    State m_state;
    Vector4 m_dimensions;
-   u32 m_lastRow = 0;
-   u32 m_lastCol = 0;
-   std::optional<MemorySize> m_activeChild{};
+   u32 m_last_row = 0;
+   u32 m_last_col = 0;
+   std::optional<MemorySize> m_active_child{};
 };
 
 }// namespace triglav::ui_core

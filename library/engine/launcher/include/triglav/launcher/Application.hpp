@@ -45,14 +45,14 @@ class Application
 
  private:
    desktop::IDisplay& m_display;
-   LaunchStage m_currentStage{LaunchStage::Uninitialized};
+   LaunchStage m_current_stage{LaunchStage::Uninitialized};
    std::unique_ptr<IStage> m_stage;
 
-   font::FontManger m_fontManager;
-   std::unique_ptr<graphics_api::Instance> m_gfxInstance;
-   std::unique_ptr<graphics_api::Device> m_gfxDevice;
-   std::unique_ptr<resource::ResourceManager> m_resourceManager;
-   std::unique_ptr<render_core::GlyphCache> m_glyphCache;
+   font::FontManger m_font_manager;
+   std::unique_ptr<graphics_api::Instance> m_gfx_instance;
+   std::unique_ptr<graphics_api::Device> m_gfx_device;
+   std::unique_ptr<resource::ResourceManager> m_resource_manager;
+   std::unique_ptr<render_core::GlyphCache> m_glyph_cache;
 };
 
 }// namespace triglav::launcher

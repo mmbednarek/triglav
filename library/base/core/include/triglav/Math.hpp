@@ -170,6 +170,21 @@ struct std::formatter<triglav::Vector3>
       return std::format_to(ctx.out(), "(X: {}, Y: {}, Z: {})", obj.x, obj.y, obj.z);
    }
 };
+
+template<>
+struct std::formatter<triglav::Vector4>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::Vector4& obj, std::format_context& ctx) const
+   {
+      return std::format_to(ctx.out(), "(X: {}, Y: {}, Z: {}, W: {})", obj.x, obj.y, obj.z, obj.w);
+   }
+};
+
 template<>
 struct std::formatter<triglav::Quaternion>
 {

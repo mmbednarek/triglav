@@ -36,8 +36,8 @@ class Parser
    io::BufferedReader m_reader;
    std::vector<Command> m_commands;
    State m_state{State::LineStart};
-   std::string m_currentToken{};
-   Command m_currentCommand;
+   std::string m_current_token{};
+   Command m_current_command;
 };
 
 }// namespace triglav::geometry

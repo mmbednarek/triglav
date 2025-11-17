@@ -27,7 +27,7 @@ struct ResourceProperties
       return it->second;
    }
 
-   [[nodiscard]] bool get_bool(Name key, bool defValue = false) const
+   [[nodiscard]] bool get_bool(Name key, bool def_value = false) const
    {
       const auto value = this->get_string(key);
       if (value == "off") {
@@ -35,7 +35,7 @@ struct ResourceProperties
       } else if (value == "on") {
          return true;
       }
-      return defValue;
+      return def_value;
    }
 
    [[nodiscard]] std::optional<float> get_float_opt(Name key) const

@@ -37,20 +37,20 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
 
 namespace triglav::io::linux {
 
-UnixFile::UnixFile(int fileDescriptor, std::string&& filePath) :
-    m_fileDescriptor(fileDescriptor),
-    m_filePath(std::move(filePath))
+UnixFile::UnixFile(int file_descriptor, std::string&& file_path) :
+    m_file_descriptor(file_descriptor),
+    m_file_path(std::move(file_path))
 {
 }
 
 UnixFile::~UnixFile()
 {
-   ::close(m_fileDescriptor);
+   ::close(m_file_descriptor);
 }
 
 Result<MemorySize> UnixFile::read(const std::span<u8> buffer)
 {
-   const auto result = ::read(m_fileDescriptor, buffer.data(), buffer.size());
+   const auto result = ::read(m_file_descriptor, buffer.data(), buffer.size());
    if (result < 0)
       return std::unexpected(Status::BrokenPipe);
    return static_cast<MemorySize>(result);
@@ -58,7 +58,7 @@ Result<MemorySize> UnixFile::read(const std::span<u8> buffer)
 
 Result<MemorySize> UnixFile::write(const std::span<const u8> buffer)
 {
-   const auto result = ::write(m_fileDescriptor, buffer.data(), buffer.size());
+   const auto result = ::write(m_file_descriptor, buffer.data(), buffer.size());
    if (result < 0)
       return std::unexpected(Status::BrokenPipe);
    return static_cast<MemorySize>(result);
@@ -79,7 +79,7 @@ Status UnixFile::seek(const SeekPosition position, const MemoryOffset offset)
       break;
    }
 
-   const auto res = ::lseek(m_fileDescriptor, offset, whence);
+   const auto res = ::lseek(m_file_descriptor, offset, whence);
    if (res < 0)
       return Status::BrokenPipe;
 
@@ -88,18 +88,18 @@ Status UnixFile::seek(const SeekPosition position, const MemoryOffset offset)
 
 Result<MemorySize> UnixFile::file_size()
 {
-   struct ::stat fileStat{};
+   struct ::stat file_stat{};
 
-   const auto res = ::stat(m_filePath.c_str(), &fileStat);
+   const auto res = ::stat(m_file_path.c_str(), &file_stat);
    if (res < 0) {
       return std::unexpected{Status::InvalidFile};
    }
-   return fileStat.st_size;
+   return file_stat.st_size;
 }
 
 MemorySize UnixFile::position() const
 {
-   const auto res = ::lseek(m_fileDescriptor, 0, SEEK_CUR);
+   const auto res = ::lseek(m_file_descriptor, 0, SEEK_CUR);
    assert(res >= 0);
    return res;
 }

@@ -10,9 +10,9 @@ namespace triglav::io {
 Path::Path(const std::string_view path) :
     m_path(path)
 {
-   auto fullPath = full_path(m_path);
-   if (fullPath.has_value()) {
-      m_path = fullPath.value();
+   auto p = full_path(m_path);
+   if (p.has_value()) {
+      m_path = p.value();
    }
 }
 

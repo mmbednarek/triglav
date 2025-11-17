@@ -15,8 +15,8 @@ using namespace render_core::literals;
 
 namespace gapi = graphics_api;
 
-RayTracingStage::RayTracingStage(RayTracingScene& rtScene) :
-    m_rtScene(rtScene)
+RayTracingStage::RayTracingStage(RayTracingScene& rt_scene) :
+    m_rt_scene(rt_scene)
 {
 }
 
@@ -31,7 +31,7 @@ void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& 
 
    ctx.set_bind_stages(gapi::PipelineStage::RayGenerationShader | gapi::PipelineStage::ClosestHitShader);
 
-   ctx.bind_acceleration_structure(0, *m_rtScene.m_tlAccelerationStructure);
+   ctx.bind_acceleration_structure(0, *m_rt_scene.m_tl_acceleration_structure);
 
    ctx.bind_rt_generation_shader("rt_general.rgenshader"_rc);
 
@@ -44,47 +44,47 @@ void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& 
    ctx.bind_rt_miss_shader("rt_ao.rmissshader"_rc);
    ctx.bind_rt_closest_hit_shader("rt_general.rchitshader"_rc);
 
-   ctx.bind_storage_buffer(4, &m_rtScene.m_objectBuffer);
-   auto lightDir{m_rtScene.m_scene.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)};
-   ctx.push_constant(lightDir);
+   ctx.bind_storage_buffer(4, &m_rt_scene.m_object_buffer);
+   auto light_dir{m_rt_scene.m_scene.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)};
+   ctx.push_constant(light_dir);
 
    ctx.bind_rt_closest_hit_shader("rt_shadow.rchitshader"_rc);
    ctx.bind_rt_closest_hit_shader("rt_ao.rchitshader"_rc);
 
-   render_core::RayTracingShaderGroup rayGenGroup{};
-   rayGenGroup.type = render_core::RayTracingShaderGroupType::General;
-   rayGenGroup.generalShader = "rt_general.rgenshader"_rc;
-   ctx.bind_rt_shader_group(rayGenGroup);
+   render_core::RayTracingShaderGroup ray_gen_group{};
+   ray_gen_group.type = render_core::RayTracingShaderGroupType::General;
+   ray_gen_group.general_shader = "rt_general.rgenshader"_rc;
+   ctx.bind_rt_shader_group(ray_gen_group);
 
-   render_core::RayTracingShaderGroup rayMissGroup{};
-   rayMissGroup.type = render_core::RayTracingShaderGroupType::General;
-   rayMissGroup.generalShader = "rt_general.rmissshader"_rc;
-   ctx.bind_rt_shader_group(rayMissGroup);
+   render_core::RayTracingShaderGroup ray_miss_group{};
+   ray_miss_group.type = render_core::RayTracingShaderGroupType::General;
+   ray_miss_group.general_shader = "rt_general.rmissshader"_rc;
+   ctx.bind_rt_shader_group(ray_miss_group);
 
-   render_core::RayTracingShaderGroup rayShadowMissGroup{};
-   rayShadowMissGroup.type = render_core::RayTracingShaderGroupType::General;
-   rayShadowMissGroup.generalShader = "rt_shadow.rmissshader"_rc;
-   ctx.bind_rt_shader_group(rayShadowMissGroup);
+   render_core::RayTracingShaderGroup ray_shadow_miss_group{};
+   ray_shadow_miss_group.type = render_core::RayTracingShaderGroupType::General;
+   ray_shadow_miss_group.general_shader = "rt_shadow.rmissshader"_rc;
+   ctx.bind_rt_shader_group(ray_shadow_miss_group);
 
-   render_core::RayTracingShaderGroup rayAoMissGroup{};
-   rayAoMissGroup.type = render_core::RayTracingShaderGroupType::General;
-   rayAoMissGroup.generalShader = "rt_ao.rmissshader"_rc;
-   ctx.bind_rt_shader_group(rayAoMissGroup);
+   render_core::RayTracingShaderGroup ray_ao_miss_group{};
+   ray_ao_miss_group.type = render_core::RayTracingShaderGroupType::General;
+   ray_ao_miss_group.general_shader = "rt_ao.rmissshader"_rc;
+   ctx.bind_rt_shader_group(ray_ao_miss_group);
 
-   render_core::RayTracingShaderGroup rayHitGroup{};
-   rayHitGroup.type = render_core::RayTracingShaderGroupType::Triangles;
-   rayHitGroup.closestHitShader = "rt_general.rchitshader"_rc;
-   ctx.bind_rt_shader_group(rayHitGroup);
+   render_core::RayTracingShaderGroup ray_hit_group{};
+   ray_hit_group.type = render_core::RayTracingShaderGroupType::Triangles;
+   ray_hit_group.closest_hit_shader = "rt_general.rchitshader"_rc;
+   ctx.bind_rt_shader_group(ray_hit_group);
 
-   render_core::RayTracingShaderGroup rayShadowHitGroup{};
-   rayShadowHitGroup.type = render_core::RayTracingShaderGroupType::Triangles;
-   rayShadowHitGroup.closestHitShader = "rt_shadow.rchitshader"_rc;
-   ctx.bind_rt_shader_group(rayShadowHitGroup);
+   render_core::RayTracingShaderGroup ray_shadow_hit_group{};
+   ray_shadow_hit_group.type = render_core::RayTracingShaderGroupType::Triangles;
+   ray_shadow_hit_group.closest_hit_shader = "rt_shadow.rchitshader"_rc;
+   ctx.bind_rt_shader_group(ray_shadow_hit_group);
 
-   render_core::RayTracingShaderGroup rayAoHitGroup{};
-   rayAoHitGroup.type = render_core::RayTracingShaderGroupType::Triangles;
-   rayAoHitGroup.closestHitShader = "rt_ao.rchitshader"_rc;
-   ctx.bind_rt_shader_group(rayAoHitGroup);
+   render_core::RayTracingShaderGroup ray_ao_hit_group{};
+   ray_ao_hit_group.type = render_core::RayTracingShaderGroupType::Triangles;
+   ray_ao_hit_group.closest_hit_shader = "rt_ao.rchitshader"_rc;
+   ctx.bind_rt_shader_group(ray_ao_hit_group);
 
    ctx.set_rt_max_recursion_depth(2);
 

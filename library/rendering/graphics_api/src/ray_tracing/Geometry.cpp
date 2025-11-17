@@ -5,183 +5,184 @@
 
 namespace triglav::graphics_api::ray_tracing {
 
-void GeometryBuildInfo::add_triangles(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat,
-                                      MemorySize vertexSize, u32 vertexCount, u32 triangleCount)
+void GeometryBuildInfo::add_triangles(const Buffer& vertex_buffer, const Buffer& index_buffer, ColorFormat vertex_format,
+                                      MemorySize vertex_size, u32 vertex_count, u32 triangle_count)
 {
    VkAccelerationStructureGeometryKHR geometry{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR};
    geometry.flags = VK_GEOMETRY_OPAQUE_BIT_KHR;
    geometry.geometryType = VK_GEOMETRY_TYPE_TRIANGLES_KHR;
    geometry.geometry.triangles.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_TRIANGLES_DATA_KHR;
    geometry.geometry.triangles.pNext = nullptr;
-   geometry.geometry.triangles.vertexData.deviceAddress = vertexBuffer.vulkan_device_address();
-   geometry.geometry.triangles.indexData.deviceAddress = indexBuffer.vulkan_device_address();
-   geometry.geometry.triangles.vertexStride = vertexSize;
-   geometry.geometry.triangles.vertexFormat = graphics_api::vulkan::to_vulkan_color_format(vertexFormat).value_or(VK_FORMAT_MAX_ENUM);
-   geometry.geometry.triangles.maxVertex = vertexCount - 1;
+   geometry.geometry.triangles.vertexData.deviceAddress = vertex_buffer.vulkan_device_address();
+   geometry.geometry.triangles.indexData.deviceAddress = index_buffer.vulkan_device_address();
+   geometry.geometry.triangles.vertexStride = vertex_size;
+   geometry.geometry.triangles.vertexFormat = graphics_api::vulkan::to_vulkan_color_format(vertex_format).value_or(VK_FORMAT_MAX_ENUM);
+   geometry.geometry.triangles.maxVertex = vertex_count - 1;
    geometry.geometry.triangles.indexType = VK_INDEX_TYPE_UINT32;
    geometry.geometry.triangles.transformData.deviceAddress = 0;
    m_geometries.push_back(geometry);
 
    VkAccelerationStructureBuildRangeInfoKHR ranges{};
-   ranges.primitiveCount = triangleCount;
+   ranges.primitiveCount = triangle_count;
    m_ranges.push_back(ranges);
 
-   m_primitiveCounts.push_back(triangleCount);
+   m_primitive_counts.push_back(triangle_count);
 }
 
-void GeometryBuildInfo::add_bounding_boxes(const Buffer& boundingBoxBuffer, MemorySize bbSize, u32 bbCount)
+void GeometryBuildInfo::add_bounding_boxes(const Buffer& bounding_box_buffer, MemorySize bb_size, u32 bb_count)
 {
    VkAccelerationStructureGeometryKHR geometry{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR};
    geometry.geometryType = VK_GEOMETRY_TYPE_AABBS_KHR;
    geometry.geometry.aabbs.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_AABBS_DATA_KHR;
    geometry.geometry.aabbs.pNext = nullptr;
-   geometry.geometry.aabbs.data.deviceAddress = boundingBoxBuffer.vulkan_device_address();
-   geometry.geometry.aabbs.stride = bbSize;
+   geometry.geometry.aabbs.data.deviceAddress = bounding_box_buffer.vulkan_device_address();
+   geometry.geometry.aabbs.stride = bb_size;
    m_geometries.push_back(geometry);
 
    VkAccelerationStructureBuildRangeInfoKHR ranges{};
-   ranges.primitiveCount = bbCount;
+   ranges.primitiveCount = bb_count;
    m_ranges.push_back(ranges);
 
-   m_primitiveCounts.push_back(bbCount);
+   m_primitive_counts.push_back(bb_count);
 }
 
-void GeometryBuildInfo::add_instances(const Buffer& instanceBuffer, u32 instanceCount)
+void GeometryBuildInfo::add_instances(const Buffer& instance_buffer, u32 instance_count)
 {
    VkAccelerationStructureGeometryKHR geometry{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_KHR};
    geometry.geometryType = VK_GEOMETRY_TYPE_INSTANCES_KHR;
    geometry.geometry.instances.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_GEOMETRY_INSTANCES_DATA_KHR;
    geometry.geometry.instances.pNext = nullptr;
    geometry.geometry.instances.arrayOfPointers = false;
-   geometry.geometry.instances.data.deviceAddress = instanceBuffer.vulkan_device_address();
+   geometry.geometry.instances.data.deviceAddress = instance_buffer.vulkan_device_address();
    m_geometries.push_back(geometry);
 
    VkAccelerationStructureBuildRangeInfoKHR ranges{};
-   ranges.primitiveCount = instanceCount;
+   ranges.primitiveCount = instance_count;
    m_ranges.push_back(ranges);
 
-   m_primitiveCounts.push_back(instanceCount);
+   m_primitive_counts.push_back(instance_count);
 }
 
 VkAccelerationStructureBuildSizesInfoKHR GeometryBuildInfo::size_requirement(Device& device) const
 {
-   VkAccelerationStructureBuildSizesInfoKHR outInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR};
-   vulkan::vkGetAccelerationStructureBuildSizesKHR(device.vulkan_device(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &m_buildInfo,
-                                                   m_primitiveCounts.data(), &outInfo);
+   VkAccelerationStructureBuildSizesInfoKHR out_info{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_SIZES_INFO_KHR};
+   vulkan::vkGetAccelerationStructureBuildSizesKHR(device.vulkan_device(), VK_ACCELERATION_STRUCTURE_BUILD_TYPE_DEVICE_KHR, &m_build_info,
+                                                   m_primitive_counts.data(), &out_info);
 
-   return outInfo;
+   return out_info;
 }
 
-VkAccelerationStructureBuildGeometryInfoKHR GeometryBuildInfo::build(AccelerationStructure& dstAs, const BufferHeap::Section& scratchBuffer)
+VkAccelerationStructureBuildGeometryInfoKHR GeometryBuildInfo::build(AccelerationStructure& dst_as,
+                                                                     const BufferHeap::Section& scratch_buffer)
 {
-   m_buildInfo.dstAccelerationStructure = dstAs.vulkan_acceleration_structure();
-   m_buildInfo.scratchData.deviceAddress = scratchBuffer.buffer->vulkan_device_address() + scratchBuffer.offset;
-   m_lastAccelerationStructure = &dstAs;
-   return m_buildInfo;
+   m_build_info.dstAccelerationStructure = dst_as.vulkan_acceleration_structure();
+   m_build_info.scratchData.deviceAddress = scratch_buffer.buffer->vulkan_device_address() + scratch_buffer.offset;
+   m_last_acceleration_structure = &dst_as;
+   return m_build_info;
 }
 
 VkAccelerationStructureBuildRangeInfoKHR* GeometryBuildInfo::ranges()
 {
    return m_ranges.data();
 }
-void GeometryBuildInfo::finalize(VkAccelerationStructureTypeKHR accelerationStructureType)
+void GeometryBuildInfo::finalize(VkAccelerationStructureTypeKHR acceleration_structure_type)
 {
-   m_buildInfo.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
-   m_buildInfo.pNext = nullptr;
-   m_buildInfo.type = accelerationStructureType;
-   m_buildInfo.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
-   m_buildInfo.srcAccelerationStructure =
-      m_lastAccelerationStructure == nullptr ? nullptr : m_lastAccelerationStructure->vulkan_acceleration_structure();
-   m_buildInfo.mode = m_lastAccelerationStructure == nullptr ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR
-                                                             : VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR;
-   m_buildInfo.dstAccelerationStructure = nullptr;
-   m_buildInfo.geometryCount = static_cast<u32>(m_geometries.size());
-   m_buildInfo.pGeometries = m_geometries.data();
-   m_buildInfo.scratchData.deviceAddress = 0;
+   m_build_info.sType = VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_BUILD_GEOMETRY_INFO_KHR;
+   m_build_info.pNext = nullptr;
+   m_build_info.type = acceleration_structure_type;
+   m_build_info.flags = VK_BUILD_ACCELERATION_STRUCTURE_PREFER_FAST_TRACE_BIT_KHR;
+   m_build_info.srcAccelerationStructure =
+      m_last_acceleration_structure == nullptr ? nullptr : m_last_acceleration_structure->vulkan_acceleration_structure();
+   m_build_info.mode = m_last_acceleration_structure == nullptr ? VK_BUILD_ACCELERATION_STRUCTURE_MODE_BUILD_KHR
+                                                                : VK_BUILD_ACCELERATION_STRUCTURE_MODE_UPDATE_KHR;
+   m_build_info.dstAccelerationStructure = nullptr;
+   m_build_info.geometryCount = static_cast<u32>(m_geometries.size());
+   m_build_info.pGeometries = m_geometries.data();
+   m_build_info.scratchData.deviceAddress = 0;
 }
 
 // *********************************************
 // ****** GEOMETRY BUILD CONTEXT ***************
 // *********************************************
 
-GeometryBuildContext::GeometryBuildContext(Device& device, AccelerationStructurePool& asPool, BufferHeap& scratchBufferHeap) :
+GeometryBuildContext::GeometryBuildContext(Device& device, AccelerationStructurePool& as_pool, BufferHeap& scratch_buffer_heap) :
     m_device(device),
-    m_asPool(asPool),
-    m_scratchBufferHeap(scratchBufferHeap)
+    m_as_pool(as_pool),
+    m_scratch_buffer_heap(scratch_buffer_heap)
 {
 }
 
-void GeometryBuildContext::add_triangle_buffer(const Buffer& vertexBuffer, const Buffer& indexBuffer, ColorFormat vertexFormat,
-                                               const MemorySize vertexSize, const u32 maxVertexCount, const u32 triangleCount)
+void GeometryBuildContext::add_triangle_buffer(const Buffer& vertex_buffer, const Buffer& index_buffer, ColorFormat vertex_format,
+                                               const MemorySize vertex_size, const u32 max_vertex_count, const u32 triangle_count)
 {
-   m_currentTriangles.add_triangles(vertexBuffer, indexBuffer, vertexFormat, vertexSize, maxVertexCount, triangleCount);
+   m_current_triangles.add_triangles(vertex_buffer, index_buffer, vertex_format, vertex_size, max_vertex_count, triangle_count);
 }
 
-void GeometryBuildContext::add_bounding_box_buffer(const Buffer& boundingBoxBuffer, const MemorySize bbSize, const u32 bbCount)
+void GeometryBuildContext::add_bounding_box_buffer(const Buffer& bounding_box_buffer, const MemorySize bb_size, const u32 bb_count)
 {
-   m_currentBoundingBoxes.add_bounding_boxes(boundingBoxBuffer, bbSize, bbCount);
+   m_current_bounding_boxes.add_bounding_boxes(bounding_box_buffer, bb_size, bb_count);
 }
 
-void GeometryBuildContext::add_instance_buffer(const Buffer& instanceBuffer, const u32 instanceCount)
+void GeometryBuildContext::add_instance_buffer(const Buffer& instance_buffer, const u32 instance_count)
 {
-   m_currentInstances.add_instances(instanceBuffer, instanceCount);
+   m_current_instances.add_instances(instance_buffer, instance_count);
 }
 
 AccelerationStructure* GeometryBuildContext::commit_triangles()
 {
-   auto& geo = m_triangleGeometries.emplace_back(std::move(m_currentTriangles));
+   auto& geo = m_triangle_geometries.emplace_back(std::move(m_current_triangles));
 
    geo.finalize(VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR);
    const auto requirement = geo.size_requirement(m_device);
 
-   auto* nextAccelerationStruct =
-      m_asPool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, requirement.accelerationStructureSize);
-   auto scratchSection = m_scratchBufferHeap.allocate_section(requirement.buildScratchSize);
+   auto* next_acceleration_struct =
+      m_as_pool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, requirement.accelerationStructureSize);
+   auto scratch_section = m_scratch_buffer_heap.allocate_section(requirement.buildScratchSize);
 
-   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, scratchSection));
-   m_buildRangePtrs.push_back(geo.ranges());
+   m_build_infos.push_back(geo.build(*next_acceleration_struct, scratch_section));
+   m_build_range_ptrs.push_back(geo.ranges());
 
-   return nextAccelerationStruct;
+   return next_acceleration_struct;
 }
 
 AccelerationStructure* GeometryBuildContext::commit_bounding_boxes()
 {
-   auto& geo = m_boundingBoxesGeometries.emplace_back(std::move(m_currentBoundingBoxes));
+   auto& geo = m_bounding_boxes_geometries.emplace_back(std::move(m_current_bounding_boxes));
 
    geo.finalize(VK_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL_KHR);
    const auto requirement = geo.size_requirement(m_device);
 
-   auto* nextAccelerationStruct =
-      m_asPool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, requirement.accelerationStructureSize);
-   auto scratchSection = m_scratchBufferHeap.allocate_section(requirement.buildScratchSize);
+   auto* next_acceleration_struct =
+      m_as_pool.acquire_acceleration_structure(AccelerationStructureType::BottomLevel, requirement.accelerationStructureSize);
+   auto scratch_section = m_scratch_buffer_heap.allocate_section(requirement.buildScratchSize);
 
-   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, scratchSection));
-   m_buildRangePtrs.push_back(geo.ranges());
+   m_build_infos.push_back(geo.build(*next_acceleration_struct, scratch_section));
+   m_build_range_ptrs.push_back(geo.ranges());
 
-   return nextAccelerationStruct;
+   return next_acceleration_struct;
 }
 
 AccelerationStructure* GeometryBuildContext::commit_instances()
 {
-   auto& geo = m_instanceGeometries.emplace_back(std::move(m_currentInstances));
+   auto& geo = m_instance_geometries.emplace_back(std::move(m_current_instances));
 
    geo.finalize(VK_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL_KHR);
    const auto requirement = geo.size_requirement(m_device);
 
-   auto* nextAccelerationStruct =
-      m_asPool.acquire_acceleration_structure(AccelerationStructureType::TopLevel, requirement.accelerationStructureSize);
-   auto scratchSection = m_scratchBufferHeap.allocate_section(requirement.buildScratchSize);
+   auto* next_acceleration_struct =
+      m_as_pool.acquire_acceleration_structure(AccelerationStructureType::TopLevel, requirement.accelerationStructureSize);
+   auto scratch_section = m_scratch_buffer_heap.allocate_section(requirement.buildScratchSize);
 
-   m_buildInfos.push_back(geo.build(*nextAccelerationStruct, scratchSection));
-   m_buildRangePtrs.push_back(geo.ranges());
+   m_build_infos.push_back(geo.build(*next_acceleration_struct, scratch_section));
+   m_build_range_ptrs.push_back(geo.ranges());
 
-   return nextAccelerationStruct;
+   return next_acceleration_struct;
 }
 
-void GeometryBuildContext::build_acceleration_structures(CommandList& cmdList)
+void GeometryBuildContext::build_acceleration_structures(CommandList& cmd_list)
 {
-   vulkan::vkCmdBuildAccelerationStructuresKHR(cmdList.vulkan_command_buffer(), static_cast<u32>(m_buildInfos.size()), m_buildInfos.data(),
-                                               m_buildRangePtrs.data());
+   vulkan::vkCmdBuildAccelerationStructuresKHR(cmd_list.vulkan_command_buffer(), static_cast<u32>(m_build_infos.size()),
+                                               m_build_infos.data(), m_build_range_ptrs.data());
 }
 
 }// namespace triglav::graphics_api::ray_tracing

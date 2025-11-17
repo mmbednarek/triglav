@@ -143,9 +143,9 @@ Result<ColorFormat> to_color_format(const VkFormat format)
    return std::unexpected(Status::UnsupportedFormat);
 }
 
-Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace)
+Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace color_space)
 {
-   switch (colorSpace) {
+   switch (color_space) {
    case ColorSpace::sRGB:
       return VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
    case ColorSpace::HDR:
@@ -155,9 +155,9 @@ Result<VkColorSpaceKHR> to_vulkan_color_space(ColorSpace colorSpace)
    return std::unexpected{Status::UnsupportedColorSpace};
 }
 
-Result<ColorSpace> to_color_space(const VkColorSpaceKHR colorSpace)
+Result<ColorSpace> to_color_space(const VkColorSpaceKHR color_space)
 {
-   switch (colorSpace) {
+   switch (color_space) {
    case VK_COLOR_SPACE_SRGB_NONLINEAR_KHR:
       return ColorSpace::sRGB;
    case VK_COLOR_SPACE_HDR10_ST2084_EXT:
@@ -169,7 +169,7 @@ Result<ColorSpace> to_color_space(const VkColorSpaceKHR colorSpace)
    return std::unexpected{Status::UnsupportedColorSpace};
 }
 
-WorkTypeFlags vulkan_queue_flags_to_work_type_flags(const VkQueueFlags flags, const bool canPresent)
+WorkTypeFlags vulkan_queue_flags_to_work_type_flags(const VkQueueFlags flags, const bool can_present)
 {
    WorkTypeFlags result{WorkType::None};
    if (flags & VK_QUEUE_GRAPHICS_BIT) {
@@ -181,16 +181,16 @@ WorkTypeFlags vulkan_queue_flags_to_work_type_flags(const VkQueueFlags flags, co
    if (flags & VK_QUEUE_COMPUTE_BIT) {
       result |= WorkType::Compute;
    }
-   if (canPresent) {
+   if (can_present) {
       result |= WorkType::Presentation;
    }
 
    return result;
 }
 
-Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sampleCount)
+Result<VkSampleCountFlagBits> to_vulkan_sample_count(const SampleCount sample_count)
 {
-   switch (sampleCount) {
+   switch (sample_count) {
    case SampleCount::Single:
       return VK_SAMPLE_COUNT_1_BIT;
    case SampleCount::Double:
@@ -227,21 +227,21 @@ Result<VkImageLayout> to_vulkan_image_layout(const AttachmentAttributeFlags type
 
 std::tuple<VkAttachmentLoadOp, VkAttachmentStoreOp> to_vulkan_load_store_ops(const AttachmentAttributeFlags flags)
 {
-   VkAttachmentLoadOp loadOp{};
+   VkAttachmentLoadOp load_op{};
    if (flags & AttachmentAttribute::ClearImage)
-      loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+      load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
    else if (flags & AttachmentAttribute::LoadImage)
-      loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+      load_op = VK_ATTACHMENT_LOAD_OP_LOAD;
    else
-      loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+      load_op = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 
-   VkAttachmentStoreOp storeOp;
+   VkAttachmentStoreOp store_op;
    if (flags & AttachmentAttribute::StoreImage)
-      storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+      store_op = VK_ATTACHMENT_STORE_OP_STORE;
    else
-      storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+      store_op = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-   return {loadOp, storeOp};
+   return {load_op, store_op};
 }
 
 VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
@@ -395,9 +395,9 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    return result;
 }
 
-VkDescriptorType to_vulkan_descriptor_type(const DescriptorType descriptorType)
+VkDescriptorType to_vulkan_descriptor_type(const DescriptorType descriptor_type)
 {
-   switch (descriptorType) {
+   switch (descriptor_type) {
    case DescriptorType::UniformBuffer:
       return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
    case DescriptorType::StorageBuffer:
@@ -416,9 +416,9 @@ VkDescriptorType to_vulkan_descriptor_type(const DescriptorType descriptorType)
    return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 }
 
-VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureState resourceState)
+VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureState resource_state)
 {
-   switch (resourceState) {
+   switch (resource_state) {
    case TextureState::Undefined:
       return VK_IMAGE_LAYOUT_UNDEFINED;
    case TextureState::TransferSrc:
@@ -456,9 +456,9 @@ VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureStat
    return VK_IMAGE_LAYOUT_UNDEFINED;
 }
 
-VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat format, const TextureState resourceState)
+VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat format, const TextureState resource_state)
 {
-   switch (resourceState) {
+   switch (resource_state) {
    case TextureState::Undefined:
       return VK_ACCESS_NONE;
    case TextureState::TransferSrc:
@@ -496,9 +496,9 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
    return 0;
 }
 
-VkFilter to_vulkan_filter(const FilterType filterType)
+VkFilter to_vulkan_filter(const FilterType filter_type)
 {
-   switch (filterType) {
+   switch (filter_type) {
    case FilterType::Linear:
       return VK_FILTER_LINEAR;
    case FilterType::NearestNeighbour:
@@ -646,30 +646,30 @@ VkMemoryPropertyFlags to_vulkan_memory_properties_flags(const BufferUsageFlags u
    return result;
 }
 
-VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags workTypes)
+VkPipelineStageFlags to_vulkan_wait_pipeline_stage(const WorkTypeFlags work_types)
 {
    using enum WorkType;
    VkPipelineStageFlags result{};
 
-   if (workTypes & Graphics) {
+   if (work_types & Graphics) {
       result |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
    }
-   if (workTypes & Compute) {
+   if (work_types & Compute) {
       result |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
    }
-   if (workTypes & Transfer) {
+   if (work_types & Transfer) {
       result |= VK_PIPELINE_STAGE_TRANSFER_BIT;
    }
-   if (workTypes & Presentation) {
+   if (work_types & Presentation) {
       result |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
    }
 
    return result;
 }
 
-VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
+VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipeline_type)
 {
-   switch (pipelineType) {
+   switch (pipeline_type) {
    case PipelineType::Graphics:
       return VK_PIPELINE_BIND_POINT_GRAPHICS;
    case PipelineType::Compute:
@@ -680,23 +680,23 @@ VkPipelineBindPoint to_vulkan_pipeline_bind_point(PipelineType pipelineType)
    return VK_PIPELINE_BIND_POINT_MAX_ENUM;
 }
 
-VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usageFlags)
+VkImageAspectFlags to_vulkan_aspect_flags(TextureUsageFlags usage_flags)
 {
-   VkImageAspectFlags outFlags{};
+   VkImageAspectFlags out_flags{};
 
-   if (usageFlags & TextureUsage::DepthStencilAttachment) {
-      outFlags |= VK_IMAGE_ASPECT_DEPTH_BIT;
-   } else if (usageFlags & TextureUsage::Sampled || usageFlags & TextureUsage::ColorAttachment || usageFlags & TextureUsage::Storage ||
-              usageFlags & TextureUsage::TransferDst) {
-      outFlags |= VK_IMAGE_ASPECT_COLOR_BIT;
+   if (usage_flags & TextureUsage::DepthStencilAttachment) {
+      out_flags |= VK_IMAGE_ASPECT_DEPTH_BIT;
+   } else if (usage_flags & TextureUsage::Sampled || usage_flags & TextureUsage::ColorAttachment || usage_flags & TextureUsage::Storage ||
+              usage_flags & TextureUsage::TransferDst) {
+      out_flags |= VK_IMAGE_ASPECT_COLOR_BIT;
    }
 
-   return outFlags;
+   return out_flags;
 }
 
-VkPresentModeKHR to_vulkan_present_mode(const PresentMode presentMode)
+VkPresentModeKHR to_vulkan_present_mode(const PresentMode present_mode)
 {
-   switch (presentMode) {
+   switch (present_mode) {
    case PresentMode::Fifo:
       return VK_PRESENT_MODE_FIFO_KHR;
    case PresentMode::Immediate:
@@ -708,7 +708,7 @@ VkPresentModeKHR to_vulkan_present_mode(const PresentMode presentMode)
    return VK_PRESENT_MODE_MAX_ENUM_KHR;
 }
 
-VkClearValue to_vulkan_clear_value(const ClearValue& clearValue)
+VkClearValue to_vulkan_clear_value(const ClearValue& clear_value)
 {
    VkClearValue result;
 
@@ -720,57 +720,57 @@ VkClearValue to_vulkan_clear_value(const ClearValue& clearValue)
             result.color.float32[2] = value.b;
             result.color.float32[3] = value.a;
          } else if constexpr (std::is_same_v<TClearValue, DepthStenctilValue>) {
-            result.depthStencil.depth = value.depthValue;
-            result.depthStencil.stencil = value.stencilValue;
+            result.depthStencil.depth = value.depth_value;
+            result.depthStencil.stencil = value.stencil_value;
          }
       },
-      clearValue.value);
+      clear_value.value);
 
    return result;
 }
 
-VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags inFlags)
+VkAccessFlags to_vulkan_access_flags(const BufferAccessFlags in_flags)
 {
    using enum BufferAccess;
 
-   VkAccessFlags outFlags{};
-   if (inFlags & TransferRead) {
-      outFlags |= VK_ACCESS_TRANSFER_READ_BIT;
+   VkAccessFlags out_flags{};
+   if (in_flags & TransferRead) {
+      out_flags |= VK_ACCESS_TRANSFER_READ_BIT;
    }
-   if (inFlags & TransferWrite) {
-      outFlags |= VK_ACCESS_TRANSFER_WRITE_BIT;
+   if (in_flags & TransferWrite) {
+      out_flags |= VK_ACCESS_TRANSFER_WRITE_BIT;
    }
-   if (inFlags & UniformRead) {
-      outFlags |= VK_ACCESS_UNIFORM_READ_BIT;
+   if (in_flags & UniformRead) {
+      out_flags |= VK_ACCESS_UNIFORM_READ_BIT;
    }
-   if (inFlags & IndexRead) {
-      outFlags |= VK_ACCESS_INDEX_READ_BIT;
+   if (in_flags & IndexRead) {
+      out_flags |= VK_ACCESS_INDEX_READ_BIT;
    }
-   if (inFlags & VertexRead) {
-      outFlags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
+   if (in_flags & VertexRead) {
+      out_flags |= VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT;
    }
-   if (inFlags & ShaderRead) {
-      outFlags |= VK_ACCESS_SHADER_READ_BIT;
+   if (in_flags & ShaderRead) {
+      out_flags |= VK_ACCESS_SHADER_READ_BIT;
    }
-   if (inFlags & ShaderWrite) {
-      outFlags |= VK_ACCESS_SHADER_WRITE_BIT;
+   if (in_flags & ShaderWrite) {
+      out_flags |= VK_ACCESS_SHADER_WRITE_BIT;
    }
-   if (inFlags & IndirectCmdRead) {
-      outFlags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+   if (in_flags & IndirectCmdRead) {
+      out_flags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
    }
-   if (inFlags & MemoryRead) {
-      outFlags |= VK_ACCESS_MEMORY_READ_BIT;
+   if (in_flags & MemoryRead) {
+      out_flags |= VK_ACCESS_MEMORY_READ_BIT;
    }
-   if (inFlags & MemoryWrite) {
-      outFlags |= VK_ACCESS_MEMORY_WRITE_BIT;
+   if (in_flags & MemoryWrite) {
+      out_flags |= VK_ACCESS_MEMORY_WRITE_BIT;
    }
 
-   return outFlags;
+   return out_flags;
 }
 
-VkQueryType to_vulkan_query_type(const QueryType queryType)
+VkQueryType to_vulkan_query_type(const QueryType query_type)
 {
-   switch (queryType) {
+   switch (query_type) {
    case QueryType::PipelineStats:
       return VK_QUERY_TYPE_PIPELINE_STATISTICS;
    case QueryType::Timestamp:
@@ -788,7 +788,7 @@ VkRenderingAttachmentInfo to_vulkan_rendering_attachment_info(const RenderAttach
    result.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
    result.resolveImageView = VK_NULL_HANDLE;
    std::tie(result.loadOp, result.storeOp) = to_vulkan_load_store_ops(attachment.flags);
-   result.clearValue = to_vulkan_clear_value(attachment.clearValue);
+   result.clearValue = to_vulkan_clear_value(attachment.clear_value);
    return result;
 }
 

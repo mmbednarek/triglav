@@ -57,7 +57,7 @@ class Scene
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
    TG_EVENT(OnViewUpdated, const Camera&)
 
-   explicit Scene(resource::ResourceManager& resourceManager);
+   explicit Scene(resource::ResourceManager& resource_manager);
 
    void update(const graphics_api::Resolution& resolution);
    ObjectID add_object(SceneObject object);
@@ -83,12 +83,12 @@ class Scene
    RayHit trace_ray(const geometry::Ray& ray) const;
 
  private:
-   resource::ResourceManager& m_resourceManager;
+   resource::ResourceManager& m_resource_manager;
    float m_yaw{};
    float m_pitch{};
    Camera m_camera{};
-   glm::quat m_directionalLightOrientation{glm::vec3{geometry::g_pi * 0.1f, 0, geometry::g_pi * 1.5f}};
-   std::array<OrthoCamera, 3> m_directionalShadowMapCameras{};
+   glm::quat m_directional_light_orientation{glm::vec3{geometry::g_pi * 0.1f, 0, geometry::g_pi * 1.5f}};
+   std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
    std::vector<SceneObject> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;
 };

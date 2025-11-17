@@ -24,10 +24,10 @@ class Editor
 
  private:
    launcher::Application m_app;
-   std::unique_ptr<RootWindow> m_rootWindow;
-   std::unique_ptr<desktop_ui::PopupManager> m_dialogManager;
-   RootWidget* m_rootWidget{};
-   bool m_shouldClose = false;
+   std::unique_ptr<RootWindow> m_root_window;
+   std::unique_ptr<desktop_ui::PopupManager> m_dialog_manager;
+   RootWidget* m_root_widget{};
+   bool m_should_close = false;
 };
 
 }// namespace triglav::editor

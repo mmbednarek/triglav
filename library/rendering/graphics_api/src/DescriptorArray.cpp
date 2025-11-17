@@ -6,44 +6,44 @@
 
 namespace triglav::graphics_api {
 
-DescriptorArray::DescriptorArray(const VkDevice device, const VkDescriptorPool descriptorPool,
-                                 std::vector<VkDescriptorSet> descriptorSets) :
+DescriptorArray::DescriptorArray(const VkDevice device, const VkDescriptorPool descriptor_pool,
+                                 std::vector<VkDescriptorSet> descriptor_sets) :
     m_device(device),
-    m_descriptorPool(descriptorPool),
-    m_descriptorSets(std::move(descriptorSets))
+    m_descriptor_pool(descriptor_pool),
+    m_descriptor_sets(std::move(descriptor_sets))
 {
 }
 
 DescriptorArray::DescriptorArray(DescriptorArray&& other) noexcept :
     m_device(std::exchange(other.m_device, nullptr)),
-    m_descriptorPool(std::exchange(other.m_descriptorPool, nullptr)),
-    m_descriptorSets(std::move(other.m_descriptorSets))
+    m_descriptor_pool(std::exchange(other.m_descriptor_pool, nullptr)),
+    m_descriptor_sets(std::move(other.m_descriptor_sets))
 {
 }
 
 DescriptorArray& DescriptorArray::operator=(DescriptorArray&& other) noexcept
 {
    m_device = std::exchange(other.m_device, nullptr);
-   m_descriptorPool = std::exchange(other.m_descriptorPool, nullptr);
-   m_descriptorSets = std::move(other.m_descriptorSets);
+   m_descriptor_pool = std::exchange(other.m_descriptor_pool, nullptr);
+   m_descriptor_sets = std::move(other.m_descriptor_sets);
    return *this;
 }
 
 DescriptorArray::~DescriptorArray()
 {
-   if (not m_descriptorSets.empty()) {
-      vkFreeDescriptorSets(m_device, m_descriptorPool, static_cast<u32>(m_descriptorSets.size()), m_descriptorSets.data());
+   if (not m_descriptor_sets.empty()) {
+      vkFreeDescriptorSets(m_device, m_descriptor_pool, static_cast<u32>(m_descriptor_sets.size()), m_descriptor_sets.data());
    }
 }
 
 size_t DescriptorArray::count() const
 {
-   return m_descriptorSets.size();
+   return m_descriptor_sets.size();
 }
 
 DescriptorView DescriptorArray::at(const size_t index) const
 {
-   return {m_descriptorSets.at(index)};
+   return {m_descriptor_sets.at(index)};
 }
 
 DescriptorView DescriptorArray::operator[](const size_t index) const

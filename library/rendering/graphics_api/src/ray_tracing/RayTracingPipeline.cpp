@@ -46,55 +46,55 @@ RayTracingPipelineBuilder& RayTracingPipelineBuilder::callable_shader(Name name,
    return this->shader(name, shader);
 }
 
-RayTracingPipelineBuilder& RayTracingPipelineBuilder::descriptor_binding(PipelineStageFlags shaderStages, DescriptorType descriptorType)
+RayTracingPipelineBuilder& RayTracingPipelineBuilder::descriptor_binding(PipelineStageFlags shader_stages, DescriptorType descriptor_type)
 {
-   this->add_descriptor_binding(descriptorType, shaderStages, 1);
+   this->add_descriptor_binding(descriptor_type, shader_stages, 1);
    return *this;
 }
 
-RayTracingPipelineBuilder& RayTracingPipelineBuilder::push_constant(PipelineStageFlags shaderStages, size_t size, size_t offset)
+RayTracingPipelineBuilder& RayTracingPipelineBuilder::push_constant(PipelineStageFlags shader_stages, size_t size, size_t offset)
 {
-   this->add_push_constant(shaderStages, size, offset);
+   this->add_push_constant(shader_stages, size, offset);
    return *this;
 }
 
 RayTracingPipelineBuilder& RayTracingPipelineBuilder::use_push_descriptors(bool enabled)
 {
-   m_usePushDescriptors = enabled;
+   m_use_push_descriptors = enabled;
    return *this;
 }
 
 RayTracingPipelineBuilder& RayTracingPipelineBuilder::max_recursion(u32 count)
 {
-   m_maxRecursion = count;
+   m_max_recursion = count;
    return *this;
 }
 
 RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader(const Name name, const Shader& shader)
 {
    auto index = this->add_shader(shader);
-   m_shaderIndices.emplace(name, ShaderIndexWithType{.shaderIndex = static_cast<u32>(index), .shaderType = shader.stage()});
+   m_shader_indices.emplace(name, ShaderIndexWithType{.shader_index = static_cast<u32>(index), .shader_type = shader.stage()});
    return *this;
 }
 
-RayTracingPipelineBuilder& RayTracingPipelineBuilder::general_group(const Name generalShader)
+RayTracingPipelineBuilder& RayTracingPipelineBuilder::general_group(const Name general_shader)
 {
-   return this->shader_group_internal(VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, std::span<const Name>{&generalShader, 1});
+   return this->shader_group_internal(VK_RAY_TRACING_SHADER_GROUP_TYPE_GENERAL_KHR, std::span<const Name>{&general_shader, 1});
 }
 
-RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(const VkRayTracingShaderGroupTypeKHR groupType,
+RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(const VkRayTracingShaderGroupTypeKHR group_type,
                                                                             std::span<const Name> shaders)
 {
    VkRayTracingShaderGroupCreateInfoKHR info{VK_STRUCTURE_TYPE_RAY_TRACING_SHADER_GROUP_CREATE_INFO_KHR};
-   info.type = groupType;
+   info.type = group_type;
 
    info.generalShader = VK_SHADER_UNUSED_KHR;
    info.intersectionShader = VK_SHADER_UNUSED_KHR;
    info.closestHitShader = VK_SHADER_UNUSED_KHR;
    info.anyHitShader = VK_SHADER_UNUSED_KHR;
 
-   for (const auto& shaderName : shaders) {
-      auto [index, stage] = m_shaderIndices.at(shaderName);
+   for (const auto& shader_name : shaders) {
+      auto [index, stage] = m_shader_indices.at(shader_name);
       switch (stage) {
       case PipelineStage::RayGenerationShader:
          [[fallthrough]];
@@ -115,64 +115,64 @@ RayTracingPipelineBuilder& RayTracingPipelineBuilder::shader_group_internal(cons
       }
    }
 
-   m_shaderGroups.push_back(info);
+   m_shader_groups.push_back(info);
 
    return *this;
 }
 
 Result<RayTracingPipeline> RayTracingPipelineBuilder::build()
 {
-   VkRayTracingPipelineCreateInfoKHR pipelineCreateInfo{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
-   pipelineCreateInfo.stageCount = static_cast<u32>(m_shaderStageInfos.size());
-   pipelineCreateInfo.pStages = m_shaderStageInfos.data();
-   pipelineCreateInfo.groupCount = static_cast<u32>(m_shaderGroups.size());
-   pipelineCreateInfo.pGroups = m_shaderGroups.data();
-   pipelineCreateInfo.maxPipelineRayRecursionDepth = m_maxRecursion;
+   VkRayTracingPipelineCreateInfoKHR pipeline_create_info{VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR};
+   pipeline_create_info.stageCount = static_cast<u32>(m_shader_stage_infos.size());
+   pipeline_create_info.pStages = m_shader_stage_infos.data();
+   pipeline_create_info.groupCount = static_cast<u32>(m_shader_groups.size());
+   pipeline_create_info.pGroups = m_shader_groups.data();
+   pipeline_create_info.maxPipelineRayRecursionDepth = m_max_recursion;
 
-   auto pipelineLayout = this->build_pipeline_layout();
-   if (not pipelineLayout.has_value()) {
-      return std::unexpected{pipelineLayout.error()};
+   auto pipeline_layout = this->build_pipeline_layout();
+   if (not pipeline_layout.has_value()) {
+      return std::unexpected{pipeline_layout.error()};
    }
 
-   auto&& [descSetLayout, layout] = *pipelineLayout;
-   pipelineCreateInfo.layout = *layout;
+   auto&& [desc_set_layout, layout] = *pipeline_layout;
+   pipeline_create_info.layout = *layout;
 
-   VkPipeline vulkanPipeline{};
-   VkResult result =
-      vulkan::vkCreateRayTracingPipelinesKHR(m_device.vulkan_device(), nullptr, nullptr, 1, &pipelineCreateInfo, nullptr, &vulkanPipeline);
+   VkPipeline vulkan_pipeline{};
+   VkResult result = vulkan::vkCreateRayTracingPipelinesKHR(m_device.vulkan_device(), nullptr, nullptr, 1, &pipeline_create_info, nullptr,
+                                                            &vulkan_pipeline);
    if (result != VK_SUCCESS) {
       return std::unexpected{Status::PSOCreationFailed};
    }
 
    vulkan::Pipeline pipeline(m_device.vulkan_device());
-   pipeline.take_ownership(vulkanPipeline);
+   pipeline.take_ownership(vulkan_pipeline);
 
-   return RayTracingPipeline{std::move(layout),        std::move(pipeline), std::move(descSetLayout),
-                             PipelineType::RayTracing, m_shaderIndices,     static_cast<u32>(m_shaderGroups.size())};
+   return RayTracingPipeline{std::move(layout),        std::move(pipeline), std::move(desc_set_layout),
+                             PipelineType::RayTracing, m_shader_indices,    static_cast<u32>(m_shader_groups.size())};
 }
 
 RayTracingPipeline::RayTracingPipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline,
-                                       vulkan::DescriptorSetLayout descriptorSetLayout, PipelineType pipelineType,
-                                       std::map<Name, ShaderIndexWithType> indices, u32 groupCount) :
-    Pipeline(std::move(layout), std::move(pipeline), std::move(descriptorSetLayout), pipelineType),
-    m_shaderIndices(std::move(indices)),
-    m_groupCount(groupCount)
+                                       vulkan::DescriptorSetLayout descriptor_set_layout, PipelineType pipeline_type,
+                                       std::map<Name, ShaderIndexWithType> indices, u32 group_count) :
+    Pipeline(std::move(layout), std::move(pipeline), std::move(descriptor_set_layout), pipeline_type),
+    m_shader_indices(std::move(indices)),
+    m_group_count(group_count)
 {
 }
 
 u32 RayTracingPipeline::group_count() const
 {
-   return m_groupCount;
+   return m_group_count;
 }
 
 u32 RayTracingPipeline::shader_count() const
 {
-   return static_cast<u32>(m_shaderIndices.size());
+   return static_cast<u32>(m_shader_indices.size());
 }
 
 ShaderIndexWithType RayTracingPipeline::shader_index(Name name) const
 {
-   return m_shaderIndices.at(name);
+   return m_shader_indices.at(name);
 }
 
 }// namespace triglav::graphics_api::ray_tracing

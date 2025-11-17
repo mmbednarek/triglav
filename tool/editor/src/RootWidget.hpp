@@ -20,7 +20,7 @@ class RootWidget final : public ui_core::ProxyWidget
    using Self = RootWidget;
    struct State
    {
-      desktop_ui::PopupManager* dialogManager;
+      desktop_ui::PopupManager* dialog_manager;
       Editor* editor;
    };
 
@@ -31,10 +31,10 @@ class RootWidget final : public ui_core::ProxyWidget
 
  private:
    State m_state;
-   desktop_ui::DesktopUIManager m_desktopUIManager;
-   desktop_ui::MenuController m_menuBarController;
-   desktop_ui::MenuBar* m_menuBar;
-   LevelEditor* m_levelEditor;
+   desktop_ui::DesktopUIManager m_desktop_uimanager;
+   desktop_ui::MenuController m_menu_bar_controller;
+   desktop_ui::MenuBar* m_menu_bar;
+   LevelEditor* m_level_editor;
 
    TG_SINK(desktop_ui::MenuController, OnClicked);
 };

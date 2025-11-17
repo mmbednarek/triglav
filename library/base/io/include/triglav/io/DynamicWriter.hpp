@@ -11,7 +11,7 @@ namespace triglav::io {
 class DynamicWriter : public IWriter
 {
  public:
-   explicit DynamicWriter(MemorySize initialCapacity = 128);
+   explicit DynamicWriter(MemorySize initial_capacity = 128);
    ~DynamicWriter() override;
 
    DynamicWriter(const DynamicWriter& other);
@@ -28,12 +28,12 @@ class DynamicWriter : public IWriter
    [[nodiscard]] MemorySize capacity() const;
 
  private:
-   void set_position(MemorySize newPosition);
+   void set_position(MemorySize new_position);
 
    std::allocator<u8> m_allocator;
 
    u8* m_buffer;
-   MemorySize m_currentCapacity{};
+   MemorySize m_current_capacity{};
    MemorySize m_position{};
 };
 

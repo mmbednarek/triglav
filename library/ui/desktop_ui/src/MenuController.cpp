@@ -20,7 +20,7 @@ void MenuController::add_submenu(const Name parent, const Name name, const Strin
    m_items[name] = {
       .name = name,
       .label = label,
-      .isSubmenu = true,
+      .is_submenu = true,
    };
 }
 
@@ -30,7 +30,7 @@ void MenuController::add_subitem(const Name parent, const Name name, const Strin
    m_items[name] = {
       .name = name,
       .label = label,
-      .isSubmenu = false,
+      .is_submenu = false,
    };
 }
 

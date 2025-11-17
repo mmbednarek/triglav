@@ -8,7 +8,7 @@
 namespace triglav::desktop::x11 {
 
 Mouse::Mouse() :
-    m_fileDescriptor(::open("/dev/input/mice", O_RDONLY | O_NONBLOCK))
+    m_file_descriptor(::open("/dev/input/mice", O_RDONLY | O_NONBLOCK))
 {
 }
 
@@ -17,7 +17,7 @@ void Mouse::tick()
    std::array<char, 256> buffer{};
 
    for (;;) {
-      auto result = ::read(m_fileDescriptor, buffer.data(), 256);
+      auto result = ::read(m_file_descriptor, buffer.data(), 256);
       if (result < 3)
          return;
 

@@ -8,11 +8,11 @@ int triglav_main(InputArgs& args, IDisplay& display);
 
 int main(const int argc, const char** argv)
 {
-   InputArgs inputArgs{
+   InputArgs input_args{
       .args = argv,
       .arg_count = argc,
    };
 
    const auto display = triglav::desktop::get_display();
-   return triglav_main(inputArgs, *display);
+   return triglav_main(input_args, *display);
 }

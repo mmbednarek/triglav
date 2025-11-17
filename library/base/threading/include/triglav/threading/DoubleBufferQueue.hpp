@@ -14,44 +14,44 @@ class DoubleBufferQueue
    using Queue = std::queue<TObject>;
 
    DoubleBufferQueue() :
-       m_pushQueue{&m_first},
-       m_popQueue{&m_second}
+       m_push_queue{&m_first},
+       m_pop_queue{&m_second}
    {
    }
 
    void push(TObject&& object)
    {
-      std::unique_lock lk{m_pushMutex};
-      m_pushQueue->push(std::move(object));
+      std::unique_lock lk{m_push_mutex};
+      m_push_queue->push(std::move(object));
    }
 
    [[nodiscard]] std::optional<TObject> pop()
    {
-      if (m_popQueue->empty())
+      if (m_pop_queue->empty())
          return std::nullopt;
 
-      auto object = std::move(m_popQueue->front());
-      m_popQueue->pop();
+      auto object = std::move(m_pop_queue->front());
+      m_pop_queue->pop();
       return std::optional{std::move(object)};
    }
 
    [[nodiscard]] bool is_empty()
    {
-      return m_popQueue->empty();
+      return m_pop_queue->empty();
    }
 
    void swap()
    {
-      std::unique_lock lk{m_pushMutex};
-      std::swap(m_pushQueue, m_popQueue);
+      std::unique_lock lk{m_push_mutex};
+      std::swap(m_push_queue, m_pop_queue);
    }
 
  private:
    Queue m_first;
    Queue m_second;
-   std::mutex m_pushMutex;
-   Queue* m_pushQueue;
-   Queue* m_popQueue;
+   std::mutex m_push_mutex;
+   Queue* m_push_queue;
+   Queue* m_pop_queue;
 };
 
 }// namespace triglav::threading

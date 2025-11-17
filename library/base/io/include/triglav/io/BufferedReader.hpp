@@ -7,7 +7,7 @@
 
 namespace triglav::io {
 
-constexpr auto g_bufferSize = 1024;
+constexpr auto g_buffer_size = 1024;
 
 class BufferedReader
 {
@@ -21,9 +21,9 @@ class BufferedReader
  private:
    void read_next_chunk();
 
-   std::array<u8, g_bufferSize> m_buffer{};
+   std::array<u8, g_buffer_size> m_buffer{};
    size_t m_position{0};
-   size_t m_bytesRead{0};
+   size_t m_bytes_read{0};
    IReader& m_stream;
    int m_line{1};
    int m_column{1};

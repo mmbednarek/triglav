@@ -10,8 +10,8 @@ void TextInstance::add(Context& ctx, Vector2 position, Vector4 crop)
    if (this->text_id == 0) {
       this->text_id = ctx.viewport().add_text(Text{
          .content = this->content,
-         .typefaceName = this->typeface_name,
-         .fontSize = this->font_size,
+         .typeface_name = this->typeface_name,
+         .font_size = this->font_size,
          .position = position,
          .color = this->color,
          .crop = crop,
@@ -45,10 +45,10 @@ void RectInstance::add(Context& ctx, Vector4 dimensions, Vector4 crop)
       rect_id = ctx.viewport().add_rectangle(Rectangle{
          .rect = dimensions,
          .color = this->color,
-         .borderRadius = this->border_radius,
-         .borderColor = this->border_color,
+         .border_radius = this->border_radius,
+         .border_color = this->border_color,
          .crop = crop,
-         .borderWidth = this->border_width,
+         .border_width = this->border_width,
       });
 
       return;
@@ -81,7 +81,7 @@ void SpriteInstance::add(Context& ctx, Vector4 dimensions, Vector4 crop)
          .position = rect_position(dimensions),
          .size = rect_size(dimensions),
          .crop = crop,
-         .textureRegion = this->texture_region,
+         .texture_region = this->texture_region,
       });
       return;
    }

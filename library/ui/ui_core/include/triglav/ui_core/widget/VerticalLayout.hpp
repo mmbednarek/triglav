@@ -21,8 +21,8 @@ class VerticalLayout : public LayoutWidget
 
    VerticalLayout(Context& context, State state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget& widget) override;
    void on_event(const Event& event) override;
@@ -31,7 +31,7 @@ class VerticalLayout : public LayoutWidget
    void handle_mouse_leave(const Event& event, IWidget* widget);
 
    State m_state;
-   IWidget* m_lastActiveWidget{nullptr};
+   IWidget* m_last_active_widget{nullptr};
 };
 
 }// namespace triglav::ui_core

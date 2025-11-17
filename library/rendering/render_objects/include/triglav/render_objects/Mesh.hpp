@@ -15,22 +15,22 @@ namespace triglav::render_objects {
 struct Mesh
 {
    graphics_api::Mesh<geometry::Vertex> mesh;
-   geometry::BoundingBox boundingBox;
+   geometry::BoundingBox bounding_box;
    std::vector<geometry::MaterialRange> range;
 };
 
 struct ModelShaderMapProperties
 {
-   ResourceName modelName;
-   geometry::BoundingBox boundingBox;
-   glm::mat4 modelMat;
+   ResourceName model_name;
+   geometry::BoundingBox bounding_box;
+   glm::mat4 model_mat;
    std::array<graphics_api::UniformBuffer<ShadowMapUBO>, 3> ubos;
 };
 
 struct InstancedModel
 {
-   ResourceName modelName;
-   geometry::BoundingBox boundingBox;
+   ResourceName model_name;
+   geometry::BoundingBox bounding_box;
    glm::vec3 position{};
    graphics_api::UniformBuffer<UniformBufferObject> ubo;
 };

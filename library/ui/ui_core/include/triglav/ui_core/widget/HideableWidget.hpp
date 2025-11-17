@@ -11,13 +11,13 @@ class HideableWidget final : public ContainerWidget
  public:
    struct State
    {
-      bool isHidden = false;
+      bool is_hidden = false;
    };
 
    HideableWidget(Context& ctx, State state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
 
    void on_child_state_changed(IWidget& widget) override;
@@ -29,8 +29,8 @@ class HideableWidget final : public ContainerWidget
 
  private:
    State m_state;
-   Vector4 m_parentDimensions{};
-   Vector4 m_croppingMask{};
+   Vector4 m_parent_dimensions{};
+   Vector4 m_cropping_mask{};
 };
 
 }// namespace triglav::ui_core

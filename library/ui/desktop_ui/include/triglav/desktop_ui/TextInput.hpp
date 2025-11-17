@@ -33,8 +33,8 @@ class TextInput final : public ui_core::IWidget
 
    TextInput(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void update_carret_state();
@@ -65,23 +65,23 @@ class TextInput final : public ui_core::IWidget
    ui_core::Context& m_context;
    State m_state;
 
-   ui_core::RectInstance m_backgroundRect;
-   ui_core::RectInstance m_selectionRect;
-   ui_core::TextInstance m_textPrim;
-   ui_core::RectInstance m_caretBox;
-   bool m_isCarretVisible{false};
-   bool m_isSelecting{false};
-   u32 m_caretPosition{};
-   u32 m_selectedCount{};
+   ui_core::RectInstance m_background_rect;
+   ui_core::RectInstance m_selection_rect;
+   ui_core::TextInstance m_text_prim;
+   ui_core::RectInstance m_caret_box;
+   bool m_is_carret_visible{false};
+   bool m_is_selecting{false};
+   u32 m_caret_position{};
+   u32 m_selected_count{};
    Vector4 m_dimensions{};
-   Vector4 m_croppingMask{};
-   Vector2 m_textSize{};
-   float m_textXPosition{};
-   float m_textOffset{};
-   float m_caretOffset{};
+   Vector4 m_cropping_mask{};
+   Vector2 m_text_size{};
+   float m_text_xposition{};
+   float m_text_offset{};
+   float m_caret_offset{};
 
-   bool m_isActive{false};
-   std::optional<u32> m_timeoutHandle{};
+   bool m_is_active{false};
+   std::optional<u32> m_timeout_handle{};
 };
 
 

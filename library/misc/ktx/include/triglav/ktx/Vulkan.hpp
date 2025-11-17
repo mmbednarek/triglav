@@ -18,15 +18,15 @@ struct VulkanTexture
    VkImage image;
    VkDeviceMemory memory;
    VkFormat format;
-   VkImageUsageFlags usageFlags;
-   Vector2u imageSize;
-   u32 mipCount;
+   VkImageUsageFlags usage_flags;
+   Vector2u image_size;
+   u32 mip_count;
 };
 
 class VulkanDeviceInfo
 {
  public:
-   explicit VulkanDeviceInfo(VkPhysicalDevice physicalDevice, VkDevice device, VkQueue queue, VkCommandPool cmdPool);
+   explicit VulkanDeviceInfo(VkPhysicalDevice physical_device, VkDevice device, VkQueue queue, VkCommandPool cmd_pool);
    ~VulkanDeviceInfo();
 
    VulkanDeviceInfo(const VulkanDeviceInfo& other) = delete;
@@ -35,11 +35,11 @@ class VulkanDeviceInfo
    VulkanDeviceInfo(VulkanDeviceInfo&& other) noexcept;
    VulkanDeviceInfo& operator=(VulkanDeviceInfo&& other) noexcept;
 
-   [[nodiscard]] std::optional<VulkanTexture> upload_texture(const Texture& texture, VkImageTiling tiling, VkImageUsageFlags usageFlags,
-                                                             VkImageLayout finalLayout) const;
+   [[nodiscard]] std::optional<VulkanTexture> upload_texture(const Texture& texture, VkImageTiling tiling, VkImageUsageFlags usage_flags,
+                                                             VkImageLayout final_layout) const;
 
  private:
-   ::ktxVulkanDeviceInfo* m_deviceInfo;
+   ::ktxVulkanDeviceInfo* m_device_info;
 };
 
 }// namespace triglav::ktx

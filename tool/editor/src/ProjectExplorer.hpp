@@ -25,7 +25,7 @@ class ProjectExplorer : public ui_core::ProxyWidget
 
    State m_state;
    desktop_ui::TreeController m_controller;
-   std::map<std::string_view, u32> m_pathToId;
+   std::map<std::string_view, u32> m_path_to_id;
 };
 
 }// namespace triglav::editor

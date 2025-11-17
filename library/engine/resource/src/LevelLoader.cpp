@@ -53,10 +53,10 @@ Transform3D parse_transformation(const ryml::ConstNodeRef node)
    const auto rotation = node["rotation"];
    const auto scale = node["scale"];
 
-   const auto rotationVec4 = parse_vector4(rotation);
+   const auto rotation_vec4 = parse_vector4(rotation);
 
    return Transform3D{
-      .rotation = glm::quat{rotationVec4.w, rotationVec4.x, rotationVec4.y, rotationVec4.z},
+      .rotation = glm::quat{rotation_vec4.w, rotation_vec4.x, rotation_vec4.y, rotation_vec4.z},
       .scale = parse_vector3(scale),
       .translation = parse_vector3(translation),
    };
@@ -64,11 +64,11 @@ Transform3D parse_transformation(const ryml::ConstNodeRef node)
 
 world::StaticMesh parse_static_mesh(const ryml::ConstNodeRef node)
 {
-   const auto meshName = node["mesh"].val();
+   const auto mesh_name = node["mesh"].val();
    const auto name = node["name"].val();
 
    return world::StaticMesh{
-      .meshName = to_typed_name<ResourceType::Mesh>(meshName),
+      .mesh_name = to_typed_name<ResourceType::Mesh>(mesh_name),
       .name = {name.data(), name.size()},
       .transform = parse_transformation(node["transform"]),
    };
@@ -90,17 +90,17 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
    for (const auto& node : nodes) {
       auto name = node["name"].val();
 
-      world::LevelNode levelNode({name.data(), name.size()});
+      world::LevelNode level_node({name.data(), name.size()});
 
       auto items = node["items"];
       for (const auto item : items) {
-         auto typeVal = item["type"].val();
-         if (typeVal == "static_mesh") {
-            levelNode.add_static_mesh(parse_static_mesh(item));
+         auto type_val = item["type"].val();
+         if (type_val == "static_mesh") {
+            level_node.add_static_mesh(parse_static_mesh(item));
          }
       }
 
-      result.add_node(make_name_id(std::string_view{name.data(), name.size()}), std::move(levelNode));
+      result.add_node(make_name_id(std::string_view{name.data(), name.size()}), std::move(level_node));
    }
 
    return result;

@@ -19,17 +19,17 @@ struct Particle
    alignas(16) glm::vec3 velocity;
    float animation;
    float rotation;
-   float angularVelocity;
+   float angular_velocity;
    float scale;
 };
 
-constexpr auto g_particleCount = 256;
+constexpr auto g_particle_count = 256;
 
 struct ShadingPushConstants
 {
-   alignas(16) Vector4 lightPosition;
-   int isAmbientOcclusionEnabled;
-   int shouldSampleShadows;
+   alignas(16) Vector4 light_position;
+   int is_ambient_occlusion_enabled;
+   int should_sample_shadows;
 };
 
 void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
@@ -43,7 +43,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
    ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, UNorm16));
 
-   if (config.isRenderingParticles) {
+   if (config.is_rendering_particles) {
       this->prepare_particles(ctx);
    }
 
@@ -56,15 +56,15 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
    ctx.bind_texture(0, "gbuffer.albedo"_name);
    ctx.bind_texture(1, "gbuffer.position"_name);
    ctx.bind_texture(2, "gbuffer.normal"_name);
-   if (config.ambientOcclusion == AmbientOcclusionMethod::RayTraced) {
+   if (config.ambient_occlusion == AmbientOcclusionMethod::RayTraced) {
       ctx.bind_texture(3, "ray_tracing.ambient_occlusion.blurred"_name);
    } else {
       ctx.bind_texture(3, "ambient_occlusion.blurred"_name);
    }
 
-   std::array<render_core::TextureRef, 3> shadowTextures{"shadow_map.cascade0"_name, "shadow_map.cascade1"_name,
-                                                         "shadow_map.cascade2"_name};
-   ctx.bind_sampled_texture_array(4, shadowTextures);
+   std::array<render_core::TextureRef, 3> shadow_textures{"shadow_map.cascade0"_name, "shadow_map.cascade1"_name,
+                                                          "shadow_map.cascade2"_name};
+   ctx.bind_sampled_texture_array(4, shadow_textures);
 
    ctx.bind_texture(5, "ray_tracing.shadows"_name);
    ctx.bind_uniform_buffer(6, "core.view_properties"_external);
@@ -72,8 +72,8 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.push_constant(ShadingPushConstants{
       Vector4(-30, 0, -5, 1.0),
-      config.ambientOcclusion != AmbientOcclusionMethod::Disabled,
-      config.shadowCasting == ShadowCastingMethod::RayTracing,
+      config.ambient_occlusion != AmbientOcclusionMethod::Disabled,
+      config.shadow_casting == ShadowCastingMethod::RayTracing,
    });
 
    ctx.set_is_blending_enabled(false);
@@ -81,7 +81,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.draw_full_screen_quad();
 
-   if (config.isRenderingParticles) {
+   if (config.is_rendering_particles) {
       this->render_particles(ctx);
    }
 
@@ -92,7 +92,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
 void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const
 {
-   ctx.declare_buffer("particles"_name, sizeof(Particle) * g_particleCount);
+   ctx.declare_buffer("particles"_name, sizeof(Particle) * g_particle_count);
 
    ctx.add_buffer_usage("particles"_name, graphics_api::BufferUsage::TransferDst);// Initially this buffer is filled from host
 
@@ -128,7 +128,7 @@ void ShadingStage::initialize_particles(render_core::JobGraph& ctx)
    Vector3 range{2, 2, 2};
 
    std::vector<Particle> particles;
-   particles.resize(g_particleCount);
+   particles.resize(g_particle_count);
 
    std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
    std::default_random_engine generator{};
@@ -139,7 +139,7 @@ void ShadingStage::initialize_particles(render_core::JobGraph& ctx)
       particle.velocity = 0.01f * glm::vec3(dist(generator), dist(generator), dist(generator));
       particle.animation = 0.5f * (1.0f + dist(generator));
       particle.rotation = 2.0f * g_pi * dist(generator);
-      particle.angularVelocity = dist(generator);
+      particle.angular_velocity = dist(generator);
       particle.scale = 0.5f + (1.0f + dist(generator));
    }
 

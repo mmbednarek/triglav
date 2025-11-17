@@ -54,17 +54,17 @@ Index Mesh::add_vertex(const Vector3 vertex)
 // ReSharper disable once CppMemberFunctionMayBeConst
 Index Mesh::add_face_range(std::span<Index> vertices)
 {
-   std::vector<InternalMesh::VertexIndex> vecVertices{};
-   vecVertices.resize(vertices.size());
-   std::ranges::transform(vertices, vecVertices.begin(), [](const Index i) { return InternalMesh::VertexIndex{i}; });
-   return m_mesh->add_face(vecVertices);
+   std::vector<InternalMesh::VertexIndex> vec_vertices{};
+   vec_vertices.resize(vertices.size());
+   std::ranges::transform(vertices, vec_vertices.begin(), [](const Index i) { return InternalMesh::VertexIndex{i}; });
+   return m_mesh->add_face(vec_vertices);
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-Index Mesh::add_group(MeshGroup meshGroup)
+Index Mesh::add_group(MeshGroup mesh_group)
 {
    assert(m_mesh != nullptr);
-   return m_mesh->add_group(std::move(meshGroup));
+   return m_mesh->add_group(std::move(mesh_group));
 }
 
 size_t Mesh::vertex_count() const
@@ -95,10 +95,10 @@ void Mesh::set_face_group(const Index face, const Index group)
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
-void Mesh::set_material(const Index meshGroup, const MaterialName material)
+void Mesh::set_material(const Index mesh_group, const MaterialName material)
 {
    assert(m_mesh != nullptr);
-   m_mesh->set_material(meshGroup, material);
+   m_mesh->set_material(mesh_group, material);
 }
 
 BoundingBox Mesh::calculate_bounding_box() const
@@ -114,10 +114,10 @@ void Mesh::reverse_orientation()
    m_mesh->reverse_orientation();
 }
 
-DeviceMesh Mesh::upload_to_device(graphics_api::Device& device, const graphics_api::BufferUsageFlags usageFlags) const
+DeviceMesh Mesh::upload_to_device(graphics_api::Device& device, const graphics_api::BufferUsageFlags usage_flags) const
 {
    assert(m_mesh != nullptr);
-   return m_mesh->upload_to_device(device, usageFlags);
+   return m_mesh->upload_to_device(device, usage_flags);
 }
 
 VertexData Mesh::to_vertex_data() const
@@ -128,8 +128,8 @@ VertexData Mesh::to_vertex_data() const
 
 Mesh Mesh::from_file(const io::Path& path)
 {
-   auto internalMesh = InternalMesh::from_obj_file(path);
-   return Mesh(std::make_unique<InternalMesh>(std::move(internalMesh)));
+   auto internal_mesh = InternalMesh::from_obj_file(path);
+   return Mesh(std::make_unique<InternalMesh>(std::move(internal_mesh)));
 }
 
 Mesh::Mesh(std::unique_ptr<InternalMesh> mesh) :

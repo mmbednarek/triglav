@@ -13,7 +13,7 @@ struct MenuItem
 {
    Name name;
    String label;
-   bool isSubmenu;
+   bool is_submenu;
 };
 
 class MenuController

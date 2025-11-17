@@ -12,7 +12,7 @@ using namespace render_core::literals;
 
 namespace {
 
-render_core::VertexLayout g_singleVertexLayout =
+render_core::VertexLayout g_single_vertex_layout =
    render_core::VertexLayout(sizeof(Vector3)).add("position"_name, GAPI_FORMAT(RGB, Float32), 0);
 
 void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count,
@@ -24,7 +24,7 @@ void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name
    ctx.bind_uniform_buffer(1, "render_viewport.colors"_name, static_cast<u32>(index * color_stride), sizeof(Vector4));
    ctx.bind_uniform_buffer(2, "render_viewport.matrices"_name, static_cast<u32>(index * matrix_stride), sizeof(Matrix4x4));
 
-   ctx.bind_vertex_layout(g_singleVertexLayout);
+   ctx.bind_vertex_layout(g_single_vertex_layout);
 
    ctx.bind_vertex_buffer(vertices);
    ctx.bind_index_buffer(indices);
@@ -40,15 +40,15 @@ void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name
 
 }// namespace
 
-RenderViewport::RenderViewport(LevelEditor& levelEditor, const Vector4 dimensions) :
-    m_levelEditor(levelEditor),
+RenderViewport::RenderViewport(LevelEditor& level_editor, const Vector4 dimensions) :
+    m_level_editor(level_editor),
     m_dimensions(dimensions)
 {
 }
 
 void RenderViewport::build_update_job(render_core::BuildContext& ctx)
 {
-   m_levelEditor.m_updateViewParamsJob.build_job(ctx);
+   m_level_editor.m_update_view_params_job.build_job(ctx);
 }
 
 struct EditorOverlayUniformBuffer
@@ -81,7 +81,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.init_buffer_raw("render_viewport.cube_vertices"_name, vertices_cube.data(), vertices_cube.size() * sizeof(Vector3));
    ctx.init_buffer_raw("render_viewport.cube_indices"_name, indices_cube.data(), indices_cube.size() * sizeof(u32));
 
-   const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
+   const auto& limits = m_level_editor.m_state.root_window->device().limits();
 
    const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
    ctx.declare_staging_buffer("render_viewport.colors.staging"_name, color_align * m_colors.size());
@@ -91,7 +91,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.declare_staging_buffer("render_viewport.matrices.staging"_name, matrix_align * m_matrices.size());
    ctx.declare_buffer("render_viewport.matrices"_name, matrix_align * m_matrices.size());
 
-   m_levelEditor.m_renderingJob.build_job(ctx);
+   m_level_editor.m_rendering_job.build_job(ctx);
 
    ctx.copy_buffer("render_viewport.colors.staging"_name, "render_viewport.colors"_name);
    ctx.copy_buffer("render_viewport.matrices.staging"_name, "render_viewport.matrices"_name);
@@ -136,21 +136,21 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
                       graphics_api::TextureUsage::TransferSrc);
 }
 
-void RenderViewport::update(render_core::JobGraph& graph, const u32 frameIndex, const float deltaTime)
+void RenderViewport::update(render_core::JobGraph& graph, const u32 frame_index, const float delta_time)
 {
-   m_levelEditor.m_updateViewParamsJob.prepare_frame(graph, frameIndex, deltaTime);
+   m_level_editor.m_update_view_params_job.prepare_frame(graph, frame_index, delta_time);
 
    if (m_updates < render_core::FRAMES_IN_FLIGHT_COUNT) {
-      const auto& limits = m_levelEditor.m_state.rootWindow->device().limits();
+      const auto& limits = m_level_editor.m_state.root_window->device().limits();
       const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
       const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
 
-      const auto matrices_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.matrices.staging"_name, frameIndex).map_memory());
+      const auto matrices_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.matrices.staging"_name, frame_index).map_memory());
       for (const auto& [index, matrix] : Enumerate(m_matrices)) {
          std::memcpy(static_cast<char*>(*matrices_mapping) + matrix_align * index, &m_matrices[index], sizeof(Matrix4x4));
       }
 
-      const auto colors_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.colors.staging"_name, frameIndex).map_memory());
+      const auto colors_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.colors.staging"_name, frame_index).map_memory());
       for (const auto& [index, color] : Enumerate(m_colors)) {
          std::memcpy(static_cast<char*>(*colors_mapping) + color_align * index, &m_colors[index], sizeof(Color));
       }

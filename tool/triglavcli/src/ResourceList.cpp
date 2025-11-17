@@ -22,13 +22,13 @@ namespace triglav::tool::cli {
 
 void ResourceListItem::deserialize_yaml(const ryml::ConstNodeRef& node)
 {
-   const auto sourceVal = node["source"].val();
+   const auto source_val = node["source"].val();
 
-   this->source = {sourceVal.data(), sourceVal.size()};
+   this->source = {source_val.data(), source_val.size()};
 
    if (node.has_child("properties")) {
-      auto propertiesNode = node["properties"];
-      for (const auto property : propertiesNode) {
+      auto properties_node = node["properties"];
+      for (const auto property : properties_node) {
          auto key = property.key();
          auto value = property.val();
          this->properties.emplace(std::string{key.data(), key.size()}, std::string{value.data(), value.size()});
@@ -40,24 +40,24 @@ void ResourceListItem::serialize_yaml(ryml::NodeRef& node) const
    node["source"] << ryml::csubstr(this->source.data(), this->source.size());
 
    if (!this->properties.empty()) {
-      auto propertiesNode = node["properties"];
-      propertiesNode |= ryml::MAP;
+      auto properties_node = node["properties"];
+      properties_node |= ryml::MAP;
 
       for (const auto& [key, value] : this->properties) {
-         propertiesNode[ryml::csubstr(key.data(), key.size())] = ryml::csubstr(value.data(), value.size());
+         properties_node[ryml::csubstr(key.data(), key.size())] = ryml::csubstr(value.data(), value.size());
       }
    }
 }
 
 void ResourceList::deserialize_yaml(const ryml::ConstNodeRef& node)
 {
-   const auto versionStr = node["version"].val();
-   this->version = std::stoi(std::string{versionStr.data(), versionStr.size()});
+   const auto version_str = node["version"].val();
+   this->version = std::stoi(std::string{version_str.data(), version_str.size()});
 
-   const auto resourcesNode = node["resources"];
-   for (const auto resource : resourcesNode) {
-      const auto nameStr = resource["name"].val();
-      std::string name = {nameStr.data(), nameStr.size()};
+   const auto resources_node = node["resources"];
+   for (const auto resource : resources_node) {
+      const auto name_str = resource["name"].val();
+      std::string name = {name_str.data(), name_str.size()};
 
       ResourceListItem item;
       item.deserialize_yaml(resource);
@@ -67,14 +67,14 @@ void ResourceList::deserialize_yaml(const ryml::ConstNodeRef& node)
 
 void ResourceList::serialize_yaml(ryml::NodeRef& node) const
 {
-   const auto versionStr = std::to_string(this->version);
-   node["version"] << ryml::csubstr(versionStr.data(), versionStr.size());
+   const auto version_str = std::to_string(this->version);
+   node["version"] << ryml::csubstr(version_str.data(), version_str.size());
 
-   auto resourcesNode = node["resources"];
-   resourcesNode |= ryml::SEQ;
+   auto resources_node = node["resources"];
+   resources_node |= ryml::SEQ;
    for (const auto& [name, resource] : this->resources) {
 
-      auto child = resourcesNode.append_child();
+      auto child = resources_node.append_child();
       child |= ryml::MAP;
 
       child["name"] << ryml::csubstr(name.data(), name.size());
@@ -105,9 +105,9 @@ bool ResourceList::save_to_file(const io::Path& path) const
    }
 
    ryml::Tree tree;
-   ryml::NodeRef treeRef{tree};
-   treeRef |= ryml::MAP;
-   this->serialize_yaml(treeRef);
+   ryml::NodeRef tree_ref{tree};
+   tree_ref |= ryml::MAP;
+   this->serialize_yaml(tree_ref);
 
    const auto str = ryml::emitrs_yaml<std::string>(tree);
    return (*file)->write({reinterpret_cast<const u8*>(str.data()), str.size()}).has_value();
@@ -115,19 +115,19 @@ bool ResourceList::save_to_file(const io::Path& path) const
 
 bool add_resource_to_index(const std::string_view name)
 {
-   auto projectInfo = load_active_project_info();
-   if (!projectInfo.has_value()) {
+   auto project_info = load_active_project_info();
+   if (!project_info.has_value()) {
       std::print(stderr, "triglav-cli: No active project found\n");
       return false;
    }
 
-   const auto indexPath = projectInfo->content_path("index.yaml");
-   auto resList = ResourceList::from_file(indexPath);
-   assert(resList.has_value());
+   const auto index_path = project_info->content_path("index.yaml");
+   auto res_list = ResourceList::from_file(index_path);
+   assert(res_list.has_value());
 
-   resList->resources.emplace(std::string{name}, std::string{name});
+   res_list->resources.emplace(std::string{name}, std::string{name});
 
-   return resList->save_to_file(indexPath);
+   return res_list->save_to_file(index_path);
 }
 
 }// namespace triglav::tool::cli

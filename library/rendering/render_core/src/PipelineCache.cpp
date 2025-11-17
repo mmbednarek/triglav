@@ -15,17 +15,17 @@ namespace {
 
 void write_descriptor_state(graphics_api::PipelineBuilderBase& builder, const DescriptorState& state)
 {
-   for (const auto i : Range(0u, state.descriptorCount)) {
+   for (const auto i : Range(0u, state.descriptor_count)) {
       const auto& desc = state.descriptors[i];
-      builder.add_descriptor_binding(desc.descriptorType, desc.pipelineStages, desc.descriptorCount);
+      builder.add_descriptor_binding(desc.descriptor_type, desc.pipeline_stages, desc.descriptor_count);
    }
 }
 
 }// namespace
 
-PipelineCache::PipelineCache(graphics_api::Device& device, resource::ResourceManager& resourceManager) :
+PipelineCache::PipelineCache(graphics_api::Device& device, resource::ResourceManager& resource_manager) :
     m_device(device),
-    m_resourceManager(resourceManager)
+    m_resource_manager(resource_manager)
 {
 }
 
@@ -39,10 +39,10 @@ graphics_api::Pipeline& PipelineCache::get_graphics_pipeline(const GraphicPipeli
 
    log_debug("creating new graphics PSO (hash: {}).", hash);
 
-   auto [pipelineIt, ok] = m_pipelines.emplace(hash, this->create_graphics_pso(state));
+   auto [pipeline_it, ok] = m_pipelines.emplace(hash, this->create_graphics_pso(state));
    assert(ok);
 
-   return pipelineIt->second;
+   return pipeline_it->second;
 }
 
 graphics_api::Pipeline& PipelineCache::get_compute_pipeline(const ComputePipelineState& state)
@@ -55,50 +55,50 @@ graphics_api::Pipeline& PipelineCache::get_compute_pipeline(const ComputePipelin
 
    log_debug("creating new compute PSO (hash: {}).", hash);
 
-   auto [pipelineIt, ok] = m_pipelines.emplace(hash, this->create_compute_pso(state));
+   auto [pipeline_it, ok] = m_pipelines.emplace(hash, this->create_compute_pso(state));
    assert(ok);
 
-   return pipelineIt->second;
+   return pipeline_it->second;
 }
 
 graphics_api::ray_tracing::RayTracingPipeline& PipelineCache::get_ray_tracing_pso(const RayTracingPipelineState& state)
 {
    const auto hash = state.hash();
 
-   if (const auto it = m_rayTracingPipelines.find(hash); it != m_rayTracingPipelines.end()) {
+   if (const auto it = m_ray_tracing_pipelines.find(hash); it != m_ray_tracing_pipelines.end()) {
       return it->second;
    }
 
    log_debug("creating new ray tracing PSO (hash: {}).", hash);
 
-   auto [pipelineIt, ok] = m_rayTracingPipelines.emplace(hash, this->create_ray_tracing_pso(state));
+   auto [pipeline_it, ok] = m_ray_tracing_pipelines.emplace(hash, this->create_ray_tracing_pso(state));
    assert(ok);
 
-   return pipelineIt->second;
+   return pipeline_it->second;
 }
 
 graphics_api::ray_tracing::ShaderBindingTable& PipelineCache::get_shader_binding_table(const RayTracingPipelineState& state)
 {
    const auto hash = state.hash();
 
-   if (const auto it = m_rayTracingShaderBindingTables.find(hash); it != m_rayTracingShaderBindingTables.end()) {
+   if (const auto it = m_ray_tracing_shader_binding_tables.find(hash); it != m_ray_tracing_shader_binding_tables.end()) {
       return it->second;
    }
 
    log_debug("creating shader binding table (hash: {}).", hash);
 
-   auto [pipelineIt, ok] = m_rayTracingShaderBindingTables.emplace(hash, this->create_ray_tracing_shader_binding_table(state));
+   auto [pipeline_it, ok] = m_ray_tracing_shader_binding_tables.emplace(hash, this->create_ray_tracing_shader_binding_table(state));
    assert(ok);
 
-   return pipelineIt->second;
+   return pipeline_it->second;
 }
 
 graphics_api::Pipeline PipelineCache::create_compute_pso(const ComputePipelineState& state) const
 {
    gapi::ComputePipelineBuilder builder(m_device);
-   builder.compute_shader(m_resourceManager.get(state.computeShader.value()));
+   builder.compute_shader(m_resource_manager.get(state.compute_shader.value()));
 
-   write_descriptor_state(builder, state.descriptorState);
+   write_descriptor_state(builder, state.descriptor_state);
 
    return GAPI_CHECK(builder.build());
 }
@@ -107,34 +107,34 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
 {
    gapi::GraphicsPipelineBuilder builder(m_device);
 
-   builder.vertex_shader(m_resourceManager.get(state.vertexShader.value()));
-   builder.fragment_shader(m_resourceManager.get(state.fragmentShader.value()));
+   builder.vertex_shader(m_resource_manager.get(state.vertex_shader.value()));
+   builder.fragment_shader(m_resource_manager.get(state.fragment_shader.value()));
 
-   write_descriptor_state(builder, state.descriptorState);
+   write_descriptor_state(builder, state.descriptor_state);
 
-   if (state.vertexLayout.stride != 0) {
-      builder.begin_vertex_layout_raw(state.vertexLayout.stride);
-      for (const auto& attribute : state.vertexLayout.attributes) {
+   if (state.vertex_layout.stride != 0) {
+      builder.begin_vertex_layout_raw(state.vertex_layout.stride);
+      for (const auto& attribute : state.vertex_layout.attributes) {
          builder.vertex_attribute(attribute.format, attribute.offset);
       }
       builder.end_vertex_layout();
    }
 
-   for (const auto format : state.renderTargetFormats) {
+   for (const auto format : state.render_target_formats) {
       builder.color_attachment(format);
    }
-   if (state.depthTargetFormat.has_value()) {
-      builder.depth_attachment(*state.depthTargetFormat);
+   if (state.depth_target_format.has_value()) {
+      builder.depth_attachment(*state.depth_target_format);
       builder.enable_depth_test(true);
    }
-   builder.vertex_topology(state.vertexTopology);
-   builder.depth_test_mode(state.depthTestMode);
-   builder.line_width(state.lineWidth);
+   builder.vertex_topology(state.vertex_topology);
+   builder.depth_test_mode(state.depth_test_mode);
+   builder.line_width(state.line_width);
 
-   for (const auto pushConstant : state.pushConstants) {
-      builder.push_constant(pushConstant.flags, pushConstant.size);
+   for (const auto push_constant : state.push_constants) {
+      builder.push_constant(push_constant.flags, push_constant.size);
    }
-   builder.enable_blending(state.isBlendingEnabled);
+   builder.enable_blending(state.is_blending_enabled);
 
    return GAPI_CHECK(builder.build());
 }
@@ -143,43 +143,43 @@ graphics_api::ray_tracing::RayTracingPipeline PipelineCache::create_ray_tracing_
 {
    gapi::ray_tracing::RayTracingPipelineBuilder builder(m_device);
 
-   builder.ray_generation_shader(make_rt_shader_name(*state.rayGenShader), m_resourceManager.get(*state.rayGenShader));
+   builder.ray_generation_shader(make_rt_shader_name(*state.ray_gen_shader), m_resource_manager.get(*state.ray_gen_shader));
 
-   for (const auto shader : state.rayMissShaders) {
-      builder.miss_shader(make_rt_shader_name(shader), m_resourceManager.get(shader));
+   for (const auto shader : state.ray_miss_shaders) {
+      builder.miss_shader(make_rt_shader_name(shader), m_resource_manager.get(shader));
    }
-   for (const auto shader : state.rayClosestHitShaders) {
-      builder.closest_hit_shader(make_rt_shader_name(shader), m_resourceManager.get(shader));
-   }
-
-   write_descriptor_state(builder, state.descriptorState);
-
-   for (const auto pushConstant : state.pushConstants) {
-      builder.push_constant(pushConstant.flags, pushConstant.size);
+   for (const auto shader : state.ray_closest_hit_shaders) {
+      builder.closest_hit_shader(make_rt_shader_name(shader), m_resource_manager.get(shader));
    }
 
-   builder.max_recursion(state.maxRecursion);
+   write_descriptor_state(builder, state.descriptor_state);
 
-   for (const auto& shaderGroup : state.shaderGroups) {
-      switch (shaderGroup.type) {
+   for (const auto push_constant : state.push_constants) {
+      builder.push_constant(push_constant.flags, push_constant.size);
+   }
+
+   builder.max_recursion(state.max_recursion);
+
+   for (const auto& shader_group : state.shader_groups) {
+      switch (shader_group.type) {
       case RayTracingShaderGroupType::General:
-         builder.general_group(make_rt_shader_name(*shaderGroup.generalShader));
+         builder.general_group(make_rt_shader_name(*shader_group.general_shader));
          break;
       case RayTracingShaderGroupType::Triangles: {
-         std::array<Name, 2> shaderNames{};
+         std::array<Name, 2> shader_names{};
 
          u32 count = 0;
-         if (shaderGroup.generalShader.has_value()) {
-            shaderNames[count++] = make_rt_shader_name(*shaderGroup.generalShader);
+         if (shader_group.general_shader.has_value()) {
+            shader_names[count++] = make_rt_shader_name(*shader_group.general_shader);
          }
-         if (shaderGroup.closestHitShader.has_value()) {
-            shaderNames[count++] = make_rt_shader_name(*shaderGroup.closestHitShader);
+         if (shader_group.closest_hit_shader.has_value()) {
+            shader_names[count++] = make_rt_shader_name(*shader_group.closest_hit_shader);
          }
 
          if (count == 1) {
-            builder.triangle_group(shaderNames[0]);
+            builder.triangle_group(shader_names[0]);
          } else {
-            builder.triangle_group(shaderNames[1]);
+            builder.triangle_group(shader_names[1]);
          }
          break;
       }

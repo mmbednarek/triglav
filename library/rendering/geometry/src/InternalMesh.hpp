@@ -71,7 +71,7 @@ class InternalMesh
    void set_face_uvs(Index face, std::span<glm::vec2> uvs);
    void set_face_normals(Index face, std::span<glm::vec3> normals);
    void set_face_group(Index face, Index group);
-   void set_material(Index meshGroup, MaterialName material);
+   void set_material(Index mesh_group, MaterialName material);
 
    [[nodiscard]] glm::vec3 location(VertexIndex index) const;
    std::optional<glm::vec3> normal(HalfedgeIndex index) const;
@@ -80,7 +80,7 @@ class InternalMesh
    [[nodiscard]] bool is_triangulated();
    [[nodiscard]] BoundingBox calculate_bounding_box() const;
 
-   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsageFlags usageFlags);
+   [[nodiscard]] DeviceMesh upload_to_device(graphics_api::Device& device, graphics_api::BufferUsageFlags usage_flags);
    [[nodiscard]] VertexData to_vertex_data();
    void reverse_orientation();
 
@@ -91,10 +91,10 @@ class InternalMesh
    SurfaceMesh m_mesh;
    NormalPropMap m_normals;
    UvPropMap m_uvs;
-   GroupPropMap m_groupIds;
+   GroupPropMap m_group_ids;
    TangentPropMap m_tangents;
    std::vector<MeshGroup> m_groups;
-   bool m_isTriangulated{false};
+   bool m_is_triangulated{false};
 };
 
 }// namespace triglav::geometry

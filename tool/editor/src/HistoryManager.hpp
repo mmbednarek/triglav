@@ -35,9 +35,9 @@ class HistoryManager
 
  private:
    std::array<std::unique_ptr<IHistoryAction>, HISTORY_SIZE> m_actions;
-   i32 m_historyBottom = 0;
-   i32 m_historyPosition = 0;
-   i32 m_historyTop = 0;
+   i32 m_history_bottom = 0;
+   i32 m_history_position = 0;
+   i32 m_history_top = 0;
 };
 
 }// namespace triglav::editor

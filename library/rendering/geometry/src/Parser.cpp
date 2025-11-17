@@ -53,7 +53,7 @@ void Parser::parse()
          continue;
       }
 
-      m_currentToken.push_back(ch);
+      m_current_token.push_back(ch);
    }
 
    this->process_token();
@@ -61,18 +61,18 @@ void Parser::parse()
 
 void Parser::process_token()
 {
-   if (m_currentToken.empty())
+   if (m_current_token.empty())
       return;
 
    if (m_state == State::Command) {
-      m_currentCommand.name = m_currentToken;
-      m_currentToken.clear();
+      m_current_command.name = m_current_token;
+      m_current_token.clear();
       m_state = State::Argument;
       return;
    }
    if (m_state == State::Argument) {
-      m_currentCommand.arguments.push_back(m_currentToken);
-      m_currentToken.clear();
+      m_current_command.arguments.push_back(m_current_token);
+      m_current_token.clear();
    }
 }
 
@@ -82,12 +82,12 @@ void Parser::process_line_end()
 
    m_state = State::LineStart;
 
-   if (not m_currentCommand.name.empty()) {
-      m_commands.push_back(m_currentCommand);
+   if (not m_current_command.name.empty()) {
+      m_commands.push_back(m_current_command);
    }
 
-   m_currentCommand.arguments.clear();
-   m_currentCommand.name.clear();
+   m_current_command.arguments.clear();
+   m_current_command.name.clear();
 }
 
 const std::vector<Command>& Parser::commands() const

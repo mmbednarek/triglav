@@ -31,45 +31,45 @@ Scene deserialize_scene(const rapidjson::Value& value)
 
 Vector3 deserialize_vector3(const rapidjson::Value& value)
 {
-   std::array<float, 3> vecData{};
-   auto it = vecData.begin();
+   std::array<float, 3> vec_data{};
+   auto it = vec_data.begin();
    for (const auto& child : value.GetArray()) {
       *it = child.GetFloat();
       ++it;
    }
 
    Vector3 result{};
-   std::memcpy(reinterpret_cast<float*>(&result), vecData.data(), sizeof(float) * 3);
+   std::memcpy(reinterpret_cast<float*>(&result), vec_data.data(), sizeof(float) * 3);
 
    return result;
 }
 
 Vector4 deserialize_vector4(const rapidjson::Value& value)
 {
-   std::array<float, 4> vecData{};
-   auto it = vecData.begin();
+   std::array<float, 4> vec_data{};
+   auto it = vec_data.begin();
    for (const auto& child : value.GetArray()) {
       *it = child.GetFloat();
       ++it;
    }
 
    Vector4 result{};
-   std::memcpy(reinterpret_cast<float*>(&result), vecData.data(), sizeof(float) * 4);
+   std::memcpy(reinterpret_cast<float*>(&result), vec_data.data(), sizeof(float) * 4);
 
    return result;
 }
 
 Matrix4x4 deserialize_matrix4x4(const rapidjson::Value& value)
 {
-   std::array<float, 16> matData{};
-   auto it = matData.begin();
+   std::array<float, 16> mat_data{};
+   auto it = mat_data.begin();
    for (const auto& child : value.GetArray()) {
       *it = child.GetFloat();
       ++it;
    }
 
    Matrix4x4 result{};
-   std::memcpy(reinterpret_cast<float*>(&result), matData.data(), sizeof(float) * 16);
+   std::memcpy(reinterpret_cast<float*>(&result), mat_data.data(), sizeof(float) * 16);
 
    return result;
 }
@@ -211,13 +211,13 @@ Accessor deserialize_accessor(const rapidjson::Value& value)
 {
    Accessor accessor{};
 
-   accessor.bufferView = value["bufferView"].GetInt();
+   accessor.buffer_view = value["bufferView"].GetInt();
    if (value.HasMember("byteOffset")) {
-      accessor.byteOffset = value["byteOffset"].GetInt();
+      accessor.byte_offset = value["byteOffset"].GetInt();
    } else {
-      accessor.byteOffset = 0;
+      accessor.byte_offset = 0;
    }
-   accessor.componentType = component_type_from_int(value["componentType"].GetInt());
+   accessor.component_type = component_type_from_int(value["componentType"].GetInt());
    accessor.count = value["count"].GetInt();
 
    if (value.HasMember("max")) {
@@ -251,29 +251,29 @@ NormalMapTexture deserialize_normal_map_texture(const rapidjson::Value& value)
 
 PBRMetallicRoughness deserialize_pbr_metallic_roughness(const rapidjson::Value& value)
 {
-   PBRMetallicRoughness pbrMetallicRoughness{};
+   PBRMetallicRoughness pbr_metallic_roughness{};
    if (value.HasMember("baseColorTexture")) {
-      pbrMetallicRoughness.baseColorTexture.emplace(deserialize_material_texture(value["baseColorTexture"]));
+      pbr_metallic_roughness.base_color_texture.emplace(deserialize_material_texture(value["baseColorTexture"]));
    }
    if (value.HasMember("baseColorFactor")) {
-      pbrMetallicRoughness.baseColorFactor.emplace(deserialize_vector4(value["baseColorFactor"]));
+      pbr_metallic_roughness.base_color_factor.emplace(deserialize_vector4(value["baseColorFactor"]));
    }
    if (value.HasMember("metallicFactor")) {
-      pbrMetallicRoughness.metallicFactor = value["metallicFactor"].GetFloat();
+      pbr_metallic_roughness.metallic_factor = value["metallicFactor"].GetFloat();
    }
    if (value.HasMember("roughnessFactor")) {
-      pbrMetallicRoughness.roughnessFactor = value["roughnessFactor"].GetFloat();
+      pbr_metallic_roughness.roughness_factor = value["roughnessFactor"].GetFloat();
    }
-   return pbrMetallicRoughness;
+   return pbr_metallic_roughness;
 }
 
 Material deserialize_material(const rapidjson::Value& value)
 {
    Material material{};
    material.name = value["name"].GetString();
-   material.pbrMetallicRoughness = deserialize_pbr_metallic_roughness(value["pbrMetallicRoughness"]);
+   material.pbr_metallic_roughness = deserialize_pbr_metallic_roughness(value["pbrMetallicRoughness"]);
    if (value.HasMember("normalTexture")) {
-      material.normalTexture.emplace(deserialize_normal_map_texture(value["normalTexture"]));
+      material.normal_texture.emplace(deserialize_normal_map_texture(value["normalTexture"]));
    }
    return material;
 }
@@ -296,10 +296,10 @@ Image deserialize_image(const rapidjson::Value& value)
       image.uri = value["uri"].GetString();
    }
    if (value.HasMember("mimeType")) {
-      image.mimeType = value["mimeType"].GetString();
+      image.mime_type = value["mimeType"].GetString();
    }
    if (value.HasMember("bufferView")) {
-      image.bufferView = value["bufferView"].GetInt();
+      image.buffer_view = value["bufferView"].GetInt();
    }
    if (value.HasMember("name")) {
       image.name = value["name"].GetString();
@@ -310,13 +310,13 @@ Image deserialize_image(const rapidjson::Value& value)
 Sampler deserialize_sampler(const rapidjson::Value& value)
 {
    Sampler sampler{};
-   sampler.magFilter = static_cast<SamplerFilter>(value["magFilter"].GetInt());
-   sampler.minFilter = static_cast<SamplerFilter>(value["minFilter"].GetInt());
+   sampler.mag_filter = static_cast<SamplerFilter>(value["magFilter"].GetInt());
+   sampler.min_filter = static_cast<SamplerFilter>(value["minFilter"].GetInt());
    if (value.HasMember("wrapS")) {
-      sampler.wrapS = static_cast<SamplerWrap>(value["wrapS"].GetInt());
+      sampler.wrap_s = static_cast<SamplerWrap>(value["wrapS"].GetInt());
    }
    if (value.HasMember("wrapT")) {
-      sampler.wrapT = static_cast<SamplerWrap>(value["wrapT"].GetInt());
+      sampler.wrap_t = static_cast<SamplerWrap>(value["wrapT"].GetInt());
    }
    if (value.HasMember("name")) {
       sampler.name = value["name"].GetString();
@@ -326,16 +326,16 @@ Sampler deserialize_sampler(const rapidjson::Value& value)
 
 BufferView deserialize_buffer_view(const rapidjson::Value& value)
 {
-   BufferView bufferView{};
-   bufferView.buffer = value["buffer"].GetInt();
+   BufferView buffer_view{};
+   buffer_view.buffer = value["buffer"].GetInt();
    if (value.HasMember("byteOffset")) {
-      bufferView.byteOffset = value["byteOffset"].GetInt();
+      buffer_view.byte_offset = value["byteOffset"].GetInt();
    }
-   bufferView.byteLength = value["byteLength"].GetInt();
+   buffer_view.byte_length = value["byteLength"].GetInt();
    if (value.HasMember("target")) {
-      bufferView.target = static_cast<BufferTarget>(value["target"].GetInt());
+      buffer_view.target = static_cast<BufferTarget>(value["target"].GetInt());
    }
-   return bufferView;
+   return buffer_view;
 }
 
 Buffer deserialize_buffer(const rapidjson::Value& value)
@@ -344,7 +344,7 @@ Buffer deserialize_buffer(const rapidjson::Value& value)
    if (value.HasMember("uri")) {
       buffer.uri.emplace(value["uri"].GetString());
    }
-   buffer.byteLength = value["byteLength"].GetInt();
+   buffer.byte_length = value["byteLength"].GetInt();
    return buffer;
 }
 
@@ -393,7 +393,7 @@ void Document::deserialize(io::IReader& reader)
       }
    }
    for (const auto& child : doc["bufferViews"].GetArray()) {
-      this->bufferViews.push_back(deserialize_buffer_view(child));
+      this->buffer_views.push_back(deserialize_buffer_view(child));
    }
    for (const auto& child : doc["buffers"].GetArray()) {
       this->buffers.push_back(deserialize_buffer(child));

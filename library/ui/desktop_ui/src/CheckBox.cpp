@@ -8,18 +8,18 @@ namespace triglav::desktop_ui {
 
 void RadioGroup::add_check_box(CheckBox* cb)
 {
-   m_checkBoxes.push_back(cb);
+   m_check_boxes.push_back(cb);
 }
 
-void RadioGroup::set_active(const CheckBox* activeCb) const
+void RadioGroup::set_active(const CheckBox* active_cb) const
 {
-   const auto it = std::ranges::find(m_checkBoxes, activeCb);
-   if (it != m_checkBoxes.end()) {
-      event_OnSelection.publish(static_cast<u32>(it - m_checkBoxes.begin()));
+   const auto it = std::ranges::find(m_check_boxes, active_cb);
+   if (it != m_check_boxes.end()) {
+      event_OnSelection.publish(static_cast<u32>(it - m_check_boxes.begin()));
    }
 
-   for (CheckBox* checkBox : m_checkBoxes) {
-      checkBox->set_state(checkBox == activeCb);
+   for (CheckBox* check_box : m_check_boxes) {
+      check_box->set_state(check_box == active_cb);
    }
 }
 
@@ -29,14 +29,14 @@ CheckBox::CheckBox(ui_core::Context& ctx, State state, ui_core::IWidget* parent)
 {
 }
 
-Vector2 CheckBox::desired_size(const Vector2 parentSize) const
+Vector2 CheckBox::desired_size(const Vector2 parent_size) const
 {
    const Vector2 padding{2.0f * TG_THEME_VAL(checkbox.padding)};
-   const auto child_size = m_content->desired_size(parentSize - padding);
+   const auto child_size = m_content->desired_size(parent_size - padding);
    return child_size + padding;
 }
 
-void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
    auto size = this->desired_size({dimensions.z, dimensions.w});
 
@@ -44,18 +44,18 @@ void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingM
       m_background = m_context.viewport().add_rectangle({
          .rect = {dimensions.x, dimensions.y, size},
          .color = TG_THEME_VAL(background_color_brighter),
-         .borderRadius = {4.0f, 4.0f, 4.0f, 4.0f},
-         .borderColor = palette::NO_COLOR,
-         .crop = croppingMask,
-         .borderWidth = 0.0f,
+         .border_radius = {4.0f, 4.0f, 4.0f, 4.0f},
+         .border_color = palette::NO_COLOR,
+         .crop = cropping_mask,
+         .border_width = 0.0f,
       });
    } else {
-      m_context.viewport().set_rectangle_dims(m_background, {dimensions.x, dimensions.y, size}, croppingMask);
+      m_context.viewport().set_rectangle_dims(m_background, {dimensions.x, dimensions.y, size}, cropping_mask);
    }
 
    const auto padding = TG_THEME_VAL(checkbox.padding);
    const Vector4 content_dims{dimensions.x + padding, dimensions.y + padding, size.x - 2 * padding, size.y - 2 * padding};
-   m_content->add_to_viewport(content_dims, croppingMask);
+   m_content->add_to_viewport(content_dims, cropping_mask);
 }
 
 void CheckBox::remove_from_viewport()
@@ -74,17 +74,17 @@ void CheckBox::on_event(const ui_core::Event& event)
 
 bool CheckBox::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
-   if (m_state.radioGroup != nullptr) {
-      m_state.radioGroup->set_active(this);
+   if (m_state.radio_group != nullptr) {
+      m_state.radio_group->set_active(this);
    } else {
-      this->set_state(!m_state.isEnabled);
+      this->set_state(!m_state.is_enabled);
    }
    return false;
 }
 
 bool CheckBox::on_mouse_entered(const ui_core::Event& /*event*/)
 {
-   if (!m_state.isEnabled) {
+   if (!m_state.is_enabled) {
       m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(active_color));
    }
    return true;
@@ -92,16 +92,16 @@ bool CheckBox::on_mouse_entered(const ui_core::Event& /*event*/)
 
 bool CheckBox::on_mouse_left(const ui_core::Event& /*event*/)
 {
-   if (!m_state.isEnabled) {
+   if (!m_state.is_enabled) {
       m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color_brighter));
    }
    return true;
 }
 
-void CheckBox::set_state(const bool isEnabled)
+void CheckBox::set_state(const bool is_enabled)
 {
-   m_state.isEnabled = isEnabled;
-   if (m_state.isEnabled) {
+   m_state.is_enabled = is_enabled;
+   if (m_state.is_enabled) {
       m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(accent_color));
    } else {
       m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color_brighter));

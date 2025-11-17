@@ -22,9 +22,9 @@ class TestingSupport
    static TestingSupport& the();
 
    graphics_api::Device* m_device;
-   resource::ResourceManager* m_resourceManager;
+   resource::ResourceManager* m_resource_manager;
    std::unique_ptr<io::DynLibrary> m_library;
-   RENDERDOC_API_1_6_0* m_renderDocApi;
+   RENDERDOC_API_1_6_0* m_render_doc_api;
 
    void initialize_render_doc();
    void on_quit() const;

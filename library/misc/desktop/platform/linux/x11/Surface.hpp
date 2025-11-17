@@ -51,9 +51,9 @@ class Surface final : public ISurface
    Display& m_display;
    Window m_window;
    Dimension m_dimension;
-   ::Cursor m_currentCursor{};
-   bool m_isCursorLocked{false};
-   KeyboardInputModeFlags m_keyboardInputMode{KeyboardInputMode::Direct};
+   ::Cursor m_current_cursor{};
+   bool m_is_cursor_locked{false};
+   KeyboardInputModeFlags m_keyboard_input_mode{KeyboardInputMode::Direct};
    XIM m_xim{};
    XIC m_xic{};
 };

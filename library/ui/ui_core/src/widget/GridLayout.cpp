@@ -10,14 +10,14 @@ GridLayout::GridLayout(Context& context, State state, IWidget* parent) :
 {
 }
 
-Vector2 GridLayout::desired_size(const Vector2 parentSize) const
+Vector2 GridLayout::desired_size(const Vector2 parent_size) const
 {
    const auto row_count = m_state.row_ratios.size();
    const auto column_count = m_state.column_ratios.size();
    assert(m_children.size() == row_count * column_count);
 
-   const Vector2 base_size = parentSize - Vector2{static_cast<float>(column_count - 1) * m_state.horizontal_spacing,
-                                                  static_cast<float>(row_count - 1) * m_state.vertical_spacing};
+   const Vector2 base_size = parent_size - Vector2{static_cast<float>(column_count - 1) * m_state.horizontal_spacing,
+                                                   static_cast<float>(row_count - 1) * m_state.vertical_spacing};
 
    Vector2 result{};
    for (MemorySize row = 0; row < row_count; ++row) {
@@ -37,7 +37,7 @@ Vector2 GridLayout::desired_size(const Vector2 parentSize) const
    return result - Vector2{m_state.horizontal_spacing, m_state.vertical_spacing};
 }
 
-void GridLayout::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void GridLayout::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
    m_dimensions = dimensions;
 
@@ -57,7 +57,7 @@ void GridLayout::add_to_viewport(const Vector4 dimensions, const Vector4 croppin
          float width = base_size.x * m_state.column_ratios[col];
          float height = base_size.y * m_state.row_ratios[row];
 
-         widget.add_to_viewport({dimensions.x + x_offset, dimensions.y + y_offset, width, height}, croppingMask);
+         widget.add_to_viewport({dimensions.x + x_offset, dimensions.y + y_offset, width, height}, cropping_mask);
 
          x_offset += width + m_state.horizontal_spacing;
          max_height = std::max(max_height, height);
@@ -76,7 +76,7 @@ void GridLayout::remove_from_viewport()
 
 void GridLayout::on_event(const Event& event)
 {
-   if (event.eventType == Event::Type::MouseLeft) {
+   if (event.event_type == Event::Type::MouseLeft) {
       for (const auto& child : m_children) {
          child->on_event(event);
       }
@@ -93,7 +93,7 @@ void GridLayout::on_event(const Event& event)
    float x_offset = 0.0f;
    for (const auto& ratio : m_state.column_ratios) {
       const float width = ratio * base_size.x;
-      if (event.mousePosition.x >= x_offset && event.mousePosition.x < (x_offset + width)) {
+      if (event.mouse_position.x >= x_offset && event.mouse_position.x < (x_offset + width)) {
          break;
       }
       x_offset += width + m_state.horizontal_spacing;
@@ -103,34 +103,34 @@ void GridLayout::on_event(const Event& event)
    float y_offset = 0.0f;
    for (const auto& ratio : m_state.row_ratios) {
       const float height = ratio * base_size.y;
-      if (event.mousePosition.y >= y_offset && event.mousePosition.y < (y_offset + height)) {
+      if (event.mouse_position.y >= y_offset && event.mouse_position.y < (y_offset + height)) {
          break;
       }
       y_offset += height + m_state.vertical_spacing;
       ++row;
    }
 
-   if (m_lastCol != col || m_lastRow != row) {
+   if (m_last_col != col || m_last_row != row) {
       Event leave_event{};
-      leave_event.eventType = Event::Type::MouseLeft;
-      leave_event.mousePosition = Vector2{0, 0};
-      leave_event.parentSize = rect_size(m_dimensions);
-      leave_event.globalMousePosition = event.globalMousePosition;
+      leave_event.event_type = Event::Type::MouseLeft;
+      leave_event.mouse_position = Vector2{0, 0};
+      leave_event.parent_size = rect_size(m_dimensions);
+      leave_event.global_mouse_position = event.global_mouse_position;
 
-      const auto leave_index = m_lastCol + m_lastRow * column_count;
+      const auto leave_index = m_last_col + m_last_row * column_count;
       if (leave_index < m_children.size()) {
-         log_info("sending leave event to row: {}, col: {}", m_lastRow, m_lastCol);
+         log_info("sending leave event to row: {}, col: {}", m_last_row, m_last_col);
          m_children[leave_index]->on_event(leave_event);
       }
 
-      m_lastRow = row;
-      m_lastCol = col;
+      m_last_row = row;
+      m_last_col = col;
 
       Event enter_event{};
-      enter_event.eventType = Event::Type::MouseEntered;
-      enter_event.mousePosition -= Vector2{x_offset, y_offset};
-      enter_event.parentSize = rect_size(m_dimensions);
-      enter_event.globalMousePosition = event.globalMousePosition;
+      enter_event.event_type = Event::Type::MouseEntered;
+      enter_event.mouse_position -= Vector2{x_offset, y_offset};
+      enter_event.parent_size = rect_size(m_dimensions);
+      enter_event.global_mouse_position = event.global_mouse_position;
 
       const auto enter_index = col + row * column_count;
       if (enter_index < m_children.size()) {
@@ -140,22 +140,22 @@ void GridLayout::on_event(const Event& event)
    }
 
    Event sub_event{event};
-   sub_event.mousePosition -= Vector2{x_offset, y_offset};
-   sub_event.parentSize = rect_size(m_dimensions);
+   sub_event.mouse_position -= Vector2{x_offset, y_offset};
+   sub_event.parent_size = rect_size(m_dimensions);
    const auto index = col + row * column_count;
    if (index < m_children.size()) {
       m_children[index]->on_event(sub_event);
    }
 
-   if (event.eventType == Event::Type::KeyPressed && std::get<Event::Keyboard>(event.data).key == desktop::Key::Tab) {
-      if (!m_activeChild.has_value()) {
-         m_activeChild = m_lastCol + m_state.column_ratios.size() * m_lastRow;
+   if (event.event_type == Event::Type::KeyPressed && std::get<Event::Keyboard>(event.data).key == desktop::Key::Tab) {
+      if (!m_active_child.has_value()) {
+         m_active_child = m_last_col + m_state.column_ratios.size() * m_last_row;
       }
-      m_activeChild = (*m_activeChild + 1) % m_children.size();
+      m_active_child = (*m_active_child + 1) % m_children.size();
 
       Event activate_event(event);
-      activate_event.eventType = Event::Type::Activated;
-      m_children[*m_activeChild]->on_event(activate_event);
+      activate_event.event_type = Event::Type::Activated;
+      m_children[*m_active_child]->on_event(activate_event);
    }
 }
 

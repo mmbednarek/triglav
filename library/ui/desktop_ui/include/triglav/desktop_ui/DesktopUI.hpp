@@ -62,7 +62,7 @@ struct ThemeProperties
 class DesktopUIManager
 {
  public:
-   DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialogManager);
+   DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager);
 
    [[nodiscard]] const ThemeProperties& properties() const;
    [[nodiscard]] const desktop::ISurface& surface() const;
@@ -72,7 +72,7 @@ class DesktopUIManager
  private:
    ThemeProperties m_properties;
    desktop::ISurface& m_surface;
-   PopupManager& m_popupManager;
+   PopupManager& m_popup_manager;
 };
 
 }// namespace triglav::desktop_ui

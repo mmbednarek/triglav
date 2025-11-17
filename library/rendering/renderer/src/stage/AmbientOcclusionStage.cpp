@@ -14,19 +14,19 @@ using namespace name_literals;
 using namespace render_core::literals;
 namespace gapi = graphics_api;
 
-constexpr auto g_sampleCount = 64;
+constexpr auto g_sample_count = 64;
 
 AmbientOcclusionStage::AmbientOcclusionStage(gapi::Device& device) :
-    m_sampleBuffer(GAPI_CHECK(
-       device.create_buffer(gapi::BufferUsage::UniformBuffer | gapi::BufferUsage::TransferDst, sizeof(Vector3_Aligned16B) * g_sampleCount)))
+    m_sample_buffer(GAPI_CHECK(device.create_buffer(gapi::BufferUsage::UniformBuffer | gapi::BufferUsage::TransferDst,
+                                                    sizeof(Vector3_Aligned16B) * g_sample_count)))
 {
    this->fill_sample_buffer();
 }
 
 void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
-   if (config.ambientOcclusion != AmbientOcclusionMethod::ScreenSpace) {
-      if (config.ambientOcclusion != AmbientOcclusionMethod::RayTraced) {
+   if (config.ambient_occlusion != AmbientOcclusionMethod::ScreenSpace) {
+      if (config.ambient_occlusion != AmbientOcclusionMethod::RayTraced) {
          ctx.declare_screen_size_texture("ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
       }
       return;
@@ -43,7 +43,7 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
    ctx.bind_texture(1, "gbuffer.normal"_name);
    ctx.bind_texture(2, "noise.tex"_rc);
    ctx.bind_uniform_buffer(3, "core.view_properties"_external);
-   ctx.bind_uniform_buffer(4, &m_sampleBuffer);
+   ctx.bind_uniform_buffer(4, &m_sample_buffer);
 
    ctx.draw_full_screen_quad();
 
@@ -62,21 +62,21 @@ void AmbientOcclusionStage::fill_sample_buffer()
    int index{};
 
    std::vector<Vector3_Aligned16B> result{};
-   result.resize(g_sampleCount);
+   result.resize(g_sample_count);
 
-   for (auto& outSample : result) {
+   for (auto& out_sample : result) {
       glm::vec3 sample{dist(generator) * 2.0 - 1.0, dist(generator) * 2.0 - 1.0, dist(generator)};
       sample = glm::normalize(sample);
       sample *= dist(generator);
 
-      const float scale = static_cast<float>(index) / static_cast<float>(g_sampleCount);
+      const float scale = static_cast<float>(index) / static_cast<float>(g_sample_count);
       sample *= std::lerp(0.1f, 1.0f, scale * scale);
-      outSample.value = sample;
+      out_sample.value = sample;
 
       ++index;
    }
 
-   GAPI_CHECK_STATUS(m_sampleBuffer.write_indirect(result.data(), result.size() * sizeof(Vector3_Aligned16B)));
+   GAPI_CHECK_STATUS(m_sample_buffer.write_indirect(result.data(), result.size() * sizeof(Vector3_Aligned16B)));
 }
 
 }// namespace triglav::renderer::stage

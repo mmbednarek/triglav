@@ -25,7 +25,7 @@ class RootWindow
    using Self = RootWindow;
 
    RootWindow(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-              render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager);
+              render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager);
 
    void initialize();
    void uninitialize() const;
@@ -38,7 +38,7 @@ class RootWindow
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
    {
-      return m_widgetRenderer.create_root_widget<T>(std::forward<typename T::State>(state));
+      return m_widget_renderer.create_root_widget<T>(std::forward<typename T::State>(state));
    }
 
    [[nodiscard]] graphics_api::Device& device() const;
@@ -50,20 +50,20 @@ class RootWindow
    void build_rendering_job(render_core::BuildContext& ctx);
 
    graphics_api::Device& m_device;
-   resource::ResourceManager& m_resourceManager;
+   resource::ResourceManager& m_resource_manager;
 
    std::shared_ptr<desktop::ISurface> m_surface;
-   graphics_api::Surface m_graphicsSurface;
-   render_core::ResourceStorage m_resourceStorage;
-   renderer::RenderSurface m_renderSurface;
-   desktop_ui::WidgetRenderer m_widgetRenderer;
-   render_core::PipelineCache m_pipelineCache;
-   render_core::JobGraph m_jobGraph;
-   RenderViewport* m_renderViewport{};
-   u32 m_frameIndex{0};
-   bool m_shouldClose{false};
-   bool m_isInitialized{false};
-   bool m_shouldUpdateViewport{false};
+   graphics_api::Surface m_graphics_surface;
+   render_core::ResourceStorage m_resource_storage;
+   renderer::RenderSurface m_render_surface;
+   desktop_ui::WidgetRenderer m_widget_renderer;
+   render_core::PipelineCache m_pipeline_cache;
+   render_core::JobGraph m_job_graph;
+   RenderViewport* m_render_viewport{};
+   u32 m_frame_index{0};
+   bool m_should_close{false};
+   bool m_is_initialized{false};
+   bool m_should_update_viewport{false};
 
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);

@@ -14,7 +14,7 @@ namespace triglav::world {
 
 struct StaticMesh
 {
-   MeshName meshName{0};
+   MeshName mesh_name{0};
    std::string name;
    Transform3D transform{};
 
@@ -34,7 +34,7 @@ class LevelNode
 
  private:
    std::string m_name;
-   std::vector<StaticMesh> m_staticMeshes;
+   std::vector<StaticMesh> m_static_meshes;
    std::vector<Name> m_children;
 };
 

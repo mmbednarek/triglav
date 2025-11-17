@@ -10,14 +10,14 @@ BufferedReader::BufferedReader(IReader& stream) :
 
 bool BufferedReader::has_next()
 {
-   if (m_bytesRead == 0)
+   if (m_bytes_read == 0)
       return false;
 
-   if (m_position >= m_bytesRead) {
+   if (m_position >= m_bytes_read) {
       this->read_next_chunk();
    }
 
-   return m_position < m_bytesRead;
+   return m_position < m_bytes_read;
 }
 
 u8 BufferedReader::next()
@@ -29,10 +29,10 @@ u8 BufferedReader::next()
 
 u8 BufferedReader::peek()
 {
-   if (m_position >= m_bytesRead) {
+   if (m_position >= m_bytes_read) {
       read_next_chunk();
    }
-   if (m_position >= m_bytesRead) {
+   if (m_position >= m_bytes_read) {
       return static_cast<u8>(EOF);
    }
 
@@ -51,11 +51,11 @@ void BufferedReader::read_next_chunk()
 {
    const auto res = m_stream.read(m_buffer);
    if (not res.has_value()) {
-      m_bytesRead = 0;
+      m_bytes_read = 0;
       m_position = 0;
       return;
    }
-   m_bytesRead = *res;
+   m_bytes_read = *res;
    m_position = 0;
 }
 

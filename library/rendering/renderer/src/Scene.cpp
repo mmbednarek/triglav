@@ -16,8 +16,8 @@ Matrix4x4 SceneObject::model_matrix() const
    return this->transform.to_matrix();
 }
 
-Scene::Scene(resource::ResourceManager& resourceManager) :
-    m_resourceManager(resourceManager)
+Scene::Scene(resource::ResourceManager& resource_manager) :
+    m_resource_manager(resource_manager)
 {
 }
 
@@ -34,8 +34,8 @@ ObjectID Scene::add_object(SceneObject object)
 {
    const auto object_id = static_cast<ObjectID>(m_objects.size());
 
-   auto& emplacedObj = m_objects.emplace_back(std::move(object));
-   event_OnObjectAddedToScene.publish(object_id, emplacedObj);
+   auto& emplaced_obj = m_objects.emplace_back(std::move(object));
+   event_OnObjectAddedToScene.publish(object_id, emplaced_obj);
    this->update_bvh();
 
    return object_id;
@@ -51,12 +51,12 @@ void Scene::set_transform(const ObjectID object_id, const Transform3D& transform
 
 void Scene::load_level(const LevelName name)
 {
-   auto& level = m_resourceManager.get<ResourceType::Level>(name);
+   auto& level = m_resource_manager.get<ResourceType::Level>(name);
    auto& root = level.root();
 
    for (const auto& mesh : root.static_meshes()) {
       this->add_object(SceneObject{
-         .model = mesh.meshName,
+         .model = mesh.mesh_name,
          .transform = mesh.transform,
       });
    }
@@ -81,12 +81,12 @@ Camera& Scene::camera()
 
 const OrthoCamera& Scene::shadow_map_camera(const u32 index) const
 {
-   return m_directionalShadowMapCameras[index];
+   return m_directional_shadow_map_cameras[index];
 }
 
 u32 Scene::directional_shadow_map_count() const
 {
-   return static_cast<u32>(m_directionalShadowMapCameras.size());
+   return static_cast<u32>(m_directional_shadow_map_cameras.size());
 }
 
 const SceneObject& Scene::object(const ObjectID id) const
@@ -108,10 +108,10 @@ void Scene::update_bvh()
 {
    std::vector<SceneObjectRef> objects{m_objects.size()};
    std::ranges::transform(m_objects, objects.begin(), [this, index = 0u](SceneObject& object) mutable {
-      const auto& mesh = m_resourceManager.get(object.model);
+      const auto& mesh = m_resource_manager.get(object.model);
       return SceneObjectRef{
          .object = &object,
-         .bbox = mesh.boundingBox.transform(object.transform.to_matrix()),
+         .bbox = mesh.bounding_box.transform(object.transform.to_matrix()),
          .id = index++,
       };
    });
@@ -155,17 +155,17 @@ RayHit Scene::trace_ray(const geometry::Ray& ray) const
 
 void Scene::update_shadow_maps()
 {
-   auto smProps1 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 32.0f, 120.0f);
-   m_directionalShadowMapCameras[0] = OrthoCamera::from_properties(smProps1);
-   event_OnShadowMapChanged.publish(0, m_directionalShadowMapCameras[0]);
+   auto sm_props1 = this->camera().calculate_shadow_map(m_directional_light_orientation, 32.0f, 120.0f);
+   m_directional_shadow_map_cameras[0] = OrthoCamera::from_properties(sm_props1);
+   event_OnShadowMapChanged.publish(0, m_directional_shadow_map_cameras[0]);
 
-   auto smProps2 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 72.0f, 192.0f);
-   m_directionalShadowMapCameras[1] = OrthoCamera::from_properties(smProps2);
-   event_OnShadowMapChanged.publish(1, m_directionalShadowMapCameras[1]);
+   auto sm_props2 = this->camera().calculate_shadow_map(m_directional_light_orientation, 72.0f, 192.0f);
+   m_directional_shadow_map_cameras[1] = OrthoCamera::from_properties(sm_props2);
+   event_OnShadowMapChanged.publish(1, m_directional_shadow_map_cameras[1]);
 
-   auto smProps3 = this->camera().calculate_shadow_map(m_directionalLightOrientation, 180.0f, 256.0f);
-   m_directionalShadowMapCameras[2] = OrthoCamera::from_properties(smProps3);
-   event_OnShadowMapChanged.publish(2, m_directionalShadowMapCameras[2]);
+   auto sm_props3 = this->camera().calculate_shadow_map(m_directional_light_orientation, 180.0f, 256.0f);
+   m_directional_shadow_map_cameras[2] = OrthoCamera::from_properties(sm_props3);
+   event_OnShadowMapChanged.publish(2, m_directional_shadow_map_cameras[2]);
 }
 
 void Scene::send_view_changed()

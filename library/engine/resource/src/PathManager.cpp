@@ -15,49 +15,49 @@ PathManager& PathManager::the()
 io::Path PathManager::content_path()
 {
    {
-      auto RA_contentPath = m_cachedContentPath.read_access();
-      if (RA_contentPath->has_value()) {
-         return **RA_contentPath;
+      auto RA_content_path = m_cached_content_path.read_access();
+      if (RA_content_path->has_value()) {
+         return **RA_content_path;
       }
    }
 
-   auto WA_contentPath = m_cachedContentPath.access();
+   auto WA_content_path = m_cached_content_path.access();
 
-   auto commandLineArg = io::CommandLine::the().arg("contentDir"_name);
-   if (commandLineArg.has_value()) {
-      WA_contentPath->emplace(io::Path{std::move(*commandLineArg)});
-      return **WA_contentPath;
+   auto command_line_arg = io::CommandLine::the().arg("contentDir"_name);
+   if (command_line_arg.has_value()) {
+      WA_content_path->emplace(io::Path{std::move(*command_line_arg)});
+      return **WA_content_path;
    }
 
    // TODO: Handle the situation when we don't get working directory
-   auto workingDir = io::working_path().value();
+   auto working_dir = io::working_path().value();
 
-   WA_contentPath->emplace(workingDir.sub("content"));
-   return **WA_contentPath;
+   WA_content_path->emplace(working_dir.sub("content"));
+   return **WA_content_path;
 }
 
 io::Path PathManager::build_path()
 {
    {
-      auto RA_buildPath = m_cachedBuildPath.read_access();
-      if (RA_buildPath->has_value()) {
-         return **RA_buildPath;
+      auto RA_build_path = m_cached_build_path.read_access();
+      if (RA_build_path->has_value()) {
+         return **RA_build_path;
       }
    }
 
-   auto WA_buildPath = m_cachedBuildPath.access();
+   auto WA_build_path = m_cached_build_path.access();
 
-   auto commandLineArg = io::CommandLine::the().arg("buildDir"_name);
-   if (commandLineArg.has_value()) {
-      WA_buildPath->emplace(io::Path{std::move(*commandLineArg)});
-      return **WA_buildPath;
+   auto command_line_arg = io::CommandLine::the().arg("buildDir"_name);
+   if (command_line_arg.has_value()) {
+      WA_build_path->emplace(io::Path{std::move(*command_line_arg)});
+      return **WA_build_path;
    }
 
    // TODO: Handle the situation when we don't get working directory
-   auto workingDir = io::working_path().value();
+   auto working_dir = io::working_path().value();
 
-   WA_buildPath->emplace(workingDir.parent().parent());
-   return **WA_buildPath;
+   WA_build_path->emplace(working_dir.parent().parent());
+   return **WA_build_path;
 }
 
 }// namespace triglav::resource

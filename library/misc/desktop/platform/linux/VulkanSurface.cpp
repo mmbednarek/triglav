@@ -11,34 +11,34 @@
 
 namespace triglav::desktop {
 
-VkResult create_vulkan_surface(const VkInstance instance, const ISurface* surfaceIFace, const VkAllocationCallbacks* pAllocator,
-                               VkSurfaceKHR* pSurface)
+VkResult create_vulkan_surface(const VkInstance instance, const ISurface* surface_iface, const VkAllocationCallbacks* p_allocator,
+                               VkSurfaceKHR* p_surface)
 {
-   auto* waylandSurface = dynamic_cast<const wayland::Surface*>(surfaceIFace);
-   if (waylandSurface != nullptr) {
+   auto* wayland_surface = dynamic_cast<const wayland::Surface*>(surface_iface);
+   if (wayland_surface != nullptr) {
       VkWaylandSurfaceCreateInfoKHR info{};
       info.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
       info.pNext = nullptr;
       info.flags = 0;
-      info.display = waylandSurface->display().display();
-      info.surface = waylandSurface->surface();
-      return vkCreateWaylandSurfaceKHR(instance, &info, pAllocator, pSurface);
+      info.display = wayland_surface->display().display();
+      info.surface = wayland_surface->surface();
+      return vkCreateWaylandSurfaceKHR(instance, &info, p_allocator, p_surface);
    }
 
-   auto* x11Surface = dynamic_cast<const x11::Surface*>(surfaceIFace);
+   auto* x11_surface = dynamic_cast<const x11::Surface*>(surface_iface);
    VkXlibSurfaceCreateInfoKHR info{};
    info.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
    info.pNext = nullptr;
    info.flags = 0;
-   info.dpy = x11Surface->display().x11_display();
-   info.window = x11Surface->window();
-   return vkCreateXlibSurfaceKHR(instance, &info, pAllocator, pSurface);
+   info.dpy = x11_surface->display().x11_display();
+   info.window = x11_surface->window();
+   return vkCreateXlibSurfaceKHR(instance, &info, p_allocator, p_surface);
 }
 
 const char* vulkan_extension_name(const IDisplay* display)
 {
-   auto* waylandDisplay = dynamic_cast<const wayland::Display*>(display);
-   return (waylandDisplay != nullptr) ? VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME : VK_KHR_XLIB_SURFACE_EXTENSION_NAME;
+   auto* wayland_display = dynamic_cast<const wayland::Display*>(display);
+   return (wayland_display != nullptr) ? VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME : VK_KHR_XLIB_SURFACE_EXTENSION_NAME;
 }
 
 }// namespace triglav::desktop

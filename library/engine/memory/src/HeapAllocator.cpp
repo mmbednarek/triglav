@@ -7,17 +7,17 @@ namespace triglav::memory {
 
 HeapAllocator::HeapAllocator(const SizeType size)
 {
-   m_freeList.emplace(0, size);
+   m_free_list.emplace(0, size);
 }
 
 std::optional<MemorySize> HeapAllocator::allocate(const MemorySize size)
 {
    // TODO: Find something better than linear search
-   const auto it = std::ranges::find_if(m_freeList, [size](const std::pair<OffsetType, SizeType>& item) { return item.second >= size; });
+   const auto it = std::ranges::find_if(m_free_list, [size](const std::pair<OffsetType, SizeType>& item) { return item.second >= size; });
 
    if (it->second == size) {
       const auto offset = it->first;
-      m_freeList.erase(it);
+      m_free_list.erase(it);
       return offset;
    }
 
@@ -27,32 +27,32 @@ std::optional<MemorySize> HeapAllocator::allocate(const MemorySize size)
 
 void HeapAllocator::free(const Area area)
 {
-   MemorySize nextItemSize = 0;
+   MemorySize next_item_size = 0;
 
-   bool shouldNextBeErased = false;
-   const auto next = m_freeList.lower_bound(area.offset);
-   if (next != m_freeList.end() && area.offset + area.size == next->first) {
-      nextItemSize = next->second;
-      shouldNextBeErased = true;
+   bool should_next_be_erased = false;
+   const auto next = m_free_list.lower_bound(area.offset);
+   if (next != m_free_list.end() && area.offset + area.size == next->first) {
+      next_item_size = next->second;
+      should_next_be_erased = true;
    }
 
-   if (next == m_freeList.begin()) {
-      if (shouldNextBeErased) {
-         m_freeList.erase(next);
+   if (next == m_free_list.begin()) {
+      if (should_next_be_erased) {
+         m_free_list.erase(next);
       }
-      m_freeList.emplace(area.offset, area.size + nextItemSize);
+      m_free_list.emplace(area.offset, area.size + next_item_size);
       return;
    }
 
    const auto prev = std::prev(next);
-   if (prev != m_freeList.end() && prev->first + prev->second == area.offset) {
-      prev->second += area.size + nextItemSize;
+   if (prev != m_free_list.end() && prev->first + prev->second == area.offset) {
+      prev->second += area.size + next_item_size;
    } else {
-      m_freeList.emplace(area.offset, area.size + nextItemSize);
+      m_free_list.emplace(area.offset, area.size + next_item_size);
    }
 
-   if (shouldNextBeErased) {
-      m_freeList.erase(next);
+   if (should_next_be_erased) {
+      m_free_list.erase(next);
    }
 }
 

@@ -6,8 +6,8 @@ namespace triglav::threading {
 
 using ThreadID = u32;
 
-constexpr ThreadID g_mainThread = 0;
-constexpr ThreadID g_workerThreadBeg = 1;
+constexpr ThreadID g_main_thread = 0;
+constexpr ThreadID g_worker_thread_beg = 1;
 
 void set_thread_id(ThreadID id);
 ThreadID this_thread_id();

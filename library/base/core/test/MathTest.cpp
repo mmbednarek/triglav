@@ -42,11 +42,11 @@ TEST(MathTest, BasicCase)
       transform.rotation = transform.rotation / triglav::sign(transform.rotation.w);
 
       const auto mat = transform.to_matrix();
-      const auto decodedTransform = Transform3D::from_matrix(mat);
+      const auto decoded_transform = Transform3D::from_matrix(mat);
 
-      EXPECT_TRUE(quat_equals(decodedTransform.rotation, transform.rotation));
-      EXPECT_TRUE(vec3_equals(decodedTransform.scale, transform.scale));
-      EXPECT_TRUE(vec3_equals(decodedTransform.translation, transform.translation));
+      EXPECT_TRUE(quat_equals(decoded_transform.rotation, transform.rotation));
+      EXPECT_TRUE(vec3_equals(decoded_transform.scale, transform.scale));
+      EXPECT_TRUE(vec3_equals(decoded_transform.translation, transform.translation));
    }
 }
 

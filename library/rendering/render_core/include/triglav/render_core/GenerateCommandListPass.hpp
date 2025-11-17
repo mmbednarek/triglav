@@ -19,9 +19,9 @@ class ResourceStorage;
 class GenerateCommandListPass
 {
  public:
-   explicit GenerateCommandListPass(BuildContext& context, PipelineCache& pipelineCache, DescriptorStorage& descriptorStorage,
-                                    ResourceStorage& resourceStorage, graphics_api::CommandList& commandList,
-                                    graphics_api::DescriptorPool* descriptorPool, u32 frameIndex);
+   explicit GenerateCommandListPass(BuildContext& context, PipelineCache& pipeline_cache, DescriptorStorage& descriptor_storage,
+                                    ResourceStorage& resource_storage, graphics_api::CommandList& command_list,
+                                    graphics_api::DescriptorPool* descriptor_pool, u32 frame_index);
 
    void visit(const detail::cmd::BindGraphicsPipeline& cmd);
    void visit(const detail::cmd::BindComputePipeline& cmd);
@@ -58,13 +58,13 @@ class GenerateCommandListPass
 
  private:
    BuildContext& m_context;
-   PipelineCache& m_pipelineCache;
-   DescriptorStorage& m_descriptorStorage;
-   ResourceStorage& m_resourceStorage;
-   graphics_api::CommandList& m_commandList;
-   graphics_api::Pipeline* m_currentPipeline{nullptr};
-   graphics_api::DescriptorPool* m_descriptorPool{nullptr};
-   u32 m_frameIndex;
+   PipelineCache& m_pipeline_cache;
+   DescriptorStorage& m_descriptor_storage;
+   ResourceStorage& m_resource_storage;
+   graphics_api::CommandList& m_command_list;
+   graphics_api::Pipeline* m_current_pipeline{nullptr};
+   graphics_api::DescriptorPool* m_descriptor_pool{nullptr};
+   u32 m_frame_index;
 };
 
 }// namespace triglav::render_core

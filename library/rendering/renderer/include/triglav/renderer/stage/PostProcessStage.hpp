@@ -15,12 +15,12 @@ namespace triglav::renderer::stage {
 class PostProcessStage final : public IStage
 {
  public:
-   explicit PostProcessStage(UpdateUserInterfaceJob* updateUserInterfaceJob);
+   explicit PostProcessStage(UpdateUserInterfaceJob* update_user_interface_job);
 
    void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
 
  private:
-   UpdateUserInterfaceJob* m_updateUserInterfaceJob;
+   UpdateUserInterfaceJob* m_update_user_interface_job;
 };
 
 }// namespace triglav::renderer::stage

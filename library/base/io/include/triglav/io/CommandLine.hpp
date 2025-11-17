@@ -21,7 +21,7 @@ class CommandLine
    [[nodiscard]] static CommandLine& the();
 
  private:
-   std::set<Name> m_enabledFlags;
+   std::set<Name> m_enabled_flags;
    std::map<Name, std::string> m_arguments;
 };
 

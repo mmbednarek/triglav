@@ -29,7 +29,7 @@ class Charset
       using pointer = Rune*;
       using reference = Rune&;
 
-      Iterator(const Charset* charset, std::vector<RuneRange>::const_iterator rangeIt, Rune rune);
+      Iterator(const Charset* charset, std::vector<RuneRange>::const_iterator range_it, Rune rune);
 
       Iterator& operator++();
       [[nodiscard]] Rune operator*() const;
@@ -37,7 +37,7 @@ class Charset
 
     private:
       const Charset* m_charset;
-      std::vector<RuneRange>::const_iterator m_rangeIt{};
+      std::vector<RuneRange>::const_iterator m_range_it{};
       Rune m_rune{};
    };
 
@@ -46,20 +46,20 @@ class Charset
    [[nodiscard]] bool contains(Rune r) const;
 
    template<typename TIterator>
-   u32 encode_string_to(const StringView str, TIterator outIt) const
+   u32 encode_string_to(const StringView str, TIterator out_it) const
    {
       u32 count{};
 
       for (const auto rune : str) {
-         u32 indexBase = 0;
+         u32 index_base = 0;
          for (const auto& [from, to] : m_ranges) {
             if (rune >= from && rune <= to) {
-               *outIt = indexBase + rune - from;
-               ++outIt;
+               *out_it = index_base + rune - from;
+               ++out_it;
                ++count;
                break;
             }
-            indexBase += to - from + 1;
+            index_base += to - from + 1;
          }
       }
 

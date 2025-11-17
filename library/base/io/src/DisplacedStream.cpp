@@ -11,8 +11,8 @@ DisplacedStream::DisplacedStream(ISeekableStream& stream, const MemoryOffset off
 
 Result<MemorySize> DisplacedStream::read(const std::span<u8> buffer)
 {
-   const auto postReadPos = this->position() + buffer.size();
-   if (postReadPos > m_size) {
+   const auto post_read_pos = this->position() + buffer.size();
+   if (post_read_pos > m_size) {
       return m_stream.read({buffer.data(), m_size - this->position()});
    }
    return m_stream.read(buffer);
@@ -20,8 +20,8 @@ Result<MemorySize> DisplacedStream::read(const std::span<u8> buffer)
 
 Result<MemorySize> DisplacedStream::write(const std::span<const u8> buffer)
 {
-   const auto postWritePos = this->position() + buffer.size();
-   if (postWritePos > m_size) {
+   const auto post_write_pos = this->position() + buffer.size();
+   if (post_write_pos > m_size) {
       return m_stream.write({buffer.data(), m_size - this->position()});
    }
    return m_stream.write(buffer);

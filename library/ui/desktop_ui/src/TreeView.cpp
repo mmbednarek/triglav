@@ -12,9 +12,9 @@ namespace triglav::desktop_ui {
 
 using namespace name_literals;
 
-constexpr auto g_indentWidth = 16.0f;
-constexpr auto g_globalPadding = 10.0f;
-constexpr auto g_itemPadding = 6.0f;
+constexpr auto g_indent_width = 16.0f;
+constexpr auto g_global_padding = 10.0f;
+constexpr auto g_item_padding = 6.0f;
 
 TreeView::TreeView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::BaseWidget(parent),
@@ -23,22 +23,22 @@ TreeView::TreeView(ui_core::Context& ctx, State state, ui_core::IWidget* parent)
 {
 }
 
-Vector2 TreeView::desired_size(Vector2 /*parentSize*/) const
+Vector2 TreeView::desired_size(Vector2 /*parent_size*/) const
 {
    return this->get_measure().size;
 }
 
-void TreeView::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void TreeView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
    m_dimensions = dimensions;
-   m_croppingMask = croppingMask;
-   m_offsetToItemId.clear();
-   float offset_y = g_globalPadding + dimensions.y;
-   this->draw_level(TREE_ROOT, dimensions.x + g_globalPadding, offset_y);
+   m_cropping_mask = cropping_mask;
+   m_offset_to_item_id.clear();
+   float offset_y = g_global_padding + dimensions.y;
+   this->draw_level(TREE_ROOT, dimensions.x + g_global_padding, offset_y);
 
-   if (m_itemHighlight != 0) {
-      const auto highlight_dims = m_highlightDims + Vector4{m_dimensions.x, m_dimensions.y, m_dimensions.z, 0};
-      m_context.viewport().set_rectangle_dims(m_itemHighlight, highlight_dims, m_croppingMask);
+   if (m_item_highlight != 0) {
+      const auto highlight_dims = m_highlight_dims + Vector4{m_dimensions.x, m_dimensions.y, m_dimensions.z, 0};
+      m_context.viewport().set_rectangle_dims(m_item_highlight, highlight_dims, m_cropping_mask);
    }
 }
 
@@ -56,7 +56,7 @@ void TreeView::remove_from_viewport()
       m_context.viewport().remove_sprite(arrow);
    }
    m_arrows.clear();
-   m_context.viewport().remove_rectangle_safe(m_itemHighlight);
+   m_context.viewport().remove_rectangle_safe(m_item_highlight);
 }
 
 void TreeView::on_event(const ui_core::Event& event)
@@ -66,33 +66,33 @@ void TreeView::on_event(const ui_core::Event& event)
 
 void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
 {
-   auto [base_offset, item_id] = this->index_from_mouse_position(event.mousePosition);
+   auto [base_offset, item_id] = this->index_from_mouse_position(event.mouse_position);
    if (item_id == 0) {
-      if (m_itemHighlight != 0) {
-         m_context.viewport().remove_rectangle(m_itemHighlight);
-         m_itemHighlight = 0;
+      if (m_item_highlight != 0) {
+         m_context.viewport().remove_rectangle(m_item_highlight);
+         m_item_highlight = 0;
       }
       return;
    }
    const auto& item = m_state.controller->item(item_id);
 
    const auto measure = this->get_measure();
-   m_highlightDims = Vector4{0, base_offset, 0, 2 * g_itemPadding + measure.item_size.y};
-   const auto highlight_dims = m_highlightDims + Vector4{m_dimensions.x, m_dimensions.y, 0, 0};
-   if (m_itemHighlight != 0) {
-      m_context.viewport().set_rectangle_dims(m_itemHighlight, highlight_dims, m_croppingMask);
+   m_highlight_dims = Vector4{0, base_offset, 0, 2 * g_item_padding + measure.item_size.y};
+   const auto highlight_dims = m_highlight_dims + Vector4{m_dimensions.x, m_dimensions.y, 0, 0};
+   if (m_item_highlight != 0) {
+      m_context.viewport().set_rectangle_dims(m_item_highlight, highlight_dims, m_cropping_mask);
    } else {
-      m_itemHighlight = m_context.viewport().add_rectangle({
+      m_item_highlight = m_context.viewport().add_rectangle({
          .rect = highlight_dims,
          .color = TG_THEME_VAL(active_color),
-         .borderRadius = {0, 0, 0, 0},
-         .borderColor = palette::NO_COLOR,
-         .crop = m_croppingMask,
-         .borderWidth = 0.0f,
+         .border_radius = {0, 0, 0, 0},
+         .border_color = palette::NO_COLOR,
+         .crop = m_cropping_mask,
+         .border_width = 0.0f,
       });
    }
 
-   if (item.hasChildren) {
+   if (item.has_children) {
       if (m_state.extended_items.contains(item_id)) {
          m_state.extended_items.erase(item_id);
          this->remove_level(item_id);
@@ -101,28 +101,28 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
       }
    }
 
-   this->add_to_viewport(m_dimensions, m_croppingMask);
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
 std::pair<float, TreeItemId> TreeView::index_from_mouse_position(const Vector2 position) const
 {
-   const auto it_lb = m_offsetToItemId.lower_bound(position.y);
-   if (it_lb == m_offsetToItemId.begin()) {
+   const auto it_lb = m_offset_to_item_id.lower_bound(position.y);
+   if (it_lb == m_offset_to_item_id.begin()) {
       return {0.0f, 0};
    }
 
    const auto it = std::prev(it_lb);
-   if (position.y > it->first + this->get_measure().item_size.y + 2 * g_itemPadding) {
+   if (position.y > it->first + this->get_measure().item_size.y + 2 * g_item_padding) {
       return {0.0f, 0};
    }
 
    return *it;
 }
 
-TreeView::Measure TreeView::get_measure(const TreeItemId parentId) const
+TreeView::Measure TreeView::get_measure(const TreeItemId parent_id) const
 {
-   if (parentId == 0 && m_cachedMeasure.has_value()) {
-      return m_cachedMeasure.value();
+   if (parent_id == 0 && m_cached_measure.has_value()) {
+      return m_cached_measure.value();
    }
 
    float max_width = 0;
@@ -131,10 +131,10 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parentId) const
 
    const auto& atlas = m_context.glyph_cache().find_glyph_atlas({
       .typeface = TG_THEME_VAL(base_typeface),
-      .fontSize = TG_THEME_VAL(base_font_size),
+      .font_size = TG_THEME_VAL(base_font_size),
    });
 
-   const auto& children = m_state.controller->children(parentId);
+   const auto& children = m_state.controller->children(parent_id);
    for (const auto child : children) {
       auto item = m_state.controller->item(child);
       auto measured_label = atlas.measure_text(item.label.view());
@@ -144,101 +144,101 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parentId) const
 
       ++total_count;
 
-      if (item.hasChildren && m_state.extended_items.contains(child)) {
+      if (item.has_children && m_state.extended_items.contains(child)) {
          auto sub_measure = this->get_measure(child);
-         max_width = std::max(max_width, sub_measure.item_size.x + g_indentWidth);
+         max_width = std::max(max_width, sub_measure.item_size.x + g_indent_width);
          max_height = std::max(max_height, sub_measure.item_size.y);
          total_count += sub_measure.total_count;
       }
    }
 
    Measure measure{
-      .size = {2 * g_globalPadding + 2 * g_itemPadding + max_width,
-               2 * g_globalPadding + (2 * g_itemPadding + max_height) * static_cast<float>(total_count)},
+      .size = {2 * g_global_padding + 2 * g_item_padding + max_width,
+               2 * g_global_padding + (2 * g_item_padding + max_height) * static_cast<float>(total_count)},
       .item_size = {max_width, max_height},
       .total_count = total_count,
    };
 
-   if (parentId == 0) {
-      m_cachedMeasure.emplace(measure);
+   if (parent_id == 0) {
+      m_cached_measure.emplace(measure);
    }
    return measure;
 }
 
-void TreeView::draw_level(const TreeItemId parentId, const float offset_x, float& offset_y)
+void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, float& offset_y)
 {
    const auto measure = this->get_measure(TREE_ROOT);
 
-   const auto& children = m_state.controller->children(parentId);
+   const auto& children = m_state.controller->children(parent_id);
    for (const auto child : children) {
       const auto& item = m_state.controller->item(child);
 
-      m_offsetToItemId[offset_y - m_dimensions.y] = child;
+      m_offset_to_item_id[offset_y - m_dimensions.y] = child;
 
       const Vector2 arrow_size{measure.item_size.y, measure.item_size.y};
-      if (item.hasChildren) {
-         const Vector2 arrow_pos{offset_x, offset_y + g_itemPadding};
+      if (item.has_children) {
+         const Vector2 arrow_pos{offset_x, offset_y + g_item_padding};
          Vector4 region{0, 0, 64, 64};
          if (!m_state.extended_items.contains(child)) {
             region = {3 * 64, 0, 64, 64};
          }
 
          if (auto arrow_it = m_arrows.find(child); arrow_it != m_arrows.end()) {
-            m_context.viewport().set_sprite_position(arrow_it->second, arrow_pos, m_croppingMask);
+            m_context.viewport().set_sprite_position(arrow_it->second, arrow_pos, m_cropping_mask);
             m_context.viewport().set_sprite_texture_region(arrow_it->second, region);
          } else {
             m_arrows[child] = m_context.viewport().add_sprite({
                .texture = "texture/ui_atlas.tex"_rc,
                .position = arrow_pos,
                .size = arrow_size,
-               .crop = m_croppingMask,
-               .textureRegion = region,
+               .crop = m_cropping_mask,
+               .texture_region = region,
             });
          }
       }
 
-      const Vector2 icon_size{measure.item_size.y + g_itemPadding, measure.item_size.y + g_itemPadding};
-      const Vector2 icon_pos{offset_x + arrow_size.x + g_itemPadding, offset_y + g_itemPadding / 2};
+      const Vector2 icon_size{measure.item_size.y + g_item_padding, measure.item_size.y + g_item_padding};
+      const Vector2 icon_pos{offset_x + arrow_size.x + g_item_padding, offset_y + g_item_padding / 2};
       if (auto icon_it = m_icons.find(child); icon_it != m_icons.end()) {
-         m_context.viewport().set_sprite_position(icon_it->second, icon_pos, m_croppingMask);
+         m_context.viewport().set_sprite_position(icon_it->second, icon_pos, m_cropping_mask);
       } else {
          m_icons[child] = m_context.viewport().add_sprite({
-            .texture = item.iconName,
+            .texture = item.icon_name,
             .position = icon_pos,
             .size = icon_size,
-            .crop = m_croppingMask,
-            .textureRegion = item.iconRegion,
+            .crop = m_cropping_mask,
+            .texture_region = item.icon_region,
          });
       }
 
-      const Vector2 label_dims{offset_x + arrow_size.x + icon_size.x + 2 * g_itemPadding, offset_y + g_itemPadding + measure.item_size.y};
+      const Vector2 label_dims{offset_x + arrow_size.x + icon_size.x + 2 * g_item_padding, offset_y + g_item_padding + measure.item_size.y};
       if (auto label_it = m_labels.find(child); label_it != m_labels.end()) {
-         m_context.viewport().set_text_position(label_it->second, label_dims, m_croppingMask);
+         m_context.viewport().set_text_position(label_it->second, label_dims, m_cropping_mask);
       } else {
          m_labels[child] = m_context.viewport().add_text({
             .content = item.label,
-            .typefaceName = TG_THEME_VAL(base_typeface),
-            .fontSize = TG_THEME_VAL(base_font_size),
+            .typeface_name = TG_THEME_VAL(base_typeface),
+            .font_size = TG_THEME_VAL(base_font_size),
             .position = label_dims,
             .color = TG_THEME_VAL(foreground_color),
-            .crop = m_croppingMask,
+            .crop = m_cropping_mask,
          });
       }
 
-      offset_y += 2 * g_itemPadding + measure.item_size.y;
+      offset_y += 2 * g_item_padding + measure.item_size.y;
 
-      if (item.hasChildren && m_state.extended_items.contains(child)) {
-         this->draw_level(child, offset_x + g_indentWidth, offset_y);
+      if (item.has_children && m_state.extended_items.contains(child)) {
+         this->draw_level(child, offset_x + g_indent_width, offset_y);
       }
    }
 }
 
-void TreeView::remove_level(const TreeItemId parentId)
+void TreeView::remove_level(const TreeItemId parent_id)
 {
-   const auto children = m_state.controller->children(parentId);
+   const auto children = m_state.controller->children(parent_id);
    for (const auto child : children) {
       const auto& item = m_state.controller->item(child);
-      if (item.hasChildren) {
+      if (item.has_children) {
          m_context.viewport().remove_sprite(m_arrows.at(child));
          m_arrows.erase(child);
          if (m_state.extended_items.contains(child)) {

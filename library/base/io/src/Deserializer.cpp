@@ -13,8 +13,8 @@ template<typename T>
 T Deserializer::read_value_internal()
 {
    T result{};
-   [[maybe_unused]] const auto readRes = m_reader.read({reinterpret_cast<u8*>(&result), sizeof(T)});
-   assert(readRes.has_value());
+   [[maybe_unused]] const auto read_res = m_reader.read({reinterpret_cast<u8*>(&result), sizeof(T)});
+   assert(read_res.has_value());
    return result;
 }
 

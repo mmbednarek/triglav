@@ -14,14 +14,14 @@ class AlignmentBox final : public ContainerWidget
  public:
    struct State
    {
-      std::optional<HorizontalAlignment> horizontalAlignment;
-      std::optional<VerticalAlignment> verticalAlignment;
+      std::optional<HorizontalAlignment> horizontal_alignment;
+      std::optional<VerticalAlignment> vertical_alignment;
    };
 
    AlignmentBox(Context& ctx, State state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
 
    void on_child_state_changed(IWidget& widget) override;
@@ -30,9 +30,9 @@ class AlignmentBox final : public ContainerWidget
 
  private:
    State m_state;
-   Vector4 m_parentDimensions{};
-   Vector4 m_croppingMask{};
-   bool m_isMouseInside = false;
+   Vector4 m_parent_dimensions{};
+   Vector4 m_cropping_mask{};
+   bool m_is_mouse_inside = false;
 };
 
 }// namespace triglav::ui_core

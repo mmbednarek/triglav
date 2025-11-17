@@ -8,47 +8,47 @@ VerticalLayout::VerticalLayout(Context& context, State state, IWidget* parent) :
 {
 }
 
-Vector2 VerticalLayout::desired_size(const Vector2 parentSize) const
+Vector2 VerticalLayout::desired_size(const Vector2 parent_size) const
 {
-   const Vector2 minSize{m_state.padding.x + m_state.padding.z, m_state.padding.y + m_state.padding.w};
+   const Vector2 min_size{m_state.padding.x + m_state.padding.z, m_state.padding.y + m_state.padding.w};
 
    if (m_children.empty()) {
-      return minSize;
+      return min_size;
    }
 
-   Vector2 innerSize = parentSize - minSize;
+   Vector2 inner_size = parent_size - min_size;
    Vector2 result{};
-   bool isFirst = true;
+   bool is_first = true;
    for (const auto& child : m_children) {
-      if (isFirst) {
-         isFirst = false;
+      if (is_first) {
+         is_first = false;
       } else {
          result.y += m_state.separation;
-         innerSize.y -= m_state.separation;
+         inner_size.y -= m_state.separation;
       }
 
-      const auto childDesiredSize = child->desired_size(innerSize);
-      if (childDesiredSize.x > result.x) {
-         result.x = childDesiredSize.x;
+      const auto child_desired_size = child->desired_size(inner_size);
+      if (child_desired_size.x > result.x) {
+         result.x = child_desired_size.x;
       }
-      result.y += childDesiredSize.y;
-      innerSize.y -= childDesiredSize.y;
+      result.y += child_desired_size.y;
+      inner_size.y -= child_desired_size.y;
    }
 
-   return minSize + result;
+   return min_size + result;
 }
 
-void VerticalLayout::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void VerticalLayout::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   const Vector4 innerDimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
-                                 dimensions.z - m_state.padding.x - m_state.padding.z,
-                                 dimensions.w - m_state.padding.y - m_state.padding.w};
+   const Vector4 inner_dimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
+                                  dimensions.z - m_state.padding.x - m_state.padding.z,
+                                  dimensions.w - m_state.padding.y - m_state.padding.w};
 
-   float height = innerDimensions.w;
+   float height = inner_dimensions.w;
    float y{0.0f};
    for (const auto& child : m_children) {
       const auto size = child->desired_size({dimensions.z, height});
-      child->add_to_viewport({innerDimensions.x, innerDimensions.y + y, innerDimensions.z, size.y}, croppingMask);
+      child->add_to_viewport({inner_dimensions.x, inner_dimensions.y + y, inner_dimensions.z, size.y}, cropping_mask);
       y += size.y + m_state.separation;
       height -= size.y + m_state.separation;
    }
@@ -70,26 +70,26 @@ void VerticalLayout::on_child_state_changed(IWidget& widget)
 
 void VerticalLayout::on_event(const Event& event)
 {
-   if (event.eventType == Event::Type::MouseLeft) {
+   if (event.event_type == Event::Type::MouseLeft) {
       for (const auto& child : m_children) {
          child->on_event(event);
       }
       return;
    }
 
-   float height = event.parentSize.y;
+   float height = event.parent_size.y;
    float y{m_state.padding.y};
 
    for (const auto& child : m_children) {
-      const auto size = child->desired_size({event.parentSize.x, height});
-      if (event.mousePosition.y >= y && event.mousePosition.y < (y + size.y)) {
-         Event subEvent{event};
-         subEvent.parentSize = size;
-         subEvent.mousePosition -= Vector2{m_state.padding.x, y};
-         child->on_event(subEvent);
+      const auto size = child->desired_size({event.parent_size.x, height});
+      if (event.mouse_position.y >= y && event.mouse_position.y < (y + size.y)) {
+         Event sub_event{event};
+         sub_event.parent_size = size;
+         sub_event.mouse_position -= Vector2{m_state.padding.x, y};
+         child->on_event(sub_event);
 
-         if (event.eventType == Event::Type::MouseMoved) {
-            this->handle_mouse_leave(subEvent, child.get());
+         if (event.event_type == Event::Type::MouseMoved) {
+            this->handle_mouse_leave(sub_event, child.get());
          }
          return;
       }
@@ -98,28 +98,28 @@ void VerticalLayout::on_event(const Event& event)
       height -= size.y + m_state.separation;
    }
 
-   if (event.eventType == Event::Type::MouseMoved && m_lastActiveWidget != nullptr) {
-      Event leaveEvent{event};
-      leaveEvent.eventType = Event::Type::MouseLeft;
-      // leaveEvent.mousePosition -= m_lastActiveWidgetOffset;
-      m_lastActiveWidget->on_event(leaveEvent);
-      m_lastActiveWidget = nullptr;
+   if (event.event_type == Event::Type::MouseMoved && m_last_active_widget != nullptr) {
+      Event leave_event{event};
+      leave_event.event_type = Event::Type::MouseLeft;
+      // leave_event.mouse_position -= m_last_active_widget_offset;
+      m_last_active_widget->on_event(leave_event);
+      m_last_active_widget = nullptr;
    }
 }
 
 void VerticalLayout::handle_mouse_leave(const Event& event, IWidget* widget)
 {
    // FIXME: Leave events have invalid position
-   if (m_lastActiveWidget != widget) {
-      Event enterEvent{event};
-      enterEvent.eventType = Event::Type::MouseEntered;
-      widget->on_event(enterEvent);
-      if (m_lastActiveWidget != nullptr) {
-         Event leaveEvent{event};
-         leaveEvent.eventType = Event::Type::MouseLeft;
-         m_lastActiveWidget->on_event(leaveEvent);
+   if (m_last_active_widget != widget) {
+      Event enter_event{event};
+      enter_event.event_type = Event::Type::MouseEntered;
+      widget->on_event(enter_event);
+      if (m_last_active_widget != nullptr) {
+         Event leave_event{event};
+         leave_event.event_type = Event::Type::MouseLeft;
+         m_last_active_widget->on_event(leave_event);
       }
-      m_lastActiveWidget = widget;
+      m_last_active_widget = widget;
    }
 }
 

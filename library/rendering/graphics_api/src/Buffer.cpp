@@ -8,24 +8,24 @@
 
 namespace triglav::graphics_api {
 
-MappedMemory::MappedMemory(void* pointer, const VkDevice device, const VkDeviceMemory deviceMemory) :
+MappedMemory::MappedMemory(void* pointer, const VkDevice device, const VkDeviceMemory device_memory) :
     m_pointer(pointer),
     m_device(device),
-    m_deviceMemory(deviceMemory)
+    m_device_memory(device_memory)
 {
 }
 
 MappedMemory::~MappedMemory()
 {
-   if (m_device != nullptr && m_deviceMemory != nullptr) {
-      vkUnmapMemory(m_device, m_deviceMemory);
+   if (m_device != nullptr && m_device_memory != nullptr) {
+      vkUnmapMemory(m_device, m_device_memory);
    }
 }
 
 MappedMemory::MappedMemory(MappedMemory&& other) noexcept :
     m_pointer(std::exchange(other.m_pointer, nullptr)),
     m_device(std::exchange(other.m_device, nullptr)),
-    m_deviceMemory(std::exchange(other.m_deviceMemory, nullptr))
+    m_device_memory(std::exchange(other.m_device_memory, nullptr))
 {
 }
 
@@ -36,7 +36,7 @@ MappedMemory& MappedMemory::operator=(MappedMemory&& other) noexcept
 
    m_pointer = std::exchange(other.m_pointer, nullptr);
    m_device = std::exchange(other.m_device, nullptr);
-   m_deviceMemory = std::exchange(other.m_deviceMemory, nullptr);
+   m_device_memory = std::exchange(other.m_device_memory, nullptr);
 
    return *this;
 }
@@ -102,31 +102,31 @@ size_t Buffer::size() const
 
 Status Buffer::write_indirect(const void* data, size_t size)
 {
-   auto transferBuffer = m_device.create_buffer(BufferUsage::HostVisible | BufferUsage::TransferSrc, size);
-   if (not transferBuffer.has_value())
-      return transferBuffer.error();
+   auto transfer_buffer = m_device.create_buffer(BufferUsage::HostVisible | BufferUsage::TransferSrc, size);
+   if (not transfer_buffer.has_value())
+      return transfer_buffer.error();
 
    {
-      const auto mappedMemory = transferBuffer->map_memory();
-      if (not mappedMemory.has_value())
-         return mappedMemory.error();
+      const auto mapped_memory = transfer_buffer->map_memory();
+      if (not mapped_memory.has_value())
+         return mapped_memory.error();
 
-      mappedMemory->write(data, size);
+      mapped_memory->write(data, size);
    }
 
-   auto oneTimeCommands = m_device.create_command_list();
-   if (not oneTimeCommands.has_value())
-      return oneTimeCommands.error();
+   auto one_time_commands = m_device.create_command_list();
+   if (not one_time_commands.has_value())
+      return one_time_commands.error();
 
-   if (const auto res = oneTimeCommands->begin(SubmitType::OneTime); res != Status::Success)
+   if (const auto res = one_time_commands->begin(SubmitType::OneTime); res != Status::Success)
       return res;
 
-   oneTimeCommands->copy_buffer(*transferBuffer, *this);
+   one_time_commands->copy_buffer(*transfer_buffer, *this);
 
-   if (const auto res = oneTimeCommands->finish(); res != Status::Success)
+   if (const auto res = one_time_commands->finish(); res != Status::Success)
       return res;
 
-   if (const auto res = m_device.submit_command_list_one_time(*oneTimeCommands); res != Status::Success)
+   if (const auto res = m_device.submit_command_list_one_time(*one_time_commands); res != Status::Success)
       return res;
 
    return Status::Success;
@@ -144,11 +144,11 @@ void Buffer::set_debug_name(const std::string_view name) const
    if (name.empty())
       return;
 
-   VkDebugUtilsObjectNameInfoEXT debugUtilsObjectName{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
-   debugUtilsObjectName.objectHandle = reinterpret_cast<u64>(*m_buffer);
-   debugUtilsObjectName.objectType = VK_OBJECT_TYPE_BUFFER;
-   debugUtilsObjectName.pObjectName = name.data();
-   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_buffer.parent(), &debugUtilsObjectName);
+   VkDebugUtilsObjectNameInfoEXT debug_utils_object_name{VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT};
+   debug_utils_object_name.objectHandle = reinterpret_cast<u64>(*m_buffer);
+   debug_utils_object_name.objectType = VK_OBJECT_TYPE_BUFFER;
+   debug_utils_object_name.pObjectName = name.data();
+   [[maybe_unused]] const auto result = vulkan::vkSetDebugUtilsObjectNameEXT(m_buffer.parent(), &debug_utils_object_name);
    assert(result == VK_SUCCESS);
 }
 

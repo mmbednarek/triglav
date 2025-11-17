@@ -13,7 +13,7 @@ DECLARE_VLK_WRAPPED_CHILD_OBJECT(QueryPool, Device)
 class QueryPool
 {
  public:
-   QueryPool(vulkan::QueryPool queryPool, float timestampPeriod);
+   QueryPool(vulkan::QueryPool query_pool, float timestamp_period);
 
    u32 get_int(u32 index);
 
@@ -22,8 +22,8 @@ class QueryPool
    [[nodiscard]] VkQueryPool vulkan_query_pool() const;
 
  private:
-   vulkan::QueryPool m_queryPool;
-   float m_timestampPeriod;
+   vulkan::QueryPool m_query_pool;
+   float m_timestamp_period;
 };
 
 }// namespace triglav::graphics_api

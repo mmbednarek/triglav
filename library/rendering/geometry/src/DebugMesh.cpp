@@ -38,14 +38,14 @@ Mesh create_box(const Extent3D& extent)
    mesh.set_face_group(left, 0);
    mesh.set_face_group(right, 0);
 
-   constexpr static auto oneThird = 1.0f / 3.0f;
-   constexpr static auto twoThirds = 2.0f / 3.0f;
+   constexpr static auto one_third = 1.0f / 3.0f;
+   constexpr static auto two_thirds = 2.0f / 3.0f;
 
    std::array uvs{
-      glm::vec2{1, oneThird},    glm::vec2{1, twoThirds},  glm::vec2{0.75, twoThirds}, glm::vec2{0.75, oneThird},
-      glm::vec2{0.5, twoThirds}, glm::vec2{0.5, oneThird}, glm::vec2{0.25, twoThirds}, glm::vec2{0.25, oneThird},
-      glm::vec2{0, twoThirds},   glm::vec2{0, oneThird},   glm::vec2{0.5, 0},          glm::vec2{0.25, 0},
-      glm::vec2{0.5, 1},         glm::vec2{0.25, 1},
+      glm::vec2{1, one_third},    glm::vec2{1, two_thirds},  glm::vec2{0.75, two_thirds}, glm::vec2{0.75, one_third},
+      glm::vec2{0.5, two_thirds}, glm::vec2{0.5, one_third}, glm::vec2{0.25, two_thirds}, glm::vec2{0.25, one_third},
+      glm::vec2{0, two_thirds},   glm::vec2{0, one_third},   glm::vec2{0.5, 0},           glm::vec2{0.25, 0},
+      glm::vec2{0.5, 1},          glm::vec2{0.25, 1},
    };
 
    mesh.set_face_uvs(bottom, uvs[3], uvs[2], uvs[1], uvs[0]);

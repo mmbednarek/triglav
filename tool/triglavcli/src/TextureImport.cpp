@@ -42,10 +42,10 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
    struct StreamData
    {
       io::ISeekableStream& stream;
-      bool isEOF;
-   } streamData{
+      bool is_eof;
+   } stream_data{
       .stream = stream,
-      .isEOF = false,
+      .is_eof = false,
    };
 
    stbi_io_callbacks callbacks;
@@ -53,7 +53,7 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
       auto* stream = static_cast<StreamData*>(user);
       const auto res = stream->stream.read({reinterpret_cast<u8*>(data), static_cast<MemorySize>(size)});
       if (!res.has_value() || *res != static_cast<MemorySize>(size)) {
-         stream->isEOF = true;
+         stream->is_eof = true;
          return static_cast<int>(*res);
       }
       return static_cast<int>(*res);
@@ -65,34 +65,34 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
    };
    callbacks.eof = [](void* user) -> int {
       auto* stream = static_cast<StreamData*>(user);
-      return stream->isEOF ? 0 : 1;
+      return stream->is_eof ? 0 : 1;
    };
 
-   int texWidth, texHeight, texChannels;
-   stbi_uc* pixels = stbi_load_from_callbacks(&callbacks, &streamData, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+   int tex_width, tex_height, tex_channels;
+   stbi_uc* pixels = stbi_load_from_callbacks(&callbacks, &stream_data, &tex_width, &tex_height, &tex_channels, STBI_rgb_alpha);
    if (pixels == nullptr) {
       std::print(std::cerr, "triglav-cli: Failed to load image from memory\n");
       return std::nullopt;
    }
 
-   ImageData outData{};
-   outData.imageData.resize(sizeof(u32) * texWidth * texHeight);
-   std::memcpy(outData.imageData.data(), pixels, sizeof(u32) * texWidth * texHeight);
-   outData.size = {texWidth, texHeight};
+   ImageData out_data{};
+   out_data.image_data.resize(sizeof(u32) * tex_width * tex_height);
+   std::memcpy(out_data.image_data.data(), pixels, sizeof(u32) * tex_width * tex_height);
+   out_data.size = {tex_width, tex_height};
 
    stbi_image_free(pixels);
 
-   return outData;
+   return out_data;
 }
 
 bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableStream& stream)
 {
-   if (!props.shouldOverride && props.dstPath.exists()) {
-      std::print(std::cerr, "triglav-cli: Failed to import texture to {}, file exists", props.dstPath.string());
+   if (!props.should_override && props.dst_path.exists()) {
+      std::print(std::cerr, "triglav-cli: Failed to import texture to {}, file exists", props.dst_path.string());
       return false;
    }
 
-   std::print(std::cerr, "triglav-cli: Importing texture to {}\n", props.dstPath.string());
+   std::print(std::cerr, "triglav-cli: Importing texture to {}\n", props.dst_path.string());
 
    auto data = load_image_data(stream);
    if (!data.has_value()) {
@@ -105,14 +105,14 @@ bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableSt
    const auto texture = GAPI_CHECK(device->create_texture(
       format_from_purpose(props.purpose), {data->size.x, data->size.y},
       graphics_api::TextureUsage::Sampled | graphics_api::TextureUsage::TransferDst | graphics_api::TextureUsage::TransferSrc,
-      graphics_api::TextureState::Undefined, graphics_api::SampleCount::Single, props.hasMipMaps ? graphics_api::g_maxMipMaps : 1));
+      graphics_api::TextureState::Undefined, graphics_api::SampleCount::Single, props.has_mip_maps ? graphics_api::g_max_mip_maps : 1));
 
-   GAPI_CHECK_STATUS(texture.write(*device, reinterpret_cast<const u8*>(data->imageData.data())));
+   GAPI_CHECK_STATUS(texture.write(*device, reinterpret_cast<const u8*>(data->image_data.data())));
 
    const auto ktxTexture = GAPI_CHECK(device->export_ktx_texture(texture));
 
-   if (props.shouldCompress) {
-      // TODO: Figure out how to transcode with isNormalMap = true.
+   if (props.should_compress) {
+      // TODO: Figure out how to transcode with is_normal_map = true.
       if (!ktxTexture.compress(ktx::TextureCompression::UASTC, false)) {
          return false;
       }
@@ -122,12 +122,12 @@ bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableSt
       }
    }
 
-   const auto outFile = io::open_file(props.dstPath, io::FileOpenMode::Create);
-   if (!outFile.has_value()) {
+   const auto out_file = io::open_file(props.dst_path, io::FileOpenMode::Create);
+   if (!out_file.has_value()) {
       return false;
    }
 
-   if (!asset::encode_texture(**outFile, props.purpose, ktxTexture, props.samplerProperties)) {
+   if (!asset::encode_texture(**out_file, props.purpose, ktxTexture, props.sampler_properties)) {
       return false;
    }
 
@@ -136,12 +136,12 @@ bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableSt
 
 bool import_texture(const TextureImportProps& props)
 {
-   auto fileHandle = io::open_file(props.srcPath, io::FileOpenMode::Read);
-   if (!fileHandle.has_value()) {
+   auto file_handle = io::open_file(props.src_path, io::FileOpenMode::Read);
+   if (!file_handle.has_value()) {
       return false;
    }
 
-   return import_texture_from_stream(props, **fileHandle);
+   return import_texture_from_stream(props, **file_handle);
 }
 
 }// namespace triglav::tool::cli

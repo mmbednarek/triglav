@@ -18,10 +18,10 @@ struct RenderedRune
    std::vector<u8> data;
    u32 width;
    u32 height;
-   i32 advanceX;
-   i32 advanceY;
-   i32 bitmapLeft;
-   i32 bitmapTop;
+   i32 advance_x;
+   i32 advance_y;
+   i32 bitmap_left;
+   i32 bitmap_top;
 };
 
 class Typeface

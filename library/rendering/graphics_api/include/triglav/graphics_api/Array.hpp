@@ -9,11 +9,11 @@ template<BufferUsageFlags CBufferUsage, typename TValue>
 class Array
 {
  public:
-   Array(Device& device, const size_t element_count, const BufferUsageFlags additionalFlags = 0) :
+   Array(Device& device, const size_t element_count, const BufferUsageFlags additional_flags = 0) :
        m_device(device),
        m_buffer(
-          GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst | additionalFlags, element_count * sizeof(TValue)))),
-       m_elementCount(element_count)
+          GAPI_CHECK(device.create_buffer(CBufferUsage | BufferUsage::TransferDst | additional_flags, element_count * sizeof(TValue)))),
+       m_element_count(element_count)
    {
    }
 
@@ -23,7 +23,7 @@ class Array
    Array(Array&& other) noexcept :
        m_device(other.m_device),
        m_buffer(std::move(other.m_buffer)),
-       m_elementCount(std::exchange(other.m_elementCount, 0))
+       m_element_count(std::exchange(other.m_element_count, 0))
    {
    }
 
@@ -33,7 +33,7 @@ class Array
          return *this;
 
       m_buffer = std::move(other.m_buffer);
-      m_elementCount = std::exchange(other.m_elementCount, 0);
+      m_element_count = std::exchange(other.m_element_count, 0);
 
       return *this;
    }
@@ -46,7 +46,7 @@ class Array
 
    Status write(const TValue* source, const size_t count)
    {
-      assert(count <= m_elementCount);
+      assert(count <= m_element_count);
       return m_buffer.write_indirect(source, count * sizeof(TValue));
    }
 
@@ -62,13 +62,13 @@ class Array
 
    [[nodiscard]] size_t count() const
    {
-      return m_elementCount;
+      return m_element_count;
    }
 
  private:
    Device& m_device;
    Buffer m_buffer;
-   size_t m_elementCount;
+   size_t m_element_count;
 };
 
 template<typename TVertex>

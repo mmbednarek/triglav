@@ -37,7 +37,7 @@ class TransposeInput final : public ui_core::ProxyWidget
 
  private:
    State m_state;
-   desktop_ui::TextInput* m_textInput{};
+   desktop_ui::TextInput* m_text_input{};
 
    TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
 };
@@ -60,23 +60,23 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
 
  private:
    State m_state;
-   TransposeInput* m_translateX;
-   TransposeInput* m_translateY;
-   TransposeInput* m_translateZ;
+   TransposeInput* m_translate_x;
+   TransposeInput* m_translate_y;
+   TransposeInput* m_translate_z;
 
-   TransposeInput* m_rotateX;
-   TransposeInput* m_rotateY;
-   TransposeInput* m_rotateZ;
+   TransposeInput* m_rotate_x;
+   TransposeInput* m_rotate_y;
+   TransposeInput* m_rotate_z;
 
-   TransposeInput* m_scaleX;
-   TransposeInput* m_scaleY;
-   TransposeInput* m_scaleZ;
+   TransposeInput* m_scale_x;
+   TransposeInput* m_scale_y;
+   TransposeInput* m_scale_z;
 
-   ui_core::TextBox* m_meshLabel;
+   ui_core::TextBox* m_mesh_label;
 
-   Vector3 m_pendingTranslate;
-   Vector3 m_pendingRotation;
-   Vector3 m_pendingScale;
+   Vector3 m_pending_translate;
+   Vector3 m_pending_rotation;
+   Vector3 m_pending_scale;
 };
 
 }// namespace triglav::editor

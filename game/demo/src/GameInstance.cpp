@@ -32,7 +32,7 @@ EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& ren
 
 void EventListener::on_mouse_move(const triglav::Vector2 position)
 {
-   m_mousePosition = position;
+   m_mouse_position = position;
    m_renderer.on_mouse_move(position);
 }
 
@@ -51,7 +51,7 @@ void EventListener::on_mouse_leave() const
 
 void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
 {
-   m_renderer.on_mouse_is_pressed(button, m_mousePosition);
+   m_renderer.on_mouse_is_pressed(button, m_mouse_position);
 
    if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
       m_surface.lock_cursor();
@@ -61,7 +61,7 @@ void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
 
 void EventListener::on_mouse_button_is_released(const MouseButton button) const
 {
-   m_renderer.on_mouse_is_released(button, m_mousePosition);
+   m_renderer.on_mouse_is_released(button, m_mouse_position);
 
    if (m_surface.is_cursor_locked() && button == MouseButton::Middle) {
       m_surface.unlock_cursor();
@@ -75,7 +75,7 @@ void EventListener::on_resize(const triglav::Vector2i resolution) const
 
 void EventListener::on_close()
 {
-   m_isRunning = false;
+   m_is_running = false;
 }
 
 void EventListener::on_key_is_pressed(const Key key) const
@@ -96,7 +96,7 @@ void EventListener::on_key_is_released(const Key key) const
 
 [[nodiscard]] bool EventListener::is_running() const
 {
-   return m_isRunning;
+   return m_is_running;
 }
 
 namespace {
@@ -124,17 +124,18 @@ gapi::DeviceFeatureFlags requested_features(const gapi::Instance& instance)
 }// namespace
 
 GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution) :
-    m_splashScreenSurface(
+    m_splash_screen_surface(
        display.create_surface("Triglav Engine Demo - Loading"_strv, {1024, 360}, WindowAttribute::AlignCenter | WindowAttribute::TopMost)),
     m_resolution(resolution),
     m_instance(GAPI_CHECK(gapi::Instance::create_instance(&display))),
-    m_graphicsSplashScreenSurface(GAPI_CHECK(m_instance.create_surface(*m_splashScreenSurface))),
-    m_device(GAPI_CHECK(m_instance.create_device(&*m_graphicsSplashScreenSurface, device_pick_strategy(), requested_features(m_instance)))),
-    m_resourceManager(*m_device, m_fontManager),
-    TG_CONNECT(m_resourceManager, OnLoadedAssets, on_loaded_assets)
+    m_graphics_splash_screen_surface(GAPI_CHECK(m_instance.create_surface(*m_splash_screen_surface))),
+    m_device(
+       GAPI_CHECK(m_instance.create_device(&*m_graphics_splash_screen_surface, device_pick_strategy(), requested_features(m_instance)))),
+    m_resource_manager(*m_device, m_font_manager),
+    TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets)
 {
    m_state = State::LoadingBaseResources;
-   m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index_base.yaml"));
+   m_resource_manager.load_asset_list(PathManager::the().content_path().sub("index_base.yaml"));
 }
 
 void GameInstance::on_loaded_assets()
@@ -142,11 +143,11 @@ void GameInstance::on_loaded_assets()
    {
       if (m_state.load() == State::LoadingBaseResources) {
          {
-            std::unique_lock lk{m_stateMtx};
+            std::unique_lock lk{m_state_mtx};
             m_state.store(State::LoadingResources);
          }
-         m_baseResourcesReadyCV.notify_one();
-         m_resourceManager.load_asset_list(PathManager::the().content_path().sub("index.yaml"));
+         m_base_resources_ready_cv.notify_one();
+         m_resource_manager.load_asset_list(PathManager::the().content_path().sub("index.yaml"));
       } else {
          m_state.store(State::Ready);
       }
@@ -157,36 +158,37 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
 {
    display.dispatch_messages();
 
-   std::unique_lock lk{m_stateMtx};
-   m_baseResourcesReadyCV.wait(lk, [this] { return m_state == State::LoadingResources; });
+   std::unique_lock lk{m_state_mtx};
+   m_base_resources_ready_cv.wait(lk, [this] { return m_state == State::LoadingResources; });
    lk.unlock();
 
-   m_splashScreen = std::make_unique<SplashScreen>(*m_splashScreenSurface, *m_graphicsSplashScreenSurface, *m_device, m_resourceManager);
+   m_splash_screen =
+      std::make_unique<SplashScreen>(*m_splash_screen_surface, *m_graphics_splash_screen_surface, *m_device, m_resource_manager);
 
    while (m_state.load() != State::Ready) {
-      m_splashScreen->update();
+      m_splash_screen->update();
       display.dispatch_messages();
    }
 
-   m_splashScreen->on_close();
-   m_splashScreen.reset();
+   m_splash_screen->on_close();
+   m_splash_screen.reset();
    m_device->await_all();
 
-   m_graphicsSplashScreenSurface.reset();
-   m_splashScreenSurface.reset();
+   m_graphics_splash_screen_surface.reset();
+   m_splash_screen_surface.reset();
 
    display.dispatch_messages();
 
-   m_demoSurface = display.create_surface("Triglav Engine Demo"_strv, {m_resolution.width, m_resolution.height}, WindowAttribute::Default);
-   m_graphicsDemoSurface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demoSurface)));
+   m_demo_surface = display.create_surface("Triglav Engine Demo"_strv, {m_resolution.width, m_resolution.height}, WindowAttribute::Default);
+   m_graphics_demo_surface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demo_surface)));
 
    m_renderer =
-      std::make_unique<triglav::renderer::Renderer>(*m_demoSurface, *m_graphicsDemoSurface, *m_device, m_resourceManager, m_resolution);
-   m_eventListener.emplace(*m_demoSurface, *m_renderer);
+      std::make_unique<triglav::renderer::Renderer>(*m_demo_surface, *m_graphics_demo_surface, *m_device, m_resource_manager, m_resolution);
+   m_event_listener.emplace(*m_demo_surface, *m_renderer);
 
-   auto& eventListener = dynamic_cast<EventListener&>(*m_eventListener);
+   auto& event_listener = dynamic_cast<EventListener&>(*m_event_listener);
 
-   while (eventListener.is_running()) {
+   while (event_listener.is_running()) {
       m_renderer->on_render();
       display.dispatch_messages();
    }

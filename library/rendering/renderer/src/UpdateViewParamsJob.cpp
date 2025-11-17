@@ -11,8 +11,8 @@ namespace gapi = graphics_api;
 
 struct FrameParameters
 {
-   float deltaTime;
-   u32 randomSeed;
+   float delta_time;
+   u32 random_seed;
 };
 
 UpdateViewParamsJob::UpdateViewParamsJob(Scene& scene) :
@@ -55,40 +55,40 @@ void UpdateViewParamsJob::build_job(render_core::BuildContext& ctx) const
    event_OnFinalize.publish(ctx);
 }
 
-void UpdateViewParamsJob::prepare_frame(render_core::JobGraph& graph, const u32 frameIndex, const float deltaTime)
+void UpdateViewParamsJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_index, const float delta_time)
 {
-   if (!m_updatedViewProperties) {
+   if (!m_updated_view_properties) {
       graph.disable_flag(JobName, "have_view_properties_changed"_name);
       return;
    }
 
    graph.enable_flag(JobName, "have_view_properties_changed"_name);
 
-   const auto viewPropertiesMem = GAPI_CHECK(graph.resources().buffer("core.view_properties.staging"_name, frameIndex).map_memory());
-   viewPropertiesMem.write(&m_viewProperties, sizeof(ViewProperties));
+   const auto view_properties_mem = GAPI_CHECK(graph.resources().buffer("core.view_properties.staging"_name, frame_index).map_memory());
+   view_properties_mem.write(&m_view_properties, sizeof(ViewProperties));
 
-   FrameParameters frameParams{};
-   frameParams.deltaTime = deltaTime;
-   frameParams.randomSeed = rand();
-   const auto frameParamsMem = GAPI_CHECK(graph.resources().buffer("core.frame_params.staging"_name, frameIndex).map_memory());
-   frameParamsMem.write(&frameParams, sizeof(FrameParameters));
+   FrameParameters frame_params{};
+   frame_params.delta_time = delta_time;
+   frame_params.random_seed = rand();
+   const auto frame_params_mem = GAPI_CHECK(graph.resources().buffer("core.frame_params.staging"_name, frame_index).map_memory());
+   frame_params_mem.write(&frame_params, sizeof(FrameParameters));
 
-   event_OnPrepareFrame.publish(graph, frameIndex);
+   event_OnPrepareFrame.publish(graph, frame_index);
 
-   m_updatedViewProperties = false;
+   m_updated_view_properties = false;
 }
 
 void UpdateViewParamsJob::on_updated(const Camera& camera)
 {
-   m_updatedViewProperties = true;
-   m_viewProperties.projection = camera.projection_matrix();
-   m_viewProperties.view = camera.view_matrix();
-   m_viewProperties.invertedView = glm::inverse(camera.view_matrix());
-   m_viewProperties.invertedProjection = glm::inverse(camera.projection_matrix());
-   m_viewProperties.orientation =
+   m_updated_view_properties = true;
+   m_view_properties.projection = camera.projection_matrix();
+   m_view_properties.view = camera.view_matrix();
+   m_view_properties.inverted_view = glm::inverse(camera.view_matrix());
+   m_view_properties.inverted_projection = glm::inverse(camera.projection_matrix());
+   m_view_properties.orientation =
       glm::inverse(glm::rotate(glm::mat4(camera.orientation()), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-   m_viewProperties.farPlane = camera.far_plane();
-   m_viewProperties.nearPlane = camera.near_plane();
+   m_view_properties.far_plane = camera.far_plane();
+   m_view_properties.near_plane = camera.near_plane();
 }
 
 }// namespace triglav::renderer

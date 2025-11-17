@@ -8,65 +8,65 @@ HorizontalLayout::HorizontalLayout(Context& context, State state, IWidget* paren
 {
 }
 
-Vector2 HorizontalLayout::desired_size(const Vector2 parentSize) const
+Vector2 HorizontalLayout::desired_size(const Vector2 parent_size) const
 {
-   const Vector2 minSize{m_state.padding.x + m_state.padding.z, m_state.padding.y + m_state.padding.w};
+   const Vector2 min_size{m_state.padding.x + m_state.padding.z, m_state.padding.y + m_state.padding.w};
 
    if (m_children.empty()) {
-      return minSize;
+      return min_size;
    }
 
-   Vector2 innerSize = parentSize - minSize;
+   Vector2 inner_size = parent_size - min_size;
    Vector2 result{};
-   bool isFirst = true;
+   bool is_first = true;
    for (const auto& child : m_children) {
-      if (isFirst) {
-         isFirst = false;
+      if (is_first) {
+         is_first = false;
       } else {
          result.x += m_state.separation;
-         innerSize.x -= m_state.separation;
+         inner_size.x -= m_state.separation;
       }
 
-      const auto childDesiredSize = child->desired_size(innerSize);
-      result.x += childDesiredSize.x;
-      if (childDesiredSize.y > result.y) {
-         result.y = childDesiredSize.y;
+      const auto child_desired_size = child->desired_size(inner_size);
+      result.x += child_desired_size.x;
+      if (child_desired_size.y > result.y) {
+         result.y = child_desired_size.y;
       }
-      innerSize.x -= childDesiredSize.x;
+      inner_size.x -= child_desired_size.x;
    }
 
-   return minSize + result;
+   return min_size + result;
 }
 
 namespace {
 
-float initial_position(const HorizontalAlignment alignment, const float containerWidth, const float contentWidth)
+float initial_position(const HorizontalAlignment alignment, const float container_width, const float content_width)
 {
    switch (alignment) {
    case HorizontalAlignment::Left:
       return 0.0f;
    case HorizontalAlignment::Center:
-      return 0.5f * (containerWidth - contentWidth);
+      return 0.5f * (container_width - content_width);
    case HorizontalAlignment::Right:
-      return containerWidth - contentWidth;
+      return container_width - content_width;
    }
    return 0.0f;
 }
 
 }// namespace
 
-void HorizontalLayout::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void HorizontalLayout::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   const Vector4 innerDimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
-                                 dimensions.z - m_state.padding.x - m_state.padding.z,
-                                 dimensions.w - m_state.padding.y - m_state.padding.w};
+   const Vector4 inner_dimensions{dimensions.x + m_state.padding.x, dimensions.y + m_state.padding.y,
+                                  dimensions.z - m_state.padding.x - m_state.padding.z,
+                                  dimensions.w - m_state.padding.y - m_state.padding.w};
 
-   const auto contentSize = this->desired_size(dimensions);
-   float width = innerDimensions.z;
-   float x = initial_position(m_state.gravity, width, contentSize.x);
+   const auto content_size = this->desired_size(dimensions);
+   float width = inner_dimensions.z;
+   float x = initial_position(m_state.gravity, width, content_size.x);
    for (const auto& child : m_children) {
       const auto size = child->desired_size({width, dimensions.w});
-      child->add_to_viewport({innerDimensions.x + x, innerDimensions.y, size.x, innerDimensions.w}, croppingMask);
+      child->add_to_viewport({inner_dimensions.x + x, inner_dimensions.y, size.x, inner_dimensions.w}, cropping_mask);
       x += size.x + m_state.separation;
       width -= size.x + m_state.separation;
    }
@@ -88,26 +88,26 @@ void HorizontalLayout::on_child_state_changed(IWidget& widget)
 
 void HorizontalLayout::on_event(const Event& event)
 {
-   if (event.eventType == Event::Type::MouseLeft) {
+   if (event.event_type == Event::Type::MouseLeft) {
       for (const auto& child : m_children) {
          child->on_event(event);
       }
       return;
    }
 
-   float width = event.parentSize.x;
+   float width = event.parent_size.x;
    float x{m_state.padding.x};
 
    for (const auto& child : m_children) {
-      const auto size = child->desired_size({width, event.parentSize.y});
-      if (event.mousePosition.x >= x && event.mousePosition.x < (x + size.x)) {
-         Event subEvent{event};
-         subEvent.parentSize = size;
-         subEvent.mousePosition -= Vector2{x, m_state.padding.y};
-         child->on_event(subEvent);
+      const auto size = child->desired_size({width, event.parent_size.y});
+      if (event.mouse_position.x >= x && event.mouse_position.x < (x + size.x)) {
+         Event sub_event{event};
+         sub_event.parent_size = size;
+         sub_event.mouse_position -= Vector2{x, m_state.padding.y};
+         child->on_event(sub_event);
 
-         if (event.eventType == Event::Type::MouseMoved) {
-            this->handle_mouse_leave(subEvent, child.get());
+         if (event.event_type == Event::Type::MouseMoved) {
+            this->handle_mouse_leave(sub_event, child.get());
          }
          return;
       }
@@ -116,27 +116,27 @@ void HorizontalLayout::on_event(const Event& event)
       width -= size.x + m_state.separation;
    }
 
-   if (event.eventType == Event::Type::MouseMoved && m_lastActiveWidget != nullptr) {
-      Event leaveEvent{event};
-      leaveEvent.eventType = Event::Type::MouseLeft;
-      m_lastActiveWidget->on_event(leaveEvent);
-      m_lastActiveWidget = nullptr;
+   if (event.event_type == Event::Type::MouseMoved && m_last_active_widget != nullptr) {
+      Event leave_event{event};
+      leave_event.event_type = Event::Type::MouseLeft;
+      m_last_active_widget->on_event(leave_event);
+      m_last_active_widget = nullptr;
    }
 }
 
 void HorizontalLayout::handle_mouse_leave(const Event& event, IWidget* widget)
 {
    // FIXME: Leave events have invalid position
-   if (m_lastActiveWidget != widget) {
-      Event enterEvent{event};
-      enterEvent.eventType = Event::Type::MouseEntered;
-      widget->on_event(enterEvent);
-      if (m_lastActiveWidget != nullptr) {
-         Event leaveEvent{event};
-         leaveEvent.eventType = Event::Type::MouseLeft;
-         m_lastActiveWidget->on_event(leaveEvent);
+   if (m_last_active_widget != widget) {
+      Event enter_event{event};
+      enter_event.event_type = Event::Type::MouseEntered;
+      widget->on_event(enter_event);
+      if (m_last_active_widget != nullptr) {
+         Event leave_event{event};
+         leave_event.event_type = Event::Type::MouseLeft;
+         m_last_active_widget->on_event(leave_event);
       }
-      m_lastActiveWidget = widget;
+      m_last_active_widget = widget;
    }
 }
 

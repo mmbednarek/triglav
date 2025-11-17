@@ -17,7 +17,7 @@ enum class Command
 #include "ProgramOptions.def"
 };
 
-std::optional<Command> command_from_string(std::string_view argName);
+std::optional<Command> command_from_string(std::string_view arg_name);
 
 #define TG_ARG_TYPE_StringArray std::vector<std::string>
 #define TG_ARG_TYPE_String std::string
@@ -26,14 +26,14 @@ std::optional<Command> command_from_string(std::string_view argName);
 #define TG_DECLARE_COMMAND(name, desc) \
    struct CmdArgs_##name               \
    {                                   \
-      std::vector<std::string> positionalArgs{};
+      std::vector<std::string> positional_args{};
 #define TG_END_COMMAND()                          \
    bool parse(const u32 argc, const char** argv); \
    void print_help();                             \
    }                                              \
    ;
-#define TG_DECLARE_ARG(argName, shorthand, longname, type, description) TG_ARG_TYPE_##type argName{};
-#define TG_DECLARE_FLAG(argName, shorthand, longname, description) bool argName{};
+#define TG_DECLARE_ARG(arg_name, shorthand, longname, type, description) TG_ARG_TYPE_##type arg_name{};
+#define TG_DECLARE_FLAG(arg_name, shorthand, longname, description) bool arg_name{};
 
 #include "ProgramOptions.def"
 

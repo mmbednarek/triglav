@@ -6,72 +6,72 @@ namespace triglav::render_core {
 
 namespace {
 
-constexpr u32 g_maxTimestampCount{16};
+constexpr u32 g_max_timestamp_count{16};
 
-ResourceStorage::ResourceID to_resource_id(const Name name, const u32 frameID)
+ResourceStorage::ResourceID to_resource_id(const Name name, const u32 frame_id)
 {
-   return name + 82646923u * frameID;
+   return name + 82646923u * frame_id;
 }
 
-ResourceStorage::ResourceID to_resource_id(const Name name, const u32 mipLevel, const u32 frameID)
+ResourceStorage::ResourceID to_resource_id(const Name name, const u32 mip_level, const u32 frame_id)
 {
-   return name + 82646923u * frameID + 24318937u * mipLevel;
+   return name + 82646923u * frame_id + 24318937u * mip_level;
 }
 
 }// namespace
 
-graphics_api::DescriptorArray& DescriptorStorage::store_descriptor_array(graphics_api::DescriptorArray&& descArray)
+graphics_api::DescriptorArray& DescriptorStorage::store_descriptor_array(graphics_api::DescriptorArray&& desc_array)
 {
-   return m_descriptorArrays.emplace_back(std::move(descArray));
+   return m_descriptor_arrays.emplace_back(std::move(desc_array));
 }
 
 ResourceStorage::ResourceStorage(graphics_api::Device& device) :
-    m_timestamps(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::Timestamp, g_maxTimestampCount))),
-    m_pipelineStats(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::PipelineStats, g_maxTimestampCount)))
+    m_timestamps(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::Timestamp, g_max_timestamp_count))),
+    m_pipeline_stats(GAPI_CHECK(device.create_query_pool(graphics_api::QueryType::PipelineStats, g_max_timestamp_count)))
 {
 }
 
-void ResourceStorage::register_texture(const Name name, const u32 frameIndex, graphics_api::Texture&& texture)
+void ResourceStorage::register_texture(const Name name, const u32 frame_index, graphics_api::Texture&& texture)
 {
-   const auto resName = to_resource_id(name, frameIndex);
-   if (m_textures.contains(resName)) {
-      m_textures.erase(resName);
+   const auto res_name = to_resource_id(name, frame_index);
+   if (m_textures.contains(res_name)) {
+      m_textures.erase(res_name);
    }
-   m_textures.emplace(to_resource_id(name, frameIndex), std::move(texture));
+   m_textures.emplace(to_resource_id(name, frame_index), std::move(texture));
 }
 
-graphics_api::Texture& ResourceStorage::texture(const Name name, const u32 frameIndex)
+graphics_api::Texture& ResourceStorage::texture(const Name name, const u32 frame_index)
 {
-   return m_textures.at(to_resource_id(name, frameIndex));
+   return m_textures.at(to_resource_id(name, frame_index));
 }
 
-void ResourceStorage::register_texture_mip_view(const Name name, const u32 mipIndex, const u32 frameIndex,
-                                                graphics_api::TextureView&& textureView)
+void ResourceStorage::register_texture_mip_view(const Name name, const u32 mip_index, const u32 frame_index,
+                                                graphics_api::TextureView&& texture_view)
 {
-   const auto resName = to_resource_id(name, mipIndex, frameIndex);
-   if (m_textureMipViews.contains(resName)) {
-      m_textureMipViews.erase(resName);
+   const auto res_name = to_resource_id(name, mip_index, frame_index);
+   if (m_texture_mip_views.contains(res_name)) {
+      m_texture_mip_views.erase(res_name);
    }
-   m_textureMipViews.emplace(resName, std::move(textureView));
+   m_texture_mip_views.emplace(res_name, std::move(texture_view));
 }
 
-graphics_api::TextureView& ResourceStorage::texture_mip_view(const Name name, const u32 mipIndex, const u32 frameIndex)
+graphics_api::TextureView& ResourceStorage::texture_mip_view(const Name name, const u32 mip_index, const u32 frame_index)
 {
-   return m_textureMipViews.at(to_resource_id(name, mipIndex, frameIndex));
+   return m_texture_mip_views.at(to_resource_id(name, mip_index, frame_index));
 }
 
-void ResourceStorage::register_buffer(const Name name, const u32 frameIndex, graphics_api::Buffer&& buffer)
+void ResourceStorage::register_buffer(const Name name, const u32 frame_index, graphics_api::Buffer&& buffer)
 {
-   const auto resName = to_resource_id(name, frameIndex);
-   if (m_buffers.contains(resName)) {
-      m_buffers.erase(resName);
+   const auto res_name = to_resource_id(name, frame_index);
+   if (m_buffers.contains(res_name)) {
+      m_buffers.erase(res_name);
    }
-   m_buffers.emplace(resName, std::move(buffer));
+   m_buffers.emplace(res_name, std::move(buffer));
 }
 
-graphics_api::Buffer& ResourceStorage::buffer(const Name name, const u32 frameIndex)
+graphics_api::Buffer& ResourceStorage::buffer(const Name name, const u32 frame_index)
 {
-   return m_buffers.at(to_resource_id(name, frameIndex));
+   return m_buffers.at(to_resource_id(name, frame_index));
 }
 
 graphics_api::QueryPool& ResourceStorage::timestamps()
@@ -81,7 +81,7 @@ graphics_api::QueryPool& ResourceStorage::timestamps()
 
 graphics_api::QueryPool& ResourceStorage::pipeline_stats()
 {
-   return m_pipelineStats;
+   return m_pipeline_stats;
 }
 
 }// namespace triglav::render_core

@@ -4,16 +4,16 @@
 
 namespace triglav::threading {
 
-thread_local ThreadID g_threadID{};
+thread_local ThreadID g_thread_id{};
 
 void set_thread_id(const ThreadID id)
 {
-   g_threadID = id;
+   g_thread_id = id;
 }
 
 ThreadID this_thread_id()
 {
-   return g_threadID;
+   return g_thread_id;
 }
 
 u32 total_thread_count()

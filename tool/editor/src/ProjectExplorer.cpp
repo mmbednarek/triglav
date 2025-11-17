@@ -45,9 +45,9 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
 
    auto& background = this->create_content<ui_core::RectBox>({
       .color = TG_THEME_VAL(background_color_brighter),
-      .borderRadius = {},
-      .borderColor = palette::NO_COLOR,
-      .borderWidth = 0.0f,
+      .border_radius = {},
+      .border_color = palette::NO_COLOR,
+      .border_width = 0.0f,
    });
 
    auto& layout = background.create_content<ui_core::VerticalLayout>({
@@ -55,14 +55,14 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
       .separation = 4.0f,
    });
 
-   auto& scrollRect = layout.create_child<ui_core::RectBox>({
+   auto& scroll_rect = layout.create_child<ui_core::RectBox>({
       .color = TG_THEME_VAL(background_color_darker),
-      .borderRadius = {2.0f, 2.0f, 2.0f, 2.0f},
-      .borderColor = palette::NO_COLOR,
-      .borderWidth = 0.0f,
+      .border_radius = {2.0f, 2.0f, 2.0f, 2.0f},
+      .border_color = palette::NO_COLOR,
+      .border_width = 0.0f,
    });
 
-   auto& scroll = scrollRect.create_content<ui_core::ScrollBox>({});
+   auto& scroll = scroll_rect.create_content<ui_core::ScrollBox>({});
 
    scroll.create_content<desktop_ui::TreeView>({
       .manager = m_state.manager,
@@ -82,15 +82,15 @@ void ProjectExplorer::add_controller_item(const std::string_view path)
    auto last_pos = 0ull;
    u32 item_id = desktop_ui::TREE_ROOT;
    while (pos != std::string_view::npos) {
-      auto it = m_pathToId.find(path.substr(0, pos));
-      if (it == m_pathToId.end()) {
+      auto it = m_path_to_id.find(path.substr(0, pos));
+      if (it == m_path_to_id.end()) {
          item_id = m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                                     .iconName = "texture/ui_atlas.tex"_rc,
-                                                     .iconRegion = {0, 128, 64, 64},
+                                                     .icon_name = "texture/ui_atlas.tex"_rc,
+                                                     .icon_region = {0, 128, 64, 64},
                                                      .label = {path.substr(last_pos, pos).data(), pos - last_pos},
-                                                     .hasChildren = true,
+                                                     .has_children = true,
                                                   });
-         m_pathToId[path.substr(0, pos)] = item_id;
+         m_path_to_id[path.substr(0, pos)] = item_id;
       } else {
          item_id = it->second;
       }
@@ -100,10 +100,10 @@ void ProjectExplorer::add_controller_item(const std::string_view path)
 
    const auto icon_offset = resource_path_to_icon_offset(path);
    m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                     .iconName = "texture/ui_atlas.tex"_rc,
-                                     .iconRegion = {icon_offset.x, icon_offset.y, 64, 64},
+                                     .icon_name = "texture/ui_atlas.tex"_rc,
+                                     .icon_region = {icon_offset.x, icon_offset.y, 64, 64},
                                      .label = {path.substr(last_pos).data(), path.size() - last_pos},
-                                     .hasChildren = false,
+                                     .has_children = false,
                                   });
 }
 

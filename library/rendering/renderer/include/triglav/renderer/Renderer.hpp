@@ -49,10 +49,10 @@ class Renderer
    };
    using Self = Renderer;
 
-   Renderer(desktop::ISurface& desktopSurface, graphics_api::Surface& surface, graphics_api::Device& device,
-            resource::ResourceManager& resourceManager, const graphics_api::Resolution& resolution);
+   Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& surface, graphics_api::Device& device,
+            resource::ResourceManager& resource_manager, const graphics_api::Resolution& resolution);
 
-   void update_debug_info(bool isFirstFrame);
+   void update_debug_info(bool is_first_frame);
    void on_render();
    void on_resize(uint32_t width, uint32_t height);
    void on_close();
@@ -68,41 +68,41 @@ class Renderer
    void on_config_property_changed(ConfigProperty property, const Config& config);
 
  private:
-   void update_uniform_data(float deltaTime);
+   void update_uniform_data(float delta_time);
    static float calculate_frame_duration();
    glm::vec3 moving_direction();
    void recreate_jobs();
 
-   bool m_mustRecreateJobs{false};
-   bool m_showDebugLines{false};
+   bool m_must_recreate_jobs{false};
+   bool m_show_debug_lines{false};
    glm::vec3 m_motion{};
-   glm::vec2 m_mouseOffset{};
-   bool m_onGround{false};
-   Moving m_moveDirection{Moving::None};
+   glm::vec2 m_mouse_offset{};
+   bool m_on_ground{false};
+   Moving m_move_direction{Moving::None};
 
    graphics_api::Device& m_device;
-   resource::ResourceManager& m_resourceManager;
+   resource::ResourceManager& m_resource_manager;
 
-   ConfigManager m_configManager;
+   ConfigManager m_config_manager;
    Scene m_scene;
-   BindlessScene m_bindlessScene;
-   render_core::GlyphCache m_glyphCache;
-   ui_core::Viewport m_uiViewport;
-   ui_core::Context m_uiContext;
-   InfoDialog m_infoDialog;
-   std::optional<RayTracingScene> m_rayTracingScene;
+   BindlessScene m_bindless_scene;
+   render_core::GlyphCache m_glyph_cache;
+   ui_core::Viewport m_ui_viewport;
+   ui_core::Context m_ui_context;
+   InfoDialog m_info_dialog;
+   std::optional<RayTracingScene> m_ray_tracing_scene;
 
-   render_core::ResourceStorage m_resourceStorage;
-   RenderSurface m_renderSurface;
-   render_core::PipelineCache m_pipelineCache;
-   render_core::JobGraph m_jobGraph;
-   UpdateViewParamsJob m_updateViewParamsJob;
-   UpdateUserInterfaceJob m_updateUserInterfaceJob;
-   OcclusionCulling m_occlusionCulling;
-   RenderingJob m_renderingJob;
-   u32 m_frameIndex{0};
+   render_core::ResourceStorage m_resource_storage;
+   RenderSurface m_render_surface;
+   render_core::PipelineCache m_pipeline_cache;
+   render_core::JobGraph m_job_graph;
+   UpdateViewParamsJob m_update_view_params_job;
+   UpdateUserInterfaceJob m_update_user_interface_job;
+   OcclusionCulling m_occlusion_culling;
+   RenderingJob m_rendering_job;
+   u32 m_frame_index{0};
 
-   DebugWidget m_debugWidget;
+   DebugWidget m_debug_widget;
 
    TG_SINK(ConfigManager, OnPropertyChanged);
 };

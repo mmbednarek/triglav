@@ -20,7 +20,7 @@ void UpdateList<TKey, TValue>::add_or_update(TKey key, TValue&& value)
 template<typename TKey, typename TValue>
 void UpdateList<TKey, TValue>::remove(TKey key)
 {
-   if (!m_keyToIndex.contains(key)) {
+   if (!m_key_to_index.contains(key)) {
       std::erase_if(m_additions, [key](const auto& pair) { return pair.first == key; });
       return;
    }
@@ -30,7 +30,7 @@ void UpdateList<TKey, TValue>::remove(TKey key)
 template<typename TKey, typename TValue>
 [[nodiscard]] u32 UpdateList<TKey, TValue>::top_index() const
 {
-   return m_indexCount;
+   return m_index_count;
 }
 
 template<typename TKey, typename TValue>
@@ -38,19 +38,19 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
 {
    // For additions with existing keys, we would like maintain the same key
    for (const auto& [key, value] : m_additions) {
-      auto it = m_keyToIndex.find(key);
-      if (it != m_keyToIndex.end()) {
+      auto it = m_key_to_index.find(key);
+      if (it != m_key_to_index.end()) {
          writer.set_object(it->second, value);
       }
    }
-   std::erase_if(m_additions, [this](const auto& pair) { return m_keyToIndex.contains(pair.first); });
+   std::erase_if(m_additions, [this](const auto& pair) { return m_key_to_index.contains(pair.first); });
 
    std::set<u32> removal_indices{};
    for (const auto rem_key : m_removals) {
-      removal_indices.emplace(m_keyToIndex.at(rem_key));
+      removal_indices.emplace(m_key_to_index.at(rem_key));
    }
 
-   const u32 target_count = static_cast<u32>(m_indexCount - m_removals.size() + m_additions.size());
+   const u32 target_count = static_cast<u32>(m_index_count - m_removals.size() + m_additions.size());
 
    // First we use additions to remove the objects
    auto addition_it = m_additions.begin();
@@ -71,7 +71,7 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
    }
 
    // If there are remaining additions append them to the end
-   u32 dst_index = m_indexCount;
+   u32 dst_index = m_index_count;
    while (addition_it != m_additions.end()) {
       this->register_mapping(addition_it->first, dst_index);
       writer.set_object(dst_index++, addition_it->second);
@@ -102,10 +102,10 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
       ++removal_it;
    }
 
-   assert(m_keyToIndex.size() == target_count);
-   assert(m_indexToKey.size() == target_count);
+   assert(m_key_to_index.size() == target_count);
+   assert(m_index_to_key.size() == target_count);
 
-   m_indexCount = target_count;
+   m_index_count = target_count;
    m_removals.clear();
    m_additions.clear();
 }
@@ -113,32 +113,32 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
 template<typename TKey, typename TValue>
 [[nodiscard]] const std::map<TKey, u32>& UpdateList<TKey, TValue>::key_map() const
 {
-   return m_keyToIndex;
+   return m_key_to_index;
 }
 
 template<typename TKey, typename TValue>
 void UpdateList<TKey, TValue>::register_mapping(const TKey key, const u32 index)
 {
-   assert(!m_indexToKey.contains(index));
-   m_indexToKey[index] = key;
-   m_keyToIndex[key] = index;
+   assert(!m_index_to_key.contains(index));
+   m_index_to_key[index] = key;
+   m_key_to_index[key] = index;
 }
 
 template<typename TKey, typename TValue>
 u32 UpdateList<TKey, TValue>::remove_mapping_by_key(const TKey key)
 {
-   const auto index = m_keyToIndex.at(key);
-   m_keyToIndex.erase(key);
-   m_indexToKey.erase(index);
+   const auto index = m_key_to_index.at(key);
+   m_key_to_index.erase(key);
+   m_index_to_key.erase(index);
    return index;
 }
 
 template<typename TKey, typename TValue>
 TKey UpdateList<TKey, TValue>::remove_mapping_by_index(const u32 index)
 {
-   const auto key = m_indexToKey.at(index);
-   m_keyToIndex.erase(key);
-   m_indexToKey.erase(index);
+   const auto key = m_index_to_key.at(index);
+   m_key_to_index.erase(key);
+   m_index_to_key.erase(index);
    return key;
 }
 

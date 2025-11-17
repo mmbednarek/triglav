@@ -50,15 +50,15 @@ PipelineHash hash_color_format(const graphics_api::ColorFormat& format)
 
 PipelineHash DescriptorInfo::hash() const
 {
-   return 193043 * static_cast<u32>(this->descriptorType) + 225349 * static_cast<u32>(this->pipelineStages.value) +
-          4411217 * this->descriptorCount;
+   return 193043 * static_cast<u32>(this->descriptor_type) + 225349 * static_cast<u32>(this->pipeline_stages.value) +
+          4411217 * this->descriptor_count;
 }
 
 PipelineHash DescriptorState::hash() const
 {
    PipelineHash result{};
 
-   for (const auto i : Range(0u, this->descriptorCount)) {
+   for (const auto i : Range(0u, this->descriptor_count)) {
       result += DESCRIPTOR_PRIMES[i] * this->descriptors[i].hash();
    }
 
@@ -100,28 +100,28 @@ PipelineHash GraphicPipelineState::hash() const
 {
    PipelineHash result{};
 
-   if (this->fragmentShader.has_value()) {
-      result += 3791173 * this->fragmentShader->name();
+   if (this->fragment_shader.has_value()) {
+      result += 3791173 * this->fragment_shader->name();
    }
-   if (this->vertexShader.has_value()) {
-      result += 1252177 * this->vertexShader->name();
+   if (this->vertex_shader.has_value()) {
+      result += 1252177 * this->vertex_shader->name();
    }
-   result += 1887451 * this->vertexLayout.hash();
-   result += 5973041 * this->descriptorState.hash();
+   result += 1887451 * this->vertex_layout.hash();
+   result += 5973041 * this->descriptor_state.hash();
 
-   for (const auto [index, format] : Enumerate(renderTargetFormats)) {
+   for (const auto [index, format] : Enumerate(render_target_formats)) {
       result += RENDER_TARGET_PRIMES[index] * hash_color_format(format);
    }
-   if (depthTargetFormat.has_value()) {
-      result += 23116759 * hash_color_format(*depthTargetFormat);
+   if (depth_target_format.has_value()) {
+      result += 23116759 * hash_color_format(*depth_target_format);
    }
-   result += 4276381 * static_cast<u32>(vertexTopology);
-   result += 2723521 * static_cast<u32>(depthTestMode);
-   result += 6378731 * static_cast<u32>(isBlendingEnabled);
-   result += 61075103 * static_cast<u32>(lineWidth * 10.0f);
+   result += 4276381 * static_cast<u32>(vertex_topology);
+   result += 2723521 * static_cast<u32>(depth_test_mode);
+   result += 6378731 * static_cast<u32>(is_blending_enabled);
+   result += 61075103 * static_cast<u32>(line_width * 10.0f);
 
-   for (const auto [index, pushConstant] : Enumerate(this->pushConstants)) {
-      result += PUSH_CONSTANT_PRIMES[index] * pushConstant.hash();
+   for (const auto [index, push_constant] : Enumerate(this->push_constants)) {
+      result += PUSH_CONSTANT_PRIMES[index] * push_constant.hash();
    }
 
    return result;
@@ -131,11 +131,11 @@ PipelineHash ComputePipelineState::hash() const
 {
    PipelineHash result{};
 
-   if (this->computeShader.has_value()) {
-      result += 221955337 * this->computeShader.value().name();
+   if (this->compute_shader.has_value()) {
+      result += 221955337 * this->compute_shader.value().name();
    }
 
-   result += 733777621 * this->descriptorState.hash();
+   result += 733777621 * this->descriptor_state.hash();
 
    return result;
 }
@@ -143,36 +143,36 @@ PipelineHash ComputePipelineState::hash() const
 PipelineHash RayTracingShaderGroup::hash() const
 {
    PipelineHash result = 625888457 * static_cast<u32>(type);
-   if (generalShader.has_value()) {
-      result += 469726181 * generalShader->name();
+   if (general_shader.has_value()) {
+      result += 469726181 * general_shader->name();
    }
-   if (closestHitShader.has_value()) {
-      result += 290082467 * closestHitShader->name();
+   if (closest_hit_shader.has_value()) {
+      result += 290082467 * closest_hit_shader->name();
    }
    return result;
 }
 
 void RayTracingPipelineState::reset()
 {
-   this->descriptorState.descriptorCount = 0;
-   this->maxRecursion = 4;
-   this->pushConstants.clear();
-   this->shaderGroups.clear();
-   this->rayGenShader.reset();
-   this->rayMissShaders.clear();
-   this->rayClosestHitShaders.clear();
+   this->descriptor_state.descriptor_count = 0;
+   this->max_recursion = 4;
+   this->push_constants.clear();
+   this->shader_groups.clear();
+   this->ray_gen_shader.reset();
+   this->ray_miss_shaders.clear();
+   this->ray_closest_hit_shaders.clear();
 }
 
 std::vector<Name> RayTracingPipelineState::shader_bindings() const
 {
    std::vector<Name> result;
-   if (this->rayGenShader.has_value()) {
-      result.emplace_back(make_rt_shader_name(*this->rayGenShader));
+   if (this->ray_gen_shader.has_value()) {
+      result.emplace_back(make_rt_shader_name(*this->ray_gen_shader));
    }
-   for (const auto shader : this->rayMissShaders) {
+   for (const auto shader : this->ray_miss_shaders) {
       result.emplace_back(make_rt_shader_name(shader));
    }
-   for (const auto shader : this->rayClosestHitShaders) {
+   for (const auto shader : this->ray_closest_hit_shaders) {
       result.emplace_back(make_rt_shader_name(shader));
    }
    return result;
@@ -182,22 +182,22 @@ PipelineHash RayTracingPipelineState::hash() const
 {
    PipelineHash result{};
 
-   if (rayGenShader.has_value()) {
-      result += 46410383 * rayGenShader->name();
+   if (ray_gen_shader.has_value()) {
+      result += 46410383 * ray_gen_shader->name();
    }
-   for (const auto [index, shader] : Enumerate(rayClosestHitShaders)) {
-      result += RAY_CLOSEST_HIT_PRIMES[index] * rayGenShader->name();
+   for (const auto [index, shader] : Enumerate(ray_closest_hit_shaders)) {
+      result += RAY_CLOSEST_HIT_PRIMES[index] * ray_gen_shader->name();
    }
-   for (const auto [index, shader] : Enumerate(rayMissShaders)) {
-      result += RAY_MISS_PRIMES[index] * rayGenShader->name();
+   for (const auto [index, shader] : Enumerate(ray_miss_shaders)) {
+      result += RAY_MISS_PRIMES[index] * ray_gen_shader->name();
    }
-   result += 612708209 * descriptorState.hash();
-   for (const auto [index, pushConstant] : Enumerate(pushConstants)) {
-      result += PUSH_CONSTANT_PRIMES[index] * pushConstant.hash();
+   result += 612708209 * descriptor_state.hash();
+   for (const auto [index, push_constant] : Enumerate(push_constants)) {
+      result += PUSH_CONSTANT_PRIMES[index] * push_constant.hash();
    }
-   result += 795496733 * maxRecursion;
-   for (const auto [index, shaderGroup] : Enumerate(shaderGroups)) {
-      result += RAY_SHADER_GROUP_PRIMES[index] * shaderGroup.hash();
+   result += 795496733 * max_recursion;
+   for (const auto [index, shader_group] : Enumerate(shader_groups)) {
+      result += RAY_SHADER_GROUP_PRIMES[index] * shader_group.hash();
    }
 
    return result;

@@ -29,12 +29,12 @@ struct BindDescriptors
 
 struct BindVertexBuffer
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
 };
 
 struct BindIndexBuffer
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
 };
 
 struct PlaceTextureBarrier
@@ -93,35 +93,35 @@ struct PlaceBufferBarrier
 
 struct DrawPrimitives
 {
-   u32 vertexCount{};
-   u32 vertexOffset{};
-   u32 instanceCount{};
-   u32 instanceOffset{};
+   u32 vertex_count{};
+   u32 vertex_offset{};
+   u32 instance_count{};
+   u32 instance_offset{};
 };
 
 struct DrawIndexedPrimitives
 {
-   u32 indexCount{};
-   u32 indexOffset{};
-   u32 vertexOffset{};
-   u32 instanceCount{};
-   u32 instanceOffset{};
+   u32 index_count{};
+   u32 index_offset{};
+   u32 vertex_offset{};
+   u32 instance_count{};
+   u32 instance_offset{};
 };
 
 struct DrawIndexedIndirectWithCount
 {
-   BufferRef drawCallBuffer{};
-   BufferRef countBuffer{};
-   u32 maxDrawCalls{};
+   BufferRef draw_call_buffer{};
+   BufferRef count_buffer{};
+   u32 max_draw_calls{};
    u32 stride{};
-   u32 countBufferOffset{};
+   u32 count_buffer_offset{};
 };
 
 struct DrawIndirectWithCount
 {
-   BufferRef drawCallBuffer{};
-   BufferRef countBuffer{};
-   u32 maxDrawCalls{};
+   BufferRef draw_call_buffer{};
+   BufferRef count_buffer{};
+   u32 max_draw_calls{};
    u32 stride{};
 };
 
@@ -132,58 +132,58 @@ struct Dispatch
 
 struct DispatchIndirect
 {
-   BufferRef indirectBuffer{};
+   BufferRef indirect_buffer{};
 };
 
 struct CopyTextureToBuffer
 {
-   TextureRef srcTexture;
-   BufferRef dstBuffer;
+   TextureRef src_texture;
+   BufferRef dst_buffer;
 };
 
 struct CopyBufferToTexture
 {
-   BufferRef srcBuffer;
-   TextureRef dstTexture;
+   BufferRef src_buffer;
+   TextureRef dst_texture;
 };
 
 struct CopyBuffer
 {
-   BufferRef srcBuffer;
-   BufferRef dstBuffer;
+   BufferRef src_buffer;
+   BufferRef dst_buffer;
 };
 
 struct CopyTexture
 {
-   TextureRef srcTexture;
-   TextureRef dstTexture;
+   TextureRef src_texture;
+   TextureRef dst_texture;
 };
 
 struct CopyTextureRegion
 {
-   TextureRef srcTexture;
-   Vector2i srcOffset;
-   TextureRef dstTexture;
-   Vector2i dstOffset;
+   TextureRef src_texture;
+   Vector2i src_offset;
+   TextureRef dst_texture;
+   Vector2i dst_offset;
    Vector2i size;
 };
 
 struct BlitTexture
 {
-   TextureRef srcTexture;
-   TextureRef dstTexture;
+   TextureRef src_texture;
+   TextureRef dst_texture;
 };
 
 struct FillBuffer
 {
-   Name buffName{};
+   Name buff_name{};
    std::vector<u8> data{};
 };
 
 struct BeginRenderPass
 {
-   Name passName;
-   std::vector<Name> renderTargets;
+   Name pass_name;
+   std::vector<Name> render_targets;
 };
 
 struct EndRenderPass
@@ -204,21 +204,21 @@ struct EndIfCond
 
 struct ExportTexture
 {
-   Name texName;
-   graphics_api::PipelineStage pipelineStage;
+   Name tex_name;
+   graphics_api::PipelineStage pipeline_stage;
    graphics_api::TextureState state;
 };
 
 struct ExportBuffer
 {
-   Name buffName;
-   graphics_api::PipelineStage pipelineStage;
+   Name buff_name;
+   graphics_api::PipelineStage pipeline_stage;
    graphics_api::BufferAccess access;
 };
 
 struct PushConstant
 {
-   graphics_api::PipelineStageFlags stageFlags;
+   graphics_api::PipelineStageFlags stage_flags;
    std::vector<u8> data;
 };
 
@@ -232,13 +232,13 @@ struct ResetQueries
 {
    u32 offset;
    u32 count;
-   bool shouldResetTimestampQueryPool;
+   bool should_reset_timestamp_query_pool;
 };
 
 struct QueryTimestamp
 {
    u32 index;
-   bool isClosing;
+   bool is_closing;
 };
 
 struct BeginQuery
@@ -254,8 +254,8 @@ struct EndQuery
 struct SetViewport
 {
    Vector4 dimensions;
-   float minDepth;
-   float maxDepth;
+   float min_depth;
+   float max_depth;
 };
 
 }// namespace cmd

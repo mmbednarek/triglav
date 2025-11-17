@@ -24,7 +24,7 @@ class Scheduler
    [[nodiscard]] static Scheduler& the();
 
  private:
-   TimerHandle m_topHandle{};
+   TimerHandle m_top_handle{};
    std::multimap<TimePoint, TimerHandle> m_timers;
    std::map<TimerHandle, std::function<void()>> m_callbacks;
 };

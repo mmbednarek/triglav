@@ -32,10 +32,10 @@ TEST(StringTest, BasicASCII)
 
    example.append("ny"_strv);
 
-   const auto strView = example.view();
-   ASSERT_EQ(strView, "Hello World Johnny");
-   ASSERT_EQ(strView.size(), 18ull);
-   ASSERT_EQ(strView.rune_count(), 18ull);
+   const auto str_view = example.view();
+   ASSERT_EQ(str_view, "Hello World Johnny");
+   ASSERT_EQ(str_view.size(), 18ull);
+   ASSERT_EQ(str_view.rune_count(), 18ull);
 
    example.shrink_by(3);
    ASSERT_EQ(example, "Hello World Joh");
@@ -75,10 +75,10 @@ TEST(StringTest, BasicUTF8)
 
    example.append(" żółć"_strv);
 
-   const auto strView = example.view();
-   ASSERT_EQ(strView, "Zażółć gęślą jaźń źdźbło żółć");
-   ASSERT_EQ(strView.size(), 45ull);
-   ASSERT_EQ(strView.rune_count(), 29ull);
+   const auto str_view = example.view();
+   ASSERT_EQ(str_view, "Zażółć gęślą jaźń źdźbło żółć");
+   ASSERT_EQ(str_view.size(), 45ull);
+   ASSERT_EQ(str_view.rune_count(), 29ull);
 
    example.shrink_by(2);
 
@@ -135,12 +135,12 @@ TEST(StringTest, MoveTest)
    ASSERT_TRUE(msg.is_empty());
    ASSERT_EQ(moved, "Zażółć gęślą jaźń źdźbło");
 
-   triglav::String doubleMoved{};
-   doubleMoved = std::move(moved);
+   triglav::String double_moved{};
+   double_moved = std::move(moved);
 
    ASSERT_EQ(moved, "");
    ASSERT_TRUE(moved.is_empty());
-   ASSERT_EQ(doubleMoved, "Zażółć gęślą jaźń źdźbło");
+   ASSERT_EQ(double_moved, "Zażółć gęślą jaźń źdźbło");
 }
 
 TEST(StringTest, Shrink)

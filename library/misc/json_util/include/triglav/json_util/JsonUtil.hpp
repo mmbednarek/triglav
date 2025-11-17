@@ -46,7 +46,7 @@ class RapidJsonInputStream
 
  private:
    mutable io::BufferedReader m_reader;
-   size_t m_totalBytesRead = 0;
+   size_t m_total_bytes_read = 0;
 };
 
 std::optional<rapidjson::Document> create_document_from_file(const io::Path& path);

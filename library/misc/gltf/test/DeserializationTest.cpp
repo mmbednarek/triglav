@@ -8,7 +8,7 @@
 
 TEST(DerserializationTest, BasicDeserialization)
 {
-   triglav::io::StringReader reader(triglav::test::g_gltfExample);
+   triglav::io::StringReader reader(triglav::test::g_gltf_example);
 
    triglav::gltf::Document doc;
    doc.deserialize(reader);
@@ -20,7 +20,7 @@ TEST(DerserializationTest, BasicDeserialization)
 
 TEST(DerserializationTest, ReadMeshTest)
 {
-   triglav::io::StringReader reader(triglav::test::g_gltfExample);
+   triglav::io::StringReader reader(triglav::test::g_gltf_example);
 
    triglav::gltf::Document doc;
    doc.deserialize(reader);

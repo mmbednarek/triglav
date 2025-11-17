@@ -93,15 +93,15 @@ enum class HorizontalAlignment
    Right,
 };
 
-constexpr float calculate_alignment(const HorizontalAlignment alignment, const float containerWidth, const float itemWidth)
+constexpr float calculate_alignment(const HorizontalAlignment alignment, const float container_width, const float item_width)
 {
    switch (alignment) {
    case HorizontalAlignment::Left:
       return 0.0f;
    case HorizontalAlignment::Center:
-      return containerWidth * 0.5f - itemWidth * 0.5f;
+      return container_width * 0.5f - item_width * 0.5f;
    case HorizontalAlignment::Right:
-      return containerWidth - itemWidth;
+      return container_width - item_width;
    }
    return 0.0f;
 }
@@ -113,15 +113,15 @@ enum class VerticalAlignment
    Bottom,
 };
 
-constexpr float calculate_alignment(const VerticalAlignment alignment, const float containerHeight, const float itemHeight)
+constexpr float calculate_alignment(const VerticalAlignment alignment, const float container_height, const float item_height)
 {
    switch (alignment) {
    case VerticalAlignment::Top:
       return 0.0f;
    case VerticalAlignment::Center:
-      return containerHeight * 0.5f - itemHeight * 0.5f;
+      return container_height * 0.5f - item_height * 0.5f;
    case VerticalAlignment::Bottom:
-      return containerHeight - itemHeight;
+      return container_height - item_height;
    }
    return 0.0f;
 }
