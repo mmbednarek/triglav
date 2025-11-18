@@ -23,6 +23,7 @@ class Renderer;
 struct SceneObject
 {
    MeshName model;
+   String name;
    Transform3D transform;
 
    [[nodiscard]] Matrix4x4 model_matrix() const;
@@ -63,6 +64,7 @@ class Scene
    ObjectID add_object(SceneObject object);
    void set_transform(ObjectID object_id, const Transform3D& transform);
    void load_level(LevelName name);
+   world::Level to_level() const;
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
    void send_view_changed();
@@ -81,6 +83,16 @@ class Scene
    void add_bounding_box(const geometry::BoundingBox& box) const;
    [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
    RayHit trace_ray(const geometry::Ray& ray) const;
+
+   [[nodiscard]] std::vector<SceneObject>::const_iterator begin() const
+   {
+      return m_objects.cbegin();
+   }
+
+   [[nodiscard]] std::vector<SceneObject>::const_iterator end() const
+   {
+      return m_objects.cend();
+   }
 
  private:
    resource::ResourceManager& m_resource_manager;

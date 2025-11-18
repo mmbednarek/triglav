@@ -10,7 +10,7 @@ LRESULT CALLBACK process_messages(const HWND window_handle, const UINT msg, cons
 {
    if (msg == WM_CREATE) {
       const auto* create_struct = reinterpret_cast<CREATESTRUCT*>(l_param);
-      SetWindowLongPtrW(window_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(create_struct->lp_create_params));
+      SetWindowLongPtrW(window_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(create_struct->lpCreateParams));
       return 0;
    }
 
@@ -27,18 +27,18 @@ Display::Display(const HINSTANCE instance) :
     m_instance(instance)
 {
    WNDCLASSEXW wc;
-   wc.cb_size = sizeof(WNDCLASSEXW);
+   wc.cbSize = sizeof(WNDCLASSEXW);
    wc.style = 0;
-   wc.lpfn_wnd_proc = process_messages;
-   wc.cb_cls_extra = 0;
-   wc.cb_wnd_extra = 0;
-   wc.h_instance = m_instance;
-   wc.h_icon = LoadIcon(nullptr, IDI_APPLICATION);
-   wc.h_cursor = LoadCursor(nullptr, IDC_ARROW);
-   wc.hbr_background = reinterpret_cast<HBRUSH>((COLOR_WINDOW + 1));
-   wc.lpsz_menu_name = nullptr;
-   wc.lpsz_class_name = g_window_class_name;
-   wc.h_icon_sm = LoadIcon(nullptr, IDI_APPLICATION);
+   wc.lpfnWndProc = process_messages;
+   wc.cbClsExtra = 0;
+   wc.cbWndExtra = 0;
+   wc.hInstance = m_instance;
+   wc.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
+   wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+   wc.hbrBackground = reinterpret_cast<HBRUSH>((COLOR_WINDOW + 1));
+   wc.lpszMenuName = nullptr;
+   wc.lpszClassName = g_window_class_name;
+   wc.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
 
    if (not RegisterClassExW(&wc)) {
       MessageBoxW(nullptr, L"Cannot register window class", L"Error", MB_ICONEXCLAMATION | MB_OK);

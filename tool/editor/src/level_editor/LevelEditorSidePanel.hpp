@@ -6,6 +6,7 @@
 #include "triglav/event/Delegate.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
+#include "triglav/desktop_ui/TreeController.hpp"
 
 namespace triglav::desktop_ui {
 
@@ -58,8 +59,12 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
    void on_changed_selected_object(const renderer::SceneObject& object);
    void apply_transform() const;
 
+   void on_object_added_to_scene(renderer::ObjectID object_id, const renderer::SceneObject& object);
+
  private:
    State m_state;
+   desktop_ui::TreeController m_tree_controller;
+
    TransposeInput* m_translate_x;
    TransposeInput* m_translate_y;
    TransposeInput* m_translate_z;
@@ -77,6 +82,8 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
    Vector3 m_pending_translate;
    Vector3 m_pending_rotation;
    Vector3 m_pending_scale;
+
+   TG_SINK(renderer::Scene, OnObjectAddedToScene);
 };
 
 }// namespace triglav::editor

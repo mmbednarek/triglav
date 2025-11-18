@@ -28,10 +28,24 @@ Key translate_key(const WPARAM key_code)
       return Key::Q;
    case 'E':
       return Key::E;
+   case 'Z':
+      return Key::Z;
+   case 'Y':
+      return Key::Y;
    case VK_BACK:
       return Key::Backspace;
    case VK_SPACE:
       return Key::Space;
+   case VK_CONTROL:
+      return Key::Control;
+   case VK_SHIFT:
+      return Key::Shift;
+   case VK_MENU:
+      return Key::Alt;
+   case VK_RETURN:
+      return Key::Enter;
+   case VK_TAB:
+      return Key::Tab;
    case VK_UP:
       return Key::UpArrow;
    case VK_DOWN:

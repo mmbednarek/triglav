@@ -51,13 +51,13 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
    });
 
    auto& layout = background.create_content<ui_core::VerticalLayout>({
-      .padding{2.0f, 2.0f, 2.0f, 2.0f},
+      .padding{4, 4, 4, 4},
       .separation = 4.0f,
    });
 
    auto& scroll_rect = layout.create_child<ui_core::RectBox>({
       .color = TG_THEME_VAL(background_color_darker),
-      .border_radius = {2.0f, 2.0f, 2.0f, 2.0f},
+      .border_radius = {4, 4, 4, 4},
       .border_color = palette::NO_COLOR,
       .border_width = 0.0f,
    });
