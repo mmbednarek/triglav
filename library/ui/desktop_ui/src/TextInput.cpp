@@ -247,7 +247,7 @@ void TextInput::on_deactivated(const ui_core::Event& /*event*/)
 void TextInput::on_select_all(const ui_core::Event& /*event*/)
 {
    m_caret_position = 0;
-   m_selected_count = m_state.text.size();
+   m_selected_count = static_cast<u32>(m_state.text.size());
    this->update_selection_box();
 }
 

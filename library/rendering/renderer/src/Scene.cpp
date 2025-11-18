@@ -11,6 +11,8 @@ using triglav::ResourceType;
 
 namespace triglav::renderer {
 
+using namespace name_literals;
+
 Matrix4x4 SceneObject::model_matrix() const
 {
    return this->transform.to_matrix();
@@ -57,9 +59,26 @@ void Scene::load_level(const LevelName name)
    for (const auto& mesh : root.static_meshes()) {
       this->add_object(SceneObject{
          .model = mesh.mesh_name,
+         .name = mesh.name.c_str(),
          .transform = mesh.transform,
       });
    }
+}
+
+world::Level Scene::to_level() const
+{
+   world::LevelNode root_node("root");
+   for (const auto& object : m_objects) {
+      root_node.add_static_mesh(world::StaticMesh{
+         .mesh_name = object.model,
+         .name = object.name.to_std(),
+         .transform = object.transform,
+      });
+   }
+
+   world::Level result;
+   result.add_node("root"_name, std::move(root_node));
+   return result;
 }
 
 void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)

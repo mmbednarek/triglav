@@ -86,6 +86,10 @@ void RootWidget::on_clicked_menu_bar(const Name item_name, const desktop_ui::Men
    case "file.close"_name:
       m_state.editor->close();
       break;
+   case "file.save"_name: {
+      m_level_editor->save_level();
+      break;
+   }
    case "edit.undo"_name: {
       ui_core::Event event{};
       event.event_type = ui_core::Event::Type::Undo;

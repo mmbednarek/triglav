@@ -19,6 +19,8 @@
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/SizeLimit.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
+#include "triglav/world/Level.hpp"
+#include "triglav/resource/PathManager.hpp"
 
 namespace triglav::editor {
 
@@ -399,6 +401,13 @@ void LevelEditor::on_undo(const ui_core::Event& /*event*/)
 void LevelEditor::on_redo(const ui_core::Event& /*event*/)
 {
    m_history_manager.redo();
+}
+
+void LevelEditor::save_level() const
+{
+   const auto level = m_scene.to_level();
+   auto level_path = resource::PathManager::the().content_path().sub("level").sub("demo.yaml");
+   assert(level.save_to_file(level_path));
 }
 
 }// namespace triglav::editor

@@ -74,10 +74,10 @@ struct Event
    bool is_forwarded_to_active = false;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 
-   Event sub_event(const Type event_type) const
+   Event sub_event(const Type sub_type) const
    {
       Event result = *this;
-      result.event_type = event_type;
+      result.event_type = sub_type;
       result.data = std::monostate{};
       return result;
    }
