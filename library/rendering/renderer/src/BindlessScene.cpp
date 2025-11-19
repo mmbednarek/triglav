@@ -217,7 +217,7 @@ const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::C
    assert(!model.range.empty());
    for (const auto& material : model.range) {
       BindlessMeshInfo mesh_info;
-      mesh_info.index_count = material.size;
+      mesh_info.index_count = static_cast<u32>(material.size);
       mesh_info.index_offset = static_cast<u32>(m_written_index_count + material.offset);
       mesh_info.vertex_offset = static_cast<u32>(m_written_vertex_count);
       mesh_info.bounding_box_max = model.bounding_box.max;
