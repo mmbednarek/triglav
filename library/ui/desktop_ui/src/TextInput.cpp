@@ -59,6 +59,8 @@ Vector2 TextInput::desired_size(const Vector2 parent_size) const
 
 void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
+   m_context.add_activating_widget(this);
+
    if (!do_regions_intersect(dimensions, cropping_mask)) {
       m_background_rect.remove(m_context);
       m_caret_box.remove(m_context);
@@ -84,6 +86,8 @@ void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
 
 void TextInput::remove_from_viewport()
 {
+   m_context.remove_activating_widget(this);
+
    m_background_rect.remove(m_context);
    m_selection_rect.remove(m_context);
    m_caret_box.remove(m_context);
@@ -115,14 +119,15 @@ void TextInput::on_mouse_moved(const ui_core::Event& event)
       return;
 
    if (event.global_mouse_position.x < m_dimensions.x && m_text_offset < 0.0f) {
-      m_text_offset += 0.2f;
-      this->update_text_position();
-      this->update_selection_box();
-   } else if (event.global_mouse_position.x > m_dimensions.x + m_dimensions.w) {
-      m_text_offset -= 0.2f;
+      m_text_offset = std::min(m_text_offset + 1.0f, 0.0f);
       this->update_text_position();
       this->update_selection_box();
    }
+   // if (event.global_mouse_position.x > m_dimensions.x + m_dimensions.w && m_text_offset > -m_dimensions.w) {
+   //    m_text_offset -= 0.2f;
+   //    this->update_text_position();
+   //    this->update_selection_box();
+   // }
 
    const auto index = this->rune_index_from_offset(event.mouse_position.x);
    if (index == m_caret_position) {
@@ -239,6 +244,8 @@ void TextInput::on_deactivated(const ui_core::Event& /*event*/)
    m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
    m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
    m_background_rect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
+   m_selection_rect.remove(m_context);
+   m_selected_count = 0;
    m_is_active = false;
    this->disable_caret();
    event_OnTextChanged.publish(m_state.text.view());

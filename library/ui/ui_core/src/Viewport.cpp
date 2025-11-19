@@ -17,7 +17,7 @@ TextId Viewport::add_text(Text&& text)
    auto [it, added] = m_texts.emplace(text_id, std::move(text));
    assert(added);
 
-   log_debug("Add text: {}", text_id);
+   // log_debug("Add text: {}", text_id);
 
    this->event_OnAddedText.publish(text_id, it->second);
    m_needs_redraw = true;
@@ -69,7 +69,7 @@ void Viewport::set_text_color(const TextId text_id, const Color color)
 
 void Viewport::remove_text(const TextId text_id)
 {
-   log_debug("Removing text: {}", text_id);
+   // log_debug("Removing text: {}", text_id);
    this->event_OnRemovedText.publish(text_id);
    m_texts.erase(text_id);
    m_needs_redraw = true;
@@ -81,7 +81,7 @@ RectId Viewport::add_rectangle(Rectangle&& rect)
    auto [it, added] = m_rectangles.emplace(rect_id, rect);
    assert(added);
 
-   log_debug("Add rectangle: {}", rect_id);
+   // log_debug("Add rectangle: {}", rect_id);
 
    this->event_OnAddedRectangle.publish(rect_id, it->second);
    m_needs_redraw = true;
@@ -95,7 +95,7 @@ void Viewport::set_rectangle_dims(const RectId rect_id, const Rect dims, const R
    if (rect.rect == dims && rect.crop == crop)
       return;
 
-   log_debug("rect: {} = (dims: {}, crop: {})", rect_id, dims, crop);
+   // log_debug("rect: {} = (dims: {}, crop: {})", rect_id, dims, crop);
 
    rect.rect = dims;
    rect.crop = crop;
@@ -119,7 +119,7 @@ void Viewport::set_rectangle_color(RectId rect_id, const Vector4 color)
 void Viewport::remove_rectangle(RectId rect_id)
 {
    assert(rect_id != 0);
-   log_debug("Removing rect: {}", rect_id);
+   // log_debug("Removing rect: {}", rect_id);
 
    event_OnRemovedRectangle.publish(rect_id);
    m_rectangles.erase(rect_id);

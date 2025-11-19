@@ -225,7 +225,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 
    m_viewport = &left_layout.emplace_child<LevelViewport>(&left_layout, *m_state.root_window, *this);
 
-   m_scene.load_level("demo.level"_rc);
+   m_scene.load_level("level/sponza.level"_rc);
    m_bindless_scene.write_objects_to_buffer();
    m_scene.update_shadow_maps();
 

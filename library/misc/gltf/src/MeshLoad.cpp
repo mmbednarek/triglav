@@ -76,6 +76,7 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
 
    std::unordered_map<Vector3, geometry::Index> unique_position_map;
 
+   [[maybe_unused]] u32 prim_id = 0;
    for (const auto& prim : src_mesh.primitives) {
       if (!prim.indices.has_value())
          continue;
@@ -90,7 +91,8 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
          if (unique_position_map.contains(position))
             continue;
          auto index = dst_mesh.add_vertex(position);
-         unique_position_map.emplace(position, index);
+         unique_position_map.insert(std::make_pair(position, index));
+         assert(!unique_position_map.empty());
       }
 
       auto normals = extract_vector<Vector3>(PrimitiveAttributeType::Normal, doc, prim, buffer_manager);
@@ -103,10 +105,13 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
          const auto c = *indices_it++;
          const auto face_id =
             dst_mesh.add_face(unique_position_map[positions[c]], unique_position_map[positions[b]], unique_position_map[positions[a]]);
+         if (face_id == ~0u)
+            continue;
          dst_mesh.set_face_normals(face_id, normals[c], normals[b], normals[a]);
          dst_mesh.set_face_uvs(face_id, uvs[c], uvs[b], uvs[a]);
          dst_mesh.set_face_group(face_id, group_id);
       }
+      ++prim_id;
    }
 
    // dst_mesh.reverse_orientation();

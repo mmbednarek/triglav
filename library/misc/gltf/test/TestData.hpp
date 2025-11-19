@@ -63,9 +63,9 @@ constexpr auto g_gltf_example = R"(
     ],
     "accessors": [
         {
-            "buffer_view": 0,
-            "byte_offset": 0,
-            "component_type": 5123,
+            "bufferView": 0,
+            "byteOffset": 0,
+            "componentType": 5123,
             "count": 36,
             "max": [
                 23
@@ -76,9 +76,9 @@ constexpr auto g_gltf_example = R"(
             "type": "SCALAR"
         },
         {
-            "buffer_view": 1,
-            "byte_offset": 0,
-            "component_type": 5126,
+            "bufferView": 1,
+            "byteOffset": 0,
+            "componentType": 5126,
             "count": 24,
             "max": [
                 1.0,
@@ -93,9 +93,9 @@ constexpr auto g_gltf_example = R"(
             "type": "VEC3"
         },
         {
-            "buffer_view": 1,
-            "byte_offset": 288,
-            "component_type": 5126,
+            "bufferView": 1,
+            "byteOffset": 288,
+            "componentType": 5126,
             "count": 24,
             "max": [
                 0.5,
@@ -110,9 +110,9 @@ constexpr auto g_gltf_example = R"(
             "type": "VEC3"
         },
         {
-            "buffer_view": 2,
-            "byte_offset": 0,
-            "component_type": 5126,
+            "bufferView": 2,
+            "byteOffset": 0,
+            "componentType": 5126,
             "count": 24,
             "max": [
                 6.0,
@@ -127,11 +127,11 @@ constexpr auto g_gltf_example = R"(
     ],
     "materials": [
         {
-            "pbr_metallic_roughness": {
-                "base_color_texture": {
+            "pbrMetallicRoughness": {
+                "baseColorTexture": {
                     "index": 0
                 },
-                "metallic_factor": 0.0
+                "metallicFactor": 0.0
             },
             "name": "Texture"
         }
@@ -149,37 +149,37 @@ constexpr auto g_gltf_example = R"(
     ],
     "samplers": [
         {
-            "mag_filter": 9729,
-            "min_filter": 9986,
-            "wrap_s": 10497,
-            "wrap_t": 10497
+            "magFilter": 9729,
+            "minFilter": 9986,
+            "wrapS": 10497,
+            "wrapT": 10497
         }
     ],
-    "buffer_views": [
+    "bufferViews": [
         {
             "buffer": 0,
-            "byte_offset": 768,
-            "byte_length": 72,
+            "byteOffset": 768,
+            "byteLength": 72,
             "target": 34963
         },
         {
             "buffer": 0,
-            "byte_offset": 0,
-            "byte_length": 576,
-            "byte_stride": 12,
+            "byteOffset": 0,
+            "byteLength": 576,
+            "byteStride": 12,
             "target": 34962
         },
         {
             "buffer": 0,
-            "byte_offset": 576,
-            "byte_length": 192,
-            "byte_stride": 8,
+            "byteOffset": 576,
+            "byteLength": 192,
+            "byteStride": 8,
             "target": 34962
         }
     ],
     "buffers": [
         {
-            "byte_length": 840,
+            "byteLength": 840,
             "uri": "BoxTextured0.bin"
         }
     ]

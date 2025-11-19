@@ -166,8 +166,8 @@ class LevelImporter
 
       const auto& src_material = m_glb_file.document->materials.at(material_id);
       if (!src_material.pbr_metallic_roughness.base_color_texture.has_value()) {
-         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned", material_id);
-         return std::nullopt;
+         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned, defaulting to stone.mat", material_id);
+         return {"stone.mat"_rc};
       }
 
       auto albedo_tex = this->import_texture(src_material.pbr_metallic_roughness.base_color_texture->index, asset::TexturePurpose::Albedo);

@@ -156,7 +156,10 @@ Mesh deserialize_mesh(const rapidjson::Value& value)
    for (const auto& child : value["primitives"].GetArray()) {
       mesh.primitives.push_back(deserialize_primitive(child));
    }
-   mesh.name = value["name"].GetString();
+
+   if (value.HasMember("name")) {
+      mesh.name = value["name"].GetString();
+   }
 
    return mesh;
 }
@@ -270,7 +273,11 @@ PBRMetallicRoughness deserialize_pbr_metallic_roughness(const rapidjson::Value& 
 Material deserialize_material(const rapidjson::Value& value)
 {
    Material material{};
-   material.name = value["name"].GetString();
+
+   if (value.HasMember("name")) {
+      material.name = value["name"].GetString();
+   }
+
    material.pbr_metallic_roughness = deserialize_pbr_metallic_roughness(value["pbrMetallicRoughness"]);
    if (value.HasMember("normalTexture")) {
       material.normal_texture.emplace(deserialize_normal_map_texture(value["normalTexture"]));

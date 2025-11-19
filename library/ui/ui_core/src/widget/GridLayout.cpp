@@ -119,7 +119,6 @@ void GridLayout::on_event(const Event& event)
 
       const auto leave_index = m_last_col + m_last_row * column_count;
       if (leave_index < m_children.size()) {
-         log_info("sending leave event to row: {}, col: {}", m_last_row, m_last_col);
          m_children[leave_index]->on_event(leave_event);
       }
 
@@ -134,7 +133,6 @@ void GridLayout::on_event(const Event& event)
 
       const auto enter_index = col + row * column_count;
       if (enter_index < m_children.size()) {
-         log_info("sending enter event to row: {}, col: {}", row, col);
          m_children[enter_index]->on_event(enter_event);
       }
    }
@@ -145,17 +143,6 @@ void GridLayout::on_event(const Event& event)
    const auto index = col + row * column_count;
    if (index < m_children.size()) {
       m_children[index]->on_event(sub_event);
-   }
-
-   if (event.event_type == Event::Type::KeyPressed && std::get<Event::Keyboard>(event.data).key == desktop::Key::Tab) {
-      if (!m_active_child.has_value()) {
-         m_active_child = m_last_col + m_state.column_ratios.size() * m_last_row;
-      }
-      m_active_child = (*m_active_child + 1) % m_children.size();
-
-      Event activate_event(event);
-      activate_event.event_type = Event::Type::Activated;
-      m_children[*m_active_child]->on_event(activate_event);
    }
 }
 
