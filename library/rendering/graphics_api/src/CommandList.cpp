@@ -161,6 +161,10 @@ void CommandList::copy_buffer(const Buffer& source, const Buffer& dest) const
 void CommandList::copy_buffer(const Buffer& source, const Buffer& dest, const u32 src_offset, const u32 dst_offset, const u32 size) const
 {
    assert(size > 0);
+   assert(src_offset < source.size());
+   assert(src_offset + size <= source.size());
+   assert(dst_offset < dest.size());
+   assert(dst_offset + size <= dest.size());
 
    VkBufferCopy region{};
    region.srcOffset = src_offset;
