@@ -4,6 +4,7 @@
 
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/Primitives.hpp"
+#include "triglav/ui_core/PrimitiveHelpers.hpp"
 
 #include <optional>
 #include <set>
@@ -50,12 +51,13 @@ class TreeView : public ui_core::BaseWidget
    State m_state;
    Vector4 m_dimensions{};
    Vector4 m_cropping_mask{};
-   std::map<TreeItemId, ui_core::TextId> m_labels;
-   std::map<TreeItemId, ui_core::SpriteId> m_icons;
-   std::map<TreeItemId, ui_core::SpriteId> m_arrows;
+   std::map<TreeItemId, ui_core::TextInstance> m_labels;
+   std::map<TreeItemId, ui_core::SpriteInstance> m_icons;
+   std::map<TreeItemId, ui_core::SpriteInstance> m_arrows;
    std::map<float, TreeItemId> m_offset_to_item_id;
-   ui_core::RectId m_item_highlight{};
+   ui_core::RectInstance m_item_highlight{};
    Vector4 m_highlight_dims{};
+   TreeItemId m_selected_item = TREE_ROOT;
 
    mutable std::optional<Measure> m_cached_measure{};
 };
