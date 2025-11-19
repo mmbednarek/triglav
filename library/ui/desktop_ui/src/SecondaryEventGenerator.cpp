@@ -57,6 +57,17 @@ void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const 
       return;
    }
 
+   if (m_modifier_state == Modifier::None) {
+      switch (keyboard.key) {
+      case desktop::Key::Tab: {
+         m_context.toggle_active_widget();
+         break;
+      }
+      default:
+         break;
+      }
+   }
+
    if (m_modifier_state == Modifier::Control) {
       switch (keyboard.key) {
       case desktop::Key::A: {
@@ -76,12 +87,6 @@ void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const 
       }
       default:
          break;
-      }
-   }
-
-   if (m_context.active_widget() != nullptr) {
-      if (!is_point_inside(m_context.active_area(), event.global_mouse_position)) {
-         m_context.set_active_widget(nullptr, {});
       }
    }
 }

@@ -89,7 +89,7 @@ class BindlessScene
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
 
  private:
-   BindlessMeshInfo& get_mesh_info(const graphics_api::CommandList& cmd_list, MeshName name);
+   const std::vector<BindlessMeshInfo>& get_mesh_infos(const graphics_api::CommandList& cmd_list, MeshName name);
    u32 get_material_id(const graphics_api::CommandList& cmd_list, const render_objects::Material& material);
    u32 get_texture_id(TextureName texture_name);
 
@@ -101,8 +101,8 @@ class BindlessScene
    // Caches and temporary buffers
    std::vector<std::pair<ObjectID, SceneObject>> m_pending_objects;
    std::vector<std::pair<ObjectID, Transform3D>> m_pending_transform;
-   std::map<ObjectID, MemorySize> m_object_mapping;
-   std::map<MeshName, BindlessMeshInfo> m_models;
+   std::multimap<ObjectID, MemorySize> m_object_mapping;
+   std::map<MeshName, std::vector<BindlessMeshInfo>> m_models;
    std::map<TextureName, u32> m_texture_ids;
    std::vector<const graphics_api::Texture*> m_scene_textures;
    std::vector<render_core::TextureRef> m_scene_texture_refs;

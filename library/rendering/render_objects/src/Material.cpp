@@ -2,22 +2,24 @@
 
 #include <ryml.hpp>
 #include <string>
+#include <string_view>
 
 namespace triglav::render_objects {
 
 namespace {
 
-std::string to_string(const MaterialTemplate mat_template)
+std::string_view to_string(const MaterialTemplate mat_template)
 {
+   using namespace std::string_view_literals;
    switch (mat_template) {
    case MaterialTemplate::Basic:
-      return "basic";
+      return "basic"sv;
    case MaterialTemplate::NormalMap:
-      return "normal_map";
+      return "normal_map"sv;
    case MaterialTemplate::FullPBR:
-      return "full_pbr";
+      return "full_pbr"sv;
    }
-   return "";
+   return ""sv;
 }
 
 MaterialTemplate material_template_from_string(const ryml::csubstr str)
@@ -60,11 +62,11 @@ void MTProperties_Basic::deserialize_yaml(const c4::yml::ConstNodeRef& node)
 void MTProperties_Basic::serialize_yaml(c4::yml::NodeRef& node) const
 {
    auto tex_str = std::to_string(this->albedo.name());
-   node["albedo"] = {tex_str.data(), tex_str.size()};
+   node["albedo"] << c4::substr(tex_str.data(), tex_str.size());
    auto metallic_str = std::to_string(this->metallic);
-   node["metallic"] = {metallic_str.data(), metallic_str.size()};
+   node["metallic"] << c4::substr(metallic_str.data(), metallic_str.size());
    auto roughness_str = std::to_string(this->roughness);
-   node["roughness"] = {roughness_str.data(), roughness_str.size()};
+   node["roughness"] << c4::substr(roughness_str.data(), roughness_str.size());
 }
 
 void MTProperties_NormalMap::deserialize_yaml(const c4::yml::ConstNodeRef& node)
@@ -78,13 +80,13 @@ void MTProperties_NormalMap::deserialize_yaml(const c4::yml::ConstNodeRef& node)
 void MTProperties_NormalMap::serialize_yaml(c4::yml::NodeRef& node) const
 {
    auto tex = std::to_string(this->albedo.name());
-   node["albedo"] = {tex.data(), tex.size()};
+   node["albedo"] << c4::substr(tex.data(), tex.size());
    auto normal_map = std::to_string(this->normal.name());
-   node["normal"] = {normal_map.data(), normal_map.size()};
+   node["normal"] << c4::substr(normal_map.data(), normal_map.size());
    auto metallic_str = std::to_string(this->metallic);
-   node["metallic"] = {metallic_str.data(), metallic_str.size()};
+   node["metallic"] << c4::substr(metallic_str.data(), metallic_str.size());
    auto roughness_str = std::to_string(this->roughness);
-   node["roughness"] = {roughness_str.data(), roughness_str.size()};
+   node["roughness"] << c4::substr(roughness_str.data(), roughness_str.size());
 }
 
 void MTProperties_FullPBR::deserialize_yaml(const c4::yml::ConstNodeRef& node)
@@ -98,13 +100,13 @@ void MTProperties_FullPBR::deserialize_yaml(const c4::yml::ConstNodeRef& node)
 void MTProperties_FullPBR::serialize_yaml(c4::yml::NodeRef& node) const
 {
    auto tex = std::to_string(this->texture.name());
-   node["albedo"] = {tex.data(), tex.size()};
+   node["albedo"] << c4::substr(tex.data(), tex.size());
    auto normal_map = std::to_string(this->normal.name());
-   node["normal"] = {normal_map.data(), normal_map.size()};
+   node["normal"] << c4::substr(normal_map.data(), normal_map.size());
    auto metallic_str = std::to_string(this->metallic.name());
-   node["metallic"] = {metallic_str.data(), metallic_str.size()};
+   node["metallic"] << c4::substr(metallic_str.data(), metallic_str.size());
    auto roughness_str = std::to_string(this->roughness.name());
-   node["roughness"] = {roughness_str.data(), roughness_str.size()};
+   node["roughness"] << c4::substr(roughness_str.data(), roughness_str.size());
 }
 
 void Material::deserialize_yaml(const c4::yml::ConstNodeRef& node)

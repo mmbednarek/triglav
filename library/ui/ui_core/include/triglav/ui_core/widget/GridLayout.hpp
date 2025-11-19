@@ -36,7 +36,6 @@ class GridLayout final : public LayoutWidget
    Vector4 m_dimensions;
    u32 m_last_row = 0;
    u32 m_last_col = 0;
-   std::optional<MemorySize> m_active_child{};
 };
 
 }// namespace triglav::ui_core

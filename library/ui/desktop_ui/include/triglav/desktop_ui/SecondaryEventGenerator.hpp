@@ -7,6 +7,7 @@ namespace triglav::desktop_ui {
 
 enum class Modifier
 {
+   None = 0,
    Control = 0b001,
    Shift = 0b010,
    Alt = 0b100,
