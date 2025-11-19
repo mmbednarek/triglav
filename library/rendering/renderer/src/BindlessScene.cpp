@@ -10,8 +10,8 @@ using namespace name_literals;
 
 constexpr auto STAGING_BUFFER_ELEM_COUNT = 128;
 constexpr auto SCENE_ELEM_COUNT = 256;
-constexpr auto VERTEX_BUFFER_SIZE = 256000;
-constexpr auto INDEX_BUFFER_SIZE = 256000;
+constexpr auto VERTEX_BUFFER_SIZE = 1 << 20;
+constexpr auto INDEX_BUFFER_SIZE = 1 << 20;
 
 namespace {
 
