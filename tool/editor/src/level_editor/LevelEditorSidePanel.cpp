@@ -251,7 +251,7 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
 void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object)
 {
    m_pending_translate = object.transform.translation;
-   m_pending_rotation = glm::eulerAngles(object.transform.rotation);
+   m_pending_rotation = glm::degrees(glm::eulerAngles(object.transform.rotation));
    m_pending_scale = object.transform.scale;
 
    const auto x = format("{}", object.transform.translation.x);
@@ -262,9 +262,9 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    m_translate_y->set_content(y.view());
    m_translate_z->set_content(z.view());
 
-   const auto yaw = format("{}", glm::degrees(m_pending_rotation.x));
-   const auto pitch = format("{}", glm::degrees(m_pending_rotation.y));
-   const auto roll = format("{}", glm::degrees(m_pending_rotation.z));
+   const auto yaw = format("{}", m_pending_rotation.x);
+   const auto pitch = format("{}", m_pending_rotation.y);
+   const auto roll = format("{}", m_pending_rotation.z);
 
    m_rotate_x->set_content(yaw.view());
    m_rotate_y->set_content(pitch.view());

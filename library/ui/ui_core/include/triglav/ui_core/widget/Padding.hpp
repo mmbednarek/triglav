@@ -25,4 +25,4 @@ class Padding final : public ContainerWidget
    Vector4 m_dimensions{};
 };
 
-}
+}// namespace triglav::ui_core

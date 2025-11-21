@@ -186,10 +186,10 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
             }
 
             m_arrows.emplace(child, ui_core::SpriteInstance{
-               .texture = "texture/ui_atlas.tex"_rc,
-               .size = arrow_size,
-               .texture_region = region,
-            });
+                                       .texture = "texture/ui_atlas.tex"_rc,
+                                       .size = arrow_size,
+                                       .texture_region = region,
+                                    });
             return m_arrows.at(child);
          }();
 
@@ -199,16 +199,16 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
 
       const Vector2 icon_size{measure.item_size.y + g_item_padding, measure.item_size.y + g_item_padding};
       auto& icon_sprite = [&]() -> ui_core::SpriteInstance& {
-		  if (auto icon_it = m_icons.find(child); icon_it != m_icons.end()) {
+         if (auto icon_it = m_icons.find(child); icon_it != m_icons.end()) {
             return icon_it->second;
-		  }
+         }
 
-          m_icons.emplace(child, ui_core::SpriteInstance{
-            .texture = item.icon_name,
-            .size = icon_size,
-            .texture_region = item.icon_region,
-		  });
-          return m_icons.at(child);
+         m_icons.emplace(child, ui_core::SpriteInstance{
+                                   .texture = item.icon_name,
+                                   .size = icon_size,
+                                   .texture_region = item.icon_region,
+                                });
+         return m_icons.at(child);
       }();
 
       const Vector2 icon_pos{offset_x + arrow_size.x + g_item_padding, offset_y + g_item_padding / 2};
@@ -217,18 +217,18 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
       const Vector2 label_dims{offset_x + arrow_size.x + icon_size.x + 2 * g_item_padding, offset_y + g_item_padding + measure.item_size.y};
 
       auto& label = [&]() -> ui_core::TextInstance& {
-		  if (auto label_it = m_labels.find(child); label_it != m_labels.end()) {
+         if (auto label_it = m_labels.find(child); label_it != m_labels.end()) {
             return label_it->second;
-		  }
+         }
 
-          m_labels.emplace(child, ui_core::TextInstance{
-            .content = item.label,
-            .typeface_name = TG_THEME_VAL(base_typeface),
-            .font_size = TG_THEME_VAL(base_font_size),
-            .color = TG_THEME_VAL(foreground_color),
-		  });
+         m_labels.emplace(child, ui_core::TextInstance{
+                                    .content = item.label,
+                                    .typeface_name = TG_THEME_VAL(base_typeface),
+                                    .font_size = TG_THEME_VAL(base_font_size),
+                                    .color = TG_THEME_VAL(foreground_color),
+                                 });
          return m_labels.at(child);
-	  }();
+      }();
 
       label.add(m_context, label_dims, m_cropping_mask);
 

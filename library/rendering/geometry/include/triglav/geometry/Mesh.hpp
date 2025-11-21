@@ -34,12 +34,19 @@ class Mesh
    template<typename... TVertices>
    Index add_face(TVertices... vertices);
    Index add_group(MeshGroup mesh_group);
+
    void set_face_uvs_range(Index face, std::span<glm::vec2> vertices);
    template<typename... TUVs>
    void set_face_uvs(Index face, TUVs... vertices);
+
    void set_face_normals_range(Index face, std::span<glm::vec3> vertices);
    template<typename... TNormals>
    void set_face_normals(Index face, TNormals... vertices);
+
+   void set_face_tangents_range(Index face, std::span<Vector4> tangents);
+   template<typename... TTangents>
+   void set_face_tangents(Index face, TTangents... vertices);
+
    void set_face_group(Index face, Index group);
    void set_material(Index mesh_group, MaterialName material);
 
@@ -80,6 +87,14 @@ void Mesh::set_face_normals(Index face, TNormals... vertices)
    static_assert(sizeof...(vertices) >= 3);
    std::array<glm::vec3, sizeof...(vertices)> in_vertices{vertices...};
    this->set_face_normals_range(face, in_vertices);
+}
+
+template<typename... TTangents>
+void Mesh::set_face_tangents(Index face, TTangents... vertices)
+{
+   static_assert(sizeof...(vertices) >= 3);
+   std::array<Vector4, sizeof...(vertices)> in_vertices{vertices...};
+   this->set_face_tangents_range(face, in_vertices);
 }
 
 }// namespace triglav::geometry

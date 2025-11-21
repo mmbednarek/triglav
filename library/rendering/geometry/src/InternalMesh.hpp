@@ -70,6 +70,7 @@ class InternalMesh
 
    void set_face_uvs(Index face, std::span<glm::vec2> uvs);
    void set_face_normals(Index face, std::span<glm::vec3> normals);
+   void set_face_tangents(Index face, std::span<Vector4> tangents);
    void set_face_group(Index face, Index group);
    void set_material(Index mesh_group, MaterialName material);
 

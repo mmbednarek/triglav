@@ -1,7 +1,7 @@
 #pragma once
 
-#include "triglav/Math.hpp"
 #include "triglav/Logging.hpp"
+#include "triglav/Math.hpp"
 
 #include <vector>
 

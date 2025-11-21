@@ -26,8 +26,8 @@ std::optional<geometry::Mesh> load_mesh(const io::Path& src_asset)
 
 bool write_mesh_to_file(const geometry::Mesh& mesh, const io::Path& dst_path)
 {
-   mesh.triangulate();
-   mesh.recalculate_tangents();
+   // mesh.triangulate();
+   // mesh.recalculate_tangents();
 
    const auto out_file = io::open_file(dst_path, io::FileOpenMode::Create);
    if (!out_file.has_value()) {

@@ -11,6 +11,7 @@
 #include "triglav/renderer/stage/GBufferStage.hpp"
 #include "triglav/renderer/stage/ShadingStage.hpp"
 #include "triglav/renderer/stage/ShadowMapStage.hpp"
+#include "triglav/resource/PathManager.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
@@ -20,7 +21,6 @@
 #include "triglav/ui_core/widget/SizeLimit.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 #include "triglav/world/Level.hpp"
-#include "triglav/resource/PathManager.hpp"
 
 namespace triglav::editor {
 

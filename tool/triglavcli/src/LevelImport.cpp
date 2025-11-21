@@ -101,10 +101,12 @@ class LevelImporter
    {
    }
 
-   std::optional<TextureName> import_texture(const u32 texture_id, const asset::TexturePurpose purpose)
+   std::optional<TextureName> import_texture(const u32 texture_id, const asset::TexturePurpose purpose,
+                                             const std::optional<TextureChannel> extract_channel = {})
    {
-      if (m_imported_textures.contains(texture_id)) {
-         return m_imported_textures.at(texture_id);
+      const auto tex_iden = std::make_pair(texture_id, extract_channel);
+      if (m_imported_textures.contains(tex_iden)) {
+         return m_imported_textures.at(tex_iden);
       }
 
       const auto& src_texture = m_glb_file.document->textures.at(texture_id);
@@ -116,6 +118,22 @@ class LevelImporter
          src_texture.name.empty() ? std::format("{}.tex{}", strip_extension(m_props.src_path.basename()), texture_id) : src_texture.name;
       for (char& ch : texture_name_str) {
          ch = static_cast<char>(std::tolower(ch));
+      }
+      if (extract_channel.has_value()) {
+         switch (*extract_channel) {
+         case TextureChannel::Red:
+            texture_name_str.append(".red");
+            break;
+         case TextureChannel::Green:
+            texture_name_str.append(".green");
+            break;
+         case TextureChannel::Blue:
+            texture_name_str.append(".blue");
+            break;
+         case TextureChannel::Alpha:
+            texture_name_str.append(".alpha");
+            break;
+         }
       }
 
       auto import_path = m_project_info.default_import_path(ResourceType::Texture, texture_name_str);
@@ -132,6 +150,7 @@ class LevelImporter
          .should_compress = true,
          .has_mip_maps = true,
          .should_override = m_props.should_override,
+         .extract_channel = extract_channel,
       };
 
       if (src_image.uri.has_value()) {
@@ -153,7 +172,7 @@ class LevelImporter
          return std::nullopt;
       }
 
-      m_imported_textures.emplace(texture_id, rc_name);
+      m_imported_textures.emplace(tex_iden, rc_name);
 
       return rc_name;
    }
@@ -166,7 +185,8 @@ class LevelImporter
 
       const auto& src_material = m_glb_file.document->materials.at(material_id);
       if (!src_material.pbr_metallic_roughness.base_color_texture.has_value()) {
-         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned, defaulting to stone.mat", material_id);
+         std::println(stderr, "triglav-cli: Failed to import GLTF material, material: {} has no texture assigned, defaulting to stone.mat",
+                      material_id);
          return {"stone.mat"_rc};
       }
 
@@ -177,29 +197,51 @@ class LevelImporter
 
       render_objects::Material dst_material{};
       if (src_material.normal_texture.has_value()) {
-         dst_material.material_template = render_objects::MaterialTemplate::NormalMap;
-
          auto normal_tex = this->import_texture(src_material.normal_texture->index, asset::TexturePurpose::NormalMap);
          if (!normal_tex.has_value()) {
             return std::nullopt;
          }
 
-         render_objects::MTProperties_NormalMap properties{
-            .albedo = *albedo_tex,
-            .normal = *normal_tex,
-            .roughness = src_material.pbr_metallic_roughness.roughness_factor,
-            .metallic = src_material.pbr_metallic_roughness.metallic_factor,
-         };
-         dst_material.properties = properties;
-      } else {
-         dst_material.material_template = render_objects::MaterialTemplate::Basic;
+         if (src_material.pbr_metallic_roughness.metallic_roughness_texture.has_value()) {
+            auto metallic_tex = this->import_texture(src_material.pbr_metallic_roughness.metallic_roughness_texture->index,
+                                                     asset::TexturePurpose::Metallic, TextureChannel::Blue);
+            if (!metallic_tex.has_value()) {
+               return std::nullopt;
+            }
 
+            auto roughness_tex = this->import_texture(src_material.pbr_metallic_roughness.metallic_roughness_texture->index,
+                                                      asset::TexturePurpose::Roughness, TextureChannel::Green);
+            if (!roughness_tex.has_value()) {
+               return std::nullopt;
+            }
+
+            render_objects::MTProperties_FullPBR properties{
+               .texture = *albedo_tex,
+               .normal = *normal_tex,
+               .roughness = *roughness_tex,
+               .metallic = *metallic_tex,
+            };
+            dst_material.material_template = render_objects::MaterialTemplate::FullPBR;
+            dst_material.properties = properties;
+
+         } else {
+            render_objects::MTProperties_NormalMap properties{
+               .albedo = *albedo_tex,
+               .normal = *normal_tex,
+               .roughness = src_material.pbr_metallic_roughness.roughness_factor,
+               .metallic = src_material.pbr_metallic_roughness.metallic_factor,
+            };
+            dst_material.material_template = render_objects::MaterialTemplate::NormalMap;
+            dst_material.properties = properties;
+         }
+      } else {
          render_objects::MTProperties_Basic properties{
             .albedo = *albedo_tex,
             .roughness = src_material.pbr_metallic_roughness.roughness_factor,
             .metallic = src_material.pbr_metallic_roughness.metallic_factor,
          };
          dst_material.properties = properties;
+         dst_material.material_template = render_objects::MaterialTemplate::Basic;
       }
 
       auto material_name_str =
@@ -347,7 +389,7 @@ class LevelImporter
    io::Path m_glb_source_path;
    std::map<u32, MeshName> m_imported_meshes;
    std::map<u32, MaterialName> m_imported_materials;
-   std::map<u32, TextureName> m_imported_textures;
+   std::map<std::pair<u32, std::optional<TextureChannel>>, TextureName> m_imported_textures;
 };
 
 bool import_level(const LevelImportProps& props)

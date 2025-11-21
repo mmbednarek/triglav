@@ -96,7 +96,6 @@ std::map<Name, std::string_view> KnownNames{
    {"metrics.gpu_time"_name, "metrics.gpu_time"sv},
    {"metrics.triangles"_name, "metrics.triangles"sv},
    {"more"_name, "more"sv},
-   {"noise"_name, "noise"sv},
    {"noRayTracing"_name, "noRayTracing"sv},
    {"normal"_name, "normal"sv},
    {"occlusion_culling.count_buffer"_name, "occlusion_culling.count_buffer"sv},

@@ -272,6 +272,12 @@ std::optional<Texture> Texture::create(const TextureCreateInfo& info)
    case Format::R8G8B8A8_UNORM:
       ktxInfo.vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
       break;
+   case Format::R8_SRGB:
+      ktxInfo.vkFormat = VK_FORMAT_R8_SRGB;
+      break;
+   case Format::R8_UNORM:
+      ktxInfo.vkFormat = VK_FORMAT_R8_UNORM;
+      break;
    }
    ktxInfo.baseWidth = info.dimensions.x;
    ktxInfo.baseHeight = info.dimensions.y;
