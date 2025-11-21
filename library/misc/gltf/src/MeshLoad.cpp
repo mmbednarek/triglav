@@ -98,6 +98,10 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
       auto normals = extract_vector<Vector3>(PrimitiveAttributeType::Normal, doc, prim, buffer_manager);
       auto uvs = extract_vector<Vector2>(PrimitiveAttributeType::TexCoord, doc, prim, buffer_manager);
       auto indices = accessor_to_array<u16>(*prim.indices, doc, buffer_manager);
+
+      std::vector<Vector4> tangents{};
+      tangents = extract_vector<Vector4>(PrimitiveAttributeType::Tangent, doc, prim, buffer_manager);
+
       auto indices_it = indices.begin();
       while (indices_it != indices.end()) {
          const auto a = *indices_it++;
@@ -110,11 +114,12 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
          dst_mesh.set_face_normals(face_id, normals[c], normals[b], normals[a]);
          dst_mesh.set_face_uvs(face_id, uvs[c], uvs[b], uvs[a]);
          dst_mesh.set_face_group(face_id, group_id);
+         if (!tangents.empty()) {
+            dst_mesh.set_face_tangents(face_id, tangents[c], tangents[b], tangents[a]);
+         }
       }
       ++prim_id;
    }
-
-   // dst_mesh.reverse_orientation();
 
    return dst_mesh;
 }

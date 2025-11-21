@@ -100,28 +100,24 @@ struct Accessor
    AccessorType type;
 };
 
-struct MaterialTexture
-{
-   u32 index;
-};
-
-struct NormalMapTexture
+struct TextureInfo
 {
    u32 index;
 };
 
 struct PBRMetallicRoughness
 {
-   std::optional<MaterialTexture> base_color_texture;
+   std::optional<TextureInfo> base_color_texture;
    std::optional<Vector4> base_color_factor;
    float metallic_factor{1};
    float roughness_factor{1};
+   std::optional<TextureInfo> metallic_roughness_texture;
 };
 
 struct Material
 {
    PBRMetallicRoughness pbr_metallic_roughness;
-   std::optional<NormalMapTexture> normal_texture;
+   std::optional<TextureInfo> normal_texture;
    std::string name;
 };
 

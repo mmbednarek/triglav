@@ -576,24 +576,40 @@ DeviceFeatureFlags Device::enabled_features() const
 
 Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
 {
-   if (texture.format() != GAPI_FORMAT(RGBA, sRGB) && texture.format() != GAPI_FORMAT(RGBA, UNorm8)) {
+   static constexpr auto to_ktx_format = [](ColorFormat format) -> std::optional<ktx::Format> {
+      if (format == GAPI_FORMAT(RGBA, sRGB)) {
+         return ktx::Format::R8G8B8A8_SRGB;
+      }
+      if (format == GAPI_FORMAT(RGBA, UNorm8)) {
+         return ktx::Format::R8G8B8A8_UNORM;
+      }
+      if (format == GAPI_FORMAT(R, sRGB)) {
+         return ktx::Format::R8_SRGB;
+      }
+      if (format == GAPI_FORMAT(R, UNorm8)) {
+         return ktx::Format::R8_UNORM;
+      }
+      return std::nullopt;
+   };
+
+   auto ktx_format = to_ktx_format(texture.format());
+   if (!ktx_format.has_value())
       return std::unexpected{Status::UnsupportedFormat};
-   }
 
    ktx::TextureCreateInfo create_info{};
    create_info.dimensions = {texture.resolution().width, texture.resolution().height};
-   create_info.format = texture.format() == GAPI_FORMAT(RGBA, sRGB) ? ktx::Format::R8G8B8A8_SRGB : ktx::Format::R8G8B8A8_UNORM;
+   create_info.format = *ktx_format;
    create_info.generate_mipmaps = false;
    create_info.create_mip_layers = texture.mip_count() > 1;
-   auto ktxTex = ktx::Texture::create(create_info);
-   if (!ktxTex.has_value()) {
+   auto ktx_texture = ktx::Texture::create(create_info);
+   if (!ktx_texture.has_value()) {
       return std::unexpected{Status::UnsupportedFormat};
    }
 
    u32 width = texture.resolution().width;
    u32 height = texture.resolution().height;
    for (u32 mip_level = 0; mip_level < texture.mip_count(); mip_level++) {
-      const auto buffer_size = width * height * sizeof(u32);
+      const auto buffer_size = width * height * texture.format().pixel_size();
       auto buffer = this->create_buffer(BufferUsage::TransferDst | BufferUsage::HostVisible, buffer_size);
       if (!buffer.has_value()) {
          return std::unexpected{Status::UnsupportedFormat};
@@ -630,7 +646,7 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
          return std::unexpected{Status::UnsupportedFormat};
       }
 
-      if (!ktxTex->set_image_from_buffer({static_cast<const u8*>(**mem), buffer_size}, mip_level, 0, 0)) {
+      if (!ktx_texture->set_image_from_buffer({static_cast<const u8*>(**mem), buffer_size}, mip_level, 0, 0)) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
@@ -645,7 +661,7 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
       }
    }
 
-   return std::move(*ktxTex);
+   return std::move(*ktx_texture);
 }
 
 const DeviceLimits& Device::limits() const

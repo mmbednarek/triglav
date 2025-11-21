@@ -7,6 +7,14 @@
 
 namespace triglav::tool::cli {
 
+enum class TextureChannel
+{
+   Red = 0,
+   Green = 1,
+   Blue = 2,
+   Alpha = 3,
+};
+
 struct TextureImportProps
 {
    io::Path src_path;
@@ -16,6 +24,7 @@ struct TextureImportProps
    bool should_compress{};
    bool has_mip_maps{};
    bool should_override{};
+   std::optional<TextureChannel> extract_channel{};
 };
 
 struct ImageData

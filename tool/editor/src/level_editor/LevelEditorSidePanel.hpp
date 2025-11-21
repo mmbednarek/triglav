@@ -3,10 +3,10 @@
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
+#include "triglav/desktop_ui/TreeController.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
-#include "triglav/desktop_ui/TreeController.hpp"
 
 namespace triglav::desktop_ui {
 

@@ -88,6 +88,13 @@ void Mesh::set_face_normals_range(const Index face, const std::span<glm::vec3> v
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
+void Mesh::set_face_tangents_range(const Index face, const std::span<Vector4> tangents)
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->set_face_tangents(face, tangents);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::set_face_group(const Index face, const Index group)
 {
    assert(m_mesh != nullptr);

@@ -18,6 +18,8 @@ enum class Format
 {
    R8G8B8A8_SRGB,
    R8G8B8A8_UNORM,
+   R8_SRGB,
+   R8_UNORM,
 };
 
 enum class TextureCompression

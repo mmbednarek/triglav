@@ -222,6 +222,17 @@ void InternalMesh::set_face_normals(const Index face, std::span<glm::vec3> norma
    }
 }
 
+void InternalMesh::set_face_tangents(const Index face, const std::span<Vector4> tangents)
+{
+   auto it = tangents.begin();
+   for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
+      if (it == tangents.end())
+         break;
+      m_tangents[halfedge] = *it;
+      ++it;
+   }
+}
+
 void InternalMesh::set_face_group(const Index face, const Index group)
 {
    m_group_ids[FaceIndex{face}] = group;

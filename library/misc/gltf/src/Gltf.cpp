@@ -238,16 +238,9 @@ Accessor deserialize_accessor(const rapidjson::Value& value)
    return accessor;
 }
 
-MaterialTexture deserialize_material_texture(const rapidjson::Value& value)
+TextureInfo deserialize_texture_info(const rapidjson::Value& value)
 {
-   MaterialTexture texture{};
-   texture.index = value["index"].GetInt();
-   return texture;
-}
-
-NormalMapTexture deserialize_normal_map_texture(const rapidjson::Value& value)
-{
-   NormalMapTexture texture{};
+   TextureInfo texture{};
    texture.index = value["index"].GetInt();
    return texture;
 }
@@ -256,7 +249,7 @@ PBRMetallicRoughness deserialize_pbr_metallic_roughness(const rapidjson::Value& 
 {
    PBRMetallicRoughness pbr_metallic_roughness{};
    if (value.HasMember("baseColorTexture")) {
-      pbr_metallic_roughness.base_color_texture.emplace(deserialize_material_texture(value["baseColorTexture"]));
+      pbr_metallic_roughness.base_color_texture.emplace(deserialize_texture_info(value["baseColorTexture"]));
    }
    if (value.HasMember("baseColorFactor")) {
       pbr_metallic_roughness.base_color_factor.emplace(deserialize_vector4(value["baseColorFactor"]));
@@ -266,6 +259,9 @@ PBRMetallicRoughness deserialize_pbr_metallic_roughness(const rapidjson::Value& 
    }
    if (value.HasMember("roughnessFactor")) {
       pbr_metallic_roughness.roughness_factor = value["roughnessFactor"].GetFloat();
+   }
+   if (value.HasMember("metallicRoughnessTexture")) {
+      pbr_metallic_roughness.metallic_roughness_texture = deserialize_texture_info(value["metallicRoughnessTexture"]);
    }
    return pbr_metallic_roughness;
 }
@@ -280,7 +276,7 @@ Material deserialize_material(const rapidjson::Value& value)
 
    material.pbr_metallic_roughness = deserialize_pbr_metallic_roughness(value["pbrMetallicRoughness"]);
    if (value.HasMember("normalTexture")) {
-      material.normal_texture.emplace(deserialize_normal_map_texture(value["normalTexture"]));
+      material.normal_texture.emplace(deserialize_texture_info(value["normalTexture"]));
    }
    return material;
 }
