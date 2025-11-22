@@ -12,25 +12,14 @@ SecondaryEventGenerator::SecondaryEventGenerator(ui_core::Context& ctx, ui_core:
 void SecondaryEventGenerator::on_event(const ui_core::Event& event)
 {
    ui_core::visit_event<void>(*this, event);
-
-   if (m_context.active_widget() != nullptr) {
-      if (event.event_type == ui_core::Event::Type::TextInput || event.event_type == ui_core::Event::Type::KeyPressed ||
-          event.event_type == ui_core::Event::Type::MouseMoved) {
-         ui_core::Event sub_event(event);
-         sub_event.mouse_position = event.global_mouse_position - rect_position(m_context.active_area());
-         sub_event.is_forwarded_to_active = true;
-         m_context.active_widget()->on_event(sub_event);
-      }
-   }
-
-   ProxyWidget::on_event(event);
+   this->forward_event(event);
 }
 
 void SecondaryEventGenerator::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/) const
 {
    if (m_context.active_widget() != nullptr) {
       if (!is_point_inside(m_context.active_area(), event.global_mouse_position)) {
-         m_context.set_active_widget(nullptr, {});
+         m_context.set_active_widget(nullptr, {}, {});
       }
    }
 }
@@ -72,17 +61,17 @@ void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const 
       switch (keyboard.key) {
       case desktop::Key::A: {
          const ui_core::Event select_all_event = event.sub_event(ui_core::Event::Type::SelectAll);
-         m_content->on_event(select_all_event);
+         this->forward_event(select_all_event);
          break;
       }
       case desktop::Key::Z: {
          const ui_core::Event undo_event = event.sub_event(ui_core::Event::Type::Undo);
-         m_content->on_event(undo_event);
+         this->forward_event(undo_event);
          break;
       }
       case desktop::Key::Y: {
-         const ui_core::Event undo_event = event.sub_event(ui_core::Event::Type::Redo);
-         m_content->on_event(undo_event);
+         const ui_core::Event redo_event = event.sub_event(ui_core::Event::Type::Redo);
+         this->forward_event(redo_event);
          break;
       }
       default:
@@ -95,6 +84,17 @@ void SecondaryEventGenerator::on_key_released(const ui_core::Event& /*event*/, c
 {
    if (const auto mod = key_to_modifier(keyboard.key); mod.has_value()) {
       m_modifier_state.remove_flag(*mod);
+   }
+}
+
+void SecondaryEventGenerator::forward_event(const ui_core::Event& event)
+{
+   if (m_context.active_widget() != nullptr && m_context.should_redirect_event(event.event_type)) {
+      ui_core::Event sub_event(event);
+      sub_event.mouse_position = event.global_mouse_position - rect_position(m_context.active_area());
+      m_context.active_widget()->on_event(sub_event);
+   } else {
+      ProxyWidget::on_event(event);
    }
 }
 

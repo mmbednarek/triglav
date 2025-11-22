@@ -1,8 +1,11 @@
 #pragma once
 
+#include "IWidget.hpp"
+
 #include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
 
+#include <set>
 #include <vector>
 
 namespace triglav::render_core {
@@ -28,9 +31,10 @@ class Context
    [[nodiscard]] render_core::GlyphCache& glyph_cache() const;
    [[nodiscard]] resource::ResourceManager& resource_manager() const;
 
-   void set_active_widget(IWidget* active_widget, Vector4 active_area);
+   void set_active_widget(IWidget* active_widget, Vector4 active_area, std::set<Event::Type> redirected_events);
    [[nodiscard]] IWidget* active_widget() const;
    [[nodiscard]] Vector4 active_area() const;
+   [[nodiscard]] bool should_redirect_event(Event::Type event_type) const;
    void add_activating_widget(IWidget* widget);
    void remove_activating_widget(IWidget* widget);
 
@@ -46,6 +50,7 @@ class Context
 
    std::vector<IWidget*> m_activating_widgets;
    MemorySize m_active_widget_id{};
+   std::set<Event::Type> m_redirected_events{};
 };
 
 }// namespace triglav::ui_core

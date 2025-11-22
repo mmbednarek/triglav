@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TreeController.hpp"
+#include "triglav/event/Delegate.hpp"
 
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
@@ -13,10 +14,13 @@ namespace triglav::desktop_ui {
 
 class DesktopUIManager;
 
-class TreeView : public ui_core::BaseWidget
+class TreeView final : public ui_core::BaseWidget
 {
  public:
    using Self = TreeView;
+
+   TG_EVENT(OnSelected, TreeItemId)
+
    struct State
    {
       DesktopUIManager* manager;
@@ -37,9 +41,9 @@ class TreeView : public ui_core::BaseWidget
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
+   void set_selected_item(TreeItemId item_id);
 
    void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
-
 
  private:
    [[nodiscard]] std::pair<float, TreeItemId> index_from_mouse_position(Vector2 position) const;

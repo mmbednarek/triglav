@@ -8,8 +8,11 @@
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
+#include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/GridLayout.hpp"
+#include "triglav/ui_core/widget/HorizontalLayout.hpp"
+#include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/Padding.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
@@ -64,25 +67,72 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .offset_type = desktop_ui::SplitterOffsetType::Preceeding,
    });
 
-   split
-      .create_preceding<ui_core::RectBox>({
-         .color = TG_THEME_VAL(background_color_brighter),
-         .border_radius = {0, 0, 0, 0},
-         .border_color = palette::NO_COLOR,
-         .border_width = 0.0f,
-      })
-      .create_content<ui_core::Padding>({4, 4, 4, 4})
-      .create_content<ui_core::RectBox>({
-         .color = TG_THEME_VAL(background_color_darker),
-         .border_radius = {4, 4, 4, 4},
-         .border_color = palette::NO_COLOR,
-         .border_width = 0.0f,
-      })
-      .create_content<desktop_ui::TreeView>({
+   auto& vert_layout = split
+                          .create_preceding<ui_core::RectBox>({
+                             .color = TG_THEME_VAL(background_color_brighter),
+                             .border_radius = {0, 0, 0, 0},
+                             .border_color = palette::NO_COLOR,
+                             .border_width = 0.0f,
+                          })
+                          .create_content<ui_core::Padding>({4, 4, 4, 4})
+                          .create_content<ui_core::VerticalLayout>({
+                             .padding = {0, 0, 0, 0},
+                             .separation = 0.0f,
+                          });
+
+   auto& buttons = vert_layout.create_child<ui_core::HorizontalLayout>({
+      .padding = {5.0f, 5.0f, 5.0f, 5.0f},
+      .separation = 10.0f,
+      .gravity = ui_core::HorizontalAlignment::Left,
+   });
+
+   buttons
+      .create_child<desktop_ui::Button>({
          .manager = m_state.manager,
-         .controller = &m_tree_controller,
-         .extended_items = {},
+      })
+      .create_content<ui_core::Image>({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .max_size = Vector2{20, 20},
+         .region = Vector4{5 * 64, 0, 64, 64},
       });
+
+   buttons
+      .create_child<desktop_ui::Button>({
+         .manager = m_state.manager,
+      })
+      .create_content<ui_core::Image>({
+         .texture = "texture/ui_atlas.tex"_rc,
+         .max_size = Vector2{20, 20},
+         .region = Vector4{5 * 64, 64, 64, 64},
+      });
+
+   auto& delete_button = buttons.create_child<desktop_ui::Button>({
+      .manager = m_state.manager,
+   });
+   delete_button.create_content<ui_core::Image>({
+      .texture = "texture/ui_atlas.tex"_rc,
+      .max_size = Vector2{20, 20},
+      .region = Vector4{5 * 64, 2 * 64, 64, 64},
+   });
+   TG_CONNECT_OPT(delete_button, OnClick, on_clicked_delete);
+
+   m_tree_view = &vert_layout
+                     .create_child<ui_core::RectBox>({
+                        .color = TG_THEME_VAL(background_color_darker),
+                        .border_radius = {4, 4, 4, 4},
+                        .border_color = palette::NO_COLOR,
+                        .border_width = 0.0f,
+                     })
+                     .create_content<ui_core::AlignmentBox>({
+                        .horizontal_alignment = std::nullopt,
+                        .vertical_alignment = ui_core::VerticalAlignment::Top,
+                     })
+                     .create_content<desktop_ui::TreeView>({
+                        .manager = m_state.manager,
+                        .controller = &m_tree_controller,
+                        .extended_items = {},
+                     });
+   TG_CONNECT_OPT(*m_tree_view, OnSelected, on_selected_object);
 
    auto& layout = split
                      .create_following<ui_core::RectBox>({
@@ -281,6 +331,8 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
    auto content = triglav::format("Mesh: {}", mesh_path);
    m_mesh_label->set_content(content.view());
+
+   m_tree_view->set_selected_item(m_object_id_to_item_id.at(m_state.editor->selected_object_id()));
 }
 
 void LevelEditorSidePanel::apply_transform() const
@@ -302,14 +354,29 @@ void LevelEditorSidePanel::apply_transform() const
    m_state.editor->viewport().update_view();
 }
 
-void LevelEditorSidePanel::on_object_added_to_scene(renderer::ObjectID /*object_id*/, const renderer::SceneObject& object)
+void LevelEditorSidePanel::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)
 {
-   m_tree_controller.add_item(0, {
-                                    .icon_name = "texture/ui_atlas.tex"_rc,
-                                    .icon_region = {64, 128, 64, 64},
-                                    .label = object.name,
-                                    .has_children = false,
-                                 });
+   const auto id = m_tree_controller.add_item(0, {
+                                                    .icon_name = "texture/ui_atlas.tex"_rc,
+                                                    .icon_region = {4 * 64, 3 * 64, 64, 64},
+                                                    .label = object.name,
+                                                    .has_children = false,
+                                                 });
+   m_item_id_to_object_id[id] = object_id;
+   m_object_id_to_item_id[object_id] = id;
+}
+
+void LevelEditorSidePanel::on_selected_object(const desktop_ui::TreeItemId item_id)
+{
+   const auto object_id = m_item_id_to_object_id[item_id];
+   m_state.editor->set_selected_object(object_id);
+   m_state.editor->viewport().update_view();
+}
+
+void LevelEditorSidePanel::on_clicked_delete()
+{
+   log_message(LogLevel::Info, StringView{"TESTING"}, "Clicked Delete");
+   // m_state.editor->scene().remove_object();
 }
 
 }// namespace triglav::editor

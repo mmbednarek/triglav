@@ -276,9 +276,16 @@ int triglav_main(InputArgs& args, IDisplay& display)
       radio_group.add_check_box(&check_box);
    }
 
-   layout.create_child<triglav::desktop_ui::Button>({
+   auto& btn = layout.create_child<triglav::desktop_ui::Button>({
       .manager = &desktop_ui_manager,
-      .label = "Example",
+   });
+   btn.create_content<triglav::ui_core::TextBox>({
+      .font_size = 10,
+      .typeface = desktop_ui_manager.properties().base_typeface,
+      .content = "Click Me!",
+      .color = triglav::palette::WHITE,
+      .horizontal_alignment = HorizontalAlignment::Center,
+      .vertical_alignment = VerticalAlignment::Center,
    });
 
    layout.create_child<triglav::ui_core::Image>({

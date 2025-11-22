@@ -2,6 +2,7 @@
 
 #include "DesktopUI.hpp"
 
+#include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/widget/Button.hpp"
 
 namespace triglav::ui_core {
@@ -10,17 +11,16 @@ class RectBox;
 }// namespace triglav::ui_core
 namespace triglav::desktop_ui {
 
-class Button final : public ui_core::IWidget
+class Button final : public ui_core::ContainerWidget
 {
  public:
    using Self = Button;
 
-   TG_EVENT(OnClick, desktop::MouseButton)
+   TG_EVENT(OnClick)
 
    struct State
    {
       DesktopUIManager* manager;
-      String label;
    };
 
    Button(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
@@ -32,9 +32,7 @@ class Button final : public ui_core::IWidget
 
  private:
    State m_state;
-   ui_core::Button m_button;
-   ui_core::RectBox* m_rect{};
-   ui_core::TextBox* m_label{};
+   ui_core::RectInstance m_background;
 };
 
 }// namespace triglav::desktop_ui

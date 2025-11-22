@@ -79,7 +79,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({}, {0, 0, resolution.width, resolution.height});
-   m_scene.load_level("level/wierd_tube.level"_rc);
+   m_scene.load_level("demo.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
