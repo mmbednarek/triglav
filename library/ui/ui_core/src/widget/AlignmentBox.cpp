@@ -18,6 +18,18 @@ Vector2 calculate_content_offset(const std::optional<HorizontalAlignment> horizo
    return result;
 }
 
+Vector2 calculate_content_size(const std::optional<HorizontalAlignment> horizontal_alignment,
+                               const std::optional<VerticalAlignment> vertical_alignment, const Vector2 parent_size, Vector2 content_size)
+{
+   if (!horizontal_alignment.has_value()) {
+      content_size.x = parent_size.x;
+   }
+   if (!vertical_alignment.has_value()) {
+      content_size.y = parent_size.y;
+   }
+   return content_size;
+}
+
 }// namespace
 
 AlignmentBox::AlignmentBox(Context& ctx, State state, IWidget* parent) :
@@ -45,7 +57,8 @@ Vector2 AlignmentBox::desired_size(const Vector2 parent_size) const
 void AlignmentBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
    const Vector2 parent_size = rect_size(dimensions);
-   const Vector2 size = m_content->desired_size(parent_size);
+   const Vector2 size =
+      calculate_content_size(m_state.horizontal_alignment, m_state.vertical_alignment, parent_size, m_content->desired_size(parent_size));
    const Vector2 offset = calculate_content_offset(m_state.horizontal_alignment, m_state.vertical_alignment, parent_size, size);
    m_content->add_to_viewport({dimensions.x + offset.x, dimensions.y + offset.y, size.x, size.y}, cropping_mask);
    m_parent_dimensions = dimensions;
@@ -64,7 +77,8 @@ void AlignmentBox::on_child_state_changed(IWidget& /*widget*/)
 
 void AlignmentBox::on_event(const Event& event)
 {
-   const Vector2 size = m_content->desired_size(event.parent_size);
+   const Vector2 size = calculate_content_size(m_state.horizontal_alignment, m_state.vertical_alignment, rect_size(m_parent_dimensions),
+                                               m_content->desired_size(event.parent_size));
    const Vector2 offset = calculate_content_offset(m_state.horizontal_alignment, m_state.vertical_alignment, event.parent_size, size);
    if (event.mouse_position.x > offset.x && event.mouse_position.x < (offset.x + size.x) && event.mouse_position.y > offset.y &&
        event.mouse_position.y < (offset.y + size.y)) {

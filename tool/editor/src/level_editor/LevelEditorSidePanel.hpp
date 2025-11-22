@@ -4,6 +4,7 @@
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/desktop_ui/TreeController.hpp"
+#include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
@@ -60,6 +61,8 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
    void apply_transform() const;
 
    void on_object_added_to_scene(renderer::ObjectID object_id, const renderer::SceneObject& object);
+   void on_selected_object(desktop_ui::TreeItemId item_id);
+   void on_clicked_delete();
 
  private:
    State m_state;
@@ -78,12 +81,18 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
    TransposeInput* m_scale_z;
 
    ui_core::TextBox* m_mesh_label;
+   desktop_ui::TreeView* m_tree_view;
 
    Vector3 m_pending_translate;
    Vector3 m_pending_rotation;
    Vector3 m_pending_scale;
 
+   std::map<desktop_ui::TreeItemId, renderer::ObjectID> m_item_id_to_object_id;
+   std::map<renderer::ObjectID, desktop_ui::TreeItemId> m_object_id_to_item_id;
+
    TG_SINK(renderer::Scene, OnObjectAddedToScene);
+   TG_OPT_SINK(desktop_ui::TreeView, OnSelected);
+   TG_OPT_SINK(desktop_ui::Button, OnClick);
 };
 
 }// namespace triglav::editor

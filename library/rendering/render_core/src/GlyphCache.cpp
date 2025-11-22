@@ -29,7 +29,7 @@ const GlyphAtlas& GlyphCache::find_glyph_atlas(const GlyphProperties& properties
 
    auto& typeface = m_resource_manager.get(properties.typeface);
    auto [atlas_it, ok] = m_atlases.emplace(hash, GlyphAtlas(m_device, typeface, font::Charset::European, properties.font_size,
-                                                            19 * properties.font_size, 19 * properties.font_size));
+                                                            22 * properties.font_size, 22 * properties.font_size));
    assert(ok);
 
    return atlas_it->second;

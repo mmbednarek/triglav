@@ -71,7 +71,6 @@ struct Event
    Vector2 parent_size;
    Vector2 mouse_position;
    Vector2 global_mouse_position;
-   bool is_forwarded_to_active = false;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
 
    Event sub_event(const Type sub_type) const

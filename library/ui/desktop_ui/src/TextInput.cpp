@@ -115,7 +115,7 @@ void TextInput::on_mouse_released(const ui_core::Event& /*event*/, const ui_core
 
 void TextInput::on_mouse_moved(const ui_core::Event& event)
 {
-   if (!m_is_selecting || !event.is_forwarded_to_active)
+   if (!m_is_selecting)
       return;
 
    if (event.global_mouse_position.x < m_dimensions.x && m_text_offset < 0.0f) {
@@ -123,11 +123,13 @@ void TextInput::on_mouse_moved(const ui_core::Event& event)
       this->update_text_position();
       this->update_selection_box();
    }
-   // if (event.global_mouse_position.x > m_dimensions.x + m_dimensions.w && m_text_offset > -m_dimensions.w) {
-   //    m_text_offset -= 0.2f;
-   //    this->update_text_position();
-   //    this->update_selection_box();
-   // }
+
+   const auto min_offset = m_dimensions.z - m_text_width - 2 * g_text_margin.x;
+   if (event.global_mouse_position.x > m_dimensions.x + m_dimensions.w && m_text_offset > min_offset) {
+      m_text_offset = std::max(m_text_offset - 1.0f, min_offset);
+      this->update_text_position();
+      this->update_selection_box();
+   }
 
    const auto index = this->rune_index_from_offset(event.mouse_position.x);
    if (index == m_caret_position) {
@@ -160,9 +162,9 @@ void TextInput::on_mouse_left(const ui_core::Event& /*event*/)
    }
 }
 
-void TextInput::on_text_input(const ui_core::Event& event, const ui_core::Event::TextInput& text_input)
+void TextInput::on_text_input(const ui_core::Event& /*event*/, const ui_core::Event::TextInput& text_input)
 {
-   if (!m_is_active || !event.is_forwarded_to_active)
+   if (!m_is_active)
       return;
 
    const auto rune = text_input.input_rune;
@@ -181,7 +183,7 @@ void TextInput::on_text_input(const ui_core::Event& event, const ui_core::Event:
 
 void TextInput::on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard)
 {
-   if (!m_is_active || !event.is_forwarded_to_active)
+   if (!m_is_active)
       return;
 
    switch (keyboard.key) {
@@ -233,7 +235,9 @@ void TextInput::on_activated(const ui_core::Event& /*event*/)
       return;
 
    m_is_active = true;
-   m_context.set_active_widget(this, m_dimensions);
+
+   using ET = ui_core::Event::Type;
+   m_context.set_active_widget(this, m_dimensions, {ET::TextInput, ET::KeyPressed, ET::MouseMoved, ET::MouseReleased, ET::SelectAll});
 
    m_background_rect.set_color(m_context, TG_THEME_VAL(text_input.bg_active));
    m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
@@ -322,6 +326,10 @@ void TextInput::recalculate_caret_offset(const bool removal)
       m_text_offset = 0;
       this->update_text_position();
    }
+
+   auto& glyph_atlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), TG_THEME_VAL(button.font_size) - 1});
+   const auto measure = glyph_atlas.measure_text(m_state.text.view());
+   m_text_width = measure.width;
 
    m_caret_box.add(m_context,
                    {m_dimensions.x + g_text_margin.x + m_text_offset + caret_offset, m_dimensions.y + g_carret_margin, 1,

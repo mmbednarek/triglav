@@ -28,6 +28,8 @@ class SecondaryEventGenerator final : public ui_core::ProxyWidget
    void on_key_released(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard);
 
  private:
+   void forward_event(const ui_core::Event& event);
+
    ModifierFlags m_modifier_state;
 };
 

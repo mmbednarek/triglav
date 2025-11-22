@@ -72,6 +72,17 @@ void TreeView::on_event(const ui_core::Event& event)
    ui_core::visit_event<void>(*this, event);
 }
 
+void TreeView::set_selected_item(const TreeItemId item_id)
+{
+   m_selected_item = item_id;
+   const auto it = std::ranges::find_if(m_offset_to_item_id, [item_id](auto pair) { return pair.second == item_id; });
+   if (it != m_offset_to_item_id.end()) {
+      const auto measure = this->get_measure();
+      m_highlight_dims = Vector4{0, it->first, 0, 2 * g_item_padding + measure.item_size.y};
+      this->add_to_viewport(m_dimensions, m_cropping_mask);
+   }
+}
+
 void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
 {
    auto [base_offset, item_id] = this->index_from_mouse_position(event.mouse_position);
@@ -80,6 +91,8 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
       m_item_highlight.remove(m_context);
       return;
    }
+   event_OnSelected.publish(m_selected_item);
+
    const auto& item = m_state.controller->item(item_id);
 
    const auto measure = this->get_measure();

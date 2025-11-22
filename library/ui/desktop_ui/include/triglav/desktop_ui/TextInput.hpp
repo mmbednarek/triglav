@@ -79,6 +79,7 @@ class TextInput final : public ui_core::IWidget
    float m_text_xposition{};
    float m_text_offset{};
    float m_caret_offset{};
+   float m_text_width{};
 
    bool m_is_active{false};
    std::optional<u32> m_timeout_handle{};

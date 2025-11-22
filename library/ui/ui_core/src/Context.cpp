@@ -26,7 +26,7 @@ resource::ResourceManager& Context::resource_manager() const
    return m_resource_manager;
 }
 
-void Context::set_active_widget(ui_core::IWidget* active_widget, const Vector4 active_area)
+void Context::set_active_widget(ui_core::IWidget* active_widget, const Vector4 active_area, std::set<Event::Type> redirected_events)
 {
    if (m_active_widget != nullptr) {
       Event deactivate_event{};
@@ -44,6 +44,7 @@ void Context::set_active_widget(ui_core::IWidget* active_widget, const Vector4 a
 
    m_active_widget = active_widget;
    m_active_area = active_area;
+   m_redirected_events = std::move(redirected_events);
 }
 
 ui_core::IWidget* Context::active_widget() const
@@ -55,6 +56,12 @@ Vector4 Context::active_area() const
 {
    return m_active_area;
 }
+
+bool Context::should_redirect_event(const Event::Type event_type) const
+{
+   return m_redirected_events.contains(event_type);
+}
+
 void Context::add_activating_widget(IWidget* widget)
 {
    if (const auto it = std::ranges::find(m_activating_widgets, widget); it == m_activating_widgets.end()) {
