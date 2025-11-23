@@ -3,9 +3,11 @@
 #include "Scene.hpp"
 
 #include "triglav/Int.hpp"
+#include "triglav/UpdateList.hpp"
 #include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Array.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
+#include "triglav/memory/HeapAllocator.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
 #include <vector>
@@ -65,8 +67,17 @@ struct Properties_MT2
    u32 metallic_texture_id{};
 };
 
+struct PendingObject
+{
+   const SceneObject* object{};
+   ObjectID object_id{};
+   u32 material_index{};
+};
+
 class BindlessScene
 {
+   friend class DrawCallUpdateWriter;
+
  public:
    using Self = BindlessScene;
 
@@ -99,7 +110,7 @@ class BindlessScene
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers
-   std::vector<std::pair<ObjectID, SceneObject>> m_pending_objects;
+   // std::vector<std::pair<ObjectID, SceneObject>> m_pending_objects;
    std::vector<std::pair<ObjectID, Transform3D>> m_pending_transform;
    std::multimap<ObjectID, MemorySize> m_object_mapping;
    std::map<MeshName, std::vector<BindlessMeshInfo>> m_models;
@@ -109,6 +120,9 @@ class BindlessScene
    std::optional<graphics_api::Pipeline> m_scene_pipeline;
    bool m_should_update_pso{false};
    bool m_should_write_objects{false};
+   memory::HeapAllocator m_vertex_buffer_heap;
+   memory::HeapAllocator m_index_buffer_heap;
+   UpdateList<ObjectID, PendingObject> m_draw_call_update_list;
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
@@ -122,9 +136,6 @@ class BindlessScene
    graphics_api::StorageArray<Properties_MT2> m_material_props_all_tex;
 
    // Buffer write counts
-   MemorySize m_written_scene_object_count{0};
-   MemorySize m_written_vertex_count{0};
-   MemorySize m_written_index_count{0};
    MemorySize m_written_material_property_AlbedoTex{0};
    MemorySize m_written_material_property_AlbedoNormalTex{0};
    MemorySize m_written_material_property_AllTex{0};
