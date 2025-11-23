@@ -29,6 +29,8 @@ struct SceneObject
    [[nodiscard]] Matrix4x4 model_matrix() const;
 };
 
+using SceneObjectUPtr = std::unique_ptr<SceneObject>;
+
 struct SceneObjectRef
 {
    SceneObject* object;
@@ -53,6 +55,7 @@ class Scene
  public:
    TG_EVENT(OnObjectAddedToScene, ObjectID, const SceneObject&)
    TG_EVENT(OnObjectChangedTransform, ObjectID, const Transform3D&)
+   TG_EVENT(OnObjectRemoved, ObjectID)
    TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
@@ -68,6 +71,7 @@ class Scene
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
    void send_view_changed();
+   void remove_object(ObjectID object_id);
 
    [[nodiscard]] const Camera& camera() const;
    [[nodiscard]] Camera& camera();
@@ -84,12 +88,12 @@ class Scene
    [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
    RayHit trace_ray(const geometry::Ray& ray) const;
 
-   [[nodiscard]] std::vector<SceneObject>::const_iterator begin() const
+   [[nodiscard]] std::map<ObjectID, SceneObjectUPtr>::const_iterator begin() const
    {
       return m_objects.cbegin();
    }
 
-   [[nodiscard]] std::vector<SceneObject>::const_iterator end() const
+   [[nodiscard]] std::map<ObjectID, SceneObjectUPtr>::const_iterator end() const
    {
       return m_objects.cend();
    }
@@ -101,8 +105,9 @@ class Scene
    Camera m_camera{};
    glm::quat m_directional_light_orientation{glm::vec3{geometry::g_pi * 0.1f, 0, geometry::g_pi * 1.5f}};
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
-   std::vector<SceneObject> m_objects{};
+   std::map<ObjectID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;
+   ObjectID m_top_object_id = 0;
 };
 
 }// namespace triglav::renderer

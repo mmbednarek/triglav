@@ -36,8 +36,9 @@ ObjectID Scene::add_object(SceneObject object)
 {
    const auto object_id = static_cast<ObjectID>(m_objects.size());
 
-   auto& emplaced_obj = m_objects.emplace_back(std::move(object));
-   event_OnObjectAddedToScene.publish(object_id, emplaced_obj);
+   const auto& [it, ok] = m_objects.emplace(m_top_object_id++, std::make_unique<SceneObject>(std::move(object)));
+   assert(ok);
+   event_OnObjectAddedToScene.publish(it->first, *it->second);
    this->update_bvh();
 
    return object_id;
@@ -45,7 +46,7 @@ ObjectID Scene::add_object(SceneObject object)
 
 void Scene::set_transform(const ObjectID object_id, const Transform3D& transform)
 {
-   m_objects[object_id].transform = transform;
+   m_objects[object_id]->transform = transform;
    this->update_bvh();
 
    event_OnObjectChangedTransform.publish(object_id, transform);
@@ -68,11 +69,11 @@ void Scene::load_level(const LevelName name)
 world::Level Scene::to_level() const
 {
    world::LevelNode root_node("root");
-   for (const auto& object : m_objects) {
+   for (const auto& object : m_objects | std::views::values) {
       root_node.add_static_mesh(world::StaticMesh{
-         .mesh_name = object.model,
-         .name = object.name.to_std(),
-         .transform = object.transform,
+         .mesh_name = object->model,
+         .name = object->name.to_std(),
+         .transform = object->transform,
       });
    }
 
@@ -110,7 +111,7 @@ u32 Scene::directional_shadow_map_count() const
 
 const SceneObject& Scene::object(const ObjectID id) const
 {
-   return m_objects[id];
+   return *m_objects.at(id);
 }
 
 float Scene::yaw() const
@@ -126,14 +127,17 @@ float Scene::pitch() const
 void Scene::update_bvh()
 {
    std::vector<SceneObjectRef> objects{m_objects.size()};
-   std::ranges::transform(m_objects, objects.begin(), [this, index = 0u](SceneObject& object) mutable {
-      const auto& mesh = m_resource_manager.get(object.model);
-      return SceneObjectRef{
-         .object = &object,
-         .bbox = mesh.bounding_box.transform(object.transform.to_matrix()),
-         .id = index++,
+
+   auto obj_it = objects.begin();
+   for (const auto& [id, scene_object] : m_objects) {
+      const auto& mesh = m_resource_manager.get(scene_object->model);
+      *(obj_it++) = SceneObjectRef{
+         .object = scene_object.get(),
+         .bbox = mesh.bounding_box.transform(scene_object->transform.to_matrix()),
+         .id = id,
       };
-   });
+   }
+
    m_tree.build(objects);
 }
 
@@ -190,6 +194,12 @@ void Scene::update_shadow_maps()
 void Scene::send_view_changed()
 {
    event_OnViewUpdated.publish(m_camera);
+}
+
+void Scene::remove_object(const ObjectID object_id)
+{
+   event_OnObjectRemoved.publish(object_id);
+   m_objects.erase(object_id);
 }
 
 }// namespace triglav::renderer
