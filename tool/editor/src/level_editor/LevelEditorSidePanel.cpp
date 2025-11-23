@@ -1,19 +1,18 @@
 #include "LevelEditorSidePanel.hpp"
 
+#include "../RootWindow.hpp"
 #include "LevelEditor.hpp"
 #include "LevelViewport.hpp"
+#include "SceneView.hpp"
 #include "SetTransformAction.hpp"
-#include "src/RootWindow.hpp"
+
 #include "triglav/Format.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
-#include "triglav/desktop_ui/TreeView.hpp"
-#include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/GridLayout.hpp"
-#include "triglav/ui_core/widget/HorizontalLayout.hpp"
+#include "triglav/ui_core/widget/HideableWidget.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
-#include "triglav/ui_core/widget/Padding.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
@@ -28,149 +27,140 @@ constexpr Color RED_OUTLINE{1.0f, 0.28f, 0.28f, 1.0f};
 constexpr Color GREEN_OUTLINE{0.35f, 1.0f, 0.35f, 1.0f};
 constexpr Color BLUE_OUTLINE{0.17f, 0.5f, 1.0f, 1.0f};
 
-TransposeInput::TransposeInput(ui_core::Context& context, State state, IWidget* parent) :
+class PanelHeader final : public ui_core::ProxyWidget
+{
+ public:
+   struct State
+   {
+      desktop_ui::DesktopUIManager* manager{};
+      String label;
+   };
+
+   PanelHeader(ui_core::Context& context, State state, IWidget* parent) :
+       ui_core::ProxyWidget(context, parent),
+       m_state(std::move(state))
+   {
+      auto& layout = this->create_content<ui_core::VerticalLayout>({
+         .padding = {},
+         .separation = 10.0f,
+      });
+
+      layout.create_child<ui_core::TextBox>({
+         .font_size = TG_THEME_VAL(base_font_size),
+         .typeface = TG_THEME_VAL(base_typeface),
+         .content = m_state.label,
+         .color = TG_THEME_VAL(accent_color),
+         .horizontal_alignment = ui_core::HorizontalAlignment::Left,
+         .vertical_alignment = ui_core::VerticalAlignment::Top,
+      });
+
+      layout
+         .create_child<ui_core::RectBox>({
+            .color = TG_THEME_VAL(accent_color),
+            .border_radius = {0, 0, 0, 0},
+            .border_color = palette::NO_COLOR,
+            .border_width = 0.0f,
+         })
+         .create_content<ui_core::EmptySpace>({
+            .size = {10.0f, 1.0f},
+         });
+      layout.create_child<ui_core::EmptySpace>({
+         .size = {10.0f, 5.0f},
+      });
+   }
+
+ private:
+   State m_state;
+};
+
+class TransformInput;
+
+class TransformWidget final : public ui_core::ProxyWidget
+{
+ public:
+   struct State
+   {
+      desktop_ui::DesktopUIManager* manager{};
+      LevelEditor* editor{};
+   };
+
+   TransformWidget(ui_core::Context& context, State state, IWidget* parent);
+
+   void on_changed_selected_object(const renderer::SceneObject& object);
+   void apply_transform();
+
+ private:
+   State m_state;
+
+   TransformInput* m_translate_x;
+   TransformInput* m_translate_y;
+   TransformInput* m_translate_z;
+
+   TransformInput* m_rotate_x;
+   TransformInput* m_rotate_y;
+   TransformInput* m_rotate_z;
+
+   TransformInput* m_scale_x;
+   TransformInput* m_scale_y;
+   TransformInput* m_scale_z;
+
+   Vector3 m_pending_translate{};
+   Vector3 m_pending_rotation{};
+   Vector3 m_pending_scale{};
+};
+
+class TransformInput final : public ui_core::ProxyWidget
+{
+ public:
+   using Self = TransformInput;
+
+   struct State
+   {
+      desktop_ui::DesktopUIManager* manager{};
+      TransformWidget* widget;
+      Color border_color{};
+      float* destination;
+   };
+
+   TransformInput(ui_core::Context& context, State state, IWidget* parent) :
+       ui_core::ProxyWidget(context, parent),
+       m_state(state)
+   {
+      static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
+
+      m_text_input = &this->create_content<desktop_ui::TextInput>({
+         .manager = m_state.manager,
+         .text = "0",
+         .filter_func = num_only,
+         .border_color = m_state.border_color,
+      });
+
+      TG_CONNECT_OPT(*m_text_input, OnTextChanged, on_text_changed);
+   }
+
+   void on_text_changed(const StringView text) const
+   {
+      *m_state.destination = std::stof(String(text).to_std());
+      m_state.widget->apply_transform();
+   }
+
+   void set_content(const StringView text) const
+   {
+      m_text_input->set_content(text);
+   }
+
+ private:
+   State m_state;
+   desktop_ui::TextInput* m_text_input{};
+
+   TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
+};
+
+TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
     m_state(state)
 {
-   static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
-
-   m_text_input = &this->create_content<desktop_ui::TextInput>({
-      .manager = m_state.manager,
-      .text = "0",
-      .filter_func = num_only,
-      .border_color = m_state.border_color,
-   });
-
-   TG_CONNECT_OPT(*m_text_input, OnTextChanged, on_text_changed);
-}
-
-void TransposeInput::on_text_changed(const StringView text) const
-{
-   *m_state.destination = std::stof(String(text).to_std());
-   m_state.side_panel->apply_transform();
-}
-
-void TransposeInput::set_content(const StringView text) const
-{
-   m_text_input->set_content(text);
-}
-
-LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent) :
-    ui_core::ProxyWidget(context, parent),
-    m_state(state),
-    TG_CONNECT(m_state.editor->scene(), OnObjectAddedToScene, on_object_added_to_scene)
-{
-   auto& split = this->create_content<desktop_ui::Splitter>({
-      .manager = m_state.manager,
-      .offset = 300,
-      .axis = ui_core::Axis::Vertical,
-      .offset_type = desktop_ui::SplitterOffsetType::Preceeding,
-   });
-
-   auto& vert_layout = split
-                          .create_preceding<ui_core::RectBox>({
-                             .color = TG_THEME_VAL(background_color_brighter),
-                             .border_radius = {0, 0, 0, 0},
-                             .border_color = palette::NO_COLOR,
-                             .border_width = 0.0f,
-                          })
-                          .create_content<ui_core::Padding>({4, 4, 4, 4})
-                          .create_content<ui_core::VerticalLayout>({
-                             .padding = {0, 0, 0, 0},
-                             .separation = 0.0f,
-                          });
-
-   auto& buttons = vert_layout.create_child<ui_core::HorizontalLayout>({
-      .padding = {5.0f, 5.0f, 5.0f, 5.0f},
-      .separation = 10.0f,
-      .gravity = ui_core::HorizontalAlignment::Left,
-   });
-
-   buttons
-      .create_child<desktop_ui::Button>({
-         .manager = m_state.manager,
-      })
-      .create_content<ui_core::Image>({
-         .texture = "texture/ui_atlas.tex"_rc,
-         .max_size = Vector2{20, 20},
-         .region = Vector4{5 * 64, 0, 64, 64},
-      });
-
-   buttons
-      .create_child<desktop_ui::Button>({
-         .manager = m_state.manager,
-      })
-      .create_content<ui_core::Image>({
-         .texture = "texture/ui_atlas.tex"_rc,
-         .max_size = Vector2{20, 20},
-         .region = Vector4{5 * 64, 64, 64, 64},
-      });
-
-   auto& delete_button = buttons.create_child<desktop_ui::Button>({
-      .manager = m_state.manager,
-   });
-   delete_button.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
-      .max_size = Vector2{20, 20},
-      .region = Vector4{5 * 64, 2 * 64, 64, 64},
-   });
-   TG_CONNECT_OPT(delete_button, OnClick, on_clicked_delete);
-
-   m_tree_view = &vert_layout
-                     .create_child<ui_core::RectBox>({
-                        .color = TG_THEME_VAL(background_color_darker),
-                        .border_radius = {4, 4, 4, 4},
-                        .border_color = palette::NO_COLOR,
-                        .border_width = 0.0f,
-                     })
-                     .create_content<ui_core::AlignmentBox>({
-                        .horizontal_alignment = std::nullopt,
-                        .vertical_alignment = ui_core::VerticalAlignment::Top,
-                     })
-                     .create_content<desktop_ui::TreeView>({
-                        .manager = m_state.manager,
-                        .controller = &m_tree_controller,
-                        .extended_items = {},
-                     });
-   TG_CONNECT_OPT(*m_tree_view, OnSelected, on_selected_object);
-
-   auto& layout = split
-                     .create_following<ui_core::RectBox>({
-                        .color = TG_THEME_VAL(background_color_brighter),
-                        .border_radius = {0, 0, 0, 0},
-                        .border_color = palette::NO_COLOR,
-                        .border_width = 0.0f,
-                     })
-                     .create_content<ui_core::VerticalLayout>({
-                        .padding = {10.0f, 10.0f, 10.0f, 10.0f},
-                        .separation = 7.0f,
-                     });
-
-   layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size),
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Transform",
-      .color = TG_THEME_VAL(accent_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Top,
-   });
-
-   layout
-      .create_child<ui_core::RectBox>({
-         .color = TG_THEME_VAL(accent_color),
-         .border_radius = {0, 0, 0, 0},
-         .border_color = palette::NO_COLOR,
-         .border_width = 0.0f,
-      })
-      .create_content<ui_core::EmptySpace>({
-         .size = {10.0f, 1.0f},
-      });
-   layout.create_child<ui_core::EmptySpace>({
-      .size = {10.0f, 5.0f},
-   });
-
-
-   auto& transform_layout = layout.create_child<ui_core::GridLayout>({
+   auto& transform_layout = this->create_content<ui_core::GridLayout>({
       .column_ratios = {0.3f, 0.233f, 0.233f, 0.233f},
       .row_ratios = {0.333f, 0.333f, 0.333f},
       .horizontal_spacing = 5.0f,
@@ -186,21 +176,21 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
 
-   m_translate_x = &transform_layout.create_child<TransposeInput>({
+   m_translate_x = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = RED_OUTLINE,
       .destination = &m_pending_translate.x,
    });
-   m_translate_y = &transform_layout.create_child<TransposeInput>({
+   m_translate_y = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = GREEN_OUTLINE,
       .destination = &m_pending_translate.y,
    });
-   m_translate_z = &transform_layout.create_child<TransposeInput>({
+   m_translate_z = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = BLUE_OUTLINE,
       .destination = &m_pending_translate.z,
    });
@@ -214,21 +204,21 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
 
-   m_rotate_x = &transform_layout.create_child<TransposeInput>({
+   m_rotate_x = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = RED_OUTLINE,
       .destination = &m_pending_rotation.x,
    });
-   m_rotate_y = &transform_layout.create_child<TransposeInput>({
+   m_rotate_y = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = GREEN_OUTLINE,
       .destination = &m_pending_rotation.y,
    });
-   m_rotate_z = &transform_layout.create_child<TransposeInput>({
+   m_rotate_z = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = BLUE_OUTLINE,
       .destination = &m_pending_rotation.z,
    });
@@ -242,63 +232,27 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
 
-   m_scale_x = &transform_layout.create_child<TransposeInput>({
+   m_scale_x = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = RED_OUTLINE,
       .destination = &m_pending_scale.x,
    });
-   m_scale_y = &transform_layout.create_child<TransposeInput>({
+   m_scale_y = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = GREEN_OUTLINE,
       .destination = &m_pending_scale.y,
    });
-   m_scale_z = &transform_layout.create_child<TransposeInput>({
+   m_scale_z = &transform_layout.create_child<TransformInput>({
       .manager = m_state.manager,
-      .side_panel = this,
+      .widget = this,
       .border_color = BLUE_OUTLINE,
       .destination = &m_pending_scale.z,
    });
-
-   layout.create_child<ui_core::EmptySpace>({
-      .size = {10.0f, 5.0f},
-   });
-
-   layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size),
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Properties",
-      .color = TG_THEME_VAL(accent_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Top,
-   });
-
-   layout
-      .create_child<ui_core::RectBox>({
-         .color = TG_THEME_VAL(accent_color),
-         .border_radius = {0, 0, 0, 0},
-         .border_color = palette::NO_COLOR,
-         .border_width = 0.0f,
-      })
-      .create_content<ui_core::EmptySpace>({
-         .size = {10.0f, 1.0f},
-      });
-   layout.create_child<ui_core::EmptySpace>({
-      .size = {10.0f, 5.0f},
-   });
-
-   m_mesh_label = &layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size),
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Mesh:",
-      .color = TG_THEME_VAL(foreground_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Center,
-   });
 }
 
-void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object)
+void TransformWidget::on_changed_selected_object(const renderer::SceneObject& object)
 {
    m_pending_translate = object.transform.translation;
    m_pending_rotation = glm::degrees(glm::eulerAngles(object.transform.rotation));
@@ -327,15 +281,9 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    m_scale_x->set_content(scale_x.view());
    m_scale_y->set_content(scale_y.view());
    m_scale_z->set_content(scale_z.view());
-
-   std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
-   auto content = triglav::format("Mesh: {}", mesh_path);
-   m_mesh_label->set_content(content.view());
-
-   m_tree_view->set_selected_item(m_object_id_to_item_id.at(m_state.editor->selected_object_id()));
 }
 
-void LevelEditorSidePanel::apply_transform() const
+void TransformWidget::apply_transform()
 {
    assert(m_state.editor);
 
@@ -354,29 +302,80 @@ void LevelEditorSidePanel::apply_transform() const
    m_state.editor->viewport().update_view();
 }
 
-void LevelEditorSidePanel::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)
+LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent) :
+    ui_core::ProxyWidget(context, parent),
+    m_state(state)
 {
-   const auto id = m_tree_controller.add_item(0, {
-                                                    .icon_name = "texture/ui_atlas.tex"_rc,
-                                                    .icon_region = {4 * 64, 3 * 64, 64, 64},
-                                                    .label = object.name,
-                                                    .has_children = false,
-                                                 });
-   m_item_id_to_object_id[id] = object_id;
-   m_object_id_to_item_id[object_id] = id;
+   auto& split = this->create_content<desktop_ui::Splitter>({
+      .manager = m_state.manager,
+      .offset = 300,
+      .axis = ui_core::Axis::Vertical,
+      .offset_type = desktop_ui::SplitterOffsetType::Preceeding,
+   });
+
+   m_scene_view = &split.create_preceding<SceneView>({
+      .manager = m_state.manager,
+      .editor = m_state.editor,
+   });
+
+   m_object_info = &split
+                       .create_following<ui_core::RectBox>({
+                          .color = TG_THEME_VAL(background_color_brighter),
+                          .border_radius = {0, 0, 0, 0},
+                          .border_color = palette::NO_COLOR,
+                          .border_width = 0.0f,
+                       })
+                       .create_content<ui_core::HideableWidget>({
+                          .is_hidden = true,
+                       });
+
+   auto& layout = m_object_info->create_content<ui_core::VerticalLayout>({
+      .padding = {10.0f, 10.0f, 10.0f, 10.0f},
+      .separation = 7.0f,
+   });
+
+   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "Transform"});
+
+   m_transform_widget = &layout.create_child<TransformWidget>({
+      .manager = m_state.manager,
+      .editor = m_state.editor,
+   });
+
+   layout.create_child<ui_core::EmptySpace>({
+      .size = {10.0f, 5.0f},
+   });
+
+   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "Properties"});
+
+   auto& prop_layout = layout.create_child<ui_core::GridLayout>({
+      .column_ratios = {0.35f, 0.65f},
+      .row_ratios = {1.0f},
+      .horizontal_spacing = 5.0f,
+      .vertical_spacing = 5.0f,
+   });
+
+   prop_layout.create_child<ui_core::TextBox>({
+      .font_size = TG_THEME_VAL(base_font_size),
+      .typeface = TG_THEME_VAL(base_typeface),
+      .content = "Mesh Path",
+      .color = TG_THEME_VAL(foreground_color),
+      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
+      .vertical_alignment = ui_core::VerticalAlignment::Center,
+   });
+   m_mesh_input = &prop_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "",
+      .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
+   });
 }
 
-void LevelEditorSidePanel::on_selected_object(const desktop_ui::TreeItemId item_id)
+void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
 {
-   const auto object_id = m_item_id_to_object_id[item_id];
-   m_state.editor->set_selected_object(object_id);
-   m_state.editor->viewport().update_view();
-}
-
-void LevelEditorSidePanel::on_clicked_delete()
-{
-   log_message(LogLevel::Info, StringView{"TESTING"}, "Clicked Delete");
-   // m_state.editor->scene().remove_object();
+   m_object_info->set_is_hidden(false);
+   m_transform_widget->on_changed_selected_object(object);
+   const std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
+   m_mesh_input->set_content(StringView{mesh_path.data(), mesh_path.size()});
+   m_scene_view->update_selected_item();
 }
 
 }// namespace triglav::editor

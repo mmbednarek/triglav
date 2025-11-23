@@ -12,6 +12,8 @@ editor_sources = files([
                            'src/level_editor/RotationTool.hpp',
                            'src/level_editor/ScalingTool.cpp',
                            'src/level_editor/ScalingTool.hpp',
+                           'src/level_editor/SceneView.cpp',
+                           'src/level_editor/SceneView.hpp',
                            'src/level_editor/SelectionTool.hpp',
                            'src/level_editor/SelectionTool.cpp',
                            'src/level_editor/SetTransformAction.cpp',

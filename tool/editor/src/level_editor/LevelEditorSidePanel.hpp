@@ -3,46 +3,21 @@
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
-#include "triglav/desktop_ui/TreeController.hpp"
-#include "triglav/desktop_ui/TreeView.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
+namespace triglav::ui_core {
+class HideableWidget;
+}
+
 namespace triglav::desktop_ui {
-
 class TextInput;
-
 }
 namespace triglav::editor {
 
 class LevelEditor;
-class LevelEditorSidePanel;
-
-class TransposeInput final : public ui_core::ProxyWidget
-{
- public:
-   using Self = TransposeInput;
-
-   struct State
-   {
-      desktop_ui::DesktopUIManager* manager{};
-      LevelEditorSidePanel* side_panel;
-      Color border_color{};
-      float* destination;
-   };
-
-   TransposeInput(ui_core::Context& context, State state, IWidget* parent);
-
-   void on_text_changed(StringView text) const;
-   void set_content(StringView text) const;
-
- private:
-   State m_state;
-   desktop_ui::TextInput* m_text_input{};
-
-   TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
-};
+class TransformWidget;
+class SceneView;
 
 class LevelEditorSidePanel final : public ui_core::ProxyWidget
 {
@@ -57,42 +32,15 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
 
    LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent);
 
-   void on_changed_selected_object(const renderer::SceneObject& object);
-   void apply_transform() const;
-
-   void on_object_added_to_scene(renderer::ObjectID object_id, const renderer::SceneObject& object);
-   void on_selected_object(desktop_ui::TreeItemId item_id);
-   void on_clicked_delete();
+   void on_changed_selected_object(const renderer::SceneObject& object) const;
 
  private:
    State m_state;
-   desktop_ui::TreeController m_tree_controller;
 
-   TransposeInput* m_translate_x;
-   TransposeInput* m_translate_y;
-   TransposeInput* m_translate_z;
-
-   TransposeInput* m_rotate_x;
-   TransposeInput* m_rotate_y;
-   TransposeInput* m_rotate_z;
-
-   TransposeInput* m_scale_x;
-   TransposeInput* m_scale_y;
-   TransposeInput* m_scale_z;
-
-   ui_core::TextBox* m_mesh_label;
-   desktop_ui::TreeView* m_tree_view;
-
-   Vector3 m_pending_translate;
-   Vector3 m_pending_rotation;
-   Vector3 m_pending_scale;
-
-   std::map<desktop_ui::TreeItemId, renderer::ObjectID> m_item_id_to_object_id;
-   std::map<renderer::ObjectID, desktop_ui::TreeItemId> m_object_id_to_item_id;
-
-   TG_SINK(renderer::Scene, OnObjectAddedToScene);
-   TG_OPT_SINK(desktop_ui::TreeView, OnSelected);
-   TG_OPT_SINK(desktop_ui::Button, OnClick);
+   SceneView* m_scene_view;
+   ui_core::HideableWidget* m_object_info;
+   TransformWidget* m_transform_widget;
+   desktop_ui::TextInput* m_mesh_input;
 };
 
 }// namespace triglav::editor
