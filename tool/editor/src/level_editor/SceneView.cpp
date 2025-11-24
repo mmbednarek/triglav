@@ -103,7 +103,8 @@ void SceneView::on_clicked_add_directory()
 
 void SceneView::on_clicked_delete()
 {
-   log_message(LogLevel::Info, StringView{"TESTING"}, "Clicked Delete");
+   m_state.editor->remove_selected_item();
+   log_message(LogLevel::Info, StringView{"SceneView"}, "Deleted Item");
 }
 
 void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)

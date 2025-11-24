@@ -334,6 +334,11 @@ void BuildContext::clear_color(const Name target_name, const Vector4 color)
    m_render_targets.at(target_name).clear_value.value.emplace<gapi::Color>(color.x, color.y, color.z, color.w);
 }
 
+void BuildContext::clear_depth_stencil(Name target_name, float depth, u32 stencil)
+{
+   m_render_targets.at(target_name).clear_value.value.emplace<gapi::DepthStenctilValue>(depth, stencil);
+}
+
 void BuildContext::reset_timestamp_queries(const u32 offset, const u32 count)
 {
    this->add_command<detail::cmd::ResetQueries>(offset, count, true);

@@ -85,6 +85,7 @@ class BindlessScene
 
    void on_object_added_to_scene(ObjectID object_id, const SceneObject& object);
    void on_object_changed_transform(ObjectID object_id, const Transform3D& transform);
+   void on_object_removed(ObjectID object_id);
    void on_update_scene(const graphics_api::CommandList& cmd_list);
 
    void write_objects_to_buffer();
@@ -110,9 +111,7 @@ class BindlessScene
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers
-   // std::vector<std::pair<ObjectID, SceneObject>> m_pending_objects;
    std::vector<std::pair<ObjectID, Transform3D>> m_pending_transform;
-   std::multimap<ObjectID, MemorySize> m_object_mapping;
    std::map<MeshName, std::vector<BindlessMeshInfo>> m_models;
    std::map<TextureName, u32> m_texture_ids;
    std::vector<const graphics_api::Texture*> m_scene_textures;
@@ -122,7 +121,7 @@ class BindlessScene
    bool m_should_write_objects{false};
    memory::HeapAllocator m_vertex_buffer_heap;
    memory::HeapAllocator m_index_buffer_heap;
-   UpdateList<ObjectID, PendingObject> m_draw_call_update_list;
+   UpdateList<std::pair<ObjectID, u32>, PendingObject> m_draw_call_update_list;
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
@@ -143,6 +142,7 @@ class BindlessScene
    // Sinks
    TG_SINK(Scene, OnObjectAddedToScene);
    TG_SINK(Scene, OnObjectChangedTransform);
+   TG_SINK(Scene, OnObjectRemoved);
 };
 
 }// namespace triglav::renderer

@@ -54,7 +54,6 @@ class DrawCallUpdateWriter
       m_staging_ptr[m_top_staging_index] = bso;
       m_cmd_list.copy_buffer(m_staging_buffer, m_dst_buffer, m_top_staging_index * sizeof(BindlessSceneObject),
                              dst * sizeof(BindlessSceneObject), sizeof(BindlessSceneObject));
-      m_bindless_scene.m_object_mapping.emplace(pending_object.object_id, dst);
       ++m_top_staging_index;
    }
 
@@ -89,7 +88,8 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_material_props_albedo_normal_tex(device, 100),
     m_material_props_all_tex(device, 100),
     TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene),
-    TG_CONNECT(scene, OnObjectChangedTransform, on_object_changed_transform)
+    TG_CONNECT(scene, OnObjectChangedTransform, on_object_changed_transform),
+    TG_CONNECT(scene, OnObjectRemoved, on_object_removed)
 {
    TG_SET_DEBUG_NAME(m_scene_objects.buffer(), "bindless_scene.scene_objects");
    TG_SET_DEBUG_NAME(m_scene_object_stage.buffer(), "bindless_scene.scene_objects.staging");
@@ -103,7 +103,7 @@ void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const Sce
 {
    const auto& model = m_resource_manager.get(object.model);
    for (u32 i = 0; i < model.range.size(); ++i) {
-      m_draw_call_update_list.add_or_update(object_id, PendingObject{&object, object_id, i});
+      m_draw_call_update_list.add_or_update(std::make_pair(object_id, i), PendingObject{&object, object_id, i});
    }
    m_should_write_objects = true;
 }
@@ -111,6 +111,17 @@ void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const Sce
 void BindlessScene::on_object_changed_transform(const ObjectID object_id, const Transform3D& transform)
 {
    m_pending_transform.emplace_back(object_id, transform);
+   m_should_write_objects = true;
+}
+
+void BindlessScene::on_object_removed(const ObjectID object_id)
+{
+   auto& obj = m_scene.object(object_id);
+   const auto& model = m_resource_manager.get(obj.model);
+
+   for (u32 i = 0; i < model.range.size(); ++i) {
+	   m_draw_call_update_list.remove(std::make_pair(object_id, i));
+   }
    m_should_write_objects = true;
 }
 
@@ -136,13 +147,17 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
          transform_mapping.write_offset(transforms.data(), transforms.size() * sizeof(Matrix4x4),
                                         stage_index * transforms.size() * sizeof(Matrix4x4));
 
-         auto [at, end] = m_object_mapping.equal_range(object_id);
-         for (; at != end; ++at) {
+         auto& obj = m_scene.object(object_id);
+         auto& mesh = m_resource_manager.get(obj.model);
+         for (u32 i = 0; i < mesh.range.size(); ++i) {
+            auto offset = m_draw_call_update_list.key_map().at(std::make_pair(object_id, i));
+
             cmd_list.copy_buffer(m_transform_stage.buffer(), m_scene_objects.buffer(),
                                  static_cast<u32>(stage_index * transforms.size() * sizeof(Matrix4x4)),
-                                 static_cast<u32>(at->second * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform)),
+                                 static_cast<u32>(offset * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform)),
                                  static_cast<u32>(transforms.size() * sizeof(Matrix4x4)));
          }
+
          ++stage_index;
       }
 

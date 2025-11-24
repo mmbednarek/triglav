@@ -103,6 +103,7 @@ class BuildContext
    void begin_render_pass_raw(Name pass_name, std::span<Name> render_targets);
    void end_render_pass();
    void clear_color(Name target_name, Vector4 color);
+   void clear_depth_stencil(Name target_name, float depth, u32 stencil);
 
    // Queries
    void reset_timestamp_queries(u32 offset, u32 count);
