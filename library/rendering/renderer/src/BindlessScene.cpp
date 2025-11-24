@@ -80,7 +80,7 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_index_buffer_heap(INDEX_BUFFER_SIZE),
     m_scene_object_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_transform_stage(device, STAGING_BUFFER_ELEM_COUNT),
-    m_scene_objects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect),
+    m_scene_objects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect | gapi::BufferUsage::TransferSrc),
     m_combined_vertex_buffer(device, VERTEX_BUFFER_SIZE),
     m_combined_index_buffer(device, INDEX_BUFFER_SIZE),
     m_count_buffer(device, gapi::BufferUsage::Indirect),
@@ -120,7 +120,7 @@ void BindlessScene::on_object_removed(const ObjectID object_id)
    const auto& model = m_resource_manager.get(obj.model);
 
    for (u32 i = 0; i < model.range.size(); ++i) {
-	   m_draw_call_update_list.remove(std::make_pair(object_id, i));
+      m_draw_call_update_list.remove(std::make_pair(object_id, i));
    }
    m_should_write_objects = true;
 }

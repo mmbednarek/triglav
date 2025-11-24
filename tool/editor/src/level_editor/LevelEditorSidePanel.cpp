@@ -371,7 +371,9 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
 
 void LevelEditorSidePanel::on_unselected()
 {
-   m_object_info->set_is_hidden(true);
+   if (!m_object_info->state().is_hidden) {
+      m_object_info->set_is_hidden(true);
+   }
 }
 
 void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
@@ -381,6 +383,11 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    const std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
    m_mesh_input->set_content(StringView{mesh_path.data(), mesh_path.size()});
    m_scene_view->update_selected_item();
+}
+
+void LevelEditorSidePanel::on_object_is_removed(const renderer::ObjectID object_id) const
+{
+   m_scene_view->on_object_is_removed(object_id);
 }
 
 }// namespace triglav::editor

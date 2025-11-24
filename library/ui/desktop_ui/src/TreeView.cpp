@@ -79,8 +79,18 @@ void TreeView::set_selected_item(const TreeItemId item_id)
    if (it != m_offset_to_item_id.end()) {
       const auto measure = this->get_measure();
       m_highlight_dims = Vector4{0, it->first, 0, 2 * g_item_padding + measure.item_size.y};
-      this->add_to_viewport(m_dimensions, m_cropping_mask);
+   } else {
+      m_highlight_dims = Vector4{0, 0, 0, 0};
    }
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
+}
+
+void TreeView::remove_item(const TreeItemId item_id)
+{
+   this->remove_internal(item_id);
+   m_state.controller->remove(item_id);
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
+   this->set_selected_item(TREE_ROOT);
 }
 
 void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
@@ -111,6 +121,25 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
    }
 
    this->add_to_viewport(m_dimensions, m_cropping_mask);
+}
+
+void TreeView::remove_internal(const TreeItemId item_id)
+{
+   if (m_state.controller->item(item_id).has_children) {
+      const auto& children = m_state.controller->children(item_id);
+      for (const auto& child : children) {
+         this->remove_internal(child);
+      }
+   }
+
+   m_labels.at(item_id).remove(m_context);
+   m_labels.erase(item_id);
+   m_icons.at(item_id).remove(m_context);
+   m_icons.erase(item_id);
+   if (m_arrows.contains(item_id)) {
+      m_arrows.at(item_id).remove(m_context);
+      m_arrows.erase(item_id);
+   }
 }
 
 std::pair<float, TreeItemId> TreeView::index_from_mouse_position(const Vector2 position) const
