@@ -414,6 +414,7 @@ void LevelEditor::save_level() const
 
 void LevelEditor::remove_selected_item()
 {
+   m_side_panel->on_object_is_removed(m_selected_object_id);
    m_scene.remove_object(m_selected_object_id);
    set_selected_object(renderer::UNSELECTED_OBJECT);
    m_viewport->update_view();

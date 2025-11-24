@@ -33,6 +33,7 @@ class SceneView final : public ui_core::ProxyWidget
    void on_clicked_add_directory();
    void on_clicked_delete();
    void on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object);
+   void on_object_is_removed(const renderer::ObjectID object_id) const;
 
    void update_selected_item() const;
 

@@ -26,6 +26,7 @@ class ITreeController
  public:
    virtual const std::vector<TreeItemId>& children(TreeItemId parent) = 0;
    virtual const TreeItem& item(TreeItemId id) = 0;
+   virtual void remove(TreeItemId id) = 0;
 };
 
 class TreeController final : public ITreeController
@@ -35,9 +36,11 @@ class TreeController final : public ITreeController
 
    const std::vector<TreeItemId>& children(TreeItemId parent) override;
    const TreeItem& item(TreeItemId id) override;
+   void remove(TreeItemId id) override;
 
  private:
    std::map<TreeItemId, std::vector<TreeItemId>> m_hierarchy;
+   std::map<TreeItemId, TreeItemId> m_parent;
    std::map<TreeItemId, TreeItem> m_items;
    TreeItemId m_top_id = 1;
 };

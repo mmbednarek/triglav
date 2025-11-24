@@ -42,10 +42,13 @@ class TreeView final : public ui_core::BaseWidget
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void set_selected_item(TreeItemId item_id);
+   void remove_item(TreeItemId item_id);
 
    void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
 
  private:
+   void remove_internal(const TreeItemId item_id);
+
    [[nodiscard]] std::pair<float, TreeItemId> index_from_mouse_position(Vector2 position) const;
    [[nodiscard]] Measure get_measure(TreeItemId parent_id = TREE_ROOT) const;
    void draw_level(TreeItemId parent_id, float offset_x, float& offset_y);

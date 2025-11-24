@@ -50,8 +50,7 @@ void RectBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
 void RectBox::remove_from_viewport()
 {
    m_content->remove_from_viewport();
-   m_context.viewport().remove_rectangle(m_rect_name);
-   m_rect_name = 0;
+   m_context.viewport().remove_rectangle_safe(m_rect_name);
 }
 
 void RectBox::set_color(Vector4 color)

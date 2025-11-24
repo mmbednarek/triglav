@@ -69,6 +69,7 @@ void Viewport::set_text_color(const TextId text_id, const Color color)
 
 void Viewport::remove_text(const TextId text_id)
 {
+   assert(text_id != 0);
    // log_debug("Removing text: {}", text_id);
    this->event_OnRemovedText.publish(text_id);
    m_texts.erase(text_id);
@@ -163,6 +164,7 @@ void Viewport::set_sprite_texture_region(const SpriteId sprite_id, Vector4 regio
 
 void Viewport::remove_sprite(const SpriteId sprite_id)
 {
+   assert(sprite_id != 0);
    event_OnRemovedSprite.publish(sprite_id);
    m_sprites.erase(sprite_id);
    m_needs_redraw = true;

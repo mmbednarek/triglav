@@ -64,8 +64,10 @@ void TextBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
 
 void TextBox::remove_from_viewport()
 {
-   m_ui_context.viewport().remove_text(m_id);
-   m_id = 0;
+   if (m_id != 0) {
+      m_ui_context.viewport().remove_text(m_id);
+      m_id = 0;
+   }
 }
 
 void TextBox::set_content(const StringView content)

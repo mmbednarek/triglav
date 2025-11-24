@@ -119,6 +119,11 @@ void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, con
    m_object_id_to_item_id[object_id] = id;
 }
 
+void SceneView::on_object_is_removed(const renderer::ObjectID object_id) const
+{
+   m_tree_view->remove_item(m_object_id_to_item_id.at(object_id));
+}
+
 void SceneView::update_selected_item() const
 {
    m_tree_view->set_selected_item(m_object_id_to_item_id.at(m_state.editor->selected_object_id()));
