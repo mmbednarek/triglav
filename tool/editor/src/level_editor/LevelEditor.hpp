@@ -58,6 +58,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    void on_undo(const ui_core::Event& event);
    void on_redo(const ui_core::Event& event);
    void save_level() const;
+   void remove_selected_item();
 
  private:
    State m_state;

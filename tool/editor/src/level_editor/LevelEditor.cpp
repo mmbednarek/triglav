@@ -377,6 +377,7 @@ void LevelEditor::set_selected_object(const renderer::ObjectID id)
 
    if (id == renderer::UNSELECTED_OBJECT) {
       m_selected_object = nullptr;
+      m_side_panel->on_unselected();
    } else {
       m_selected_object = &scene().object(id);
       m_side_panel->on_changed_selected_object(*m_selected_object);
@@ -407,8 +408,15 @@ void LevelEditor::on_redo(const ui_core::Event& /*event*/)
 void LevelEditor::save_level() const
 {
    const auto level = m_scene.to_level();
-   auto level_path = resource::PathManager::the().content_path().sub("level").sub("sponza.level");
+   auto level_path = resource::PathManager::the().content_path().sub("level").sub("demo.yaml");
    assert(level.save_to_file(level_path));
+}
+
+void LevelEditor::remove_selected_item()
+{
+   m_scene.remove_object(m_selected_object_id);
+   set_selected_object(renderer::UNSELECTED_OBJECT);
+   m_viewport->update_view();
 }
 
 }// namespace triglav::editor

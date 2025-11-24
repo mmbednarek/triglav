@@ -159,6 +159,14 @@ void RenderViewport::update(render_core::JobGraph& graph, const u32 frame_index,
    }
 }
 
+void RenderViewport::reset_matrices()
+{
+   for (u32 i = 0; i < OVERLAY_COUNT; ++i) {
+      m_matrices[i] = Matrix4x4{};
+   }
+   m_updates = 0;
+}
+
 [[nodiscard]] Vector4 RenderViewport::dimensions() const
 {
    return m_dimensions;

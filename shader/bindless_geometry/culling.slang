@@ -5,22 +5,25 @@ import "../common/common.slang";
 StructuredBuffer<mesh::SceneMesh> SceneMeshes;
 
 [[vk::binding(1)]]
-RWStructuredBuffer<uint32_t> Count;
+ConstantBuffer<uint32_t> SceneMeshCount;
 
 [[vk::binding(2)]]
-ConstantBuffer<common::ViewProperties> ViewProps;
+RWStructuredBuffer<uint32_t> Count;
 
 [[vk::binding(3)]]
+ConstantBuffer<common::ViewProperties> ViewProps;
+
+[[vk::binding(4)]]
 [[vk::image_format("r16")]]
 Texture2D<float> HiZBuffer;
 
-[[vk::binding(4)]]
+[[vk::binding(5)]]
 RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT0;
 
-[[vk::binding(5)]]
+[[vk::binding(6)]]
 RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT1;
 
-[[vk::binding(6)]]
+[[vk::binding(7)]]
 RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT2;
 
 uint2 to_texture_space(float2 screenSpace, float2 texRes)
@@ -139,10 +142,9 @@ bool is_object_visible(in mesh::SceneMesh mesh)
 [numthreads(1024, 1, 1)]
 void cs_main(uint3 threadID : SV_DispatchThreadID)
 {
-    uint32_t meshCount, stride;
-    SceneMeshes.GetDimensions(meshCount, stride);
-
-    if (threadID.x >= meshCount)
+    // uint32_t meshCount, stride;
+    // SceneMeshes.GetDimensions(meshCount, stride);
+    if (threadID.x >= SceneMeshCount)
         return;
 
     mesh::SceneMesh sceneMesh = SceneMeshes[threadID.x];

@@ -32,6 +32,7 @@ class LevelEditorSidePanel final : public ui_core::ProxyWidget
 
    LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent);
 
+   void on_unselected();
    void on_changed_selected_object(const renderer::SceneObject& object) const;
 
  private:

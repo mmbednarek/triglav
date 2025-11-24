@@ -369,6 +369,11 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    });
 }
 
+void LevelEditorSidePanel::on_unselected()
+{
+   m_object_info->set_is_hidden(true);
+}
+
 void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
 {
    m_object_info->set_is_hidden(false);

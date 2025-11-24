@@ -53,6 +53,7 @@ class RenderViewport
    void build_update_job(render_core::BuildContext& ctx);
    void build_render_job(render_core::BuildContext& ctx);
    void update(render_core::JobGraph& graph, u32 frame_index, float delta_time);
+   void reset_matrices();
 
    [[nodiscard]] Vector4 dimensions() const;
 

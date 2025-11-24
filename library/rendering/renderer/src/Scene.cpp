@@ -200,6 +200,7 @@ void Scene::remove_object(const ObjectID object_id)
 {
    event_OnObjectRemoved.publish(object_id);
    m_objects.erase(object_id);
+   this->update_bvh();
 }
 
 }// namespace triglav::renderer

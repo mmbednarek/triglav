@@ -41,6 +41,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
    // Render Depth Pre-Pass
    {
       render_core::RenderPassScope rt_scope(ctx, "occlusion_culling.depth_prepass"_name, "occlusion_culling.depth_prepass_target"_name);
+      ctx.clear_depth_stencil("occlusion_culling.depth_prepass_target"_name, 1.0f, 0);
 
       this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt0"_last_frame, "occlusion_culling.count_buffer"_last_frame, 0);
       this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt1"_last_frame, "occlusion_culling.count_buffer"_last_frame, 1);
@@ -77,13 +78,14 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
    ctx.bind_compute_shader("bindless_geometry_culling.cshader"_rc);
 
    ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
-   ctx.bind_storage_buffer(1, "occlusion_culling.count_buffer"_name);
-   ctx.bind_uniform_buffer(2, "core.view_properties"_name);
-   ctx.bind_texture(3, "occlusion_culling.hierarchical_depth_buffer"_name);
+   ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
+   ctx.bind_storage_buffer(2, "occlusion_culling.count_buffer"_name);
+   ctx.bind_uniform_buffer(3, "core.view_properties"_name);
+   ctx.bind_texture(4, "occlusion_culling.hierarchical_depth_buffer"_name);
 
-   ctx.bind_storage_buffer(4, "occlusion_culling.visible_objects.mt0"_name);
-   ctx.bind_storage_buffer(5, "occlusion_culling.visible_objects.mt1"_name);
-   ctx.bind_storage_buffer(6, "occlusion_culling.visible_objects.mt2"_name);
+   ctx.bind_storage_buffer(5, "occlusion_culling.visible_objects.mt0"_name);
+   ctx.bind_storage_buffer(6, "occlusion_culling.visible_objects.mt1"_name);
+   ctx.bind_storage_buffer(7, "occlusion_culling.visible_objects.mt2"_name);
 
    ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 1024), 1, 1});
 }
