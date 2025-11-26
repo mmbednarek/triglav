@@ -43,7 +43,9 @@ void TreeView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
    this->draw_level(TREE_ROOT, dimensions.x + g_global_padding, offset_y);
 
 
-   if (m_selected_item != TREE_ROOT) {
+   if (m_selected_item == TREE_ROOT) {
+      m_item_highlight.remove(m_context);
+   } else {
       const auto highlight_dims = m_highlight_dims + Vector4{m_dimensions.x, m_dimensions.y, m_dimensions.z, 0};
       m_item_highlight.add(m_context, highlight_dims, m_cropping_mask);
    }
@@ -89,8 +91,8 @@ void TreeView::remove_item(const TreeItemId item_id)
 {
    this->remove_internal(item_id);
    m_state.controller->remove(item_id);
-   this->add_to_viewport(m_dimensions, m_cropping_mask);
    this->set_selected_item(TREE_ROOT);
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
 void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
