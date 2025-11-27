@@ -33,7 +33,7 @@ class ResourceStorage;
 
 namespace triglav::renderer {
 
-class Renderer
+class Renderer final : public IRenderer
 {
    TG_DEFINE_LOG_CATEGORY(Renderer)
  public:
@@ -66,6 +66,7 @@ class Renderer
    [[nodiscard]] std::tuple<uint32_t, uint32_t> screen_resolution() const;
    [[nodiscard]] graphics_api::Device& device() const;
    void on_config_property_changed(ConfigProperty property, const Config& config);
+   void recreate_render_jobs() override;
 
  private:
    void update_uniform_data(float delta_time);
@@ -73,6 +74,7 @@ class Renderer
    glm::vec3 moving_direction();
    void recreate_jobs();
 
+ private:
    bool m_must_recreate_jobs{false};
    bool m_show_debug_lines{false};
    glm::vec3 m_motion{};

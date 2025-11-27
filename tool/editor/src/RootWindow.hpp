@@ -6,6 +6,7 @@
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
+#include "triglav/renderer/IRenderer.hpp"
 #include "triglav/renderer/RenderSurface.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
 #include "triglav/ui_core/IWidget.hpp"
@@ -19,7 +20,7 @@ namespace triglav::editor {
 
 class RenderViewport;
 
-class RootWindow
+class RootWindow final : public triglav::renderer::IRenderer
 {
  public:
    using Self = RootWindow;
@@ -45,10 +46,12 @@ class RootWindow
    [[nodiscard]] desktop::ISurface& surface() const;
    [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] bool should_close() const;
+   void recreate_render_jobs() override;
 
  private:
    void build_rendering_job(render_core::BuildContext& ctx);
 
+ private:
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resource_manager;
 

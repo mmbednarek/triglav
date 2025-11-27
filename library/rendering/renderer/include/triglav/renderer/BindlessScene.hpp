@@ -1,5 +1,6 @@
 #pragma once
 
+#include "IRenderer.hpp"
 #include "Scene.hpp"
 
 #include "triglav/Int.hpp"
@@ -81,7 +82,7 @@ class BindlessScene
  public:
    using Self = BindlessScene;
 
-   BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, Scene& scene);
+   BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, Scene& scene, IRenderer& renderer);
 
    void on_object_added_to_scene(ObjectID object_id, const SceneObject& object);
    void on_object_changed_transform(ObjectID object_id, const Transform3D& transform);
@@ -108,6 +109,7 @@ class BindlessScene
    // References
    resource::ResourceManager& m_resource_manager;
    Scene& m_scene;
+   IRenderer& m_renderer;
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers
@@ -117,7 +119,6 @@ class BindlessScene
    std::vector<const graphics_api::Texture*> m_scene_textures;
    std::vector<render_core::TextureRef> m_scene_texture_refs;
    std::optional<graphics_api::Pipeline> m_scene_pipeline;
-   bool m_should_update_pso{false};
    bool m_should_write_objects{false};
    memory::HeapAllocator m_vertex_buffer_heap;
    memory::HeapAllocator m_index_buffer_heap;

@@ -179,4 +179,9 @@ bool RootWindow::should_close() const
    return m_should_close;
 }
 
+void RootWindow::recreate_render_jobs()
+{
+   m_should_update_viewport = true;
+}
+
 }// namespace triglav::editor

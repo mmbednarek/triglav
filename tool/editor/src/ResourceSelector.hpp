@@ -25,11 +25,13 @@ class ResourceSelector : public ui_core::ProxyWidget
    ResourceSelector(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    void on_typing(StringView text) const;
+   void on_text_changed(StringView text) const;
 
  private:
    State m_state;
    ResourceList* m_resource_list;
    TG_OPT_SINK(desktop_ui::TextInput, OnTyping);
+   TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
 };
 
 class ResourceSelectTrigger final : public ui_core::ProxyWidget

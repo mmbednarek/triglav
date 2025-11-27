@@ -72,9 +72,10 @@ class DrawCallUpdateWriter
    u32 m_top_staging_index = 0;
 };
 
-BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene) :
+BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene, IRenderer& renderer) :
     m_resource_manager(resource_manager),
     m_scene(scene),
+    m_renderer(renderer),
     m_device(device),
     m_vertex_buffer_heap(VERTEX_BUFFER_SIZE),
     m_index_buffer_heap(INDEX_BUFFER_SIZE),
@@ -351,7 +352,7 @@ u32 BindlessScene::get_texture_id(const TextureName texture_name)
       return it->second;
    }
 
-   m_should_update_pso = true;
+   m_renderer.recreate_render_jobs();
 
    auto& texture = m_resource_manager.get(texture_name);
    const auto texture_id = static_cast<u32>(m_scene_textures.size());
