@@ -158,6 +158,20 @@ struct Transform3D
 }// namespace triglav
 
 template<>
+struct std::formatter<triglav::Vector2>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::Vector2& obj, std::format_context& ctx) const
+   {
+      return std::format_to(ctx.out(), "(X: {}, Y: {})", obj.x, obj.y);
+   }
+};
+
+template<>
 struct std::formatter<triglav::Vector3>
 {
    constexpr auto parse(std::format_parse_context& ctx)

@@ -1,6 +1,10 @@
 #pragma once
 
+#include "../ResourceSelector.hpp"
+
+#include "triglav/Logging.hpp"
 #include "triglav/desktop_ui/Button.hpp"
+#include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
@@ -17,6 +21,7 @@ using namespace name_literals;
 
 class SceneView final : public ui_core::ProxyWidget
 {
+   TG_DEFINE_LOG_CATEGORY(SceneView)
  public:
    using Self = SceneView;
 
@@ -36,6 +41,7 @@ class SceneView final : public ui_core::ProxyWidget
    void on_object_is_removed(const renderer::ObjectID object_id) const;
 
    void update_selected_item() const;
+   void on_resource_selected(String resource);
 
  private:
    State m_state;
@@ -47,6 +53,7 @@ class SceneView final : public ui_core::ProxyWidget
 
    TG_SINK(renderer::Scene, OnObjectAddedToScene);
    TG_OPT_SINK(desktop_ui::TreeView, OnSelected);
+   TG_OPT_NAMED_SINK(ResourceSelectTrigger, OnSelected, OnResourceSelected);
    TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, Add);
    TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, AddDirectory);
    TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, Delete);

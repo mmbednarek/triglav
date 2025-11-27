@@ -125,6 +125,11 @@ void Dialog::on_resize(const Vector2i size)
    m_widget_renderer.add_widget_to_viewport(size);
 };
 
+WidgetRenderer& Dialog::widget_renderer()
+{
+   return m_widget_renderer;
+}
+
 desktop::ISurface& Dialog::surface() const
 {
    return *m_surface;

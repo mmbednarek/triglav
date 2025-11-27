@@ -46,7 +46,7 @@ void UpdateList<TKey, TValue>::write_to_buffers(UpdateWriter<TValue> auto& write
    std::erase_if(m_additions, [this](const auto& pair) { return m_key_to_index.contains(pair.first); });
 
    std::set<u32> removal_indices{};
-   for (const auto rem_key : m_removals) {
+   for (const auto& rem_key : m_removals) {
       removal_indices.emplace(m_key_to_index.at(rem_key));
    }
 

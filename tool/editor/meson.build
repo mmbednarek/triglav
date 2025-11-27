@@ -28,6 +28,8 @@ editor_sources = files([
                            'src/Main.cpp',
                            'src/ProjectExplorer.cpp',
                            'src/ProjectExplorer.hpp',
+                           'src/ResourceSelector.cpp',
+                           'src/ResourceSelector.hpp',
                            'src/RootWidget.cpp',
                            'src/RootWidget.hpp',
                            'src/RootWindow.cpp',

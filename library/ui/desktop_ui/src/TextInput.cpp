@@ -178,6 +178,7 @@ void TextInput::on_text_input(const ui_core::Event& /*event*/, const ui_core::Ev
       ++m_caret_position;
       this->recalculate_caret_offset();
       m_text_prim.set_content(m_context, m_state.text.view());
+      event_OnTyping.publish(m_state.text.view());
    }
 }
 
@@ -214,6 +215,7 @@ void TextInput::on_key_pressed(const ui_core::Event& event, const ui_core::Event
          } else {
             m_text_prim.set_content(m_context, m_state.text.view());
          }
+         event_OnTyping.publish(m_state.text.view());
       }
       break;
    }

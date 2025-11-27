@@ -37,11 +37,18 @@ class Dialog
    void update();
    void on_close();
    void on_resize(Vector2i size);
+   [[nodiscard]] WidgetRenderer& widget_renderer();
 
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
    {
       return m_widget_renderer.create_root_widget<T>(std::forward<typename T::State>(state));
+   }
+
+   template<typename T, typename... TArgs>
+   T& emplace_root_widget(TArgs&&... args)
+   {
+      return m_widget_renderer.emplace_root_widget<T>(std::forward<TArgs>(args)...);
    }
 
    [[nodiscard]] desktop::ISurface& surface() const;

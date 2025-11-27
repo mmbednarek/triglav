@@ -22,6 +22,7 @@ class TextInput final : public ui_core::IWidget
    using Self = TextInput;
 
    TG_EVENT(OnTextChanged, StringView)
+   TG_EVENT(OnTyping, StringView)
 
    struct State
    {
