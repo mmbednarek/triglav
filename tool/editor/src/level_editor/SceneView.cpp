@@ -13,6 +13,8 @@
 
 namespace triglav::editor {
 
+using namespace string_literals;
+
 SceneView::SceneView(ui_core::Context& context, State state, IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
     m_state(std::move(state)),
@@ -98,11 +100,6 @@ void SceneView::on_selected_object(const desktop_ui::TreeItemId item_id)
    m_state.editor->viewport().update_view();
 }
 
-void SceneView::on_clicked_add()
-{
-   log_info("Clicked add!");
-}
-
 void SceneView::on_clicked_add_directory()
 {
    log_info("Clicked add directory!");
@@ -136,9 +133,25 @@ void SceneView::update_selected_item() const
    m_tree_view->set_selected_item(m_object_id_to_item_id.at(m_state.editor->selected_object_id()));
 }
 
-void SceneView::on_resource_selected(String resource)
+void SceneView::on_resource_selected(const String resource) const
 {
    log_info("Selected resource: {}", resource.to_std());
+
+   const auto& camera = m_state.editor->scene().camera();
+
+   Transform3D transform{};
+   transform.translation = camera.position() + 10.0f * camera.forward_vector();
+   transform.rotation = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+   transform.scale = {1, 1, 1};
+
+   const auto object_id = m_state.editor->scene().add_object(renderer::SceneObject{
+      .model = make_rc_name(resource.view().to_std()),
+      .name = "New Object"_str,
+      .transform = transform,
+   });
+
+   m_state.editor->set_selected_object(object_id);
+   m_state.editor->viewport().update_view();
 }
 
 }// namespace triglav::editor

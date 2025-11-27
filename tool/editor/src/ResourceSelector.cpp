@@ -127,6 +127,14 @@ class ResourceList final : public ui_core::BaseWidget
       this->add_to_viewport(m_dimensions, m_cropping_mask);
    }
 
+   [[nodiscard]] StringView selected_path() const
+   {
+      if (m_selection_index < m_text_instances.size()) {
+         return m_text_instances[m_selection_index].content.view();
+      }
+      return {"", 0};
+   }
+
    void on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/) const
    {
       if (m_selection_index < m_text_instances.size()) {
@@ -165,6 +173,7 @@ ResourceSelector::ResourceSelector(ui_core::Context& ctx, State state, ui_core::
       .text = "",
    });
    TG_CONNECT_OPT(text_input, OnTyping, on_typing);
+   TG_CONNECT_OPT(text_input, OnTextChanged, on_text_changed);
 
    m_resource_list = &layout
                          .create_child<ui_core::ScrollBox>({
@@ -180,6 +189,11 @@ void ResourceSelector::on_typing(const StringView text) const
 {
    assert(m_resource_list != nullptr);
    m_resource_list->filter(text);
+}
+
+void ResourceSelector::on_text_changed(const StringView /*text*/) const
+{
+   m_state.trigger->dispatch_select(m_resource_list->selected_path());
 }
 
 ResourceSelectTrigger::ResourceSelectTrigger(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :

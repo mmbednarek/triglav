@@ -58,7 +58,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_resource_manager(resource_manager),
     m_config_manager(m_device),
     m_scene(m_resource_manager),
-    m_bindless_scene(m_device, m_resource_manager, m_scene),
+    m_bindless_scene(m_device, m_resource_manager, m_scene, *this),
     m_glyph_cache(m_device, m_resource_manager),
     m_ui_viewport({resolution.width, resolution.height}),
     m_ui_context(m_ui_viewport, m_glyph_cache, m_resource_manager),
@@ -369,6 +369,11 @@ void Renderer::on_config_property_changed(const ConfigProperty /*property*/, con
 {
    m_must_recreate_jobs = true;
    m_rendering_job.set_config(config);
+}
+
+void Renderer::recreate_render_jobs()
+{
+   m_must_recreate_jobs = true;
 }
 
 constexpr auto g_moving_speed = 10.0f;

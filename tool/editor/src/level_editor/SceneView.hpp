@@ -34,14 +34,13 @@ class SceneView final : public ui_core::ProxyWidget
    SceneView(ui_core::Context& context, State state, IWidget* parent);
 
    void on_selected_object(const desktop_ui::TreeItemId item_id);
-   void on_clicked_add();
    void on_clicked_add_directory();
    void on_clicked_delete();
    void on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object);
    void on_object_is_removed(const renderer::ObjectID object_id) const;
 
    void update_selected_item() const;
-   void on_resource_selected(String resource);
+   void on_resource_selected(String resource) const;
 
  private:
    State m_state;
