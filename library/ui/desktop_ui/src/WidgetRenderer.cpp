@@ -177,4 +177,9 @@ ui_core::Viewport& WidgetRenderer::ui_viewport()
    return m_ui_viewport;
 }
 
+ui_core::Context& WidgetRenderer::context()
+{
+   return m_context;
+}
+
 }// namespace triglav::desktop_ui

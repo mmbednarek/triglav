@@ -1,9 +1,11 @@
 #include "SceneView.hpp"
 
+#include "../ResourceSelector.hpp"
 #include "LevelEditor.hpp"
 #include "LevelViewport.hpp"
 
 #include "triglav/desktop_ui/DesktopUI.hpp"
+#include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
@@ -35,7 +37,13 @@ SceneView::SceneView(ui_core::Context& context, State state, IWidget* parent) :
       .gravity = ui_core::HorizontalAlignment::Left,
    });
 
-   auto& add_button = buttons.create_child<desktop_ui::Button>({
+   auto& add_trigger = buttons.create_child<ResourceSelectTrigger>({
+      .manager = m_state.manager,
+      .suffix = ".mesh",
+   });
+   TG_CONNECT_NAMED_OPT(add_trigger, OnSelected, OnResourceSelected, on_resource_selected);
+
+   auto& add_button = add_trigger.create_content<desktop_ui::Button>({
       .manager = m_state.manager,
    });
    add_button.create_content<ui_core::Image>({
@@ -43,7 +51,6 @@ SceneView::SceneView(ui_core::Context& context, State state, IWidget* parent) :
       .max_size = Vector2{20, 20},
       .region = Vector4{5 * 64, 0, 64, 64},
    });
-   TG_CONNECT_NAMED_OPT(add_button, OnClick, Add, on_clicked_add);
 
    auto& add_dir_button = buttons.create_child<desktop_ui::Button>({
       .manager = m_state.manager,
@@ -93,18 +100,18 @@ void SceneView::on_selected_object(const desktop_ui::TreeItemId item_id)
 
 void SceneView::on_clicked_add()
 {
-   log_message(LogLevel::Info, StringView{"TESTING"}, "Clicked Add");
+   log_info("Clicked add!");
 }
 
 void SceneView::on_clicked_add_directory()
 {
-   log_message(LogLevel::Info, StringView{"TESTING"}, "Clicked Add Directory");
+   log_info("Clicked add directory!");
 }
 
 void SceneView::on_clicked_delete()
 {
    m_state.editor->remove_selected_item();
-   log_message(LogLevel::Info, StringView{"SceneView"}, "Deleted Item");
+   log_info("Deleted item!");
 }
 
 void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)
@@ -127,6 +134,11 @@ void SceneView::on_object_is_removed(const renderer::ObjectID object_id) const
 void SceneView::update_selected_item() const
 {
    m_tree_view->set_selected_item(m_object_id_to_item_id.at(m_state.editor->selected_object_id()));
+}
+
+void SceneView::on_resource_selected(String resource)
+{
+   log_info("Selected resource: {}", resource.to_std());
 }
 
 }// namespace triglav::editor

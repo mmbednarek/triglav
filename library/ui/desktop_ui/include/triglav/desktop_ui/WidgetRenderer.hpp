@@ -44,11 +44,18 @@ class WidgetRenderer
    ui_core::IWidget& set_root_widget(ui_core::IWidgetPtr&& content);
    [[nodiscard]] bool is_empty() const;
    [[nodiscard]] ui_core::Viewport& ui_viewport();
+   [[nodiscard]] ui_core::Context& context();
 
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
    {
       return dynamic_cast<T&>(this->set_root_widget(std::make_unique<T>(m_context, std::forward<typename T::State>(state), nullptr)));
+   }
+
+   template<typename T, typename... TArgs>
+   T& emplace_root_widget(TArgs&&... args)
+   {
+      return dynamic_cast<T&>(this->set_root_widget(std::make_unique<T>(std::forward<TArgs>(args)...)));
    }
 
  private:

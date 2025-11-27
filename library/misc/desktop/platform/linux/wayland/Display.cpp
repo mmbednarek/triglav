@@ -428,6 +428,8 @@ void Display::on_keyboard_enter(const u32 /*serial*/, wl_surface* surface, wl_ar
    if (not m_surface_map.contains(surface))
       return;
 
+   log_message(LogLevel::Info, StringView{"WaylandDisplay"}, "Changed keyboard focus: {}", reinterpret_cast<u64>(surface));
+
    auto keyboard_surface = m_keyboard_surface.access();
    *keyboard_surface = m_surface_map.at(surface);
 }
@@ -450,7 +452,8 @@ void Display::on_keymap(const u32 format, const i32 fd, const u32 size)
 
 void Display::on_key(const u32 /*serial*/, const u32 /*time*/, const u32 key, const u32 state) const
 {
-   auto keyboard_surface = m_keyboard_surface.read_access();
+   // auto keyboard_surface = m_keyboard_surface.read_access();
+   auto keyboard_surface = m_pointer_surface.read_access();
    if (*keyboard_surface == nullptr)
       return;
 
