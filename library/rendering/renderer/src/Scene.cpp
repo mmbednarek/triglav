@@ -203,4 +203,11 @@ void Scene::remove_object(const ObjectID object_id)
    this->update_bvh();
 }
 
+void Scene::set_object_name(const ObjectID id, const StringView name) const
+{
+   const auto& obj = m_objects.at(id);
+   obj->name = name;
+   event_OnObjectChangedName.publish(id, name);
+}
+
 }// namespace triglav::renderer

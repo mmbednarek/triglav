@@ -10,15 +10,17 @@
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/Padding.hpp"
+#include "triglav/ui_core/widget/ScrollBox.hpp"
 
 namespace triglav::editor {
 
 using namespace string_literals;
 
-SceneView::SceneView(ui_core::Context& context, State state, IWidget* parent) :
+SceneView::SceneView(ui_core::Context& context, const State state, IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
-    m_state(std::move(state)),
-    TG_CONNECT(m_state.editor->scene(), OnObjectAddedToScene, on_object_added_to_scene)
+    m_state(state),
+    TG_CONNECT(m_state.editor->scene(), OnObjectAddedToScene, on_object_added_to_scene),
+    TG_CONNECT(m_state.editor->scene(), OnObjectChangedName, on_object_changed_name)
 {
    auto& vert_layout = this
                           ->create_content<ui_core::RectBox>({
@@ -81,9 +83,8 @@ SceneView::SceneView(ui_core::Context& context, State state, IWidget* parent) :
                         .border_color = palette::NO_COLOR,
                         .border_width = 0.0f,
                      })
-                     .create_content<ui_core::AlignmentBox>({
-                        .horizontal_alignment = std::nullopt,
-                        .vertical_alignment = ui_core::VerticalAlignment::Top,
+                     .create_content<ui_core::ScrollBox>({
+                        .offset = 0.0f,
                      })
                      .create_content<desktop_ui::TreeView>({
                         .manager = m_state.manager,
@@ -97,18 +98,16 @@ void SceneView::on_selected_object(const desktop_ui::TreeItemId item_id)
 {
    const auto object_id = m_item_id_to_object_id[item_id];
    m_state.editor->set_selected_object(object_id);
-   m_state.editor->viewport().update_view();
 }
 
 void SceneView::on_clicked_add_directory()
 {
-   log_info("Clicked add directory!");
+   log_error("Adding directory is not implemented yet");
 }
 
-void SceneView::on_clicked_delete()
+void SceneView::on_clicked_delete() const
 {
    m_state.editor->remove_selected_item();
-   log_info("Deleted item!");
 }
 
 void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)
@@ -126,6 +125,11 @@ void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, con
 void SceneView::on_object_is_removed(const renderer::ObjectID object_id) const
 {
    m_tree_view->remove_item(m_object_id_to_item_id.at(object_id));
+}
+
+void SceneView::on_object_changed_name(const renderer::ObjectID object_id, const StringView name) const
+{
+   m_tree_view->set_label(m_object_id_to_item_id.at(object_id), name);
 }
 
 void SceneView::update_selected_item() const
@@ -151,7 +155,6 @@ void SceneView::on_resource_selected(const String resource) const
    });
 
    m_state.editor->set_selected_object(object_id);
-   m_state.editor->viewport().update_view();
 }
 
 }// namespace triglav::editor

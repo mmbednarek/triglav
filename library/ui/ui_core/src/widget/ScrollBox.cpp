@@ -12,14 +12,17 @@ ScrollBox::ScrollBox(Context& ctx, State state, IWidget* parent) :
 
 Vector2 ScrollBox::desired_size(const Vector2 parent_size) const
 {
-   m_content_size = this->m_content->desired_size(parent_size);
-   m_parent_size = parent_size;
-   m_height = m_state.max_height.has_value() ? std::min(*m_state.max_height, parent_size.y) : parent_size.y;
-   return {m_content_size.x, m_height};
+   const auto child_size = this->m_content->desired_size(parent_size);
+   const auto height = m_state.max_height.has_value() ? std::min(*m_state.max_height, parent_size.y) : parent_size.y;
+   return {child_size.x, height};
 }
 
 void ScrollBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
+   m_available_size = rect_size(dimensions);
+   m_content_size = this->m_content->desired_size(m_available_size);
+   m_height = m_state.max_height.has_value() ? std::min(*m_state.max_height, dimensions.w) : dimensions.w;
+
    m_stored_dims = dimensions;
    m_cropping_mask = min_area(cropping_mask, dimensions);
    this->m_content->add_to_viewport({dimensions.x, dimensions.y + m_state.offset, dimensions.z, dimensions.w}, m_cropping_mask);

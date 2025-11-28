@@ -2,7 +2,7 @@ nodes:
   - name: root
     items:
       - type: static_mesh
-        name: hall
+        name: Main Hall
         mesh: 18446744073247152064
         transform:
           translation:
@@ -19,7 +19,7 @@ nodes:
             y: 10.000000
             z: 10.000000
       - type: static_mesh
-        name: arrow
+        name: Arrow
         mesh: 18446744073394145072
         transform:
           translation:
@@ -36,7 +36,7 @@ nodes:
             y: 2.000000
             z: 2.000000
       - type: static_mesh
-        name: column_0
+        name: Column 0
         mesh: 18446744072693836414
         transform:
           translation:
@@ -53,7 +53,7 @@ nodes:
             y: 10.000000
             z: 10.000000
       - type: static_mesh
-        name: column_1
+        name: Column 1
         mesh: 18446744072693836414
         transform:
           translation:
@@ -70,7 +70,7 @@ nodes:
             y: 10.000000
             z: 10.000000
       - type: static_mesh
-        name: column_2
+        name: Column 2
         mesh: 18446744072693836414
         transform:
           translation:
@@ -87,7 +87,7 @@ nodes:
             y: 10.000000
             z: 10.000000
       - type: static_mesh
-        name: column_3
+        name: Column 3
         mesh: 18446744072693836414
         transform:
           translation:
@@ -104,7 +104,7 @@ nodes:
             y: 10.000000
             z: 10.000000
       - type: static_mesh
-        name: column_4
+        name: Column 4
         mesh: 18446744072693836414
         transform:
           translation:
@@ -121,7 +121,7 @@ nodes:
             y: 10.000000
             z: 10.000000
       - type: static_mesh
-        name: sphere
+        name: Sphere
         mesh: 18446744071760099236
         transform:
           translation:
@@ -137,3 +137,20 @@ nodes:
             x: 3.000000
             y: 3.000000
             z: 3.000000
+      - type: static_mesh
+        name: Cage
+        mesh: 18446744072255812014
+        transform:
+          translation:
+            x: 10.000000
+            y: 9.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 1.000000
+            y: 1.000000
+            z: 1.000000

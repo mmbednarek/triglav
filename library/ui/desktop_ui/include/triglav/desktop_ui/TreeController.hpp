@@ -26,6 +26,7 @@ class ITreeController
  public:
    virtual const std::vector<TreeItemId>& children(TreeItemId parent) = 0;
    virtual const TreeItem& item(TreeItemId id) = 0;
+   virtual void set_label(TreeItemId id, StringView label) = 0;
    virtual void remove(TreeItemId id) = 0;
 };
 
@@ -36,6 +37,7 @@ class TreeController final : public ITreeController
 
    const std::vector<TreeItemId>& children(TreeItemId parent) override;
    const TreeItem& item(TreeItemId id) override;
+   void set_label(TreeItemId id, StringView label) override;
    void remove(TreeItemId id) override;
 
  private:

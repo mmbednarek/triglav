@@ -10,7 +10,7 @@
 
 namespace triglav::desktop_ui {
 
-constexpr auto g_item_padding = 10.0f;
+constexpr auto g_item_padding = 13.0f;
 
 TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::LayoutWidget(ctx, parent),
@@ -58,27 +58,13 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
             m_active_rect_id = m_context.viewport().add_rectangle({
                .rect = active_tab_dims,
                .color = TG_THEME_VAL(background_color_brighter),
-               .border_radius = {0.0f, 0.0f, 0.0f, 0.0f},
+               .border_radius = {5.0f, 5.0f, 0.0f, 0.0f},
                .border_color = palette::NO_COLOR,
                .crop = cropping_mask,
                .border_width = 0.0f,
             });
          } else {
             m_context.viewport().set_rectangle_dims(m_active_rect_id, active_tab_dims, m_cropping_mask);
-         }
-
-         const Vector4 highlight_tab_dims{offset_x, dimensions.y, measure.tab_widths[index], 0.25f * g_item_padding};
-         if (m_highlight_rect_id == 0) {
-            m_highlight_rect_id = m_context.viewport().add_rectangle({
-               .rect = highlight_tab_dims,
-               .color = TG_THEME_VAL(accent_color),
-               .border_radius = {0.0f, 0.0f, 0.0f, 0.0f},
-               .border_color = palette::NO_COLOR,
-               .crop = cropping_mask,
-               .border_width = 0.0f,
-            });
-         } else {
-            m_context.viewport().set_rectangle_dims(m_highlight_rect_id, highlight_tab_dims, m_cropping_mask);
          }
       }
 
@@ -87,7 +73,7 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
          m_labels.emplace_back(m_context.viewport().add_text({
             .content = tab_name,
             .typeface_name = TG_THEME_VAL(base_typeface),
-            .font_size = TG_THEME_VAL(base_font_size),
+            .font_size = TG_THEME_VAL(tab_view.font_size),
             .position = text_pos,
             .color = TG_THEME_VAL(foreground_color),
             .crop = cropping_mask,
@@ -117,7 +103,6 @@ void TabView::remove_from_viewport()
    m_background_id = 0;
    m_context.viewport().remove_rectangle_safe(m_active_rect_id);
    m_context.viewport().remove_rectangle_safe(m_hover_rect_id);
-   m_context.viewport().remove_rectangle_safe(m_highlight_rect_id);
 
    m_children[m_state.active_tab]->remove_from_viewport();
 }
@@ -245,7 +230,7 @@ void TabView::set_active_tab(const u32 active_tab)
 
    const auto& atlas = m_context.glyph_cache().find_glyph_atlas({
       .typeface = TG_THEME_VAL(base_typeface),
-      .font_size = TG_THEME_VAL(base_font_size),
+      .font_size = TG_THEME_VAL(tab_view.font_size),
    });
 
    for (const auto& name : m_state.tab_names) {

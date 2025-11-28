@@ -44,7 +44,6 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
                                                                      axis_forward_vec3(*m_transform_axis), ray.origin, ray.direction) -
                                     m_starting_hit);
       m_level_editor.set_selected_transform(transform);
-      m_level_editor.viewport().update_view();
       return;
    }
 

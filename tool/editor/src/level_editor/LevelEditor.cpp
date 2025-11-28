@@ -145,6 +145,8 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    });
    m_tool_radio_group.add_check_box(&scale_btn);
 
+   m_tool_radio_group.set_active(&select_btn);
+
    // Separation
    toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
 
@@ -320,7 +322,10 @@ void LevelEditor::on_selected_tool(const u32 id)
    default:
       break;
    }
-   m_viewport->update_view();
+
+   if (m_viewport != nullptr) {
+      m_viewport->update_view();
+   }
 }
 
 void LevelEditor::on_origin_selected(u32 /*id*/) const
@@ -369,6 +374,12 @@ void LevelEditor::set_selected_transform(const Transform3D& transform)
 
    m_scene.set_transform(m_selected_object_id, transform);
    m_side_panel->on_changed_selected_object(*m_selected_object);
+   m_viewport->update_view();
+}
+
+void LevelEditor::set_selected_name(const StringView name)
+{
+   scene().set_object_name(m_selected_object_id, name);
 }
 
 void LevelEditor::set_selected_object(const renderer::ObjectID id)
@@ -382,6 +393,8 @@ void LevelEditor::set_selected_object(const renderer::ObjectID id)
       m_selected_object = &scene().object(id);
       m_side_panel->on_changed_selected_object(*m_selected_object);
    }
+
+   m_viewport->update_view();
 }
 
 HistoryManager& LevelEditor::history_manager()
@@ -417,7 +430,6 @@ void LevelEditor::remove_selected_item()
    m_side_panel->on_object_is_removed(m_selected_object_id);
    m_scene.remove_object(m_selected_object_id);
    set_selected_object(renderer::UNSELECTED_OBJECT);
-   m_viewport->update_view();
 }
 
 }// namespace triglav::editor

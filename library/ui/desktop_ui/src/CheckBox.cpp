@@ -25,7 +25,13 @@ void RadioGroup::set_active(const CheckBox* active_cb) const
 
 CheckBox::CheckBox(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ContainerWidget(ctx, parent),
-    m_state(state)
+    m_state(state),
+    m_background{
+       .color = TG_THEME_VAL(background_color_brighter),
+       .border_radius = {4.0f, 4.0f, 4.0f, 4.0f},
+       .border_color = palette::NO_COLOR,
+       .border_width = 0.0f,
+    }
 {
 }
 
@@ -40,18 +46,7 @@ void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
 {
    auto size = this->desired_size({dimensions.z, dimensions.w});
 
-   if (m_background == 0) {
-      m_background = m_context.viewport().add_rectangle({
-         .rect = {dimensions.x, dimensions.y, size},
-         .color = TG_THEME_VAL(background_color_brighter),
-         .border_radius = {4.0f, 4.0f, 4.0f, 4.0f},
-         .border_color = palette::NO_COLOR,
-         .crop = cropping_mask,
-         .border_width = 0.0f,
-      });
-   } else {
-      m_context.viewport().set_rectangle_dims(m_background, {dimensions.x, dimensions.y, size}, cropping_mask);
-   }
+   m_background.add(m_context, {dimensions.x, dimensions.y, size}, cropping_mask);
 
    const auto padding = TG_THEME_VAL(checkbox.padding);
    const Vector4 content_dims{dimensions.x + padding, dimensions.y + padding, size.x - 2 * padding, size.y - 2 * padding};
@@ -60,8 +55,7 @@ void CheckBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
 
 void CheckBox::remove_from_viewport()
 {
-   m_context.viewport().remove_rectangle(m_background);
-   m_background = 0;
+   m_background.remove(m_context);
    m_content->remove_from_viewport();
 }
 
@@ -85,7 +79,7 @@ bool CheckBox::on_mouse_released(const ui_core::Event& /*event*/, const ui_core:
 bool CheckBox::on_mouse_entered(const ui_core::Event& /*event*/)
 {
    if (!m_state.is_enabled) {
-      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(active_color));
+      m_background.set_color(m_context, TG_THEME_VAL(active_color));
    }
    return true;
 }
@@ -93,7 +87,7 @@ bool CheckBox::on_mouse_entered(const ui_core::Event& /*event*/)
 bool CheckBox::on_mouse_left(const ui_core::Event& /*event*/)
 {
    if (!m_state.is_enabled) {
-      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color_brighter));
+      m_background.set_color(m_context, TG_THEME_VAL(background_color_brighter));
    }
    return true;
 }
@@ -102,9 +96,9 @@ void CheckBox::set_state(const bool is_enabled)
 {
    m_state.is_enabled = is_enabled;
    if (m_state.is_enabled) {
-      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(accent_color));
+      m_background.set_color(m_context, TG_THEME_VAL(accent_color));
    } else {
-      m_context.viewport().set_rectangle_color(m_background, TG_THEME_VAL(background_color_brighter));
+      m_background.set_color(m_context, TG_THEME_VAL(background_color_brighter));
    }
 }
 
