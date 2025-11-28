@@ -80,7 +80,6 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
       transform.translation = m_starting_position + translation_diff;
       transform.scale = m_starting_transform.scale * scale_vec;
       m_level_editor.set_selected_transform(transform);
-      m_level_editor.viewport().update_view();
       return;
    }
 

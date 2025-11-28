@@ -43,6 +43,14 @@ ThemeProperties ThemeProperties::get_default()
          {
             .padding = 4.0f,
          },
+      .tab_view =
+         {
+            .font_size = 14,
+         },
+      .tree_view =
+         {
+            .font_size = 14,
+         },
    };
 }
 

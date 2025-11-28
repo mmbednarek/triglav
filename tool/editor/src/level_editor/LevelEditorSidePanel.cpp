@@ -348,8 +348,8 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "Properties"});
 
    auto& prop_layout = layout.create_child<ui_core::GridLayout>({
-      .column_ratios = {0.35f, 0.65f},
-      .row_ratios = {1.0f},
+      .column_ratios = {0.3f, 0.7f},
+      .row_ratios = {0.5f, 0.5f},
       .horizontal_spacing = 5.0f,
       .vertical_spacing = 5.0f,
    });
@@ -357,7 +357,22 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
    prop_layout.create_child<ui_core::TextBox>({
       .font_size = TG_THEME_VAL(base_font_size),
       .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Mesh Path",
+      .content = "Name",
+      .color = TG_THEME_VAL(foreground_color),
+      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
+      .vertical_alignment = ui_core::VerticalAlignment::Center,
+   });
+   m_name_input = &prop_layout.create_child<desktop_ui::TextInput>({
+      .manager = m_state.manager,
+      .text = "",
+      .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
+   });
+   TG_CONNECT_NAMED_OPT(*m_name_input, OnTextChanged, NameChange, on_changed_name);
+
+   prop_layout.create_child<ui_core::TextBox>({
+      .font_size = TG_THEME_VAL(base_font_size),
+      .typeface = TG_THEME_VAL(base_typeface),
+      .content = "Mesh",
       .color = TG_THEME_VAL(foreground_color),
       .horizontal_alignment = ui_core::HorizontalAlignment::Left,
       .vertical_alignment = ui_core::VerticalAlignment::Center,
@@ -367,9 +382,10 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .text = "",
       .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
    });
+   TG_CONNECT_NAMED_OPT(*m_mesh_input, OnTextChanged, MeshChange, on_changed_mesh);
 }
 
-void LevelEditorSidePanel::on_unselected()
+void LevelEditorSidePanel::on_unselected() const
 {
    if (!m_object_info->state().is_hidden) {
       m_object_info->set_is_hidden(true);
@@ -380,14 +396,28 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
 {
    m_object_info->set_is_hidden(false);
    m_transform_widget->on_changed_selected_object(object);
+
+   m_name_input->set_content(object.name.view());
+
    const std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
-   m_mesh_input->set_content(StringView{mesh_path.data(), mesh_path.size()});
+   m_mesh_input->set_content(StringView{mesh_path});
+
    m_scene_view->update_selected_item();
 }
 
 void LevelEditorSidePanel::on_object_is_removed(const renderer::ObjectID object_id) const
 {
    m_scene_view->on_object_is_removed(object_id);
+}
+
+void LevelEditorSidePanel::on_changed_name(const StringView name) const
+{
+   m_state.editor->set_selected_name(name);
+}
+
+void LevelEditorSidePanel::on_changed_mesh(StringView /*mesh*/)
+{
+   // TODO: Implement
 }
 
 }// namespace triglav::editor

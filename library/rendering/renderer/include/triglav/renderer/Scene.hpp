@@ -55,6 +55,7 @@ class Scene
  public:
    TG_EVENT(OnObjectAddedToScene, ObjectID, const SceneObject&)
    TG_EVENT(OnObjectChangedTransform, ObjectID, const Transform3D&)
+   TG_EVENT(OnObjectChangedName, ObjectID, const StringView)
    TG_EVENT(OnObjectRemoved, ObjectID)
    TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
@@ -72,6 +73,7 @@ class Scene
    void update_shadow_maps();
    void send_view_changed();
    void remove_object(ObjectID object_id);
+   void set_object_name(ObjectID id, StringView name) const;
 
    [[nodiscard]] const Camera& camera() const;
    [[nodiscard]] Camera& camera();

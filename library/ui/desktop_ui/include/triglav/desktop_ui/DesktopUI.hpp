@@ -54,6 +54,18 @@ struct ThemeProperties
       float padding;
    } checkbox;
 
+   // Tab View
+   struct
+   {
+      i32 font_size;
+   } tab_view;
+
+   // Tree View
+   struct
+   {
+      int font_size;
+   } tree_view;
+
    static ThemeProperties get_default();
 };
 

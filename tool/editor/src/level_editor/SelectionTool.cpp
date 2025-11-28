@@ -16,7 +16,6 @@ bool SelectionTool::on_use_start(const geometry::Ray& ray)
    const auto hit = m_level_editor.scene().trace_ray(ray);
    if (hit.object != nullptr) {
       m_level_editor.set_selected_object(hit.id);
-      m_level_editor.viewport().update_view();
    }
    return true;
 }

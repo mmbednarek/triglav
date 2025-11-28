@@ -43,6 +43,7 @@ class TreeView final : public ui_core::BaseWidget
    void on_event(const ui_core::Event& event) override;
    void set_selected_item(TreeItemId item_id);
    void remove_item(TreeItemId item_id);
+   void set_label(TreeItemId item_id, StringView label);
 
    void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
 

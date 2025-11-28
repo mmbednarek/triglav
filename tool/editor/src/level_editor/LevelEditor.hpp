@@ -52,6 +52,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    float speed() const;
    void finish_using_tool() const;
    void set_selected_transform(const Transform3D& transform);
+   void set_selected_name(StringView name);
    void set_selected_object(renderer::ObjectID id);
    HistoryManager& history_manager();
    void on_event(const ui_core::Event& event) override;
@@ -71,7 +72,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    renderer::RenderingJob m_rendering_job;
    const renderer::SceneObject* m_selected_object{};
    renderer::ObjectID m_selected_object_id{renderer::UNSELECTED_OBJECT};
-   LevelViewport* m_viewport;
+   LevelViewport* m_viewport{};
    SelectionTool m_selection_tool;
    TranslationTool m_translation_tool;
    RotationTool m_rotation_tool;

@@ -2,6 +2,7 @@
 
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
+#include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/Primitives.hpp"
 
 namespace triglav::desktop_ui {
@@ -51,7 +52,7 @@ class CheckBox : public ui_core::ContainerWidget
 
  private:
    State m_state;
-   ui_core::RectId m_background{};
+   ui_core::RectInstance m_background{};
 };
 
 }// namespace triglav::desktop_ui

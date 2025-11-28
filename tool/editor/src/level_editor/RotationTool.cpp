@@ -74,7 +74,6 @@ void RotationTool::on_mouse_moved(Vector2 position)
       transform.translation = obj_position + quat_rot * (m_starting_transform.translation - obj_position);
       transform.rotation = quat_rot * m_starting_transform.rotation;
       m_level_editor.set_selected_transform(transform);
-      m_level_editor.viewport().update_view();
       return;
    }
 

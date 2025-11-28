@@ -49,12 +49,12 @@ void HideableWidget::on_event(const Event& event)
 
 void HideableWidget::set_is_hidden(const bool value)
 {
-   if (value) {
+   m_state.is_hidden = value;
+   if (m_state.is_hidden) {
       this->remove_from_viewport();
    } else {
       this->add_to_viewport(m_parent_dimensions, m_cropping_mask);
    }
-   m_state.is_hidden = value;
 
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(*this);

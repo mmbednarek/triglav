@@ -56,7 +56,6 @@ class TabView final : public ui_core::LayoutWidget
    ui_core::RectId m_background_id{};
    ui_core::RectId m_hover_rect_id{};
    ui_core::RectId m_active_rect_id{};
-   ui_core::RectId m_highlight_rect_id{};
    u32 m_hovered_item = 0;
    bool m_is_dragging{false};
 

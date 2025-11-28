@@ -25,9 +25,9 @@ class ScrollBox final : public ContainerWidget
 
  private:
    State m_state;
-   mutable Vector2 m_content_size{};
-   mutable Vector2 m_parent_size{};
-   mutable float m_height{};
+   Vector2 m_content_size{};
+   Vector2 m_available_size{};
+   float m_height{};
    Vector4 m_stored_dims{};
    Vector4 m_cropping_mask{};
 };

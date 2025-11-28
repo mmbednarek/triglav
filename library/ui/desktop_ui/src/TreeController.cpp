@@ -21,6 +21,11 @@ const TreeItem& TreeController::item(const TreeItemId id)
    return m_items.at(id);
 }
 
+void TreeController::set_label(const TreeItemId id, const StringView label)
+{
+   m_items.at(id).label = label;
+}
+
 void TreeController::remove(const TreeItemId id)
 {
    const auto parent = m_parent.at(id);

@@ -42,7 +42,6 @@ void TreeView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
    float offset_y = g_global_padding + dimensions.y;
    this->draw_level(TREE_ROOT, dimensions.x + g_global_padding, offset_y);
 
-
    if (m_selected_item == TREE_ROOT) {
       m_item_highlight.remove(m_context);
    } else {
@@ -92,6 +91,12 @@ void TreeView::remove_item(const TreeItemId item_id)
    this->remove_internal(item_id);
    m_state.controller->remove(item_id);
    this->set_selected_item(TREE_ROOT);
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
+}
+
+void TreeView::set_label(const TreeItemId item_id, const StringView label)
+{
+   m_state.controller->set_label(item_id, label);
    this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
@@ -171,7 +176,7 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parent_id) const
 
    const auto& atlas = m_context.glyph_cache().find_glyph_atlas({
       .typeface = TG_THEME_VAL(base_typeface),
-      .font_size = TG_THEME_VAL(base_font_size),
+      .font_size = TG_THEME_VAL(tree_view.font_size),
    });
 
    const auto& children = m_state.controller->children(parent_id);
@@ -268,12 +273,13 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
          m_labels.emplace(child, ui_core::TextInstance{
                                     .content = item.label,
                                     .typeface_name = TG_THEME_VAL(base_typeface),
-                                    .font_size = TG_THEME_VAL(base_font_size),
+                                    .font_size = TG_THEME_VAL(tree_view.font_size),
                                     .color = TG_THEME_VAL(foreground_color),
                                  });
          return m_labels.at(child);
       }();
 
+      label.set_content(m_context, item.label.view());
       label.add(m_context, label_dims, m_cropping_mask);
 
       offset_y += 2 * g_item_padding + measure.item_size.y;
