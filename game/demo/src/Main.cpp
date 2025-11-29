@@ -4,6 +4,7 @@
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/io/CommandLine.hpp"
+#include "triglav/io/Logging.hpp"
 #include "triglav/resource/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
@@ -28,7 +29,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    CommandLine::the().parse(args.arg_count, args.args);
 
    // Initialize logger
-   triglav::LogManager::the().register_listener<triglav::StdOutLogger>();
+   triglav::LogManager::the().register_listener<triglav::io::StreamLogger>(triglav::io::stdout_writer());
 
    // Assign ID to the main thread
    triglav::threading::set_thread_id(triglav::threading::g_main_thread);

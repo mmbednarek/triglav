@@ -260,7 +260,7 @@ class LevelImporter
          return std::nullopt;
       }
 
-      const auto file = io::open_file(dst_path, io::FileOpenMode::Create);
+      const auto file = io::open_file(dst_path, io::FileMode::Write | io::FileMode::Create);
       if (!file.has_value()) {
          return std::nullopt;
       }

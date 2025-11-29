@@ -49,7 +49,7 @@ size_t RapidJsonInputStream::PutEnd(Ch*)
 
 std::optional<rapidjson::Document> create_document_from_file(const io::Path& path)
 {
-   auto file = io::open_file(path, io::FileOpenMode::Read);
+   auto file = io::open_file(path, io::FileMode::Read);
    if (!file.has_value())
       return std::nullopt;
 

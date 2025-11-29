@@ -373,7 +373,7 @@ InternalMesh InternalMesh::from_obj_file(io::IReader& stream)
 
 InternalMesh InternalMesh::from_obj_file(const io::Path& path)
 {
-   const auto file = io::open_file(path, io::FileOpenMode::Read);
+   const auto file = io::open_file(path, io::FileMode::Read);
    if (not file.has_value()) {
       throw std::runtime_error("failed to open object file");
    }

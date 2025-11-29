@@ -99,7 +99,7 @@ std::optional<ResourceList> ResourceList::from_file(const io::Path& path)
 
 bool ResourceList::save_to_file(const io::Path& path) const
 {
-   const auto file = io::open_file(path, io::FileOpenMode::Create);
+   const auto file = io::open_file(path, io::FileMode::Write | io::FileMode::Create);
    if (!file.has_value()) {
       return false;
    }

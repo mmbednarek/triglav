@@ -7,22 +7,22 @@
 
 namespace triglav::io {
 
-Result<IFileUPtr> open_file(const io::Path& path, const FileOpenMode mode)
+Result<IFileUPtr> open_file(const io::Path& path, const FileModeFlags mode)
 {
    int flags{};
-   switch (mode) {
-   case FileOpenMode::Read:
-      flags = O_RDONLY;
-      break;
-   case FileOpenMode::Write:
-      flags = O_WRONLY | O_TRUNC;
-      break;
-   case FileOpenMode::ReadWrite:
-      flags = O_RDWR;
-      break;
-   case FileOpenMode::Create:
-      flags = O_WRONLY | O_CREAT | O_TRUNC;
-      break;
+   if (mode & FileMode::Read && mode & FileMode::Write) {
+      flags |= O_RDWR;
+   } else if (mode & FileMode::Read) {
+      flags |= O_RDONLY;
+   } else if (mode & FileMode::Write) {
+      flags |= O_WRONLY | O_TRUNC;
+   }
+
+   if (mode & FileMode::Create) {
+      flags |= O_CREAT;
+   }
+   if (mode & FileMode::Append) {
+      flags |= O_APPEND;
    }
 
    const auto res = ::open(path.string().c_str(), flags, 0644);

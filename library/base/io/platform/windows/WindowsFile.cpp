@@ -7,22 +7,23 @@ namespace triglav::io {
 
 namespace {
 
-UINT map_file_open_style(const FileOpenMode mode)
+UINT map_file_open_style(const FileModeFlags mode)
 {
-   switch (mode) {
-   case FileOpenMode::Read:
-      return OF_READ;
-   case FileOpenMode::Write:
-      return OF_WRITE;
-   case FileOpenMode::ReadWrite:
-      return OF_READ | OF_WRITE;
-   case FileOpenMode::Create:
-      return OF_WRITE | OF_CREATE;
+   UINT flags{};
+   if (mode & FileMode::Read && mode & FileMode::Write) {
+      flags |= OF_READWRITE;
+   } else if (mode & FileMode::Read) {
+      flags |= OF_READ;
+   } else if (mode & FileMode::Write) {
+      flags |= OF_WRITE;
+   }
+
+   if (mode & FileMode::Create) {
+      flags |= OF_CREATE;
    }
 
    return 0;
 }
-
 
 HANDLE hfile_to_handle(HFILE file)
 {
@@ -31,12 +32,16 @@ HANDLE hfile_to_handle(HFILE file)
 
 }// namespace
 
-Result<IFileUPtr> open_file(const Path& path, const FileOpenMode mode)
+Result<IFileUPtr> open_file(const Path& path, const FileModeFlags mode)
 {
    OFSTRUCT open_file_info{};
-   const auto file = OpenFile(path.string().data(), &open_file_info, map_file_open_style(mode));
+   const auto file = ::OpenFile(path.string().data(), &open_file_info, map_file_open_style(mode));
    if (file == HFILE_ERROR) {
       return std::unexpected(Status::BrokenPipe);
+   }
+
+   if (mode & FileMode::Append) {
+      ::SetFilePointer(hfile_to_handle(file), 0, nullptr, FILE_END);
    }
 
    return std::make_unique<windows::WindowsFile>(file);
@@ -69,8 +74,8 @@ Result<MemorySize> WindowsFile::read(const std::span<u8> buffer)
 Result<MemorySize> WindowsFile::write(const std::span<const u8> buffer)
 {
    DWORD bytes_written{};
-   const auto res = WriteFile(hfile_to_handle(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytes_written, nullptr);
-   if (not res) {
+   const BOOL res = ::WriteFile(hfile_to_handle(m_file), buffer.data(), static_cast<DWORD>(buffer.size()), &bytes_written, nullptr);
+   if (!res) {
       return std::unexpected(Status::BrokenPipe);
    }
    return static_cast<MemorySize>(bytes_written);

@@ -4,6 +4,7 @@
 
 #include "triglav/Logging.hpp"
 #include "triglav/String.hpp"
+#include "triglav/io/Logging.hpp"
 
 #include <chrono>
 #include <thread>
@@ -16,7 +17,7 @@ using namespace std::chrono_literals;
 Editor::Editor(desktop::InputArgs& args, desktop::IDisplay& display) :
     m_app(args, display)
 {
-   LogManager::the().register_listener<StdOutLogger>();
+   LogManager::the().register_listener<io::StreamLogger>(io::stdout_writer());
 }
 
 void Editor::initialize()

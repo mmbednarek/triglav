@@ -6,7 +6,7 @@ namespace triglav::io {
 
 std::vector<char> read_whole_file(const Path& path)
 {
-   auto file_res = open_file(path, FileOpenMode::Read);
+   auto file_res = open_file(path, FileMode::Read);
    if (not file_res.has_value()) {
       return {};
    }
