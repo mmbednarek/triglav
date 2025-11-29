@@ -43,5 +43,14 @@ class ISeekableStream : public IStream
    [[nodiscard]] virtual MemorySize position() const = 0;
 };
 
+class IConsoleWriter : public IWriter
+{
+ public:
+   [[nodiscard]] virtual bool supports_color_output() const = 0;
+};
+
+[[nodiscard]] IConsoleWriter& stdout_writer();
+[[nodiscard]] IConsoleWriter& stderr_writer();
+[[nodiscard]] IReader& stdin_reader();
 
 }// namespace triglav::io

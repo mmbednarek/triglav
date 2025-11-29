@@ -3,12 +3,15 @@
 #include "vulkan/Util.hpp"
 
 #include "triglav/String.hpp"
+#include "triglav/io/CommandLine.hpp"
 
 #define TG_ENABLE_SYNC_VALIDATION 0
 
 namespace triglav::graphics_api {
 
 namespace {
+
+using namespace name_literals;
 
 DeviceFeatureFlags feature_flags_from_physical_device(const VkPhysicalDevice physical_device)
 {
@@ -105,19 +108,21 @@ Instance::Instance(vulkan::Instance&& instance) :
 #endif
 {
 #if GAPI_ENABLE_VALIDATION
-   VkDebugUtilsMessengerCreateInfoEXT debug_messenger_info{};
-   debug_messenger_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-   debug_messenger_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                                          VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-   debug_messenger_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                                      VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-   debug_messenger_info.pfnUserCallback = validation_layers_callback;
-   debug_messenger_info.pUserData = nullptr;
+   if (!io::CommandLine::the().is_enabled("disableValidation"_name)) {
+      VkDebugUtilsMessengerCreateInfoEXT debug_messenger_info{};
+      debug_messenger_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+      debug_messenger_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                             VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                             VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+      debug_messenger_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                         VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+      debug_messenger_info.pfnUserCallback = validation_layers_callback;
+      debug_messenger_info.pUserData = nullptr;
 
-   if (const auto res = m_debug_messenger.construct(&debug_messenger_info); res != VK_SUCCESS) {
-      log_error("failed to enable validation layers: {}", static_cast<i32>(res));
+      if (const auto res = m_debug_messenger.construct(&debug_messenger_info); res != VK_SUCCESS) {
+         log_error("failed to enable validation layers: {}", static_cast<i32>(res));
+      }
    }
-
 #endif
 }
 
@@ -313,11 +318,14 @@ Result<Instance> Instance::create_instance(const desktop::IDisplay* display)
 
    std::vector vulkan_instance_extensions{
       VK_KHR_SURFACE_EXTENSION_NAME,
-#if GAPI_ENABLE_VALIDATION
-      VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
-      VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
-#endif
    };
+
+#if GAPI_ENABLE_VALIDATION
+   if (!io::CommandLine::the().is_enabled("disableValidation"_name)) {
+      vulkan_instance_extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+      vulkan_instance_extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+   }
+#endif
 
    if (display != nullptr) {
       vulkan_instance_extensions.push_back(desktop::vulkan_extension_name(display));

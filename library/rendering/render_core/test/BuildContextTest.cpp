@@ -135,7 +135,7 @@ void write_buffer(triglav::graphics_api::Buffer& buffer, T value)
 [[maybe_unused]]
 void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_view file_name = "test_output.dat")
 {
-   const auto out_file = triglav::io::open_file(triglav::io::Path{file_name}, triglav::io::FileOpenMode::Create);
+   const auto out_file = triglav::io::open_file(triglav::io::Path{file_name}, triglav::io::FileMode::Write | triglav::io::FileMode::Create);
    assert(out_file.has_value());
    const auto write_res = (*out_file)->write(buffer);
    assert(write_res.has_value());
@@ -177,7 +177,7 @@ TEST(BuildContext, BasicCompute)
 
 TEST(BuildContext, BasicGraphics)
 {
-   using triglav::io::FileOpenMode;
+   using triglav::io::FileMode;
    using triglav::io::open_file;
    using triglav::io::Path;
 
@@ -236,7 +236,7 @@ TEST(BuildContext, BasicGraphics)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_graphics_expected_bitmap.dat"}, FileOpenMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/basic_graphics_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
@@ -244,7 +244,7 @@ TEST(BuildContext, BasicGraphics)
 
 TEST(BuildContext, BasicDepth)
 {
-   using triglav::io::FileOpenMode;
+   using triglav::io::FileMode;
    using triglav::io::open_file;
    using triglav::io::Path;
 
@@ -311,7 +311,7 @@ TEST(BuildContext, BasicDepth)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_depth_expected_bitmap.dat"}, FileOpenMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/basic_depth_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
@@ -319,7 +319,7 @@ TEST(BuildContext, BasicDepth)
 
 TEST(BuildContext, BasicTexture)
 {
-   using triglav::io::FileOpenMode;
+   using triglav::io::FileMode;
    using triglav::io::open_file;
    using triglav::io::Path;
 
@@ -381,7 +381,7 @@ TEST(BuildContext, BasicTexture)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_texture_expected_bitmap.dat"}, FileOpenMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/basic_texture_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
@@ -389,7 +389,7 @@ TEST(BuildContext, BasicTexture)
 
 TEST(BuildContext, MultiplePasses)
 {
-   using triglav::io::FileOpenMode;
+   using triglav::io::FileMode;
    using triglav::io::open_file;
    using triglav::io::Path;
 
@@ -428,7 +428,7 @@ TEST(BuildContext, MultiplePasses)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/multiple_passes_expected_bitmap.dat"}, FileOpenMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/multiple_passes_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
@@ -436,7 +436,7 @@ TEST(BuildContext, MultiplePasses)
 
 TEST(BuildContext, DepthTargetSample)
 {
-   using triglav::io::FileOpenMode;
+   using triglav::io::FileMode;
    using triglav::io::open_file;
    using triglav::io::Path;
 
@@ -508,7 +508,7 @@ TEST(BuildContext, DepthTargetSample)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileOpenMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
@@ -677,7 +677,7 @@ TEST(BuildContext, ConditionalBarrier)
 
 TEST(BuildContext, BasicRayTracing)
 {
-   using triglav::io::FileOpenMode;
+   using triglav::io::FileMode;
    using triglav::io::open_file;
    using triglav::io::Path;
 
@@ -783,7 +783,7 @@ TEST(BuildContext, BasicRayTracing)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_ray_tracing_expected_bitmap.dat"}, FileOpenMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/basic_ray_tracing_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));

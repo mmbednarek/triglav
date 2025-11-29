@@ -29,7 +29,7 @@ bool write_mesh_to_file(const geometry::Mesh& mesh, const io::Path& dst_path)
    // mesh.triangulate();
    // mesh.recalculate_tangents();
 
-   const auto out_file = io::open_file(dst_path, io::FileOpenMode::Create);
+   const auto out_file = io::open_file(dst_path, io::FileMode::Write | io::FileMode::Create);
    if (!out_file.has_value()) {
       std::print(stderr, "Failed to open output file\n");
       return false;

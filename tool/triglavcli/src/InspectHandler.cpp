@@ -51,7 +51,7 @@ ExitStatus handle_inspect(const CmdArgs_inspect& args)
       return EXIT_FAILURE;
    }
 
-   const auto file_handle = io::open_file(io::Path(args.positional_args[0]), io::FileOpenMode::Read);
+   const auto file_handle = io::open_file(io::Path(args.positional_args[0]), io::FileMode::Read);
    if (!file_handle.has_value()) {
       return EXIT_FAILURE;
    }

@@ -46,7 +46,7 @@ std::optional<GlbInfo> read_glb_info(io::ISeekableStream& stream)
 
 std::optional<GlbResource> open_glb_file(const io::Path& path)
 {
-   auto file_handle_res = io::open_file(path, io::FileOpenMode::Read);
+   auto file_handle_res = io::open_file(path, io::FileMode::Read);
    if (!file_handle_res.has_value()) {
       return std::nullopt;
    }

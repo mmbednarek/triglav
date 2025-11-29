@@ -1,4 +1,5 @@
 #include "triglav/io/DynamicWriter.hpp"
+#include "triglav/io/Iterator.hpp"
 #include "triglav/test_util/GTest.hpp"
 
 #include <cstring>
@@ -38,4 +39,17 @@ TEST(IO_DynamicWriterTests, BasicTest)
 
    ASSERT_EQ(std::strncmp(reinterpret_cast<const char*>(writer.data()), TEST_STRING, 16), 0);
    ASSERT_EQ(std::strncmp(reinterpret_cast<const char*>(writer.data()) + 16, TEST_STRING, 231), 0);
+}
+
+TEST(IO_DynamicWriterTests, IteratorTest)
+{
+   DynamicWriter writer;
+
+   std::string_view str = TEST_STRING;
+
+   triglav::io::WriterIterator<u8> iter(writer);
+   std::copy(str.begin(), str.end(), iter);
+
+   std::string_view result(reinterpret_cast<const char*>(writer.data()), writer.size());
+   ASSERT_EQ(result, str);
 }

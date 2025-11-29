@@ -77,36 +77,9 @@ void LogManager::flush_internal()
    m_offset = 0;
 }
 
-namespace {
-
-StringView log_level_color_escape(const LogLevel level)
-{
-   using namespace string_literals;
-   switch (level) {
-   case LogLevel::Error:
-      return "\033[31m"_strv;
-   case LogLevel::Warning:
-      return "\033[33m"_strv;
-   case LogLevel::Info:
-      return "\033[32m"_strv;
-   case LogLevel::Debug:
-      return "\033[34m"_strv;
-   }
-   return ""_strv;
-}
-
-}// namespace
-
 void flush_logs()
 {
    LogManager::the().flush();
-}
-
-void StdOutLogger::on_log(const LogLevel level, const std::chrono::time_point<std::chrono::system_clock> tp, const StringView category,
-                          const StringView log)
-{
-   std::cout << std::format("[{:%Y-%m-%d %H:%M:%OS}] [{}{}\033[0m] \033[33m{}\033[0m: {}\n", tp, log_level_color_escape(level).to_std(),
-                            log_level_to_string(level).to_std(), category.to_std(), log.to_std());
 }
 
 }// namespace triglav

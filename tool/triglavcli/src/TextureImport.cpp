@@ -140,7 +140,7 @@ bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableSt
       }
    }
 
-   const auto out_file = io::open_file(props.dst_path, io::FileOpenMode::Create);
+   const auto out_file = io::open_file(props.dst_path, io::FileMode::Write | io::FileMode::Create);
    if (!out_file.has_value()) {
       return false;
    }
@@ -154,7 +154,7 @@ bool import_texture_from_stream(const TextureImportProps& props, io::ISeekableSt
 
 bool import_texture(const TextureImportProps& props)
 {
-   auto file_handle = io::open_file(props.src_path, io::FileOpenMode::Read);
+   auto file_handle = io::open_file(props.src_path, io::FileMode::Read);
    if (!file_handle.has_value()) {
       return false;
    }

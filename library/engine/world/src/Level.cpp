@@ -50,7 +50,7 @@ void Level::serialize_yaml(c4::yml::NodeRef& node) const
 
 bool Level::save_to_file(const io::Path& path) const
 {
-   const auto file = io::open_file(path, io::FileOpenMode::Create);
+   const auto file = io::open_file(path, io::FileMode::Write | io::FileMode::Create);
    if (!file.has_value()) {
       return false;
    }

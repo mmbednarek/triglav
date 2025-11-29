@@ -117,12 +117,6 @@ void log_message(const LogLevel level, const StringView category, std::format_st
    LogManager::the().write_formatted(header, category.data(), fmt, std::forward<TArgs>(args)...);
 }
 
-class StdOutLogger final : public ILogListener
-{
- public:
-   void on_log(LogLevel level, std::chrono::time_point<std::chrono::system_clock> tp, StringView category, StringView log) override;
-};
-
 }// namespace triglav
 
 #define TG_LOG_LEVEL(long, short, name)                                                                   \

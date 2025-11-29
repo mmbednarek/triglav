@@ -11,7 +11,7 @@ namespace triglav::resource {
 render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& device, MeshName /*name*/, const io::Path& path,
                                                           const ResourceProperties& /*props*/)
 {
-   const auto mesh_file_handle = io::open_file(path, io::FileOpenMode::Read);
+   const auto mesh_file_handle = io::open_file(path, io::FileMode::Read);
    assert(mesh_file_handle.has_value());
 
    [[maybe_unused]]

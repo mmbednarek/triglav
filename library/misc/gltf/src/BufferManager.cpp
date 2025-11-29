@@ -10,7 +10,7 @@ BufferManager::BufferManager(Document& document, io::IFile* binary_chunk, const 
 {
    for (const auto& buffer : m_document.buffers) {
       if (buffer.uri.has_value()) {
-         auto file_handle = io::open_file(io::Path(*buffer.uri), io::FileOpenMode::Read);
+         auto file_handle = io::open_file(io::Path(*buffer.uri), io::FileMode::Read);
          if (!file_handle.has_value()) {
             throw std::runtime_error(std::format("gltf::BufferManager: could not open buffer {}", *buffer.uri));
          }
