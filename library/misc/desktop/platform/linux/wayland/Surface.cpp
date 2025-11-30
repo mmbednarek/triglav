@@ -9,6 +9,156 @@ namespace triglav::desktop::wayland {
 
 using namespace string_literals;
 
+namespace {
+
+Key map_key(const u32 key)
+{
+   switch (key) {
+   case 1:
+      return Key::Escape;
+   case 2:
+      return Key::Digit1;
+   case 3:
+      return Key::Digit2;
+   case 4:
+      return Key::Digit3;
+   case 5:
+      return Key::Digit4;
+   case 6:
+      return Key::Digit5;
+   case 7:
+      return Key::Digit6;
+   case 8:
+      return Key::Digit7;
+   case 9:
+      return Key::Digit8;
+   case 10:
+      return Key::Digit9;
+   case 11:
+      return Key::Digit0;
+   case 15:
+      return Key::Tab;
+   case 14:
+      return Key::Backspace;
+   case 16:
+      return Key::Q;
+   case 17:
+      return Key::W;
+   case 18:
+      return Key::E;
+   case 19:
+      return Key::R;
+   case 20:
+      return Key::T;
+   case 21:
+      return Key::Y;
+   case 22:
+      return Key::U;
+   case 23:
+      return Key::I;
+   case 24:
+      return Key::O;
+   case 25:
+      return Key::P;
+   case 26:
+      return Key::LeftBrace;
+   case 27:
+      return Key::RightBrace;
+   case 28:
+      return Key::Enter;
+   case 29:
+      return Key::Control;
+   case 30:
+      return Key::A;
+   case 31:
+      return Key::S;
+   case 32:
+      return Key::D;
+   case 33:
+      return Key::F;
+   case 34:
+      return Key::G;
+   case 35:
+      return Key::H;
+   case 36:
+      return Key::J;
+   case 37:
+      return Key::K;
+   case 38:
+      return Key::L;
+   case 39:
+      return Key::Semicolon;
+   case 40:
+      return Key::Quote;
+   case 41:
+      return Key::Tilde;
+   case 42:
+      return Key::Shift;
+   case 44:
+      return Key::Z;
+   case 45:
+      return Key::X;
+   case 46:
+      return Key::C;
+   case 47:
+      return Key::V;
+   case 48:
+      return Key::B;
+   case 49:
+      return Key::N;
+   case 50:
+      return Key::M;
+   case 51:
+      return Key::Comma;
+   case 52:
+      return Key::Dot;
+   case 53:
+      return Key::Slash;
+   case 56:
+      return Key::Alt;
+   case 57:
+      return Key::Space;
+   case 59:
+      return Key::F1;
+   case 60:
+      return Key::F2;
+   case 61:
+      return Key::F3;
+   case 62:
+      return Key::F4;
+   case 63:
+      return Key::F5;
+   case 64:
+      return Key::F6;
+   case 65:
+      return Key::F7;
+   case 66:
+      return Key::F8;
+   case 67:
+      return Key::F9;
+   case 68:
+      return Key::F10;
+   case 69:
+      return Key::F11;
+   case 70:
+      return Key::F12;
+   case 103:
+      return Key::DownArrow;
+   case 105:
+      return Key::LeftArrow;
+   case 106:
+      return Key::RightArrow;
+   case 108:
+      return Key::UpArrow;
+   case 111:
+      return Key::Delete;
+   }
+
+   return Key::Unknown;
+}
+
+}// namespace
+
 Surface::Surface(Display& display, const StringView title, const Dimension dimension, const WindowAttributeFlags attributes) :
     m_display(display),
     m_surface(wl_compositor_create_surface(display.compositor())),
@@ -163,6 +313,42 @@ void Surface::on_popup_repositioned(u32 token)
    log_debug("on popup repositioned: {}", token);
 }
 
+void Surface::on_key(u32 /*serial*/, u32 /*time*/, const u32 key, const u32 state) const
+{
+   if (m_keyboard_input_mode & KeyboardInputMode::Text && state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+      char data[128];
+      const i32 count = xkb_state_key_get_utf8(m_display.m_xkb_state, key + 8, data, 128);
+      if (count > 0) {
+         const char* buff_ptr = data;
+         Rune rune = decode_rune_from_buffer(buff_ptr, buff_ptr + count);
+         event_OnTextInput.publish(rune);
+      }
+   }
+
+   if (m_keyboard_input_mode & KeyboardInputMode::Direct) {
+      if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+         event_OnKeyIsPressed.publish(map_key(key));
+      } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+         event_OnKeyIsReleased.publish(map_key(key));
+      }
+   }
+}
+
+void Surface::on_modifiers(u32 /*serial*/, const u32 mods_depressed, u32 /*mods_latched*/, u32 /*mods_locked*/, u32 /*group*/)
+{
+   m_modifiers = Modifier::Empty;
+   if ((mods_depressed & (1 << 0u)) != 0) {
+      m_modifiers |= Modifier::Shift;
+   }
+   // 1 is caps
+   if ((mods_depressed & (1 << 2u)) != 0) {
+      m_modifiers |= Modifier::Control;
+   }
+   if ((mods_depressed & (1 << 3u)) != 0) {
+      m_modifiers |= Modifier::Alt;
+   }
+}
+
 void Surface::lock_cursor()
 {
    if (m_locked_pointer != nullptr) {
@@ -231,6 +417,11 @@ void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
 std::shared_ptr<ISurface> Surface::create_popup(const Vector2u dimensions, const Vector2 offset, const WindowAttributeFlags flags)
 {
    return std::make_shared<Surface>(m_display, *this, dimensions, offset, flags);
+}
+
+ModifierFlags Surface::modifiers() const
+{
+   return m_modifiers;
 }
 
 void Surface::tick()

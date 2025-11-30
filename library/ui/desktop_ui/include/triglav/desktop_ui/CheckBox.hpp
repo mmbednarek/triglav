@@ -19,6 +19,7 @@ class RadioGroup
 
    void add_check_box(CheckBox* cb);
    void set_active(const CheckBox* active_cb) const;
+   void highlight(u32 target_index);
 
  private:
    std::vector<CheckBox*> m_check_boxes;

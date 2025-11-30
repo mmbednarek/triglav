@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/EnumFlags.hpp"
 #include "triglav/Int.hpp"
 
 namespace triglav::desktop {
@@ -45,6 +46,17 @@ enum class Key
    N,
    M,
 
+   Digit1,
+   Digit2,
+   Digit3,
+   Digit4,
+   Digit5,
+   Digit6,
+   Digit7,
+   Digit8,
+   Digit9,
+   Digit0,
+
    F1,
    F2,
    F3,
@@ -67,6 +79,16 @@ enum class Key
    Shift,
    Alt,
    Enter,
+   Delete,
+
+   LeftBrace,
+   RightBrace,
+   Semicolon,
+   Quote,
+   Tilde,
+   Comma,
+   Dot,
+   Slash,
 
    LeftArrow,
    UpArrow,
@@ -84,5 +106,15 @@ enum class CursorIcon
    ResizeHorizontal,
    ResizeVertical,
 };
+
+enum class Modifier : u32
+{
+   Empty = 0,
+   Control = (1 << 0u),
+   Shift = (1 << 1u),
+   Alt = (1 << 2u),
+};
+
+TRIGLAV_DECL_FLAGS(Modifier)
 
 }// namespace triglav::desktop

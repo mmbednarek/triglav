@@ -4,8 +4,11 @@
 
 namespace triglav::desktop_ui {
 
-SecondaryEventGenerator::SecondaryEventGenerator(ui_core::Context& ctx, ui_core::IWidget* parent) :
-    ui_core::ProxyWidget(ctx, parent)
+using desktop::Modifier;
+
+SecondaryEventGenerator::SecondaryEventGenerator(ui_core::Context& ctx, ui_core::IWidget* parent, desktop::ISurface& surface) :
+    ui_core::ProxyWidget(ctx, parent),
+    m_surface(surface)
 {
 }
 
@@ -24,29 +27,10 @@ void SecondaryEventGenerator::on_mouse_pressed(const ui_core::Event& event, cons
    }
 }
 
-static std::optional<Modifier> key_to_modifier(const desktop::Key key)
-{
-   switch (key) {
-   case desktop::Key::Control:
-      return Modifier::Control;
-   case desktop::Key::Shift:
-      return Modifier::Shift;
-   case desktop::Key::Alt:
-      return Modifier::Alt;
-   default:
-      break;
-   }
-   return std::nullopt;
-}
-
 void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard)
 {
-   if (const auto mod = key_to_modifier(keyboard.key); mod.has_value()) {
-      m_modifier_state |= *mod;
-      return;
-   }
-
-   if (m_modifier_state == Modifier::None) {
+   const auto modifier_state = m_surface.modifiers();
+   if (modifier_state == Modifier::Empty) {
       switch (keyboard.key) {
       case desktop::Key::Tab: {
          m_context.toggle_active_widget();
@@ -57,33 +41,16 @@ void SecondaryEventGenerator::on_key_pressed(const ui_core::Event& event, const 
       }
    }
 
-   if (m_modifier_state == Modifier::Control) {
+   if (modifier_state == Modifier::Control) {
       switch (keyboard.key) {
       case desktop::Key::A: {
          const ui_core::Event select_all_event = event.sub_event(ui_core::Event::Type::SelectAll);
          this->forward_event(select_all_event);
          break;
       }
-      case desktop::Key::Z: {
-         const ui_core::Event undo_event = event.sub_event(ui_core::Event::Type::Undo);
-         this->forward_event(undo_event);
-         break;
-      }
-      case desktop::Key::Y: {
-         const ui_core::Event redo_event = event.sub_event(ui_core::Event::Type::Redo);
-         this->forward_event(redo_event);
-         break;
-      }
       default:
          break;
       }
-   }
-}
-
-void SecondaryEventGenerator::on_key_released(const ui_core::Event& /*event*/, const ui_core::Event::Keyboard& keyboard)
-{
-   if (const auto mod = key_to_modifier(keyboard.key); mod.has_value()) {
-      m_modifier_state.remove_flag(*mod);
    }
 }
 

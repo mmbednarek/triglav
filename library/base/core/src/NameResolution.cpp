@@ -43,6 +43,7 @@ std::map<Name, std::string_view> KnownNames{
    {"debug_lines"_name, "debug_lines"sv},
    {"demo"_name, "demo"sv},
    {"dialog_render_ui"_name, "dialog_render_ui"sv},
+   {"disableValidation"_name, "disableValidation"sv},
    {"edit"_name, "edit"sv},
    {"edit.redo"_name, "edit.redo"sv},
    {"edit.undo"_name, "edit.undo"sv},

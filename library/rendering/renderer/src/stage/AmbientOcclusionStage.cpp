@@ -105,7 +105,7 @@ void AmbientOcclusionStage::fill_sample_buffer()
    std::vector<Vector3_Aligned16B> result{};
    result.resize(g_sample_count);
 
-   static constexpr auto min_distance = 0.5f;
+   static constexpr auto min_distance = 0.25f;
 
    for (auto& out_sample : result) {
       Vector3 sample;
@@ -146,7 +146,7 @@ std::vector<Vector2> AmbientOcclusionStage::generate_noise_texture(const Vector2
    static std::default_random_engine generator{2957831};
    static std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 
-   static constexpr auto min_distance = 0.001f;
+   static constexpr auto min_distance = 0.0005f;
 
    [[maybe_unused]] u32 skipped = 0;
 

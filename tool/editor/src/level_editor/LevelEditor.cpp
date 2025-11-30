@@ -305,26 +305,21 @@ RootWindow& LevelEditor::root_window() const
 
 void LevelEditor::on_selected_tool(const u32 id)
 {
-   m_current_tool->on_left_tool();
    switch (id) {
    case 0:
-      m_current_tool = &m_selection_tool;
+      this->set_active_tool(LevelEditorTool::Selection);
       break;
    case 1:
-      m_current_tool = &m_translation_tool;
+      this->set_active_tool(LevelEditorTool::Translation);
       break;
    case 2:
-      m_current_tool = &m_rotation_tool;
+      this->set_active_tool(LevelEditorTool::Rotation);
       break;
    case 3:
-      m_current_tool = &m_scaling_tool;
+      this->set_active_tool(LevelEditorTool::Scaling);
       break;
    default:
       break;
-   }
-
-   if (m_viewport != nullptr) {
-      m_viewport->update_view();
    }
 }
 
@@ -404,18 +399,7 @@ HistoryManager& LevelEditor::history_manager()
 
 void LevelEditor::on_event(const ui_core::Event& event)
 {
-   ui_core::visit_event<void>(*this, event);
    ProxyWidget::on_event(event);
-}
-
-void LevelEditor::on_undo(const ui_core::Event& /*event*/)
-{
-   m_history_manager.undo();
-}
-
-void LevelEditor::on_redo(const ui_core::Event& /*event*/)
-{
-   m_history_manager.redo();
 }
 
 void LevelEditor::save_level() const
@@ -427,9 +411,85 @@ void LevelEditor::save_level() const
 
 void LevelEditor::remove_selected_item()
 {
+   if (m_selected_object_id == renderer::UNSELECTED_OBJECT)
+      return;
    m_side_panel->on_object_is_removed(m_selected_object_id);
    m_scene.remove_object(m_selected_object_id);
    set_selected_object(renderer::UNSELECTED_OBJECT);
+}
+
+void LevelEditor::on_command(const Command command)
+{
+   switch (command) {
+   case Command::Save: {
+      this->save_level();
+      break;
+   }
+   case Command::Undo: {
+      m_history_manager.undo();
+      break;
+   }
+   case Command::Redo: {
+      m_history_manager.redo();
+      break;
+   }
+   case Command::Delete: {
+      this->remove_selected_item();
+      break;
+   }
+   case Command::SelectionTool: {
+      this->set_active_tool(LevelEditorTool::Selection);
+      break;
+   }
+   case Command::TranslateTool: {
+      this->set_active_tool(LevelEditorTool::Translation);
+      break;
+   }
+   case Command::RotationTool: {
+      this->set_active_tool(LevelEditorTool::Rotation);
+      break;
+   }
+   case Command::ScaleTool: {
+      this->set_active_tool(LevelEditorTool::Scaling);
+      break;
+   }
+   default:
+      break;
+   }
+}
+
+bool LevelEditor::accepts_key_chords() const
+{
+   return !m_viewport->is_moving() && m_context.active_widget() == nullptr;
+}
+
+void LevelEditor::set_active_tool(const LevelEditorTool tool)
+{
+   m_current_tool->on_left_tool();
+   switch (tool) {
+   case LevelEditorTool::Selection:
+      m_current_tool = &m_selection_tool;
+      m_tool_radio_group.highlight(0);
+      break;
+   case LevelEditorTool::Translation:
+      m_current_tool = &m_translation_tool;
+      m_tool_radio_group.highlight(1);
+      break;
+   case LevelEditorTool::Rotation:
+      m_current_tool = &m_rotation_tool;
+      m_tool_radio_group.highlight(2);
+      break;
+   case LevelEditorTool::Scaling:
+      m_current_tool = &m_scaling_tool;
+      m_tool_radio_group.highlight(3);
+      break;
+   default:
+      break;
+   }
+
+   if (m_viewport != nullptr) {
+      m_viewport->update_view();
+   }
 }
 
 }// namespace triglav::editor

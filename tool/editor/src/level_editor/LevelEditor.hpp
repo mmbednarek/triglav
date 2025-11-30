@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Command.hpp"
 #include "../HistoryManager.hpp"
 #include "ILevelEditorTool.hpp"
 #include "RotationTool.hpp"
@@ -21,6 +22,14 @@ namespace triglav::editor {
 class LevelViewport;
 class RootWindow;
 class LevelEditorSidePanel;
+
+enum class LevelEditorTool
+{
+   Selection,
+   Translation,
+   Rotation,
+   Scaling,
+};
 
 class LevelEditor final : public ui_core::ProxyWidget
 {
@@ -56,10 +65,11 @@ class LevelEditor final : public ui_core::ProxyWidget
    void set_selected_object(renderer::ObjectID id);
    HistoryManager& history_manager();
    void on_event(const ui_core::Event& event) override;
-   void on_undo(const ui_core::Event& event);
-   void on_redo(const ui_core::Event& event);
    void save_level() const;
    void remove_selected_item();
+   void on_command(Command command);
+   [[nodiscard]] bool accepts_key_chords() const;
+   void set_active_tool(LevelEditorTool tool);
 
  private:
    State m_state;

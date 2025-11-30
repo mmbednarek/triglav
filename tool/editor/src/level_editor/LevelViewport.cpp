@@ -198,4 +198,9 @@ RenderViewport& LevelViewport::render_viewport() const
    return *m_render_viewport;
 }
 
+bool LevelViewport::is_moving() const
+{
+   return m_is_moving;
+}
+
 }// namespace triglav::editor
