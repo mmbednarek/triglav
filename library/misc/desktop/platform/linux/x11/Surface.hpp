@@ -27,6 +27,7 @@ class Surface final : public ISurface
    void set_cursor_icon(CursorIcon icon) override;
    void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
    [[nodiscard]] std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) override;
+   [[nodiscard]] ModifierFlags modifiers() const override;
 
    void dispatch_key_press(const XEvent& event) const;
    void dispatch_key_release(const XEvent& event) const;

@@ -9,20 +9,22 @@
 #include "triglav/desktop_ui/SecondaryEventGenerator.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TabView.hpp"
-#include "triglav/ui_core/widget/HorizontalLayout.hpp"
 
 namespace triglav::editor {
 
 using namespace name_literals;
 using namespace string_literals;
 
+using desktop::Key;
+using desktop::Modifier;
+
 RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
     m_state(state),
-    m_desktop_uimanager(desktop_ui::ThemeProperties::get_default(), m_state.dialog_manager->root_surface(), *m_state.dialog_manager),
+    m_desktop_ui_manager(desktop_ui::ThemeProperties::get_default(), m_state.dialog_manager->root_surface(), *m_state.dialog_manager),
     TG_CONNECT(m_menu_bar_controller, OnClicked, on_clicked_menu_bar)
 {
-   auto& event_gen = this->emplace_content<desktop_ui::SecondaryEventGenerator>(m_context, this);
+   auto& event_gen = this->emplace_content<desktop_ui::SecondaryEventGenerator>(m_context, this, m_state.dialog_manager->root_surface());
    auto& global_layout = event_gen.create_content<ui_core::VerticalLayout>({
       .padding = {},
       .separation = 0.0f,
@@ -48,62 +50,54 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
    m_menu_bar_controller.add_subitem("help"_name, "help.repository"_name, "Github Repository"_strv);
    m_menu_bar_controller.add_subitem("help"_name, "help.about"_name, "About"_strv);
 
+   m_command_manager.register_command("file.save"_name, {Modifier::Control, Key::S}, Command::Save);
+   m_command_manager.register_command("file.close"_name, {Modifier::Control, Key::Q}, Command::Quit);
+   m_command_manager.register_command("edit.undo"_name, {Modifier::Control, Key::Z}, Command::Undo);
+   m_command_manager.register_command("edit.redo"_name, {Modifier::Control, Key::Y}, Command::Redo);
+   m_command_manager.register_command("edit.delete"_name, {Modifier::Empty, Key::Delete}, Command::Delete);
+
+   m_command_manager.register_command({Modifier::Empty, Key::G}, Command::TranslateTool);
+   m_command_manager.register_command({Modifier::Empty, Key::R}, Command::RotationTool);
+   m_command_manager.register_command({Modifier::Empty, Key::S}, Command::ScaleTool);
+   m_command_manager.register_command({Modifier::Empty, Key::E}, Command::SelectionTool);
+
    m_menu_bar = &global_layout.create_child<desktop_ui::MenuBar>({
-      .manager = &m_desktop_uimanager,
+      .manager = &m_desktop_ui_manager,
       .controller = &m_menu_bar_controller,
    });
 
    auto& splitter = global_layout.create_child<desktop_ui::Splitter>({
-      .manager = &m_desktop_uimanager,
+      .manager = &m_desktop_ui_manager,
       .offset = 260,
       .axis = ui_core::Axis::Horizontal,
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
    auto& left_tab_view = splitter.create_preceding<desktop_ui::TabView>({
-      .manager = &m_desktop_uimanager,
+      .manager = &m_desktop_ui_manager,
       .tab_names = {"Level Editor"},
       .active_tab = 0,
    });
    m_level_editor = &left_tab_view.create_child<LevelEditor>({
-      .manager = &m_desktop_uimanager,
+      .manager = &m_desktop_ui_manager,
       .root_window = m_state.editor->root_window(),
    });
 
    auto& right_tab_view = splitter.create_following<desktop_ui::TabView>({
-      .manager = &m_desktop_uimanager,
+      .manager = &m_desktop_ui_manager,
       .tab_names = {"Project Explorer"},
       .active_tab = 0,
    });
    right_tab_view.create_child<ProjectExplorer>({
-      .manager = &m_desktop_uimanager,
+      .manager = &m_desktop_ui_manager,
    });
 }
 
 void RootWidget::on_clicked_menu_bar(const Name item_name, const desktop_ui::MenuItem& /*item*/) const
 {
-   switch (item_name) {
-   case "file.close"_name:
-      m_state.editor->close();
-      break;
-   case "file.save"_name: {
-      m_level_editor->save_level();
-      break;
-   }
-   case "edit.undo"_name: {
-      ui_core::Event event{};
-      event.event_type = ui_core::Event::Type::Undo;
-      m_level_editor->on_event(event);
-      break;
-   }
-   case "edit.redo"_name: {
-      ui_core::Event event{};
-      event.event_type = ui_core::Event::Type::Redo;
-      m_level_editor->on_event(event);
-      break;
-   }
-   default:
-      break;
+   const auto command = m_command_manager.translate_menu_item(item_name);
+   if (command.has_value()) {
+      this->on_command(command.value());
    }
 }
 
@@ -111,6 +105,38 @@ void RootWidget::tick(const float delta_time) const
 {
    assert(m_level_editor != nullptr);
    m_level_editor->tick(delta_time);
+}
+
+void RootWidget::on_command(const Command command) const
+{
+   if (command == Command::Quit) {
+      m_state.editor->close();
+      return;
+   }
+
+   if (m_level_editor != nullptr) {
+      m_level_editor->on_command(command);
+   }
+}
+
+void RootWidget::on_event(const ui_core::Event& event)
+{
+   if (ui_core::visit_event<bool>(*this, event, true)) {
+      ProxyWidget::on_event(event);
+   }
+}
+
+bool RootWidget::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Keyboard& keyboard) const
+{
+   if (m_level_editor != nullptr && !m_level_editor->accepts_key_chords())
+      return true;
+
+   const auto command = m_command_manager.translate_chord({m_state.dialog_manager->root_surface().modifiers(), keyboard.key});
+   if (command.has_value()) {
+      this->on_command(command.value());
+      return false;
+   }
+   return true;
 }
 
 }// namespace triglav::editor

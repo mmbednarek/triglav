@@ -77,6 +77,7 @@ class Display final : public IDisplay
    void on_keymap(uint32_t format, int32_t fd, uint32_t size);
    void on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
    void on_destroyed_surface(Surface* surface);
+   void on_modifiers(u32 serial, u32 mods_depressed, u32 mods_latched, u32 mods_locked, u32 group) const;
 
    wl_display* m_display;
    wl_registry* m_registry;

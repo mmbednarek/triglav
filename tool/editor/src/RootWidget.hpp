@@ -1,9 +1,10 @@
 #pragma once
 
+#include "CommandManager.hpp"
+
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/MenuController.hpp"
 #include "triglav/ui_core/IWidget.hpp"
-#include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 namespace triglav::desktop_ui {
 class MenuBar;
@@ -28,11 +29,15 @@ class RootWidget final : public ui_core::ProxyWidget
 
    void on_clicked_menu_bar(Name item_name, const desktop_ui::MenuItem& item) const;
    void tick(float delta_time) const;
+   void on_command(Command command) const;
+   void on_event(const ui_core::Event& event) override;
+   bool on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard) const;
 
  private:
    State m_state;
-   desktop_ui::DesktopUIManager m_desktop_uimanager;
+   desktop_ui::DesktopUIManager m_desktop_ui_manager;
    desktop_ui::MenuController m_menu_bar_controller;
+   CommandManager m_command_manager;
    desktop_ui::MenuBar* m_menu_bar;
    LevelEditor* m_level_editor;
 

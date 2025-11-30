@@ -20,8 +20,6 @@
    TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)      \
    TG_DEFINE_EVENT(KeyReleased, on_key_released, Keyboard)    \
    TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)       \
-   TG_DEFINE_EVENT_NO_PAYLOAD(Undo, on_undo)                  \
-   TG_DEFINE_EVENT_NO_PAYLOAD(Redo, on_redo)                  \
    TG_DEFINE_EVENT_NO_PAYLOAD(SelectAll, on_select_all)       \
    TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_activated)        \
    TG_DEFINE_EVENT_NO_PAYLOAD(Deactivated, on_deactivated)

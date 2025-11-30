@@ -72,6 +72,7 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    virtual void set_cursor_icon(CursorIcon icon) = 0;
    virtual void set_keyboard_input_mode(KeyboardInputModeFlags mode) = 0;
    virtual std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) = 0;
+   virtual ModifierFlags modifiers() const = 0;
 
    [[nodiscard]] virtual bool is_cursor_locked() const = 0;
    [[nodiscard]] virtual Vector2i dimension() const = 0;

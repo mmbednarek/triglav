@@ -42,6 +42,7 @@ class LevelViewport final : public ui_core::BaseWidget
 
    [[nodiscard]] Vector4 dimensions() const;
    [[nodiscard]] RenderViewport& render_viewport() const;
+   [[nodiscard]] bool is_moving() const;
 
  private:
    Vector4 m_dimensions{};

@@ -213,7 +213,8 @@ void ResourceSelectTrigger::on_event(const ui_core::Event& event)
    if (event.event_type == ui_core::Event::Type::MousePressed) {
       auto& popup =
          m_state.manager->popup_manager().create_popup_dialog(rect_position(m_dimensions) + Vector2{0, m_dimensions.w}, {240, 400});
-      auto& root_widget = popup.emplace_root_widget<desktop_ui::SecondaryEventGenerator>(popup.widget_renderer().context(), nullptr);
+      auto& root_widget =
+         popup.emplace_root_widget<desktop_ui::SecondaryEventGenerator>(popup.widget_renderer().context(), nullptr, popup.surface());
 
       m_desktop_manager =
          std::make_unique<desktop_ui::DesktopUIManager>(m_state.manager->properties(), popup.surface(), m_state.manager->popup_manager());

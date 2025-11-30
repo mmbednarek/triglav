@@ -207,6 +207,11 @@ std::shared_ptr<ISurface> Surface::create_popup(const Vector2u dimensions, const
    return surface;
 }
 
+ModifierFlags Surface::modifiers() const
+{
+   return Modifier::Empty;
+}
+
 void Surface::dispatch_key_press(const XEvent& event) const
 {
    if (m_keyboard_input_mode & KeyboardInputMode::Text) {

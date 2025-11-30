@@ -1,6 +1,7 @@
 #include "CheckBox.hpp"
 
 #include "DesktopUI.hpp"
+#include "triglav/Ranges.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
@@ -23,7 +24,14 @@ void RadioGroup::set_active(const CheckBox* active_cb) const
    }
 }
 
-CheckBox::CheckBox(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
+void RadioGroup::highlight(const u32 target_index)
+{
+   for (const auto [cb_index, check_box] : Enumerate(m_check_boxes)) {
+      check_box->set_state(cb_index == target_index);
+   }
+}
+
+CheckBox::CheckBox(ui_core::Context& ctx, State state, IWidget* parent) :
     ContainerWidget(ctx, parent),
     m_state(state),
     m_background{

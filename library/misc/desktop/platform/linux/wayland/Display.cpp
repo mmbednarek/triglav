@@ -19,78 +19,6 @@ namespace triglav::desktop::wayland {
 
 namespace {
 
-Key map_key(const u32 key)
-{
-   switch (key) {
-   case 1:
-      return Key::Escape;
-   case 15:
-      return Key::Tab;
-   case 14:
-      return Key::Backspace;
-   case 16:
-      return Key::Q;
-   case 17:
-      return Key::W;
-   case 18:
-      return Key::E;
-   case 21:
-      return Key::Y;
-   case 28:
-      return Key::Enter;
-   case 29:
-      return Key::Control;
-   case 31:
-      return Key::S;
-   case 30:
-      return Key::A;
-   case 32:
-      return Key::D;
-   case 42:
-      return Key::Shift;
-   case 44:
-      return Key::Z;
-   case 56:
-      return Key::Alt;
-   case 57:
-      return Key::Space;
-   case 59:
-      return Key::F1;
-   case 60:
-      return Key::F2;
-   case 61:
-      return Key::F3;
-   case 62:
-      return Key::F4;
-   case 63:
-      return Key::F5;
-   case 64:
-      return Key::F6;
-   case 65:
-      return Key::F7;
-   case 66:
-      return Key::F8;
-   case 67:
-      return Key::F9;
-   case 68:
-      return Key::F10;
-   case 69:
-      return Key::F11;
-   case 70:
-      return Key::F12;
-   case 103:
-      return Key::DownArrow;
-   case 105:
-      return Key::LeftArrow;
-   case 106:
-      return Key::RightArrow;
-   case 108:
-      return Key::UpArrow;
-   }
-
-   return Key::Unknown;
-}
-
 MouseButton map_button(const u32 button)
 {
    switch (button) {
@@ -224,9 +152,12 @@ Display::Display() :
       display->on_key(serial, time, key, state);
    };
 
-   m_keyboard_listener.modifiers = [](void* data, wl_keyboard* /*wl_keyboard*/, u32 /*serial*/, const u32 mods_depressed,
+   m_keyboard_listener.modifiers = [](void* data, wl_keyboard* /*wl_keyboard*/, u32 serial, const u32 mods_depressed,
                                       const u32 mods_latched, const u32 mods_locked, const u32 group) {
       const auto* display = static_cast<Display*>(data);
+      display->on_modifiers(serial, mods_depressed, mods_latched, mods_locked, group);
+      log_message(LogLevel::Debug, StringView{"Wayland"}, "Modifiers DEPRESSED: {}, LATCHED: {}, LOCKED: {}, GROUP: {}", mods_depressed,
+                  mods_latched, mods_locked, group);
       xkb_state_update_mask(display->m_xkb_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
    };
 
@@ -450,30 +381,13 @@ void Display::on_keymap(const u32 format, const i32 fd, const u32 size)
    close(fd);
 }
 
-void Display::on_key(const u32 /*serial*/, const u32 /*time*/, const u32 key, const u32 state) const
+void Display::on_key(const u32 serial, const u32 time, const u32 key, const u32 state) const
 {
-   // auto keyboard_surface = m_keyboard_surface.read_access();
    auto keyboard_surface = m_pointer_surface.read_access();
    if (*keyboard_surface == nullptr)
       return;
 
-   if ((*keyboard_surface)->m_keyboard_input_mode & KeyboardInputMode::Text && state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-      char data[128];
-      const i32 count = xkb_state_key_get_utf8(m_xkb_state, key + 8, data, 128);
-      if (count > 0) {
-         const char* buff_ptr = data;
-         Rune rune = decode_rune_from_buffer(buff_ptr, buff_ptr + count);
-         (*keyboard_surface)->event_OnTextInput.publish(rune);
-      }
-   }
-
-   if ((*keyboard_surface)->m_keyboard_input_mode & KeyboardInputMode::Direct) {
-      if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
-         (*keyboard_surface)->event_OnKeyIsPressed.publish(map_key(key));
-      } else if (state == WL_KEYBOARD_KEY_STATE_RELEASED) {
-         (*keyboard_surface)->event_OnKeyIsReleased.publish(map_key(key));
-      }
-   }
+   (*keyboard_surface)->on_key(serial, time, key, state);
 }
 
 void Display::on_destroyed_surface(Surface* surface)
@@ -493,6 +407,19 @@ void Display::on_destroyed_surface(Surface* surface)
    }
 
    m_surface_map.erase(surface->surface());
+}
+
+void Display::on_modifiers(const u32 serial, const u32 mods_depressed, const u32 mods_latched, const u32 mods_locked, const u32 group) const
+{
+   log_message(LogLevel::Debug, StringView{"Wayland"}, "Modifiers DEPRESSED: {}, LATCHED: {}, LOCKED: {}, GROUP: {}", mods_depressed,
+               mods_latched, mods_locked, group);
+   xkb_state_update_mask(m_xkb_state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
+
+   auto keyboard_surface = m_pointer_surface.read_access();
+   if (*keyboard_surface == nullptr)
+      return;
+
+   (*keyboard_surface)->on_modifiers(serial, mods_depressed, mods_latched, mods_locked, group);
 }
 
 }// namespace triglav::desktop::wayland
