@@ -1,5 +1,7 @@
 #include "Material.hpp"
 
+#include "triglav/ResourcePathMap.hpp"
+
 #include <ryml.hpp>
 #include <string>
 #include <string_view>
@@ -42,7 +44,7 @@ TextureName to_texture_name(const ryml::csubstr str)
       return TextureName{std::stoull({str.data(), str.size()})};
    }
 
-   return make_rc_name({str.data(), str.size()});
+   return name_from_path({str.data(), str.size()});
 }
 
 float to_float(const ryml::csubstr str)

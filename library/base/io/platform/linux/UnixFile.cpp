@@ -104,4 +104,11 @@ MemorySize UnixFile::position() const
    return res;
 }
 
+Result<std::monostate> remove_file(const Path& path)
+{
+   if (::unlink(path.string().c_str()) != 0)
+      return std::monostate{};
+   return std::unexpected{Status::InvalidFile};
+}
+
 }// namespace triglav::io::linux

@@ -115,6 +115,21 @@ String::String(const char* string, const MemorySize data_size)
    std::memcpy(this->data(), string, data_size);
 }
 
+String::String(const Rune single_rune, const MemorySize num_runes)
+{
+   const auto rune_byte_count = rune_to_byte_count(single_rune);
+   this->ensure_capacity_for_size(num_runes * rune_byte_count);
+   if (rune_byte_count == 1) {
+      std::memset(this->data(), static_cast<int>(single_rune), num_runes);
+   } else {
+      std::array<char, 8> rune_chars{};
+      encode_rune_to_buffer(single_rune, rune_chars.data(), rune_byte_count);
+      for (MemorySize i = 0; i < num_runes; ++i) {
+         std::memcpy(this->data() + i * rune_byte_count, rune_chars.data(), rune_byte_count);
+      }
+   }
+}
+
 String::~String()
 {
    this->deallocate();

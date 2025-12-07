@@ -10,6 +10,7 @@
    TG_IO_TYPE(Vector2)           \
    TG_IO_TYPE(Vector3)           \
    TG_IO_TYPE(Vector4)           \
+   TG_IO_TYPE(MemorySize)        \
    TG_IO_TYPE(u32)               \
    TG_IO_TYPE(u16)
 

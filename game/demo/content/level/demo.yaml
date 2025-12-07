@@ -3,7 +3,7 @@ nodes:
     items:
       - type: static_mesh
         name: Main Hall
-        mesh: 18446744073247152064
+        mesh: "model/hall.mesh"
         transform:
           translation:
             x: 0.000000
@@ -20,7 +20,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Arrow
-        mesh: 18446744073394145072
+        mesh: "mesh/arrow.mesh"
         transform:
           translation:
             x: 15.000000
@@ -37,7 +37,7 @@ nodes:
             z: 2.000000
       - type: static_mesh
         name: Column 0
-        mesh: 18446744072693836414
+        mesh: "model/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -54,7 +54,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 1
-        mesh: 18446744072693836414
+        mesh: "model/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -71,7 +71,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 2
-        mesh: 18446744072693836414
+        mesh: "model/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -88,7 +88,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 3
-        mesh: 18446744072693836414
+        mesh: "model/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -105,7 +105,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 4
-        mesh: 18446744072693836414
+        mesh: "model/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -122,7 +122,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Sphere
-        mesh: 18446744071760099236
+        mesh: "model/ball.mesh"
         transform:
           translation:
             x: 12.000000
@@ -139,7 +139,7 @@ nodes:
             z: 3.000000
       - type: static_mesh
         name: Cage
-        mesh: 18446744072255812014
+        mesh: "model/cage.mesh"
         transform:
           translation:
             x: 10.000000

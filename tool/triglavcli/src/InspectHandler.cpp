@@ -65,7 +65,7 @@ ExitStatus handle_inspect(const CmdArgs_inspect& args)
    std::print("asset type: {}\n\n", asset_type_to_string(header->type));
 
    if (header->type == ResourceType::Mesh) {
-      auto mesh = asset::decode_mesh(**file_handle);
+      auto mesh = asset::decode_mesh(**file_handle, header->version);
       if (!mesh.has_value()) {
          return EXIT_FAILURE;
       }

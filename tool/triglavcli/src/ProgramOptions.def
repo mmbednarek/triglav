@@ -23,6 +23,9 @@ TG_DECLARE_FLAG(no_mip_maps, "n", "no-mip-maps", "Don't generate mip maps for th
 TG_DECLARE_FLAG(should_override, "r", "override", "Override already imported files")
 TG_END_COMMAND()
 
+TG_DECLARE_COMMAND(reimport, "Update an assert to a newer version")
+TG_END_COMMAND()
+
 TG_DECLARE_COMMAND(inspect, "Print asset metadata")
 TG_END_COMMAND()
 

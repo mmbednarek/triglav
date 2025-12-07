@@ -66,4 +66,12 @@ constexpr int loading_stage_count()
    return top_stage + 1;
 }
 
+constexpr std::array g_resource_stage_extensions{
+#define TG_RESOURCE_TYPE(name, ext, cpp_type, stage) std::string_view{ext},
+
+   TG_RESOURCE_TYPE_LIST
+
+#undef TG_RESOURCE_TYPE
+};
+
 }// namespace triglav

@@ -37,6 +37,12 @@ class StringView
    };
    using iterator = Iterator;
 
+   StringView() :
+       m_data(nullptr),
+       m_size(0)
+   {
+   }
+
    explicit StringView(const char* string) :
        m_data(string),
        m_size(std::strlen(string))
@@ -81,6 +87,7 @@ class String
    String(const char* string);
    String(StringView string);
    String(const char* string, MemorySize data_size);
+   String(Rune single_rune, MemorySize num_runes);
    ~String();
 
    String(const String& other);
