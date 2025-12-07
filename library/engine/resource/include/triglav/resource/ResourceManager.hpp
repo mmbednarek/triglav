@@ -1,13 +1,18 @@
 #pragma once
 
 #include "Container.hpp"
+#include "LevelLoader.hpp"
 #include "Loader.hpp"
+#include "MaterialLoader.hpp"
+#include "MeshLoader.hpp"
 #include "NameRegistry.hpp"
 #include "Resource.hpp"
 
 #include "LoadContext.hpp"
+#include "PathManager.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/ResourcePathMap.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/Path.hpp"
@@ -21,7 +26,6 @@ class Device;
 }
 
 namespace triglav::resource {
-
 
 class ResourceManager
 {
@@ -57,6 +61,39 @@ class ResourceManager
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(*this, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Static) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load(path));
+      }
+   }
+
+   template<ResourceType CResourceType>
+   void collect_dependencies(std::vector<ResourceName>& out_deps, const io::Path& path)
+   {
+      if constexpr (CollectsDependencies<Loader<CResourceType>>) {
+         Loader<CResourceType>::collect_dependencies(out_deps, path);
+      } else {
+         log_message(LogLevel::Debug, StringView{"Dependencies"}, "Missing support for dependencies for resource type {}",
+                     g_resource_stage_extensions[static_cast<int>(CResourceType)]);
+      }
+   }
+
+   template<ResourceType CResourceType>
+   void collect_dependencies_recursively(std::vector<ResourceName>& out_deps, TypedName<CResourceType> name)
+   {
+      if (name.name() == 0)
+         return;
+
+      const auto path_str = ResourcePathMap::the().resolve(name);
+      if (path_str.size() == 0)
+         return;
+      // assert(path_str.size() != 0);
+      const auto path = PathManager::the().content_path().sub(path_str.to_std());
+
+      const auto start_index = out_deps.size();
+      this->collect_dependencies<CResourceType>(out_deps, path);
+      const auto end_index = out_deps.size();
+
+      for (auto index = start_index; index < end_index; ++index) {
+         const auto dep = out_deps.at(index);
+         dep.match([&](auto rc) { this->collect_dependencies_recursively(out_deps, rc); });
       }
    }
 

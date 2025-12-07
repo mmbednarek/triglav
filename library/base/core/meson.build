@@ -13,6 +13,7 @@ core_sources = files([
                     'include/triglav/ObjectPool.hpp',
                     'include/triglav/RangedArray.hpp',
                     'include/triglav/Ranges.hpp',
+                    'include/triglav/ResourcePathMap.hpp',
                     'include/triglav/ResourceType.hpp',
                     'include/triglav/String.hpp',
                     'include/triglav/Template.hpp',
@@ -23,6 +24,7 @@ core_sources = files([
                     'src/Logging.cpp',
                     'src/Math.cpp',
                     'src/NameResolution.cpp',
+                    'src/ResourcePathMap.cpp',
                     'src/String.cpp'
 ])
 

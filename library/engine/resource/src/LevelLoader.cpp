@@ -1,5 +1,6 @@
 #include "LevelLoader.hpp"
 
+#include "triglav/ResourcePathMap.hpp"
 #include "triglav/io/File.hpp"
 
 #include <ryml.hpp>
@@ -44,7 +45,7 @@ TypedName<CResType> to_typed_name(const ryml::csubstr str)
       return TypedName<CResType>{std::stoull(std::string{str.data(), str.size()})};
    }
 
-   return TypedName<CResType>{make_rc_name(std::string_view{str.data(), str.size()})};
+   return TypedName<CResType>{name_from_path({str.data(), str.size()})};
 }
 
 Transform3D parse_transformation(const ryml::ConstNodeRef node)
@@ -105,5 +106,16 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
 
    return result;
 }
+
+void Loader<ResourceType::Level>::collect_dependencies(std::vector<ResourceName>& out_dependencies, const io::Path& path)
+{
+   auto level = load(path);
+
+   for (const auto& mesh : level.root().static_meshes()) {
+      out_dependencies.push_back(mesh.mesh_name);
+   }
+}
+
+static_assert(CollectsDependencies<Loader<ResourceType::Level>>);
 
 }// namespace triglav::resource

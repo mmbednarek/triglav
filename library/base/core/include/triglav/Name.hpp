@@ -77,6 +77,21 @@ class ResourceName
       return TypedName<CResourceType>(m_name);
    }
 
+   template<typename TFunc>
+   void match(TFunc cb) const
+   {
+      switch (m_type) {
+#define TG_RESOURCE_TYPE(name, ext, cpp_type, stage) \
+   case ResourceType::name:                          \
+      cb(TypedName<ResourceType::name>(m_name));     \
+      break;
+         TG_RESOURCE_TYPE_LIST
+#undef TG_RESOURCE_TYPE
+      default:
+         break;
+      }
+   }
+
    [[nodiscard]] ResourceType type() const
    {
       return m_type;

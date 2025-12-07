@@ -138,7 +138,8 @@ SamplerProperties decode_sampler_properties(EncodedSamplerProperties encoded_pro
 std::optional<AssetHeader> decode_header(io::IReader& reader);
 
 bool encode_mesh(io::IWriter& writer, const geometry::Mesh& mesh);
-std::optional<geometry::MeshData> decode_mesh(io::IReader& reader);
+bool encode_mesh_data(io::IWriter& writer, const geometry::MeshData& mesh_data);
+std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, u32 version);
 
 bool encode_texture(io::IWriter& writer, TexturePurpose purpose, const ktx::Texture& tex, const SamplerProperties& sampler);
 std::optional<DecodedTexture> decode_texture(io::IFile& stream);

@@ -1,5 +1,7 @@
 #include "MaterialLoader.hpp"
 
+#include "ResourceManager.hpp"
+
 #include "triglav/io/File.hpp"
 
 #include <ryml.hpp>
@@ -7,7 +9,9 @@
 
 namespace triglav::resource {
 
-render_objects::Material Loader<ResourceType::Material>::load(ResourceManager& /*manager*/, const io::Path& path)
+namespace {
+
+render_objects::Material load_material(const io::Path& path)
 {
    auto file = io::read_whole_file(path);
    assert(not file.empty());
@@ -19,6 +23,32 @@ render_objects::Material Loader<ResourceType::Material>::load(ResourceManager& /
    material.deserialize_yaml(tree);
 
    return material;
+}
+
+}// namespace
+
+render_objects::Material Loader<ResourceType::Material>::load(ResourceManager& /*manager*/, const io::Path& path)
+{
+   return load_material(path);
+}
+
+void Loader<ResourceType::Material>::collect_dependencies(std::vector<ResourceName>& out_dependencies, const io::Path& path)
+{
+   const auto mat = load_material(path);
+   if (std::holds_alternative<render_objects::MTProperties_Basic>(mat.properties)) {
+      const auto& props = std::get<render_objects::MTProperties_Basic>(mat.properties);
+      out_dependencies.push_back(props.albedo);
+   } else if (std::holds_alternative<render_objects::MTProperties_NormalMap>(mat.properties)) {
+      const auto& props = std::get<render_objects::MTProperties_NormalMap>(mat.properties);
+      out_dependencies.push_back(props.albedo);
+      out_dependencies.push_back(props.normal);
+   } else if (std::holds_alternative<render_objects::MTProperties_FullPBR>(mat.properties)) {
+      const auto& props = std::get<render_objects::MTProperties_FullPBR>(mat.properties);
+      out_dependencies.push_back(props.texture);
+      out_dependencies.push_back(props.normal);
+      out_dependencies.push_back(props.roughness);
+      out_dependencies.push_back(props.metallic);
+   }
 }
 
 }// namespace triglav::resource
