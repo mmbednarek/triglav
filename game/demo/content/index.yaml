@@ -2,8 +2,6 @@ version: 1
 resources:
   - name: ambient_occlusion.fshader
     source: shader/pass/ambient_occlusion.spv
-  - name: model/ball.mesh
-    source: model/ball.mesh
   - name: bark.mat
     source: material/bark.yaml
   - name: bark.tex
@@ -46,10 +44,6 @@ resources:
     source: texture/brick_normal.tex
   - name: bunny.mesh
     source: model/bunny.mesh
-  - name: model/cage.mesh
-    source: model/cage.mesh
-  - name: model/column.mesh
-    source: model/column.mesh
   - name: common/full_screen.vshader
     source: shader/misc/full_screen_vs.spv
   - name: demo.level
@@ -80,8 +74,6 @@ resources:
     source: shader/geometry/ground_fs.spv
   - name: ground.vshader
     source: shader/geometry/ground_vs.spv
-  - name: model/hall.mesh
-    source: model/hall.mesh
   - name: leaves.mat
     source: material/leaves.yaml
   - name: level/example.level
@@ -116,6 +108,14 @@ resources:
     source: texture/metal_normal.tex
   - name: metal/roughness.tex
     source: texture/metal_roughness.tex
+  - name: model/ball.mesh
+    source: model/ball.mesh
+  - name: model/cage.mesh
+    source: model/cage.mesh
+  - name: model/column.mesh
+    source: model/column.mesh
+  - name: model/hall.mesh
+    source: model/hall.mesh
   - name: noise.tex
     source: texture/noise.tex
   - name: particle.tex
@@ -202,6 +202,8 @@ resources:
     source: texture/logo.tex
   - name: texture/ui_atlas.tex
     source: texture/ui_atlas.tex
+  - name: texture/ui_icons.tex
+    source: texture/ui_icons.tex
   - name: texture/wierd_tube.tex0.tex
     source: texture/wierd_tube.tex0.tex
   - name: texture/wierd_tube.tex1.tex

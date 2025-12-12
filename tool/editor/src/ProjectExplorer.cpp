@@ -16,25 +16,25 @@ using namespace name_literals;
 Vector2i resource_path_to_icon_offset(const std::string_view path)
 {
    if (path.ends_with(".tex")) {
-      return {64, 128};
+      return {6 * 18, 0};
    }
    if (path.ends_with(".mesh")) {
-      return {128, 128};
+      return {7 * 18, 0};
    }
    if (path.ends_with("shader")) {
-      return {192, 128};
+      return {8 * 18, 0};
    }
    if (path.ends_with(".mat")) {
-      return {0, 192};
+      return {9 * 18, 0};
    }
    if (path.ends_with(".typeface")) {
-      return {64, 192};
+      return {6 * 18, 18};
    }
    if (path.ends_with(".level")) {
-      return {128, 192};
+      return {7 * 18, 18};
    }
 
-   return {192, 192};
+   return {8 * 18, 18};
 }
 
 ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core::IWidget* parent) :
@@ -85,8 +85,8 @@ void ProjectExplorer::add_controller_item(const std::string_view path)
       auto it = m_path_to_id.find(path.substr(0, pos));
       if (it == m_path_to_id.end()) {
          item_id = m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                                     .icon_name = "texture/ui_atlas.tex"_rc,
-                                                     .icon_region = {0, 128, 64, 64},
+                                                     .icon_name = "texture/ui_icons.tex"_rc,
+                                                     .icon_region = {5 * 18, 0, 18, 18},
                                                      .label = {path.substr(last_pos, pos).data(), pos - last_pos},
                                                      .has_children = true,
                                                   });
@@ -100,8 +100,8 @@ void ProjectExplorer::add_controller_item(const std::string_view path)
 
    const auto icon_offset = resource_path_to_icon_offset(path);
    m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                     .icon_name = "texture/ui_atlas.tex"_rc,
-                                     .icon_region = {icon_offset.x, icon_offset.y, 64, 64},
+                                     .icon_name = "texture/ui_icons.tex"_rc,
+                                     .icon_region = {icon_offset.x, icon_offset.y, 18, 18},
                                      .label = {path.substr(last_pos).data(), path.size() - last_pos},
                                      .has_children = false,
                                   });

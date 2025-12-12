@@ -22,6 +22,7 @@ class UpdateList
    void remove(TKey key);
    [[nodiscard]] u32 top_index() const;
    [[nodiscard]] const std::map<TKey, u32>& key_map() const;
+   [[nodiscard]] const std::map<u32, TKey>& index_map() const;
 
    void write_to_buffers(UpdateWriter<TValue> auto& writer);
 

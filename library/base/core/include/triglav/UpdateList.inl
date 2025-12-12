@@ -117,6 +117,12 @@ template<typename TKey, typename TValue>
 }
 
 template<typename TKey, typename TValue>
+[[nodiscard]] const std::map<u32, TKey>& UpdateList<TKey, TValue>::index_map() const
+{
+   return m_index_to_key;
+}
+
+template<typename TKey, typename TValue>
 void UpdateList<TKey, TValue>::register_mapping(const TKey key, const u32 index)
 {
    assert(!m_index_to_key.contains(index));

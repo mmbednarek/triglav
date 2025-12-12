@@ -246,7 +246,7 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
          arrow_sprite.set_region(m_context, region);
       }
 
-      const Vector2 icon_size{measure.item_size.y + g_item_padding, measure.item_size.y + g_item_padding};
+      const Vector2 icon_size{m_state.icon_size, m_state.icon_size};
       auto& icon_sprite = [&]() -> ui_core::SpriteInstance& {
          if (auto icon_it = m_icons.find(child); icon_it != m_icons.end()) {
             return icon_it->second;
@@ -260,7 +260,8 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
          return m_icons.at(child);
       }();
 
-      const Vector2 icon_pos{offset_x + arrow_size.x + g_item_padding, offset_y + g_item_padding / 2};
+      const Vector2 icon_pos{offset_x + arrow_size.x + g_item_padding,
+                             offset_y + g_item_padding + measure.item_size.y / 2 - icon_size.y / 2};
       icon_sprite.add(m_context, {icon_pos, icon_size}, m_cropping_mask);
 
       const Vector2 label_dims{offset_x + arrow_size.x + icon_size.x + 2 * g_item_padding, offset_y + g_item_padding + measure.item_size.y};

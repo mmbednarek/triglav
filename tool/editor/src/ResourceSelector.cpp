@@ -238,8 +238,10 @@ const ResourceSelectTrigger::State& ResourceSelectTrigger::state() const
 void ResourceSelectTrigger::dispatch_select(String result)
 {
    event_OnSelected.publish(std::move(result));
-   m_state.manager->popup_manager().close_popup(m_dialog);
-   m_dialog = nullptr;
+   if (m_dialog != nullptr) {
+      m_state.manager->popup_manager().close_popup(m_dialog);
+      m_dialog = nullptr;
+   }
 }
 
 }// namespace triglav::editor
