@@ -16,57 +16,57 @@ std::optional<GlbInfo> read_glb_info(io::ISeekableStream& stream)
       return std::nullopt;
    }
 
-   GlbChunkHeader jsonHeader{};
-   if (!stream.read({reinterpret_cast<u8*>(&jsonHeader), sizeof(GlbChunkHeader)}).has_value()) {
+   GlbChunkHeader json_header{};
+   if (!stream.read({reinterpret_cast<u8*>(&json_header), sizeof(GlbChunkHeader)}).has_value()) {
       return std::nullopt;
    }
-   if (jsonHeader.chunkType != 0x4E4F534A) {
-      return std::nullopt;
-   }
-
-   if (stream.seek(io::SeekPosition::Current, jsonHeader.chunkLength) != io::Status::Success) {
+   if (json_header.chunk_type != 0x4E4F534A) {
       return std::nullopt;
    }
 
-   GlbChunkHeader binaryHeader{};
-   if (!stream.read({reinterpret_cast<u8*>(&binaryHeader), sizeof(GlbChunkHeader)}).has_value()) {
+   if (stream.seek(io::SeekPosition::Current, json_header.chunk_length) != io::Status::Success) {
       return std::nullopt;
    }
-   if (binaryHeader.chunkType != 0x004E4942) {
+
+   GlbChunkHeader binary_header{};
+   if (!stream.read({reinterpret_cast<u8*>(&binary_header), sizeof(GlbChunkHeader)}).has_value()) {
+      return std::nullopt;
+   }
+   if (binary_header.chunk_type != 0x004E4942) {
       return std::nullopt;
    }
 
    return GlbInfo{
-      .jsonSize = jsonHeader.chunkLength,
-      .jsonOffset = sizeof(GlbHeader) + sizeof(GlbChunkHeader),
-      .binarySize = binaryHeader.chunkLength,
-      .binaryOffset = sizeof(GlbHeader) + sizeof(GlbChunkHeader) + jsonHeader.chunkLength + sizeof(GlbChunkHeader),
+      .json_size = json_header.chunk_length,
+      .json_offset = sizeof(GlbHeader) + sizeof(GlbChunkHeader),
+      .binary_size = binary_header.chunk_length,
+      .binary_offset = sizeof(GlbHeader) + sizeof(GlbChunkHeader) + json_header.chunk_length + sizeof(GlbChunkHeader),
    };
 }
 
 std::optional<GlbResource> open_glb_file(const io::Path& path)
 {
-   auto fileHandleRes = io::open_file(path, io::FileOpenMode::Read);
-   if (!fileHandleRes.has_value()) {
+   auto file_handle_res = io::open_file(path, io::FileMode::Read);
+   if (!file_handle_res.has_value()) {
       return std::nullopt;
    }
-   auto& fileHandle = **fileHandleRes;
+   auto& file_handle = **file_handle_res;
 
-   auto glbInfo = read_glb_info(fileHandle);
-   if (!glbInfo.has_value()) {
+   auto glb_info = read_glb_info(file_handle);
+   if (!glb_info.has_value()) {
       return std::nullopt;
    }
 
-   fileHandle.seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(glbInfo->jsonOffset));
+   file_handle.seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(glb_info->json_offset));
 
-   io::LimitedReader jsonReader(fileHandle, glbInfo->jsonSize);
+   io::LimitedReader json_reader(file_handle, glb_info->json_size);
 
    auto doc = std::make_unique<Document>();
-   doc->deserialize(jsonReader);
+   doc->deserialize(json_reader);
 
-   BufferManager manager(*doc, &fileHandle, static_cast<MemoryOffset>(glbInfo->binaryOffset));
+   BufferManager manager(*doc, &file_handle, static_cast<MemoryOffset>(glb_info->binary_offset));
 
-   return GlbResource{.document{std::move(doc)}, .glbFileHandle{std::move(*fileHandleRes)}, .bufferManager{std::move(manager)}};
+   return GlbResource{.document{std::move(doc)}, .glb_file_handle{std::move(*file_handle_res)}, .buffer_manager{std::move(manager)}};
 }
 
 }// namespace triglav::gltf

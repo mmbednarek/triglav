@@ -1,5 +1,6 @@
 #include "Texture.hpp"
 
+#include <cstdlib>
 #include <utility>
 extern "C"
 {
@@ -9,75 +10,75 @@ extern "C"
 #include <ktx.h>
 #include <ktxvulkan.h>
 }
-#include <fmt/core.h>
 #include <memory>
+#include <print>
 
 namespace triglav::ktx {
 
 namespace {
 
-ktxStream create_ktx_stream_from_io_stream(io::ISeekableStream& seekableStream)
+ktxStream create_ktx_stream_from_io_stream(io::ISeekableStream& seekable_stream)
 {
-   ktxStream resultStream{};
-   resultStream.data.custom_ptr.address = &seekableStream;
-   resultStream.type = eStreamTypeCustom;
+   ktxStream result_stream{};
+   result_stream.data.custom_ptr.address = &seekable_stream;
+   result_stream.type = eStreamTypeCustom;
 
-   resultStream.read = [](ktxStream* str, void* dst, const ktx_size_t count) -> KTX_error_code {
-      auto* userData = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
-      if (!userData->read({static_cast<u8*>(dst), count}).has_value()) {
+   result_stream.read = [](ktxStream* str, void* dst, const ktx_size_t count) -> KTX_error_code {
+      auto* user_data = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
+      if (!user_data->read({static_cast<u8*>(dst), count}).has_value()) {
          return KTX_FILE_READ_ERROR;
       }
       return KTX_SUCCESS;
    };
 
-   resultStream.skip = [](ktxStream* str, const ktx_size_t count) -> KTX_error_code {
-      auto* userData = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
-      if (userData->seek(io::SeekPosition::Current, static_cast<MemoryOffset>(count)) != io::Status::Success) {
+   result_stream.skip = [](ktxStream* str, const ktx_size_t count) -> KTX_error_code {
+      auto* user_data = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
+      if (user_data->seek(io::SeekPosition::Current, static_cast<MemoryOffset>(count)) != io::Status::Success) {
          return KTX_FILE_READ_ERROR;
       }
       return KTX_SUCCESS;
    };
 
-   resultStream.write = [](ktxStream* str, const void* src, const ktx_size_t size, const ktx_size_t count) -> KTX_error_code {
-      auto* userData = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
-      if (!userData->write({static_cast<const u8*>(src), size * count}).has_value()) {
+   result_stream.write = [](ktxStream* str, const void* src, const ktx_size_t size, const ktx_size_t count) -> KTX_error_code {
+      auto* user_data = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
+      if (!user_data->write({static_cast<const u8*>(src), size * count}).has_value()) {
          return KTX_FILE_WRITE_ERROR;
       }
       return KTX_SUCCESS;
    };
 
-   resultStream.getpos = [](ktxStream* str, ktx_off_t* const offset) -> KTX_error_code {
-      const auto* userData = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
-      *offset = static_cast<ktx_off_t>(userData->position());
+   result_stream.getpos = [](ktxStream* str, ktx_off_t* const offset) -> KTX_error_code {
+      const auto* user_data = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
+      *offset = static_cast<ktx_off_t>(user_data->position());
       return KTX_SUCCESS;
    };
 
-   resultStream.setpos = [](ktxStream* str, const ktx_off_t offset) -> KTX_error_code {
-      auto* userData = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
-      if (userData->seek(io::SeekPosition::Begin, offset) != io::Status::Success) {
+   result_stream.setpos = [](ktxStream* str, const ktx_off_t offset) -> KTX_error_code {
+      auto* user_data = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
+      if (user_data->seek(io::SeekPosition::Begin, offset) != io::Status::Success) {
          return KTX_FILE_READ_ERROR;
       }
       return KTX_SUCCESS;
    };
 
-   resultStream.getsize = [](ktxStream* str, ktx_size_t* const size) -> KTX_error_code {
-      auto* userData = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
-      const auto currPos = userData->position();
-      if (userData->seek(io::SeekPosition::End, 0) != io::Status::Success) {
+   result_stream.getsize = [](ktxStream* str, ktx_size_t* const size) -> KTX_error_code {
+      auto* user_data = static_cast<io::ISeekableStream*>(str->data.custom_ptr.address);
+      const auto curr_pos = user_data->position();
+      if (user_data->seek(io::SeekPosition::End, 0) != io::Status::Success) {
          return KTX_FILE_READ_ERROR;
       }
-      *size = userData->position();
-      if (userData->seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(currPos)) != io::Status::Success) {
+      *size = user_data->position();
+      if (user_data->seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(curr_pos)) != io::Status::Success) {
          return KTX_FILE_READ_ERROR;
       }
       return KTX_SUCCESS;
    };
 
-   resultStream.destruct = [](ktxStream* /*str*/) -> void {};
-   resultStream.readpos = 0;
-   resultStream.closeOnDestruct = false;
+   result_stream.destruct = [](ktxStream* /*str*/) -> void {};
+   result_stream.readpos = 0;
+   result_stream.closeOnDestruct = false;
 
-   return resultStream;
+   return result_stream;
 }
 
 struct WriterStreamUserData
@@ -88,52 +89,52 @@ struct WriterStreamUserData
 
 std::tuple<ktxStream, std::unique_ptr<WriterStreamUserData>> create_ktx_stream_from_io_writer(io::IWriter& writer)
 {
-   auto userData = std::make_unique<WriterStreamUserData>(writer, 0);
+   auto user_data = std::make_unique<WriterStreamUserData>(writer, 0);
 
-   ktxStream resultStream{};
-   resultStream.data.custom_ptr.address = userData.get();
-   resultStream.type = eStreamTypeCustom;
+   ktxStream result_stream{};
+   result_stream.data.custom_ptr.address = user_data.get();
+   result_stream.type = eStreamTypeCustom;
 
-   resultStream.read = [](ktxStream* /*str*/, void* /*dst*/, const ktx_size_t /*count*/) -> KTX_error_code {
+   result_stream.read = [](ktxStream* /*str*/, void* /*dst*/, const ktx_size_t /*count*/) -> KTX_error_code {
       assert(0);
       return KTX_FILE_DATA_ERROR;
    };
 
-   resultStream.skip = [](ktxStream* /*str*/, const ktx_size_t /*count*/) -> KTX_error_code {
+   result_stream.skip = [](ktxStream* /*str*/, const ktx_size_t /*count*/) -> KTX_error_code {
       assert(0);
       return KTX_FILE_DATA_ERROR;
    };
 
-   resultStream.write = [](ktxStream* str, const void* src, const ktx_size_t size, const ktx_size_t count) -> KTX_error_code {
-      auto* userData = static_cast<WriterStreamUserData*>(str->data.custom_ptr.address);
-      if (!userData->writer.write({static_cast<const u8*>(src), size * count}).has_value()) {
+   result_stream.write = [](ktxStream* str, const void* src, const ktx_size_t size, const ktx_size_t count) -> KTX_error_code {
+      auto* user_data = static_cast<WriterStreamUserData*>(str->data.custom_ptr.address);
+      if (!user_data->writer.write({static_cast<const u8*>(src), size * count}).has_value()) {
          return KTX_FILE_WRITE_ERROR;
       }
-      userData->position += size * count;
+      user_data->position += size * count;
       return KTX_SUCCESS;
    };
 
-   resultStream.getpos = [](ktxStream* str, ktx_off_t* const offset) -> KTX_error_code {
-      auto* userData = static_cast<WriterStreamUserData*>(str->data.custom_ptr.address);
-      *offset = userData->position;
+   result_stream.getpos = [](ktxStream* str, ktx_off_t* const offset) -> KTX_error_code {
+      auto* user_data = static_cast<WriterStreamUserData*>(str->data.custom_ptr.address);
+      *offset = user_data->position;
       return KTX_SUCCESS;
    };
 
-   resultStream.setpos = [](ktxStream* /*str*/, const ktx_off_t /*offset*/) -> KTX_error_code {
+   result_stream.setpos = [](ktxStream* /*str*/, const ktx_off_t /*offset*/) -> KTX_error_code {
       assert(0);
       return KTX_FILE_DATA_ERROR;
    };
 
-   resultStream.getsize = [](ktxStream* /*str*/, ktx_size_t* const /*size*/) -> KTX_error_code {
+   result_stream.getsize = [](ktxStream* /*str*/, ktx_size_t* const /*size*/) -> KTX_error_code {
       assert(0);
       return KTX_FILE_DATA_ERROR;
    };
 
-   resultStream.destruct = [](ktxStream* /*str*/) -> void {};
-   resultStream.readpos = 0;
-   resultStream.closeOnDestruct = false;
+   result_stream.destruct = [](ktxStream* /*str*/) -> void {};
+   result_stream.readpos = 0;
+   result_stream.closeOnDestruct = false;
 
-   return {resultStream, std::move(userData)};
+   return {result_stream, std::move(user_data)};
 }
 
 }// namespace
@@ -161,17 +162,17 @@ Texture& Texture::operator=(Texture&& other) noexcept
    return *this;
 }
 
-bool Texture::set_image_from_buffer(const std::span<const u8> buffer, const u32 mipLevel, const u32 layer, const u32 faceSlice) const
+bool Texture::set_image_from_buffer(const std::span<const u8> buffer, const u32 mip_level, const u32 layer, const u32 face_slice) const
 {
-   const auto result = ktxTexture_SetImageFromMemory(m_ktxTexture, mipLevel, layer, faceSlice, buffer.data(), buffer.size());
+   const auto result = ktxTexture_SetImageFromMemory(m_ktxTexture, mip_level, layer, face_slice, buffer.data(), buffer.size());
    return result == KTX_SUCCESS;
 }
 
 bool Texture::write_to_stream(io::IWriter& writer) const
 {
-   auto [outStream, userData] = create_ktx_stream_from_io_writer(writer);
+   auto [out_stream, user_data] = create_ktx_stream_from_io_writer(writer);
    ktxTexture_WriteToNamedFile(m_ktxTexture, "debug.ktx");
-   return ktxTexture_WriteToStream(m_ktxTexture, &outStream) == KTX_SUCCESS;
+   return ktxTexture_WriteToStream(m_ktxTexture, &out_stream) == KTX_SUCCESS;
 }
 
 bool Texture::write_to_file(const io::Path& path) const
@@ -179,7 +180,7 @@ bool Texture::write_to_file(const io::Path& path) const
    return ktxTexture_WriteToNamedFile(m_ktxTexture, path.string().c_str()) == KTX_SUCCESS;
 }
 
-bool Texture::compress(const TextureCompression compression, const bool isNormalMap) const
+bool Texture::compress(const TextureCompression compression, const bool is_normal_map) const
 {
    if (compression == TextureCompression::ZLIB) {
       return ktxTexture2_DeflateZLIB(reinterpret_cast<ktxTexture2*>(m_ktxTexture), 5) == KTX_SUCCESS;
@@ -187,7 +188,7 @@ bool Texture::compress(const TextureCompression compression, const bool isNormal
 
    ktxBasisParams params{};
    params.structSize = sizeof(ktxBasisParams);
-   params.normalMap = isNormalMap ? KTX_TRUE : KTX_FALSE;
+   params.normalMap = is_normal_map ? KTX_TRUE : KTX_FALSE;
    switch (compression) {
    case TextureCompression::ETC:
       params.compressionLevel = KTX_ETC1S_DEFAULT_COMPRESSION_LEVEL;
@@ -209,22 +210,22 @@ bool Texture::transcode(const TextureTranscode transcode) const
       return true;
    }
 
-   ktx_transcode_fmt_e transcodeFormat;
+   ktx_transcode_fmt_e transcode_format;
    switch (transcode) {
    case TextureTranscode::BC1_RGB:
-      transcodeFormat = KTX_TTF_BC1_RGB;
+      transcode_format = KTX_TTF_BC1_RGB;
       break;
    case TextureTranscode::BC3_RGBA:
-      transcodeFormat = KTX_TTF_BC3_RGBA;
+      transcode_format = KTX_TTF_BC3_RGBA;
       break;
    case TextureTranscode::BC4_R:
-      transcodeFormat = KTX_TTF_BC4_R;
+      transcode_format = KTX_TTF_BC4_R;
       break;
    default:
       return false;
    }
 
-   return ktxTexture2_TranscodeBasis(reinterpret_cast<ktxTexture2*>(m_ktxTexture), transcodeFormat, 0) == KTX_SUCCESS;
+   return ktxTexture2_TranscodeBasis(reinterpret_cast<ktxTexture2*>(m_ktxTexture), transcode_format, 0) == KTX_SUCCESS;
 }
 
 bool Texture::uncompress() const
@@ -240,9 +241,9 @@ bool Texture::is_compressed() const
 Vector2u Texture::dimensions() const
 {
    Vector2u result{};
-   auto iterator = [](const int mipLevel, const int /*face*/, const int width, const int height, const int /*depth*/,
-                      const ktx_uint64_t /*faceLodSize*/, void* /*pixels*/, void* userdata) -> KTX_error_code {
-      if (mipLevel == 0) {
+   auto iterator = [](const int mip_level, const int /*face*/, const int width, const int height, const int /*depth*/,
+                      const ktx_uint64_t /*face_lod_size*/, void* /*pixels*/, void* userdata) -> KTX_error_code {
+      if (mip_level == 0) {
          auto* res = static_cast<Vector2u*>(userdata);
          res->x = width;
          res->y = height;
@@ -256,7 +257,7 @@ Vector2u Texture::dimensions() const
 
 void Texture::print_debug_info() const
 {
-   fmt::print(stderr, "Format: {}\n", static_cast<u32>(ktxTexture2_GetVkFormat(reinterpret_cast<ktxTexture2*>(m_ktxTexture))));
+   std::println(stderr, "Format: {}", static_cast<u32>(ktxTexture2_GetVkFormat(reinterpret_cast<ktxTexture2*>(m_ktxTexture))));
 }
 
 void Texture::generate_mipmaps() const {}
@@ -271,24 +272,30 @@ std::optional<Texture> Texture::create(const TextureCreateInfo& info)
    case Format::R8G8B8A8_UNORM:
       ktxInfo.vkFormat = VK_FORMAT_R8G8B8A8_UNORM;
       break;
+   case Format::R8_SRGB:
+      ktxInfo.vkFormat = VK_FORMAT_R8_SRGB;
+      break;
+   case Format::R8_UNORM:
+      ktxInfo.vkFormat = VK_FORMAT_R8_UNORM;
+      break;
    }
    ktxInfo.baseWidth = info.dimensions.x;
    ktxInfo.baseHeight = info.dimensions.y;
    ktxInfo.baseDepth = 1;
    ktxInfo.numDimensions = 2;
    ktxInfo.numLevels =
-      info.createMipLayers ? static_cast<int>(std::floor(std::log2(std::max(info.dimensions.x, info.dimensions.y)))) + 1 : 1;
+      info.create_mip_layers ? static_cast<int>(std::floor(std::log2(std::max(info.dimensions.x, info.dimensions.y)))) + 1 : 1;
    ktxInfo.numLayers = 1;
    ktxInfo.numFaces = 1;
    ktxInfo.isArray = KTX_FALSE;
-   ktxInfo.generateMipmaps = info.generateMipmaps ? KTX_TRUE : KTX_FALSE;
+   ktxInfo.generateMipmaps = info.generate_mipmaps ? KTX_TRUE : KTX_FALSE;
 
-   ::ktxTexture2* resultTexture{};
-   if (ktxTexture2_Create(&ktxInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &resultTexture) != KTX_SUCCESS) {
+   ::ktxTexture2* result_texture{};
+   if (ktxTexture2_Create(&ktxInfo, KTX_TEXTURE_CREATE_ALLOC_STORAGE, &result_texture) != KTX_SUCCESS) {
       return std::nullopt;
    }
 
-   return Texture{ktxTexture(resultTexture)};
+   return Texture{ktxTexture(result_texture)};
 }
 
 std::optional<Texture> Texture::from_file(const io::Path& path)
@@ -300,12 +307,12 @@ std::optional<Texture> Texture::from_file(const io::Path& path)
    return Texture{ktxTexture};
 }
 
-std::optional<Texture> Texture::from_stream(io::ISeekableStream& seekableStream)
+std::optional<Texture> Texture::from_stream(io::ISeekableStream& seekable_stream)
 {
-   auto inputKtxStream = create_ktx_stream_from_io_stream(seekableStream);
+   auto input_ktx_stream = create_ktx_stream_from_io_stream(seekable_stream);
 
    ::ktxTexture* ktxTexture;
-   if (ktxTexture_CreateFromStream(&inputKtxStream, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture) != KTX_SUCCESS) {
+   if (ktxTexture_CreateFromStream(&input_ktx_stream, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &ktxTexture) != KTX_SUCCESS) {
       return std::nullopt;
    }
 

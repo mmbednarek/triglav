@@ -4,12 +4,11 @@
 #include "triglav/gltf/Gltf.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
 #include "triglav/io/StringReader.hpp"
-
-#include <gtest/gtest.h>
+#include "triglav/test_util/GTest.hpp"
 
 TEST(DerserializationTest, BasicDeserialization)
 {
-   triglav::io::StringReader reader(triglav::test::g_gltfExample);
+   triglav::io::StringReader reader(triglav::test::g_gltf_example);
 
    triglav::gltf::Document doc;
    doc.deserialize(reader);
@@ -21,7 +20,7 @@ TEST(DerserializationTest, BasicDeserialization)
 
 TEST(DerserializationTest, ReadMeshTest)
 {
-   triglav::io::StringReader reader(triglav::test::g_gltfExample);
+   triglav::io::StringReader reader(triglav::test::g_gltf_example);
 
    triglav::gltf::Document doc;
    doc.deserialize(reader);

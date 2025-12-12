@@ -6,13 +6,13 @@
 
 namespace triglav::graphics_api {
 
-Swapchain::Swapchain(QueueManager& queueManager, const Resolution& resolution, std::vector<Texture> textures,
-                     vulkan::SwapchainKHR swapchain, const ColorFormat& colorFormat) :
-    m_queueManager(queueManager),
+Swapchain::Swapchain(QueueManager& queue_manager, const Resolution& resolution, std::vector<Texture> textures,
+                     vulkan::SwapchainKHR swapchain, const ColorFormat& color_format) :
+    m_queue_manager(queue_manager),
     m_resolution(resolution),
     m_textures(std::move(textures)),
     m_swapchain(std::move(swapchain)),
-    m_colorFormat(colorFormat)
+    m_color_format(color_format)
 {
 }
 
@@ -23,16 +23,16 @@ VkSwapchainKHR Swapchain::vulkan_swapchain() const
 
 Result<std::tuple<u32, bool>> Swapchain::get_available_framebuffer(const Semaphore& semaphore) const
 {
-   u32 imageIndex;
+   u32 image_index;
    if (const auto res =
-          vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &imageIndex);
+          vkAcquireNextImageKHR(m_swapchain.parent(), *m_swapchain, UINT64_MAX, semaphore.vulkan_semaphore(), VK_NULL_HANDLE, &image_index);
        res != VK_SUCCESS) {
       if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
-         return std::make_tuple(imageIndex, true);
+         return std::make_tuple(image_index, true);
       }
       return std::unexpected{Status::UnsupportedDevice};
    }
-   return std::make_tuple(imageIndex, false);
+   return std::make_tuple(image_index, false);
 }
 
 Resolution Swapchain::resolution() const
@@ -40,24 +40,24 @@ Resolution Swapchain::resolution() const
    return m_resolution;
 }
 
-Status Swapchain::present(const SemaphoreArrayView& waitSemaphores, const uint32_t framebufferIndex)
+Status Swapchain::present(const SemaphoreArrayView& wait_semaphores, const uint32_t framebuffer_index)
 {
    const std::array swapchains{*m_swapchain};
-   const std::array imageIndices{framebufferIndex};
+   const std::array image_indices{framebuffer_index};
 
-   VkPresentInfoKHR presentInfo{};
-   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-   presentInfo.waitSemaphoreCount = static_cast<u32>(waitSemaphores.semaphore_count());
-   presentInfo.pWaitSemaphores = waitSemaphores.vulkan_semaphores();
-   presentInfo.swapchainCount = static_cast<u32>(swapchains.size());
-   presentInfo.pSwapchains = swapchains.data();
-   presentInfo.pImageIndices = imageIndices.data();
-   presentInfo.pResults = nullptr;
+   VkPresentInfoKHR present_info{};
+   present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+   present_info.waitSemaphoreCount = static_cast<u32>(wait_semaphores.semaphore_count());
+   present_info.pWaitSemaphores = wait_semaphores.vulkan_semaphores();
+   present_info.swapchainCount = static_cast<u32>(swapchains.size());
+   present_info.pSwapchains = swapchains.data();
+   present_info.pImageIndices = image_indices.data();
+   present_info.pResults = nullptr;
 
-   auto& queue = m_queueManager.get().next_queue(WorkType::Presentation);
+   auto& queue = m_queue_manager.get().next_queue(WorkType::Presentation);
 
-   auto queueAccessor = queue.access();
-   if (auto status = vkQueuePresentKHR(*queueAccessor, &presentInfo); status != VK_SUCCESS) {
+   auto queue_accessor = queue.access();
+   if (auto status = vkQueuePresentKHR(*queue_accessor, &present_info); status != VK_SUCCESS) {
       if (status == VK_ERROR_OUT_OF_DATE_KHR || status == VK_SUBOPTIMAL_KHR) {
          return Status::OutOfDateSwapchain;
       }
@@ -67,9 +67,9 @@ Status Swapchain::present(const SemaphoreArrayView& waitSemaphores, const uint32
    return Status::Success;
 }
 
-VkImageView Swapchain::vulkan_image_view(const u32 frameIndex) const
+VkImageView Swapchain::vulkan_image_view(const u32 frame_index) const
 {
-   return m_textures[frameIndex].vulkan_image_view();
+   return m_textures[frame_index].vulkan_image_view();
 }
 
 u32 Swapchain::frame_count() const
@@ -79,7 +79,7 @@ u32 Swapchain::frame_count() const
 
 ColorFormat Swapchain::color_format() const
 {
-   return m_colorFormat;
+   return m_color_format;
 }
 
 const std::vector<Texture>& Swapchain::textures() const

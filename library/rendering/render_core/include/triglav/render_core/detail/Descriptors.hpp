@@ -8,32 +8,39 @@ namespace descriptor {
 
 struct RWTexture
 {
-   TextureRef texRef;
+   TextureRef tex_ref;
 };
 
 struct SamplableTexture
 {
-   TextureRef texRef;
+   TextureRef tex_ref;
 };
 
 struct Texture
 {
-   TextureRef texRef;
+   TextureRef tex_ref;
 };
 
 struct SampledTextureArray
 {
-   std::vector<TextureRef> texRefs;
+   std::vector<TextureRef> tex_refs;
 };
 
 struct UniformBuffer
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
+};
+
+struct UniformBufferRange
+{
+   BufferRef buff_ref{};
+   u32 offset{};
+   u32 size{};
 };
 
 struct StorageBuffer
 {
-   BufferRef buffRef{};
+   BufferRef buff_ref{};
 };
 
 struct UniformBufferArray
@@ -43,14 +50,14 @@ struct UniformBufferArray
 
 struct AccelerationStructure
 {
-   graphics_api::ray_tracing::AccelerationStructure* accelerationStructure;
+   graphics_api::ray_tracing::AccelerationStructure* acceleration_structure;
 };
 
 }// namespace descriptor
 
-using Descriptor =
-   std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::SampledTextureArray, descriptor::Texture,
-                descriptor::UniformBuffer, descriptor::UniformBufferArray, descriptor::StorageBuffer, descriptor::AccelerationStructure>;
+using Descriptor = std::variant<descriptor::RWTexture, descriptor::SamplableTexture, descriptor::SampledTextureArray, descriptor::Texture,
+                                descriptor::UniformBuffer, descriptor::UniformBufferRange, descriptor::UniformBufferArray,
+                                descriptor::StorageBuffer, descriptor::AccelerationStructure>;
 
 struct DescriptorAndStage
 {

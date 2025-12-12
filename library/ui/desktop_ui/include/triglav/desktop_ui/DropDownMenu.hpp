@@ -29,8 +29,8 @@ class DropDownSelectorButton final : public ui_core::IWidget
 
    DropDownSelectorButton(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -64,8 +64,8 @@ class DropDownSelector final : public ui_core::IWidget
 
    DropDownSelector(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
@@ -73,10 +73,10 @@ class DropDownSelector final : public ui_core::IWidget
  private:
    State m_state;
    ui_core::IWidget* m_parent;
-   ui_core::VerticalLayout m_verticalLayout;
+   ui_core::VerticalLayout m_vertical_layout;
 };
 
-class DropDownMenu final : public ui_core::IWidget, ui_core::EventVisitor
+class DropDownMenu final : public ui_core::IWidget
 {
    friend class DropDownSelectorButton;
    friend class DropDownSelector;
@@ -84,26 +84,29 @@ class DropDownMenu final : public ui_core::IWidget, ui_core::EventVisitor
  public:
    using Self = DropDownMenu;
 
+   TG_EVENT(OnSelected, u32)
+
    struct State
    {
       DesktopUIManager* manager;
       std::vector<String> items;
-      u32 selectedItem;
+      u32 selected_item;
    };
 
    DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
 
+   [[nodiscard]] u32 selected_item() const;
    void set_selected_item(u32 index);
 
-   bool on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse) override;
-   bool on_mouse_entered(const ui_core::Event& event) override;
-   bool on_mouse_left(const ui_core::Event& event) override;
+   void on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
+   void on_mouse_entered(const ui_core::Event& event);
+   void on_mouse_left(const ui_core::Event& event);
 
  private:
    [[maybe_unused]] ui_core::Context& m_context;
@@ -112,10 +115,10 @@ class DropDownMenu final : public ui_core::IWidget, ui_core::EventVisitor
    [[maybe_unused]] ui_core::IWidget* m_parent;
    ui_core::RectBox m_rect;
    ui_core::TextBox* m_label{};
-   ui_core::SpriteId m_downArrow{};
+   ui_core::SpriteId m_down_arrow{};
    Vector4 m_dimensions;
-   Vector4 m_croppingMask;
-   Dialog* m_currentPopup{};
+   Vector4 m_cropping_mask;
+   Dialog* m_current_popup{};
 };
 
 }// namespace triglav::desktop_ui

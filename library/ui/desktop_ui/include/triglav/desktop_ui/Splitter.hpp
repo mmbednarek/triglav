@@ -2,11 +2,18 @@
 
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
+#include "triglav/ui_core/Primitives.hpp"
 #include "triglav/ui_core/UICore.hpp"
 
 namespace triglav::desktop_ui {
 
 class DesktopUIManager;
+
+enum class SplitterOffsetType
+{
+   Preceeding,
+   Following,
+};
 
 class Splitter final : public ui_core::BaseWidget
 {
@@ -18,12 +25,13 @@ class Splitter final : public ui_core::BaseWidget
       DesktopUIManager* manager;
       float offset;
       ui_core::Axis axis;
+      SplitterOffsetType offset_type;
    };
 
    Splitter(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
@@ -43,17 +51,20 @@ class Splitter final : public ui_core::BaseWidget
    }
 
  private:
+   float offset() const;
+   void add_offset(float diff);
    TG_DECLARE_AXIS_FUNCS(m_state.axis)
 
    ui_core::Context& m_context;
    State m_state;
    ui_core::IWidgetPtr m_preceding;
    ui_core::IWidgetPtr m_following;
-   bool m_isMoving{false};
-   bool m_isShowingCursor{false};
-   float m_lastMousePos{};
+   bool m_is_moving{false};
+   bool m_is_showing_cursor{false};
+   float m_last_mouse_pos{};
    Vector4 m_dimensions{};
-   Vector4 m_croppingMask{};
+   Vector4 m_cropping_mask{};
+   ui_core::RectId m_background{};
 };
 
 }// namespace triglav::desktop_ui

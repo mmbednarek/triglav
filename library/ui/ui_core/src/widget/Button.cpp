@@ -7,14 +7,14 @@ Button::Button(Context& ctx, State /*state*/, IWidget* parent) :
 {
 }
 
-Vector2 Button::desired_size(const Vector2 parentSize) const
+Vector2 Button::desired_size(const Vector2 parent_size) const
 {
-   return m_content->desired_size(parentSize);
+   return m_content->desired_size(parent_size);
 }
 
-void Button::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void Button::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   m_content->add_to_viewport(dimensions, croppingMask);
+   m_content->add_to_viewport(dimensions, cropping_mask);
 }
 
 void Button::remove_from_viewport()
@@ -31,7 +31,7 @@ void Button::on_child_state_changed(IWidget& widget)
 
 void Button::on_event(const Event& event)
 {
-   switch (event.eventType) {
+   switch (event.event_type) {
    case Event::Type::MouseReleased:
       event_OnClick.publish(std::get<Event::Mouse>(event.data).button);
       break;

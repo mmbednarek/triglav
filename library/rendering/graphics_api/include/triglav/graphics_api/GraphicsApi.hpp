@@ -155,14 +155,14 @@ struct ColorFormat
    [[nodiscard]] size_t pixel_size() const
    {
       size_t result{};
-      ColorFormatPart lastPart{};
+      ColorFormatPart last_part{};
       const auto count = color_format_order_count(this->order);
       for (size_t i = 0; i < count; ++i) {
          if (parts[i] == ColorFormatPart::Unknown) {
-            result += color_format_part_size(lastPart);
+            result += color_format_part_size(last_part);
          } else {
             result += color_format_part_size(parts[i]);
-            lastPart = parts[i];
+            last_part = parts[i];
          }
       }
       return result;
@@ -226,8 +226,8 @@ struct Color
 
 struct DepthStenctilValue
 {
-   float depthValue{};
-   u32 stencilValue{};
+   float depth_value{};
+   u32 stencil_value{};
 };
 
 struct ClearValue
@@ -329,17 +329,17 @@ class Texture;
 struct TextureBarrierInfo
 {
    const Texture* texture{};
-   TextureState sourceState;
-   TextureState targetState;
-   int baseMipLevel{};
-   int mipLevelCount{};
+   TextureState source_state;
+   TextureState target_state;
+   int base_mip_level{};
+   int mip_level_count{};
 };
 
 struct TextureRegion
 {
-   glm::vec2 offsetMin{};
-   glm::vec2 offsetMax{};
-   int mipLevel{};
+   glm::vec2 offset_min{};
+   glm::vec2 offset_max{};
+   int mip_level{};
 };
 
 enum class SampleCount : uint32_t
@@ -408,15 +408,15 @@ enum class TextureAddressMode
 
 struct SamplerProperties
 {
-   FilterType minFilter{};
-   FilterType magFilter{};
-   TextureAddressMode addressU{};
-   TextureAddressMode addressV{};
-   TextureAddressMode addressW{};
-   bool enableAnisotropy{};
-   float mipBias{};
-   float minLod{};
-   float maxLod{};
+   FilterType min_filter{};
+   FilterType mag_filter{};
+   TextureAddressMode address_u{};
+   TextureAddressMode address_v{};
+   TextureAddressMode address_w{};
+   bool enable_anisotropy{};
+   float mip_bias{};
+   float min_lod{};
+   float max_lod{};
 };
 
 enum class WorkType : u32
@@ -534,18 +534,18 @@ struct RenderAttachment
    Texture* texture;
    TextureState state;
    AttachmentAttributeFlags flags;
-   ClearValue clearValue;
+   ClearValue clear_value;
 };
 
 struct RenderingInfo
 {
-   Vector2i renderAreaOffset;
-   Vector2i renderAreaExtent;
-   u32 layerCount;
-   u32 viewMask;
+   Vector2i render_area_offset;
+   Vector2i render_area_extent;
+   u32 layer_count;
+   u32 view_mask;
 
-   std::vector<RenderAttachment> colorAttachments;
-   std::optional<RenderAttachment> depthAttachment;
+   std::vector<RenderAttachment> color_attachments;
+   std::optional<RenderAttachment> depth_attachment;
 };
 
 class Buffer;
@@ -553,8 +553,8 @@ class Buffer;
 struct BufferBarrier
 {
    const Buffer* buffer;
-   BufferAccessFlags srcAccess;
-   BufferAccessFlags dstAccess;
+   BufferAccessFlags src_access;
+   BufferAccessFlags dst_access;
 };
 
 enum class QueryType

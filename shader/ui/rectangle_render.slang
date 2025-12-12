@@ -55,8 +55,8 @@ VSOutput vs_main(uint vid: SV_VertexID)
     const rectangle_api::Primitive prim = g_drawCallBuffer[common::get_draw_index()].primitive;
 
     const float2 vertex = g_vertexIndex[vid];
-    const float2 posOnRect = vertex * prim.dimensions.zw;
-    const float2 ssPosition = prim.dimensions.xy + posOnRect;
+    const float2 posOnRect = round(vertex * prim.dimensions.zw);
+    const float2 ssPosition = round(prim.dimensions.xy) + posOnRect;
 
     VSOutput out;
     out.position = float4(2 * (ssPosition / g_viewportSize) - float2(1, 1), 0, 1);
@@ -64,8 +64,8 @@ VSOutput vs_main(uint vid: SV_VertexID)
     out.screenOffset = prim.dimensions.xy;
     out.rectSize = prim.dimensions.zw;
     out.borderRadius = prim.borderRadius;
-    out.borderColor = prim.borderColor;
-    out.backgroundColor = prim.backgroundColor;
+    out.borderColor = common::to_linear_color(prim.borderColor);
+    out.backgroundColor = common::to_linear_color(prim.backgroundColor);
     out.croppingMask = prim.croppingMask;
     out.borderWidth = prim.borderWidth;
     return out;

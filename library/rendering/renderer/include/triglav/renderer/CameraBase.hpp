@@ -13,7 +13,7 @@ struct OrthoCameraProperties
    glm::quat orientation;
    float range;
    float aspect;
-   float viewSpaceWidth;
+   float view_space_width;
 };
 
 class CameraBase
@@ -34,7 +34,10 @@ class CameraBase
    [[nodiscard]] const glm::mat4& view_matrix() const;
    [[nodiscard]] const glm::mat4& view_projection_matrix() const;
    [[nodiscard]] bool is_point_visible(glm::vec3 point) const;
-   [[nodiscard]] bool is_bounding_box_visible(const geometry::BoundingBox& boundingBox, const glm::mat4& modelMat) const;
+   [[nodiscard]] bool is_bounding_box_visible(const geometry::BoundingBox& bounding_box, const glm::mat4& model_mat) const;
+   [[nodiscard]] Vector3 forward_vector() const;
+   [[nodiscard]] Vector3 right_vector() const;
+   [[nodiscard]] Vector3 down_vector() const;
 
    [[nodiscard]] virtual const glm::mat4& projection_matrix() const = 0;
    [[nodiscard]] virtual float to_linear_depth(float depth) const = 0;
@@ -42,15 +45,15 @@ class CameraBase
  private:
    glm::vec3 m_position{};
    glm::quat m_orientation{0.0f, 0.0f, 0.0f, 1.0f};
-   float m_nearPlane{0.1f};
-   float m_farPlane{200.0f};
+   float m_near_plane{0.1f};
+   float m_far_plane{200.0f};
 
-   mutable bool m_hasCachedViewMatrix{false};
-   mutable glm::mat4 m_viewMat{};
+   mutable bool m_has_cached_view_matrix{false};
+   mutable glm::mat4 m_view_mat{};
 
  protected:
-   mutable bool m_hasCachedViewProjectionMatrix{false};
-   mutable glm::mat4 m_viewProjectionMat{};
+   mutable bool m_has_cached_view_projection_matrix{false};
+   mutable glm::mat4 m_view_projection_mat{};
 };
 
 }// namespace triglav::renderer

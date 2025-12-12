@@ -12,8 +12,8 @@ namespace triglav::desktop::x11 {
 
 Display::Display() :
     m_display(XOpenDisplay(nullptr)),
-    m_rootWindow(DefaultRootWindow(m_display)),
-    m_wmDeleteAtom(XInternAtom(m_display, "WM_DELETE_WINDOW", true)),
+    m_root_window(DefaultRootWindow(m_display)),
+    m_wm_delete_atom(XInternAtom(m_display, "WM_DELETE_WINDOW", true)),
     TG_CONNECT(m_mouse, OnMouseMove, on_mouse_move)
 {
 }
@@ -68,18 +68,26 @@ void Display::dispatch_messages()
          break;
       }
       case ClientMessage: {
-         if (event.xclient.data.l[0] == static_cast<int>(m_wmDeleteAtom)) {
+         if (event.xclient.data.l[0] == static_cast<int>(m_wm_delete_atom)) {
             auto surface = this->surface_by_window(event.xclient.window);
             if (surface) {
                surface->dispatch_close();
             }
          }
+         break;
+      }
+      case ConfigureNotify: {
+         auto surface = this->surface_by_window(event.xconfigure.window);
+         if (surface) {
+            surface->dispatch_resize({event.xconfigure.width, event.xconfigure.height});
+         }
+         break;
       }
       }
    }
 
-   for (const auto wndHandle : std::views::keys(m_surfaces)) {
-      auto surface = this->surface_by_window(wndHandle);
+   for (const auto wnd_handle : std::views::keys(m_surfaces)) {
+      auto surface = this->surface_by_window(wnd_handle);
       if (not surface)
          break;
       surface->tick();
@@ -90,7 +98,7 @@ void Display::dispatch_messages()
 
 std::shared_ptr<ISurface> Display::create_surface(const StringView title, const Vector2u dimensions, const WindowAttributeFlags flags)
 {
-   auto window = XCreateSimpleWindow(m_display, m_rootWindow, 0, 0, dimensions.x, dimensions.y, 0, 0, 0xffffffff);
+   auto window = XCreateSimpleWindow(m_display, m_root_window, 0, 0, dimensions.x, dimensions.y, 0, 0, 0xffffffff);
 
    XStoreName(m_display, window, title.data());
 
@@ -103,8 +111,8 @@ std::shared_ptr<ISurface> Display::create_surface(const StringView title, const 
    XMapWindow(m_display, window);
    XSelectInput(m_display, window,
                 ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
-                   LeaveNotify);
-   XSetWMProtocols(m_display, window, &m_wmDeleteAtom, 1);
+                   LeaveNotify | StructureNotifyMask);
+   XSetWMProtocols(m_display, window, &m_wm_delete_atom, 1);
 
    auto surface = std::make_shared<Surface>(*this, window, dimensions);
    this->map_surface(window, surface->weak_from_this());
@@ -118,8 +126,8 @@ void Display::map_surface(const ::Window window, const std::weak_ptr<ISurface>& 
 
 void Display::on_mouse_move(const float x, const float y)
 {
-   for (const auto wndHandle : std::views::keys(m_surfaces)) {
-      auto surface = this->surface_by_window(wndHandle);
+   for (const auto wnd_handle : std::views::keys(m_surfaces)) {
+      auto surface = this->surface_by_window(wnd_handle);
       if (not surface)
          break;
 
@@ -127,15 +135,15 @@ void Display::on_mouse_move(const float x, const float y)
    }
 }
 
-std::shared_ptr<Surface> Display::surface_by_window(const Window wndHandle)
+std::shared_ptr<Surface> Display::surface_by_window(const Window wnd_handle)
 {
-   auto it = m_surfaces.find(wndHandle);
+   auto it = m_surfaces.find(wnd_handle);
    if (it == m_surfaces.end())
       return nullptr;
 
    auto surface = it->second.lock();
    if (not surface) {
-      m_surfaces.erase(wndHandle);
+      m_surfaces.erase(wnd_handle);
       return nullptr;
    }
 

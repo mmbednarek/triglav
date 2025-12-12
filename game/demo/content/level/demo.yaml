@@ -1,59 +1,156 @@
 nodes:
-  - name: "root"
+  - name: root
     items:
       - type: static_mesh
-        name: "hall"
-        mesh: "hall.mesh"
+        name: Main Hall
+        mesh: "model/hall.mesh"
         transform:
-          translation: {x: 0, y: 0, z: 0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 10, y: 10, z: 10}
+          translation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 10.000000
+            y: 10.000000
+            z: 10.000000
       - type: static_mesh
-        name: "pine"
-        mesh: "pine.mesh"
+        name: Arrow
+        mesh: "mesh/arrow.mesh"
         transform:
-          translation: {x: 12.0, y: -20.0, z: -0.0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 50.0, y: 50.0, z: 50.0}
+          translation:
+            x: 15.000000
+            y: -20.000000
+            z: -5.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 2.000000
+            y: 2.000000
+            z: 2.000000
       - type: static_mesh
-        name: "column_0"
-        mesh: "column.mesh"
+        name: Column 0
+        mesh: "model/column.mesh"
         transform:
-          translation: {x: 0.0, y: -32.0, z: 0.0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 10, y: 10, z: 10}
+          translation:
+            x: 0.000000
+            y: -32.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 10.000000
+            y: 10.000000
+            z: 10.000000
       - type: static_mesh
-        name: "column_1"
-        mesh: "column.mesh"
+        name: Column 1
+        mesh: "model/column.mesh"
         transform:
-          translation: {x: 0.0, y: -16.0, z: 0.0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 10, y: 10, z: 10}
+          translation:
+            x: 0.000000
+            y: -16.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 10.000000
+            y: 10.000000
+            z: 10.000000
       - type: static_mesh
-        name: "column_2"
-        mesh: "column.mesh"
+        name: Column 2
+        mesh: "model/column.mesh"
         transform:
-          translation: {x: 0.0, y: 0.0, z: 0.0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 10, y: 10, z: 10}
+          translation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 10.000000
+            y: 10.000000
+            z: 10.000000
       - type: static_mesh
-        name: "column_3"
-        mesh: "column.mesh"
+        name: Column 3
+        mesh: "model/column.mesh"
         transform:
-          translation: {x: 0.0, y: 16.0, z: 0.0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 10, y: 10, z: 10}
+          translation:
+            x: 0.000000
+            y: 16.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 10.000000
+            y: 10.000000
+            z: 10.000000
       - type: static_mesh
-        name: "column_4"
-        mesh: "column.mesh"
+        name: Column 4
+        mesh: "model/column.mesh"
         transform:
-          translation: {x: 0.0, y: 32.0, z: 0.0}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 10, y: 10, z: 10}
+          translation:
+            x: 0.000000
+            y: 32.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 10.000000
+            y: 10.000000
+            z: 10.000000
       - type: static_mesh
-        name: "sphere"
-        mesh: "ball.mesh"
+        name: Sphere
+        mesh: "model/ball.mesh"
         transform:
-          translation: {x: 12.0, y: 24.0, z: -2.5}
-          rotation: {x: 0, y: 0, z: 0, w: 1}
-          scale: {x: 3, y: 3, z: 3}
+          translation:
+            x: 12.000000
+            y: 24.000000
+            z: -2.500000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 3.000000
+            y: 3.000000
+            z: 3.000000
+      - type: static_mesh
+        name: Cage
+        mesh: "model/cage.mesh"
+        transform:
+          translation:
+            x: 10.000000
+            y: 9.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 1.000000
+            y: 1.000000
+            z: 1.000000

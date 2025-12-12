@@ -7,7 +7,7 @@ namespace triglav::io::linux {
 class UnixFile final : public IFile
 {
  public:
-   explicit UnixFile(int fileDescriptor, std::string&& filePath);
+   explicit UnixFile(int file_descriptor, std::string&& file_path);
    ~UnixFile() override;
 
    [[nodiscard]] Result<MemorySize> read(std::span<u8> buffer) override;
@@ -17,8 +17,8 @@ class UnixFile final : public IFile
    [[nodiscard]] MemorySize position() const override;
 
  private:
-   int m_fileDescriptor;
-   std::string m_filePath;
+   int m_file_descriptor;
+   std::string m_file_path;
 };
 
 }// namespace triglav::io::linux

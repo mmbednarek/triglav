@@ -11,10 +11,10 @@ namespace triglav::tool::cli {
 
 struct ImportSettings
 {
-   std::string texturePath;
-   std::string meshPath;
-   std::string levelPath;
-   std::string materialPath;
+   std::string texture_path;
+   std::string mesh_path;
+   std::string level_path;
+   std::string material_path;
 
    void deserialize(const rapidjson::Value& value);
 };
@@ -22,19 +22,19 @@ struct ImportSettings
 struct ProjectInfo
 {
    std::string name;
-   std::string fullName;
+   std::string full_name;
    std::string path;
-   ImportSettings importSettings;
+   ImportSettings import_settings;
 
    void deserialize(const rapidjson::Value& value);
-   [[nodiscard]] io::Path system_path(std::string_view resourcePath) const;
-   [[nodiscard]] io::Path content_path(std::string_view resourcePath) const;
-   [[nodiscard]] std::string default_import_path(ResourceType resType, std::string_view basename) const;
+   [[nodiscard]] io::Path system_path(std::string_view resource_path) const;
+   [[nodiscard]] io::Path content_path(std::string_view resource_path) const;
+   [[nodiscard]] std::string default_import_path(ResourceType res_type, std::string_view basename) const;
 };
 
 struct ProjectConfig
 {
-   std::string activeProject{};
+   std::string active_project{};
    std::vector<ProjectInfo> projects{};
 
    void deserialize(const rapidjson::Value& value);

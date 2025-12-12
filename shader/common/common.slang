@@ -16,4 +16,14 @@ public uint get_draw_index() {
     };
 }
 
+public float4 to_linear_color(const float4 color)
+{
+    return float4(pow(color.xyz, GAMMA), color.w);
+}
+
+public float4 correct_gamma(const float4 color)
+{
+    return float4(pow(color.xyz, 1.0 / GAMMA), color.w);
+}
+
 }

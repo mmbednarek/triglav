@@ -6,12 +6,14 @@ core_sources = files([
                     'include/triglav/EnumFlags.hpp',
                     'include/triglav/Format.hpp',
                     'include/triglav/Int.hpp',
+                    'include/triglav/Logging.hpp',
                     'include/triglav/Math.hpp',
                     'include/triglav/Name.hpp',
                     'include/triglav/NameResolution.hpp',
                     'include/triglav/ObjectPool.hpp',
                     'include/triglav/RangedArray.hpp',
                     'include/triglav/Ranges.hpp',
+                    'include/triglav/ResourcePathMap.hpp',
                     'include/triglav/ResourceType.hpp',
                     'include/triglav/String.hpp',
                     'include/triglav/Template.hpp',
@@ -19,8 +21,10 @@ core_sources = files([
                     'include/triglav/UpdateList.hpp',
                     'include/triglav/Utf8.hpp',
                     'src/Core.cpp',
+                    'src/Logging.cpp',
                     'src/Math.cpp',
                     'src/NameResolution.cpp',
+                    'src/ResourcePathMap.cpp',
                     'src/String.cpp'
 ])
 

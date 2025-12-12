@@ -6,7 +6,7 @@
 
 namespace triglav::detail {
 
-static constexpr std::array g_primeTable = {
+static constexpr std::array g_prime_table = {
    0x00000000U, 0x77073096U, 0xEE0E612CU, 0x990951BAU, 0x076DC419U, 0x706AF48FU, 0xE963A535U, 0x9E6495A3U, 0x0EDB8832U, 0x79DCB8A4U,
    0xE0D5E91EU, 0x97D2D988U, 0x09B64C2BU, 0x7EB17CBDU, 0xE7B82D07U, 0x90BF1D91U, 0x1DB71064U, 0x6AB020F2U, 0xF3B97148U, 0x84BE41DEU,
    0x1ADAD47DU, 0x6DDDE4EBU, 0xF4D4B551U, 0x83D385C7U, 0x136C9856U, 0x646BA8C0U, 0xFD62F97AU, 0x8A65C9ECU, 0x14015C4FU, 0x63066CD9U,
@@ -39,7 +39,7 @@ constexpr uint64_t compute_crc(const char* data, const uint32_t len, uint64_t cr
 {
    crc = crc ^ 0xFFFFFFFFFFFFFFFFU;
    for (uint64_t i = 0; i < len; i++) {
-      crc = g_primeTable[*data ^ (crc & 0xFF)] ^ (crc >> 8);
+      crc = g_prime_table[*data ^ (crc & 0xFF)] ^ (crc >> 8);
       data++;
    }
    crc = crc ^ 0xFFFFFFFFFFFFFFFFU;

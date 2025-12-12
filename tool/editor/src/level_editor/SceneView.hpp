@@ -1,0 +1,63 @@
+#pragma once
+
+#include "../ResourceSelector.hpp"
+
+#include "triglav/Logging.hpp"
+#include "triglav/desktop_ui/Button.hpp"
+#include "triglav/desktop_ui/Dialog.hpp"
+#include "triglav/desktop_ui/TreeView.hpp"
+#include "triglav/renderer/Scene.hpp"
+#include "triglav/ui_core/IWidget.hpp"
+
+namespace triglav::desktop_ui {
+class DesktopUIManager;
+}
+
+namespace triglav::editor {
+
+class LevelEditor;
+
+using namespace name_literals;
+
+class SceneView final : public ui_core::ProxyWidget
+{
+   TG_DEFINE_LOG_CATEGORY(SceneView)
+ public:
+   using Self = SceneView;
+
+   struct State
+   {
+      desktop_ui::DesktopUIManager* manager{};
+      LevelEditor* editor{};
+   };
+
+   SceneView(ui_core::Context& context, State state, IWidget* parent);
+
+   void on_selected_object(desktop_ui::TreeItemId item_id);
+   void on_clicked_add_directory();
+   void on_clicked_delete() const;
+   void on_object_added_to_scene(renderer::ObjectID object_id, const renderer::SceneObject& object);
+   void on_object_is_removed(renderer::ObjectID object_id) const;
+   void on_object_changed_name(renderer::ObjectID object_id, StringView name) const;
+
+   void update_selected_item() const;
+   void on_resource_selected(String resource) const;
+
+ private:
+   State m_state;
+   desktop_ui::TreeController m_tree_controller;
+   desktop_ui::TreeView* m_tree_view;
+
+   std::map<desktop_ui::TreeItemId, renderer::ObjectID> m_item_id_to_object_id;
+   std::map<renderer::ObjectID, desktop_ui::TreeItemId> m_object_id_to_item_id;
+
+   TG_SINK(renderer::Scene, OnObjectAddedToScene);
+   TG_SINK(renderer::Scene, OnObjectChangedName);
+   TG_OPT_SINK(desktop_ui::TreeView, OnSelected);
+   TG_OPT_NAMED_SINK(ResourceSelectTrigger, OnSelected, OnResourceSelected);
+   TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, Add);
+   TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, AddDirectory);
+   TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, Delete);
+};
+
+}// namespace triglav::editor

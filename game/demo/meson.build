@@ -11,7 +11,6 @@ demo_deps = [
   geometry,
   desktop,
   threading,
-  fmt,
   shaders,
 ]
 

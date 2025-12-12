@@ -6,8 +6,6 @@
 #include "triglav/render_objects/Mesh.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::renderer {
 
 namespace gapi = graphics_api;
@@ -19,72 +17,72 @@ constexpr auto MAX_OBJECT_COUNT = 32;
 
 struct RayTracingConstants
 {
-   alignas(16) glm::vec3 lightDir;
+   alignas(16) glm::vec3 light_dir;
 };
 
 RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager& resources, Scene& scene) :
     m_device{device},
-    m_resourceManager{resources},
+    m_resource_manager{resources},
     m_teapot(resources.get("teapot.mesh"_rc)),
     m_scene(scene),
-    m_objectBuffer{GAPI_CHECK(
+    m_object_buffer{GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, MAX_OBJECT_COUNT * sizeof(ObjectDesc)))},
-    m_instanceBuilder(m_device),
-    m_scratchHeap(device, gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer),
-    m_asPool{device},
-    m_buildBLContext{device, m_asPool, m_scratchHeap},
-    m_buildTLContext{device, m_asPool, m_scratchHeap},
+    m_instance_builder(m_device),
+    m_scratch_heap(device, gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer),
+    m_as_pool{device},
+    m_build_blcontext{device, m_as_pool, m_scratch_heap},
+    m_build_tlcontext{device, m_as_pool, m_scratch_heap},
     TG_CONNECT(m_scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
 }
 
 void RayTracingScene::build_acceleration_structures()
 {
-   if (!m_mustUpdateAccelerationStructures) {
+   if (!m_must_update_acceleration_structures) {
       return;
    }
 
-   spdlog::info("Updating acceleration structures...");
-   m_mustUpdateAccelerationStructures = false;
+   log_info("Updating acceleration structures...");
+   m_must_update_acceleration_structures = false;
 
-   auto asUpdateCmdList = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
+   auto as_update_cmd_list = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
 
-   GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
-   m_buildBLContext.build_acceleration_structures(asUpdateCmdList);
-   GAPI_CHECK_STATUS(asUpdateCmdList.finish());
+   GAPI_CHECK_STATUS(as_update_cmd_list.begin(gapi::SubmitType::OneTime));
+   m_build_blcontext.build_acceleration_structures(as_update_cmd_list);
+   GAPI_CHECK_STATUS(as_update_cmd_list.finish());
 
-   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(asUpdateCmdList));
+   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(as_update_cmd_list));
 
-   m_instanceListBuffer.emplace(m_instanceBuilder.build_buffer());
+   m_instance_list_buffer.emplace(m_instance_builder.build_buffer());
 
-   m_buildTLContext.add_instance_buffer(*m_instanceListBuffer, static_cast<u32>(m_objects.size()));
-   m_tlAccelerationStructure = m_buildTLContext.commit_instances();
+   m_build_tlcontext.add_instance_buffer(*m_instance_list_buffer, static_cast<u32>(m_objects.size()));
+   m_tl_acceleration_structure = m_build_tlcontext.commit_instances();
 
-   GAPI_CHECK_STATUS(asUpdateCmdList.begin(gapi::SubmitType::OneTime));
-   m_buildTLContext.build_acceleration_structures(asUpdateCmdList);
-   GAPI_CHECK_STATUS(asUpdateCmdList.finish());
+   GAPI_CHECK_STATUS(as_update_cmd_list.begin(gapi::SubmitType::OneTime));
+   m_build_tlcontext.build_acceleration_structures(as_update_cmd_list);
+   GAPI_CHECK_STATUS(as_update_cmd_list.finish());
 
-   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(asUpdateCmdList));
+   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(as_update_cmd_list));
 
-   GAPI_CHECK_STATUS(m_objectBuffer.write_indirect(m_objects.data(), m_objects.size() * sizeof(ObjectDesc)));
+   GAPI_CHECK_STATUS(m_object_buffer.write_indirect(m_objects.data(), m_objects.size() * sizeof(ObjectDesc)));
 }
 
 void RayTracingScene::on_object_added_to_scene(const SceneObject& object)
 {
-   m_mustUpdateAccelerationStructures = true;
+   m_must_update_acceleration_structures = true;
 
-   const auto& model = m_resourceManager.get(object.model);
-   const auto vertexCount = static_cast<u32>(model.mesh.vertices.count());
-   const auto triangleCount = static_cast<u32>(model.mesh.indices.count() / 3);
-   m_buildBLContext.add_triangle_buffer(model.mesh.vertices.buffer(), model.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
-                                        sizeof(geo::Vertex), vertexCount, triangleCount);
+   const auto& model = m_resource_manager.get(object.model);
+   const auto vertex_count = static_cast<u32>(model.mesh.vertices.count());
+   const auto triangle_count = static_cast<u32>(model.mesh.indices.count() / 3);
+   m_build_blcontext.add_triangle_buffer(model.mesh.vertices.buffer(), model.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
+                                         sizeof(geo::Vertex), vertex_count, triangle_count);
 
-   auto* accStruct = m_buildBLContext.commit_triangles();
+   auto* acc_struct = m_build_blcontext.commit_triangles();
 
-   m_instanceBuilder.add_instance(*accStruct, object.model_matrix(), m_objects.size());
+   m_instance_builder.add_instance(*acc_struct, object.model_matrix(), m_objects.size());
 
-   m_objects.emplace_back(ObjectDesc{.indexBuffer = model.mesh.indices.buffer().buffer_address(),
-                                     .vertexBuffer = model.mesh.vertices.buffer().buffer_address()});
+   m_objects.emplace_back(ObjectDesc{.index_buffer = model.mesh.indices.buffer().buffer_address(),
+                                     .vertex_buffer = model.mesh.vertices.buffer().buffer_address()});
 }
 
 

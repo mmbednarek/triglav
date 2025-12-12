@@ -47,7 +47,7 @@ class Display final : public IDisplay
 
    [[nodiscard]] constexpr xdg_wm_base* wm_base() const noexcept
    {
-      return m_wmBase;
+      return m_wm_base;
    }
 
    [[nodiscard]] constexpr wl_pointer* pointer() const noexcept
@@ -57,7 +57,7 @@ class Display final : public IDisplay
 
    [[nodiscard]] constexpr zwp_pointer_constraints_v1* pointer_constraints() const noexcept
    {
-      return m_pointerConstraints;
+      return m_pointer_constraints;
    }
 
  private:
@@ -77,33 +77,34 @@ class Display final : public IDisplay
    void on_keymap(uint32_t format, int32_t fd, uint32_t size);
    void on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
    void on_destroyed_surface(Surface* surface);
+   void on_modifiers(u32 serial, u32 mods_depressed, u32 mods_latched, u32 mods_locked, u32 group) const;
 
    wl_display* m_display;
    wl_registry* m_registry;
-   wl_registry_listener m_registryListener{};
+   wl_registry_listener m_registry_listener{};
    wl_compositor* m_compositor{};
-   xdg_wm_base* m_wmBase{};
-   xdg_wm_base_listener m_wmBaseListener{};
+   xdg_wm_base* m_wm_base{};
+   xdg_wm_base_listener m_wm_base_listener{};
    wl_seat* m_seat{};
-   wl_seat_listener m_seatListener{};
+   wl_seat_listener m_seat_listener{};
    wl_pointer* m_pointer{};
-   wl_pointer_listener m_pointerListener{};
+   wl_pointer_listener m_pointer_listener{};
    wl_keyboard* m_keyboard{};
-   wl_keyboard_listener m_keyboardListener{};
-   zwp_pointer_constraints_v1* m_pointerConstraints{};
-   zwp_relative_pointer_manager_v1* m_relativePointerManager{};
-   zwp_relative_pointer_v1* m_relativePointer{};
-   zwp_relative_pointer_v1_listener m_relativePointerListener{};
-   wp_cursor_shape_manager_v1* m_cursorShapeManager{};
-   wp_cursor_shape_device_v1* m_cursorShapeDevice{};
-   zxdg_decoration_manager_v1* m_decorationManager{};
-   xkb_context* m_xkbContext;
-   xkb_keymap* m_xkbKeymap;
-   xkb_state* m_xkbState;
+   wl_keyboard_listener m_keyboard_listener{};
+   zwp_pointer_constraints_v1* m_pointer_constraints{};
+   zwp_relative_pointer_manager_v1* m_relative_pointer_manager{};
+   zwp_relative_pointer_v1* m_relative_pointer{};
+   zwp_relative_pointer_v1_listener m_relative_pointer_listener{};
+   wp_cursor_shape_manager_v1* m_cursor_shape_manager{};
+   wp_cursor_shape_device_v1* m_cursor_shape_device{};
+   zxdg_decoration_manager_v1* m_decoration_manager{};
+   xkb_context* m_xkb_context;
+   xkb_keymap* m_xkb_keymap;
+   xkb_state* m_xkb_state;
 
-   std::map<wl_surface*, Surface*> m_surfaceMap{};
-   threading::SafeReadWriteAccess<Surface*> m_pointerSurface{};
-   threading::SafeReadWriteAccess<Surface*> m_keyboardSurface{};
+   std::map<wl_surface*, Surface*> m_surface_map{};
+   threading::SafeReadWriteAccess<Surface*> m_pointer_surface{};
+   threading::SafeReadWriteAccess<Surface*> m_keyboard_surface{};
 };
 
 }// namespace triglav::desktop::wayland

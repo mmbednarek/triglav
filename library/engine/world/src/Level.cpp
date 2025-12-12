@@ -39,26 +39,26 @@ LevelNode& Level::root()
 
 void Level::serialize_yaml(c4::yml::NodeRef& node) const
 {
-   auto nodesYaml = node["nodes"];
-   nodesYaml |= ryml::SEQ;
-   for (const auto& levelNode : Values(m_nodes)) {
-      auto child = nodesYaml.append_child();
+   auto nodes_yaml = node["nodes"];
+   nodes_yaml |= ryml::SEQ;
+   for (const auto& level_node : Values(m_nodes)) {
+      auto child = nodes_yaml.append_child();
       child |= ryml::MAP;
-      levelNode.serialize_yaml(child);
+      level_node.serialize_yaml(child);
    }
 }
 
 bool Level::save_to_file(const io::Path& path) const
 {
-   const auto file = io::open_file(path, io::FileOpenMode::Create);
+   const auto file = io::open_file(path, io::FileMode::Write | io::FileMode::Create);
    if (!file.has_value()) {
       return false;
    }
 
    ryml::Tree tree;
-   ryml::NodeRef treeRef{tree};
-   treeRef |= ryml::MAP;
-   this->serialize_yaml(treeRef);
+   ryml::NodeRef tree_ref{tree};
+   tree_ref |= ryml::MAP;
+   this->serialize_yaml(tree_ref);
 
    const auto str = ryml::emitrs_yaml<std::string>(tree);
    return (*file)->write({reinterpret_cast<const u8*>(str.data()), str.size()}).has_value();

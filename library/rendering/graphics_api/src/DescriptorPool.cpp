@@ -20,20 +20,20 @@ void DescriptorLayoutArray::add_from_pipeline(const Pipeline& pipeline)
    m_layouts.push_back(pipeline.vulkan_descriptor_set_layout());
 }
 
-DescriptorPool::DescriptorPool(vulkan::DescriptorPool descriptorPool) :
-    m_descriptorPool(std::move(descriptorPool))
+DescriptorPool::DescriptorPool(vulkan::DescriptorPool descriptor_pool) :
+    m_descriptor_pool(std::move(descriptor_pool))
 {
 }
 
-Status DescriptorPool::allocate_descriptors(const std::span<VkDescriptorSetLayout> inLayouts, std::span<VkDescriptorSet> outSets)
+Status DescriptorPool::allocate_descriptors(const std::span<VkDescriptorSetLayout> in_layouts, std::span<VkDescriptorSet> out_sets)
 {
-   VkDescriptorSetAllocateInfo descriptorSetsInfo{};
-   descriptorSetsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-   descriptorSetsInfo.descriptorPool = *m_descriptorPool;
-   descriptorSetsInfo.descriptorSetCount = static_cast<u32>(inLayouts.size());
-   descriptorSetsInfo.pSetLayouts = inLayouts.data();
+   VkDescriptorSetAllocateInfo descriptor_sets_info{};
+   descriptor_sets_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+   descriptor_sets_info.descriptorPool = *m_descriptor_pool;
+   descriptor_sets_info.descriptorSetCount = static_cast<u32>(in_layouts.size());
+   descriptor_sets_info.pSetLayouts = in_layouts.data();
 
-   if (const auto res = vkAllocateDescriptorSets(m_descriptorPool.parent(), &descriptorSetsInfo, outSets.data()); res != VK_SUCCESS) {
+   if (const auto res = vkAllocateDescriptorSets(m_descriptor_pool.parent(), &descriptor_sets_info, out_sets.data()); res != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
@@ -42,29 +42,29 @@ Status DescriptorPool::allocate_descriptors(const std::span<VkDescriptorSetLayou
 
 Status DescriptorPool::free_descriptors(const std::span<VkDescriptorSet> sets)
 {
-   const auto res = vkFreeDescriptorSets(m_descriptorPool.parent(), *m_descriptorPool, static_cast<u32>(sets.size()), sets.data());
+   const auto res = vkFreeDescriptorSets(m_descriptor_pool.parent(), *m_descriptor_pool, static_cast<u32>(sets.size()), sets.data());
    if (res != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
    return Status::Success;
 }
 
-Result<DescriptorArray> DescriptorPool::allocate_array(const DescriptorLayoutArray& descriptorLayouts)
+Result<DescriptorArray> DescriptorPool::allocate_array(const DescriptorLayoutArray& descriptor_layouts)
 {
-   VkDescriptorSetAllocateInfo descriptorSetsInfo{};
-   descriptorSetsInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-   descriptorSetsInfo.descriptorPool = *m_descriptorPool;
-   descriptorSetsInfo.descriptorSetCount = static_cast<u32>(descriptorLayouts.layouts().size());
-   descriptorSetsInfo.pSetLayouts = descriptorLayouts.layouts().data();
+   VkDescriptorSetAllocateInfo descriptor_sets_info{};
+   descriptor_sets_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+   descriptor_sets_info.descriptorPool = *m_descriptor_pool;
+   descriptor_sets_info.descriptorSetCount = static_cast<u32>(descriptor_layouts.layouts().size());
+   descriptor_sets_info.pSetLayouts = descriptor_layouts.layouts().data();
 
-   std::vector<VkDescriptorSet> descriptorSets{};
-   descriptorSets.resize(descriptorLayouts.layouts().size());
-   if (const auto res = vkAllocateDescriptorSets(m_descriptorPool.parent(), &descriptorSetsInfo, descriptorSets.data());
+   std::vector<VkDescriptorSet> descriptor_sets{};
+   descriptor_sets.resize(descriptor_layouts.layouts().size());
+   if (const auto res = vkAllocateDescriptorSets(m_descriptor_pool.parent(), &descriptor_sets_info, descriptor_sets.data());
        res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return DescriptorArray(m_descriptorPool.parent(), *m_descriptorPool, std::move(descriptorSets));
+   return DescriptorArray(m_descriptor_pool.parent(), *m_descriptor_pool, std::move(descriptor_sets));
 }
 
 }// namespace triglav::graphics_api

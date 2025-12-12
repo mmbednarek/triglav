@@ -18,7 +18,7 @@ template<typename TObject, typename TFactory, u32 CBucketSize>
 class PoolBucket
 {
  public:
-   static constexpr auto aquiredIndex = std::numeric_limits<u32>::max();
+   static constexpr auto aquired_index = std::numeric_limits<u32>::max();
 
    explicit PoolBucket(TFactory& factory) :
        m_objects(initialize_array<TObject, CBucketSize>(factory))
@@ -38,7 +38,7 @@ class PoolBucket
       }
 
       const auto point = m_path[m_head];
-      m_path[m_head] = aquiredIndex;
+      m_path[m_head] = aquired_index;
       auto* obj = &m_objects[m_head];
       m_head = point;
 
@@ -52,7 +52,7 @@ class PoolBucket
          return false;
       }
 
-      if (m_path[index] != aquiredIndex) {
+      if (m_path[index] != aquired_index) {
          return false;
       }
 
@@ -77,7 +77,7 @@ class PoolBucket
       return m_objects.data();
    }
 
-   u32 m_chain{aquiredIndex};
+   u32 m_chain{aquired_index};
 
  private:
    std::array<TObject, CBucketSize> m_objects;
@@ -98,16 +98,16 @@ class ObjectPool
 {
    struct PointerRange
    {
-      const TObject* basePtr;
+      const TObject* base_ptr;
 
       bool operator<(const PointerRange& other) const
       {
-         return (basePtr + CBucketSize) < other.basePtr;
+         return (base_ptr + CBucketSize) < other.base_ptr;
       }
 
       bool operator==(const PointerRange& other) const
       {
-         return (other.basePtr >= basePtr) && (other.basePtr < (basePtr + CBucketSize));
+         return (other.base_ptr >= base_ptr) && (other.base_ptr < (base_ptr + CBucketSize));
       }
    };
 
@@ -115,24 +115,24 @@ class ObjectPool
    using Bucket = PoolBucket<TObject, TFactory, CBucketSize>;
 
    explicit ObjectPool(TFactory& factory = default_constructor<TObject>) :
-       m_objectFactory(factory)
+       m_object_factory(factory)
    {
    }
 
    TObject* acquire_object()
    {
-      if (m_bucketHead == Bucket::aquiredIndex) {
-         m_bucketHead = static_cast<u32>(m_buckets.size());
-         auto& bucket = m_buckets.emplace_back(std::make_unique<Bucket>(m_objectFactory));
-         m_bucketRanges[PointerRange{bucket->base_ptr()}] = m_bucketHead;
+      if (m_bucket_head == Bucket::aquired_index) {
+         m_bucket_head = static_cast<u32>(m_buckets.size());
+         auto& bucket = m_buckets.emplace_back(std::make_unique<Bucket>(m_object_factory));
+         m_bucket_ranges[PointerRange{bucket->base_ptr()}] = m_bucket_head;
          return bucket->acquire_object();
       }
 
-      auto& bucket = m_buckets[m_bucketHead];
+      auto& bucket = m_buckets[m_bucket_head];
       auto* result = bucket->acquire_object();
       if (bucket->is_full()) {
-         m_bucketHead = bucket->m_chain;
-         bucket->m_chain = Bucket::aquiredIndex;
+         m_bucket_head = bucket->m_chain;
+         bucket->m_chain = Bucket::aquired_index;
       }
 
       return result;
@@ -140,8 +140,8 @@ class ObjectPool
 
    bool release_object(const TObject* obj)
    {
-      auto it = m_bucketRanges.find(PointerRange{obj});
-      if (it == m_bucketRanges.end()) {
+      auto it = m_bucket_ranges.find(PointerRange{obj});
+      if (it == m_bucket_ranges.end()) {
          return false;
       }
 
@@ -150,8 +150,8 @@ class ObjectPool
       auto& bucket = m_buckets[it->second];
 
       if (bucket->is_full()) {
-         bucket->m_chain = m_bucketHead;
-         m_bucketHead = it->second;
+         bucket->m_chain = m_bucket_head;
+         m_bucket_head = it->second;
       }
 
       // TODO: Release unused buckets (?)
@@ -160,10 +160,10 @@ class ObjectPool
    }
 
  private:
-   TFactory& m_objectFactory;
+   TFactory& m_object_factory;
    std::vector<std::unique_ptr<Bucket>> m_buckets;
-   std::map<PointerRange, u32> m_bucketRanges;
-   u32 m_bucketHead{Bucket::aquiredIndex};
+   std::map<PointerRange, u32> m_bucket_ranges;
+   u32 m_bucket_head{Bucket::aquired_index};
 };
 
 }// namespace triglav

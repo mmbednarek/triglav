@@ -5,16 +5,14 @@
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
-#include <spdlog/spdlog.h>
-
 namespace triglav::renderer::ui {
 
-constexpr u32 g_maxTextUpdateCount = 256;
-constexpr u32 g_maxCharacterCount = 4096;
-constexpr u32 g_maxTextDrawCalls = 512;
-constexpr u32 g_maxTextVertices = 8192;
-constexpr u32 g_maxCombinedGlyphBufferSize = sizeof(render_core::GlyphInfo) * 286 * 32;
-constexpr u32 g_vertexCountPerChar = 6;
+constexpr u32 g_max_text_update_count = 256;
+constexpr u32 g_max_character_count = 4096;
+constexpr u32 g_max_text_draw_calls = 512;
+constexpr u32 g_max_text_vertices = 8192;
+constexpr u32 g_max_combined_glyph_buffer_size = sizeof(render_core::GlyphInfo) * 286 * 32;
+constexpr u32 g_vertex_count_per_char = 6;
 
 using namespace name_literals;
 using namespace render_core::literals;
@@ -25,15 +23,15 @@ struct TextUpdateInfo
    Vector4 color;
    Vector4 crop;
    Vector2 position;
-   u32 atlasId;
+   u32 atlas_id;
 
-   u32 characterOffset;
-   u32 characterCount;
-   u32 glyphBufferOffset;
+   u32 character_offset;
+   u32 character_count;
+   u32 glyph_buffer_offset;
 
-   u32 dstDrawCall;
-   u32 dstVertexOffset;
-   u32 dstVertexCount;
+   u32 dst_draw_call;
+   u32 dst_vertex_offset;
+   u32 dst_vertex_count;
 
    u32 padding[3];
 };
@@ -42,15 +40,15 @@ static_assert(sizeof(TextUpdateInfo) % 16 == 0);
 
 struct TextDrawCall
 {
-   u32 vertexCount;
-   u32 instanceCount;
-   u32 firstVertex;
-   u32 firstInstance;
+   u32 vertex_count;
+   u32 instance_count;
+   u32 first_vertex;
+   u32 first_instance;
 
    Vector4 color;
    Vector4 crop;
    Vector2 position;
-   u32 atlasIndex;
+   u32 atlas_index;
 
    u32 padding;
 };
@@ -63,174 +61,119 @@ struct TextVertex
    Vector2 uv;
 };
 
-TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyphCache, ui_core::Viewport& viewport) :
+TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport) :
     m_device(device),
-    m_glyphCache(glyphCache),
-    m_combinedGlyphBuffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
-                                                          g_maxCombinedGlyphBufferSize))),
-    m_vertexAllocator(g_maxTextVertices),
+    m_glyph_cache(glyph_cache),
+    m_combined_glyph_buffer(GAPI_CHECK(device.create_buffer(
+       graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst, g_max_combined_glyph_buffer_size))),
+    m_vertex_allocator{memory::HeapAllocator{g_max_text_vertices}},
     TG_CONNECT(viewport, OnAddedText, on_added_text),
     TG_CONNECT(viewport, OnUpdatedText, on_updated_text),
     TG_CONNECT(viewport, OnRemovedText, on_removed_text)
 {
 }
 
-void TextRenderer::on_added_text(const TextId textId, const ui_core::Text& text)
+void TextRenderer::on_added_text(const TextId text_id, const ui_core::Text& text)
 {
-   std::unique_lock lk{m_updateMtx};
+   std::unique_lock lk{m_update_mtx};
 
-   const auto& typefaceInfo = this->get_typeface_info({text.typefaceName, text.fontSize});
-   const auto vertexSection = this->allocate_vertex_section(textId, static_cast<u32>(g_vertexCountPerChar * text.content.size()));
+   const auto& typeface_info = this->get_typeface_info({text.typeface_name, text.font_size});
+   const auto vertex_section = this->allocate_vertex_section(text_id, static_cast<u32>(g_vertex_count_per_char * text.content.size()));
 
-   m_textInfos.emplace(textId, TextInfo{text, static_cast<u32>(m_drawCallToTextName.size()), typefaceInfo.glyphBufferOffset, text.color,
-                                        text.crop, text.position, typefaceInfo.atlasId, static_cast<u32>(vertexSection.offset),
-                                        static_cast<u32>(vertexSection.size)});
-   m_drawCallToTextName.emplace_back(textId);
-
-   m_pendingTextUpdates.emplace_back(textId);
+   for (auto& updates : m_frame_updates) {
+      updates.add_or_update(text_id,
+                            TextInfo{text, typeface_info.glyph_buffer_offset, text.color, text.crop, text.position, typeface_info.atlas_id,
+                                     static_cast<u32>(vertex_section.offset), static_cast<u32>(vertex_section.size)});
+   }
 }
 
-void TextRenderer::on_removed_text(const TextId textId)
+void TextRenderer::on_removed_text(const TextId text_id)
 {
-   std::unique_lock lk{m_updateMtx};
-   m_pendingTextRemoval.emplace_back(textId);
+   std::unique_lock lk{m_update_mtx};
+   for (auto& updates : m_frame_updates) {
+      updates.remove(text_id);
+   }
+   this->free_vertex_section(text_id);
 }
 
-void TextRenderer::on_updated_text(const TextId textId, const ui_core::Text& text)
+void TextRenderer::on_updated_text(const TextId text_id, const ui_core::Text& text)
 {
-   std::unique_lock lk{m_updateMtx};
-
-   this->free_vertex_section(textId);
-   const auto vertexSection = this->allocate_vertex_section(textId, static_cast<u32>(g_vertexCountPerChar * text.content.rune_count()));
-
-   auto& textInfo = m_textInfos.at(textId);
-   textInfo.text.content = text.content;
-   textInfo.dstVertexOffset = static_cast<u32>(vertexSection.offset);
-   textInfo.dstVertexCount = static_cast<u32>(vertexSection.size);
-   textInfo.position = text.position;
-   textInfo.crop = text.crop;
-   textInfo.color = text.color;
-
-   m_pendingTextUpdates.emplace_back(textId);
+   this->on_added_text(text_id, text);
 }
 
-void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frameIndex)
+void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frame_index)
 {
-   std::unique_lock lk{m_updateMtx};
+   std::unique_lock lk{m_update_mtx};
 
-   const auto textUpdateMem =
-      GAPI_CHECK(graph.resources().buffer("user_interface.text_update_buffer.staging"_name, frameIndex).map_memory());
-   auto& textUpdates = textUpdateMem.cast<std::array<TextUpdateInfo, g_maxTextUpdateCount>>();
+   const auto text_update_mem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.text_update_buffer.staging"_name, frame_index).map_memory());
+   m_update_infos = static_cast<TextUpdateInfo*>(*text_update_mem);
 
-   const auto charBufferMem = GAPI_CHECK(graph.resources().buffer("user_interface.character_buffer.staging"_name, frameIndex).map_memory());
-   auto& charBuffer = charBufferMem.cast<std::array<u32, g_maxCharacterCount>>();
+   const auto char_buffer_mem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.character_buffer.staging"_name, frame_index).map_memory());
+   m_char_buffer = static_cast<u32*>(*char_buffer_mem);
 
-   const auto textDispatchBufferMem = GAPI_CHECK(graph.resources().buffer("user_interface.dispatch_buffer"_name, frameIndex).map_memory());
-   auto& textDispatch = textDispatchBufferMem.cast<Vector3u>();
+   const auto text_dispatch_buffer_mem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.dispatch_buffer"_name, frame_index).map_memory());
+   auto& text_dispatch = text_dispatch_buffer_mem.cast<Vector3u>();
 
-   const auto textDrawCallCountBufferMem =
-      GAPI_CHECK(graph.resources().buffer("user_interface.text_draw_call_count"_name, frameIndex).map_memory());
-   auto& textDrawCallCount = textDrawCallCountBufferMem.cast<u32>();
+   const auto text_draw_call_count_buffer_mem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.text_draw_call_count"_name, frame_index).map_memory());
+   auto& text_draw_call_count = text_draw_call_count_buffer_mem.cast<u32>();
 
-   const auto textRemovalCountMem = GAPI_CHECK(graph.resources().buffer("user_interface.text_removal_count"_name, frameIndex).map_memory());
-   auto& textRemovalCount = textRemovalCountMem.cast<u32>();
+   const auto text_removal_count_mem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.text_removal_count"_name, frame_index).map_memory());
+   auto& text_removal_count = text_removal_count_mem.cast<u32>();
 
-   const auto textRemovalBufferMem =
-      GAPI_CHECK(graph.resources().buffer("user_interface.text_removal_buffer"_name, frameIndex).map_memory());
-   auto& textRemovalBuffer = textRemovalBufferMem.cast<std::array<std::pair<u32, u32>, g_maxTextUpdateCount>>();
+   const auto text_removal_buffer_mem =
+      GAPI_CHECK(graph.resources().buffer("user_interface.text_removal_buffer"_name, frame_index).map_memory());
+   m_move_buffer = static_cast<std::pair<u32, u32>*>(*text_removal_buffer_mem);
 
-   textRemovalCount = 0;
-   std::vector<u32> textRemovals{};
-   textRemovals.reserve(textRemovalBuffer.size());
-   for (const auto& [id, textName] : Enumerate(m_pendingTextRemoval)) {
-      textRemovals.emplace_back(m_textInfos[textName].drawCallId);
-      this->free_vertex_section(textName);
-      m_textInfos.erase(textName);
-   }
-   m_pendingTextRemoval.clear();
+   m_top_update_info = 0;
+   m_top_move_index = 0;
+   m_char_offset = 0;
+   m_current_frame_index = frame_index;
 
-   std::ranges::stable_sort(textRemovals);
+   m_frame_updates[frame_index].write_to_buffers(*this);
 
-   auto textRemovalBufferIt = textRemovalBuffer.begin();
-
-   const auto remainCount = static_cast<u32>(m_drawCallToTextName.size() - textRemovals.size());
-   u32 srcIndex = remainCount;
-   for (const auto dstIndex : textRemovals) {
-      while (std::ranges::binary_search(textRemovals, srcIndex))
-         ++srcIndex;
-
-      if (dstIndex < remainCount) {
-         ui_core::TextId srcName = m_drawCallToTextName[srcIndex];
-         m_textInfos[srcName].drawCallId = dstIndex;
-         m_drawCallToTextName[dstIndex] = srcName;
-
-         *textRemovalBufferIt = {srcIndex, dstIndex};
-         ++textRemovalBufferIt;
-         ++srcIndex;
-         ++textRemovalCount;
-      }
-   }
-
-   m_drawCallToTextName.resize(remainCount);
-
-   u32 charOffset = 0;
-
-   textDispatch = {static_cast<u32>(m_pendingTextUpdates.size()), 1, 1};
-   textDrawCallCount = static_cast<u32>(m_drawCallToTextName.size());
-
-   for (const auto [index, textName] : Enumerate(m_pendingTextUpdates)) {
-      if (index >= g_maxTextUpdateCount)
-         break;
-
-      auto textInfoIt = m_textInfos.find(textName);
-      if (textInfoIt == m_textInfos.end())
-         continue;
-
-      const auto& textInfo = textInfoIt->second;
-      auto& dstUpdate = textUpdates.at(index);
-
-      dstUpdate.dstDrawCall = textInfo.drawCallId;
-      dstUpdate.characterOffset = charOffset;
-      dstUpdate.characterCount = font::Charset::European.encode_string_to(textInfo.text.content.view(), charBuffer.begin() + charOffset);
-      dstUpdate.color = textInfo.color;
-      dstUpdate.crop = textInfo.crop;
-      dstUpdate.position = textInfo.position;
-      dstUpdate.atlasId = textInfo.atlasId;
-      dstUpdate.glyphBufferOffset = textInfo.glyphBufferOffset;
-      dstUpdate.dstVertexOffset = textInfo.dstVertexOffset;
-      dstUpdate.dstVertexCount = textInfo.dstVertexCount;
-      charOffset += dstUpdate.characterCount;
-   }
-
-   if (m_pendingTextUpdates.size() <= g_maxTextUpdateCount) {
-      m_pendingTextUpdates.clear();
-   } else {
-      std::copy(m_pendingTextUpdates.begin() + g_maxTextUpdateCount, m_pendingTextUpdates.end(), m_pendingTextUpdates.begin());
-      m_pendingTextUpdates.resize(m_pendingTextUpdates.size() - g_maxTextUpdateCount);
-   }
+   text_draw_call_count = m_frame_updates[frame_index].top_index();
+   text_removal_count = m_top_move_index;
+   text_dispatch = {m_top_update_info, 1, 1};
 }
 
 void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
 {
-   ctx.declare_buffer("user_interface.text_update_buffer"_name, sizeof(TextUpdateInfo) * g_maxTextUpdateCount);
-   ctx.declare_staging_buffer("user_interface.text_update_buffer.staging"_name, sizeof(TextUpdateInfo) * g_maxTextUpdateCount);
+   ctx.declare_buffer("user_interface.text_update_buffer"_name, sizeof(TextUpdateInfo) * g_max_text_update_count);
+   ctx.declare_staging_buffer("user_interface.text_update_buffer.staging"_name, sizeof(TextUpdateInfo) * g_max_text_update_count);
 
-   ctx.declare_buffer("user_interface.character_buffer"_name, sizeof(u32) * g_maxCharacterCount);
-   ctx.declare_staging_buffer("user_interface.character_buffer.staging"_name, sizeof(u32) * g_maxCharacterCount);
+   ctx.declare_buffer("user_interface.character_buffer"_name, sizeof(u32) * g_max_character_count);
+   ctx.declare_staging_buffer("user_interface.character_buffer.staging"_name, sizeof(u32) * g_max_character_count);
 
    ctx.declare_staging_buffer("user_interface.dispatch_buffer"_name, sizeof(Vector3u));
    ctx.declare_staging_buffer("user_interface.text_draw_call_count"_name, sizeof(u32));
-   ctx.declare_staging_buffer("user_interface.text_removal_buffer"_name, sizeof(std::pair<u32, u32>) * g_maxTextUpdateCount);
+   ctx.declare_staging_buffer("user_interface.text_removal_buffer"_name, sizeof(std::pair<u32, u32>) * g_max_text_update_count);
    ctx.declare_staging_buffer("user_interface.text_removal_count"_name, sizeof(u32));
 
-   ctx.declare_buffer("user_interface.text_draw_call_buffer"_name, sizeof(TextDrawCall) * g_maxTextDrawCalls);
-   ctx.declare_buffer("user_interface.text_vertex_buffer"_name, sizeof(TextVertex) * g_maxTextVertices);
+   ctx.declare_buffer("user_interface.text_draw_call_buffer"_name, sizeof(TextDrawCall) * g_max_text_draw_calls);
+   ctx.declare_buffer("user_interface.text_vertex_buffer"_name, sizeof(TextVertex) * g_max_text_vertices);
 
    // Copy buffers
    ctx.copy_buffer("user_interface.text_update_buffer.staging"_name, "user_interface.text_update_buffer"_name);
    ctx.copy_buffer("user_interface.character_buffer.staging"_name, "user_interface.character_buffer"_name);
-   ctx.copy_buffer("user_interface.text_draw_call_buffer"_last_frame, "user_interface.text_draw_call_buffer"_name);
-   ctx.copy_buffer("user_interface.text_vertex_buffer"_last_frame, "user_interface.text_vertex_buffer"_name);
+
+   // Dispatch buffer
+   ctx.bind_compute_shader("text/generate_geometry.cshader"_rc);
+
+   // input
+   ctx.bind_storage_buffer(0, "user_interface.text_update_buffer"_name);
+   ctx.bind_storage_buffer(1, "user_interface.character_buffer"_name);
+   ctx.bind_storage_buffer(2, &this->m_combined_glyph_buffer);
+
+   // output
+   ctx.bind_storage_buffer(3, "user_interface.text_draw_call_buffer"_name);
+   ctx.bind_storage_buffer(4, "user_interface.text_vertex_buffer"_name);
+
+   ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
 
    // Remove pending texts
    ctx.bind_compute_shader("text/removal.cshader"_rc);
@@ -240,20 +183,6 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
    ctx.bind_storage_buffer(2, "user_interface.text_draw_call_buffer"_name);
 
    ctx.dispatch({1, 1, 1});
-
-   // Dispatch buffer
-   ctx.bind_compute_shader("text/generate_geometry.cshader"_rc);
-
-   // input
-   ctx.bind_storage_buffer(0, "user_interface.text_update_buffer"_name);
-   ctx.bind_storage_buffer(1, "user_interface.character_buffer"_name);
-   ctx.bind_storage_buffer(2, &this->m_combinedGlyphBuffer);
-
-   // output
-   ctx.bind_storage_buffer(3, "user_interface.text_draw_call_buffer"_name);
-   ctx.bind_storage_buffer(4, "user_interface.text_vertex_buffer"_name);
-
-   ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
 
    ctx.export_buffer("user_interface.text_draw_call_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead,
@@ -284,53 +213,90 @@ void TextRenderer::build_render_ui(render_core::BuildContext& ctx)
    ctx.bind_vertex_buffer("user_interface.text_vertex_buffer"_external);
 
    ctx.draw_indirect_with_count("user_interface.text_draw_call_buffer"_external, "user_interface.text_draw_call_count"_external,
-                                g_maxTextDrawCalls, sizeof(TextDrawCall));
+                                g_max_text_draw_calls, sizeof(TextDrawCall));
 }
 
-const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProperties& glyphProps)
+void TextRenderer::set_object(const u32 index, const TextInfo& info)
 {
-   if (const auto it = m_typefaceInfos.find(glyphProps.hash()); it != m_typefaceInfos.end()) {
+   const auto char_count = font::Charset::European.encode_string_to(info.text.content.view(), m_char_buffer + m_char_offset);
+   m_update_infos[m_top_update_info++] = TextUpdateInfo{
+      .color = info.color,
+      .crop = info.crop,
+      .position = info.position,
+      .atlas_id = info.atlas_id,
+      .character_offset = m_char_offset,
+      .character_count = char_count,
+      .glyph_buffer_offset = info.glyph_buffer_offset,
+      .dst_draw_call = index,
+      .dst_vertex_offset = info.dst_vertex_offset,
+      .dst_vertex_count = info.dst_vertex_count,
+   };
+   m_char_offset += char_count;
+   assert(m_char_offset < g_max_character_count);
+}
+
+void TextRenderer::move_object(const u32 src, const u32 dst)
+{
+   assert(m_top_update_info <= g_max_text_update_count);
+   m_move_buffer[m_top_move_index++] = {src, dst};
+}
+
+const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProperties& glyph_props)
+{
+   if (const auto it = m_typeface_infos.find(glyph_props.hash()); it != m_typeface_infos.end()) {
       return it->second;
    }
 
-   auto& glyphAtlas = m_glyphCache.find_glyph_atlas(glyphProps);
+   auto& glyph_atlas = m_glyph_cache.find_glyph_atlas(glyph_props);
 
-   const auto atlasId = static_cast<u32>(m_atlases.size());
-   m_atlases.emplace_back(&glyphAtlas.texture());
+   const auto atlas_id = static_cast<u32>(m_atlases.size());
+   m_atlases.emplace_back(&glyph_atlas.texture());
 
-   const auto transferCmdList = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+   const auto transfer_cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
 
-   GAPI_CHECK_STATUS(transferCmdList.begin(graphics_api::SubmitType::OneTime));
-   transferCmdList.copy_buffer(glyphAtlas.storage_buffer(), m_combinedGlyphBuffer, 0, m_glyphOffset,
-                               static_cast<u32>(glyphAtlas.storage_buffer().size()));
-   GAPI_CHECK_STATUS(transferCmdList.finish());
+   GAPI_CHECK_STATUS(transfer_cmd_list.begin(graphics_api::SubmitType::OneTime));
+   transfer_cmd_list.copy_buffer(glyph_atlas.storage_buffer(), m_combined_glyph_buffer, 0, m_glyph_offset,
+                                 static_cast<u32>(glyph_atlas.storage_buffer().size()));
+   GAPI_CHECK_STATUS(transfer_cmd_list.finish());
 
-   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(transferCmdList));
+   GAPI_CHECK_STATUS(m_device.submit_command_list_one_time(transfer_cmd_list));
 
-   auto [newIt, ok] =
-      m_typefaceInfos.emplace(glyphProps.hash(), TypefaceInfo{atlasId, static_cast<u32>(m_glyphOffset / sizeof(render_core::GlyphInfo))});
+   auto [new_it, ok] = m_typeface_infos.emplace(glyph_props.hash(),
+                                                TypefaceInfo{atlas_id, static_cast<u32>(m_glyph_offset / sizeof(render_core::GlyphInfo))});
    assert(ok);
 
-   m_glyphOffset += static_cast<u32>(glyphAtlas.storage_buffer().size());
+   m_glyph_offset += static_cast<u32>(glyph_atlas.storage_buffer().size());
 
-   return newIt->second;
+   return new_it->second;
 }
 
-memory::Area TextRenderer::allocate_vertex_section(const TextId textId, const u32 vertexCount)
+memory::Area TextRenderer::allocate_vertex_section(const TextId text_id, const u32 vertex_count)
 {
-   const auto section = m_vertexAllocator.allocate(vertexCount);
+   if (m_allocated_vertex_sections.contains(text_id)) {
+      const auto& sec = m_allocated_vertex_sections.at(text_id);
+      if (sec.size == vertex_count)
+         return sec;
+
+      m_vertex_allocator.free(sec);
+   }
+
+   const auto section = m_vertex_allocator.allocate(vertex_count);
    assert(section.has_value());
 
-   memory::Area result{vertexCount, *section};
-   m_allocatedVertexSections.emplace(textId, result);
+   log_debug("allocated {} bytes at {}", vertex_count, section.value());
+
+   const memory::Area result{vertex_count, *section};
+   m_allocated_vertex_sections[text_id] = result;
 
    return result;
 }
 
-void TextRenderer::free_vertex_section(const TextId textId)
+void TextRenderer::free_vertex_section(const TextId text_id)
 {
-   m_vertexAllocator.free(m_allocatedVertexSections.at(textId));
-   m_allocatedVertexSections.erase(textId);
+   const auto section = m_allocated_vertex_sections.at(text_id);
+   log_debug("freed {} bytes at {}", section.size, section.size);
+   m_vertex_allocator.free(section);
+   m_allocated_vertex_sections.erase(text_id);
 }
 
 }// namespace triglav::renderer::ui

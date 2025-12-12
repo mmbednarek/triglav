@@ -11,17 +11,17 @@ InstanceBuilder::InstanceBuilder(Device& device) :
 {
 }
 
-void InstanceBuilder::add_instance(AccelerationStructure& accStructure, glm::mat4 matrix, const Index instanceIndex)
+void InstanceBuilder::add_instance(AccelerationStructure& acc_structure, glm::mat4 matrix, const Index instance_index)
 {
    VkAccelerationStructureInstanceKHR instance{};
-   instance.accelerationStructureReference = accStructure.vulkan_device_address();
-   instance.instanceCustomIndex = instanceIndex;
+   instance.accelerationStructureReference = acc_structure.vulkan_device_address();
+   instance.instanceCustomIndex = instance_index;
    instance.flags = VK_GEOMETRY_INSTANCE_TRIANGLE_FACING_CULL_DISABLE_BIT_KHR;
    instance.mask = 0xFF;
    instance.instanceShaderBindingTableRecordOffset = 0;
 
-   auto matT = glm::transpose(matrix);
-   std::memcpy(instance.transform.matrix, &matT, sizeof(VkTransformMatrixKHR));
+   auto mat_t = glm::transpose(matrix);
+   std::memcpy(instance.transform.matrix, &mat_t, sizeof(VkTransformMatrixKHR));
 
    m_instances.emplace_back(instance);
 }

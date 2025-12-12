@@ -8,27 +8,27 @@ namespace {
 
 Config get_default_config(const graphics_api::Device& device)
 {
-   const bool isRayTracingEnabled = device.enabled_features() & graphics_api::DeviceFeature::RayTracing;
+   const bool is_ray_tracing_enabled = device.enabled_features() & graphics_api::DeviceFeature::RayTracing;
 
    Config result{};
-   result.ambientOcclusion = isRayTracingEnabled ? AmbientOcclusionMethod::RayTraced : AmbientOcclusionMethod::ScreenSpace;
+   result.ambient_occlusion = is_ray_tracing_enabled ? AmbientOcclusionMethod::RayTraced : AmbientOcclusionMethod::ScreenSpace;
    result.antialiasing = AntialiasingMethod::FastApproximate;
-   result.shadowCasting = isRayTracingEnabled ? ShadowCastingMethod::RayTracing : ShadowCastingMethod::ShadowMap;
-   result.isBloomEnabled = true;
-   result.isUIHidden = false;
-   result.isSmoothCameraEnabled = true;
-   result.isRenderingParticles = true;
+   result.shadow_casting = is_ray_tracing_enabled ? ShadowCastingMethod::RayTracing : ShadowCastingMethod::ShadowMap;
+   result.is_bloom_enabled = true;
+   result.is_uihidden = false;
+   result.is_smooth_camera_enabled = true;
+   result.is_rendering_particles = true;
 
    return result;
 }
 
-AmbientOcclusionMethod next_ambient_occlusion_method(const AmbientOcclusionMethod aoMethod, const bool isRayTracingEnabled)
+AmbientOcclusionMethod next_ambient_occlusion_method(const AmbientOcclusionMethod ao_method, const bool is_ray_tracing_enabled)
 {
-   switch (aoMethod) {
+   switch (ao_method) {
    case AmbientOcclusionMethod::Disabled:
       return AmbientOcclusionMethod::ScreenSpace;
    case AmbientOcclusionMethod::ScreenSpace:
-      if (isRayTracingEnabled) {
+      if (is_ray_tracing_enabled) {
          return AmbientOcclusionMethod::RayTraced;
       } else {
          return AmbientOcclusionMethod::Disabled;
@@ -48,8 +48,8 @@ ConfigManager::ConfigManager(const graphics_api::Device& device) :
 
 void ConfigManager::toggle_ambient_occlusion()
 {
-   m_config.ambientOcclusion =
-      next_ambient_occlusion_method(m_config.ambientOcclusion, m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing);
+   m_config.ambient_occlusion =
+      next_ambient_occlusion_method(m_config.ambient_occlusion, m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing);
    event_OnPropertyChanged.publish(ConfigProperty::AmbientOcclusion, m_config);
 }
 
@@ -63,36 +63,36 @@ void ConfigManager::toggle_antialiasing()
 void ConfigManager::toggle_shadow_casting()
 {
    if (!(m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing)) {
-      assert(m_config.shadowCasting == ShadowCastingMethod::ShadowMap);
+      assert(m_config.shadow_casting == ShadowCastingMethod::ShadowMap);
       return;
    }
 
-   m_config.shadowCasting =
-      m_config.shadowCasting == ShadowCastingMethod::RayTracing ? ShadowCastingMethod::ShadowMap : ShadowCastingMethod::RayTracing;
+   m_config.shadow_casting =
+      m_config.shadow_casting == ShadowCastingMethod::RayTracing ? ShadowCastingMethod::ShadowMap : ShadowCastingMethod::RayTracing;
    event_OnPropertyChanged.publish(ConfigProperty::ShadowCasting, m_config);
 }
 
 void ConfigManager::toggle_bloom()
 {
-   m_config.isBloomEnabled = !m_config.isBloomEnabled;
+   m_config.is_bloom_enabled = !m_config.is_bloom_enabled;
    event_OnPropertyChanged.publish(ConfigProperty::IsBloomEnabled, m_config);
 }
 
 void ConfigManager::toggle_ui_hidden()
 {
-   m_config.isUIHidden = !m_config.isUIHidden;
+   m_config.is_uihidden = !m_config.is_uihidden;
    event_OnPropertyChanged.publish(ConfigProperty::IsUIHidden, m_config);
 }
 
 void ConfigManager::toggle_smooth_camera()
 {
-   m_config.isSmoothCameraEnabled = !m_config.isSmoothCameraEnabled;
+   m_config.is_smooth_camera_enabled = !m_config.is_smooth_camera_enabled;
    event_OnPropertyChanged.publish(ConfigProperty::IsSmoothCameraEnabled, m_config);
 }
 
 void ConfigManager::toggle_rendering_particles()
 {
-   m_config.isRenderingParticles = !m_config.isRenderingParticles;
+   m_config.is_rendering_particles = !m_config.is_rendering_particles;
    event_OnPropertyChanged.publish(ConfigProperty::IsRenderingParticles, m_config);
 }
 

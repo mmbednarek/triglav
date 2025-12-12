@@ -5,7 +5,6 @@
 #include "triglav/Format.hpp"
 #include "triglav/String.hpp"
 
-#include <spdlog/spdlog.h>
 #include <windowsx.h>
 
 namespace triglav::desktop {
@@ -14,9 +13,9 @@ using namespace string_literals;
 
 namespace {
 
-Key translate_key(const WPARAM keyCode)
+Key translate_key(const WPARAM key_code)
 {
-   switch (keyCode) {
+   switch (key_code) {
    case 'W':
       return Key::W;
    case 'A':
@@ -25,10 +24,28 @@ Key translate_key(const WPARAM keyCode)
       return Key::S;
    case 'D':
       return Key::D;
+   case 'Q':
+      return Key::Q;
+   case 'E':
+      return Key::E;
+   case 'Z':
+      return Key::Z;
+   case 'Y':
+      return Key::Y;
    case VK_BACK:
       return Key::Backspace;
    case VK_SPACE:
       return Key::Space;
+   case VK_CONTROL:
+      return Key::Control;
+   case VK_SHIFT:
+      return Key::Shift;
+   case VK_MENU:
+      return Key::Alt;
+   case VK_RETURN:
+      return Key::Enter;
+   case VK_TAB:
+      return Key::Tab;
    case VK_UP:
       return Key::UpArrow;
    case VK_DOWN:
@@ -68,7 +85,7 @@ Key translate_key(const WPARAM keyCode)
    return Key::Unknown;
 }
 
-DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags, const bool isPopup)
+DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags, const bool is_popup)
 {
    DWORD result{};
    if (flags & WindowAttribute::TopMost) {
@@ -77,14 +94,14 @@ DWORD map_window_attributes_to_ex_style(const WindowAttributeFlags flags, const 
    if (flags & WindowAttribute::ShowDecorations) {
       result |= WS_EX_CLIENTEDGE;
    }
-   if (isPopup) {
+   if (is_popup) {
       result |= WS_EX_TOOLWINDOW;
    }
 
    return result;
 }
 
-DWORD map_window_attributes_to_style(const WindowAttributeFlags flags, const bool isPopup)
+DWORD map_window_attributes_to_style(const WindowAttributeFlags flags, const bool is_popup)
 {
    DWORD result{};
 
@@ -94,7 +111,7 @@ DWORD map_window_attributes_to_style(const WindowAttributeFlags flags, const boo
    if (flags & WindowAttribute::Resizeable) {
       result |= WS_THICKFRAME;
    }
-   if (isPopup) {
+   if (is_popup) {
       result |= WS_POPUP;
    }
    return result;
@@ -103,8 +120,8 @@ DWORD map_window_attributes_to_style(const WindowAttributeFlags flags, const boo
 int map_window_attributes_to_x_position(const WindowAttributeFlags flags, const Dimension& dimension)
 {
    if (flags & WindowAttribute::AlignCenter) {
-      auto screenWidth = GetSystemMetrics(SM_CXSCREEN);
-      return screenWidth / 2 - dimension.x / 2;
+      auto screen_width = GetSystemMetrics(SM_CXSCREEN);
+      return screen_width / 2 - dimension.x / 2;
    }
    return CW_USEDEFAULT;
 }
@@ -112,22 +129,22 @@ int map_window_attributes_to_x_position(const WindowAttributeFlags flags, const 
 int map_window_attributes_to_y_position(const WindowAttributeFlags flags, const Dimension& dimension)
 {
    if (flags & WindowAttribute::AlignCenter) {
-      auto screenHeight = GetSystemMetrics(SM_CYSCREEN);
-      return screenHeight / 2 - dimension.y / 2;
+      auto screen_height = GetSystemMetrics(SM_CYSCREEN);
+      return screen_height / 2 - dimension.y / 2;
    }
    return CW_USEDEFAULT;
 }
 
 HWND create_window(const HINSTANCE instance, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags,
-                   void* lpParam, const bool isPopup)
+                   void* lp_param, const bool is_popup)
 {
-   const auto runeCount = title.rune_count();
-   std::vector<wchar_t> wCharTitle(runeCount + 1);
-   std::transform(title.begin(), title.end(), wCharTitle.begin(), [](const Rune r) { return static_cast<wchar_t>(r); });
-   wCharTitle[runeCount] = 0;
+   const auto rune_count = title.rune_count();
+   std::vector<wchar_t> w_char_title(rune_count + 1);
+   std::transform(title.begin(), title.end(), w_char_title.begin(), [](const Rune r) { return static_cast<wchar_t>(r); });
+   w_char_title[rune_count] = 0;
 
-   const auto style = map_window_attributes_to_style(flags, isPopup);
-   const auto styleEx = map_window_attributes_to_ex_style(flags, isPopup);
+   const auto style = map_window_attributes_to_style(flags, is_popup);
+   const auto style_ex = map_window_attributes_to_ex_style(flags, is_popup);
 
    RECT rect{
       /*left*/ 0,
@@ -135,40 +152,41 @@ HWND create_window(const HINSTANCE instance, const StringView title, const Vecto
       /*right*/ dimension.x,
       /*botton*/ dimension.y,
    };
-   if (!AdjustWindowRectEx(&rect, style, false, styleEx)) {
-      spdlog::error("failed to calculate window size");
+   if (!AdjustWindowRectEx(&rect, style, false, style_ex)) {
+      log_message(LogLevel::Error, StringView{"WindowsSurface"}, "failed to calculate window size");
       return nullptr;
    }
 
-   Vector2i clientDim{rect.right - rect.left, rect.bottom - rect.top};
+   Vector2i client_dim{rect.right - rect.left, rect.bottom - rect.top};
 
-   return CreateWindowExW(styleEx, g_windowClassName, wCharTitle.data(), style, map_window_attributes_to_x_position(flags, dimension),
-                          map_window_attributes_to_y_position(flags, dimension), clientDim.x, clientDim.y, nullptr, nullptr, instance,
-                          lpParam);
+   return CreateWindowExW(style_ex, g_window_class_name, w_char_title.data(), style, map_window_attributes_to_x_position(flags, dimension),
+                          map_window_attributes_to_y_position(flags, dimension), client_dim.x, client_dim.y, nullptr, nullptr, instance,
+                          lp_param);
 }
 
 }// namespace
 
-Surface::Surface(Display& display, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags, const bool isPopup) :
+Surface::Surface(Display& display, const StringView title, const Vector2i dimension, const WindowAttributeFlags flags,
+                 const bool is_popup) :
     m_display(display),
     m_dimension(dimension),
-    m_windowHandle(create_window(display.winapi_instance(), title, dimension, flags, this, isPopup))
+    m_window_handle(create_window(display.winapi_instance(), title, dimension, flags, this, is_popup))
 {
-   ShowWindow(m_windowHandle, SW_NORMAL);
-   UpdateWindow(m_windowHandle);
+   ShowWindow(m_window_handle, SW_NORMAL);
+   UpdateWindow(m_window_handle);
 }
 
 Surface::~Surface()
 {
-   DestroyWindow(m_windowHandle);
+   DestroyWindow(m_window_handle);
 }
 
 void Surface::lock_cursor()
 {
    RECT rect{};
-   GetWindowRect(m_windowHandle, &rect);
+   GetWindowRect(m_window_handle, &rect);
    SetCursorPos((rect.left + rect.right) / 2, (rect.top + rect.bottom) / 2);
-   SetCapture(m_windowHandle);
+   SetCapture(m_window_handle);
 }
 
 void Surface::unlock_cursor()
@@ -184,7 +202,7 @@ void Surface::hide_cursor() const
 
 bool Surface::is_cursor_locked() const
 {
-   return GetCapture() == m_windowHandle;
+   return GetCapture() == m_window_handle;
 }
 
 Dimension Surface::dimension() const
@@ -194,7 +212,7 @@ Dimension Surface::dimension() const
 
 void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
 {
-   m_keyboardInputMode = mode;
+   m_keyboard_input_mode = mode;
 }
 
 HINSTANCE Surface::winapi_instance() const
@@ -204,23 +222,23 @@ HINSTANCE Surface::winapi_instance() const
 
 HWND Surface::winapi_window_handle() const
 {
-   return m_windowHandle;
+   return m_window_handle;
 }
 
-void Surface::on_key_down(const WPARAM keyCode) const
+void Surface::on_key_down(const WPARAM key_code) const
 {
-   event_OnKeyIsPressed.publish(translate_key(keyCode));
+   event_OnKeyIsPressed.publish(translate_key(key_code));
 }
 
-void Surface::on_key_up(WPARAM keyCode) const
+void Surface::on_key_up(WPARAM key_code) const
 {
-   event_OnKeyIsReleased.publish(translate_key(keyCode));
+   event_OnKeyIsReleased.publish(translate_key(key_code));
 }
 
 void Surface::on_button_down(MouseButton button) const
 {
-   if (m_currentCursor != nullptr) {
-      SetCursor(m_currentCursor);
+   if (m_current_cursor != nullptr) {
+      SetCursor(m_current_cursor);
    }
    event_OnMouseButtonIsPressed.publish(button);
 }
@@ -232,8 +250,8 @@ void Surface::on_button_up(MouseButton button) const
 
 void Surface::on_mouse_move(const int x, const int y)
 {
-   if (m_currentCursor != nullptr) {
-      SetCursor(m_currentCursor);
+   if (m_current_cursor != nullptr) {
+      SetCursor(m_current_cursor);
    }
 
    if (this->is_cursor_locked()) {
@@ -241,16 +259,16 @@ void Surface::on_mouse_move(const int x, const int y)
       GetCursorPos(&point);
 
       RECT rect{};
-      GetWindowRect(m_windowHandle, &rect);
-      const auto originX = (rect.left + rect.right) / 2;
-      const auto originY = (rect.top + rect.bottom) / 2;
+      GetWindowRect(m_window_handle, &rect);
+      const auto origin_x = (rect.left + rect.right) / 2;
+      const auto origin_y = (rect.top + rect.bottom) / 2;
 
-      const int diffX = point.x - originX;
-      const int diffY = point.y - originY;
+      const int diff_x = point.x - origin_x;
+      const int diff_y = point.y - origin_y;
 
-      SetCursorPos(originX, originY);
+      SetCursorPos(origin_x, origin_y);
 
-      event_OnMouseRelativeMove.publish(Vector2{0.5f * static_cast<float>(diffX), 0.5f * static_cast<float>(diffY)});
+      event_OnMouseRelativeMove.publish(Vector2{0.5f * static_cast<float>(diff_x), 0.5f * static_cast<float>(diff_y)});
    } else {
       event_OnMouseMove.publish(Vector2{static_cast<float>(x), static_cast<float>(y)});
    }
@@ -269,16 +287,16 @@ void Surface::on_resize(const short x, const short y)
 
 void Surface::on_rune(const Rune rune) const
 {
-   if (m_keyboardInputMode & KeyboardInputMode::Text) {
+   if (m_keyboard_input_mode & KeyboardInputMode::Text) {
       event_OnTextInput.publish(rune);
    }
 }
 
-void Surface::on_set_focus(const bool hasFocus)
+void Surface::on_set_focus(const bool has_focus)
 {
-   if (hasFocus) {
+   if (has_focus) {
       POINT point;
-      if (GetCursorPos(&point) && ScreenToClient(m_windowHandle, &point)) {
+      if (GetCursorPos(&point) && ScreenToClient(m_window_handle, &point)) {
          event_OnMouseEnter.publish(Vector2{static_cast<float>(point.x), static_cast<float>(point.y)});
       }
    } else {
@@ -293,7 +311,7 @@ void Surface::on_mouse_wheel(int delta)
    }
 }
 
-LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const LPARAM lParam)
+LRESULT Surface::handle_window_event(const UINT msg, const WPARAM w_param, const LPARAM l_param)
 {
    switch (msg) {
    case WM_CLOSE: {
@@ -304,11 +322,11 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       PostQuitMessage(0);
       break;
    case WM_KEYDOWN: {
-      this->on_key_down(wParam);
+      this->on_key_down(w_param);
       break;
    }
    case WM_KEYUP: {
-      this->on_key_up(wParam);
+      this->on_key_up(w_param);
       break;
    }
    case WM_LBUTTONDOWN: {
@@ -336,19 +354,19 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       break;
    }
    case WM_MOUSEMOVE: {
-      this->on_mouse_move(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+      this->on_mouse_move(GET_X_LPARAM(l_param), GET_Y_LPARAM(l_param));
       break;
    }
    case WM_SIZE: {
-      this->on_resize(LOWORD(lParam), HIWORD(lParam));
+      this->on_resize(LOWORD(l_param), HIWORD(l_param));
       break;
    }
    case WM_CHAR: {
-      this->on_rune(static_cast<Rune>(wParam));
+      this->on_rune(static_cast<Rune>(w_param));
       break;
    }
    case WM_INPUT: {
-      spdlog::info("WM_INPUT event!");
+      log_info("WM_INPUT event!");
       break;
    }
    case WM_SETFOCUS: {
@@ -360,12 +378,12 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
       break;
    }
    case WM_MOUSEWHEEL: {
-      const auto delta = GET_WHEEL_DELTA_WPARAM(wParam);
+      const auto delta = GET_WHEEL_DELTA_WPARAM(w_param);
       this->on_mouse_wheel(delta);
       break;
    }
    default:
-      return DefWindowProcW(m_windowHandle, msg, wParam, lParam);
+      return DefWindowProcW(m_window_handle, msg, w_param, l_param);
    }
 
    return 0;
@@ -373,53 +391,53 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM wParam, const 
 
 void Surface::set_cursor_icon(const CursorIcon icon)
 {
-   if (m_currentCursor != nullptr) {
-      DestroyCursor(m_currentCursor);
+   if (m_current_cursor != nullptr) {
+      DestroyCursor(m_current_cursor);
    }
 
    switch (icon) {
    case CursorIcon::Arrow:
-      m_currentCursor = LoadCursor(nullptr, IDC_ARROW);
+      m_current_cursor = LoadCursor(nullptr, IDC_ARROW);
       break;
    case CursorIcon::Hand:
-      m_currentCursor = LoadCursor(nullptr, IDC_HAND);
+      m_current_cursor = LoadCursor(nullptr, IDC_HAND);
       break;
    case CursorIcon::Move:
-      m_currentCursor = LoadCursor(nullptr, IDC_SIZEALL);
+      m_current_cursor = LoadCursor(nullptr, IDC_SIZEALL);
       break;
    case CursorIcon::Wait:
-      m_currentCursor = LoadCursor(nullptr, IDC_WAIT);
+      m_current_cursor = LoadCursor(nullptr, IDC_WAIT);
       break;
    case CursorIcon::Edit:
-      m_currentCursor = LoadCursor(nullptr, IDC_IBEAM);
+      m_current_cursor = LoadCursor(nullptr, IDC_IBEAM);
       break;
    case CursorIcon::ResizeHorizontal:
-      m_currentCursor = LoadCursor(nullptr, IDC_SIZEWE);
+      m_current_cursor = LoadCursor(nullptr, IDC_SIZEWE);
       break;
    case CursorIcon::ResizeVertical:
-      m_currentCursor = LoadCursor(nullptr, IDC_SIZENS);
+      m_current_cursor = LoadCursor(nullptr, IDC_SIZENS);
       break;
    default:
-      m_currentCursor = nullptr;
+      m_current_cursor = nullptr;
       return;
    }
 
-   SetCursor(m_currentCursor);
+   SetCursor(m_current_cursor);
    ShowCursor(true);
 }
 
 std::shared_ptr<ISurface> Surface::create_popup(const Vector2u dimensions, const Vector2 offset, const WindowAttributeFlags flags)
 {
-   auto popupSurface = std::make_shared<Surface>(m_display, "popup"_strv, dimensions, flags, true);
+   auto popup_surface = std::make_shared<Surface>(m_display, "popup"_strv, dimensions, flags, true);
 
-   RECT parentRect;
-   GetClientRect(m_windowHandle, &parentRect);
-   ClientToScreen(m_windowHandle, reinterpret_cast<LPPOINT>(&parentRect.left));
+   RECT parent_rect;
+   GetClientRect(m_window_handle, &parent_rect);
+   ClientToScreen(m_window_handle, reinterpret_cast<LPPOINT>(&parent_rect.left));
 
-   SetWindowPos(popupSurface->m_windowHandle, HWND_TOP, parentRect.left + static_cast<int>(offset.x),
-                parentRect.top + static_cast<int>(offset.y), 0, 0, SWP_NOSIZE);
+   SetWindowPos(popup_surface->m_window_handle, HWND_TOP, parent_rect.left + static_cast<int>(offset.x),
+                parent_rect.top + static_cast<int>(offset.y), 0, 0, SWP_NOSIZE);
 
-   return popupSurface;
+   return popup_surface;
 }
 
 Display& Surface::display()

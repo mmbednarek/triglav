@@ -21,7 +21,7 @@ struct ResourcePath
 
 struct ResourceStage
 {
-   std::vector<ResourcePath> resourceList;
+   std::vector<ResourcePath> resource_list;
 };
 
 enum class FinishLoadingAssetResult
@@ -34,7 +34,7 @@ enum class FinishLoadingAssetResult
 class LoadContext
 {
  public:
-   explicit LoadContext(std::vector<ResourceStage>&& loadingStages);
+   explicit LoadContext(std::vector<ResourceStage>&& loading_stages);
 
    const ResourceStage& next_stage();
    FinishLoadingAssetResult finish_loading_asset();
@@ -46,11 +46,11 @@ class LoadContext
    static std::unique_ptr<LoadContext> from_asset_list(const io::Path& path);
 
  private:
-   u32 m_assetsLoadedInStage{};
-   u32 m_totalAssets{};
-   u32 m_totalLoadedAssets{};
-   u32 m_currentStageId{};
-   std::vector<ResourceStage> m_loadingStages{};
+   u32 m_assets_loaded_in_stage{};
+   u32 m_total_assets{};
+   u32 m_total_loaded_assets{};
+   u32 m_current_stage_id{};
+   std::vector<ResourceStage> m_loading_stages{};
    mutable threading::SharedMutex m_mutex;
 };
 

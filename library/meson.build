@@ -1,6 +1,8 @@
 subdir('external/mikktspace')
 subdir('external/stbi')
 
+subdir('misc/test_util')
+
 subdir('base/core')
 subdir('base/io')
 subdir('engine/memory')
@@ -19,8 +21,8 @@ subdir('rendering/render_objects')
 subdir('misc/gltf')
 subdir('engine/asset')
 subdir('engine/resource')
-subdir('engine/launcher')
 subdir('rendering/render_core')
 subdir('ui/ui_core')
 subdir('rendering/renderer')
 subdir('ui/desktop_ui')
+subdir('engine/launcher')

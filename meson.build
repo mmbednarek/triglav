@@ -28,6 +28,7 @@ endif
 if host_machine.system() == 'windows' and meson.get_compiler('cpp').get_id() == 'gcc'
   add_project_arguments('-Wa,-mbig-obj', language : 'cpp')
   add_project_arguments('-D_GLIBCXX_USE_CXX11_ABI=1', language : 'cpp')
+  add_project_link_arguments('-lstdc++exp', language : 'cpp')
 endif
 
 if meson.get_compiler('cpp').get_id() == 'clang'
@@ -49,13 +50,11 @@ fs = import('fs')
 
 # Using system vulkan
 vulkan = dependency('vulkan')
-fmt = dependency('fmt', method:'pkg-config')
 glm = dependency('glm', method:'pkg-config')
 cgal = dependency('cgal', method:'pkg-config')
 freetype = dependency('freetype2', method:'pkg-config')
 gtest = dependency('gtest', method:'pkg-config')
 rapidyaml = dependency('rapidyaml', method:'pkg-config')
-spdlog = dependency('spdlog', method:'pkg-config')
 entt = dependency('entt', method:'pkg-config')
 rapidjson = dependency('rapidjson', method:'pkg-config')
 ktx = dependency('ktx', method:'pkg-config')
@@ -70,4 +69,5 @@ subdir('shader')
 subdir('library')
 subdir('game/demo')
 subdir('tool/triglavcli')
+subdir('tool/editor')
 

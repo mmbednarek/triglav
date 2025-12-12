@@ -12,3 +12,4 @@ buildDir-mingw-rel
 compile_commands.json
 .docker-grpc
 debug
+.zed

@@ -7,7 +7,9 @@ io_sources = files([
   'include/triglav/io/DynamicWriter.hpp',
   'include/triglav/io/DynLibrary.hpp',
   'include/triglav/io/File.hpp',
+  'include/triglav/io/Iterator.hpp',
   'include/triglav/io/LimitedReader.hpp',
+  'include/triglav/io/Logging.hpp',
   'include/triglav/io/Path.hpp',
   'include/triglav/io/Result.hpp',
   'include/triglav/io/Serializer.hpp',
@@ -22,6 +24,7 @@ io_sources = files([
   'src/DynLibrary.cpp',
   'src/File.cpp',
   'src/LimitedReader.cpp',
+  'src/Logging.cpp',
   'src/Path.cpp',
   'src/Serializer.cpp',
   'src/StringReader.cpp',
@@ -33,7 +36,7 @@ elif host_machine.system() == 'windows'
     subdir('platform/windows')
 endif
 
-io_deps = [core, glm, fmt]
+io_deps = [core, glm]
 io_incl = include_directories(['include', 'include/triglav/io'])
 
 io_lib = static_library('io',

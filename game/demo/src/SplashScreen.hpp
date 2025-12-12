@@ -22,38 +22,38 @@ class SplashScreen
  public:
    using Self = SplashScreen;
 
-   SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphicsSurface, triglav::graphics_api::Device& device,
-                triglav::resource::ResourceManager& resourceManager);
+   SplashScreen(triglav::desktop::ISurface& surface, triglav::graphics_api::Surface& graphics_surface,
+                triglav::graphics_api::Device& device, triglav::resource::ResourceManager& resource_manager);
 
    void update();
    void on_close();
 
    void build_rendering_job(triglav::render_core::BuildContext& ctx);
 
-   void on_started_loading_asset(triglav::ResourceName resourceName);
-   void on_finished_loading_asset(triglav::ResourceName resourceName, triglav::u32 loadedAssets, triglav::u32 totalAssets);
+   void on_started_loading_asset(triglav::ResourceName resource_name);
+   void on_finished_loading_asset(triglav::ResourceName resource_name, triglav::u32 loaded_assets, triglav::u32 total_assets);
 
  private:
    void update_process_bar(float progress);
    void update_loaded_resource(triglav::ResourceName name);
 
    triglav::graphics_api::Device& m_device;
-   triglav::resource::ResourceManager& m_resourceManager;
-   triglav::render_core::ResourceStorage m_resourceStorage;
-   triglav::renderer::RenderSurface m_renderSurface;
-   triglav::render_core::GlyphCache m_glyphCache;
-   std::set<triglav::ResourceName> m_pendingResources;
-   triglav::ResourceName m_displayedResource;
-   triglav::render_core::PipelineCache m_pipelineCache;
-   triglav::ui_core::Viewport m_uiViewport;
-   triglav::renderer::UpdateUserInterfaceJob m_updateUiJob;
-   triglav::render_core::JobGraph m_jobGraph;
-   triglav::u32 m_frameIndex{0};
-   std::mutex m_statusMutex;
-   triglav::ui_core::RectId m_statusBgId{};
-   triglav::ui_core::RectId m_statusFgId{};
-   triglav::ui_core::TextId m_titleId{};
-   triglav::ui_core::TextId m_descId{};
+   triglav::resource::ResourceManager& m_resource_manager;
+   triglav::render_core::ResourceStorage m_resource_storage;
+   triglav::renderer::RenderSurface m_render_surface;
+   triglav::render_core::GlyphCache m_glyph_cache;
+   std::set<triglav::ResourceName> m_pending_resources;
+   triglav::ResourceName m_displayed_resource;
+   triglav::render_core::PipelineCache m_pipeline_cache;
+   triglav::ui_core::Viewport m_ui_viewport;
+   triglav::renderer::UpdateUserInterfaceJob m_update_ui_job;
+   triglav::render_core::JobGraph m_job_graph;
+   triglav::u32 m_frame_index{0};
+   std::mutex m_status_mutex;
+   triglav::ui_core::RectId m_status_bg_id{};
+   triglav::ui_core::RectId m_status_fg_id{};
+   triglav::ui_core::TextId m_title_id{};
+   triglav::ui_core::TextId m_desc_id{};
 
    TG_OPT_SINK(triglav::resource::ResourceManager, OnStartedLoadingAsset);
    TG_OPT_SINK(triglav::resource::ResourceManager, OnFinishedLoadingAsset);

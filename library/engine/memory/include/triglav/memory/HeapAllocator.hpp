@@ -24,12 +24,12 @@ class HeapAllocator
 #if TG_HEAP_ALLOCATOR_TEST
    std::map<OffsetType, SizeType>& free_list()
    {
-      return m_freeList;
+      return m_free_list;
    }
 #endif// TG_HEAP_ALLOCATOR_TEST
 
  private:
-   std::map<OffsetType, SizeType> m_freeList;
+   std::map<OffsetType, SizeType> m_free_list;
 };
 
 }// namespace triglav::memory

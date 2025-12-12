@@ -20,7 +20,7 @@ void MenuController::add_submenu(const Name parent, const Name name, const Strin
    m_items[name] = {
       .name = name,
       .label = label,
-      .isSubmenu = true,
+      .is_submenu = true,
    };
 }
 
@@ -30,13 +30,18 @@ void MenuController::add_subitem(const Name parent, const Name name, const Strin
    m_items[name] = {
       .name = name,
       .label = label,
-      .isSubmenu = false,
+      .is_submenu = false,
    };
 }
 
 void MenuController::add_seperator()
 {
    m_hierarchy["root"_name].push_back("separator"_name);
+}
+
+void MenuController::add_seperator(Name parent)
+{
+   m_hierarchy[parent].push_back("separator"_name);
 }
 
 const std::vector<Name>& MenuController::children(const Name parent) const

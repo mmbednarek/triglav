@@ -3,7 +3,7 @@ io_test_sources = files(
     'Main.cpp',
 )
 
-io_test_deps = [core, gtest, io]
+io_test_deps = [core, test_util, io]
 
 io_test = executable('io_test',
                      sources : io_test_sources,

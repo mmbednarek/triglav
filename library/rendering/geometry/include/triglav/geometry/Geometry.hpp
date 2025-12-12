@@ -1,21 +1,23 @@
 #pragma once
 
+#include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/Array.hpp"
 
 #include <cmath>
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
+#include <optional>
 
 namespace triglav::geometry {
 
 using Index = uint32_t;
 
-constexpr Index g_invalidIndex = std::numeric_limits<Index>::max();
+constexpr Index g_invalid_index = std::numeric_limits<Index>::max();
 
 constexpr bool is_valid(const Index index)
 {
-   return index != g_invalidIndex;
+   return index != g_invalid_index;
 }
 
 struct Vertex
@@ -55,7 +57,7 @@ struct MaterialRange
 {
    size_t offset;
    size_t size;
-   MaterialName materialName;
+   MaterialName material_name;
 };
 
 struct DeviceMesh
@@ -71,16 +73,87 @@ struct VertexData
    std::vector<MaterialRange> ranges;
 };
 
+struct Ray
+{
+   Vector3 origin;
+   Vector3 direction;
+   float distance;
+};
+
 struct BoundingBox
 {
-   glm::vec3 min;
-   glm::vec3 max;
+   Vector3 min;
+   Vector3 max;
+
+   [[nodiscard]] constexpr Vector3 centroid() const
+   {
+      return (max + min) * 0.5f;
+   }
+
+   [[nodiscard]] constexpr std::optional<Vector2> intersect(const Ray& ray) const
+   {
+      const float tx1 = (min.x - ray.origin.x) / ray.direction.x;
+      const float tx2 = (max.x - ray.origin.x) / ray.direction.x;
+      float t_min = std::min(tx1, tx2);
+      float t_max = std::max(tx1, tx2);
+      const float ty1 = (min.y - ray.origin.y) / ray.direction.y;
+      const float ty2 = (max.y - ray.origin.y) / ray.direction.y;
+      t_min = std::max(t_min, std::min(ty1, ty2));
+      t_max = std::min(t_max, std::max(ty1, ty2));
+      const float tz1 = (min.z - ray.origin.z) / ray.direction.z;
+      const float tz2 = (max.z - ray.origin.z) / ray.direction.z;
+      t_min = std::max(t_min, std::min(tz1, tz2));
+      t_max = std::min(t_max, std::max(tz1, tz2));
+      if (t_max >= t_min && t_min < ray.distance && t_max > 0) {
+         return Vector2{t_min, t_max};
+      }
+      return std::nullopt;
+   }
+
+   [[nodiscard]] constexpr bool does_intersect(const Ray& ray) const
+   {
+      return this->intersect(ray).has_value();
+   }
+
+   [[nodiscard]] BoundingBox transform(const Matrix4x4& mat) const
+   {
+      std::array<Vector4, 8> points{
+         Vector4{min.x, min.y, min.z, 1.0f}, Vector4{min.x, min.y, max.z, 1.0f}, Vector4{min.x, max.y, min.z, 1.0f},
+         Vector4{min.x, max.y, max.z, 1.0f}, Vector4{max.x, min.y, min.z, 1.0f}, Vector4{max.x, min.y, max.z, 1.0f},
+         Vector4{max.x, max.y, min.z, 1.0f}, Vector4{max.x, max.y, max.z, 1.0f},
+      };
+
+      Vector3 bb_min{INFINITY, INFINITY, INFINITY};
+      Vector3 bb_max{-INFINITY, -INFINITY, -INFINITY};
+      for (const auto& p : points) {
+         Vector4 r = mat * p;
+         r /= r.w;
+
+         bb_min = {
+            std::min(bb_min.x, r.x),
+            std::min(bb_min.y, r.y),
+            std::min(bb_min.z, r.z),
+         };
+         bb_max = {
+            std::max(bb_max.x, r.x),
+            std::max(bb_max.y, r.y),
+            std::max(bb_max.z, r.z),
+         };
+      }
+
+      return BoundingBox{bb_min, bb_max};
+   }
+
+   [[nodiscard]] Vector3 scale() const
+   {
+      return max - min;
+   }
 };
 
 struct MeshData
 {
-   VertexData vertexData;
-   BoundingBox boundingBox;
+   VertexData vertex_data;
+   BoundingBox bounding_box;
 };
 
 constexpr double g_pi = 3.1415926535897932;

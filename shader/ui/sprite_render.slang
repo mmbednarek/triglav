@@ -43,7 +43,7 @@ VSOutput vs_main(uint vid: SV_VertexID)
     const sprite_api::Primitive prim = g_drawCallBuffer[common::get_draw_index()].primitive;
 
     float2 vertex = g_vertexIndex[vid];
-    float2 ssPosition = prim.spriteRect.xy + vertex*prim.spriteRect.zw;
+    float2 ssPosition = round(prim.spriteRect.xy) + vertex*round(prim.spriteRect.zw);
 
     VSOutput out;
     out.position = float4(2 * (ssPosition / g_viewportSize) - float2(1, 1), 0, 1);

@@ -8,27 +8,27 @@ HideableWidget::HideableWidget(Context& ctx, const State state, IWidget* parent)
 {
 }
 
-Vector2 HideableWidget::desired_size(const Vector2 parentSize) const
+Vector2 HideableWidget::desired_size(const Vector2 parent_size) const
 {
-   if (m_state.isHidden) {
+   if (m_state.is_hidden) {
       return {0, 0};
    }
-   return m_content->desired_size(parentSize);
+   return m_content->desired_size(parent_size);
 }
 
-void HideableWidget::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void HideableWidget::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   m_parentDimensions = dimensions;
-   m_croppingMask = croppingMask;
+   m_parent_dimensions = dimensions;
+   m_cropping_mask = cropping_mask;
 
-   if (m_state.isHidden)
+   if (m_state.is_hidden)
       return;
-   m_content->add_to_viewport(dimensions, croppingMask);
+   m_content->add_to_viewport(dimensions, cropping_mask);
 }
 
 void HideableWidget::remove_from_viewport()
 {
-   if (m_state.isHidden)
+   if (m_state.is_hidden)
       return;
    m_content->remove_from_viewport();
 }
@@ -42,19 +42,19 @@ void HideableWidget::on_child_state_changed(IWidget& widget)
 
 void HideableWidget::on_event(const Event& event)
 {
-   if (!m_state.isHidden) {
+   if (!m_state.is_hidden) {
       m_content->on_event(event);
    }
 }
 
 void HideableWidget::set_is_hidden(const bool value)
 {
-   if (value) {
+   m_state.is_hidden = value;
+   if (m_state.is_hidden) {
       this->remove_from_viewport();
    } else {
-      this->add_to_viewport(m_parentDimensions, m_croppingMask);
+      this->add_to_viewport(m_parent_dimensions, m_cropping_mask);
    }
-   m_state.isHidden = value;
 
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(*this);

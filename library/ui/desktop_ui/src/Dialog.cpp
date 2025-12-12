@@ -2,7 +2,7 @@
 
 #include "triglav/render_core/BuildContext.hpp"
 
-#include <spdlog/spdlog.h>
+#include "WidgetRenderer.hpp"
 
 namespace triglav::desktop_ui {
 
@@ -10,235 +10,124 @@ using namespace name_literals;
 using namespace string_literals;
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions) :
-    m_glyphCache(glyphCache),
-    m_resourceManager(resourceManager),
-    m_surface(display.create_surface("UI Dialog"_strv, dimensions, desktop::WindowAttribute::Default)),
-    m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
-    m_resourceStorage(device),
-    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),
-    m_uiViewport(dimensions),
-    m_updateUiJob(device, m_glyphCache, m_uiViewport, m_resourceManager),
-    m_pipelineCache(device, m_resourceManager),
-    m_jobGraph(device, m_resourceManager, m_pipelineCache, m_resourceStorage, dimensions),
-    m_context(m_uiViewport, m_glyphCache, m_resourceManager),
-    TG_CONNECT(*m_surface, OnClose, on_close),
-    TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
-    TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
-    TG_CONNECT(*m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
-    TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
-    TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
-    TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
-    TG_CONNECT(*m_surface, OnTextInput, on_text_input),
-    TG_CONNECT(*m_surface, OnResize, on_resize)
+               render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, const Vector2u dimensions,
+               const StringView title) :
+    Dialog(instance, device, glyph_cache, resource_manager, dimensions,
+           display.create_surface(title, dimensions, desktop::WindowAttribute::Default))
 {
 }
 
-Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parentSurface,
-               render_core::GlyphCache& glyphCache, resource::ResourceManager& resourceManager, const Vector2u dimensions,
+Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parent_surface,
+               render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, const Vector2u dimensions,
                const Vector2i offset) :
-    m_glyphCache(glyphCache),
-    m_resourceManager(resourceManager),
-    m_surface(parentSurface.create_popup(dimensions, offset, desktop::WindowAttribute::None)),
-    m_graphicsSurface(GAPI_CHECK(instance.create_surface(*m_surface))),
-    m_resourceStorage(device),
-    m_renderSurface(device, *m_surface, m_graphicsSurface, m_resourceStorage, dimensions, graphics_api::PresentMode::Immediate),
-    m_uiViewport(dimensions),
-    m_updateUiJob(device, m_glyphCache, m_uiViewport, m_resourceManager),
-    m_pipelineCache(device, m_resourceManager),
-    m_jobGraph(device, m_resourceManager, m_pipelineCache, m_resourceStorage, dimensions),
-    m_context(m_uiViewport, m_glyphCache, m_resourceManager),
+    Dialog(instance, device, glyph_cache, resource_manager, dimensions,
+           parent_surface.create_popup(dimensions, offset, desktop::WindowAttribute::None))
+{
+}
+
+Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
+               resource::ResourceManager& resource_manager, const Vector2u dimensions, std::shared_ptr<desktop::ISurface> surface) :
+    m_device(device),
+    m_surface(std::move(surface)),
+    m_graphics_surface(GAPI_CHECK(instance.create_surface(*m_surface))),
+    m_resource_storage(device),
+    m_render_surface(device, *m_surface, m_graphics_surface, m_resource_storage, dimensions, graphics_api::PresentMode::Immediate),
+    m_widget_renderer(*m_surface, glyph_cache, resource_manager, device),
+    m_pipeline_cache(device, resource_manager),
+    m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, dimensions),
     TG_CONNECT(*m_surface, OnClose, on_close),
-    TG_CONNECT(*m_surface, OnMouseEnter, on_mouse_enter),
-    TG_CONNECT(*m_surface, OnMouseMove, on_mouse_move),
-    TG_CONNECT(*m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
-    TG_CONNECT(*m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
-    TG_CONNECT(*m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
-    TG_CONNECT(*m_surface, OnKeyIsPressed, on_key_is_pressed),
-    TG_CONNECT(*m_surface, OnTextInput, on_text_input),
     TG_CONNECT(*m_surface, OnResize, on_resize)
 {
 }
 
 void Dialog::initialize()
 {
-   if (m_isInitialized)
+   if (m_is_initialized)
       return;
-   if (m_rootWidget == nullptr)
+   if (m_widget_renderer.is_empty())
       return;
 
-   m_rootWidget->add_to_viewport({0, 0, m_surface->dimension().x, m_surface->dimension().y},
-                                 {0, 0, m_surface->dimension().x, m_surface->dimension().y});
+   m_widget_renderer.add_widget_to_viewport(m_surface->dimension());
 
-   auto& updateUiCtx = m_jobGraph.add_job("update_ui"_name);
-   m_updateUiJob.build_job(updateUiCtx);
+   auto& update_ui_ctx = m_job_graph.add_job("update_ui"_name);
+   m_widget_renderer.create_update_job(update_ui_ctx);
 
-   auto& renderCtx = m_jobGraph.add_job("render_dialog"_name);
-   this->build_rendering_job(renderCtx);
+   auto& render_ctx = m_job_graph.add_job("render_dialog"_name);
+   this->build_rendering_job(render_ctx);
 
-   m_jobGraph.add_dependency_to_previous_frame("update_ui"_name, "update_ui"_name);
+   m_job_graph.add_dependency_to_previous_frame("update_ui"_name, "update_ui"_name);
 
-   renderer::RenderSurface::add_present_jobs(m_jobGraph, "render_dialog"_name);
+   renderer::RenderSurface::add_present_jobs(m_job_graph, "render_dialog"_name);
 
-   m_jobGraph.add_dependency("render_dialog"_name, "update_ui"_name);
+   m_job_graph.add_dependency("render_dialog"_name, "update_ui"_name);
 
-   m_jobGraph.build_jobs("render_dialog"_name);
+   m_job_graph.build_jobs("render_dialog"_name);
 
-   m_renderSurface.recreate_present_jobs();
+   m_render_surface.recreate_present_jobs();
 
-   m_isInitialized = true;
+   m_is_initialized = true;
 }
 
 void Dialog::uninitialize() const
 {
-   if (m_rootWidget != nullptr) {
-      m_rootWidget->remove_from_viewport();
-   }
+   m_widget_renderer.remove_widget_from_viewport();
 }
 
 void Dialog::build_rendering_job(render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
-
-   ctx.begin_render_pass("splash_screen"_name, "core.color_out"_name);
-
-   m_updateUiJob.render_ui(ctx);
-
-   ctx.end_render_pass();
-
+   m_widget_renderer.create_render_job(ctx, "core.color_out"_name);
    ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
                       graphics_api::TextureUsage::TransferSrc);
 }
 
 void Dialog::update()
 {
-   if (!m_isInitialized)
+   if (!m_is_initialized)
       return;
-   if (!m_uiViewport.should_redraw())
+   if (!m_widget_renderer.ui_viewport().should_redraw())
       return;
 
-   m_renderSurface.await_for_frame(m_frameIndex);
+   m_render_surface.await_for_frame(m_frame_index);
 
-   m_jobGraph.build_semaphores();
+   m_job_graph.build_semaphores();
 
-   m_updateUiJob.prepare_frame(m_jobGraph, m_frameIndex);
+   m_widget_renderer.prepare_resources(m_job_graph, m_frame_index);
 
-   m_jobGraph.execute("render_dialog"_name, m_frameIndex, nullptr);
+   m_job_graph.execute("render_dialog"_name, m_frame_index, nullptr);
 
-   m_renderSurface.present(m_jobGraph, m_frameIndex);
+   m_render_surface.present(m_job_graph, m_frame_index);
 
-   m_frameIndex = (m_frameIndex + 1) % 3;
+   m_frame_index = (m_frame_index + 1) % 3;
 }
 
 void Dialog::on_close()
 {
-   m_shouldClose = true;
-}
-
-void Dialog::on_mouse_enter(const Vector2 position)
-{
-   m_mousePosition = position;
-}
-
-void Dialog::on_mouse_move(const Vector2 position)
-{
-   m_mousePosition = position;
-
-   if (m_rootWidget == nullptr)
-      return;
-
-   ui_core::Event event;
-   event.eventType = ui_core::Event::Type::MouseMoved;
-   event.mousePosition = position;
-   event.globalMousePosition = position;
-   event.parentSize = m_renderSurface.resolution();
-   m_rootWidget->on_event(event);
-}
-
-void Dialog::on_mouse_wheel_turn(const float amount) const
-{
-   if (m_rootWidget == nullptr)
-      return;
-
-   ui_core::Event event;
-   event.eventType = ui_core::Event::Type::MouseScrolled;
-   event.mousePosition = m_mousePosition;
-   event.globalMousePosition = m_mousePosition;
-   event.parentSize = m_renderSurface.resolution();
-   event.data = ui_core::Event::Scroll{amount};
-   m_rootWidget->on_event(event);
-}
-
-void Dialog::on_mouse_button_is_pressed(desktop::MouseButton button) const
-{
-   if (m_rootWidget == nullptr)
-      return;
-
-   ui_core::Event event;
-   event.eventType = ui_core::Event::Type::MousePressed;
-   event.mousePosition = m_mousePosition;
-   event.globalMousePosition = m_mousePosition;
-   event.parentSize = m_renderSurface.resolution();
-   event.data.emplace<ui_core::Event::Mouse>(button);
-   m_rootWidget->on_event(event);
-}
-
-void Dialog::on_mouse_button_is_released(desktop::MouseButton button) const
-{
-   if (m_rootWidget == nullptr)
-      return;
-
-   ui_core::Event event;
-   event.eventType = ui_core::Event::Type::MouseReleased;
-   event.mousePosition = m_mousePosition;
-   event.globalMousePosition = m_mousePosition;
-   event.parentSize = m_renderSurface.resolution();
-   event.data.emplace<ui_core::Event::Mouse>(button);
-   m_rootWidget->on_event(event);
-}
-
-void Dialog::on_key_is_pressed(desktop::Key key) const
-{
-   if (m_rootWidget == nullptr)
-      return;
-
-   ui_core::Event event;
-   event.eventType = ui_core::Event::Type::KeyPressed;
-   event.mousePosition = m_mousePosition;
-   event.globalMousePosition = m_mousePosition;
-   event.parentSize = m_renderSurface.resolution();
-   event.data.emplace<ui_core::Event::Keyboard>(key);
-   m_rootWidget->on_event(event);
-}
-
-void Dialog::on_text_input(const Rune rune) const
-{
-   if (m_rootWidget == nullptr)
-      return;
-
-   ui_core::Event event;
-   event.eventType = ui_core::Event::Type::TextInput;
-   event.mousePosition = m_mousePosition;
-   event.globalMousePosition = m_mousePosition;
-   event.parentSize = m_renderSurface.resolution();
-   event.data.emplace<ui_core::Event::TextInput>(rune);
-   m_rootWidget->on_event(event);
+   m_should_close = true;
 }
 
 void Dialog::on_resize(const Vector2i size)
 {
-   spdlog::info("Resize event: {} {}", size.x, size.y);
+   m_device.await_all();
+
+   m_job_graph.set_screen_size(size);
+   m_widget_renderer.ui_viewport().set_dimensions(size);
+
+   auto& update_ui_ctx = m_job_graph.replace_job("update_ui"_name);
+   m_widget_renderer.create_update_job(update_ui_ctx);
+   m_job_graph.rebuild_job("update_ui"_name);
+
+   auto& render_ctx = m_job_graph.replace_job("render_dialog"_name);
+   this->build_rendering_job(render_ctx);
+   m_job_graph.rebuild_job("render_dialog"_name);
+
+   m_render_surface.recreate_swapchain(size);
+   m_widget_renderer.add_widget_to_viewport(size);
 };
 
-ui_core::IWidget& Dialog::set_root_widget(ui_core::IWidgetPtr&& content)
+WidgetRenderer& Dialog::widget_renderer()
 {
-   if (m_rootWidget != nullptr) {
-      m_rootWidget->remove_from_viewport();
-   }
-
-   m_rootWidget = std::move(content);
-
-   return *m_rootWidget;
+   return m_widget_renderer;
 }
 
 desktop::ISurface& Dialog::surface() const
@@ -248,7 +137,7 @@ desktop::ISurface& Dialog::surface() const
 
 bool Dialog::should_close() const
 {
-   return m_shouldClose;
+   return m_should_close;
 }
 
 }// namespace triglav::desktop_ui

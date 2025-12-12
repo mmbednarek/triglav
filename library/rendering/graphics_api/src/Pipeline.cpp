@@ -4,12 +4,12 @@
 
 namespace triglav::graphics_api {
 
-Pipeline::Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorSetLayout descriptorSetLayout,
-                   PipelineType pipelineType) :
+Pipeline::Pipeline(vulkan::PipelineLayout layout, vulkan::Pipeline pipeline, vulkan::DescriptorSetLayout descriptor_set_layout,
+                   PipelineType pipeline_type) :
     m_layout(std::move(layout)),
     m_pipeline(std::move(pipeline)),
-    m_descriptorSetLayout(std::move(descriptorSetLayout)),
-    m_pipelineType(pipelineType)
+    m_descriptor_set_layout(std::move(descriptor_set_layout)),
+    m_pipeline_type(pipeline_type)
 {
 }
 
@@ -25,12 +25,12 @@ const vulkan::PipelineLayout& Pipeline::layout() const
 
 PipelineType Pipeline::pipeline_type() const
 {
-   return m_pipelineType;
+   return m_pipeline_type;
 }
 
 VkDescriptorSetLayout Pipeline::vulkan_descriptor_set_layout() const
 {
-   return *m_descriptorSetLayout;
+   return *m_descriptor_set_layout;
 }
 
 }// namespace triglav::graphics_api

@@ -13,7 +13,7 @@ namespace triglav::desktop_ui {
 class Dialog;
 class DesktopUIManager;
 
-class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
+class MenuBar final : public ui_core::BaseWidget
 {
  public:
    struct State
@@ -31,14 +31,14 @@ class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
 
    MenuBar(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
 
-   bool on_mouse_moved(const ui_core::Event&) override;
-   bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&) override;
-   bool on_mouse_left(const ui_core::Event&) override;
+   void on_mouse_moved(const ui_core::Event&);
+   void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
+   void on_mouse_left(const ui_core::Event&);
 
  private:
    [[nodiscard]] std::pair<float, Name> index_from_mouse_position(Vector2 position) const;
@@ -48,16 +48,16 @@ class MenuBar final : public ui_core::BaseWidget, ui_core::EventVisitor
    ui_core::Context& m_context;
    State m_state;
    std::vector<ui_core::TextId> m_labels;
-   std::map<float, Name> m_offsetToItem;
-   ui_core::RectId m_backgroundId;
-   ui_core::RectId m_hoverRectId{};
+   std::map<float, Name> m_offset_to_item;
+   ui_core::RectId m_background_id{};
+   ui_core::RectId m_hover_rect_id{};
    Vector4 m_dimensions;
-   Vector4 m_croppingMask;
-   Name m_hoveredItem = 0;
-   float m_hoveredItemOffset = 0.0f;
-   Dialog* m_subMenu = nullptr;
+   Vector4 m_cropping_mask;
+   Name m_hovered_item = 0;
+   float m_hovered_item_offset = 0.0f;
+   Dialog* m_sub_menu = nullptr;
 
-   mutable std::optional<Measure> m_cachedMeasure{};
+   mutable std::optional<Measure> m_cached_measure{};
 };
 
 }// namespace triglav::desktop_ui

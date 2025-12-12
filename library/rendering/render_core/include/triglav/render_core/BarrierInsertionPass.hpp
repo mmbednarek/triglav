@@ -21,6 +21,8 @@ class BarrierInsertionPass
    void visit(const detail::cmd::CopyBufferToTexture& cmd);
    void visit(const detail::cmd::CopyBuffer& cmd);
    void visit(const detail::cmd::CopyTexture& cmd);
+   void visit(const detail::cmd::CopyTextureRegion& cmd);
+   void visit(const detail::cmd::BlitTexture& cmd);
    void visit(const detail::cmd::FillBuffer& cmd);
    void visit(const detail::cmd::BeginRenderPass& cmd);
    void visit(const detail::cmd::EndRenderPass& cmd);
@@ -45,7 +47,7 @@ class BarrierInsertionPass
    template<typename TCmd, typename... TArgs>
    TCmd& add_command_before_render_pass(TArgs&&... args)
    {
-      if (!m_isWithinRenderPass) {
+      if (!m_is_within_render_pass) {
          return this->add_command<TCmd>(std::forward<TArgs>(args)...);
       }
 
@@ -54,14 +56,15 @@ class BarrierInsertionPass
       return std::get<TCmd>(*m_commands.emplace(it.base() - 1, std::in_place_type_t<TCmd>{}, std::forward<TArgs>(args)...));
    }
 
-   void setup_texture_barrier(TextureRef texRef, graphics_api::TextureState targetState, graphics_api::PipelineStageFlags targetStageFlags,
-                              std::optional<graphics_api::PipelineStage> lastUsedStage = std::nullopt);
+   void setup_texture_barrier(TextureRef tex_ref, graphics_api::TextureState target_state,
+                              graphics_api::PipelineStageFlags target_stage_flags,
+                              std::optional<graphics_api::PipelineStage> last_used_stage = std::nullopt);
 
-   void setup_buffer_barrier(BufferRef buffRef, graphics_api::BufferAccess targetAccess, graphics_api::PipelineStageFlags targetStages);
+   void setup_buffer_barrier(BufferRef buff_ref, graphics_api::BufferAccess target_access, graphics_api::PipelineStageFlags target_stages);
 
    BuildContext& m_context;
    std::vector<detail::Command> m_commands;
-   bool m_isWithinRenderPass{false};
+   bool m_is_within_render_pass{false};
 };
 
 }// namespace triglav::render_core

@@ -1,6 +1,6 @@
 #include "ProjectConfig.hpp"
 
-#include <fmt/core.h>
+#include <format>
 #include <ranges>
 
 namespace triglav::tool::cli {
@@ -23,53 +23,65 @@ std::string to_system_path(const std::string_view path)
 
 void ImportSettings::deserialize(const rapidjson::Value& value)
 {
-   this->texturePath = value["texture_path"].GetString();
-   this->meshPath = value["mesh_path"].GetString();
-   this->levelPath = value["level_path"].GetString();
-   this->materialPath = value["material_path"].GetString();
+   this->texture_path = value["texture_path"].GetString();
+   this->mesh_path = value["mesh_path"].GetString();
+   this->level_path = value["level_path"].GetString();
+   this->material_path = value["material_path"].GetString();
 }
 
 void ProjectInfo::deserialize(const rapidjson::Value& value)
 {
    this->name = value["name"].GetString();
-   this->fullName = value["fullname"].GetString();
+   this->full_name = value["fullname"].GetString();
    this->path = value["path"].GetString();
-   this->importSettings.deserialize(value["import_settings"]);
+   this->import_settings.deserialize(value["import_settings"]);
 }
 
-io::Path ProjectInfo::system_path(const std::string_view resourcePath) const
+io::Path ProjectInfo::system_path(const std::string_view resource_path) const
 {
-   const std::string subPath = to_system_path(resourcePath);
-   const io::Path projectPath{this->path};
-   return projectPath.sub(subPath);
+   const std::string sub_path = to_system_path(resource_path);
+   const io::Path project_path{this->path};
+   return project_path.sub(sub_path);
 }
 
-io::Path ProjectInfo::content_path(const std::string_view resourcePath) const
+io::Path ProjectInfo::content_path(const std::string_view resource_path) const
 {
-   const std::string subPath = to_system_path(resourcePath);
-   const io::Path projectPath{this->path};
-   return projectPath.sub("content").sub(subPath);
+   const std::string sub_path = to_system_path(resource_path);
+   const io::Path project_path{this->path};
+   return project_path.sub("content").sub(sub_path);
 }
 
-std::string ProjectInfo::default_import_path(const ResourceType resType, const std::string_view basename) const
+std::string ProjectInfo::default_import_path(const ResourceType res_type, const std::string_view basename) const
 {
-   switch (resType) {
+   std::string result;
+   switch (res_type) {
    case ResourceType::Texture:
-      return fmt::format(fmt::runtime(this->importSettings.texturePath), fmt::arg("basename", basename));
+      result = this->import_settings.texture_path;
+      break;
    case ResourceType::Mesh:
-      return fmt::format(fmt::runtime(this->importSettings.meshPath), fmt::arg("basename", basename));
+      result = this->import_settings.mesh_path;
+      break;
    case ResourceType::Level:
-      return fmt::format(fmt::runtime(this->importSettings.levelPath), fmt::arg("basename", basename));
+      result = this->import_settings.level_path;
+      break;
    case ResourceType::Material:
-      return fmt::format(fmt::runtime(this->importSettings.materialPath), fmt::arg("basename", basename));
+      result = this->import_settings.material_path;
+      break;
    default:
       return "";
    }
+
+   auto index = result.find("{basename}");
+   while (index != std::string::npos) {
+      result.replace(index, 10, basename);
+      index = result.find("{basename}");
+   }
+   return result;
 }
 
 void ProjectConfig::deserialize(const rapidjson::Value& value)
 {
-   this->activeProject = value["active_project"].GetString();
+   this->active_project = value["active_project"].GetString();
    for (const auto& child : value["projects"].GetArray()) {
       ProjectInfo info;
       info.deserialize(child);
@@ -84,9 +96,9 @@ std::optional<ProjectConfig> load_project_config()
       return std::nullopt;
    }
 
-   auto projectsJson = dir->sub(".triglav").sub("projects.json");
+   auto projects_json = dir->sub(".triglav").sub("projects.json");
 
-   auto doc = json_util::create_document_from_file(projectsJson);
+   auto doc = json_util::create_document_from_file(projects_json);
    if (!doc.has_value()) {
       return std::nullopt;
    }
@@ -99,10 +111,10 @@ std::optional<ProjectConfig> load_project_config()
 
 std::optional<ProjectInfo> load_active_project_info()
 {
-   static std::optional<ProjectInfo> cachedConfig;
+   static std::optional<ProjectInfo> cached_config;
 
-   if (cachedConfig.has_value()) {
-      return cachedConfig;
+   if (cached_config.has_value()) {
+      return cached_config;
    }
 
    const auto config = load_project_config();
@@ -111,12 +123,12 @@ std::optional<ProjectInfo> load_active_project_info()
    }
 
    const auto project =
-      std::ranges::find_if(config->projects, [&target = config->activeProject](const ProjectInfo& info) { return info.name == target; });
+      std::ranges::find_if(config->projects, [&target = config->active_project](const ProjectInfo& info) { return info.name == target; });
    if (project == config->projects.end()) {
       return std::nullopt;
    }
 
-   cachedConfig.emplace(*project);
+   cached_config.emplace(*project);
 
    return *project;
 }

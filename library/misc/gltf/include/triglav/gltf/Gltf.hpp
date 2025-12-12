@@ -11,7 +11,7 @@
 
 namespace triglav::gltf {
 
-constexpr u32 g_invalidID = ~0u;
+constexpr u32 g_invalid_id = ~0u;
 
 struct Asset
 {
@@ -51,7 +51,7 @@ enum class PrimitiveAttributeType
 struct PrimitiveAttribute
 {
    PrimitiveAttributeType type;
-   u32 accessorId;
+   u32 accessor_id;
 };
 
 struct Primitive
@@ -91,37 +91,33 @@ enum class ComponentType
 
 struct Accessor
 {
-   u32 bufferView;
-   u32 byteOffset;
-   ComponentType componentType;
+   u32 buffer_view;
+   u32 byte_offset;
+   ComponentType component_type;
    u32 count;
    std::vector<float> max;
    std::vector<float> min;
    AccessorType type;
 };
 
-struct MaterialTexture
-{
-   u32 index;
-};
-
-struct NormalMapTexture
+struct TextureInfo
 {
    u32 index;
 };
 
 struct PBRMetallicRoughness
 {
-   std::optional<MaterialTexture> baseColorTexture;
-   std::optional<Vector4> baseColorFactor;
-   float metallicFactor{1};
-   float roughnessFactor{1};
+   std::optional<TextureInfo> base_color_texture;
+   std::optional<Vector4> base_color_factor;
+   float metallic_factor{1};
+   float roughness_factor{1};
+   std::optional<TextureInfo> metallic_roughness_texture;
 };
 
 struct Material
 {
-   PBRMetallicRoughness pbrMetallicRoughness;
-   std::optional<NormalMapTexture> normalTexture;
+   PBRMetallicRoughness pbr_metallic_roughness;
+   std::optional<TextureInfo> normal_texture;
    std::string name;
 };
 
@@ -135,8 +131,8 @@ struct Texture
 struct Image
 {
    std::optional<std::string> uri;
-   std::optional<std::string> mimeType;
-   std::optional<u32> bufferView;
+   std::optional<std::string> mime_type;
+   std::optional<u32> buffer_view;
    std::string name;
 };
 
@@ -159,10 +155,10 @@ enum class SamplerWrap : u32
 
 struct Sampler
 {
-   SamplerFilter magFilter;
-   SamplerFilter minFilter;
-   SamplerWrap wrapS = SamplerWrap::Repeat;
-   SamplerWrap wrapT = SamplerWrap::Repeat;
+   SamplerFilter mag_filter;
+   SamplerFilter min_filter;
+   SamplerWrap wrap_s = SamplerWrap::Repeat;
+   SamplerWrap wrap_t = SamplerWrap::Repeat;
    std::string name;
 };
 
@@ -175,14 +171,14 @@ enum class BufferTarget
 struct BufferView
 {
    u32 buffer;
-   u32 byteOffset = 0;
-   u32 byteLength;
+   u32 byte_offset = 0;
+   u32 byte_length;
    std::optional<BufferTarget> target;
 };
 
 struct Buffer
 {
-   u32 byteLength;
+   u32 byte_length;
    std::optional<std::string> uri;
 };
 
@@ -198,7 +194,7 @@ struct Document
    std::vector<Texture> textures;
    std::vector<Image> images;
    std::vector<Sampler> samplers;
-   std::vector<BufferView> bufferViews;
+   std::vector<BufferView> buffer_views;
    std::vector<Buffer> buffers;
 
    void deserialize(io::IReader& reader);

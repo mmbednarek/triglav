@@ -2,7 +2,7 @@
 
 namespace triglav::test {
 
-constexpr auto g_gltfExample = R"(
+constexpr auto g_gltf_example = R"(
 {
     "asset": {
         "generator": "COLLADA2GLTF",

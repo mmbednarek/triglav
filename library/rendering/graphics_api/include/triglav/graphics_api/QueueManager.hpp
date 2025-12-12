@@ -20,7 +20,7 @@ class Device;
 struct QueueFamilyInfo
 {
    u32 index{};
-   u32 queueCount{};
+   u32 queue_count{};
    WorkTypeFlags flags{WorkType::None};
 };
 
@@ -56,9 +56,9 @@ class QueueManager
       Device& m_device;
       std::vector<SafeQueue> m_queues;
       WorkTypeFlags m_flags;
-      std::vector<vulkan::CommandPool> m_commandPools;
-      u32 m_queueFamilyIndex{};
-      mutable std::atomic<u32> m_nextQueue;
+      std::vector<vulkan::CommandPool> m_command_pools;
+      u32 m_queue_family_index{};
+      mutable std::atomic<u32> m_next_queue;
       std::vector<ktx::VulkanDeviceInfo> m_ktxDeviceInfos;
    };
 
@@ -87,12 +87,12 @@ class QueueManager
    [[nodiscard]] QueueGroup& queue_group(WorkTypeFlags type);
    [[nodiscard]] const QueueGroup& queue_group(WorkTypeFlags type) const;
 
-   SemaphoreFactory m_semaphoreFactory;
-   ObjectPool<Semaphore, SemaphoreFactory, 8> m_semaphorePool;
-   FenceFactory m_fenceFactory;
-   ObjectPool<Fence, FenceFactory, 4> m_fencePool;
-   std::vector<std::unique_ptr<QueueGroup>> m_queueGroups;
-   std::array<u32, 16> m_queueIndices{};
+   SemaphoreFactory m_semaphore_factory;
+   ObjectPool<Semaphore, SemaphoreFactory, 8> m_semaphore_pool;
+   FenceFactory m_fence_factory;
+   ObjectPool<Fence, FenceFactory, 4> m_fence_pool;
+   std::vector<std::unique_ptr<QueueGroup>> m_queue_groups;
+   std::array<u32, 16> m_queue_indices{};
 };
 
 }// namespace triglav::graphics_api

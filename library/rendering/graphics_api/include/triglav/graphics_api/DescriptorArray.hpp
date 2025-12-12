@@ -10,7 +10,7 @@ namespace triglav::graphics_api {
 class DescriptorArray
 {
  public:
-   DescriptorArray(VkDevice device, VkDescriptorPool descriptorPool, std::vector<VkDescriptorSet> descriptorSets);
+   DescriptorArray(VkDevice device, VkDescriptorPool descriptor_pool, std::vector<VkDescriptorSet> descriptor_sets);
    ~DescriptorArray();
 
    DescriptorArray(const DescriptorArray& other) = delete;
@@ -24,8 +24,8 @@ class DescriptorArray
 
  private:
    VkDevice m_device;
-   VkDescriptorPool m_descriptorPool;
-   std::vector<VkDescriptorSet> m_descriptorSets;
+   VkDescriptorPool m_descriptor_pool;
+   std::vector<VkDescriptorSet> m_descriptor_sets;
 };
 
 }// namespace triglav::graphics_api

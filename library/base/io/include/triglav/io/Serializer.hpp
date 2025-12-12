@@ -22,7 +22,7 @@ class Serializer
    Result<void> add_padding(u32 alignment);
 
    IWriter& m_writer;
-   u32 m_bytesWritten{};
+   u32 m_bytes_written{};
 };
 
 }// namespace triglav::io

@@ -7,19 +7,22 @@ extern "C"
 #include "api/XdgShell.h"
 }
 
+#include "triglav/Logging.hpp"
+
 #include <optional>
 
 namespace triglav::desktop::wayland {
 
 class Display;
 
-class Surface : public ISurface
+class Surface final : public ISurface
 {
+   TG_DEFINE_LOG_CATEGORY(WaylandSurface)
    friend Display;
 
  public:
    Surface(Display& display, StringView title, Dimension dimension, WindowAttributeFlags attributes);
-   Surface(Display& display, ISurface& parentSurface, Dimension dimension, Vector2 offset, WindowAttributeFlags attributes);
+   Surface(Display& display, ISurface& parent_surface, Dimension dimension, Vector2 offset, WindowAttributeFlags attributes);
 
    ~Surface() override;
 
@@ -29,6 +32,8 @@ class Surface : public ISurface
    void on_popup_configure(Vector2i position, Vector2i size);
    void on_popup_done();
    void on_popup_repositioned(u32 token);
+   void on_key(u32 serial, u32 time, u32 key, u32 state) const;
+   void on_modifiers(u32 serial, u32 mods_depressed, u32 mods_latched, u32 mods_locked, u32 group);
 
    void lock_cursor() override;
    void unlock_cursor() override;
@@ -39,6 +44,7 @@ class Surface : public ISurface
    void set_cursor_icon(CursorIcon icon) override;
    void set_keyboard_input_mode(KeyboardInputModeFlags mode) override;
    [[nodiscard]] std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) override;
+   ModifierFlags modifiers() const override;
 
    [[nodiscard]] constexpr Display& display() const noexcept
    {
@@ -53,24 +59,25 @@ class Surface : public ISurface
  private:
    Display& m_display;
    wl_surface* m_surface{};
-   xdg_surface* m_xdgSurface{};
-   xdg_surface_listener m_surfaceListener{};
-   xdg_toplevel* m_topLevel{};
-   xdg_toplevel_listener m_topLevelListener{};
-   xdg_popup_listener m_popupListener{};
-   zwp_locked_pointer_v1* m_lockedPointer{};
+   xdg_surface* m_xdg_surface{};
+   xdg_surface_listener m_surface_listener{};
+   xdg_toplevel* m_top_level{};
+   xdg_toplevel_listener m_top_level_listener{};
+   xdg_popup_listener m_popup_listener{};
+   zwp_locked_pointer_v1* m_locked_pointer{};
    zxdg_toplevel_decoration_v1* m_decoration{};
    xdg_popup* m_popup{};
-   bool m_resizeReady = false;
-   bool m_isConfigured = false;
-   int m_repositionToken{0};
-   KeyboardInputModeFlags m_keyboardInputMode{KeyboardInputMode::Direct};
+   bool m_resize_ready = false;
+   bool m_is_configured = false;
+   int m_reposition_token{0};
+   KeyboardInputModeFlags m_keyboard_input_mode{KeyboardInputMode::Direct};
+   ModifierFlags m_modifiers{};
 
-   uint32_t m_pointerSerial{};
+   uint32_t m_pointer_serial{};
 
    Dimension m_dimension{};
    WindowAttributeFlags m_attributes{};
-   std::optional<Dimension> m_pendingDimension{};
+   std::optional<Dimension> m_pending_dimension{};
 };
 
 }// namespace triglav::desktop::wayland

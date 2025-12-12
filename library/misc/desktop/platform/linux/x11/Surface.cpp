@@ -4,15 +4,14 @@
 #include "Display.hpp"
 
 #include <X11/cursorfont.h>
-#include <spdlog/spdlog.h>
 
 namespace triglav::desktop::x11 {
 
 namespace {
 
-Key map_key(const KeyCode keyCode)
+Key map_key(const KeyCode key_code)
 {
-   switch (keyCode) {
+   switch (key_code) {
    case 22:
       return Key::Backspace;
    case 25:
@@ -63,13 +62,13 @@ Key map_key(const KeyCode keyCode)
       return Key::DownArrow;
    }
 
-   spdlog::warn("unknown keycode: {}", keyCode);
+   log_message(LogLevel::Warning, StringView{"X11Surface"}, "unknown keycode: {}", key_code);
    return Key::Unknown;
 }
 
-MouseButton map_button(const uint32_t keyCode)
+MouseButton map_button(const uint32_t key_code)
 {
-   switch (keyCode) {
+   switch (key_code) {
    case 1:
       return MouseButton::Left;
    case 2:
@@ -99,7 +98,7 @@ Surface::~Surface()
 
 void Surface::lock_cursor()
 {
-   m_isCursorLocked = true;
+   m_is_cursor_locked = true;
 
    XGrabPointer(m_display.x11_display(), m_window, false,
                 ButtonPressMask | ButtonReleaseMask | PointerMotionMask | FocusChangeMask | EnterWindowMask | LeaveWindowMask,
@@ -111,7 +110,7 @@ void Surface::lock_cursor()
 
 void Surface::unlock_cursor()
 {
-   m_isCursorLocked = false;
+   m_is_cursor_locked = false;
    XUngrabPointer(m_display.x11_display(), CurrentTime);
 }
 
@@ -128,7 +127,7 @@ void Surface::internal_close()
 
 bool Surface::is_cursor_locked() const
 {
-   return m_isCursorLocked;
+   return m_is_cursor_locked;
 }
 
 Dimension Surface::dimension() const
@@ -140,45 +139,45 @@ Dimension Surface::dimension() const
 
 void Surface::set_cursor_icon(const CursorIcon icon)
 {
-   spdlog::info("calling set_cursor_icon: {}", static_cast<int>(icon));
+   log_info("calling set_cursor_icon: {}", static_cast<int>(icon));
 
-   if (m_currentCursor != 0) {
-      XFreeCursor(m_display.x11_display(), m_currentCursor);
+   if (m_current_cursor != 0) {
+      XFreeCursor(m_display.x11_display(), m_current_cursor);
    }
 
    switch (icon) {
    case CursorIcon::Arrow:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_arrow);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_arrow);
       break;
    case CursorIcon::Hand:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_hand1);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_hand1);
       break;
    case CursorIcon::Move:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_fleur);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_fleur);
       break;
    case CursorIcon::Wait:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_watch);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_watch);
       break;
    case CursorIcon::Edit:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_xterm);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_xterm);
       break;
    case CursorIcon::ResizeHorizontal:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_sb_h_double_arrow);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_sb_h_double_arrow);
       break;
    case CursorIcon::ResizeVertical:
-      m_currentCursor = ::XCreateFontCursor(m_display.x11_display(), XC_double_arrow);
+      m_current_cursor = ::XCreateFontCursor(m_display.x11_display(), XC_double_arrow);
       break;
    default:
-      m_currentCursor = 0;
+      m_current_cursor = 0;
       return;
    }
 
-   ::XDefineCursor(m_display.x11_display(), m_window, m_currentCursor);
+   ::XDefineCursor(m_display.x11_display(), m_window, m_current_cursor);
 }
 
 void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
 {
-   m_keyboardInputMode = mode;
+   m_keyboard_input_mode = mode;
 
    if (mode & KeyboardInputMode::Text) {
       ::XSetLocaleModifiers("");
@@ -195,36 +194,41 @@ void Surface::set_keyboard_input_mode(const KeyboardInputModeFlags mode)
 
 std::shared_ptr<ISurface> Surface::create_popup(const Vector2u dimensions, const Vector2 offset, const WindowAttributeFlags /*flags*/)
 {
-   const auto popupWindow = XCreateSimpleWindow(m_display.x11_display(), m_window, static_cast<int>(offset.x), static_cast<int>(offset.y),
-                                                dimensions.x, dimensions.y, 0, 0, 0xffffffff);
+   const auto popup_window = XCreateSimpleWindow(m_display.x11_display(), m_window, static_cast<int>(offset.x), static_cast<int>(offset.y),
+                                                 dimensions.x, dimensions.y, 0, 0, 0xffffffff);
 
-   XMapWindow(m_display.x11_display(), popupWindow);
-   XSelectInput(m_display.x11_display(), popupWindow,
+   XMapWindow(m_display.x11_display(), popup_window);
+   XSelectInput(m_display.x11_display(), popup_window,
                 ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask | EnterNotify |
                    LeaveNotify);
 
-   auto surface = std::make_shared<Surface>(m_display, popupWindow, dimensions);
-   m_display.map_surface(popupWindow, surface);
+   auto surface = std::make_shared<Surface>(m_display, popup_window, dimensions);
+   m_display.map_surface(popup_window, surface);
    return surface;
+}
+
+ModifierFlags Surface::modifiers() const
+{
+   return Modifier::Empty;
 }
 
 void Surface::dispatch_key_press(const XEvent& event) const
 {
-   if (m_keyboardInputMode & KeyboardInputMode::Text) {
+   if (m_keyboard_input_mode & KeyboardInputMode::Text) {
       char buffer[128];
       const int count = Xutf8LookupString(m_xic, const_cast<XKeyPressedEvent*>(&event.xkey), buffer, 128, nullptr, nullptr);
-      const char* bufferPtr = buffer;
-      auto rune = decode_rune_from_buffer(bufferPtr, buffer + count);
+      const char* buffer_ptr = buffer;
+      auto rune = decode_rune_from_buffer(buffer_ptr, buffer + count);
       event_OnTextInput.publish(rune);
    }
-   if (m_keyboardInputMode & KeyboardInputMode::Direct) {
+   if (m_keyboard_input_mode & KeyboardInputMode::Direct) {
       event_OnKeyIsPressed.publish(map_key(event.xkey.keycode));
    }
 }
 
 void Surface::dispatch_key_release(const XEvent& event) const
 {
-   if (m_keyboardInputMode & KeyboardInputMode::Direct) {
+   if (m_keyboard_input_mode & KeyboardInputMode::Direct) {
       event_OnKeyIsReleased.publish(map_key(event.xkey.keycode));
    }
 }
@@ -255,7 +259,7 @@ void Surface::dispatch_mouse_move(const XEvent& event) const
 
 void Surface::dispatch_mouse_relative_move(const Vector2 diff) const
 {
-   if (not m_isCursorLocked)
+   if (not m_is_cursor_locked)
       return;
 
    event_OnMouseRelativeMove.publish(diff);
@@ -266,9 +270,15 @@ void Surface::dispatch_close() const
    event_OnClose.publish();
 }
 
+void Surface::dispatch_resize(Vector2i new_size)
+{
+   m_dimension = {new_size.x, new_size.y};
+   event_OnResize.publish(new_size);
+}
+
 void Surface::tick() const
 {
-   if (m_isCursorLocked) {
+   if (m_is_cursor_locked) {
       const Dimension center{m_dimension.x / 2, m_dimension.y / 2};
       XWarpPointer(m_display.x11_display(), 0L, m_window, 0, 0, 0, 0, center.x, center.y);
       XSync(m_display.x11_display(), false);

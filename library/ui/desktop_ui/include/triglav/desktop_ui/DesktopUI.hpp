@@ -9,14 +9,15 @@ class ISurface;
 
 namespace triglav::desktop_ui {
 
-class DialogManager;
+class PopupManager;
 
 struct ThemeProperties
 {
    // Core
    TypefaceName base_typeface;
    i32 base_font_size;
-   Color background_color;
+   Color background_color_darker;
+   Color background_color_brighter;
    Color active_color;
    Color foreground_color;
    Color accent_color;
@@ -53,6 +54,18 @@ struct ThemeProperties
       float padding;
    } checkbox;
 
+   // Tab View
+   struct
+   {
+      i32 font_size;
+   } tab_view;
+
+   // Tree View
+   struct
+   {
+      int font_size;
+   } tree_view;
+
    static ThemeProperties get_default();
 };
 
@@ -61,17 +74,17 @@ struct ThemeProperties
 class DesktopUIManager
 {
  public:
-   DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, DialogManager& dialogManager);
+   DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager);
 
    [[nodiscard]] const ThemeProperties& properties() const;
    [[nodiscard]] const desktop::ISurface& surface() const;
    [[nodiscard]] desktop::ISurface& surface();
-   [[nodiscard]] DialogManager& dialog_manager() const;
+   [[nodiscard]] PopupManager& popup_manager() const;
 
  private:
    ThemeProperties m_properties;
    desktop::ISurface& m_surface;
-   DialogManager& m_dialogManager;
+   PopupManager& m_popup_manager;
 };
 
 }// namespace triglav::desktop_ui

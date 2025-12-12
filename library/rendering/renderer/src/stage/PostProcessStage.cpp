@@ -10,14 +10,14 @@ namespace triglav::renderer::stage {
 
 struct PostProcessingPushConstants
 {
-   int enableFXAA{};
-   int bloomEnabled{};
+   int enable_fxaa{};
+   int bloom_enabled{};
 };
 
 using namespace name_literals;
 
-PostProcessStage::PostProcessStage(UpdateUserInterfaceJob& updateUserInterfaceJob) :
-    m_updateUserInterfaceJob(updateUserInterfaceJob)
+PostProcessStage::PostProcessStage(UpdateUserInterfaceJob* update_user_interface_job) :
+    m_update_user_interface_job(update_user_interface_job)
 {
 }
 
@@ -30,8 +30,8 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config&
    ctx.bind_fragment_shader("post_processing.fshader"_rc);
 
    ctx.push_constant(PostProcessingPushConstants{
-      .enableFXAA = config.antialiasing == AntialiasingMethod::FastApproximate,
-      .bloomEnabled = config.isBloomEnabled,
+      .enable_fxaa = config.antialiasing == AntialiasingMethod::FastApproximate,
+      .bloom_enabled = config.is_bloom_enabled,
    });
 
    ctx.bind_samplable_texture(0, "shading.color"_name);
@@ -41,8 +41,8 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config&
 
    ctx.draw_full_screen_quad();
 
-   if (!config.isUIHidden) {
-      m_updateUserInterfaceJob.render_ui(ctx);
+   if (m_update_user_interface_job != nullptr && !config.is_uihidden) {
+      m_update_user_interface_job->render_ui(ctx);
    }
 
    ctx.end_render_pass();

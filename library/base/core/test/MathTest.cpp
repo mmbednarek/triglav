@@ -1,6 +1,6 @@
 #include "triglav/Math.hpp"
+#include "triglav/test_util/GTest.hpp"
 
-#include <gtest/gtest.h>
 #include <random>
 
 using triglav::g_pi;
@@ -42,10 +42,23 @@ TEST(MathTest, BasicCase)
       transform.rotation = transform.rotation / triglav::sign(transform.rotation.w);
 
       const auto mat = transform.to_matrix();
-      const auto decodedTransform = Transform3D::from_matrix(mat);
+      const auto decoded_transform = Transform3D::from_matrix(mat);
 
-      EXPECT_TRUE(quat_equals(decodedTransform.rotation, transform.rotation));
-      EXPECT_TRUE(vec3_equals(decodedTransform.scale, transform.scale));
-      EXPECT_TRUE(vec3_equals(decodedTransform.translation, transform.translation));
+      EXPECT_TRUE(quat_equals(decoded_transform.rotation, transform.rotation));
+      EXPECT_TRUE(vec3_equals(decoded_transform.scale, transform.scale));
+      EXPECT_TRUE(vec3_equals(decoded_transform.translation, transform.translation));
    }
+}
+
+TEST(MathTest, ClosestPoint)
+{
+   const auto result =
+      triglav::find_closest_point_between_lines({0, 0, 0}, glm::normalize(Vector3{1, 1, 0}), {1, 0, 0}, glm::normalize(Vector3{-1, 1, 0}));
+   EXPECT_EQ(result, Vector3(0.5, 0.5, 0));
+}
+
+TEST(MathTest, ClosestPointToLine)
+{
+   const auto result = triglav::find_closest_point_on_line({0, 0, 0}, glm::normalize(Vector3{1, 1, 0}), Vector3{1, 2, 0});
+   EXPECT_TRUE(glm::dot(result - Vector3(1.5, 1.5, 0), Vector3{1, 1, 1}) < 0.001f);
 }

@@ -26,7 +26,7 @@ class Level;
 }// namespace triglav
 
 /*
-TG_RESOURCE_TYPE(name, extension, cppType, loadingStage)
+TG_RESOURCE_TYPE(name, extension, cpp_type, loading_stage)
 */
 
 #define TG_RESOURCE_TYPE_LIST                                                               \

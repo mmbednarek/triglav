@@ -5,7 +5,7 @@
 #include "triglav/io/Path.hpp"
 #include "triglav/json_util/JsonUtil.hpp"
 
-#include <fmt/core.h>
+#include <print>
 #include <vector>
 
 namespace triglav::tool::cli {
@@ -16,12 +16,12 @@ ExitStatus handle_project(const CmdArgs_project& args)
    if (!config.has_value())
       return EXIT_FAILURE;
 
-   if (args.shouldList) {
-      fmt::print(stderr, "Active project: {}\n", config->activeProject);
+   if (args.should_list) {
+      std::print(stderr, "Active project: {}\n", config->active_project);
       for (const auto& project : config->projects) {
-         fmt::print(stderr, "  Project: {}\n", project.name);
-         fmt::print(stderr, "  Full Name: {}\n", project.fullName);
-         fmt::print(stderr, "  Path: {}\n", project.path);
+         std::print(stderr, "  Project: {}\n", project.name);
+         std::print(stderr, "  Full Name: {}\n", project.full_name);
+         std::print(stderr, "  Path: {}\n", project.path);
       }
    }
 

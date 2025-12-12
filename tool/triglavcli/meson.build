@@ -12,6 +12,7 @@ triglavcli_sources = files([
   'src/ProjectConfig.cpp',
   'src/ProjectConfig.hpp',
   'src/ProjectHandler.cpp',
+  'src/ReimportHandler.cpp',
   'src/ResourceList.cpp',
   'src/ResourceList.hpp',
   'src/TextureImport.hpp',
@@ -20,7 +21,6 @@ triglavcli_sources = files([
 
 triglavcli_deps = [
   geometry,
-  fmt,
   asset,
   gltf,
   stbi,

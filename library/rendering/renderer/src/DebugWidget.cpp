@@ -12,57 +12,57 @@ using namespace name_literals;
 DebugWidget::DebugWidget(ui_core::Context& ctx) :
     m_content(ctx, ui_core::RectBox::State{.color{0.0, 0.0, 0.5, 0.8}}, this)
 {
-   auto& alignmentBox = m_content.create_content<ui_core::AlignmentBox>({
-      .horizontalAlignment = ui_core::HorizontalAlignment::Right,
-      .verticalAlignment = ui_core::VerticalAlignment::Bottom,
+   auto& alignment_box = m_content.create_content<ui_core::AlignmentBox>({
+      .horizontal_alignment = ui_core::HorizontalAlignment::Right,
+      .vertical_alignment = ui_core::VerticalAlignment::Bottom,
    });
-   auto& verticalLayout = alignmentBox.create_content<ui_core::VerticalLayout>({
+   auto& vertical_layout = alignment_box.create_content<ui_core::VerticalLayout>({
       .padding{20.0f, 20.0f, 20.0f, 20.0f},
       .separation = 25.0f,
    });
 
-   verticalLayout.create_child<ui_core::TextBox>({
-      .fontSize = 16,
-      .typeface = "cantarell.typeface"_rc,
+   vertical_layout.create_child<ui_core::TextBox>({
+      .font_size = 16,
+      .typeface = "fonts/cantarell/regular.typeface"_rc,
       .content = "Lorem ipsum",
       .color = {1, 1, 1, 1},
    });
 
-   auto& horizontal = verticalLayout.create_child<ui_core::HorizontalLayout>({
+   auto& horizontal = vertical_layout.create_child<ui_core::HorizontalLayout>({
       .padding = {},
       .separation = 10.0f,
    });
 
    horizontal.create_child<ui_core::TextBox>({
-      .fontSize = 15,
-      .typeface = "cantarell.typeface"_rc,
+      .font_size = 15,
+      .typeface = "fonts/cantarell/regular.typeface"_rc,
       .content = "beta delta",
       .color = {0, 1, 1, 1},
    });
 
    horizontal.create_child<ui_core::TextBox>({
-      .fontSize = 15,
-      .typeface = "cantarell.typeface"_rc,
+      .font_size = 15,
+      .typeface = "fonts/cantarell/regular.typeface"_rc,
       .content = "beta delta",
       .color = {1, 1, 0, 1},
    });
 
-   verticalLayout.create_child<ui_core::TextBox>({
-      .fontSize = 16,
-      .typeface = "cantarell.typeface"_rc,
+   vertical_layout.create_child<ui_core::TextBox>({
+      .font_size = 16,
+      .typeface = "fonts/cantarell/regular.typeface"_rc,
       .content = "bar foo bar",
       .color = {0, 0, 1, 1},
    });
 }
 
-Vector2 DebugWidget::desired_size(const Vector2 parentSize) const
+Vector2 DebugWidget::desired_size(const Vector2 parent_size) const
 {
-   return m_content.desired_size(parentSize);
+   return m_content.desired_size(parent_size);
 }
 
-void DebugWidget::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void DebugWidget::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   m_content.add_to_viewport(dimensions, croppingMask);
+   m_content.add_to_viewport(dimensions, cropping_mask);
 }
 
 void DebugWidget::remove_from_viewport()

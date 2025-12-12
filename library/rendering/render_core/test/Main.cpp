@@ -4,10 +4,10 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+#include "triglav/test_util/GTest.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
-#include <fmt/core.h>
-#include <gtest/gtest.h>
+#include <print>
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -32,21 +32,21 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    triglav::test::TestingSupport::the().m_device = device.get();
 
-   triglav::font::FontManger fontManager;
-   ResourceManager resourceManager(*device, fontManager);
-   triglav::test::TestingSupport::the().m_resourceManager = &resourceManager;
+   triglav::font::FontManger font_manager;
+   ResourceManager resource_manager(*device, font_manager);
+   triglav::test::TestingSupport::the().m_resource_manager = &resource_manager;
 
    triglav::test::TestingSupport::the().initialize_render_doc();
 
-   LoadAssetsAwaiter awaiter(resourceManager);
+   LoadAssetsAwaiter awaiter(resource_manager);
 
-   resourceManager.load_asset_list("content/index.yaml"_path);
+   resource_manager.load_asset_list("content/index.yaml"_path);
 
-   fmt::print("Loading resources\n");
+   std::println("Loading resources");
 
    awaiter.await();
 
-   fmt::print("Finished loading resources\n");
+   std::println("Finished loading resources");
 
    int status = 0;
 

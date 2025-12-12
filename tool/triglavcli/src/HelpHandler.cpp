@@ -1,30 +1,31 @@
 #include "Commands.hpp"
 
 #include <cassert>
-#include <fmt/core.h>
+#include <format>
+#include <print>
 
 namespace triglav::tool::cli {
 
-constexpr auto g_descOffset = 16;
+constexpr auto g_desc_offset = 16;
 
 namespace {
 
-void print_command(std::string_view commandName, std::string_view description)
+void print_command(std::string_view command_name, std::string_view description)
 {
-   assert(commandName.length() < g_descOffset);
-   fmt::print(stderr, "   {}", commandName);
-   const auto remainingOffset = g_descOffset - commandName.size();
-   for (auto i = 0u; i < remainingOffset; i++) {
-      fmt::print(stderr, " ");
+   assert(command_name.length() < g_desc_offset);
+   std::print(stderr, "   {}", command_name);
+   const auto remaining_offset = g_desc_offset - command_name.size();
+   for (auto i = 0u; i < remaining_offset; i++) {
+      std::print(stderr, " ");
    }
-   fmt::print(stderr, "{}\n", description);
+   std::print(stderr, "{}\n", description);
 }
 
 }// namespace
 
 ExitStatus handle_help(const CmdArgs_help& /*args*/)
 {
-   fmt::print(stderr, "Triglav CLI tool is used to create and maintain triglav projects.\n\nCOMMANDS\n");
+   std::print(stderr, "Triglav CLI tool is used to create and maintain triglav projects.\n\nCOMMANDS\n");
 
 #define TG_DECLARE_COMMAND(name, desc) print_command(#name, desc);
 

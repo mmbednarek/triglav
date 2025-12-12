@@ -36,9 +36,9 @@ material::FSOutput fs_main(material::FSInput fsInput)
     let albedoColor = material::MaterialTextures[properties.albedoTextureID].Sample(fsInput.texCoord);
 
 #if MT_USE_NORMAL_MAP
-    let tangentSpaceMat = float3x3(fsInput.tangent, fsInput.bitangent, fsInput.normal);
+    let tangentSpaceMat = float3x3(normalize(fsInput.tangent), normalize(fsInput.bitangent), normalize(fsInput.normal));
     let sampledNormal = 2 * material::MaterialTextures[properties.normalTextureID].Sample(fsInput.texCoord).xyz - float3(1, 1, 1);
-    let normalVec = normalize(mul(tangentSpaceMat, sampledNormal));
+    let normalVec = normalize(mul(sampledNormal, tangentSpaceMat));
 #else
     let normalVec = normalize(fsInput.normal);
 #endif

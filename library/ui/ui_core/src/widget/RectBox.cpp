@@ -11,63 +11,62 @@ RectBox::RectBox(Context& context, State state, IWidget* parent) :
 {
 }
 
-Vector2 RectBox::desired_size(const Vector2 parentSize) const
+Vector2 RectBox::desired_size(const Vector2 parent_size) const
 {
-   if (m_cachedParentSize.has_value() && *m_cachedParentSize == parentSize)
-      return m_cachedSize;
+   if (m_cached_parent_size.has_value() && *m_cached_parent_size == parent_size)
+      return m_cached_size;
 
-   m_cachedParentSize.emplace(parentSize);
-   m_cachedSize = m_content->desired_size(parentSize);
-   return m_cachedSize;
+   m_cached_parent_size.emplace(parent_size);
+   m_cached_size = m_content->desired_size(parent_size);
+   return m_cached_size;
 }
 
-void RectBox::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void RectBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   if (!do_regions_intersect(dimensions, croppingMask)) {
-      if (m_rectName != 0) {
-         m_context.viewport().remove_rectangle(m_rectName);
-         m_rectName = 0;
+   if (!do_regions_intersect(dimensions, cropping_mask)) {
+      if (m_rect_name != 0) {
+         m_context.viewport().remove_rectangle(m_rect_name);
+         m_rect_name = 0;
       }
       return;
    }
 
-   if (m_rectName != 0) {
-      m_context.viewport().set_rectangle_dims(m_rectName, dimensions, croppingMask);
+   if (m_rect_name != 0) {
+      m_context.viewport().set_rectangle_dims(m_rect_name, dimensions, cropping_mask);
    } else {
-      m_rectName = m_context.viewport().add_rectangle(Rectangle{
+      m_rect_name = m_context.viewport().add_rectangle(Rectangle{
          .rect = dimensions,
          .color = m_state.color,
-         .borderRadius = m_state.borderRadius,
-         .borderColor = m_state.borderColor,
-         .crop = croppingMask,
-         .borderWidth = m_state.borderWidth,
+         .border_radius = m_state.border_radius,
+         .border_color = m_state.border_color,
+         .crop = cropping_mask,
+         .border_width = m_state.border_width,
       });
    }
 
-   m_content->add_to_viewport(dimensions, croppingMask);
+   m_content->add_to_viewport(dimensions, cropping_mask);
 }
 
 void RectBox::remove_from_viewport()
 {
    m_content->remove_from_viewport();
-   m_context.viewport().remove_rectangle(m_rectName);
-   m_rectName = 0;
+   m_context.viewport().remove_rectangle_safe(m_rect_name);
 }
 
 void RectBox::set_color(Vector4 color)
 {
    if (m_state.color == color)
       return;
-   if (m_rectName == 0)
+   if (m_rect_name == 0)
       return;
 
    m_state.color = color;
-   m_context.viewport().set_rectangle_color(m_rectName, color);
+   m_context.viewport().set_rectangle_color(m_rect_name, color);
 }
 
 void RectBox::on_child_state_changed(IWidget& widget)
 {
-   m_cachedParentSize.reset();
+   m_cached_parent_size.reset();
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(widget);
    }

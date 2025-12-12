@@ -26,10 +26,10 @@ class InfoDialog final : public ui_core::IWidget
  public:
    using Self = InfoDialog;
 
-   InfoDialog(ui_core::Context& context, ConfigManager& configManager, desktop::ISurface& surface);
+   InfoDialog(ui_core::Context& context, ConfigManager& config_manager, desktop::ISurface& surface);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parentSize) const override;
-   void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) override;
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_child_state_changed(IWidget& widget) override;
    void on_event(const ui_core::Event& event) override;
@@ -51,14 +51,14 @@ class InfoDialog final : public ui_core::IWidget
    void on_title_leave() const;
 
  private:
-   ConfigManager& m_configManager;
+   ConfigManager& m_config_manager;
    desktop::ISurface& m_surface;
-   ui_core::RectBox m_rootBox;
+   ui_core::RectBox m_root_box;
    std::map<Name, ui_core::TextBox*> m_values;
-   bool m_isDragging{false};
-   Vector2 m_dialogOffset{20, 20};
-   Vector4 m_croppingMask;
-   std::optional<Vector2> m_dragOffset;
+   bool m_is_dragging{false};
+   Vector2 m_dialog_offset{20, 20};
+   Vector4 m_cropping_mask;
+   std::optional<Vector2> m_drag_offset;
    ui_core::TextBox* m_title;
 
    TG_SINK(ConfigManager, OnPropertyChanged);

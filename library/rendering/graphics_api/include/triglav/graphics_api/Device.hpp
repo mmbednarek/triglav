@@ -41,69 +41,75 @@ DECLARE_VLK_WRAPPED_OBJECT(Device)
 DECLARE_VLK_WRAPPED_CHILD_OBJECT(DebugUtilsMessengerEXT, Instance)
 #endif
 
+struct DeviceLimits
+{
+   MemorySize min_uniform_buffer_alignment{};
+};
+
 namespace vulkan {
 using PhysicalDevice = VkPhysicalDevice;
 }// namespace vulkan
 
-constexpr auto g_maxMipMaps = 0;
+constexpr auto g_max_mip_maps = 0;
 
 class Device
 {
  public:
-   Device(vulkan::Device device, vulkan::PhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
-          DeviceFeatureFlags enabledFeatures);
+   Device(vulkan::Device device, vulkan::PhysicalDevice physical_device, std::vector<QueueFamilyInfo>&& queue_family_infos,
+          DeviceFeatureFlags enabled_features);
 
-   [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
-                                                    const Resolution& resolution, PresentMode presentMode,
-                                                    Swapchain* oldSwapchain = nullptr);
+   [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat color_format, ColorSpace color_space,
+                                                    const Resolution& resolution, PresentMode present_mode,
+                                                    Swapchain* old_swapchain = nullptr);
    [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint, std::span<const char> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
-   [[nodiscard]] Result<DescriptorPool> create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptorCounts,
-                                                               u32 maxDescriptorCount);
+   [[nodiscard]] Result<DescriptorPool> create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptor_counts,
+                                                               u32 max_descriptor_count);
    [[nodiscard]] Result<Buffer> create_buffer(BufferUsageFlags usage, uint64_t size);
    [[nodiscard]] Result<Fence> create_fence() const;
    [[nodiscard]] Result<Semaphore> create_semaphore() const;
-   [[nodiscard]] Result<Texture> create_texture_from_ktx(const ktx::Texture& texture, TextureUsageFlags usageFlags,
-                                                         TextureState finalState);
-   [[nodiscard]] Result<Texture> create_texture(const ColorFormat& format, const Resolution& imageSize,
-                                                TextureUsageFlags usageFlags = TextureUsage::Sampled | TextureUsage::TransferSrc |
-                                                                               TextureUsage::TransferDst,
-                                                TextureState initialTextureState = TextureState::Undefined,
-                                                SampleCount sampleCount = SampleCount::Single, int mipCount = 1) const;
+   [[nodiscard]] Result<Texture> create_texture_from_ktx(const ktx::Texture& texture, TextureUsageFlags usage_flags,
+                                                         TextureState final_state);
+   [[nodiscard]] Result<Texture> create_texture(const ColorFormat& format, const Resolution& image_size,
+                                                TextureUsageFlags usage_flags = TextureUsage::Sampled | TextureUsage::TransferSrc |
+                                                                                TextureUsage::TransferDst,
+                                                TextureState initial_texture_state = TextureState::Undefined,
+                                                SampleCount sample_count = SampleCount::Single, int mip_count = 1) const;
    [[nodiscard]] Result<Sampler> create_sampler(const SamplerProperties& info);
-   [[nodiscard]] Result<QueryPool> create_query_pool(QueryType queryType, u32 timestampCount);
-   [[nodiscard]] Result<ray_tracing::AccelerationStructure> create_acceleration_structure(ray_tracing::AccelerationStructureType structType,
-                                                                                          const Buffer& buffer, MemorySize bufferOffset,
-                                                                                          MemorySize bufferSize);
+   [[nodiscard]] Result<QueryPool> create_query_pool(QueryType query_type, u32 timestamp_count);
+   [[nodiscard]] Result<ray_tracing::AccelerationStructure>
+   create_acceleration_structure(ray_tracing::AccelerationStructureType struct_type, const Buffer& buffer, MemorySize buffer_offset,
+                                 MemorySize buffer_size);
 
    [[nodiscard]] std::pair<Resolution, Resolution> get_surface_resolution_limits(const Surface& surface) const;
    [[nodiscard]] Vector2u get_current_surface_extent(const Surface& surface) const;
 
-   [[nodiscard]] Status submit_command_list(const CommandList& commandList, SemaphoreArrayView waitSemaphores,
-                                            SemaphoreArrayView signalSemaphores, const Fence* fence, WorkTypeFlags workTypes);
-   [[nodiscard]] Status submit_command_list(const CommandList& commandList, const Semaphore& waitSemaphore,
-                                            const Semaphore& signalSemaphore, const Fence& fence);
-   [[nodiscard]] Status submit_command_list_one_time(const CommandList& commandList);
+   [[nodiscard]] Status submit_command_list(const CommandList& command_list, SemaphoreArrayView wait_semaphores,
+                                            SemaphoreArrayView signal_semaphores, const Fence* fence, WorkTypeFlags work_types);
+   [[nodiscard]] Status submit_command_list(const CommandList& command_list, const Semaphore& wait_semaphore,
+                                            const Semaphore& signal_semaphore, const Fence& fence);
+   [[nodiscard]] Status submit_command_list_one_time(const CommandList& command_list);
    [[nodiscard]] VkDevice vulkan_device() const;
    [[nodiscard]] VkPhysicalDevice vulkan_physical_device() const;
    [[nodiscard]] QueueManager& queue_manager();
    [[nodiscard]] SamplerCache& sampler_cache();
    [[nodiscard]] DeviceFeatureFlags enabled_features() const;
    [[nodiscard]] Result<ktx::Texture> export_ktx_texture(const Texture& texture);
+   [[nodiscard]] const DeviceLimits& limits() const;
 
    void await_all() const;
 
    [[nodiscard]] MemorySize min_storage_buffer_alignment() const;
 
  private:
-   [[nodiscard]] uint32_t find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+   [[nodiscard]] uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties) const;
 
    vulkan::Device m_device;
-   vulkan::PhysicalDevice m_physicalDevice;
-   std::vector<QueueFamilyInfo> m_queueFamilyInfos;
-   DeviceFeatureFlags m_enabledFeatures;
-   QueueManager m_queueManager;
-   SamplerCache m_samplerCache;
+   vulkan::PhysicalDevice m_physical_device;
+   std::vector<QueueFamilyInfo> m_queue_family_infos;
+   DeviceFeatureFlags m_enabled_features;
+   QueueManager m_queue_manager;
+   SamplerCache m_sampler_cache;
 };
 
 using DeviceUPtr = std::unique_ptr<Device>;

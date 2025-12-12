@@ -9,19 +9,19 @@ const Charset Charset::European = Charset().add_range(32, 126).add_range(0xc0, 0
 
 // ***** Charset::Iterator *****
 
-Charset::Iterator::Iterator(const Charset* charset, const std::vector<RuneRange>::const_iterator rangeIt, const Rune rune) :
+Charset::Iterator::Iterator(const Charset* charset, const std::vector<RuneRange>::const_iterator range_it, const Rune rune) :
     m_charset(charset),
-    m_rangeIt(rangeIt),
+    m_range_it(range_it),
     m_rune(rune)
 {
 }
 
 Charset::Iterator& Charset::Iterator::operator++()
 {
-   if (m_rune >= m_rangeIt->to) {
-      ++m_rangeIt;
-      if (m_rangeIt != m_charset->m_ranges.end()) {
-         m_rune = m_rangeIt->from;
+   if (m_rune >= m_range_it->to) {
+      ++m_range_it;
+      if (m_range_it != m_charset->m_ranges.end()) {
+         m_rune = m_range_it->from;
       } else {
          m_rune = 0;
       }
@@ -39,7 +39,7 @@ Rune Charset::Iterator::operator*() const
 
 bool Charset::Iterator::operator!=(const Charset::Iterator& other) const
 {
-   return m_rangeIt != other.m_rangeIt || m_rune != other.m_rune;
+   return m_range_it != other.m_range_it || m_rune != other.m_rune;
 }
 
 // ***** Charset *****

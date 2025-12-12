@@ -22,25 +22,25 @@ DECLARE_VLK_ENUMERATOR(get_swapchain_images, VkImage, vkGetSwapchainImagesKHR)
 
 namespace {
 
-bool is_surface_format_supported(const VkPhysicalDevice physicalDevice, const VkSurfaceKHR surface, const ColorFormat& colorFormat,
-                                 const ColorSpace colorSpace)
+bool is_surface_format_supported(const VkPhysicalDevice physical_device, const VkSurfaceKHR surface, const ColorFormat& color_format,
+                                 const ColorSpace color_space)
 {
-   const auto formats = vulkan::get_surface_formats(physicalDevice, surface);
+   const auto formats = vulkan::get_surface_formats(physical_device, surface);
 
-   const auto targetVulkanFormat = vulkan::to_vulkan_color_format(colorFormat);
-   if (not targetVulkanFormat.has_value()) {
+   const auto target_vulkan_format = vulkan::to_vulkan_color_format(color_format);
+   if (not target_vulkan_format.has_value()) {
       return false;
    }
 
-   const auto targetVulkanColorSpace = vulkan::to_vulkan_color_space(colorSpace);
-   if (not targetVulkanColorSpace.has_value()) {
+   const auto target_vulkan_color_space = vulkan::to_vulkan_color_space(color_space);
+   if (not target_vulkan_color_space.has_value()) {
       return false;
    }
 
-   for (const auto [vulkanFormat, vulkanColorSpace] : formats) {
-      if (vulkanFormat != targetVulkanFormat)
+   for (const auto [vulkan_format, vulkan_color_space] : formats) {
+      if (vulkan_format != target_vulkan_format)
          continue;
-      if (vulkanColorSpace != targetVulkanColorSpace)
+      if (vulkan_color_space != target_vulkan_color_space)
          continue;
 
       return true;
@@ -60,144 +60,144 @@ uint32_t swapchain_image_count(const uint32_t min, const uint32_t max)
 
 }// namespace
 
-Device::Device(vulkan::Device device, const VkPhysicalDevice physicalDevice, std::vector<QueueFamilyInfo>&& queueFamilyInfos,
-               const DeviceFeatureFlags enabledFeatures) :
+Device::Device(vulkan::Device device, const VkPhysicalDevice physical_device, std::vector<QueueFamilyInfo>&& queue_family_infos,
+               const DeviceFeatureFlags enabled_features) :
     m_device(std::move(device)),
-    m_physicalDevice(physicalDevice),
-    m_queueFamilyInfos{std::move(queueFamilyInfos)},
-    m_enabledFeatures{enabledFeatures},
-    m_queueManager(*this, m_queueFamilyInfos),
-    m_samplerCache(*this)
+    m_physical_device(physical_device),
+    m_queue_family_infos{std::move(queue_family_infos)},
+    m_enabled_features{enabled_features},
+    m_queue_manager(*this, m_queue_family_infos),
+    m_sampler_cache(*this)
 {
    vulkan::DynamicProcedures::the().init(*m_device);
 }
 
-Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat colorFormat, ColorSpace colorSpace,
-                                           const Resolution& resolution, PresentMode presentMode, Swapchain* oldSwapchain)
+Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat color_format, ColorSpace color_space,
+                                           const Resolution& resolution, PresentMode present_mode, Swapchain* old_swapchain)
 {
-   if (not is_surface_format_supported(m_physicalDevice, surface.vulkan_surface(), colorFormat, colorSpace))
+   if (not is_surface_format_supported(m_physical_device, surface.vulkan_surface(), color_format, color_space))
       return std::unexpected(Status::UnsupportedFormat);
 
-   const auto vulkanColorFormat = vulkan::to_vulkan_color_format(colorFormat);
-   if (not vulkanColorFormat.has_value())
+   const auto vulkan_color_format = vulkan::to_vulkan_color_format(color_format);
+   if (not vulkan_color_format.has_value())
       return std::unexpected(Status::UnsupportedFormat);
 
-   const auto vulkanColorSpace = vulkan::to_vulkan_color_space(colorSpace);
-   if (not vulkanColorSpace.has_value())
+   const auto vulkan_color_space = vulkan::to_vulkan_color_space(color_space);
+   if (not vulkan_color_space.has_value())
       return std::unexpected(Status::UnsupportedFormat);
 
    VkSurfaceCapabilitiesKHR capabilities;
-   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, surface.vulkan_surface(), &capabilities);
+   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physical_device, surface.vulkan_surface(), &capabilities);
 
-   VkSwapchainCreateInfoKHR swapchainInfo{};
-   swapchainInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-   swapchainInfo.surface = surface.vulkan_surface();
-   swapchainInfo.presentMode = vulkan::to_vulkan_present_mode(presentMode);
-   swapchainInfo.imageExtent = VkExtent2D{resolution.width, resolution.height};
-   swapchainInfo.imageFormat = *vulkanColorFormat;
-   swapchainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-   if (oldSwapchain != nullptr) {
-      swapchainInfo.oldSwapchain = oldSwapchain->vulkan_swapchain();
+   VkSwapchainCreateInfoKHR swapchain_info{};
+   swapchain_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+   swapchain_info.surface = surface.vulkan_surface();
+   swapchain_info.presentMode = vulkan::to_vulkan_present_mode(present_mode);
+   swapchain_info.imageExtent = VkExtent2D{resolution.width, resolution.height};
+   swapchain_info.imageFormat = *vulkan_color_format;
+   swapchain_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+   if (old_swapchain != nullptr) {
+      swapchain_info.oldSwapchain = old_swapchain->vulkan_swapchain();
    }
-   swapchainInfo.minImageCount = swapchain_image_count(capabilities.minImageCount, capabilities.maxImageCount);
-   swapchainInfo.imageColorSpace = *vulkanColorSpace;
-   swapchainInfo.imageArrayLayers = 1;
-   swapchainInfo.preTransform = capabilities.currentTransform;
-   swapchainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-   swapchainInfo.clipped = true;
+   swapchain_info.minImageCount = swapchain_image_count(capabilities.minImageCount, capabilities.maxImageCount);
+   swapchain_info.imageColorSpace = *vulkan_color_space;
+   swapchain_info.imageArrayLayers = 1;
+   swapchain_info.preTransform = capabilities.currentTransform;
+   swapchain_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+   swapchain_info.clipped = true;
 
-   const std::array queueFamilyIndices{
-      m_queueManager.queue_index(WorkType::Graphics),
-      m_queueManager.queue_index(WorkType::Presentation),
+   const std::array queue_family_indices{
+      m_queue_manager.queue_index(WorkType::Graphics),
+      m_queue_manager.queue_index(WorkType::Presentation),
    };
-   if (queueFamilyIndices[0] != queueFamilyIndices[1]) {
-      swapchainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-      swapchainInfo.queueFamilyIndexCount = static_cast<u32>(queueFamilyIndices.size());
-      swapchainInfo.pQueueFamilyIndices = queueFamilyIndices.data();
+   if (queue_family_indices[0] != queue_family_indices[1]) {
+      swapchain_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+      swapchain_info.queueFamilyIndexCount = static_cast<u32>(queue_family_indices.size());
+      swapchain_info.pQueueFamilyIndices = queue_family_indices.data();
    } else {
-      swapchainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+      swapchain_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
    }
 
    vulkan::SwapchainKHR swapchain(*m_device);
-   if (swapchain.construct(&swapchainInfo) != VK_SUCCESS) {
+   if (swapchain.construct(&swapchain_info) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedFormat);
    }
 
 
    const auto images = vulkan::get_swapchain_images(*m_device, *swapchain);
 
-   std::vector<Texture> swapchainTextures;
-   swapchainTextures.reserve(images.size());
+   std::vector<Texture> swapchain_textures;
+   swapchain_textures.reserve(images.size());
 
    for (const auto image : images) {
-      VkImageViewCreateInfo imageViewInfo{};
-      imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-      imageViewInfo.image = image;
-      imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-      imageViewInfo.format = *vulkanColorFormat;
-      imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-      imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-      imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-      imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      imageViewInfo.subresourceRange.baseMipLevel = 0;
-      imageViewInfo.subresourceRange.levelCount = 1;
-      imageViewInfo.subresourceRange.baseArrayLayer = 0;
-      imageViewInfo.subresourceRange.layerCount = 1;
+      VkImageViewCreateInfo image_view_info{};
+      image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+      image_view_info.image = image;
+      image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+      image_view_info.format = *vulkan_color_format;
+      image_view_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+      image_view_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+      image_view_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+      image_view_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+      image_view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      image_view_info.subresourceRange.baseMipLevel = 0;
+      image_view_info.subresourceRange.levelCount = 1;
+      image_view_info.subresourceRange.baseArrayLayer = 0;
+      image_view_info.subresourceRange.layerCount = 1;
 
-      vulkan::ImageView imageView(*m_device);
-      if (imageView.construct(&imageViewInfo) != VK_SUCCESS) {
+      vulkan::ImageView image_view(*m_device);
+      if (image_view.construct(&image_view_info) != VK_SUCCESS) {
          return std::unexpected(Status::UnsupportedDevice);
       }
 
-      swapchainTextures.emplace_back(image, std::move(imageView), colorFormat, TextureUsage::ColorAttachment | TextureUsage::TransferDst,
-                                     resolution.width, resolution.height, 1);
+      swapchain_textures.emplace_back(image, std::move(image_view), color_format, TextureUsage::ColorAttachment | TextureUsage::TransferDst,
+                                      resolution.width, resolution.height, 1);
    }
 
-   return Swapchain(m_queueManager, resolution, std::move(swapchainTextures), std::move(swapchain), colorFormat);
+   return Swapchain(m_queue_manager, resolution, std::move(swapchain_textures), std::move(swapchain), color_format);
 }
 
 Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint, const std::span<const char> code)
 {
-   VkShaderModuleCreateInfo shaderModuleInfo{};
-   shaderModuleInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-   shaderModuleInfo.codeSize = code.size();
-   shaderModuleInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+   VkShaderModuleCreateInfo shader_module_info{};
+   shader_module_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+   shader_module_info.codeSize = code.size();
+   shader_module_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
-   vulkan::ShaderModule shaderModule(*m_device);
-   if (shaderModule.construct(&shaderModuleInfo) != VK_SUCCESS) {
+   vulkan::ShaderModule shader_module(*m_device);
+   if (shader_module.construct(&shader_module_info) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return Shader(std::string{entrypoint}, stage, std::move(shaderModule));
+   return Shader(std::string{entrypoint}, stage, std::move(shader_module));
 }
 
 Result<CommandList> Device::create_command_list(const WorkTypeFlags flags) const
 {
-   return m_queueManager.create_command_list(flags);
+   return m_queue_manager.create_command_list(flags);
 }
 
-Result<DescriptorPool> Device::create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptorCounts,
-                                                      const u32 maxDescriptorCount)
+Result<DescriptorPool> Device::create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptor_counts,
+                                                      const u32 max_descriptor_count)
 {
-   std::vector<VkDescriptorPoolSize> descriptorPoolSizes;
-   descriptorPoolSizes.reserve(descriptorCounts.size());
-   for (const auto& [descType, count] : descriptorCounts) {
-      descriptorPoolSizes.emplace_back(vulkan::to_vulkan_descriptor_type(descType), count);
+   std::vector<VkDescriptorPoolSize> descriptor_pool_sizes;
+   descriptor_pool_sizes.reserve(descriptor_counts.size());
+   for (const auto& [desc_type, count] : descriptor_counts) {
+      descriptor_pool_sizes.emplace_back(vulkan::to_vulkan_descriptor_type(desc_type), count);
    }
 
-   VkDescriptorPoolCreateInfo descriptorPoolInfo{};
-   descriptorPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-   descriptorPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-   descriptorPoolInfo.poolSizeCount = static_cast<u32>(descriptorPoolSizes.size());
-   descriptorPoolInfo.pPoolSizes = descriptorPoolSizes.data();
-   descriptorPoolInfo.maxSets = maxDescriptorCount;
+   VkDescriptorPoolCreateInfo descriptor_pool_info{};
+   descriptor_pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+   descriptor_pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+   descriptor_pool_info.poolSizeCount = static_cast<u32>(descriptor_pool_sizes.size());
+   descriptor_pool_info.pPoolSizes = descriptor_pool_sizes.data();
+   descriptor_pool_info.maxSets = max_descriptor_count;
 
-   vulkan::DescriptorPool descriptorPool{*m_device};
-   if (descriptorPool.construct(&descriptorPoolInfo) != VK_SUCCESS)
+   vulkan::DescriptorPool descriptor_pool{*m_device};
+   if (descriptor_pool.construct(&descriptor_pool_info) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return DescriptorPool(std::move(descriptorPool));
+   return DescriptorPool(std::move(descriptor_pool));
 }
 
 Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_t size)
@@ -205,32 +205,33 @@ Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_
    assert(size != 0);
    assert(usage != BufferUsage::None);
 
-   VkBufferCreateInfo bufferInfo{};
-   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-   bufferInfo.size = size;
-   bufferInfo.usage = vulkan::to_vulkan_buffer_usage_flags(usage);
-   bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+   VkBufferCreateInfo buffer_info{};
+   buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+   buffer_info.size = size;
+   buffer_info.usage = vulkan::to_vulkan_buffer_usage_flags(usage);
+   buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
    vulkan::Buffer buffer(*m_device);
-   if (const auto res = buffer.construct(&bufferInfo); res != VK_SUCCESS) {
+   if (const auto res = buffer.construct(&buffer_info); res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   VkMemoryRequirements memRequirements;
-   vkGetBufferMemoryRequirements(*m_device, *buffer, &memRequirements);
+   VkMemoryRequirements mem_requirements;
+   vkGetBufferMemoryRequirements(*m_device, *buffer, &mem_requirements);
 
-   VkMemoryAllocateInfo allocateInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
-   allocateInfo.allocationSize = memRequirements.size;
-   allocateInfo.memoryTypeIndex = this->find_memory_type(memRequirements.memoryTypeBits, vulkan::to_vulkan_memory_properties_flags(usage));
+   VkMemoryAllocateInfo allocate_info{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
+   allocate_info.allocationSize = mem_requirements.size;
+   allocate_info.memoryTypeIndex =
+      this->find_memory_type(mem_requirements.memoryTypeBits, vulkan::to_vulkan_memory_properties_flags(usage));
 
-   VkMemoryAllocateFlagsInfo allocateFlagsInfo{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO};
+   VkMemoryAllocateFlagsInfo allocate_flags_info{VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO};
    if (!(usage & BufferUsage::HostVisible)) {
-      allocateFlagsInfo.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
-      allocateInfo.pNext = &allocateFlagsInfo;
+      allocate_flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+      allocate_info.pNext = &allocate_flags_info;
    }
 
    vulkan::DeviceMemory memory(*m_device);
-   if (memory.construct(&allocateInfo) != VK_SUCCESS) {
+   if (memory.construct(&allocate_info) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
@@ -243,12 +244,12 @@ Result<Buffer> Device::create_buffer(const BufferUsageFlags usage, const uint64_
 
 Result<Fence> Device::create_fence() const
 {
-   VkFenceCreateInfo fenceInfo{};
-   fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+   VkFenceCreateInfo fence_info{};
+   fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+   fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
    vulkan::Fence fence(*m_device);
-   if (fence.construct(&fenceInfo) != VK_SUCCESS) {
+   if (fence.construct(&fence_info) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
@@ -257,198 +258,198 @@ Result<Fence> Device::create_fence() const
 
 Result<Semaphore> Device::create_semaphore() const
 {
-   VkSemaphoreCreateInfo semaphoreInfo{};
-   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+   VkSemaphoreCreateInfo semaphore_info{};
+   semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
    vulkan::Semaphore semaphore(*m_device);
-   if (semaphore.construct(&semaphoreInfo) != VK_SUCCESS) {
+   if (semaphore.construct(&semaphore_info) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
    return Semaphore(std::move(semaphore));
 }
 
-Result<Texture> Device::create_texture_from_ktx(const ktx::Texture& texture, const TextureUsageFlags usageFlags,
-                                                const TextureState finalState)
+Result<Texture> Device::create_texture_from_ktx(const ktx::Texture& texture, const TextureUsageFlags usage_flags,
+                                                const TextureState final_state)
 {
-   const auto vkImageUsage = vulkan::to_vulkan_image_usage_flags(usageFlags);
+   const auto vkImageUsage = vulkan::to_vulkan_image_usage_flags(usage_flags);
 
-   std::optional<ktx::VulkanTexture> texProps;
+   std::optional<ktx::VulkanTexture> tex_props;
    {
       // need to access the queue to be able to access texture
-      auto [queueAccess, ktxDevice] = m_queueManager.ktx_device_info();
-      auto accessor{queueAccess.access()};
+      auto [queue_access, ktxDevice] = m_queue_manager.ktx_device_info();
+      auto accessor{queue_access.access()};
 
-      texProps = ktxDevice.upload_texture(texture, VK_IMAGE_TILING_OPTIMAL, vkImageUsage,
-                                          vulkan::to_vulkan_image_layout(GAPI_FORMAT(RGBA, sRGB), finalState));
+      tex_props = ktxDevice.upload_texture(texture, VK_IMAGE_TILING_OPTIMAL, vkImageUsage,
+                                           vulkan::to_vulkan_image_layout(GAPI_FORMAT(RGBA, sRGB), final_state));
    }
 
-   if (!texProps.has_value()) {
+   if (!tex_props.has_value()) {
       return std::unexpected{Status::UnsupportedDevice};
    }
 
-   vulkan::Image wrappedImage(*m_device);
-   wrappedImage.take_ownership(texProps->image);
+   vulkan::Image wrapped_image(*m_device);
+   wrapped_image.take_ownership(tex_props->image);
 
-   vulkan::DeviceMemory wrappedMemory(*m_device);
-   wrappedMemory.take_ownership(texProps->memory);
+   vulkan::DeviceMemory wrapped_memory(*m_device);
+   wrapped_memory.take_ownership(tex_props->memory);
 
-   VkImageViewCreateInfo imageViewInfo{};
-   imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-   imageViewInfo.image = texProps->image;
-   imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-   imageViewInfo.format = texProps->format;
-   imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.subresourceRange.aspectMask = vulkan::to_vulkan_image_aspect_flags(usageFlags);
-   imageViewInfo.subresourceRange.baseMipLevel = 0;
-   imageViewInfo.subresourceRange.levelCount = texProps->mipCount;
-   imageViewInfo.subresourceRange.baseArrayLayer = 0;
-   imageViewInfo.subresourceRange.layerCount = 1;
+   VkImageViewCreateInfo image_view_info{};
+   image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+   image_view_info.image = tex_props->image;
+   image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+   image_view_info.format = tex_props->format;
+   image_view_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.subresourceRange.aspectMask = vulkan::to_vulkan_image_aspect_flags(usage_flags);
+   image_view_info.subresourceRange.baseMipLevel = 0;
+   image_view_info.subresourceRange.levelCount = tex_props->mip_count;
+   image_view_info.subresourceRange.baseArrayLayer = 0;
+   image_view_info.subresourceRange.layerCount = 1;
 
-   vulkan::ImageView imageView(*m_device);
-   if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
+   vulkan::ImageView image_view(*m_device);
+   if (image_view.construct(&image_view_info) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(wrappedImage), std::move(wrappedMemory), std::move(imageView),
-                  GAPI_CHECK(vulkan::to_color_format(texProps->format)), usageFlags, texProps->imageSize.x, texProps->imageSize.y,
-                  static_cast<int>(texProps->mipCount));
+   return Texture(std::move(wrapped_image), std::move(wrapped_memory), std::move(image_view),
+                  GAPI_CHECK(vulkan::to_color_format(tex_props->format)), usage_flags, tex_props->image_size.x, tex_props->image_size.y,
+                  static_cast<int>(tex_props->mip_count));
 }
 
-Result<Texture> Device::create_texture(const ColorFormat& format, const Resolution& imageSize, const TextureUsageFlags usageFlags,
-                                       const TextureState initialTextureState, const SampleCount sampleCount, int mipCount) const
+Result<Texture> Device::create_texture(const ColorFormat& format, const Resolution& image_size, const TextureUsageFlags usage_flags,
+                                       const TextureState initial_texture_state, const SampleCount sample_count, int mip_count) const
 {
-   assert(usageFlags != TextureUsage::None);
+   assert(usage_flags != TextureUsage::None);
 
-   const auto vulkanColorFormat = *vulkan::to_vulkan_color_format(format);
+   const auto vulkan_color_format = *vulkan::to_vulkan_color_format(format);
 
-   if (mipCount == 0) {
-      mipCount = static_cast<int>(std::floor(std::log2(std::max(imageSize.width, imageSize.height)))) + 1;
+   if (mip_count == 0) {
+      mip_count = static_cast<int>(std::floor(std::log2(std::max(image_size.width, image_size.height)))) + 1;
    }
 
-   VkImageFormatProperties formatProperties;
+   VkImageFormatProperties format_properties;
    if (const auto res =
-          vkGetPhysicalDeviceImageFormatProperties(m_physicalDevice, vulkanColorFormat, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL,
-                                                   vulkan::to_vulkan_image_usage_flags(usageFlags), 0, &formatProperties);
+          vkGetPhysicalDeviceImageFormatProperties(m_physical_device, vulkan_color_format, VK_IMAGE_TYPE_2D, VK_IMAGE_TILING_OPTIMAL,
+                                                   vulkan::to_vulkan_image_usage_flags(usage_flags), 0, &format_properties);
        res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedFormat);
    }
 
-   if (mipCount > static_cast<int>(formatProperties.maxMipLevels)) {
-      mipCount = static_cast<int>(formatProperties.maxMipLevels);
+   if (mip_count > static_cast<int>(format_properties.maxMipLevels)) {
+      mip_count = static_cast<int>(format_properties.maxMipLevels);
    }
 
-   VkImageCreateInfo imageInfo{};
-   imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-   imageInfo.format = vulkanColorFormat;
-   imageInfo.extent = VkExtent3D{imageSize.width, imageSize.height, 1};
-   imageInfo.imageType = VK_IMAGE_TYPE_2D;
-   imageInfo.mipLevels = mipCount;
-   imageInfo.arrayLayers = 1;
-   imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-   imageInfo.initialLayout = vulkan::to_vulkan_image_layout(format, initialTextureState);
-   imageInfo.samples = static_cast<VkSampleCountFlagBits>(sampleCount);
-   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-   imageInfo.usage = vulkan::to_vulkan_image_usage_flags(usageFlags);
+   VkImageCreateInfo image_info{};
+   image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+   image_info.format = vulkan_color_format;
+   image_info.extent = VkExtent3D{image_size.width, image_size.height, 1};
+   image_info.imageType = VK_IMAGE_TYPE_2D;
+   image_info.mipLevels = mip_count;
+   image_info.arrayLayers = 1;
+   image_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+   image_info.initialLayout = vulkan::to_vulkan_image_layout(format, initial_texture_state);
+   image_info.samples = static_cast<VkSampleCountFlagBits>(sample_count);
+   image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+   image_info.usage = vulkan::to_vulkan_image_usage_flags(usage_flags);
 
    vulkan::Image image(*m_device);
-   if (image.construct(&imageInfo) != VK_SUCCESS)
+   if (image.construct(&image_info) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   VkMemoryRequirements memRequirements;
-   vkGetImageMemoryRequirements(*m_device, *image, &memRequirements);
+   VkMemoryRequirements mem_requirements;
+   vkGetImageMemoryRequirements(*m_device, *image, &mem_requirements);
 
-   VkMemoryAllocateInfo allocInfo{};
-   allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-   allocInfo.allocationSize = memRequirements.size;
-   allocInfo.memoryTypeIndex = find_memory_type(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+   VkMemoryAllocateInfo alloc_info{};
+   alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+   alloc_info.allocationSize = mem_requirements.size;
+   alloc_info.memoryTypeIndex = find_memory_type(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-   vulkan::DeviceMemory imageMemory(*m_device);
-   if (imageMemory.construct(&allocInfo) != VK_SUCCESS)
+   vulkan::DeviceMemory image_memory(*m_device);
+   if (image_memory.construct(&alloc_info) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   vkBindImageMemory(*m_device, *image, *imageMemory, 0);
+   vkBindImageMemory(*m_device, *image, *image_memory, 0);
 
-   VkImageViewCreateInfo imageViewInfo{};
-   imageViewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-   imageViewInfo.image = *image;
-   imageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-   imageViewInfo.format = vulkanColorFormat;
-   imageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-   imageViewInfo.subresourceRange.aspectMask = vulkan::to_vulkan_image_aspect_flags(usageFlags);
-   imageViewInfo.subresourceRange.baseMipLevel = 0;
-   imageViewInfo.subresourceRange.levelCount = mipCount;
-   imageViewInfo.subresourceRange.baseArrayLayer = 0;
-   imageViewInfo.subresourceRange.layerCount = 1;
+   VkImageViewCreateInfo image_view_info{};
+   image_view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+   image_view_info.image = *image;
+   image_view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+   image_view_info.format = vulkan_color_format;
+   image_view_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+   image_view_info.subresourceRange.aspectMask = vulkan::to_vulkan_image_aspect_flags(usage_flags);
+   image_view_info.subresourceRange.baseMipLevel = 0;
+   image_view_info.subresourceRange.levelCount = mip_count;
+   image_view_info.subresourceRange.baseArrayLayer = 0;
+   image_view_info.subresourceRange.layerCount = 1;
 
-   vulkan::ImageView imageView(*m_device);
-   if (imageView.construct(&imageViewInfo) != VK_SUCCESS)
+   vulkan::ImageView image_view(*m_device);
+   if (image_view.construct(&image_view_info) != VK_SUCCESS)
       return std::unexpected(Status::UnsupportedDevice);
 
-   return Texture(std::move(image), std::move(imageMemory), std::move(imageView), format, usageFlags, imageSize.width, imageSize.height,
-                  mipCount);
+   return Texture(std::move(image), std::move(image_memory), std::move(image_view), format, usage_flags, image_size.width,
+                  image_size.height, mip_count);
 }
 
 Result<Sampler> Device::create_sampler(const SamplerProperties& info)
 {
    VkPhysicalDeviceProperties properties{};
-   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+   vkGetPhysicalDeviceProperties(m_physical_device, &properties);
 
-   VkSamplerCreateInfo samplerInfo{};
-   samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-   samplerInfo.magFilter = vulkan::to_vulkan_filter(info.magFilter);
-   samplerInfo.minFilter = vulkan::to_vulkan_filter(info.minFilter);
-   samplerInfo.addressModeU = vulkan::to_vulkan_sampler_address_mode(info.addressU);
-   samplerInfo.addressModeV = vulkan::to_vulkan_sampler_address_mode(info.addressV);
-   samplerInfo.addressModeW = vulkan::to_vulkan_sampler_address_mode(info.addressW);
-   samplerInfo.anisotropyEnable = info.enableAnisotropy;
-   samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-   samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-   samplerInfo.unnormalizedCoordinates = false;
-   samplerInfo.compareEnable = false;
-   samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-   samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-   samplerInfo.minLod = info.minLod;
-   samplerInfo.maxLod = info.maxLod;
-   samplerInfo.mipLodBias = info.mipBias;
+   VkSamplerCreateInfo sampler_info{};
+   sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+   sampler_info.magFilter = vulkan::to_vulkan_filter(info.mag_filter);
+   sampler_info.minFilter = vulkan::to_vulkan_filter(info.min_filter);
+   sampler_info.addressModeU = vulkan::to_vulkan_sampler_address_mode(info.address_u);
+   sampler_info.addressModeV = vulkan::to_vulkan_sampler_address_mode(info.address_v);
+   sampler_info.addressModeW = vulkan::to_vulkan_sampler_address_mode(info.address_w);
+   sampler_info.anisotropyEnable = info.enable_anisotropy;
+   sampler_info.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+   sampler_info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+   sampler_info.unnormalizedCoordinates = false;
+   sampler_info.compareEnable = false;
+   sampler_info.compareOp = VK_COMPARE_OP_ALWAYS;
+   sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+   sampler_info.minLod = info.min_lod;
+   sampler_info.maxLod = info.max_lod;
+   sampler_info.mipLodBias = info.mip_bias;
 
    vulkan::Sampler sampler(*m_device);
-   if (sampler.construct(&samplerInfo) != VK_SUCCESS) {
+   if (sampler.construct(&sampler_info) != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
    return Sampler(std::move(sampler));
 }
 
-Result<QueryPool> Device::create_query_pool(const QueryType queryType, const u32 timestampCount)
+Result<QueryPool> Device::create_query_pool(const QueryType query_type, const u32 timestamp_count)
 {
-   VkQueryPoolCreateInfo queryPoolInfo{VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO};
-   queryPoolInfo.queryType = vulkan::to_vulkan_query_type(queryType);
-   queryPoolInfo.queryCount = timestampCount;
-   if (queryType == QueryType::PipelineStats) {
-      queryPoolInfo.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT;
+   VkQueryPoolCreateInfo query_pool_info{VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO};
+   query_pool_info.queryType = vulkan::to_vulkan_query_type(query_type);
+   query_pool_info.queryCount = timestamp_count;
+   if (query_type == QueryType::PipelineStats) {
+      query_pool_info.pipelineStatistics = VK_QUERY_PIPELINE_STATISTIC_INPUT_ASSEMBLY_PRIMITIVES_BIT;
    }
 
    VkPhysicalDeviceProperties properties;
-   vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+   vkGetPhysicalDeviceProperties(m_physical_device, &properties);
 
-   vulkan::QueryPool queryPool(*m_device);
-   if (const auto res = queryPool.construct(&queryPoolInfo); res != VK_SUCCESS) {
+   vulkan::QueryPool query_pool(*m_device);
+   if (const auto res = query_pool.construct(&query_pool_info); res != VK_SUCCESS) {
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return QueryPool(std::move(queryPool), properties.limits.timestampPeriod);
+   return QueryPool(std::move(query_pool), properties.limits.timestampPeriod);
 }
 
 std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Surface& surface) const
 {
    VkSurfaceCapabilitiesKHR capabilities;
-   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, surface.vulkan_surface(), &capabilities);
+   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physical_device, surface.vulkan_surface(), &capabilities);
 
    return {Resolution{capabilities.minImageExtent.width, capabilities.minImageExtent.height},
            Resolution{capabilities.maxImageExtent.width, capabilities.maxImageExtent.height}};
@@ -457,72 +458,72 @@ std::pair<Resolution, Resolution> Device::get_surface_resolution_limits(const Su
 Vector2u Device::get_current_surface_extent(const Surface& surface) const
 {
    VkSurfaceCapabilitiesKHR capabilities;
-   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, surface.vulkan_surface(), &capabilities);
+   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physical_device, surface.vulkan_surface(), &capabilities);
    return {capabilities.currentExtent.width, capabilities.currentExtent.height};
 }
 
-Status Device::submit_command_list(const CommandList& commandList, const SemaphoreArrayView waitSemaphores,
-                                   const SemaphoreArrayView signalSemaphores, const Fence* fence, const WorkTypeFlags /*workTypes*/)
+Status Device::submit_command_list(const CommandList& command_list, const SemaphoreArrayView wait_semaphores,
+                                   const SemaphoreArrayView signal_semaphores, const Fence* fence, const WorkTypeFlags /*work_types*/)
 {
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   VkSubmitInfo submit_info{};
+   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-   std::vector<VkPipelineStageFlags> waitStages{};
-   waitStages.resize(waitSemaphores.semaphore_count());
-   // std::ranges::fill(waitStages, vulkan::to_vulkan_wait_pipeline_stage(workTypes));
-   std::ranges::fill(waitStages, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-   const std::array commandBuffers{commandList.vulkan_command_buffer()};
+   std::vector<VkPipelineStageFlags> wait_stages{};
+   wait_stages.resize(wait_semaphores.semaphore_count());
+   // std::ranges::fill(wait_stages, vulkan::to_vulkan_wait_pipeline_stage(work_types));
+   std::ranges::fill(wait_stages, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+   const std::array command_buffers{command_list.vulkan_command_buffer()};
 
-   submitInfo.waitSemaphoreCount = static_cast<u32>(waitSemaphores.semaphore_count());
-   submitInfo.pWaitSemaphores = waitSemaphores.vulkan_semaphores();
-   submitInfo.pWaitDstStageMask = waitStages.data();
-   submitInfo.commandBufferCount = static_cast<u32>(commandBuffers.size());
-   submitInfo.pCommandBuffers = commandBuffers.data();
-   submitInfo.signalSemaphoreCount = static_cast<u32>(signalSemaphores.semaphore_count());
-   submitInfo.pSignalSemaphores = signalSemaphores.vulkan_semaphores();
+   submit_info.waitSemaphoreCount = static_cast<u32>(wait_semaphores.semaphore_count());
+   submit_info.pWaitSemaphores = wait_semaphores.vulkan_semaphores();
+   submit_info.pWaitDstStageMask = wait_stages.data();
+   submit_info.commandBufferCount = static_cast<u32>(command_buffers.size());
+   submit_info.pCommandBuffers = command_buffers.data();
+   submit_info.signalSemaphoreCount = static_cast<u32>(signal_semaphores.semaphore_count());
+   submit_info.pSignalSemaphores = signal_semaphores.vulkan_semaphores();
 
-   VkFence vulkanFence{};
+   VkFence vulkan_fence{};
    if (fence != nullptr) {
-      vulkanFence = fence->vulkan_fence();
+      vulkan_fence = fence->vulkan_fence();
    }
 
-   auto& queue = m_queueManager.next_queue(commandList.work_types());
-   auto queueAccessor = queue.access();
+   auto& queue = m_queue_manager.next_queue(command_list.work_types());
+   auto queue_accessor = queue.access();
 
-   if (vkQueueSubmit(*queueAccessor, 1, &submitInfo, vulkanFence) != VK_SUCCESS) {
+   if (auto status = vkQueueSubmit(*queue_accessor, 1, &submit_info, vulkan_fence); status != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
    return Status::Success;
 }
 
-Status Device::submit_command_list(const CommandList& commandList, const Semaphore& waitSemaphore, const Semaphore& signalSemaphore,
+Status Device::submit_command_list(const CommandList& command_list, const Semaphore& wait_semaphore, const Semaphore& signal_semaphore,
                                    const Fence& fence)
 {
-   SemaphoreArray waitSemaphores;
-   waitSemaphores.add_semaphore(waitSemaphore);
-   SemaphoreArray signalSemaphores;
-   signalSemaphores.add_semaphore(signalSemaphore);
+   SemaphoreArray wait_semaphores;
+   wait_semaphores.add_semaphore(wait_semaphore);
+   SemaphoreArray signal_semaphores;
+   signal_semaphores.add_semaphore(signal_semaphore);
 
-   return this->submit_command_list(commandList, waitSemaphores, signalSemaphores, &fence, WorkType::Graphics);
+   return this->submit_command_list(command_list, wait_semaphores, signal_semaphores, &fence, WorkType::Graphics);
 }
 
-Status Device::submit_command_list_one_time(const CommandList& commandList)
+Status Device::submit_command_list_one_time(const CommandList& command_list)
 {
-   const auto vulkanCommandList = commandList.vulkan_command_buffer();
+   const auto vulkan_command_list = command_list.vulkan_command_buffer();
 
-   VkSubmitInfo submitInfo{};
-   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-   submitInfo.commandBufferCount = 1;
-   submitInfo.pCommandBuffers = &vulkanCommandList;
+   VkSubmitInfo submit_info{};
+   submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+   submit_info.commandBufferCount = 1;
+   submit_info.pCommandBuffers = &vulkan_command_list;
 
-   auto& queue = m_queueManager.next_queue(commandList.work_types());
-   auto queueAccessor = queue.access();
+   auto& queue = m_queue_manager.next_queue(command_list.work_types());
+   auto queue_accessor = queue.access();
 
-   if (vkQueueSubmit(*queueAccessor, 1, &submitInfo, nullptr) != VK_SUCCESS) {
+   if (vkQueueSubmit(*queue_accessor, 1, &submit_info, nullptr) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
-   if (vkQueueWaitIdle(*queueAccessor) != VK_SUCCESS) {
+   if (vkQueueWaitIdle(*queue_accessor) != VK_SUCCESS) {
       return Status::UnsupportedDevice;
    }
 
@@ -536,12 +537,12 @@ VkDevice Device::vulkan_device() const
 
 VkPhysicalDevice Device::vulkan_physical_device() const
 {
-   return m_physicalDevice;
+   return m_physical_device;
 }
 
 QueueManager& Device::queue_manager()
 {
-   return m_queueManager;
+   return m_queue_manager;
 }
 
 void Device::await_all() const
@@ -549,13 +550,13 @@ void Device::await_all() const
    vkDeviceWaitIdle(*m_device);
 }
 
-uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties) const
+uint32_t Device::find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties) const
 {
-   VkPhysicalDeviceMemoryProperties memProperties;
-   vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
+   VkPhysicalDeviceMemoryProperties mem_properties;
+   vkGetPhysicalDeviceMemoryProperties(m_physical_device, &mem_properties);
 
-   for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-      if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+   for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
+      if ((type_filter & (1 << i)) && (mem_properties.memoryTypes[i].propertyFlags & properties) == properties) {
          return i;
       }
    }
@@ -565,62 +566,78 @@ uint32_t Device::find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags pro
 
 SamplerCache& Device::sampler_cache()
 {
-   return m_samplerCache;
+   return m_sampler_cache;
 }
 
 DeviceFeatureFlags Device::enabled_features() const
 {
-   return m_enabledFeatures;
+   return m_enabled_features;
 }
 
 Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
 {
-   if (texture.format() != GAPI_FORMAT(RGBA, sRGB) && texture.format() != GAPI_FORMAT(RGBA, UNorm8)) {
-      return std::unexpected{Status::UnsupportedFormat};
-   }
+   static constexpr auto to_ktx_format = [](ColorFormat format) -> std::optional<ktx::Format> {
+      if (format == GAPI_FORMAT(RGBA, sRGB)) {
+         return ktx::Format::R8G8B8A8_SRGB;
+      }
+      if (format == GAPI_FORMAT(RGBA, UNorm8)) {
+         return ktx::Format::R8G8B8A8_UNORM;
+      }
+      if (format == GAPI_FORMAT(R, sRGB)) {
+         return ktx::Format::R8_SRGB;
+      }
+      if (format == GAPI_FORMAT(R, UNorm8)) {
+         return ktx::Format::R8_UNORM;
+      }
+      return std::nullopt;
+   };
 
-   ktx::TextureCreateInfo createInfo{};
-   createInfo.dimensions = {texture.resolution().width, texture.resolution().height};
-   createInfo.format = texture.format() == GAPI_FORMAT(RGBA, sRGB) ? ktx::Format::R8G8B8A8_SRGB : ktx::Format::R8G8B8A8_UNORM;
-   createInfo.generateMipmaps = false;
-   createInfo.createMipLayers = texture.mip_count() > 1;
-   auto ktxTex = ktx::Texture::create(createInfo);
-   if (!ktxTex.has_value()) {
+   auto ktx_format = to_ktx_format(texture.format());
+   if (!ktx_format.has_value())
+      return std::unexpected{Status::UnsupportedFormat};
+
+   ktx::TextureCreateInfo create_info{};
+   create_info.dimensions = {texture.resolution().width, texture.resolution().height};
+   create_info.format = *ktx_format;
+   create_info.generate_mipmaps = false;
+   create_info.create_mip_layers = texture.mip_count() > 1;
+   auto ktx_texture = ktx::Texture::create(create_info);
+   if (!ktx_texture.has_value()) {
       return std::unexpected{Status::UnsupportedFormat};
    }
 
    u32 width = texture.resolution().width;
    u32 height = texture.resolution().height;
-   for (u32 mipLevel = 0; mipLevel < texture.mip_count(); mipLevel++) {
-      const auto bufferSize = width * height * sizeof(u32);
-      auto buffer = this->create_buffer(BufferUsage::TransferDst | BufferUsage::HostVisible, bufferSize);
+   for (u32 mip_level = 0; mip_level < texture.mip_count(); mip_level++) {
+      const auto buffer_size = width * height * texture.format().pixel_size();
+      auto buffer = this->create_buffer(BufferUsage::TransferDst | BufferUsage::HostVisible, buffer_size);
       if (!buffer.has_value()) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
-      auto cmdList = this->create_command_list(WorkType::Compute);
-      if (!cmdList.has_value()) {
+      auto cmd_list = this->create_command_list(WorkType::Compute);
+      if (!cmd_list.has_value()) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
-      if (cmdList->begin(SubmitType::OneTime) != Status::Success) {
+      if (cmd_list->begin(SubmitType::OneTime) != Status::Success) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
-      TextureBarrierInfo inBarrier{};
-      inBarrier.texture = &texture;
-      inBarrier.sourceState = TextureState::Undefined;
-      inBarrier.targetState = TextureState::TransferSrc;
-      inBarrier.baseMipLevel = static_cast<int>(mipLevel);
-      inBarrier.mipLevelCount = 1;
-      cmdList->texture_barrier(PipelineStage::Entrypoint, PipelineStage::Transfer, {&inBarrier, 1});
+      TextureBarrierInfo in_barrier{};
+      in_barrier.texture = &texture;
+      in_barrier.source_state = TextureState::Undefined;
+      in_barrier.target_state = TextureState::TransferSrc;
+      in_barrier.base_mip_level = static_cast<int>(mip_level);
+      in_barrier.mip_level_count = 1;
+      cmd_list->texture_barrier(PipelineStage::Entrypoint, PipelineStage::Transfer, {&in_barrier, 1});
 
-      cmdList->copy_texture_to_buffer(texture, *buffer, static_cast<int>(mipLevel));
-      if (cmdList->finish() != Status::Success) {
+      cmd_list->copy_texture_to_buffer(texture, *buffer, static_cast<int>(mip_level));
+      if (cmd_list->finish() != Status::Success) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
-      if (this->submit_command_list_one_time(*cmdList) != Status::Success) {
+      if (this->submit_command_list_one_time(*cmd_list) != Status::Success) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
@@ -629,7 +646,7 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
          return std::unexpected{Status::UnsupportedFormat};
       }
 
-      if (!ktxTex->set_image_from_buffer({static_cast<const u8*>(**mem), bufferSize}, mipLevel, 0, 0)) {
+      if (!ktx_texture->set_image_from_buffer({static_cast<const u8*>(**mem), buffer_size}, mip_level, 0, 0)) {
          return std::unexpected{Status::UnsupportedFormat};
       }
 
@@ -644,28 +661,44 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
       }
    }
 
-   return std::move(*ktxTex);
+   return std::move(*ktx_texture);
+}
+
+const DeviceLimits& Device::limits() const
+{
+   static std::optional<DeviceLimits> limits;
+   if (limits.has_value()) {
+      return *limits;
+   }
+
+   limits.emplace(DeviceLimits{});
+
+   VkPhysicalDeviceProperties props;
+   vkGetPhysicalDeviceProperties(m_physical_device, &props);
+
+   limits->min_uniform_buffer_alignment = props.limits.minUniformBufferOffsetAlignment;
+   return *limits;
 }
 
 MemorySize Device::min_storage_buffer_alignment() const
 {
    VkPhysicalDeviceProperties props;
-   vkGetPhysicalDeviceProperties(m_physicalDevice, &props);
+   vkGetPhysicalDeviceProperties(m_physical_device, &props);
    return props.limits.minStorageBufferOffsetAlignment;
 }
 
-Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType structType,
-                                                                                 const Buffer& buffer, const MemorySize bufferOffset,
-                                                                                 const MemorySize bufferSize)
+Result<ray_tracing::AccelerationStructure> Device::create_acceleration_structure(const ray_tracing::AccelerationStructureType struct_type,
+                                                                                 const Buffer& buffer, const MemorySize buffer_offset,
+                                                                                 const MemorySize buffer_size)
 {
-   VkAccelerationStructureCreateInfoKHR asInfo{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR};
-   asInfo.buffer = buffer.vulkan_buffer();
-   asInfo.offset = bufferOffset;
-   asInfo.size = std::min(buffer.size() - bufferOffset, bufferSize);
-   asInfo.type = vulkan::to_vulkan_acceleration_structure_type(structType);
+   VkAccelerationStructureCreateInfoKHR as_info{VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_CREATE_INFO_KHR};
+   as_info.buffer = buffer.vulkan_buffer();
+   as_info.offset = buffer_offset;
+   as_info.size = std::min(buffer.size() - buffer_offset, buffer_size);
+   as_info.type = vulkan::to_vulkan_acceleration_structure_type(struct_type);
 
    vulkan::AccelerationStructureKHR structure(*m_device);
-   if (structure.construct(&asInfo) != VK_SUCCESS) {
+   if (structure.construct(&as_info) != VK_SUCCESS) {
       return std::unexpected{Status::UnsupportedDevice};
    }
 

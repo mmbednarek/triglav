@@ -8,63 +8,56 @@
 
 namespace triglav::desktop_ui {
 
-Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidget* /*parent*/) :
+constexpr auto g_padding = 5.0f;
+
+Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidget* parent) :
+    ui_core::ContainerWidget(ctx, parent),
     m_state(state),
-    m_button(ctx, {}, this)
+    m_background{
+       .color = TG_THEME_VAL(background_color_brighter),
+       .border_radius = {5.0f, 5.0f, 5.0f, 5.0f},
+       .border_color = TG_THEME_VAL(active_color),
+       .border_width = 1.0f,
+    }
 {
-   const auto& props = m_state.manager->properties();
-   m_rect = &m_button.create_content<ui_core::RectBox>({
-      .color = TG_THEME_VAL(button.bg_color),
-      .borderRadius = {13.0f, 13.0f, 13.0f, 13.0f},
-      .borderColor = {},
-      .borderWidth = 0.0f,
-   });
-   auto& layout = m_rect->create_content<ui_core::VerticalLayout>({
-      .padding{15.0f, 15.0f, 15.0f, 15.0f},
-      .separation = 0.0f,
-   });
-   m_label = &layout.create_child<ui_core::TextBox>({
-      .fontSize = TG_THEME_VAL(button.font_size),
-      .typeface = props.base_typeface,
-      .content = state.label,
-      .color = props.foreground_color,
-      .horizontalAlignment = ui_core::HorizontalAlignment::Center,
-      .verticalAlignment = ui_core::VerticalAlignment::Center,
-   });
 }
 
-Vector2 Button::desired_size(const Vector2 parentSize) const
+Vector2 Button::desired_size(const Vector2 parent_size) const
 {
-   return m_button.desired_size(parentSize);
+   const auto child_size = m_content->desired_size(parent_size);
+   return child_size + 2.0f * Vector2{g_padding, g_padding};
 }
 
-void Button::add_to_viewport(const Vector4 dimensions, const Vector4 croppingMask)
+void Button::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   m_button.add_to_viewport(dimensions, croppingMask);
+   m_background.add(m_context, dimensions, cropping_mask);
+   m_content->add_to_viewport(
+      {dimensions.x + g_padding, dimensions.y + g_padding, dimensions.z - 2 * g_padding, dimensions.w - 2 * g_padding}, cropping_mask);
 }
 
 void Button::remove_from_viewport()
 {
-   m_button.remove_from_viewport();
+   m_background.remove(m_context);
+   m_content->remove_from_viewport();
 }
 
 void Button::on_event(const ui_core::Event& event)
 {
-   switch (event.eventType) {
+   switch (event.event_type) {
    case ui_core::Event::Type::MousePressed:
-      m_rect->set_color(m_state.manager->properties().button.bg_pressed_color);
+      m_background.set_color(m_context, m_state.manager->properties().background_color_darker);
       break;
    case ui_core::Event::Type::MouseReleased:
-      m_rect->set_color(m_state.manager->properties().button.bg_hover_color);
-      event_OnClick.publish(std::get<ui_core::Event::Mouse>(event.data).button);
+      m_background.set_color(m_context, m_state.manager->properties().active_color);
+      event_OnClick.publish();
       break;
    case ui_core::Event::Type::MouseEntered:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Hand);
-      m_rect->set_color(m_state.manager->properties().button.bg_hover_color);
+      m_background.set_color(m_context, m_state.manager->properties().active_color);
       break;
    case ui_core::Event::Type::MouseLeft:
       m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
-      m_rect->set_color(m_state.manager->properties().button.bg_color);
+      m_background.set_color(m_context, m_state.manager->properties().background_color_brighter);
       break;
    default:
       break;

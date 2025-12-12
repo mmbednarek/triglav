@@ -21,7 +21,7 @@ class OcclusionCulling
  public:
    using Self = OcclusionCulling;
 
-   explicit OcclusionCulling(UpdateViewParamsJob& updateViewJob, BindlessScene& bindlessScene);
+   explicit OcclusionCulling(UpdateViewParamsJob& update_view_job, BindlessScene& bindless_scene);
 
    void on_resource_definition(render_core::BuildContext& ctx) const;
    void on_view_properties_changed(render_core::BuildContext& ctx) const;
@@ -30,10 +30,10 @@ class OcclusionCulling
    static void reset_buffers(graphics_api::Device& device, render_core::JobGraph& graph);
 
  private:
-   void draw_pre_pass_objects(render_core::BuildContext& ctx, render_core::BufferRef objectBuffer, render_core::BufferRef countBuffer,
+   void draw_pre_pass_objects(render_core::BuildContext& ctx, render_core::BufferRef object_buffer, render_core::BufferRef count_buffer,
                               u32 index) const;
 
-   BindlessScene& m_bindlessScene;
+   BindlessScene& m_bindless_scene;
 
    TG_SINK(UpdateViewParamsJob, OnResourceDefinition);
    TG_SINK(UpdateViewParamsJob, OnViewPropertiesChanged);

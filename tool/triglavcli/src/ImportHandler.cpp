@@ -12,7 +12,8 @@
 #include "triglav/world/Level.hpp"
 
 #include <algorithm>
-#include <fmt/core.h>
+#include <format>
+#include <iostream>
 
 namespace triglav::tool::cli {
 
@@ -20,68 +21,69 @@ using namespace name_literals;
 
 namespace {
 
-std::string create_dst_resource_path(const ProjectInfo& projectInfo, const io::Path& srcPath, const ResourceType resType)
+std::string create_dst_resource_path(const ProjectInfo& project_info, const io::Path& src_path, const ResourceType res_type)
 {
-   auto basename = srcPath.basename();
-   auto dotAt = basename.find_last_of('.');
-   if (dotAt != std::string::npos) {
-      basename = basename.substr(0, dotAt);
+   auto basename = src_path.basename();
+   auto dot_at = basename.find_last_of('.');
+   if (dot_at != std::string::npos) {
+      basename = basename.substr(0, dot_at);
    }
 
-   return projectInfo.default_import_path(resType, basename);
+   return project_info.default_import_path(res_type, basename);
 }
 
-std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_view purposeStr)
+std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_view purpose_str)
 {
-   if (purposeStr.empty()) {
-      fmt::print(stderr, "warning: no texture purpose provided defaulting to albedo\n");
+   if (purpose_str.empty()) {
+      std::print(std::cerr, "warning: no texture purpose provided defaulting to albedo\n");
       return asset::TexturePurpose::Albedo;
    }
 
-   if (purposeStr == "albedo") {
+   if (purpose_str == "albedo") {
       return asset::TexturePurpose::Albedo;
    }
-   if (purposeStr == "albedo_alpha") {
+   if (purpose_str == "albedo_alpha") {
       return asset::TexturePurpose::AlbedoWithAlpha;
    }
-   if (purposeStr == "normal_map") {
+   if (purpose_str == "normal_map") {
       return asset::TexturePurpose::NormalMap;
    }
-   if (purposeStr == "bump_map") {
+   if (purpose_str == "bump_map") {
       return asset::TexturePurpose::BumpMap;
    }
-   if (purposeStr == "metallic") {
+   if (purpose_str == "metallic") {
       return asset::TexturePurpose::Metallic;
    }
-   if (purposeStr == "roughness") {
+   if (purpose_str == "roughness") {
       return asset::TexturePurpose::Roughness;
    }
 
-   fmt::print(stderr, "error: unknown texture purpose '{}'\n", purposeStr);
+   std::print(std::cerr, "error: unknown texture purpose '{}'\n", purpose_str);
    return std::nullopt;
 }
 
 ExitStatus handle_level_from_glb(const CmdArgs_import& args)
 {
-   auto projectInfo = load_active_project_info();
-   if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+   auto project_info = load_active_project_info();
+   if (!project_info.has_value()) {
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
-   auto subPath = args.outputPath.empty() ? create_dst_resource_path(*projectInfo, io::Path{args.positionalArgs[0]}, ResourceType::Level)
-                                          : args.outputPath;
+   auto sub_path = args.output_path.empty()
+                      ? create_dst_resource_path(*project_info, io::Path{args.positional_args[0]}, ResourceType::Level)
+                      : args.output_path;
 
-   const LevelImportProps importProps{
-      .srcPath = io::Path{args.positionalArgs[0]},
-      .dstPath = projectInfo->content_path(subPath),
-      .shouldOverride = args.shouldOverride,
+   const LevelImportProps import_props{
+      .src_path = io::Path{args.positional_args[0]},
+      .dst_path = project_info->content_path(sub_path),
+      .should_override = args.should_override,
    };
-   if (!import_level(importProps)) {
+   if (!import_level(import_props)) {
       return EXIT_FAILURE;
    }
 
-   if (!add_resource_to_index(subPath)) {
+   if (!add_resource_to_index(sub_path)) {
       return EXIT_FAILURE;
    }
 
@@ -90,36 +92,36 @@ ExitStatus handle_level_from_glb(const CmdArgs_import& args)
 
 ExitStatus handle_mesh_import(const CmdArgs_import& args)
 {
-   auto projectInfo = load_active_project_info();
-   if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+   auto project_info = load_active_project_info();
+   if (!project_info.has_value()) {
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
-   const auto subPath = args.outputPath.empty()
-                           ? create_dst_resource_path(*projectInfo, io::Path{args.positionalArgs[0]}, ResourceType::Mesh)
-                           : args.outputPath;
+   const auto sub_path = args.output_path.empty()
+                            ? create_dst_resource_path(*project_info, io::Path{args.positional_args[0]}, ResourceType::Mesh)
+                            : args.output_path;
 
    const MeshImportProps props{
-      .srcPath = io::Path{args.positionalArgs[0]},
-      .dstPath = projectInfo->content_path(subPath),
-      .shouldOverride = args.shouldOverride,
+      .src_path = io::Path{args.positional_args[0]},
+      .dst_path = project_info->content_path(sub_path),
+      .should_override = args.should_override,
    };
    if (!import_mesh(props)) {
       return EXIT_FAILURE;
    }
 
-   if (!add_resource_to_index(subPath)) {
+   if (!add_resource_to_index(sub_path)) {
       return EXIT_FAILURE;
    }
 
    return EXIT_SUCCESS;
 }
 
-std::optional<asset::SamplerProperties> parse_sampler_properties(const std::vector<std::string>& samplerOpts)
+std::optional<asset::SamplerProperties> parse_sampler_properties(const std::vector<std::string>& sampler_opts)
 {
-   asset::SamplerProperties samplerProperties;
-   for (const auto& option : samplerOpts) {
+   asset::SamplerProperties sampler_properties;
+   for (const auto& option : sampler_opts) {
       const auto sep = option.find('=');
       if (sep == std::string::npos)
          continue;
@@ -130,85 +132,86 @@ std::optional<asset::SamplerProperties> parse_sampler_properties(const std::vect
       if (key == "minfilter") {
          auto filter = asset::filter_type_from_string(value);
          if (!filter.has_value()) {
-            fmt::print(stderr, "invalid filter type: '{}'\n", value);
+            std::print(std::cerr, "invalid filter type: '{}'\n", value);
             return std::nullopt;
          }
-         samplerProperties.minFilter = filter.value();
+         sampler_properties.min_filter = filter.value();
       } else if (key == "magfilter") {
          auto filter = asset::filter_type_from_string(option.substr(sep + 1));
          if (!filter.has_value()) {
-            fmt::print(stderr, "invalid filter type: '{}'\n", value);
+            std::print(std::cerr, "invalid filter type: '{}'\n", value);
             return std::nullopt;
          }
-         samplerProperties.magFilter = filter.value();
+         sampler_properties.mag_filter = filter.value();
       } else if (key == "addressmode.u") {
-         auto addressMode = asset::texture_address_mode_from_string(option.substr(sep + 1));
-         if (!addressMode.has_value()) {
-            fmt::print(stderr, "invalid address mode: '{}'\n", value);
+         auto address_mode = asset::texture_address_mode_from_string(option.substr(sep + 1));
+         if (!address_mode.has_value()) {
+            std::print(std::cerr, "invalid address mode: '{}'\n", value);
             return std::nullopt;
          }
-         samplerProperties.addressModeU = addressMode.value();
+         sampler_properties.address_mode_u = address_mode.value();
       } else if (key == "addressmode.v") {
-         auto addressMode = asset::texture_address_mode_from_string(option.substr(sep + 1));
-         if (!addressMode.has_value()) {
-            fmt::print(stderr, "invalid address mode: '{}'\n", value);
+         auto address_mode = asset::texture_address_mode_from_string(option.substr(sep + 1));
+         if (!address_mode.has_value()) {
+            std::print(std::cerr, "invalid address mode: '{}'\n", value);
             return std::nullopt;
          }
-         samplerProperties.addressModeV = addressMode.value();
+         sampler_properties.address_mode_v = address_mode.value();
       } else if (key == "addressmode.w") {
-         auto addressMode = asset::texture_address_mode_from_string(option.substr(sep + 1));
-         if (!addressMode.has_value()) {
-            fmt::print(stderr, "invalid address mode: '{}'\n", value);
+         auto address_mode = asset::texture_address_mode_from_string(option.substr(sep + 1));
+         if (!address_mode.has_value()) {
+            std::print(std::cerr, "invalid address mode: '{}'\n", value);
             return std::nullopt;
          }
-         samplerProperties.addressModeW = addressMode.value();
+         sampler_properties.address_mode_w = address_mode.value();
       } else if (key == "anisotropy") {
-         samplerProperties.enableAnisotropy = option.substr(sep + 1) == "true" ? true : false;
+         sampler_properties.enable_anisotropy = option.substr(sep + 1) == "true" ? true : false;
       } else {
-         fmt::print(stderr, "invalid sampler option key: '{}'\n", key);
+         std::print(std::cerr, "invalid sampler option key: '{}'\n", key);
          return std::nullopt;
       }
    }
 
-   return samplerProperties;
+   return sampler_properties;
 }
 
 ExitStatus handle_texture_import(const CmdArgs_import& args)
 {
-   auto projectInfo = load_active_project_info();
-   if (!projectInfo.has_value()) {
-      fmt::print(stderr, "triglav-cli: No active project found\n");
+   auto project_info = load_active_project_info();
+   if (!project_info.has_value()) {
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
-   auto subPath = args.outputPath.empty() ? create_dst_resource_path(*projectInfo, io::Path{args.positionalArgs[0]}, ResourceType::Texture)
-                                          : args.outputPath;
-   auto dstPath = projectInfo->content_path(subPath);
+   auto sub_path = args.output_path.empty()
+                      ? create_dst_resource_path(*project_info, io::Path{args.positional_args[0]}, ResourceType::Texture)
+                      : args.output_path;
+   auto dst_path = project_info->content_path(sub_path);
 
-   const auto purpose = parse_texture_purpose(args.texturePurpose);
+   const auto purpose = parse_texture_purpose(args.texture_purpose);
    if (!purpose.has_value()) {
       return EXIT_FAILURE;
    }
 
-   const auto samplerProps = parse_sampler_properties(args.samplerOptions);
-   if (!samplerProps.has_value()) {
+   const auto sampler_props = parse_sampler_properties(args.sampler_options);
+   if (!sampler_props.has_value()) {
       return EXIT_FAILURE;
    }
 
-   TextureImportProps importProps{
-      .srcPath = io::Path{args.positionalArgs[0]},
-      .dstPath = projectInfo->content_path(subPath),
+   TextureImportProps import_props{
+      .src_path = io::Path{args.positional_args[0]},
+      .dst_path = project_info->content_path(sub_path),
       .purpose = purpose.value(),
-      .samplerProperties = *samplerProps,
-      .shouldCompress = args.shouldCompress,
-      .hasMipMaps = !args.noMipMaps,
-      .shouldOverride = args.shouldOverride,
+      .sampler_properties = *sampler_props,
+      .should_compress = args.should_compress,
+      .has_mip_maps = !args.no_mip_maps,
+      .should_override = args.should_override,
    };
-   if (!import_texture(importProps)) {
+   if (!import_texture(import_props)) {
       return EXIT_FAILURE;
    }
 
-   if (!add_resource_to_index(subPath)) {
+   if (!add_resource_to_index(sub_path)) {
       return EXIT_FAILURE;
    }
 
@@ -219,19 +222,19 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
 
 ExitStatus handle_import(const CmdArgs_import& args)
 {
-   if (args.positionalArgs.size() != 1) {
-      fmt::print(stderr, "must provide an input file\n");
+   if (args.positional_args.size() != 1) {
+      std::print(std::cerr, "must provide an input file\n");
       return EXIT_SUCCESS;
    }
 
-   const auto srcFile = args.positionalArgs[0];
-   if (srcFile.ends_with(".glb")) {
+   const auto src_file = args.positional_args[0];
+   if (src_file.ends_with(".glb")) {
       return handle_level_from_glb(args);
    }
-   if (srcFile.ends_with(".obj")) {
+   if (src_file.ends_with(".obj")) {
       return handle_mesh_import(args);
    }
-   if (srcFile.ends_with(".jpg") || srcFile.ends_with(".png")) {
+   if (src_file.ends_with(".jpg") || src_file.ends_with(".png")) {
       return handle_texture_import(args);
    }
    return EXIT_FAILURE;

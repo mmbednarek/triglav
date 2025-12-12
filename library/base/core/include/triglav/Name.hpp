@@ -63,9 +63,9 @@ class ResourceName
    {
    }
 
-   constexpr ResourceName(const ResourceType type, const Name nameID) :
+   constexpr ResourceName(const ResourceType type, const Name name_id) :
        m_type(type),
-       m_name(nameID)
+       m_name(name_id)
    {
    }
 
@@ -77,6 +77,21 @@ class ResourceName
       return TypedName<CResourceType>(m_name);
    }
 
+   template<typename TFunc>
+   void match(TFunc cb) const
+   {
+      switch (m_type) {
+#define TG_RESOURCE_TYPE(name, ext, cpp_type, stage) \
+   case ResourceType::name:                          \
+      cb(TypedName<ResourceType::name>(m_name));     \
+      break;
+         TG_RESOURCE_TYPE_LIST
+#undef TG_RESOURCE_TYPE
+      default:
+         break;
+      }
+   }
+
    [[nodiscard]] ResourceType type() const
    {
       return m_type;
@@ -84,7 +99,7 @@ class ResourceName
 
    [[nodiscard]] constexpr int loading_stage() const
    {
-      return g_resourceStage[static_cast<int>(m_type)];
+      return g_resource_stage[static_cast<int>(m_type)];
    }
 
    [[nodiscard]] constexpr Name name() const
@@ -113,7 +128,7 @@ class ResourceName
    Name m_name;
 };
 
-constexpr auto g_emptyResource = ResourceName{};
+constexpr auto g_empty_resource = ResourceName{};
 
 template<ResourceType CResourceType>
 TypedName<CResourceType>::operator ResourceName() const
@@ -150,7 +165,7 @@ constexpr auto make_rc_name(const std::string_view value)
    return ResourceName(type_by_extension(extension), hash);
 }
 
-#define TG_RESOURCE_TYPE(name, ext, cppType, stage) using name##Name = TypedName<ResourceType::name>;
+#define TG_RESOURCE_TYPE(name, ext, cpp_type, stage) using name##Name = TypedName<ResourceType::name>;
 
 TG_RESOURCE_TYPE_LIST
 

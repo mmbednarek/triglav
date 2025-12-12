@@ -2,8 +2,6 @@ version: 1
 resources:
   - name: ambient_occlusion.fshader
     source: shader/pass/ambient_occlusion.spv
-  - name: ball.mesh
-    source: model/ball.mesh
   - name: bark.mat
     source: material/bark.yaml
   - name: bark.tex
@@ -46,16 +44,20 @@ resources:
     source: texture/brick_normal.tex
   - name: bunny.mesh
     source: model/bunny.mesh
-  - name: cage.mesh
-    source: model/cage.mesh
-  - name: column.mesh
-    source: model/column.mesh
   - name: common/full_screen.vshader
     source: shader/misc/full_screen_vs.spv
   - name: demo.level
     source: level/demo.yaml
+  - name: editor/object_selection.fshader
+    source: shader/editor/object_selection_fs.spv
+  - name: editor/object_selection.vshader
+    source: shader/editor/object_selection_vs.spv
   - name: example.mesh
     source: model/example.mesh
+  - name: fonts/segoeui/bold.typeface
+    source: fonts/segoeui_bold.ttf
+  - name: fonts/segoeui/regular.typeface
+    source: fonts/segoeui_regular.ttf
   - name: gold.mat
     source: material/gold.yaml
   - name: gold.tex
@@ -72,8 +74,6 @@ resources:
     source: shader/geometry/ground_fs.spv
   - name: ground.vshader
     source: shader/geometry/ground_vs.spv
-  - name: hall.mesh
-    source: model/hall.mesh
   - name: leaves.mat
     source: material/leaves.yaml
   - name: level/example.level
@@ -84,6 +84,8 @@ resources:
     source: material/stone.mat
   - name: material/tubemtl.mat
     source: material/tubemtl.mat
+  - name: mesh/arrow.mesh
+    source: mesh/arrow.mesh
   - name: mesh/cone.mesh
     source: mesh/cone.mesh
   - name: mesh/cube.mesh
@@ -106,8 +108,14 @@ resources:
     source: texture/metal_normal.tex
   - name: metal/roughness.tex
     source: texture/metal_roughness.tex
-  - name: mirror.mesh
-    source: model/mirror.mesh
+  - name: model/ball.mesh
+    source: model/ball.mesh
+  - name: model/cage.mesh
+    source: model/cage.mesh
+  - name: model/column.mesh
+    source: model/column.mesh
+  - name: model/hall.mesh
+    source: model/hall.mesh
   - name: noise.tex
     source: texture/noise.tex
   - name: particle.tex
@@ -162,10 +170,6 @@ resources:
     source: shader/ray_tracing/shadow_miss.spv
     properties:
       rt_only: on
-  - name: segoeui.typeface
-    source: fonts/segoeui.ttf
-  - name: segoeui/bold.typeface
-    source: fonts/segoeuib.ttf
   - name: shading.fshader
     source: shader/pass/shading.spv
   - name: skybox.fshader
@@ -198,6 +202,8 @@ resources:
     source: texture/logo.tex
   - name: texture/ui_atlas.tex
     source: texture/ui_atlas.tex
+  - name: texture/ui_icons.tex
+    source: texture/ui_icons.tex
   - name: texture/wierd_tube.tex0.tex
     source: texture/wierd_tube.tex0.tex
   - name: texture/wierd_tube.tex1.tex

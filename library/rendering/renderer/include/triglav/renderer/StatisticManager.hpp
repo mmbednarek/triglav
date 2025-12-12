@@ -14,11 +14,11 @@ struct StatProperties
 {
    float value{.0f};
    float accumulated{.0f};
-   float minValue{std::numeric_limits<float>::max()};
-   float maxValue{std::numeric_limits<float>::lowest()};
-   float totalAverage{0.0f};
-   float totalAccumulated{0.0f};
-   float totalSamples{0.0f};
+   float min_value{std::numeric_limits<float>::max()};
+   float max_value{std::numeric_limits<float>::lowest()};
+   float total_average{0.0f};
+   float total_accumulated{0.0f};
+   float total_samples{0.0f};
    u32 samples{0};
 
    std::mutex mtx;
@@ -49,7 +49,7 @@ class StatisticManager
 
  private:
    std::array<StatProperties, static_cast<u32>(Stat::Count)> m_properties;
-   std::chrono::steady_clock::time_point m_lastAccumulationPoint;
+   std::chrono::steady_clock::time_point m_last_accumulation_point;
 };
 
 }// namespace triglav::renderer

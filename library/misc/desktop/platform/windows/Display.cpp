@@ -6,19 +6,19 @@ namespace triglav::desktop {
 
 namespace {
 
-LRESULT CALLBACK process_messages(const HWND windowHandle, const UINT msg, const WPARAM wParam, const LPARAM lParam)
+LRESULT CALLBACK process_messages(const HWND window_handle, const UINT msg, const WPARAM w_param, const LPARAM l_param)
 {
    if (msg == WM_CREATE) {
-      const auto* createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-      SetWindowLongPtrW(windowHandle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(createStruct->lpCreateParams));
+      const auto* create_struct = reinterpret_cast<CREATESTRUCT*>(l_param);
+      SetWindowLongPtrW(window_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(create_struct->lpCreateParams));
       return 0;
    }
 
-   auto* surface = reinterpret_cast<Surface*>(GetWindowLongPtrW(windowHandle, GWLP_USERDATA));
+   auto* surface = reinterpret_cast<Surface*>(GetWindowLongPtrW(window_handle, GWLP_USERDATA));
    if (surface != nullptr) {
-      return surface->handle_window_event(msg, wParam, lParam);
+      return surface->handle_window_event(msg, w_param, l_param);
    }
-   return DefWindowProcW(windowHandle, msg, wParam, lParam);
+   return DefWindowProcW(window_handle, msg, w_param, l_param);
 }
 
 }// namespace
@@ -37,7 +37,7 @@ Display::Display(const HINSTANCE instance) :
    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
    wc.hbrBackground = reinterpret_cast<HBRUSH>((COLOR_WINDOW + 1));
    wc.lpszMenuName = nullptr;
-   wc.lpszClassName = g_windowClassName;
+   wc.lpszClassName = g_window_class_name;
    wc.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
 
    if (not RegisterClassExW(&wc)) {

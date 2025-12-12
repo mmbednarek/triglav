@@ -2,11 +2,27 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/String.hpp"
+#include "triglav/Template.hpp"
 #include "triglav/desktop/Desktop.hpp"
 
 #include <memory>
+#include <type_traits>
 #include <variant>
 #include <vector>
+
+#define TG_UI_EVENTS                                          \
+   TG_DEFINE_EVENT(MousePressed, on_mouse_pressed, Mouse)     \
+   TG_DEFINE_EVENT(MouseReleased, on_mouse_released, Mouse)   \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseMoved, on_mouse_moved)     \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseEntered, on_mouse_entered) \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseLeft, on_mouse_left)       \
+   TG_DEFINE_EVENT(MouseScrolled, on_mouse_scrolled, Scroll)  \
+   TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)      \
+   TG_DEFINE_EVENT(KeyReleased, on_key_released, Keyboard)    \
+   TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)       \
+   TG_DEFINE_EVENT_NO_PAYLOAD(SelectAll, on_select_all)       \
+   TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_activated)        \
+   TG_DEFINE_EVENT_NO_PAYLOAD(Deactivated, on_deactivated)
 
 namespace triglav::ui_core {
 
@@ -22,14 +38,11 @@ struct Event
 {
    enum class Type
    {
-      MousePressed,
-      MouseReleased,
-      MouseMoved,
-      MouseEntered,
-      MouseLeft,
-      MouseScrolled,
-      KeyPressed,
-      TextInput,
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD) NAME,
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD) NAME,
+      TG_UI_EVENTS
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
    };
 
    struct Mouse
@@ -49,63 +62,75 @@ struct Event
 
    struct TextInput
    {
-      Rune inputRune;
+      Rune input_rune;
    };
 
-   Type eventType;
-   Vector2 parentSize;
-   Vector2 mousePosition;
-   Vector2 globalMousePosition;
+   Type event_type;
+   Vector2 parent_size;
+   Vector2 mouse_position;
+   Vector2 global_mouse_position;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
+
+   Event sub_event(const Type sub_type) const
+   {
+      Event result = *this;
+      result.event_type = sub_type;
+      result.data = std::monostate{};
+      return result;
+   }
 };
 
-class EventVisitor
+namespace event_visitor_concepts {
+
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD)                                                 \
+   template<typename TVisitor, typename TResult>                                               \
+   concept NAME = requires(TVisitor& visitor, const Event& e, const Event::PAYLOAD& payload) { \
+      { visitor.METHOD(e, payload) } -> std::convertible_to<TResult>;                          \
+   };
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD)                \
+   template<typename TVisitor, typename TResult>                \
+   concept NAME = requires(TVisitor& visitor, const Event& e) { \
+      { visitor.METHOD(e) } -> std::convertible_to<TResult>;    \
+   };
+TG_UI_EVENTS
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
+
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD) NAME<TVisitor, TResult> ||
+
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD) NAME<TVisitor, TResult> ||
+template<typename TVisitor, typename TResult>
+concept AnyVisitor = TG_UI_EVENTS false;
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
+
+}// namespace event_visitor_concepts
+
+template<typename TResult, event_visitor_concepts::AnyVisitor<TResult> TEventVisitor>
+TResult visit_event(TEventVisitor& visitor, const Event& ev, NonVoid<TResult> default_result = {})
 {
- public:
-   // return true if event should be propagated
-
-   virtual bool on_mouse_pressed(const Event& /*event*/, const Event::Mouse& /*mouse*/)
-   {
-      return true;
+   switch (ev.event_type) {
+#define TG_DEFINE_EVENT(NAME, METHOD, PAYLOAD)                              \
+   case Event::Type::NAME:                                                  \
+      if constexpr (event_visitor_concepts::NAME<TEventVisitor, TResult>) { \
+         return visitor.METHOD(ev, std::get<Event::PAYLOAD>(ev.data));      \
+      }                                                                     \
+      break;
+#define TG_DEFINE_EVENT_NO_PAYLOAD(NAME, METHOD)                            \
+   case Event::Type::NAME:                                                  \
+      if constexpr (event_visitor_concepts::NAME<TEventVisitor, TResult>) { \
+         return visitor.METHOD(ev);                                         \
+      }                                                                     \
+      break;
+      TG_UI_EVENTS
+#undef TG_DEFINE_EVENT_NO_PAYLOAD
+#undef TG_DEFINE_EVENT
    }
 
-   virtual bool on_mouse_released(const Event& /*event*/, const Event::Mouse& /*mouse*/)
-   {
-      return true;
+   if constexpr (!std::is_same_v<TResult, void>) {
+      return default_result;
    }
-
-   virtual bool on_mouse_moved(const Event& /*event*/)
-   {
-      return true;
-   }
-
-   virtual bool on_mouse_entered(const Event& /*event*/)
-   {
-      return true;
-   }
-
-   virtual bool on_mouse_left(const Event& /*event*/)
-   {
-      return true;
-   }
-
-   virtual bool on_mouse_scrolled(const Event& /*event*/, const Event::Scroll& /*scroll*/)
-   {
-      return true;
-   }
-
-   virtual bool on_key_pressed(const Event& /*event*/, const Event::Keyboard& /*key_press*/)
-   {
-      return true;
-   }
-
-   virtual bool on_text_input(const Event& /*event*/, const Event::TextInput& /*text_input*/)
-   {
-      return true;
-   }
-
-   bool visit_event(const Event& event);
-};
+}
 
 class IWidget
 {
@@ -113,12 +138,12 @@ class IWidget
    virtual ~IWidget() = default;
 
    // Calculates widget's desired size based on parent's size.
-   [[nodiscard]] virtual Vector2 desired_size(Vector2 parentSize) const = 0;
+   [[nodiscard]] virtual Vector2 desired_size(Vector2 parent_size) const = 0;
 
    // Adds widget to the current viewport
    // If the widget has already been added, it
    // will be adjusted to the new parent's dimensions.
-   virtual void add_to_viewport(Vector4 dimensions, Vector4 croppingMask) = 0;
+   virtual void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) = 0;
 
    // Removed the widget from current viewport.
    virtual void remove_from_viewport() = 0;
@@ -187,6 +212,17 @@ class LayoutWidget : public BaseWidget
  protected:
    Context& m_context;
    std::vector<IWidgetPtr> m_children;
+};
+
+class ProxyWidget : public ContainerWidget
+{
+ public:
+   ProxyWidget(Context& context, IWidget* parent);
+
+   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
+   void remove_from_viewport() override;
+   void on_event(const Event& event) override;
 };
 
 }// namespace triglav::ui_core

@@ -5,10 +5,11 @@
 
 #include <array>
 #include <cstring>
+#include <string>
 
 namespace triglav {
 
-constexpr MemorySize g_smallStringCapacity = 16;
+constexpr MemorySize g_small_string_capacity = 16;
 
 class StringView
 {
@@ -22,7 +23,7 @@ class StringView
       using pointer = Rune*;
       using reference = Rune&;
 
-      Iterator(const char* beg, const char* end, bool isEnd);
+      Iterator(const char* beg, const char* end, bool is_end);
 
       Iterator& operator++();
       [[nodiscard]] Rune operator*() const;
@@ -32,13 +33,25 @@ class StringView
       Rune m_rune{};
       const char* m_iterator;
       const char* m_end;
-      bool m_isEnd;
+      bool m_is_end;
    };
    using iterator = Iterator;
+
+   StringView() :
+       m_data(nullptr),
+       m_size(0)
+   {
+   }
 
    explicit StringView(const char* string) :
        m_data(string),
        m_size(std::strlen(string))
+   {
+   }
+
+   constexpr explicit StringView(const std::string_view std_str) :
+       m_data(std_str.data()),
+       m_size(std_str.size())
    {
    }
 
@@ -58,6 +71,8 @@ class StringView
    [[nodiscard]] Iterator begin() const;
    [[nodiscard]] Iterator end() const;
 
+   [[nodiscard]] std::string_view to_std() const;
+
  private:
    const char* m_data;
    MemorySize m_size;
@@ -72,6 +87,7 @@ class String
    String(const char* string);
    String(StringView string);
    String(const char* string, MemorySize data_size);
+   String(Rune single_rune, MemorySize num_runes);
    ~String();
 
    String(const String& other);
@@ -91,20 +107,23 @@ class String
    [[nodiscard]] StringView view() const;
    [[nodiscard]] bool is_empty() const;
 
-   [[nodiscard]] StringView subview(i32 initialRune, i32 lastRune) const;
+   [[nodiscard]] StringView subview(i32 initial_rune, i32 last_rune) const;
 
    void append(StringView other);
    void append_rune(Rune rune);
-   void shrink_by(MemorySize runeCount);
+   void shrink_by(MemorySize rune_count);
    void insert_rune_at(u32 position, Rune rune);
    void remove_rune_at(u32 position);
+   void remove_range(u32 first_rune, u32 last_rune);
 
    [[nodiscard]] iterator begin() const;
    [[nodiscard]] iterator end() const;
 
+   [[nodiscard]] std::string to_std() const;
+
  private:
-   void grow_to(MemorySize newSize);
-   void resize(MemorySize newSize);
+   void grow_to(MemorySize new_size);
+   void resize(MemorySize new_size);
    void ensure_capacity_for_size(MemorySize size);
    void deallocate();
 
@@ -117,8 +136,8 @@ class String
    MemorySize m_size{};
    union
    {
-      std::array<char, g_smallStringCapacity> m_smallPayload{};
-      LargeStringPayload m_largePayload;
+      std::array<char, g_small_string_capacity> m_small_payload{};
+      LargeStringPayload m_large_payload;
    };
 };
 
@@ -131,7 +150,7 @@ class RuneInserterIterator
    using reference = Rune&;
    using difference_type = ptrdiff_t;
 
-   explicit RuneInserterIterator(String& stringInstance);
+   explicit RuneInserterIterator(String& string_instance);
    RuneInserterIterator(const RuneInserterIterator& other) = default;
    RuneInserterIterator& operator=(const RuneInserterIterator& other);
 
@@ -141,11 +160,11 @@ class RuneInserterIterator
    [[nodiscard]] Rune& operator*();
 
  private:
-   String& m_stringInstance;
-   Rune m_currentRune{};
+   String& m_string_instance;
+   Rune m_current_rune{};
 };
 
-RuneInserterIterator rune_inserter(String& stringInstance);
+RuneInserterIterator rune_inserter(String& string_instance);
 
 class CharInserterIterator
 {
@@ -156,7 +175,7 @@ class CharInserterIterator
    using reference = char&;
    using difference_type = ptrdiff_t;
 
-   explicit CharInserterIterator(String& stringInstance);
+   explicit CharInserterIterator(String& string_instance);
    CharInserterIterator(const CharInserterIterator& other) = default;
    CharInserterIterator& operator=(const CharInserterIterator& other);
 
@@ -166,14 +185,14 @@ class CharInserterIterator
    [[nodiscard]] char& operator*();
 
  private:
-   String& m_stringInstance;
-   char m_currentChar{};
+   String& m_string_instance;
+   char m_current_char{};
    MemorySize m_offset{};
-   MemorySize m_targetOffset{};
-   std::array<char, 4> m_charBuffer{};
+   MemorySize m_target_offset{};
+   std::array<char, 4> m_char_buffer{};
 };
 
-CharInserterIterator char_inserter(String& stringInstance);
+CharInserterIterator char_inserter(String& string_instance);
 
 namespace string_literals {
 

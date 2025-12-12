@@ -3,7 +3,7 @@ nodes:
     items:
       - type: static_mesh
         name: WierdTube
-        mesh: 18446744071937723998
+        mesh: "mesh/wierdtube.mesh"
         transform:
           translation:
             x: 0.000000
@@ -20,7 +20,7 @@ nodes:
             z: 1.000000
       - type: static_mesh
         name: Stone_2
-        mesh: 18446744072009097381
+        mesh: "mesh/stone_1.mesh"
         transform:
           translation:
             x: 0.330393
@@ -37,7 +37,7 @@ nodes:
             z: 1.587748
       - type: static_mesh
         name: Stone_1
-        mesh: 18446744069476217119
+        mesh: "mesh/stone_2.mesh"
         transform:
           translation:
             x: -3.484990

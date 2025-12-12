@@ -20,12 +20,12 @@ RapidJsonInputStream::Ch RapidJsonInputStream::Take()
    if (!m_reader.has_next())
       return 0;
 
-   m_totalBytesRead += 1;
+   m_total_bytes_read += 1;
    return m_reader.next();
 }
 size_t RapidJsonInputStream::Tell() const
 {
-   return m_totalBytesRead;
+   return m_total_bytes_read;
 }
 
 RapidJsonInputStream::Ch* RapidJsonInputStream::PutBegin()
@@ -49,7 +49,7 @@ size_t RapidJsonInputStream::PutEnd(Ch*)
 
 std::optional<rapidjson::Document> create_document_from_file(const io::Path& path)
 {
-   auto file = io::open_file(path, io::FileOpenMode::Read);
+   auto file = io::open_file(path, io::FileMode::Read);
    if (!file.has_value())
       return std::nullopt;
 

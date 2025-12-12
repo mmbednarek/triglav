@@ -1,0 +1,188 @@
+#include "RenderViewport.hpp"
+
+#include "../RootWindow.hpp"
+#include "ToolMeshes.hpp"
+
+#include "triglav/Ranges.hpp"
+
+namespace triglav::editor {
+
+using namespace name_literals;
+using namespace render_core::literals;
+
+namespace {
+
+render_core::VertexLayout g_single_vertex_layout =
+   render_core::VertexLayout(sizeof(Vector3)).add("position"_name, GAPI_FORMAT(RGB, Float32), 0);
+
+void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count,
+                 MemorySize color_stride, MemorySize matrix_stride, const graphics_api::VertexTopology topology, bool enable_blending)
+{
+   ctx.bind_vertex_shader("editor/object_selection.vshader"_rc);
+
+   ctx.bind_uniform_buffer(0, "core.view_properties"_external);
+   ctx.bind_uniform_buffer(1, "render_viewport.colors"_name, static_cast<u32>(index * color_stride), sizeof(Vector4));
+   ctx.bind_uniform_buffer(2, "render_viewport.matrices"_name, static_cast<u32>(index * matrix_stride), sizeof(Matrix4x4));
+
+   ctx.bind_vertex_layout(g_single_vertex_layout);
+
+   ctx.bind_vertex_buffer(vertices);
+   ctx.bind_index_buffer(indices);
+
+   ctx.bind_fragment_shader("editor/object_selection.fshader"_rc);
+   ctx.bind_samplable_texture(3, "gbuffer.depth"_name);
+
+   ctx.set_vertex_topology(topology);
+   ctx.set_is_blending_enabled(enable_blending);
+
+   ctx.draw_indexed_primitives(index_count, 0, 0);
+}
+
+}// namespace
+
+RenderViewport::RenderViewport(LevelEditor& level_editor, const Vector4 dimensions) :
+    m_level_editor(level_editor),
+    m_dimensions(dimensions)
+{
+}
+
+void RenderViewport::build_update_job(render_core::BuildContext& ctx)
+{
+   m_level_editor.m_update_view_params_job.build_job(ctx);
+}
+
+struct EditorOverlayUniformBuffer
+{
+   Matrix4x4 select_object_transform;
+};
+
+void RenderViewport::build_render_job(render_core::BuildContext& ctx)
+{
+   ctx.declare_render_target("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
+
+   const auto [vertices_box, indices_box] = create_box_mesh({0, 0, 0}, {1, 1, 1});
+   ctx.init_buffer_raw("render_viewport.box_vertices"_name, vertices_box.data(), vertices_box.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.box_indices"_name, indices_box.data(), indices_box.size() * sizeof(u32));
+
+   const auto [vertices_arrow, indices_arrow] = create_arrow_mesh<12>({0, 0, 0}, SHAFT_RADIUS, SHAFT_HEIGHT, TIP_RADIUS, TIP_HEIGHT);
+   ctx.init_buffer_raw("render_viewport.arrow_vertices"_name, vertices_arrow.data(), vertices_arrow.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.arrow_indices"_name, indices_arrow.data(), indices_arrow.size() * sizeof(u32));
+
+   const auto [vertices_ring, indices_ring] = create_ring_mesh<32>(ROTATOR_RADIUS);
+   ctx.init_buffer_raw("render_viewport.ring_vertices"_name, vertices_ring.data(), vertices_ring.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.ring_indices"_name, indices_ring.data(), indices_ring.size() * sizeof(u32));
+
+   const auto [vertices_scaler, indices_scaler] = create_scaler_mesh<12>({0, 0, 0}, SHAFT_RADIUS, SHAFT_HEIGHT, BOX_SIZE);
+   ctx.init_buffer_raw("render_viewport.scaler_vertices"_name, vertices_scaler.data(), vertices_scaler.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.scaler_indices"_name, indices_scaler.data(), indices_scaler.size() * sizeof(u32));
+
+   const auto [vertices_cube, indices_cube] =
+      create_filled_box_mesh({-SCALING_CUBE, -SCALING_CUBE, -SCALING_CUBE}, {SCALING_CUBE, SCALING_CUBE, SCALING_CUBE});
+   ctx.init_buffer_raw("render_viewport.cube_vertices"_name, vertices_cube.data(), vertices_cube.size() * sizeof(Vector3));
+   ctx.init_buffer_raw("render_viewport.cube_indices"_name, indices_cube.data(), indices_cube.size() * sizeof(u32));
+
+   const auto& limits = m_level_editor.m_state.root_window->device().limits();
+
+   const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
+   ctx.declare_staging_buffer("render_viewport.colors.staging"_name, color_align * m_colors.size());
+   ctx.declare_buffer("render_viewport.colors"_name, color_align * m_colors.size());
+
+   const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
+   ctx.declare_staging_buffer("render_viewport.matrices.staging"_name, matrix_align * m_matrices.size());
+   ctx.declare_buffer("render_viewport.matrices"_name, matrix_align * m_matrices.size());
+
+   m_level_editor.m_rendering_job.build_job(ctx);
+
+   ctx.copy_buffer("render_viewport.colors.staging"_name, "render_viewport.colors"_name);
+   ctx.copy_buffer("render_viewport.matrices.staging"_name, "render_viewport.matrices"_name);
+
+   ctx.blit_texture("shading.color"_name, "render_viewport.out"_name);
+
+   ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
+
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, OVERLAY_ARROW_X,
+               static_cast<u32>(indices_arrow.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, OVERLAY_ARROW_Y,
+               static_cast<u32>(indices_arrow.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.arrow_vertices"_name, "render_viewport.arrow_indices"_name, OVERLAY_ARROW_Z,
+               static_cast<u32>(indices_arrow.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+
+   ctx.set_line_width(5.0f);
+
+   render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_X,
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, true);
+   render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_Y,
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, true);
+   render_tool(ctx, "render_viewport.ring_vertices"_name, "render_viewport.ring_indices"_name, OVERLAY_ROTATOR_Z,
+               static_cast<u32>(indices_ring.size()), color_align, matrix_align, graphics_api::VertexTopology::LineStrip, true);
+
+   ctx.set_line_width(2.0f);
+
+   render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_X,
+               static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_Y,
+               static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.scaler_vertices"_name, "render_viewport.scaler_indices"_name, OVERLAY_SCALER_Z,
+               static_cast<u32>(indices_scaler.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+   render_tool(ctx, "render_viewport.cube_vertices"_name, "render_viewport.cube_indices"_name, OVERLAY_SCALER_XYZ,
+               static_cast<u32>(indices_cube.size()), color_align, matrix_align, graphics_api::VertexTopology::TriangleList, false);
+
+   render_tool(ctx, "render_viewport.box_vertices"_name, "render_viewport.box_indices"_name, OVERLAY_SELECTION_BOX,
+               static_cast<u32>(indices_box.size()), color_align, matrix_align, graphics_api::VertexTopology::LineList, true);
+
+   ctx.end_render_pass();
+
+   ctx.export_texture("render_viewport.out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
+                      graphics_api::TextureUsage::TransferSrc);
+}
+
+void RenderViewport::update(render_core::JobGraph& graph, const u32 frame_index, const float delta_time)
+{
+   m_level_editor.m_update_view_params_job.prepare_frame(graph, frame_index, delta_time);
+
+   if (m_updates < render_core::FRAMES_IN_FLIGHT_COUNT) {
+      const auto& limits = m_level_editor.m_state.root_window->device().limits();
+      const auto color_align = align_size(sizeof(Vector4), limits.min_uniform_buffer_alignment);
+      const auto matrix_align = align_size(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
+
+      const auto matrices_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.matrices.staging"_name, frame_index).map_memory());
+      for (const auto& [index, matrix] : Enumerate(m_matrices)) {
+         std::memcpy(static_cast<char*>(*matrices_mapping) + matrix_align * index, &m_matrices[index], sizeof(Matrix4x4));
+      }
+
+      const auto colors_mapping = GAPI_CHECK(graph.resources().buffer("render_viewport.colors.staging"_name, frame_index).map_memory());
+      for (const auto& [index, color] : Enumerate(m_colors)) {
+         std::memcpy(static_cast<char*>(*colors_mapping) + color_align * index, &m_colors[index], sizeof(Color));
+      }
+
+      ++m_updates;
+   }
+}
+
+void RenderViewport::reset_matrices()
+{
+   for (u32 i = 0; i < OVERLAY_COUNT; ++i) {
+      m_matrices[i] = Matrix4x4{};
+   }
+   m_updates = 0;
+}
+
+[[nodiscard]] Vector4 RenderViewport::dimensions() const
+{
+   return m_dimensions;
+}
+
+void RenderViewport::set_selection_matrix(const u32 index, const Matrix4x4& mat)
+{
+   m_matrices[index] = mat;
+   m_updates = 0;
+}
+
+void RenderViewport::set_color(u32 index, const Color& color)
+{
+   m_colors[index] = color;
+   m_updates = 0;
+}
+
+
+}// namespace triglav::editor

@@ -15,19 +15,22 @@
 #endif //TG_END_COMMAND
 
 TG_DECLARE_COMMAND(import, "Import an asset to the current project")
-TG_DECLARE_ARG(outputPath, "o", "output", String, "Specify project path for the imported asset")
-TG_DECLARE_ARG(samplerOptions, "s", "sampler-option", StringArray, "Sampler options")
-TG_DECLARE_ARG(texturePurpose, "p", "purpose", String, "Select purpose for imported textures")
-TG_DECLARE_FLAG(shouldCompress, "c", "compress", "Compress texture using block compression")
-TG_DECLARE_FLAG(noMipMaps, "n", "no-mip-maps", "Don't generate mip maps for the imported texture")
-TG_DECLARE_FLAG(shouldOverride, "r", "override", "Override already imported files")
+TG_DECLARE_ARG(output_path, "o", "output", String, "Specify project path for the imported asset")
+TG_DECLARE_ARG(sampler_options, "s", "sampler-option", StringArray, "Sampler options")
+TG_DECLARE_ARG(texture_purpose, "p", "purpose", String, "Select purpose for imported textures")
+TG_DECLARE_FLAG(should_compress, "c", "compress", "Compress texture using block compression")
+TG_DECLARE_FLAG(no_mip_maps, "n", "no-mip-maps", "Don't generate mip maps for the imported texture")
+TG_DECLARE_FLAG(should_override, "r", "override", "Override already imported files")
+TG_END_COMMAND()
+
+TG_DECLARE_COMMAND(reimport, "Update an assert to a newer version")
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(inspect, "Print asset metadata")
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(project, "Maintain project")
-TG_DECLARE_FLAG(shouldList, "l", "list", "List known projects")
+TG_DECLARE_FLAG(should_list, "l", "list", "List known projects")
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(help, "Print help menu")

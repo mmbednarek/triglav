@@ -3,6 +3,7 @@ from conan.tools.meson import MesonToolchain
 from conan.tools.meson import Meson
 from conan.tools.gnu import PkgConfigDeps
 
+
 class TriglavEngine(ConanFile):
     name = "triglav-engine"
     version = "0.0.1"
@@ -15,18 +16,17 @@ class TriglavEngine(ConanFile):
         "address_sanitizer": False,
         "disable_debug_utils": False,
     }
+
     # We should use system vulkan
 
     def requirements(self):
         self.requires("cgal/6.0.1")
         self.requires("entt/3.15.0")
         self.requires("freetype/2.13.2")
-        self.requires("fmt/11.2.0", override=True)
         self.requires("gtest/1.14.0")
         self.requires("glm/0.9.9.8")
         self.requires("rapidyaml/0.5.0")
-        self.requires("spdlog/1.15.3")
-        self.requires("rapidjson/1.1.0")
+        self.requires("rapidjson/cci.20230929")
         self.requires("ktx/4.3.2")
 
     def configure(self):

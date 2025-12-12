@@ -39,8 +39,8 @@ class EventListener final
  private:
    triglav::desktop::ISurface& m_surface;
    triglav::renderer::Renderer& m_renderer;
-   bool m_isRunning{true};
-   triglav::Vector2 m_mousePosition;
+   bool m_is_running{true};
+   triglav::Vector2 m_mouse_position;
 
    TG_SINK(triglav::desktop::ISurface, OnMouseMove);
    TG_SINK(triglav::desktop::ISurface, OnMouseRelativeMove);
@@ -72,21 +72,21 @@ class GameInstance
    void loop(triglav::desktop::IDisplay& display);
 
  private:
-   std::shared_ptr<triglav::desktop::ISurface> m_splashScreenSurface;
-   std::shared_ptr<triglav::desktop::ISurface> m_demoSurface;
+   std::shared_ptr<triglav::desktop::ISurface> m_splash_screen_surface;
+   std::shared_ptr<triglav::desktop::ISurface> m_demo_surface;
    triglav::graphics_api::Resolution m_resolution;
    triglav::graphics_api::Instance m_instance;
-   std::optional<triglav::graphics_api::Surface> m_graphicsSplashScreenSurface;
-   std::optional<triglav::graphics_api::Surface> m_graphicsDemoSurface;
+   std::optional<triglav::graphics_api::Surface> m_graphics_splash_screen_surface;
+   std::optional<triglav::graphics_api::Surface> m_graphics_demo_surface;
    triglav::graphics_api::DeviceUPtr m_device;
-   triglav::font::FontManger m_fontManager;
-   triglav::resource::ResourceManager m_resourceManager;
-   std::unique_ptr<SplashScreen> m_splashScreen;
+   triglav::font::FontManger m_font_manager;
+   triglav::resource::ResourceManager m_resource_manager;
+   std::unique_ptr<SplashScreen> m_splash_screen;
    std::unique_ptr<triglav::renderer::Renderer> m_renderer;
-   std::optional<EventListener> m_eventListener;
-   std::mutex m_stateMtx;
+   std::optional<EventListener> m_event_listener;
+   std::mutex m_state_mtx;
    std::atomic<State> m_state{State::Uninitialized};
-   std::condition_variable m_baseResourcesReadyCV;
+   std::condition_variable m_base_resources_ready_cv;
 
    TG_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
 };

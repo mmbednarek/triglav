@@ -16,6 +16,7 @@ struct Loader<ResourceType::Level>
    constexpr static ResourceLoadType type{ResourceLoadType::Static};
 
    static world::Level load(const io::Path& path);
+   static void collect_dependencies(std::vector<ResourceName>& out_dependencies, const io::Path& path);
 };
 
 }// namespace triglav::resource
