@@ -51,18 +51,18 @@ SceneView::SceneView(ui_core::Context& context, const State state, IWidget* pare
       .manager = m_state.manager,
    });
    add_button.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
-      .max_size = Vector2{20, 20},
-      .region = Vector4{5 * 64, 0, 64, 64},
+      .texture = "texture/ui_icons.tex"_rc,
+      .max_size = Vector2{22, 22},
+      .region = Vector4{0, 2 * 22, 22, 22},
    });
 
    auto& add_dir_button = buttons.create_child<desktop_ui::Button>({
       .manager = m_state.manager,
    });
    add_dir_button.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
-      .max_size = Vector2{20, 20},
-      .region = Vector4{5 * 64, 64, 64, 64},
+      .texture = "texture/ui_icons.tex"_rc,
+      .max_size = Vector2{22, 22},
+      .region = Vector4{22, 2 * 22, 22, 22},
    });
    TG_CONNECT_NAMED_OPT(add_dir_button, OnClick, AddDirectory, on_clicked_add_directory);
 
@@ -70,9 +70,9 @@ SceneView::SceneView(ui_core::Context& context, const State state, IWidget* pare
       .manager = m_state.manager,
    });
    delete_button.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
-      .max_size = Vector2{20, 20},
-      .region = Vector4{5 * 64, 2 * 64, 64, 64},
+      .texture = "texture/ui_icons.tex"_rc,
+      .max_size = Vector2{22, 22},
+      .region = Vector4{2 * 22, 2 * 22, 22, 22},
    });
    TG_CONNECT_NAMED_OPT(delete_button, OnClick, Delete, on_clicked_delete);
 
@@ -113,8 +113,8 @@ void SceneView::on_clicked_delete() const
 void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)
 {
    const auto id = m_tree_controller.add_item(0, {
-                                                    .icon_name = "texture/ui_atlas.tex"_rc,
-                                                    .icon_region = {4 * 64, 3 * 64, 64, 64},
+                                                    .icon_name = "texture/ui_icons.tex"_rc,
+                                                    .icon_region = {5 * 18, 18, 18, 18},
                                                     .label = object.name,
                                                     .has_children = false,
                                                  });

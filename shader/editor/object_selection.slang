@@ -53,6 +53,6 @@ float4 fs_main(FSInput input) : SV_Target0 {
     if (depth > input.depth) {
         return input.color;
     } else {
-        return float4(input.color.xyz, 0.1);
+        return float4(input.color.xyz, 0.3);
     }
 }

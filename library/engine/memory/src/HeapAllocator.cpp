@@ -14,6 +14,9 @@ std::optional<MemorySize> HeapAllocator::allocate(const MemorySize size)
 {
    // TODO: Find something better than linear search
    const auto it = std::ranges::find_if(m_free_list, [size](const std::pair<OffsetType, SizeType>& item) { return item.second >= size; });
+   if (it == m_free_list.end()) {
+      return std::nullopt;
+   }
 
    if (it->second == size) {
       const auto offset = it->first;

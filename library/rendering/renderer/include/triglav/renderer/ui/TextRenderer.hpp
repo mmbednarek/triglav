@@ -1,5 +1,7 @@
 #pragma once
 
+#include "triglav/Logging.hpp"
+#include "triglav/UpdateList.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/memory/HeapAllocator.hpp"
 #include "triglav/render_core/RenderCore.hpp"
@@ -18,10 +20,11 @@ struct GlyphProperties;
 
 namespace triglav::renderer::ui {
 
+struct TextUpdateInfo;
+
 struct TextInfo
 {
    ui_core::Text text;
-   u32 draw_call_id;
    u32 glyph_buffer_offset;
 
    Vector4 color;
@@ -41,6 +44,7 @@ struct TypefaceInfo
 
 class TextRenderer
 {
+   TG_DEFINE_LOG_CATEGORY(TextRenderer)
  public:
    using Self = TextRenderer;
 
@@ -55,6 +59,9 @@ class TextRenderer
    void build_data_preparation(render_core::BuildContext& ctx) const;
    void build_render_ui(render_core::BuildContext& ctx);
 
+   void set_object(u32 index, const TextInfo& info);
+   void move_object(u32 src, u32 dst);
+
  private:
    [[nodiscard]] const TypefaceInfo& get_typeface_info(const render_core::GlyphProperties& glyph_props);
    memory::Area allocate_vertex_section(ui_core::TextId text_id, u32 vertex_count);
@@ -63,16 +70,21 @@ class TextRenderer
    graphics_api::Device& m_device;
    render_core::GlyphCache& m_glyph_cache;
 
-   std::vector<ui_core::TextId> m_pending_text_updates;
-   std::vector<ui_core::TextId> m_pending_text_removal;
-   std::map<ui_core::TextId, TextInfo> m_text_infos;
-   std::vector<ui_core::TextId> m_draw_call_to_text_name;
+   std::array<UpdateList<ui_core::RectId, TextInfo>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frame_updates;
    std::vector<render_core::TextureRef> m_atlases;
    graphics_api::Buffer m_combined_glyph_buffer;
    u32 m_glyph_offset{};
    std::map<u64, TypefaceInfo> m_typeface_infos;
    memory::HeapAllocator m_vertex_allocator;
    std::map<ui_core::TextId, memory::Area> m_allocated_vertex_sections;
+
+   TextUpdateInfo* m_update_infos{};
+   u32 m_top_update_info = 0;
+   u32* m_char_buffer{};
+   std::pair<u32, u32>* m_move_buffer{};
+   u32 m_top_move_index = 0;
+   u32 m_current_frame_index{};
+   u32 m_char_offset{};
 
    std::mutex m_update_mtx;
 

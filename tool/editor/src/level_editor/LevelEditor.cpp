@@ -65,7 +65,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
       .manager = m_state.manager,
-      .offset = 260,
+      .offset = 300,
       .axis = ui_core::Axis::Horizontal,
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
@@ -103,9 +103,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    select_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
+      .texture = "texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
-      .region = Vector4{192, 64, 64, 64},
+      .region = Vector4{3 * 22, 0, 22, 22},
    });
    m_tool_radio_group.add_check_box(&select_btn);
 
@@ -115,9 +115,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    move_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
+      .texture = "texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
-      .region = Vector4{0, 64, 64, 64},
+      .region = Vector4{0, 0, 22, 22},
    });
    m_tool_radio_group.add_check_box(&move_btn);
 
@@ -127,9 +127,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    rotate_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
+      .texture = "texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
-      .region = Vector4{64, 64, 64, 64},
+      .region = Vector4{22, 0, 22, 22},
    });
    m_tool_radio_group.add_check_box(&rotate_btn);
 
@@ -139,9 +139,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    scale_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_atlas.tex"_rc,
+      .texture = "texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
-      .region = Vector4{128, 64, 64, 64},
+      .region = Vector4{2 * 22, 0, 22, 22},
    });
    m_tool_radio_group.add_check_box(&scale_btn);
 
@@ -169,9 +169,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       })
       .create_content<ui_core::Image>({
-         .texture = "texture/ui_atlas.tex"_rc,
+         .texture = "texture/ui_icons.tex"_rc,
          .max_size = ICON_SIZE,
-         .region = Vector4{4 * 64, 0, 64, 64},
+         .region = Vector4{0, 22, 22, 22},
       });
 
    m_origin_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
@@ -192,9 +192,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       })
       .create_content<ui_core::Image>({
-         .texture = "texture/ui_atlas.tex"_rc,
+         .texture = "texture/ui_icons.tex"_rc,
          .max_size = ICON_SIZE,
-         .region = Vector4{4 * 64, 64, 64, 64},
+         .region = Vector4{22, 22, 22, 22},
       });
 
    m_snap_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
@@ -214,9 +214,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       })
       .create_content<ui_core::Image>({
-         .texture = "texture/ui_atlas.tex"_rc,
+         .texture = "texture/ui_icons.tex"_rc,
          .max_size = ICON_SIZE,
-         .region = Vector4{4 * 64, 2 * 64, 64, 64},
+         .region = Vector4{2 * 22, 22, 22, 22},
       });
 
    m_speed_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({

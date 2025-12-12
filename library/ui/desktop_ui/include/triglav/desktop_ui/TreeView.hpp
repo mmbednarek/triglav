@@ -26,6 +26,7 @@ class TreeView final : public ui_core::BaseWidget
       DesktopUIManager* manager;
       ITreeController* controller;
       std::set<TreeItemId> extended_items;
+      float icon_size = 18.0f;
    };
 
    struct Measure
