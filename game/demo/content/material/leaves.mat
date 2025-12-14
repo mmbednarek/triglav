@@ -1,7 +1,7 @@
 name: leaves
 template: normal_map
 properties:
-  albedo: "leaves.tex"
-  normal: "leaves/normal.tex"
+  albedo: "texture/leaves.tex"
+  normal: "texture/leaves_normal.tex"
   roughness: 1.0
   metallic: 0.0

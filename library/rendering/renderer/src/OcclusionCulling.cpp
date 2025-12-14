@@ -60,7 +60,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
    int depth_height = ctx.screen_size().y / 4;
 
    for (const u32 mip_index : Range(0u, mip_count - 1)) {
-      ctx.bind_compute_shader("bindless_geometry_hi_zbuffer.cshader"_rc);
+      ctx.bind_compute_shader("shader/bindless_geometry/hi_zbuffer_construct.cshader"_rc);
 
       ctx.bind_texture(0, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index});
       ctx.bind_rw_texture(1, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index + 1});
@@ -75,7 +75,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
 
    ctx.fill_buffer("occlusion_culling.count_buffer"_name, std::array<u32, 3>{0, 0, 0});
 
-   ctx.bind_compute_shader("bindless_geometry_culling.cshader"_rc);
+   ctx.bind_compute_shader("shader/bindless_geometry/culling.cshader"_rc);
 
    ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
    ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
@@ -114,7 +114,7 @@ void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
 void OcclusionCulling::draw_pre_pass_objects(render_core::BuildContext& ctx, const render_core::BufferRef object_buffer,
                                              const render_core::BufferRef count_buffer, const u32 index) const
 {
-   ctx.bind_vertex_shader("bindless_geometry_depth_prepass.vshader"_rc);
+   ctx.bind_vertex_shader("shader/bindless_geometry/depth_prepass.vshader"_rc);
 
    render_core::VertexLayout layout(sizeof(geometry::Vertex));
    layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
@@ -123,7 +123,7 @@ void OcclusionCulling::draw_pre_pass_objects(render_core::BuildContext& ctx, con
    ctx.bind_uniform_buffer(0, "core.view_properties"_name);
    ctx.bind_storage_buffer(1, object_buffer);
 
-   ctx.bind_fragment_shader("bindless_geometry_depth_prepass.fshader"_rc);
+   ctx.bind_fragment_shader("shader/bindless_geometry/depth_prepass.fshader"_rc);
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());

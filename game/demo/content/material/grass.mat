@@ -1,7 +1,7 @@
 name: grass
 template: normal_map
 properties:
-  albedo: "grass.tex"
-  normal: "grass/normal.tex"
+  albedo: "texture/grass.tex"
+  normal: "texture/grass_normal.tex"
   roughness: 1.0
   metallic: 0.0

@@ -1,5 +1,5 @@
 template: basic
 properties:
-  albedo: "stone/albedo.tex"
+  albedo: "texture/stone_albedo.tex"
   metallic: 0.700000
   roughness: 0.200000

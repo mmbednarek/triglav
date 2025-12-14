@@ -156,14 +156,14 @@ void SpriteRenderer::build_data_update(render_core::BuildContext& ctx) const
    ctx.copy_buffer("user_interface.sprite.removal.staging"_name, "user_interface.sprite.removal"_name);
 
    // Execute insertion
-   ctx.bind_compute_shader("sprite/insertion.cshader"_rc);
+   ctx.bind_compute_shader("shader/ui/sprite_insertion.cshader"_rc);
    ctx.bind_uniform_buffer(0, "user_interface.sprite.insertion.count"_name);
    ctx.bind_storage_buffer(1, "user_interface.sprite.insertion"_name);
    ctx.bind_storage_buffer(2, "user_interface.sprite.draw_calls"_name);
    ctx.dispatch_indirect("user_interface.sprite.insertion.indirect_buffer"_name);
 
    // Execute removal
-   ctx.bind_compute_shader("sprite/removal.cshader"_rc);
+   ctx.bind_compute_shader("shader/ui/sprite_removal.cshader"_rc);
    ctx.bind_uniform_buffer(0, "user_interface.sprite.removal.count"_name);
    ctx.bind_storage_buffer(1, "user_interface.sprite.removal"_name);
    ctx.bind_storage_buffer(2, "user_interface.sprite.draw_calls"_name);
@@ -181,11 +181,11 @@ void SpriteRenderer::build_render_ui(render_core::BuildContext& ctx)
    if (m_textures.empty())
       return;
 
-   ctx.bind_vertex_shader("sprite/render.vshader"_rc);
+   ctx.bind_vertex_shader("shader/ui/sprite_render.vshader"_rc);
    ctx.bind_uniform_buffer(0, "ui.viewport_info"_external);
    ctx.bind_storage_buffer(1, "user_interface.sprite.draw_calls"_external);
 
-   ctx.bind_fragment_shader("sprite/render.fshader"_rc);
+   ctx.bind_fragment_shader("shader/ui/sprite_render.fshader"_rc);
 
    ctx.bind_sampled_texture_array(2, m_textures);
 

@@ -78,7 +78,7 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
 
    ctx.begin_render_pass("ambient_occlusion"_name, "ambient_occlusion.target"_name);
 
-   ctx.bind_fragment_shader("ambient_occlusion.fshader"_rc);
+   ctx.bind_fragment_shader("shader/pass/ambient_occlusion.fshader"_rc);
 
    ctx.bind_texture(0, "gbuffer.position"_name);
    ctx.bind_texture(1, "gbuffer.normal"_name);

@@ -708,7 +708,7 @@ void BuildContext::draw_indirect_with_count(BufferRef draw_call_buffer, BufferRe
 void BuildContext::draw_full_screen_quad()
 {
    using namespace name_literals;
-   this->bind_vertex_shader("common/full_screen.vshader"_rc);
+   this->bind_vertex_shader("shader/misc/full_screen.vshader"_rc);
    this->set_vertex_topology(gapi::VertexTopology::TriangleFan);
    this->draw_primitives(4, 0);
 }

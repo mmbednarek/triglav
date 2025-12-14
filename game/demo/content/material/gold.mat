@@ -1,7 +1,7 @@
 name: gold
 template: normal_map
 properties:
-  albedo: "gold.tex"
-  normal: "gold/normal.tex"
+  albedo: "texture/gold.tex"
+  normal: "texture/gold_normal.tex"
   roughness: 0.5
   metallic: 0.25

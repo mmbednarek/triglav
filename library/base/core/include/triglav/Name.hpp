@@ -153,7 +153,7 @@ constexpr auto make_resource_path_comptime()
    constexpr auto value = TValue.to_string_view();
    constexpr auto at = value.find_last_of('.');
    constexpr auto extension = value.substr(at + 1);
-   constexpr auto hash = detail::hash_string(value.substr(0, at));
+   constexpr auto hash = detail::hash_string(value);
    return TypedName<type_by_extension(extension)>(hash);
 }
 
@@ -161,7 +161,7 @@ constexpr auto make_rc_name(const std::string_view value)
 {
    const auto at = value.find_last_of('.');
    const auto extension = value.substr(at + 1);
-   const auto hash = detail::hash_string(value.substr(0, at));
+   const auto hash = detail::hash_string(value);
    return ResourceName(type_by_extension(extension), hash);
 }
 

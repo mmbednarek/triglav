@@ -1,10 +1,12 @@
 #include "Commands.hpp"
 
+#include "triglav/ResourcePathMap.hpp"
+#include "triglav/String.hpp"
 #include "triglav/asset/Asset.hpp"
 #include "triglav/io/File.hpp"
+#include "triglav/ktx/Texture.hpp"
 
 #include <print>
-#include <triglav/ktx/Texture.hpp>
 
 namespace triglav::tool::cli {
 
@@ -72,8 +74,14 @@ ExitStatus handle_inspect(const CmdArgs_inspect& args)
 
       std::print("vertex count: {}\n", mesh->vertex_data.vertices.size());
       std::print("index count: {}\n", mesh->vertex_data.indices.size());
-      std::print("bounding box min: ({}, {}, {})\n", mesh->bounding_box.min.x, mesh->bounding_box.min.y, mesh->bounding_box.min.z);
-      std::print("bounding box max: ({}, {}, {})\n", mesh->bounding_box.max.x, mesh->bounding_box.max.y, mesh->bounding_box.max.z);
+      std::print("bounding box min: {}\n", mesh->bounding_box.min);
+      std::print("bounding box max: {}\n", mesh->bounding_box.max);
+      std::print("ranges:\n");
+      for (const auto& range : mesh->vertex_data.ranges) {
+         std::print("\t- name: {}\n", ResourcePathMap::the().resolve(range.material_name));
+         std::print("\t  offset: {}\n", range.offset);
+         std::print("\t  size: {}\n", range.size);
+      }
    }
    if (header->type == ResourceType::Texture) {
       auto decoded_tex = asset::decode_texture(**file_handle);

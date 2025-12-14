@@ -1,5 +1,7 @@
 #include "ResourcePathMap.hpp"
 
+#include "NameResolution.hpp"
+
 #include <cassert>
 
 namespace triglav {
@@ -8,7 +10,7 @@ StringView ResourcePathMap::resolve(const ResourceName name) const
 {
    const auto it = m_map.find(name);
    if (it == m_map.end()) {
-      return {};
+      return StringView{resolve_name(name.name())};
    }
    return it->second.view();
 }

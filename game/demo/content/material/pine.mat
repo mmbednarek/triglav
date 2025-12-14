@@ -1,7 +1,7 @@
 name: pine
 template: normal_map
 properties:
-  albedo: "pine.tex"
-  normal: "pine/normal.tex"
+  albedo: "texture/pine.tex"
+  normal: "texture/pine_normal.tex"
   roughness: 1.0
   metallic: 0.0

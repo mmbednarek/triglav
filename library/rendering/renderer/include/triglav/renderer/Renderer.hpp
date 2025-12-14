@@ -72,7 +72,7 @@ class Renderer final : public IRenderer
    void update_uniform_data(float delta_time);
    static float calculate_frame_duration();
    glm::vec3 moving_direction();
-   void recreate_jobs();
+   void recreate_jobs(Vector2u dimensions);
 
  private:
    bool m_must_recreate_jobs{false};

@@ -175,6 +175,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
     m_root_box(context,
                ui_core::RectBox::State{
                   .color = {0.0, 0.0f, 0.0f, 0.75f},
+                  .border_radius = {10.0f, 10.0f, 10.0f, 10.0f},
                },
                this),
     TG_CONNECT(m_config_manager, OnPropertyChanged, on_config_property_changed)

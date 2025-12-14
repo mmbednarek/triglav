@@ -59,14 +59,14 @@ void ShadowMapStage::render_cascade(render_core::BuildContext& ctx, const Name p
 {
    render_core::RenderPassScope rt_scope(ctx, pass_name, target_name);
 
-   ctx.bind_vertex_shader("bindless_geometry/shadow_map.vshader"_rc);
+   ctx.bind_vertex_shader("shader/bindless_geometry/shadow_map.vshader"_rc);
 
    ctx.bind_vertex_layout(g_vertex_layout);
 
    ctx.bind_uniform_buffer(0, view_props);
    ctx.bind_storage_buffer(1, &m_bindless_scene.scene_object_buffer());
 
-   ctx.bind_fragment_shader("bindless_geometry/shadow_map.fshader"_rc);
+   ctx.bind_fragment_shader("shader/bindless_geometry/shadow_map.fshader"_rc);
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());

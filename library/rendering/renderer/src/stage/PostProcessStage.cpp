@@ -27,7 +27,7 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config&
 
    ctx.begin_render_pass("post_processing"_name, "core.color_out"_name);
 
-   ctx.bind_fragment_shader("post_processing.fshader"_rc);
+   ctx.bind_fragment_shader("shader/pass/post_processing.fshader"_rc);
 
    ctx.push_constant(PostProcessingPushConstants{
       .enable_fxaa = config.antialiasing == AntialiasingMethod::FastApproximate,

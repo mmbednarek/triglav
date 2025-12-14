@@ -18,7 +18,7 @@ render_core::VertexLayout g_single_vertex_layout =
 void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count,
                  MemorySize color_stride, MemorySize matrix_stride, const graphics_api::VertexTopology topology, bool enable_blending)
 {
-   ctx.bind_vertex_shader("editor/object_selection.vshader"_rc);
+   ctx.bind_vertex_shader("shader/editor/object_selection.vshader"_rc);
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
    ctx.bind_uniform_buffer(1, "render_viewport.colors"_name, static_cast<u32>(index * color_stride), sizeof(Vector4));
@@ -29,7 +29,7 @@ void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name
    ctx.bind_vertex_buffer(vertices);
    ctx.bind_index_buffer(indices);
 
-   ctx.bind_fragment_shader("editor/object_selection.fshader"_rc);
+   ctx.bind_fragment_shader("shader/editor/object_selection.fshader"_rc);
    ctx.bind_samplable_texture(3, "gbuffer.depth"_name);
 
    ctx.set_vertex_topology(topology);

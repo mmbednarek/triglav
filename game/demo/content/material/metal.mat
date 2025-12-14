@@ -1,6 +1,6 @@
 template: full_pbr
 properties:
-  albedo: "metal/albedo.tex"
-  normal: "metal/normal.tex"
-  roughness: "metal/roughness.tex"
-  metallic: "metal/metallic.tex"
+  albedo: "texture/metal_albedo.tex"
+  normal: "texture/metal_normal.tex"
+  roughness: "texture/metal_roughness.tex"
+  metallic: "texture/metal_metallic.tex"
