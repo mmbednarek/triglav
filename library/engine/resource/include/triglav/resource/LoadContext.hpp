@@ -1,8 +1,7 @@
 #pragma once
 
-#include "Resource.hpp"
-
 #include "triglav/Int.hpp"
+#include "triglav/String.hpp"
 #include "triglav/io/Path.hpp"
 #include "triglav/threading/SharedMutex.hpp"
 
@@ -12,16 +11,9 @@
 
 namespace triglav::resource {
 
-struct ResourcePath
-{
-   std::string name;
-   std::string source;
-   ResourceProperties properties;
-};
-
 struct ResourceStage
 {
-   std::vector<ResourcePath> resource_list;
+   std::vector<String> resource_list;
 };
 
 enum class FinishLoadingAssetResult

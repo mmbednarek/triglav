@@ -3,6 +3,7 @@
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/graphics_api/Instance.hpp"
+#include "triglav/io/Logging.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/test_util/GTest.hpp"
 #include "triglav/threading/ThreadPool.hpp"
@@ -21,6 +22,9 @@ TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets)
 int triglav_main(InputArgs& args, IDisplay& display)
 {
    using namespace triglav::io::path_literals;
+
+   // Initialize logger
+   triglav::LogManager::the().register_listener<triglav::io::StreamLogger>(triglav::io::stdout_writer());
 
    auto surface = display.create_surface("Testing window"_strv, {400, 400}, WindowAttribute::Default);
    auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance(&display));

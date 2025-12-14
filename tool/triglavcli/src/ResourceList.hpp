@@ -2,26 +2,17 @@
 
 #include "triglav/io/Path.hpp"
 
-#include <map>
 #include <optional>
 #include <ryml.hpp>
 #include <string>
+#include <vector>
 
 namespace triglav::tool::cli {
-
-struct ResourceListItem
-{
-   std::string source;
-   std::map<std::string, std::string> properties;
-
-   void deserialize_yaml(const ryml::ConstNodeRef& node);
-   void serialize_yaml(ryml::NodeRef& node) const;
-};
 
 struct ResourceList
 {
    int version;
-   std::map<std::string, ResourceListItem> resources;
+   std::vector<std::string> resources;
 
    void deserialize_yaml(const ryml::ConstNodeRef& node);
    void serialize_yaml(ryml::NodeRef& node) const;

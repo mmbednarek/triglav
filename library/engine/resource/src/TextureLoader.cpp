@@ -14,7 +14,7 @@ using graphics_api::TextureUsage;
 using namespace name_literals;
 
 graphics_api::Texture Loader<ResourceType::Texture>::load_gpu(graphics_api::Device& device, [[maybe_unused]] const TextureName name,
-                                                              const io::Path& path, const ResourceProperties& /*props*/)
+                                                              const io::Path& path)
 {
    auto file = io::open_file(path, io::FileMode::Read);
    assert(file.has_value());

@@ -60,8 +60,8 @@ ExitStatus handle_reimport(const CmdArgs_reimport& args)
    auto res_list = ResourceList::from_file(index_path);
    assert(res_list.has_value());
 
-   for (const auto& [name, item] : res_list->resources) {
-      ResourcePathMap::the().store_path(StringView{name.data(), name.size()});
+   for (const auto& rc_path : res_list->resources) {
+      ResourcePathMap::the().store_path(StringView{rc_path.data(), rc_path.size()});
    }
 
    const auto& rc_path = args.positional_args.at(0);

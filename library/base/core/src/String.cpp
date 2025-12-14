@@ -359,6 +359,11 @@ std::string String::to_std() const
    return {data(), data() + m_size};
 }
 
+std::string_view String::to_std_view() const
+{
+   return {data(), data() + m_size};
+}
+
 void String::grow_to(const MemorySize new_size)
 {
    if (new_size <= this->capacity()) {

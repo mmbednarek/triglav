@@ -39,7 +39,7 @@ class ResourceManager
 
    void load_asset_list(const io::Path& path);
 
-   void load_asset(ResourceName asset_name, const io::Path& path, const ResourceProperties& props);
+   void load_asset(ResourceName asset_name, const io::Path& path);
    [[nodiscard]] bool is_name_registered(ResourceName asset_name) const;
 
    template<ResourceType CResourceType>
@@ -49,10 +49,10 @@ class ResourceManager
    }
 
    template<ResourceType CResourceType>
-   void load_resource(TypedName<CResourceType> name, const io::Path& path, const ResourceProperties& props)
+   void load_resource(TypedName<CResourceType> name, const io::Path& path)
    {
       if constexpr (Loader<CResourceType>::type == ResourceLoadType::Graphics) {
-         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, name, path, props));
+         container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(m_device, name, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::GraphicsDependent) {
          container<CResourceType>().register_resource(name, Loader<CResourceType>::load_gpu(*this, m_device, path));
       } else if constexpr (Loader<CResourceType>::type == ResourceLoadType::Font) {
