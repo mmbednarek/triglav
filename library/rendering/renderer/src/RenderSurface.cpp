@@ -86,7 +86,7 @@ void RenderSurface::recreate_present_jobs()
 
    for (const auto& swapchain_texture : m_swapchain.textures()) {
       for (const u32 frame_index : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
-         auto cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics | graphics_api::WorkType::Transfer));
+         auto cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics));
          GAPI_CHECK_STATUS(cmd_list.begin());
 
          graphics_api::TextureBarrierInfo in_barrier{};

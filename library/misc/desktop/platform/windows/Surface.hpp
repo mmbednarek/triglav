@@ -34,6 +34,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    LRESULT handle_window_event(UINT msg, WPARAM w_param, LPARAM l_param);
    void set_cursor_icon(CursorIcon icon) override;
    [[nodiscard]] std::shared_ptr<ISurface> create_popup(Vector2u dimensions, Vector2 offset, WindowAttributeFlags flags) override;
+   ModifierFlags modifiers() const override;
 
    [[nodiscard]] Display& display();
 

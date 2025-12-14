@@ -20,7 +20,7 @@ class TriglavEngine(ConanFile):
     # We should use system vulkan
 
     def requirements(self):
-        self.requires("cgal/6.0.1")
+        self.requires("cgal/6.1")
         self.requires("entt/3.15.0")
         self.requires("freetype/2.13.2")
         self.requires("gtest/1.14.0")

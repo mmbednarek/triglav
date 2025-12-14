@@ -4,6 +4,7 @@
 #include "String.hpp"
 
 #include <map>
+#include <mutex>
 
 namespace triglav {
 
@@ -17,6 +18,7 @@ class ResourcePathMap
 
  private:
    std::map<ResourceName, String> m_map;
+   mutable std::mutex m_mtx;
 };
 
 ResourceName name_from_path(StringView name);
