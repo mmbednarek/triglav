@@ -311,6 +311,11 @@ void Surface::on_mouse_wheel(int delta)
    }
 }
 
+ModifierFlags Surface::modifiers() const
+{
+   return {};
+}
+
 LRESULT Surface::handle_window_event(const UINT msg, const WPARAM w_param, const LPARAM l_param)
 {
    switch (msg) {

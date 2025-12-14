@@ -8,6 +8,8 @@ namespace triglav {
 
 StringView ResourcePathMap::resolve(const ResourceName name) const
 {
+   std::unique_lock lk{m_mtx};
+
    const auto it = m_map.find(name);
    if (it == m_map.end()) {
       return StringView{resolve_name(name.name())};
@@ -17,6 +19,8 @@ StringView ResourcePathMap::resolve(const ResourceName name) const
 
 ResourceName ResourcePathMap::store_path(const StringView name)
 {
+   std::unique_lock lk{m_mtx};
+
    const auto rc_name = make_rc_name(name.to_std());
    if (m_map.contains(rc_name)) {
       assert(m_map.at(rc_name) == name);

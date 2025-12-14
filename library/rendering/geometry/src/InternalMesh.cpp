@@ -18,7 +18,7 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
 #elifdef _MSC_VER
 #pragma warning(push)
-#pragma warning(disable : 4996 4456 4245 4267 4244 4305 5054 4702)
+#pragma warning(disable : 4996 4456 4245 4267 4244 4305 4458 5054 4702 5030 5222)
 #endif
 
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>

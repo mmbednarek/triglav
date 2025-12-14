@@ -66,7 +66,7 @@ class ResourceList final : public ui_core::BaseWidget
       for (auto [index, instance] : Enumerate(m_text_instances)) {
          const auto position = rect_position(dimensions) + Vector2(0, offset_y);
          const Vector4 rect{position, dimensions.z, measure.height + 2 * g_vertical_margin};
-         m_offsets[offset_y + rect.w] = index;
+         m_offsets[offset_y + rect.w] = static_cast<u32>(index);
 
          if (index == m_selection_index) {
             m_selection.add(m_context, rect, cropping_mask);
