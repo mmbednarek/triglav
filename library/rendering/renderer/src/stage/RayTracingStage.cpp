@@ -33,7 +33,7 @@ void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& 
 
    ctx.bind_acceleration_structure(0, *m_rt_scene.m_tl_acceleration_structure);
 
-   ctx.bind_rt_generation_shader("shader/ray_tracing/general.rgenshader"_rc);
+   ctx.bind_rt_generation_shader("shader/ray_tracing/ray_generation.rgenshader"_rc);
 
    ctx.bind_rw_texture(1, "ray_tracing.ambient_occlusion"_name);
    ctx.bind_rw_texture(2, "ray_tracing.shadows"_name);
@@ -53,7 +53,7 @@ void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& 
 
    render_core::RayTracingShaderGroup ray_gen_group{};
    ray_gen_group.type = render_core::RayTracingShaderGroupType::General;
-   ray_gen_group.general_shader = "shader/ray_tracing/general.rgenshader"_rc;
+   ray_gen_group.general_shader = "shader/ray_tracing/ray_generation.rgenshader"_rc;
    ctx.bind_rt_shader_group(ray_gen_group);
 
    render_core::RayTracingShaderGroup ray_miss_group{};

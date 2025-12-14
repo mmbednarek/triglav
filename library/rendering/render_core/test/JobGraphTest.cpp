@@ -52,7 +52,7 @@ TEST(JobGraphTest, BasicDependency)
    first_ctx.export_buffer("basic_dependency.data"_name, PipelineStage::ComputeShader, BufferAccess::ShaderRead,
                            BufferUsage::TransferSrc | BufferUsage::StorageBuffer);
 
-   second_ctx.bind_compute_shader("testing/increase_number.cshader"_rc);
+   second_ctx.bind_compute_shader("shader/testing/increase_number.cshader"_rc);
    second_ctx.bind_storage_buffer(0, "basic_dependency.data"_external);
    second_ctx.dispatch({1, 1, 1});
 
@@ -93,7 +93,7 @@ TEST(JobGraphTest, BasicInterframeDependency)
    build_context.copy_buffer("basic_interframe_dependency.data"_last_frame, "basic_interframe_dependency.data"_name);
    build_context.end_if();
 
-   build_context.bind_compute_shader("testing/increase_number.cshader"_rc);
+   build_context.bind_compute_shader("shader/testing/increase_number.cshader"_rc);
    build_context.bind_storage_buffer(0, "basic_interframe_dependency.data"_name);
    build_context.dispatch({1, 1, 1});
 

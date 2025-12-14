@@ -122,6 +122,7 @@ class String
    [[nodiscard]] iterator end() const;
 
    [[nodiscard]] std::string to_std() const;
+   [[nodiscard]] std::string_view to_std_view() const;
 
  private:
    void grow_to(MemorySize new_size);

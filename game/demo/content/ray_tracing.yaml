@@ -1,0 +1,9 @@
+version: 1
+resources:
+  - shader/ray_tracing/ambient_occlusion.rchitshader
+  - shader/ray_tracing/ambient_occlusion.rmissshader
+  - shader/ray_tracing/general.rchitshader
+  - shader/ray_tracing/ray_generation.rgenshader
+  - shader/ray_tracing/general.rmissshader
+  - shader/ray_tracing/shadow.rchitshader
+  - shader/ray_tracing/shadow.rmissshader

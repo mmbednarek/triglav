@@ -1,5 +1,6 @@
 #include "LoadContext.hpp"
 
+#include "triglav/ResourcePathMap.hpp"
 #include "triglav/io/File.hpp"
 
 #include <ryml.hpp>
@@ -74,23 +75,9 @@ std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
    auto resources = tree["resources"];
 
    for (const auto node : resources) {
-      auto name = node["name"].val();
-      auto source = node["source"].val();
-
-      ResourceProperties properties;
-
-      if (node.has_child("properties")) {
-         auto properties_node = node["properties"];
-         for (const auto property : properties_node) {
-            auto key = property.key();
-            auto value = property.val();
-            properties.add(make_name_id({key.data(), key.size()}), std::string{value.data(), value.size()});
-         }
-      }
-
-      auto resource_name = make_rc_name(std::string{name.data(), name.size()});
-      result[resource_name.loading_stage()].resource_list.emplace_back(std::string{name.data(), name.size()},
-                                                                       std::string{source.data(), source.size()}, std::move(properties));
+      auto rc_path = node.val();
+      auto resource_name = name_from_path(StringView{rc_path.data(), rc_path.size()});
+      result[resource_name.loading_stage()].resource_list.emplace_back(rc_path.data(), rc_path.size());
    }
 
    result.erase(std::ranges::remove_if(result, [](const ResourceStage& stage) { return stage.resource_list.empty(); }).begin(),

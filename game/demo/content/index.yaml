@@ -1,208 +1,88 @@
 version: 1
 resources:
-  - name: shader/pass/ambient_occlusion.fshader
-    source: shader/pass/ambient_occlusion.fshader
-  - name: material/bark.mat
-    source: material/bark.mat
-  - name: texture/bark.tex
-    source: texture/bark.tex
-  - name: texture/bark_normal.tex
-    source: texture/bark_normal.tex
-  - name: shader/bindless_geometry/render_mt0.fshader
-    source: shader/bindless_geometry/render_mt0.fshader
-  - name: shader/bindless_geometry/render_mt1.fshader
-    source: shader/bindless_geometry/render_mt1.fshader
-  - name: shader/bindless_geometry/render_mt2.fshader
-    source: shader/bindless_geometry/render_mt2.fshader
-  - name: shader/bindless_geometry/vertex.vshader
-    source: shader/bindless_geometry/vertex.vshader
-  - name: shader/bindless_geometry/shadow_map.fshader
-    source: shader/bindless_geometry/shadow_map.fshader
-  - name: shader/bindless_geometry/shadow_map.vshader
-    source: shader/bindless_geometry/shadow_map.vshader
-  - name: shader/bindless_geometry/culling.cshader
-    source: shader/bindless_geometry/culling.cshader
-  - name: shader/bindless_geometry/depth_prepass.fshader
-    source: shader/bindless_geometry/depth_prepass.fshader
-  - name: shader/bindless_geometry/depth_prepass.vshader
-    source: shader/bindless_geometry/depth_prepass.vshader
-  - name: shader/bindless_geometry/hi_zbuffer_construct.cshader
-    source: shader/bindless_geometry/hi_zbuffer_construct.cshader
-  - name: shader/misc/blur_rgba.cshader
-    source: shader/misc/blur_rgba.cshader
-  - name: shader/misc/blur_r.cshader
-    source: shader/misc/blur_r.cshader
-  - name: texture/board.tex
-    source: texture/board.tex
-  - name: material/brick.mat
-    source: material/brick.mat
-  - name: texture/brick_albedo.tex
-    source: texture/brick_albedo.tex
-  - name: texture/brick_height_map.tex
-    source: texture/brick_height_map.tex
-  - name: texture/brick_normal.tex
-    source: texture/brick_normal.tex
-  - name: mesh/bunny.mesh
-    source: mesh/bunny.mesh
-  - name: shader/misc/full_screen.vshader
-    source: shader/misc/full_screen.vshader
-  - name: level/demo.level
-    source: level/demo.level
-  - name: shader/editor/object_selection.fshader
-    source: shader/editor/object_selection.fshader
-  - name: shader/editor/object_selection.vshader
-    source: shader/editor/object_selection.vshader
-  - name: mesh/example.mesh
-    source: mesh/example.mesh
-  - name: fonts/segoeui/bold.typeface
-    source: fonts/segoeui/bold.typeface
-  - name: fonts/segoeui/regular.typeface
-    source: fonts/segoeui/regular.typeface
-  - name: material/gold.mat
-    source: material/gold.mat
-  - name: texture/gold.tex
-    source: texture/gold.tex
-  - name: texture/gold_normal.tex
-    source: texture/gold_normal.tex
-  - name: material/grass.mat
-    source: material/grass.mat
-  - name: texture/grass.tex
-    source: texture/grass.tex
-  - name: texture/grass_normal.tex
-    source: texture/grass_normal.tex
-  - name: shader/geometry/ground.fshader
-    source: shader/geometry/ground.fshader
-  - name: shader/geometry/ground.vshader
-    source: shader/geometry/ground.vshader
-  - name: material/leaves.mat
-    source: material/leaves.mat
-  - name: level/wierd_tube.level
-    source: level/wierd_tube.level
-  - name: material/stone.mat
-    source: material/stone.mat
-  - name: material/tubemtl.mat
-    source: material/tubemtl.mat
-  - name: mesh/arrow.mesh
-    source: mesh/arrow.mesh
-  - name: mesh/cone.mesh
-    source: mesh/cone.mesh
-  - name: mesh/cube.mesh
-    source: mesh/cube.mesh
-  - name: mesh/sphere.mesh
-    source: mesh/sphere.mesh
-  - name: mesh/stone_1.mesh
-    source: mesh/stone_1.mesh
-  - name: mesh/stone_2.mesh
-    source: mesh/stone_2.mesh
-  - name: mesh/wierdtube.mesh
-    source: mesh/wierdtube.mesh
-  - name: material/metal.mat
-    source: material/metal.mat
-  - name: texture/metal_albedo.tex
-    source: texture/metal_albedo.tex
-  - name: texture/metal_metallic.tex
-    source: texture/metal_metallic.tex
-  - name: texture/metal_normal.tex
-    source: texture/metal_normal.tex
-  - name: texture/metal_roughness.tex
-    source: texture/metal_roughness.tex
-  - name: mesh/ball.mesh
-    source: mesh/ball.mesh
-  - name: mesh/cage.mesh
-    source: mesh/cage.mesh
-  - name: mesh/column.mesh
-    source: mesh/column.mesh
-  - name: mesh/hall.mesh
-    source: mesh/hall.mesh
-  - name: texture/noise.tex
-    source: texture/noise.tex
-  - name: texture/particle.tex
-    source: texture/particle.tex
-  - name: shader/particles/update_position.cshader
-    source: shader/particles/update_position.cshader
-  - name: shader/particles/render.fshader
-    source: shader/particles/render.fshader
-  - name: shader/particles/render.vshader
-    source: shader/particles/render.vshader
-  - name: material/pine.mat
-    source: material/pine.mat
-  - name: mesh/pine.mesh
-    source: mesh/pine.mesh
-  - name: texture/pine.tex
-    source: texture/pine.tex
-  - name: texture/pine_normal.tex
-    source: texture/pine_normal.tex
-  - name: shader/pass/post_processing.fshader
-    source: shader/pass/post_processing.fshader
-  - name: material/quartz.mat
-    source: material/quartz.mat
-  - name: texture/quartz.tex
-    source: texture/quartz.tex
-  - name: texture/quartz_normal.tex
-    source: texture/quartz_normal.tex
-  - name: shader/ray_tracing/ambient_occlusion.rchitshader
-    source: shader/ray_tracing/ambient_occlusion.rchitshader
-    properties:
-      rt_only: on
-  - name: shader/ray_tracing/ambient_occlusion.rmissshader
-    source: shader/ray_tracing/ambient_occlusion.rmissshader
-    properties:
-      rt_only: on
-  - name: shader/ray_tracing/general.rchitshader
-    source: shader/ray_tracing/general.rchitshader
-    properties:
-      rt_only: on
-  - name: shader/ray_tracing/ray_generation.rgenshader
-    source: shader/ray_tracing/ray_generation.rgenshader
-    properties:
-      rt_only: on
-  - name: shader/ray_tracing/general.rmissshader
-    source: shader/ray_tracing/general.rmissshader
-    properties:
-      rt_only: on
-  - name: shader/ray_tracing/shadow.rchitshader
-    source: shader/ray_tracing/shadow.rchitshader
-    properties:
-      rt_only: on
-  - name: shader/ray_tracing/shadow.rmissshader
-    source: shader/ray_tracing/shadow.rmissshader
-    properties:
-      rt_only: on
-  - name: shader/pass/shading.fshader
-    source: shader/pass/shading.fshader
-  - name: shader/geometry/skybox.fshader
-    source: shader/geometry/skybox.fshader
-  - name: texture/skybox.tex
-    source: texture/skybox.tex
-    properties:
-      anisotropy: off
-      max_lod: 0.0
-  - name: shader/geometry/skybox.vshader
-    source: shader/geometry/skybox.vshader
-  - name: material/stone.mat
-    source: material/stone.mat
-  - name: texture/stone_albedo.tex
-    source: texture/stone_height_map.tex
-    properties:
-      anisotropy: off
-      max_lod: 0.0
-  - name: texture/stone_normal.tex
-    source: texture/stone_normal.tex
-  - name: mesh/teapot.mesh
-    source: mesh/teapot.mesh
-  - name: mesh/terrain.mesh
-    source: mesh/terrain.mesh
-  - name: texture/logo.tex
-    source: texture/logo.tex
-  - name: texture/ui_atlas.tex
-    source: texture/ui_atlas.tex
-  - name: texture/ui_icons.tex
-    source: texture/ui_icons.tex
-  - name: texture/wierd_tube.tex0.tex
-    source: texture/wierd_tube.tex0.tex
-  - name: texture/wierd_tube.tex1.tex
-    source: texture/wierd_tube.tex1.tex
-  - name: mesh/tree.mesh
-    source: mesh/tree.mesh
-  - name: mesh/wall.mesh
-    source: mesh/wall.mesh
+  - shader/pass/ambient_occlusion.fshader
+  - material/bark.mat
+  - texture/bark.tex
+  - texture/bark_normal.tex
+  - shader/bindless_geometry/render_mt0.fshader
+  - shader/bindless_geometry/render_mt1.fshader
+  - shader/bindless_geometry/render_mt2.fshader
+  - shader/bindless_geometry/vertex.vshader
+  - shader/bindless_geometry/shadow_map.fshader
+  - shader/bindless_geometry/shadow_map.vshader
+  - shader/bindless_geometry/culling.cshader
+  - shader/bindless_geometry/depth_prepass.fshader
+  - shader/bindless_geometry/depth_prepass.vshader
+  - shader/bindless_geometry/hi_zbuffer_construct.cshader
+  - shader/misc/blur_rgba.cshader
+  - shader/misc/blur_r.cshader
+  - texture/board.tex
+  - material/brick.mat
+  - texture/brick_albedo.tex
+  - texture/brick_height_map.tex
+  - texture/brick_normal.tex
+  - mesh/bunny.mesh
+  - shader/misc/full_screen.vshader
+  - level/demo.level
+  - shader/editor/object_selection.fshader
+  - shader/editor/object_selection.vshader
+  - mesh/example.mesh
+  - fonts/segoeui/bold.typeface
+  - fonts/segoeui/regular.typeface
+  - material/gold.mat
+  - texture/gold.tex
+  - texture/gold_normal.tex
+  - material/grass.mat
+  - texture/grass.tex
+  - texture/grass_normal.tex
+  - shader/geometry/ground.fshader
+  - shader/geometry/ground.vshader
+  - material/leaves.mat
+  - level/wierd_tube.level
+  - material/stone.mat
+  - material/tubemtl.mat
+  - mesh/arrow.mesh
+  - mesh/cone.mesh
+  - mesh/cube.mesh
+  - mesh/sphere.mesh
+  - mesh/stone_1.mesh
+  - mesh/stone_2.mesh
+  - mesh/wierdtube.mesh
+  - material/metal.mat
+  - texture/metal_albedo.tex
+  - texture/metal_metallic.tex
+  - texture/metal_normal.tex
+  - texture/metal_roughness.tex
+  - mesh/ball.mesh
+  - mesh/cage.mesh
+  - mesh/column.mesh
+  - mesh/hall.mesh
+  - texture/noise.tex
+  - texture/particle.tex
+  - shader/particles/update_position.cshader
+  - shader/particles/render.fshader
+  - shader/particles/render.vshader
+  - material/pine.mat
+  - mesh/pine.mesh
+  - texture/pine.tex
+  - texture/pine_normal.tex
+  - shader/pass/post_processing.fshader
+  - material/quartz.mat
+  - texture/quartz.tex
+  - texture/quartz_normal.tex
+  - shader/pass/shading.fshader
+  - shader/geometry/skybox.fshader
+  - texture/skybox.tex
+  - shader/geometry/skybox.vshader
+  - material/stone.mat
+  - texture/stone_albedo.tex
+  - texture/stone_normal.tex
+  - mesh/teapot.mesh
+  - mesh/terrain.mesh
+  - texture/logo.tex
+  - texture/ui_atlas.tex
+  - texture/ui_icons.tex
+  - texture/wierd_tube.tex0.tex
+  - texture/wierd_tube.tex1.tex
+  - mesh/tree.mesh
+  - mesh/wall.mesh

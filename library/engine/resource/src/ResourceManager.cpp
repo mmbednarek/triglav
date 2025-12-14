@@ -61,30 +61,24 @@ void ResourceManager::load_next_stage()
    auto build_path = PathManager::the().build_path();
    auto content_path = PathManager::the().content_path();
 
-   for (const auto& [name_str, source, props] : stage.resource_list) {
-      if (props.get_bool("rt_only"_name) && !(m_device.enabled_features() & graphics_api::DeviceFeature::RayTracing)) {
-         log_info("Skipped asset {}, ray tracing is disabled", name_str);
-         this->on_finished_loading_resource(make_rc_name(name_str), true);
-         continue;
-      }
-
-      auto resource_path = build_path.sub(source);
+   for (const auto& rc_path : stage.resource_list) {
+      auto resource_path = build_path.sub(rc_path.to_std_view());
       if (not resource_path.exists()) {
-         resource_path = content_path.sub(source);
+         resource_path = content_path.sub(rc_path.to_std_view());
 
          if (not resource_path.exists()) {
-            log_error("failed to load resource: {}, file not found", source);
+            log_error("failed to load resource: {}, file not found", rc_path);
             continue;
          }
       }
 
-      auto name = make_rc_name(name_str);
-      m_name_registry.register_resource(name, name_str);
-      threading::ThreadPool::the().issue_job([this, name, resource_path, props] { this->load_asset(name, resource_path, props); });
+      auto name = name_from_path(rc_path.view());
+      m_name_registry.register_resource(name, rc_path.to_std_view());
+      threading::ThreadPool::the().issue_job([this, name, resource_path] { this->load_asset(name, resource_path); });
    }
 }
 
-void ResourceManager::load_asset(const ResourceName asset_name, const io::Path& path, const ResourceProperties& props)
+void ResourceManager::load_asset(const ResourceName asset_name, const io::Path& path)
 {
    log_info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
             m_name_registry.lookup_resource_name(asset_name).value_or("UNKNOWN"));
@@ -92,9 +86,9 @@ void ResourceManager::load_asset(const ResourceName asset_name, const io::Path& 
    this->event_OnStartedLoadingAsset.publish(asset_name);
 
    switch (asset_name.type()) {
-#define TG_RESOURCE_TYPE(name, extension, cpp_type, stage)              \
-   case ResourceType::name:                                             \
-      this->load_resource<ResourceType::name>(asset_name, path, props); \
+#define TG_RESOURCE_TYPE(name, extension, cpp_type, stage)       \
+   case ResourceType::name:                                      \
+      this->load_resource<ResourceType::name>(asset_name, path); \
       break;
       TG_RESOURCE_TYPE_LIST
 #undef TG_RESOURCE_TYPE

@@ -61,6 +61,7 @@ class GameInstance
       Uninitialized,
       LoadingBaseResources,
       LoadingResources,
+      LoadingRayTracingResources,
       Ready
    };
 

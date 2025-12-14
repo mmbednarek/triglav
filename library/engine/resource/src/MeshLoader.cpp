@@ -27,8 +27,7 @@ geometry::MeshData load_mesh_data(const io::Path& path)
 
 }// namespace
 
-render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& device, MeshName /*name*/, const io::Path& path,
-                                                          const ResourceProperties& /*props*/)
+render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& device, MeshName /*name*/, const io::Path& path)
 {
    const auto mesh = load_mesh_data(path);
 

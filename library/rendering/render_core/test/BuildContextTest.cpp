@@ -152,7 +152,7 @@ TEST(BuildContext, BasicCompute)
    build_context.declare_staging_buffer("test.basic_compute.output_buffer"_name, 64 * 64 * sizeof(int));
 
    // Run compute
-   build_context.bind_compute_shader("testing/basic_compute.cshader"_rc);
+   build_context.bind_compute_shader("shader/testing/basic/compute.cshader"_rc);
    build_context.bind_rw_texture(0, "test.basic_compute.pattern_texture"_name);
    build_context.dispatch({4, 4, 1});
 
@@ -209,7 +209,7 @@ TEST(BuildContext, BasicGraphics)
       RenderPassScope scope(build_context, "test.basic_graphics.render_pass"_name, "test.basic_graphics.render_target"_name);
 
       // Define vertex shader, layout and input buffer
-      build_context.bind_vertex_shader("testing/basic_graphics.vshader"_rc);
+      build_context.bind_vertex_shader("shader/testing/basic/graphics.vshader"_rc);
 
       triglav::render_core::VertexLayout layout(sizeof(triglav::Vector4));
       layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
@@ -218,7 +218,7 @@ TEST(BuildContext, BasicGraphics)
       build_context.bind_vertex_buffer("test.basic_graphics.vertex_buffer"_name);
 
       // Bind fragment shader and ubo
-      build_context.bind_fragment_shader("testing/basic_graphics.fshader"_rc);
+      build_context.bind_fragment_shader("shader/testing/basic/graphics.fshader"_rc);
 
       build_context.bind_uniform_buffer(0, "test.basic_graphics.uniform_buffer"_name);
 
@@ -236,7 +236,7 @@ TEST(BuildContext, BasicGraphics)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_graphics_expected_bitmap.dat"}, FileMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/blob/basic_graphics_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
@@ -283,7 +283,7 @@ TEST(BuildContext, BasicDepth)
                             "test.basic_depth.depth_target"_name);
 
       // Define vertex shader, layout and input buffer
-      build_context.bind_vertex_shader("testing/basic_depth.vshader"_rc);
+      build_context.bind_vertex_shader("shader/testing/basic/depth.vshader"_rc);
 
       build_context.bind_uniform_buffer(0, "test.basic_depth.uniform_buffer"_name);
 
@@ -295,7 +295,7 @@ TEST(BuildContext, BasicDepth)
       build_context.bind_index_buffer("test.basic_depth.index_buffer"_name);
 
       // Bind fragment shader and texture
-      build_context.bind_fragment_shader("testing/basic_depth.fshader"_rc);
+      build_context.bind_fragment_shader("shader/testing/basic/depth.fshader"_rc);
 
       // Draw
       build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.indices.size()), 0, 0, 2, 0);
@@ -311,7 +311,7 @@ TEST(BuildContext, BasicDepth)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_depth_expected_bitmap.dat"}, FileMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/blob/basic_depth_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
@@ -354,7 +354,7 @@ TEST(BuildContext, BasicTexture)
       RenderPassScope scope(build_context, "test.basic_texture.render_pass"_name, "test.basic_texture.render_target"_name);
 
       // Define vertex shader, layout and input buffer
-      build_context.bind_vertex_shader("testing/basic_texture.vshader"_rc);
+      build_context.bind_vertex_shader("shader/testing/basic/texture.vshader"_rc);
 
       triglav::render_core::VertexLayout layout(sizeof(Vertex));
       layout.add("position"_name, GAPI_FORMAT(RG, Float32), offsetof(Vertex, position));
@@ -364,8 +364,8 @@ TEST(BuildContext, BasicTexture)
       build_context.bind_vertex_buffer("test.basic_texture.vertex_buffer"_name);
 
       // Bind fragment shader and texture
-      build_context.bind_fragment_shader("testing/basic_texture.fshader"_rc);
-      build_context.bind_samplable_texture(0, "testing/sample.tex"_rc);
+      build_context.bind_fragment_shader("shader/testing/basic/texture.fshader"_rc);
+      build_context.bind_samplable_texture(0, "texture/sample.tex"_rc);
 
       // Draw
       build_context.draw_primitives(3, 0);
@@ -381,7 +381,7 @@ TEST(BuildContext, BasicTexture)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_texture_expected_bitmap.dat"}, FileMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/blob/basic_texture_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
@@ -406,14 +406,14 @@ TEST(BuildContext, MultiplePasses)
    {
       // First Pass
       RenderPassScope scope(build_context, "test.multiple_passes.render_pass.first"_name, "test.multiple_passes.render_target.first"_name);
-      build_context.bind_fragment_shader("testing/multiple_passes_first.fshader"_rc);
+      build_context.bind_fragment_shader("shader/testing/multiple_passes/first.fshader"_rc);
       build_context.draw_full_screen_quad();
    }
    {
       // Second pass
       RenderPassScope scope(build_context, "test.multiple_passes.render_pass.second"_name,
                             "test.multiple_passes.render_target.second"_name);
-      build_context.bind_fragment_shader("testing/multiple_passes_second.fshader"_rc);
+      build_context.bind_fragment_shader("shader/testing/multiple_passes/second.fshader"_rc);
       build_context.bind_samplable_texture(0, "test.multiple_passes.render_target.first"_name);
       build_context.draw_full_screen_quad();
    }
@@ -428,7 +428,7 @@ TEST(BuildContext, MultiplePasses)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/multiple_passes_expected_bitmap.dat"}, FileMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/blob/multiple_passes_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer(**expected_bitmap, pixels, buffer_size));
@@ -473,7 +473,7 @@ TEST(BuildContext, DepthTargetSample)
       RenderPassScope scope(build_context, "test.depth_target_sample.depth_pass"_name, "test.depth_target_sample.depth_target"_name);
 
       // Define vertex shader, layout and input buffer
-      build_context.bind_vertex_shader("testing/depth_target_sample/draw.vshader"_rc);
+      build_context.bind_vertex_shader("shader/testing/depth_target_sample/draw.vshader"_rc);
 
       build_context.bind_uniform_buffer(0, "test.depth_target_sample.uniform_buffer"_name);
 
@@ -485,7 +485,7 @@ TEST(BuildContext, DepthTargetSample)
       build_context.bind_index_buffer("test.depth_target_sample.index_buffer"_name);
 
       // Bind fragment shader and texture
-      build_context.bind_fragment_shader("testing/depth_target_sample/draw.fshader"_rc);
+      build_context.bind_fragment_shader("shader/testing/depth_target_sample/draw.fshader"_rc);
 
       // Draw
       build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.indices.size()), 0, 0, 1, 0);
@@ -493,7 +493,7 @@ TEST(BuildContext, DepthTargetSample)
    {
       // Second pass
       RenderPassScope scope(build_context, "test.depth_target_sample.render_pass"_name, "test.depth_target_sample.render_target"_name);
-      build_context.bind_fragment_shader("testing/depth_target_sample/sample.fshader"_rc);
+      build_context.bind_fragment_shader("shader/testing/depth_target_sample/sample.fshader"_rc);
       build_context.bind_samplable_texture(0, "test.depth_target_sample.depth_target"_name);
       build_context.draw_full_screen_quad();
    }
@@ -508,7 +508,7 @@ TEST(BuildContext, DepthTargetSample)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/depth_target_sample_expected_bitmap.dat"}, FileMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/blob/depth_target_sample_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
@@ -583,7 +583,7 @@ TEST(BuildContext, CopyFromLastFrame)
    build_context.copy_buffer("test.copy_from_last_frame.data_buffer"_last_frame, "test.copy_from_last_frame.data_buffer"_name);
    build_context.end_if();
 
-   build_context.bind_compute_shader("testing/increase_number.cshader"_rc);
+   build_context.bind_compute_shader("shader/testing/increase_number.cshader"_rc);
    build_context.bind_storage_buffer(0, "test.copy_from_last_frame.data_buffer"_name);
    build_context.dispatch({1, 1, 1});
 
@@ -646,7 +646,7 @@ TEST(BuildContext, ConditionalBarrier)
    build_context.init_buffer("test.conditional_barrier.data"_name, 5);
 
    build_context.if_enabled("increase_number"_name);
-   build_context.bind_compute_shader("testing/increase_number.cshader"_rc);
+   build_context.bind_compute_shader("shader/testing/increase_number.cshader"_rc);
    build_context.bind_storage_buffer(0, "test.conditional_barrier.data"_name);
    build_context.dispatch({1, 1, 1});
    build_context.end_if();
@@ -739,27 +739,27 @@ TEST(BuildContext, BasicRayTracing)
 
    build_context.init_buffer("test.basic_ray_tracing.view_props"_name, ViewProperties{inverse(perspective), inverse(view)});
 
-   build_context.bind_rt_generation_shader("testing/rt/basic_rgen.rgenshader"_rc);
+   build_context.bind_rt_generation_shader("shader/testing/ray_tracing/basic.rgenshader"_rc);
    build_context.bind_acceleration_structure(0, *top_level_as);
    build_context.bind_rw_texture(1, "test.basic_ray_tracing.target"_name);
    build_context.bind_uniform_buffer(2, "test.basic_ray_tracing.view_props"_name);
 
-   build_context.bind_rt_closest_hit_shader("testing/rt/basic_rchit.rchitshader"_rc);
-   build_context.bind_rt_miss_shader("testing/rt/basic_rmiss.rmissshader"_rc);
+   build_context.bind_rt_closest_hit_shader("shader/testing/ray_tracing/basic.rchitshader"_rc);
+   build_context.bind_rt_miss_shader("shader/testing/ray_tracing/basic.rmissshader"_rc);
 
    triglav::render_core::RayTracingShaderGroup rt_gen_group{};
    rt_gen_group.type = triglav::render_core::RayTracingShaderGroupType::General;
-   rt_gen_group.general_shader.emplace("testing/rt/basic_rgen.rgenshader"_rc);
+   rt_gen_group.general_shader.emplace("shader/testing/ray_tracing/basic.rgenshader"_rc);
    build_context.bind_rt_shader_group(rt_gen_group);
 
    triglav::render_core::RayTracingShaderGroup rt_miss_group{};
    rt_miss_group.type = triglav::render_core::RayTracingShaderGroupType::General;
-   rt_miss_group.general_shader.emplace("testing/rt/basic_rmiss.rmissshader"_rc);
+   rt_miss_group.general_shader.emplace("shader/testing/ray_tracing/basic.rmissshader"_rc);
    build_context.bind_rt_shader_group(rt_miss_group);
 
    triglav::render_core::RayTracingShaderGroup rt_closest_hit_group{};
    rt_closest_hit_group.type = triglav::render_core::RayTracingShaderGroupType::Triangles;
-   rt_closest_hit_group.closest_hit_shader.emplace("testing/rt/basic_rchit.rchitshader"_rc);
+   rt_closest_hit_group.closest_hit_shader.emplace("shader/testing/ray_tracing/basic.rchitshader"_rc);
    build_context.bind_rt_shader_group(rt_closest_hit_group);
 
    build_context.trace_rays({DefaultSize.x, DefaultSize.y, 1});
@@ -783,7 +783,7 @@ TEST(BuildContext, BasicRayTracing)
    const auto mapped_memory = GAPI_CHECK(out_buffer.map_memory());
    const auto* pixels = static_cast<triglav::u8*>(*mapped_memory);
 
-   const auto expected_bitmap = open_file(Path{"content/basic_ray_tracing_expected_bitmap.dat"}, FileMode::Read);
+   const auto expected_bitmap = open_file(Path{"content/blob/basic_ray_tracing_expected_bitmap.dat"}, FileMode::Read);
    ASSERT_TRUE(expected_bitmap.has_value());
 
    ASSERT_TRUE(compare_stream_with_buffer_with_tolerance(**expected_bitmap, pixels, buffer_size, 0x02));
