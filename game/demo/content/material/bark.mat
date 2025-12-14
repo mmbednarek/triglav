@@ -1,7 +1,7 @@
 name: bark
 template: normal_map
 properties:
-  albedo: "bark.tex"
-  normal: "bark/normal.tex"
+  albedo: "texture/bark.tex"
+  normal: "texture/bark_normal.tex"
   roughness: 1.0
   metallic: 0.0

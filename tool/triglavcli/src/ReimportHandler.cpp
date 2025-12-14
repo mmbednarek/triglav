@@ -12,8 +12,7 @@
 
 namespace triglav::tool::cli {
 
-// std::map<std::string, std::string> g_translate_path;
-ExitStatus reimport_mesh(const ProjectInfo& info, const std::string& rc_path)
+ExitStatus reimport_mesh(const ProjectInfo& info, const std::string& rc_path, const size_t range_index, const StringView path)
 {
    const auto sys_path = info.content_path(rc_path);
 
@@ -30,6 +29,10 @@ ExitStatus reimport_mesh(const ProjectInfo& info, const std::string& rc_path)
       mesh = asset::decode_mesh(**mesh_file_handle, asset_header->version);
    }
    assert(mesh.has_value());
+
+   if (!path.is_empty() && range_index < mesh->vertex_data.ranges.size()) {
+      mesh->vertex_data.ranges[range_index].material_name = name_from_path(path);
+   }
 
    const auto mesh_file_output = io::open_file(sys_path, io::FileMode::Write);
    if (!mesh_file_output.has_value()) {
@@ -63,7 +66,7 @@ ExitStatus handle_reimport(const CmdArgs_reimport& args)
 
    const auto& rc_path = args.positional_args.at(0);
    if (rc_path.ends_with(".mesh")) {
-      reimport_mesh(*project_info, rc_path);
+      reimport_mesh(*project_info, rc_path, args.range_index, StringView{args.material});
       return 0;
    }
 

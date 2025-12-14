@@ -80,6 +80,11 @@ MemorySize StringView::rune_count() const
    return calculate_rune_count(m_data, m_size);
 }
 
+bool StringView::is_empty() const
+{
+   return m_size == 0;
+}
+
 StringView::Iterator StringView::begin() const
 {
    Iterator it{m_data, m_data + m_size, false};

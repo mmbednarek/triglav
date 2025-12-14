@@ -1,83 +1,81 @@
 version: 1
 resources:
-  - name: ambient_occlusion.fshader
-    source: shader/pass/ambient_occlusion.spv
-  - name: bark.mat
-    source: material/bark.yaml
-  - name: bark.tex
+  - name: shader/pass/ambient_occlusion.fshader
+    source: shader/pass/ambient_occlusion.fshader
+  - name: material/bark.mat
+    source: material/bark.mat
+  - name: texture/bark.tex
     source: texture/bark.tex
-  - name: bark/normal.tex
+  - name: texture/bark_normal.tex
     source: texture/bark_normal.tex
-  - name: bindless/render_mt0.fshader
-    source: shader/bindless_geometry/render_mt0.spv
-  - name: bindless/render_mt1.fshader
-    source: shader/bindless_geometry/render_mt1.spv
-  - name: bindless/render_mt2.fshader
-    source: shader/bindless_geometry/render_mt2.spv
-  - name: bindless_geometry.vshader
-    source: shader/bindless_geometry/vertex.spv
-  - name: bindless_geometry/shadow_map.fshader
-    source: shader/bindless_geometry/shadow_map_fragment.spv
-  - name: bindless_geometry/shadow_map.vshader
-    source: shader/bindless_geometry/shadow_map_vertex.spv
-  - name: bindless_geometry_culling.cshader
-    source: shader/bindless_geometry/culling_comp.spv
-  - name: bindless_geometry_depth_prepass.fshader
-    source: shader/bindless_geometry/depth_prepass_fragment.spv
-  - name: bindless_geometry_depth_prepass.vshader
-    source: shader/bindless_geometry/depth_prepass_vertex.spv
-  - name: bindless_geometry_hi_zbuffer.cshader
-    source: shader/bindless_geometry/hi_z_comp.spv
-  - name: blur.cshader
-    source: shader/misc/blur_rgba.spv
-  - name: blur/sc.cshader
-    source: shader/misc/blur_r.spv
-  - name: board.tex
+  - name: shader/bindless_geometry/render_mt0.fshader
+    source: shader/bindless_geometry/render_mt0.fshader
+  - name: shader/bindless_geometry/render_mt1.fshader
+    source: shader/bindless_geometry/render_mt1.fshader
+  - name: shader/bindless_geometry/render_mt2.fshader
+    source: shader/bindless_geometry/render_mt2.fshader
+  - name: shader/bindless_geometry/vertex.vshader
+    source: shader/bindless_geometry/vertex.vshader
+  - name: shader/bindless_geometry/shadow_map.fshader
+    source: shader/bindless_geometry/shadow_map.fshader
+  - name: shader/bindless_geometry/shadow_map.vshader
+    source: shader/bindless_geometry/shadow_map.vshader
+  - name: shader/bindless_geometry/culling.cshader
+    source: shader/bindless_geometry/culling.cshader
+  - name: shader/bindless_geometry/depth_prepass.fshader
+    source: shader/bindless_geometry/depth_prepass.fshader
+  - name: shader/bindless_geometry/depth_prepass.vshader
+    source: shader/bindless_geometry/depth_prepass.vshader
+  - name: shader/bindless_geometry/hi_zbuffer_construct.cshader
+    source: shader/bindless_geometry/hi_zbuffer_construct.cshader
+  - name: shader/misc/blur_rgba.cshader
+    source: shader/misc/blur_rgba.cshader
+  - name: shader/misc/blur_r.cshader
+    source: shader/misc/blur_r.cshader
+  - name: texture/board.tex
     source: texture/board.tex
-  - name: brick.mat
-    source: material/brick.yaml
-  - name: brick/albedo.tex
+  - name: material/brick.mat
+    source: material/brick.mat
+  - name: texture/brick_albedo.tex
     source: texture/brick_albedo.tex
-  - name: brick/height_map.tex
+  - name: texture/brick_height_map.tex
     source: texture/brick_height_map.tex
-  - name: brick/normal.tex
+  - name: texture/brick_normal.tex
     source: texture/brick_normal.tex
-  - name: bunny.mesh
-    source: model/bunny.mesh
-  - name: common/full_screen.vshader
-    source: shader/misc/full_screen_vs.spv
-  - name: demo.level
-    source: level/demo.yaml
-  - name: editor/object_selection.fshader
-    source: shader/editor/object_selection_fs.spv
-  - name: editor/object_selection.vshader
-    source: shader/editor/object_selection_vs.spv
-  - name: example.mesh
-    source: model/example.mesh
+  - name: mesh/bunny.mesh
+    source: mesh/bunny.mesh
+  - name: shader/misc/full_screen.vshader
+    source: shader/misc/full_screen.vshader
+  - name: level/demo.level
+    source: level/demo.level
+  - name: shader/editor/object_selection.fshader
+    source: shader/editor/object_selection.fshader
+  - name: shader/editor/object_selection.vshader
+    source: shader/editor/object_selection.vshader
+  - name: mesh/example.mesh
+    source: mesh/example.mesh
   - name: fonts/segoeui/bold.typeface
-    source: fonts/segoeui_bold.ttf
+    source: fonts/segoeui/bold.typeface
   - name: fonts/segoeui/regular.typeface
-    source: fonts/segoeui_regular.ttf
-  - name: gold.mat
-    source: material/gold.yaml
-  - name: gold.tex
+    source: fonts/segoeui/regular.typeface
+  - name: material/gold.mat
+    source: material/gold.mat
+  - name: texture/gold.tex
     source: texture/gold.tex
-  - name: gold/normal.tex
+  - name: texture/gold_normal.tex
     source: texture/gold_normal.tex
-  - name: grass.mat
-    source: material/grass.yaml
-  - name: grass.tex
+  - name: material/grass.mat
+    source: material/grass.mat
+  - name: texture/grass.tex
     source: texture/grass.tex
-  - name: grass/normal.tex
+  - name: texture/grass_normal.tex
     source: texture/grass_normal.tex
-  - name: ground.fshader
-    source: shader/geometry/ground_fs.spv
-  - name: ground.vshader
-    source: shader/geometry/ground_vs.spv
-  - name: leaves.mat
-    source: material/leaves.yaml
-  - name: level/example.level
-    source: level/example.level
+  - name: shader/geometry/ground.fshader
+    source: shader/geometry/ground.fshader
+  - name: shader/geometry/ground.vshader
+    source: shader/geometry/ground.vshader
+  - name: material/leaves.mat
+    source: material/leaves.mat
   - name: level/wierd_tube.level
     source: level/wierd_tube.level
   - name: material/stone.mat
@@ -98,106 +96,102 @@ resources:
     source: mesh/stone_2.mesh
   - name: mesh/wierdtube.mesh
     source: mesh/wierdtube.mesh
-  - name: metal.mat
-    source: material/metal.yaml
-  - name: metal/albedo.tex
+  - name: material/metal.mat
+    source: material/metal.mat
+  - name: texture/metal_albedo.tex
     source: texture/metal_albedo.tex
-  - name: metal/metallic.tex
+  - name: texture/metal_metallic.tex
     source: texture/metal_metallic.tex
-  - name: metal/normal.tex
+  - name: texture/metal_normal.tex
     source: texture/metal_normal.tex
-  - name: metal/roughness.tex
+  - name: texture/metal_roughness.tex
     source: texture/metal_roughness.tex
-  - name: model/ball.mesh
-    source: model/ball.mesh
-  - name: model/cage.mesh
-    source: model/cage.mesh
-  - name: model/column.mesh
-    source: model/column.mesh
-  - name: model/hall.mesh
-    source: model/hall.mesh
-  - name: noise.tex
+  - name: mesh/ball.mesh
+    source: mesh/ball.mesh
+  - name: mesh/cage.mesh
+    source: mesh/cage.mesh
+  - name: mesh/column.mesh
+    source: mesh/column.mesh
+  - name: mesh/hall.mesh
+    source: mesh/hall.mesh
+  - name: texture/noise.tex
     source: texture/noise.tex
-  - name: particle.tex
+  - name: texture/particle.tex
     source: texture/particle.tex
-  - name: particles.cshader
-    source: shader/particles/compute.spv
-  - name: particles.fshader
-    source: shader/particles/fragment.spv
-  - name: particles.vshader
-    source: shader/particles/vertex.spv
-  - name: pine.mat
-    source: material/pine.yaml
-  - name: pine.mesh
-    source: model/pine.mesh
-  - name: pine.tex
+  - name: shader/particles/update_position.cshader
+    source: shader/particles/update_position.cshader
+  - name: shader/particles/render.fshader
+    source: shader/particles/render.fshader
+  - name: shader/particles/render.vshader
+    source: shader/particles/render.vshader
+  - name: material/pine.mat
+    source: material/pine.mat
+  - name: mesh/pine.mesh
+    source: mesh/pine.mesh
+  - name: texture/pine.tex
     source: texture/pine.tex
-  - name: pine/normal.tex
+  - name: texture/pine_normal.tex
     source: texture/pine_normal.tex
-  - name: post_processing.fshader
-    source: shader/pass/post_processing.spv
-  - name: quartz.mat
-    source: material/quartz.yaml
-  - name: quartz.tex
+  - name: shader/pass/post_processing.fshader
+    source: shader/pass/post_processing.fshader
+  - name: material/quartz.mat
+    source: material/quartz.mat
+  - name: texture/quartz.tex
     source: texture/quartz.tex
-  - name: quartz/normal.tex
+  - name: texture/quartz_normal.tex
     source: texture/quartz_normal.tex
-  - name: rt_ao.rchitshader
-    source: shader/ray_tracing/ambient_occlusion_hit.spv
+  - name: shader/ray_tracing/ambient_occlusion.rchitshader
+    source: shader/ray_tracing/ambient_occlusion.rchitshader
     properties:
       rt_only: on
-  - name: rt_ao.rmissshader
-    source: shader/ray_tracing/ambient_occlusion_miss.spv
+  - name: shader/ray_tracing/ambient_occlusion.rmissshader
+    source: shader/ray_tracing/ambient_occlusion.rmissshader
     properties:
       rt_only: on
-  - name: rt_general.rchitshader
-    source: shader/ray_tracing/closest_hit.spv
+  - name: shader/ray_tracing/general.rchitshader
+    source: shader/ray_tracing/general.rchitshader
     properties:
       rt_only: on
-  - name: rt_general.rgenshader
-    source: shader/ray_tracing/ray_generation.spv
+  - name: shader/ray_tracing/ray_generation.rgenshader
+    source: shader/ray_tracing/ray_generation.rgenshader
     properties:
       rt_only: on
-  - name: rt_general.rmissshader
-    source: shader/ray_tracing/miss.spv
+  - name: shader/ray_tracing/general.rmissshader
+    source: shader/ray_tracing/general.rmissshader
     properties:
       rt_only: on
-  - name: rt_shadow.rchitshader
-    source: shader/ray_tracing/shadow_closest_hit.spv
+  - name: shader/ray_tracing/shadow.rchitshader
+    source: shader/ray_tracing/shadow.rchitshader
     properties:
       rt_only: on
-  - name: rt_shadow.rmissshader
-    source: shader/ray_tracing/shadow_miss.spv
+  - name: shader/ray_tracing/shadow.rmissshader
+    source: shader/ray_tracing/shadow.rmissshader
     properties:
       rt_only: on
-  - name: shading.fshader
-    source: shader/pass/shading.spv
-  - name: skybox.fshader
-    source: shader/geometry/skybox_fs.spv
-  - name: skybox.tex
+  - name: shader/pass/shading.fshader
+    source: shader/pass/shading.fshader
+  - name: shader/geometry/skybox.fshader
+    source: shader/geometry/skybox.fshader
+  - name: texture/skybox.tex
     source: texture/skybox.tex
     properties:
       anisotropy: off
       max_lod: 0.0
-  - name: skybox.vshader
-    source: shader/geometry/skybox_vs.spv
-  - name: stairs.mesh
-    source: model/stairs.mesh
-  - name: stone.mat
-    source: material/stone.yaml
-  - name: stone/albedo.tex
-    source: texture/stone_albedo.tex
-  - name: stone/height_map.tex
+  - name: shader/geometry/skybox.vshader
+    source: shader/geometry/skybox.vshader
+  - name: material/stone.mat
+    source: material/stone.mat
+  - name: texture/stone_albedo.tex
     source: texture/stone_height_map.tex
     properties:
       anisotropy: off
       max_lod: 0.0
-  - name: stone/normal.tex
+  - name: texture/stone_normal.tex
     source: texture/stone_normal.tex
-  - name: teapot.mesh
-    source: model/teapot.mesh
-  - name: terrain.mesh
-    source: model/terrain.mesh
+  - name: mesh/teapot.mesh
+    source: mesh/teapot.mesh
+  - name: mesh/terrain.mesh
+    source: mesh/terrain.mesh
   - name: texture/logo.tex
     source: texture/logo.tex
   - name: texture/ui_atlas.tex
@@ -208,7 +202,7 @@ resources:
     source: texture/wierd_tube.tex0.tex
   - name: texture/wierd_tube.tex1.tex
     source: texture/wierd_tube.tex1.tex
-  - name: tree.mesh
-    source: model/tree.mesh
-  - name: wall.mesh
-    source: model/wall.mesh
+  - name: mesh/tree.mesh
+    source: mesh/tree.mesh
+  - name: mesh/wall.mesh
+    source: mesh/wall.mesh

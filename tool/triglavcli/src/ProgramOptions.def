@@ -24,6 +24,8 @@ TG_DECLARE_FLAG(should_override, "r", "override", "Override already imported fil
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(reimport, "Update an assert to a newer version")
+TG_DECLARE_ARG(range_index, "r", "range-index", Int, "Material range index to be changed")
+TG_DECLARE_ARG(material, "m", "material", String, "Material path to be updated")
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(inspect, "Print asset metadata")

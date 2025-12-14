@@ -79,8 +79,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({}, {0, 0, resolution.width, resolution.height});
-   // m_scene.load_level("demo.level"_rc);
-   m_scene.load_level("level/sponza.level"_rc);
+   m_scene.load_level("level/demo.level"_rc);
+   // m_scene.load_level("level/sponza.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -151,7 +151,7 @@ void Renderer::on_render()
    const auto delta_time = calculate_frame_duration();
 
    if (m_must_recreate_jobs) {
-      this->recreate_jobs();
+      this->recreate_jobs(m_render_surface.resolution());
    }
 
    if (m_ray_tracing_scene.has_value()) {
@@ -332,16 +332,19 @@ glm::vec3 Renderer::moving_direction()
    return glm::vec3{0.0f, 0.0f, 0.0f};
 }
 
-void Renderer::recreate_jobs()
+void Renderer::recreate_jobs(const Vector2u dimensions)
 {
    m_device.await_all();
 
    log_info("Recreating rendering job...");
 
-   m_job_graph.set_screen_size(m_render_surface.resolution());
+   m_job_graph.set_screen_size(dimensions);
+   m_ui_viewport.set_dimensions(dimensions);
+
+   auto& update_user_interface_ctx = m_job_graph.replace_job(UpdateUserInterfaceJob::JobName);
+   m_update_user_interface_job.build_job(update_user_interface_ctx);
 
    auto& rendering_ctx = m_job_graph.replace_job(RenderingJob::JobName);
-
    m_rendering_job.build_job(rendering_ctx);
 
    m_job_graph.rebuild_job(RenderingJob::JobName);
@@ -353,11 +356,8 @@ void Renderer::recreate_jobs()
 
 void Renderer::on_resize(const uint32_t width, const uint32_t height)
 {
-   if (m_render_surface.resolution() == Vector2u{width, height})
-      return;
-
    m_render_surface.recreate_swapchain(Vector2u{width, height});
-   this->recreate_jobs();
+   this->recreate_jobs({width, height});
 }
 
 graphics_api::Device& Renderer::device() const

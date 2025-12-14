@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstring>
+#include <format>
 #include <string>
 
 namespace triglav {
@@ -67,6 +68,7 @@ class StringView
    [[nodiscard]] const char* data() const;
    [[nodiscard]] MemorySize size() const;
    [[nodiscard]] MemorySize rune_count() const;
+   [[nodiscard]] bool is_empty() const;
 
    [[nodiscard]] Iterator begin() const;
    [[nodiscard]] Iterator end() const;
@@ -218,3 +220,31 @@ constexpr String operator""_str()
 }// namespace string_literals
 
 }// namespace triglav
+
+template<>
+struct std::formatter<triglav::String>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::String& obj, std::format_context& ctx) const
+   {
+      return std::copy_n(obj.data(), obj.size(), ctx.out());
+   }
+};
+
+template<>
+struct std::formatter<triglav::StringView>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::StringView& obj, std::format_context& ctx) const
+   {
+      return std::copy_n(obj.data(), obj.size(), ctx.out());
+   }
+};

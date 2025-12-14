@@ -1,6 +1,8 @@
 #pragma once
 
+#include "triglav/Logging.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/ResourcePathMap.hpp"
 #include "triglav/threading/SharedMutex.hpp"
 
 #include <map>
@@ -22,6 +24,7 @@ class IContainer
 template<ResourceType CResourceType>
 class Container final : public IContainer
 {
+   TG_DEFINE_LOG_CATEGORY(ResourceContainer)
  public:
    using ResName = TypedName<CResourceType>;
    using ValueType = typename EnumToCppResourceType<CResourceType>::ResourceType;
@@ -29,6 +32,11 @@ class Container final : public IContainer
    ValueType& get(const ResName name)
    {
       std::shared_lock lk{m_mutex};
+      if (!m_map.contains(name)) {
+         log_error("Resource not found: {}", ResourcePathMap::the().resolve(name));
+         flush_logs();
+         assert(false);
+      }
       return m_map.at(name);
    }
 

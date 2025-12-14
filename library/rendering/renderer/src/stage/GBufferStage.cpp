@@ -48,7 +48,7 @@ void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& /*c
 
 void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
 {
-   ctx.bind_vertex_shader("skybox.vshader"_rc);
+   ctx.bind_vertex_shader("shader/geometry/skybox.vshader"_rc);
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
 
@@ -56,9 +56,9 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
    layout.add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location));
    ctx.bind_vertex_layout(layout);
 
-   ctx.bind_fragment_shader("skybox.fshader"_rc);
+   ctx.bind_fragment_shader("shader/geometry/skybox.fshader"_rc);
 
-   ctx.bind_samplable_texture(1, "skybox.tex"_rc);
+   ctx.bind_samplable_texture(1, "texture/skybox.tex"_rc);
 
    ctx.set_depth_test_mode(graphics_api::DepthTestMode::Disabled);
    ctx.set_is_blending_enabled(false);
@@ -68,13 +68,13 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
 
 void GBufferStage::build_ground(render_core::BuildContext& ctx) const
 {
-   ctx.bind_vertex_shader("ground.vshader"_rc);
+   ctx.bind_vertex_shader("shader/geometry/ground.vshader"_rc);
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
 
-   ctx.bind_fragment_shader("ground.fshader"_rc);
+   ctx.bind_fragment_shader("shader/geometry/ground.fshader"_rc);
 
-   ctx.bind_samplable_texture(1, "board.tex"_rc);
+   ctx.bind_samplable_texture(1, "texture/board.tex"_rc);
 
    ctx.set_depth_test_mode(graphics_api::DepthTestMode::Disabled);
    ctx.set_vertex_topology(graphics_api::VertexTopology::TriangleStrip);
@@ -91,15 +91,18 @@ static const auto bindless_geo_vert_layout = render_core::VertexLayout(sizeof(ge
 
 void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 {
-   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt0"_external, "bindless/render_mt0.fshader"_rc, 0);
-   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt1"_external, "bindless/render_mt1.fshader"_rc, 1);
-   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt2"_external, "bindless/render_mt2.fshader"_rc, 2);
+   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt0"_external,
+                                             "shader/bindless_geometry/render_mt0.fshader"_rc, 0);
+   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt1"_external,
+                                             "shader/bindless_geometry/render_mt1.fshader"_rc, 1);
+   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt2"_external,
+                                             "shader/bindless_geometry/render_mt2.fshader"_rc, 2);
 }
 
 void GBufferStage::draw_objects_with_material_template(render_core::BuildContext& ctx, const render_core::BufferRef visible_objects,
                                                        const FragmentShaderName fs_name, const u32 material_template_index) const
 {
-   ctx.bind_vertex_shader("bindless_geometry.vshader"_rc);
+   ctx.bind_vertex_shader("shader/bindless_geometry/vertex.vshader"_rc);
 
    ctx.bind_vertex_layout(bindless_geo_vert_layout);
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);

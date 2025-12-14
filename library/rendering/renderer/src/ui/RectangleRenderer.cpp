@@ -156,14 +156,14 @@ void RectangleRenderer::build_data_update(render_core::BuildContext& ctx) const
    ctx.copy_buffer("user_interface.rectangle.removal.staging"_name, "user_interface.rectangle.removal"_name);
 
    // Execute insertion
-   ctx.bind_compute_shader("rectangle/insertion.cshader"_rc);
+   ctx.bind_compute_shader("shader/ui/rectangle_insertion.cshader"_rc);
    ctx.bind_uniform_buffer(0, "user_interface.rectangle.insertion.count"_name);
    ctx.bind_storage_buffer(1, "user_interface.rectangle.insertion"_name);
    ctx.bind_storage_buffer(2, "user_interface.rectangle.draw_calls"_name);
    ctx.dispatch_indirect("user_interface.rectangle.insertion.indirect_buffer"_name);
 
    // Execute removal
-   ctx.bind_compute_shader("rectangle/removal.cshader"_rc);
+   ctx.bind_compute_shader("shader/ui/rectangle_removal.cshader"_rc);
    ctx.bind_uniform_buffer(0, "user_interface.rectangle.removal.count"_name);
    ctx.bind_storage_buffer(1, "user_interface.rectangle.removal"_name);
    ctx.bind_storage_buffer(2, "user_interface.rectangle.draw_calls"_name);
@@ -178,11 +178,11 @@ void RectangleRenderer::build_data_update(render_core::BuildContext& ctx) const
 
 void RectangleRenderer::build_render_ui(render_core::BuildContext& ctx)
 {
-   ctx.bind_vertex_shader("rectangle/render.vshader"_rc);
+   ctx.bind_vertex_shader("shader/ui/rectangle_render.vshader"_rc);
    ctx.bind_uniform_buffer(0, "ui.viewport_info"_external);
    ctx.bind_storage_buffer(1, "user_interface.rectangle.draw_calls"_external);
 
-   ctx.bind_fragment_shader("rectangle/render.fshader"_rc);
+   ctx.bind_fragment_shader("shader/ui/rectangle_render.fshader"_rc);
 
    ctx.draw_indirect_with_count("user_interface.rectangle.draw_calls"_external, "user_interface.rectangle.count"_external,
                                 g_draw_call_buffer_size, sizeof(DrawCall));

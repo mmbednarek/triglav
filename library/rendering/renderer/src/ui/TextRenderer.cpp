@@ -162,7 +162,7 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
    ctx.copy_buffer("user_interface.character_buffer.staging"_name, "user_interface.character_buffer"_name);
 
    // Dispatch buffer
-   ctx.bind_compute_shader("text/generate_geometry.cshader"_rc);
+   ctx.bind_compute_shader("shader/ui/text_geometry_gen.cshader"_rc);
 
    // input
    ctx.bind_storage_buffer(0, "user_interface.text_update_buffer"_name);
@@ -176,7 +176,7 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
    ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
 
    // Remove pending texts
-   ctx.bind_compute_shader("text/removal.cshader"_rc);
+   ctx.bind_compute_shader("shader/ui/text_removal.cshader"_rc);
 
    ctx.bind_uniform_buffer(0, "user_interface.text_removal_count"_name);
    ctx.bind_storage_buffer(1, "user_interface.text_removal_buffer"_name);
@@ -195,13 +195,13 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
 
 void TextRenderer::build_render_ui(render_core::BuildContext& ctx)
 {
-   ctx.bind_vertex_shader("text/render.vshader"_rc);
+   ctx.bind_vertex_shader("shader/ui/text_render.vshader"_rc);
 
    ctx.push_constant(ctx.screen_size());
 
    ctx.bind_storage_buffer(0, "user_interface.text_draw_call_buffer"_external);
 
-   ctx.bind_fragment_shader("text/render.fshader"_rc);
+   ctx.bind_fragment_shader("shader/ui/text_render.fshader"_rc);
 
    ctx.bind_sampled_texture_array(1, m_atlases);
 

@@ -51,7 +51,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.begin_render_pass("shading"_name, "shading.color"_name, "shading.bloom"_name, "shading.depth"_name);
 
-   ctx.bind_fragment_shader("shading.fshader"_rc);
+   ctx.bind_fragment_shader("shader/pass/shading.fshader"_rc);
 
    ctx.bind_texture(0, "gbuffer.albedo"_name);
    ctx.bind_texture(1, "gbuffer.position"_name);
@@ -96,7 +96,7 @@ void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const
 
    ctx.add_buffer_usage("particles"_name, graphics_api::BufferUsage::TransferDst);// Initially this buffer is filled from host
 
-   ctx.bind_compute_shader("particles.cshader"_rc);
+   ctx.bind_compute_shader("shader/particles/update_position.cshader"_rc);
 
    ctx.bind_storage_buffer(0, "particles"_last_frame);
    ctx.bind_storage_buffer(1, "particles"_name);
@@ -107,14 +107,14 @@ void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const
 
 void ShadingStage::render_particles(render_core::BuildContext& ctx) const
 {
-   ctx.bind_vertex_shader("particles.vshader"_rc);
+   ctx.bind_vertex_shader("shader/particles/render.vshader"_rc);
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
    ctx.bind_storage_buffer(1, "particles"_name);
 
-   ctx.bind_fragment_shader("particles.fshader"_rc);
+   ctx.bind_fragment_shader("shader/particles/render.fshader"_rc);
 
-   ctx.bind_samplable_texture(2, "particle.tex"_rc);
+   ctx.bind_samplable_texture(2, "texture/particle.tex"_rc);
 
    ctx.set_vertex_topology(graphics_api::VertexTopology::TriangleStrip);
    ctx.set_depth_test_mode(graphics_api::DepthTestMode::ReadOnly);

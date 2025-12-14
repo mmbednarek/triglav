@@ -12,9 +12,9 @@ void blur_texture(render_core::BuildContext& ctx, const Name src_texture, const 
    ctx.declare_screen_size_texture(dst_texture, dst_format);
 
    if (dst_format.channel_count() == 1) {
-      ctx.bind_compute_shader("blur/sc.cshader"_rc);
+      ctx.bind_compute_shader("shader/misc/blur_r.cshader"_rc);
    } else {
-      ctx.bind_compute_shader("blur.cshader"_rc);
+      ctx.bind_compute_shader("shader/misc/blur_rgba.cshader"_rc);
    }
 
    ctx.bind_samplable_texture(0, src_texture);

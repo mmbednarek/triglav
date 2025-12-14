@@ -54,7 +54,7 @@ std::optional<Command> command_from_string(const std::string_view arg_name)
 
 #define TG_PARSE_ARG_StringArray(arg_name) this->arg_name.emplace_back(option_value);
 #define TG_PARSE_ARG_String(arg_name) this->arg_name = option_value;
-#define TG_PARSE_ARG_Int(arg_name) this->arg_name = std::stoi(option_value);
+#define TG_PARSE_ARG_Int(arg_name) this->arg_name = std::stoi(std::string{option_value});
 
 #define TG_DECLARE_ARG(arg_name, shorthand, longname, type, description) \
    if (arg == "-" shorthand || arg == "--" longname) {                   \
