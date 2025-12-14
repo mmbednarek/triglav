@@ -3,7 +3,7 @@ nodes:
     items:
       - type: static_mesh
         name: Main Hall
-        mesh: "model/hall.mesh"
+        mesh: "mesh/hall.mesh"
         transform:
           translation:
             x: 0.000000
@@ -37,7 +37,7 @@ nodes:
             z: 2.000000
       - type: static_mesh
         name: Column 0
-        mesh: "model/column.mesh"
+        mesh: "mesh/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -54,7 +54,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 1
-        mesh: "model/column.mesh"
+        mesh: "mesh/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -71,7 +71,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 2
-        mesh: "model/column.mesh"
+        mesh: "mesh/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -88,7 +88,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 3
-        mesh: "model/column.mesh"
+        mesh: "mesh/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -105,7 +105,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 4
-        mesh: "model/column.mesh"
+        mesh: "mesh/column.mesh"
         transform:
           translation:
             x: 0.000000
@@ -122,7 +122,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Sphere
-        mesh: "model/ball.mesh"
+        mesh: "mesh/ball.mesh"
         transform:
           translation:
             x: 12.000000
@@ -139,7 +139,7 @@ nodes:
             z: 3.000000
       - type: static_mesh
         name: Cage
-        mesh: "model/cage.mesh"
+        mesh: "mesh/cage.mesh"
         transform:
           translation:
             x: 10.000000

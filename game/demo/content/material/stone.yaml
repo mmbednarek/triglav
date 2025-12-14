@@ -1,6 +1,0 @@
-name: quartz
-template: basic
-properties:
-  albedo: "quartz.tex"
-  roughness: 0.2
-  metallic: 0.1
