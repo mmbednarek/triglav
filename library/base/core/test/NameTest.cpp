@@ -12,6 +12,7 @@ TEST(NameTest, BasicBehavior)
    static constexpr auto tex_name = "engine/textures/test.tex"_rc;
    static_assert(std::is_same_v<std::decay_t<decltype(tex_name)>, TextureName>);
    static_assert(decltype(tex_name)::resource_type == ResourceType::Texture);
+   static_assert(tex_name.name() == "engine/textures/test.tex"_name);
 
    static ResourceName typed_tex_name{tex_name};
    ASSERT_EQ(tex_name, typed_tex_name);

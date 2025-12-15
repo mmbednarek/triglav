@@ -227,15 +227,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 
    m_viewport = &left_layout.emplace_child<LevelViewport>(&left_layout, *m_state.root_window, *this);
 
-   std::vector<ResourceName> dependencies;
-
-   name_from_path(StringView{"level/wierd_tube.level"});
-   m_state.root_window->resource_manager().collect_dependencies_recursively(dependencies, "level/wierd_tube.level"_rc);
-   for (const auto dep : dependencies) {
-      log_message(LogLevel::Debug, StringView{"Dependencies"}, "Dependency Name: {}", ResourcePathMap::the().resolve(dep).to_std());
-   }
-
-   // m_scene.load_level("level/sponza.level"_rc);
    m_scene.load_level("level/demo.level"_rc);
    m_bindless_scene.write_objects_to_buffer();
    m_scene.update_shadow_maps();

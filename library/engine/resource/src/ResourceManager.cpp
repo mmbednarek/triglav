@@ -148,4 +148,26 @@ const NameRegistry& ResourceManager::name_registry() const
    return m_name_registry;
 }
 
+void resolve_dependencies(std::set<ResourceName>& resource_list)
+{
+   std::set<ResourceName> child_deps;
+   for (const auto rc : resource_list) {
+      const auto path_str = ResourcePathMap::the().resolve(rc);
+      if (path_str.size() == 0)
+         return;
+      const auto path = PathManager::the().content_path().sub(path_str.to_std());
+
+      rc.match([&]<typename TName>(TName /*typed_rc*/) {
+         if constexpr (CollectsDependencies<Loader<TName::resource_type>>) {
+            Loader<TName::resource_type>::collect_dependencies(child_deps, path);
+         }
+      });
+   }
+
+   if (!child_deps.empty()) {
+      resolve_dependencies(child_deps);
+      resource_list.insert_range(child_deps);
+   }
+}
+
 }// namespace triglav::resource

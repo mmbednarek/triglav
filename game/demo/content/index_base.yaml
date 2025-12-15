@@ -2,12 +2,10 @@
 version: 1
 resources:
   # Fonts
-  - "fonts/cantarell/regular.typeface"
-  - "fonts/cantarell/bold.typeface"
-  - "fonts/lato/light.typeface"
-  - "fonts/lato/regular.typeface"
   - "fonts/inter/regular.typeface"
   - "fonts/inter/light.typeface"
+  - "fonts/cantarell/bold.typeface"
+  - "fonts/cantarell/regular.typeface"
   # Rectangle shaders
   - "shader/ui/rectangle_insertion.cshader"
   - "shader/ui/rectangle_removal.cshader"

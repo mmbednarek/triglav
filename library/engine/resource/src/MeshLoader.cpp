@@ -45,11 +45,11 @@ render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& 
    return {{std::move(gpu_vertices), std::move(gpu_indices)}, mesh.bounding_box, mesh.vertex_data.ranges};
 }
 
-void Loader<ResourceType::Mesh>::collect_dependencies(std::vector<ResourceName>& out_dependencies, const io::Path& path)
+void Loader<ResourceType::Mesh>::collect_dependencies(std::set<ResourceName>& out_dependencies, const io::Path& path)
 {
    const auto mesh_data = load_mesh_data(path);
    for (const auto& range : mesh_data.vertex_data.ranges) {
-      out_dependencies.push_back(range.material_name);
+      out_dependencies.insert(range.material_name);
    }
 }
 

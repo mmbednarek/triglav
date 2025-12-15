@@ -359,7 +359,7 @@ InternalMesh InternalMesh::from_obj_file(io::IReader& stream)
          }
       } else if (name == "o") {
          assert(arguments.size() == 1);
-         last_group_index = result.add_group({arguments[0], "stone.mat"_rc});
+         last_group_index = result.add_group({arguments[0], "material/stone.mat"_rc});
       } else if (name == "usemtl") {
          assert(arguments.size() == 1);
          if (not result.m_groups.empty()) {

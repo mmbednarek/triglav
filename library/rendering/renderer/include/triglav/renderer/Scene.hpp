@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "DebugLinesRenderer.hpp"
 #include "OrthoCamera.hpp"
 
 #include "triglav/Name.hpp"
+#include "triglav/String.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/geometry/BVHTree.hpp"
 #include "triglav/render_objects/Mesh.hpp"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <glm/gtc/quaternion.hpp>
 #include <vector>

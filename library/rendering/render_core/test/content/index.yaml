@@ -13,8 +13,8 @@ resources:
   - shader/testing/depth_target_sample/draw.fshader
   - shader/testing/depth_target_sample/sample.fshader
   - shader/testing/increase_number.cshader
-  - shader/testing/rt/basic.rgenshader
-  - shader/testing/rt/basic.rmissshader
-  - shader/testing/rt/basic.rchitshader
+  - shader/testing/ray_tracing/basic.rgenshader
+  - shader/testing/ray_tracing/basic.rmissshader
+  - shader/testing/ray_tracing/basic.rchitshader
   - shader/misc/full_screen.vshader
   - texture/sample.tex
