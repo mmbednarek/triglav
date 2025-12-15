@@ -64,39 +64,6 @@ class ResourceManager
       }
    }
 
-   template<ResourceType CResourceType>
-   void collect_dependencies(std::vector<ResourceName>& out_deps, const io::Path& path)
-   {
-      if constexpr (CollectsDependencies<Loader<CResourceType>>) {
-         Loader<CResourceType>::collect_dependencies(out_deps, path);
-      } else {
-         log_message(LogLevel::Debug, StringView{"Dependencies"}, "Missing support for dependencies for resource type {}",
-                     g_resource_stage_extensions[static_cast<int>(CResourceType)]);
-      }
-   }
-
-   template<ResourceType CResourceType>
-   void collect_dependencies_recursively(std::vector<ResourceName>& out_deps, TypedName<CResourceType> name)
-   {
-      if (name.name() == 0)
-         return;
-
-      const auto path_str = ResourcePathMap::the().resolve(name);
-      if (path_str.size() == 0)
-         return;
-      // assert(path_str.size() != 0);
-      const auto path = PathManager::the().content_path().sub(path_str.to_std());
-
-      const auto start_index = out_deps.size();
-      this->collect_dependencies<CResourceType>(out_deps, path);
-      const auto end_index = out_deps.size();
-
-      for (auto index = start_index; index < end_index; ++index) {
-         const auto dep = out_deps.at(index);
-         dep.match([&](auto rc) { this->collect_dependencies_recursively(out_deps, rc); });
-      }
-   }
-
    template<ResourceType CResourceType, typename... TArgs>
    void emplace_resource(TypedName<CResourceType> name, TArgs&&... args)
    {
@@ -130,5 +97,7 @@ class ResourceManager
    graphics_api::Device& m_device;
    font::FontManger& m_font_manager;
 };
+
+void resolve_dependencies(std::set<ResourceName>& resource_list);
 
 }// namespace triglav::resource

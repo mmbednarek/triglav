@@ -13,7 +13,7 @@ Mesh create_box(const Extent3D& extent)
    const Extent3D half{0.5f * extent.width, 0.5f * extent.height, 0.5f * extent.depth};
 
    Mesh mesh;
-   mesh.add_group({"box", "stone.mat"_rc});
+   mesh.add_group({"box", "material/stone.mat"_rc});
 
    mesh.add_vertex(-half.width, -half.height, half.depth);
    mesh.add_vertex(-half.width, half.height, half.depth);
@@ -63,7 +63,7 @@ Mesh create_box(const Extent3D& extent)
 Mesh create_sphere(const int segment_count, const int ring_count, const float radius)
 {
    Mesh mesh;
-   mesh.add_group({"sphere", "stone.mat"_rc});
+   mesh.add_group({"sphere", "material/stone.mat"_rc});
 
    std::vector<glm::vec2> uvs{};
    std::vector<glm::vec3> normals{};

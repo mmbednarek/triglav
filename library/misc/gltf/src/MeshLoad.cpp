@@ -67,7 +67,7 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
 
    geometry::Mesh dst_mesh;
 
-   const auto invalid_group_id = dst_mesh.add_group(geometry::MeshGroup{.name = "invalid", .material = "stone.mat"_rc});
+   const auto invalid_group_id = dst_mesh.add_group(geometry::MeshGroup{.name = "invalid", .material = "material/stone.mat"_rc});
 
    std::map<u32, geometry::Index> index_to_name;
    for (const auto& [index, name] : materials) {

@@ -32,22 +32,22 @@ render_objects::Material Loader<ResourceType::Material>::load(ResourceManager& /
    return load_material(path);
 }
 
-void Loader<ResourceType::Material>::collect_dependencies(std::vector<ResourceName>& out_dependencies, const io::Path& path)
+void Loader<ResourceType::Material>::collect_dependencies(std::set<ResourceName>& out_dependencies, const io::Path& path)
 {
    const auto mat = load_material(path);
    if (std::holds_alternative<render_objects::MTProperties_Basic>(mat.properties)) {
       const auto& props = std::get<render_objects::MTProperties_Basic>(mat.properties);
-      out_dependencies.push_back(props.albedo);
+      out_dependencies.insert(props.albedo);
    } else if (std::holds_alternative<render_objects::MTProperties_NormalMap>(mat.properties)) {
       const auto& props = std::get<render_objects::MTProperties_NormalMap>(mat.properties);
-      out_dependencies.push_back(props.albedo);
-      out_dependencies.push_back(props.normal);
+      out_dependencies.insert(props.albedo);
+      out_dependencies.insert(props.normal);
    } else if (std::holds_alternative<render_objects::MTProperties_FullPBR>(mat.properties)) {
       const auto& props = std::get<render_objects::MTProperties_FullPBR>(mat.properties);
-      out_dependencies.push_back(props.texture);
-      out_dependencies.push_back(props.normal);
-      out_dependencies.push_back(props.roughness);
-      out_dependencies.push_back(props.metallic);
+      out_dependencies.insert(props.texture);
+      out_dependencies.insert(props.normal);
+      out_dependencies.insert(props.roughness);
+      out_dependencies.insert(props.metallic);
    }
 }
 

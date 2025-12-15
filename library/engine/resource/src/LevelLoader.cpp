@@ -107,12 +107,12 @@ world::Level Loader<ResourceType::Level>::load(const io::Path& path)
    return result;
 }
 
-void Loader<ResourceType::Level>::collect_dependencies(std::vector<ResourceName>& out_dependencies, const io::Path& path)
+void Loader<ResourceType::Level>::collect_dependencies(std::set<ResourceName>& out_dependencies, const io::Path& path)
 {
    auto level = load(path);
 
    for (const auto& mesh : level.root().static_meshes()) {
-      out_dependencies.push_back(mesh.mesh_name);
+      out_dependencies.insert(mesh.mesh_name);
    }
 }
 
