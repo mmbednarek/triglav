@@ -9,6 +9,7 @@
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
 #include "triglav/renderer/stage/GBufferStage.hpp"
+#include "triglav/renderer/stage/PostProcessStage.hpp"
 #include "triglav/renderer/stage/ShadingStage.hpp"
 #include "triglav/renderer/stage/ShadowMapStage.hpp"
 #include "triglav/resource/PathManager.hpp"
@@ -235,6 +236,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_rendering_job.emplace_stage<renderer::stage::AmbientOcclusionStage>(m_state.root_window->device());
    m_rendering_job.emplace_stage<renderer::stage::ShadowMapStage>(m_scene, m_bindless_scene, m_update_view_params_job);
    m_rendering_job.emplace_stage<renderer::stage::ShadingStage>();
+   m_rendering_job.emplace_stage<renderer::stage::PostProcessStage>(nullptr, "post_process.out"_name);
 
    m_scene.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
 }

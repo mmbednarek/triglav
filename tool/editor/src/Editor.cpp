@@ -58,12 +58,12 @@ int Editor::run()
       const auto frame_duration = frame_end - frame_start;
 
       // Limit tick to 60 fps
-      if (frame_duration < 17ms) {
-         delta_time = 0.017f;
-         std::this_thread::sleep_for(17ms - frame_duration);
-      } else {
-         delta_time = static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(frame_duration).count()) / 1000000.0f;
-      }
+      // if (frame_duration < 17ms) {
+      //    delta_time = 0.017f;
+      //    std::this_thread::sleep_for(17ms - frame_duration);
+      // } else {
+      //    delta_time = static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(frame_duration).count()) / 1000000.0f;
+      // }
    }
 
    m_app.gfx_device().await_all();

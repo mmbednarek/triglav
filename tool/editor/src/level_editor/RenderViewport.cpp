@@ -96,7 +96,7 @@ void RenderViewport::build_render_job(render_core::BuildContext& ctx)
    ctx.copy_buffer("render_viewport.colors.staging"_name, "render_viewport.colors"_name);
    ctx.copy_buffer("render_viewport.matrices.staging"_name, "render_viewport.matrices"_name);
 
-   ctx.blit_texture("shading.color"_name, "render_viewport.out"_name);
+   ctx.blit_texture("post_process.out"_name, "render_viewport.out"_name);
 
    ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
 

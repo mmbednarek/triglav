@@ -96,7 +96,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
       m_rendering_job.emplace_stage<stage::RayTracingStage>(*m_ray_tracing_scene);
    }
    m_rendering_job.emplace_stage<stage::ShadingStage>();
-   m_rendering_job.emplace_stage<stage::PostProcessStage>(&m_update_user_interface_job);
+   m_rendering_job.emplace_stage<stage::PostProcessStage>(&m_update_user_interface_job, "core.color_out"_name);
 
    auto& update_view_params_ctx = m_job_graph.add_job(UpdateViewParamsJob::JobName);
    m_update_view_params_job.build_job(update_view_params_ctx);

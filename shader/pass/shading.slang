@@ -38,7 +38,9 @@ static const float4x4 BIAS_MAT = float4x4(
 );
 
 static const float STATIC_AMBIENT_TERM = 0.5;
-static const float SHADOW_MAP_BIAS_TERM = 0.008;
+static const float SHADOW_MAP_BIAS_TERM_CLOSE = 0.0015;
+static const float SHADOW_MAP_BIAS_TERM_MID = 0.002;
+static const float SHADOW_MAP_BIAS_TERM_FAR = 0.004;
 
 struct FragOutput
 {
@@ -77,7 +79,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
     if (g_shouldSampleShadows) {
         shadow = texShadow.Load(pixelPos);
     } else if (common::shadow_map::test_bounds(shadowUV)) {
-        shadow = common::shadow_map::test_pcr(texShadowMaps[0], shadowUV, SHADOW_MAP_BIAS_TERM);
+        shadow = common::shadow_map::test_pcr(texShadowMaps[0], shadowUV, SHADOW_MAP_BIAS_TERM_CLOSE);
 #if SHOW_SHADOW_CASCADES
         texColorSample.rgb *= float3(1.0, 0.1, 0.1);
 #endif
@@ -85,14 +87,14 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
         shadowUV = mul(mul(BIAS_MAT, g_shadowMapMatrices[1]), float4(position, 1.0));
         shadowUV /= shadowUV.w;
         if (common::shadow_map::test_bounds(shadowUV)) {
-            shadow = common::shadow_map::test_pcr(texShadowMaps[1], shadowUV, SHADOW_MAP_BIAS_TERM);
+            shadow = common::shadow_map::test_pcr(texShadowMaps[1], shadowUV, SHADOW_MAP_BIAS_TERM_MID);
 #if SHOW_SHADOW_CASCADES
             texColorSample.rgb *= float3(0.1, 1.0, 0.1);
 #endif
         } else {
             shadowUV = mul(mul(BIAS_MAT, g_shadowMapMatrices[2]), float4(position, 1.0));
             shadowUV /= shadowUV.w;
-            shadow = common::shadow_map::test_pcr(texShadowMaps[2], shadowUV, SHADOW_MAP_BIAS_TERM);
+            shadow = common::shadow_map::test_pcr(texShadowMaps[2], shadowUV, SHADOW_MAP_BIAS_TERM_FAR);
 #if SHOW_SHADOW_CASCADES
             texColorSample.rgb *= float3(0.1, 0.1, 1.0);
 #endif
