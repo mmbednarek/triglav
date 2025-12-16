@@ -16,16 +16,17 @@ struct PostProcessingPushConstants
 
 using namespace name_literals;
 
-PostProcessStage::PostProcessStage(UpdateUserInterfaceJob* update_user_interface_job) :
-    m_update_user_interface_job(update_user_interface_job)
+PostProcessStage::PostProcessStage(UpdateUserInterfaceJob* update_user_interface_job, Name output_render_target) :
+    m_update_user_interface_job(update_user_interface_job),
+    m_output_render_target(output_render_target)
 {
 }
 
 void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
-   ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target(m_output_render_target, GAPI_FORMAT(BGRA, sRGB));
 
-   ctx.begin_render_pass("post_processing"_name, "core.color_out"_name);
+   ctx.begin_render_pass("post_processing"_name, m_output_render_target);
 
    ctx.bind_fragment_shader("shader/pass/post_processing.fshader"_rc);
 
@@ -47,7 +48,7 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config&
 
    ctx.end_render_pass();
 
-   ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
+   ctx.export_texture(m_output_render_target, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
                       graphics_api::TextureUsage::TransferSrc);
 }
 

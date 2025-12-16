@@ -8,6 +8,7 @@
 #include "detail/Declarations.hpp"
 #include "detail/Descriptors.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/GraphicsApi.hpp"
@@ -51,6 +52,8 @@ class BuildContext
 {
    friend class GenerateCommandListPass;
    friend class BarrierInsertionPass;
+
+   TG_DEFINE_LOG_CATEGORY(BuildContext)
 
  public:
    BuildContext(graphics_api::Device& device, resource::ResourceManager& resource_manager, Vector2i screen_size);

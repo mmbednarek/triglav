@@ -433,6 +433,11 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
 
 void BuildContext::add_texture_usage(const Name tex_name, const graphics_api::TextureUsageFlags flags)
 {
+   if (!m_declarations.contains(tex_name)) {
+      log_error("missing texture declaration: {}", resolve_name(tex_name));
+      flush_logs();
+      assert(false);
+   }
    this->declaration<detail::decl::Texture>(tex_name).tex_usage_flags |= flags;
 }
 
