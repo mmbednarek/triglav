@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <expected>
+#include <iostream>
 
 namespace triglav::io {
 
@@ -45,6 +46,44 @@ Result<IFileUPtr> open_file(const Path& path, const FileModeFlags mode)
    }
 
    return std::make_unique<windows::WindowsFile>(file);
+}
+
+union WindowsDirectoryStream
+{
+   DirectoryStream stream;
+   struct
+   {
+      WIN32_FIND_DATAA find_data;
+      HANDLE file_handle;
+   } win;
+};
+static_assert(sizeof(WindowsDirectoryStream) == sizeof(DirectoryStream));
+
+Result<DirectoryStream> DirectoryStream::create(const Path& path)
+{
+   WindowsDirectoryStream stream{};
+   auto sub_path = path.sub("*");
+   stream.win.file_handle = ::FindFirstFileA(sub_path.string().c_str(), &stream.win.find_data);
+   if (stream.win.file_handle == INVALID_HANDLE_VALUE) {
+      return std::unexpected{Status::InvalidDirectory};
+   }
+   // First file should always be ".", we can skip it.
+   return std::bit_cast<DirectoryStream>(stream);
+}
+
+[[nodiscard]] std::optional<ListedFile> DirectoryStream::next()
+{
+   auto* stream = std::bit_cast<WindowsDirectoryStream*>(this);
+   if (::FindNextFileA(stream->win.file_handle, &stream->win.find_data) == 0) {
+      return std::nullopt;
+   }
+
+   // skip parent directory
+   if (std::strcmp(stream->win.find_data.cFileName, "..") == 0) {
+      return this->next();
+   }
+
+   return ListedFile{StringView{stream->win.find_data.cFileName}, (stream->win.find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0};
 }
 
 }// namespace triglav::io
