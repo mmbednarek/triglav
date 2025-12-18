@@ -1,9 +1,13 @@
 #include "UnixFile.hpp"
 
 #include <cassert>
+extern "C"
+{
+#include <dirent.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+}
 
 namespace triglav::io {
 
@@ -31,6 +35,32 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileModeFlags mode)
    }
 
    return std::make_unique<linux::UnixFile>(res, std::string{path.string()});
+}
+
+union UnixDirectoryStream
+{
+   DirectoryStream stream;
+   ::DIR* unix_handle;
+};
+static_assert(sizeof(UnixDirectoryStream) == sizeof(DirectoryStream));
+
+Result<DirectoryStream> DirectoryStream::create(const Path& path)
+{
+   UnixDirectoryStream stream{};
+   stream.unix_handle = ::opendir(path.string().c_str());
+   if (stream.unix_handle == nullptr) {
+      return std::unexpected{Status::InvalidDirectory};
+   }
+   return std::bit_cast<DirectoryStream>(stream);
+}
+
+[[nodiscard]] std::optional<ListedFile> DirectoryStream::next()
+{
+   const auto* stream = std::bit_cast<UnixDirectoryStream*>(this);
+   const auto* directory = ::readdir(stream->unix_handle);
+   if (directory == nullptr)
+      return std::nullopt;
+   return ListedFile{StringView{directory->d_name}, (directory->d_type & DT_DIR) != 0};
 }
 
 }// namespace triglav::io
