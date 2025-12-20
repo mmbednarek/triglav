@@ -32,7 +32,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_glyph_cache(device, m_resource_manager),
     m_pipeline_cache(m_device, m_resource_manager),
     m_ui_viewport({g_splash_screen_resolution.x, g_splash_screen_resolution.y}),
-    m_update_ui_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager),
+    m_update_ui_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager, *this),
     m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage,
                 {g_splash_screen_resolution.x, g_splash_screen_resolution.y})
 {
@@ -145,6 +145,11 @@ void SplashScreen::on_finished_loading_asset(const triglav::ResourceName resourc
       std::advance(it, index);
       this->update_loaded_resource(*it);
    }
+}
+
+void SplashScreen::recreate_render_jobs()
+{
+   // unsupported
 }
 
 void SplashScreen::update_process_bar(const float progress)

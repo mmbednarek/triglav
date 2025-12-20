@@ -72,7 +72,8 @@ class DrawCallUpdateWriter
    u32 m_top_staging_index = 0;
 };
 
-BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene, IRenderer& renderer) :
+BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene,
+                             render_core::IRenderer& renderer) :
     m_resource_manager(resource_manager),
     m_scene(scene),
     m_renderer(renderer),

@@ -5,6 +5,7 @@
 #include "triglav/graphics_api/Swapchain.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
+#include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/renderer/RenderSurface.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
@@ -17,7 +18,7 @@
 
 namespace demo {
 
-class SplashScreen
+class SplashScreen final : public triglav::render_core::IRenderer
 {
  public:
    using Self = SplashScreen;
@@ -32,11 +33,13 @@ class SplashScreen
 
    void on_started_loading_asset(triglav::ResourceName resource_name);
    void on_finished_loading_asset(triglav::ResourceName resource_name, triglav::u32 loaded_assets, triglav::u32 total_assets);
+   void recreate_render_jobs() override;
 
  private:
    void update_process_bar(float progress);
    void update_loaded_resource(triglav::ResourceName name);
 
+ private:
    triglav::graphics_api::Device& m_device;
    triglav::resource::ResourceManager& m_resource_manager;
    triglav::render_core::ResourceStorage m_resource_storage;

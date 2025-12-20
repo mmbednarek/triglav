@@ -133,10 +133,7 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
 void TreeView::remove_internal(const TreeItemId item_id)
 {
    if (m_state.controller->item(item_id).has_children) {
-      const auto& children = m_state.controller->children(item_id);
-      for (const auto& child : children) {
-         this->remove_internal(child);
-      }
+      m_state.controller->children(item_id, [&](const TreeItemId child) { this->remove_internal(child); });
    }
 
    m_labels.at(item_id).remove(m_context);
@@ -179,8 +176,7 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parent_id) const
       .font_size = TG_THEME_VAL(tree_view.font_size),
    });
 
-   const auto& children = m_state.controller->children(parent_id);
-   for (const auto child : children) {
+   m_state.controller->children(parent_id, [&](const TreeItemId child) {
       auto item = m_state.controller->item(child);
       auto measured_label = atlas.measure_text(item.label.view());
 
@@ -195,7 +191,7 @@ TreeView::Measure TreeView::get_measure(const TreeItemId parent_id) const
          max_height = std::max(max_height, sub_measure.item_size.y);
          total_count += sub_measure.total_count;
       }
-   }
+   });
 
    Measure measure{
       .size = {2 * g_global_padding + 2 * g_item_padding + max_width,
@@ -214,8 +210,7 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
 {
    const auto measure = this->get_measure(TREE_ROOT);
 
-   const auto& children = m_state.controller->children(parent_id);
-   for (const auto child : children) {
+   m_state.controller->children(parent_id, [&](const TreeItemId child) {
       const auto& item = m_state.controller->item(child);
 
       m_offset_to_item_id[offset_y - m_dimensions.y] = child;
@@ -288,13 +283,12 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
       if (item.has_children && m_state.extended_items.contains(child)) {
          this->draw_level(child, offset_x + g_indent_width, offset_y);
       }
-   }
+   });
 }
 
 void TreeView::remove_level(const TreeItemId parent_id)
 {
-   const auto children = m_state.controller->children(parent_id);
-   for (const auto child : children) {
+   m_state.controller->children(parent_id, [&](const TreeItemId child) {
       const auto& item = m_state.controller->item(child);
       if (item.has_children) {
          m_arrows.at(child).remove(m_context);
@@ -308,7 +302,7 @@ void TreeView::remove_level(const TreeItemId parent_id)
       m_icons.erase(child);
       m_labels.at(child).remove(m_context);
       m_labels.erase(child);
-   }
+   });
 }
 
 }// namespace triglav::desktop_ui

@@ -4,6 +4,7 @@
 #include "triglav/Name.hpp"
 #include "triglav/String.hpp"
 
+#include <functional>
 #include <map>
 #include <vector>
 
@@ -24,7 +25,8 @@ struct TreeItem
 class ITreeController
 {
  public:
-   virtual const std::vector<TreeItemId>& children(TreeItemId parent) = 0;
+   virtual ~ITreeController() = default;
+   virtual void children(TreeItemId parent, std::function<void(TreeItemId)> callback) = 0;
    virtual const TreeItem& item(TreeItemId id) = 0;
    virtual void set_label(TreeItemId id, StringView label) = 0;
    virtual void remove(TreeItemId id) = 0;
@@ -35,7 +37,7 @@ class TreeController final : public ITreeController
  public:
    TreeItemId add_item(TreeItemId parent, const TreeItem& item);
 
-   const std::vector<TreeItemId>& children(TreeItemId parent) override;
+   void children(TreeItemId parent, std::function<void(TreeItemId)> callback) override;
    const TreeItem& item(TreeItemId id) override;
    void set_label(TreeItemId id, StringView label) override;
    void remove(TreeItemId id) override;

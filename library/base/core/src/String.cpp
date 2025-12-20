@@ -196,6 +196,11 @@ bool String::operator==(const StringView other) const
    return std::memcmp(this->data(), other.data(), m_size) == 0;
 }
 
+bool String::operator<(const String& other) const
+{
+   return std::strncmp(this->data(), other.data(), std::min(this->size(), other.size())) < 0;
+}
+
 const char* String::data() const
 {
    if (m_size <= g_small_string_capacity) {

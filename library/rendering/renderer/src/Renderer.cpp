@@ -68,7 +68,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_pipeline_cache(m_device, m_resource_manager),
     m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage, {resolution.width, resolution.height}),
     m_update_view_params_job(m_scene),
-    m_update_user_interface_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager),
+    m_update_user_interface_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager, *this),
     m_occlusion_culling(m_update_view_params_job, m_bindless_scene),
     m_rendering_job(m_config_manager.config()),
     m_debug_widget(m_ui_context),

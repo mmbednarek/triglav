@@ -5,8 +5,8 @@
 #include "triglav/desktop_ui/WidgetRenderer.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
+#include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/JobGraph.hpp"
-#include "triglav/renderer/IRenderer.hpp"
 #include "triglav/renderer/RenderSurface.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
 #include "triglav/ui_core/IWidget.hpp"
@@ -20,7 +20,7 @@ namespace triglav::editor {
 
 class RenderViewport;
 
-class RootWindow final : public triglav::renderer::IRenderer
+class RootWindow final : public render_core::IRenderer
 {
  public:
    using Self = RootWindow;

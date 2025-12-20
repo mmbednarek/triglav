@@ -19,7 +19,7 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
     m_graphics_surface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resource_storage(device),
     m_render_surface(device, *m_surface, m_graphics_surface, m_resource_storage, DEFAULT_DIMENSIONS, graphics_api::PresentMode::Fifo),
-    m_widget_renderer(*m_surface, glyph_cache, resource_manager, device),
+    m_widget_renderer(*m_surface, glyph_cache, resource_manager, device, *this),
     m_pipeline_cache(device, resource_manager),
     m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, DEFAULT_DIMENSIONS),
     TG_CONNECT(*m_surface, OnClose, on_close),

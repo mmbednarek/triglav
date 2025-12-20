@@ -27,7 +27,7 @@ class UpdateUserInterfaceJob
    static constexpr auto JobName = make_name_id("job.update_user_interface");
 
    explicit UpdateUserInterfaceJob(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport,
-                                   resource::ResourceManager& resource_manager);
+                                   resource::ResourceManager& resource_manager, render_core::IRenderer& renderer);
 
    void build_job(render_core::BuildContext& ctx) const;
    void prepare_frame(render_core::JobGraph& graph, u32 frame_index);

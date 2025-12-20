@@ -8,6 +8,7 @@ render_core_sources = files([
   'include/triglav/render_core/GenerateCommandListPass.hpp',
   'include/triglav/render_core/GlyphAtlas.hpp',
   'include/triglav/render_core/GlyphCache.hpp',
+  'include/triglav/render_core/IRenderer.hpp',
   'include/triglav/render_core/Job.hpp',
   'include/triglav/render_core/JobGraph.hpp',
   'include/triglav/render_core/PipelineCache.hpp',

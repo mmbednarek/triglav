@@ -25,7 +25,7 @@ void Editor::initialize()
    m_root_window = std::make_unique<RootWindow>(m_app.gfx_instance(), m_app.gfx_device(), m_app.display(), m_app.glyph_cache(),
                                                 m_app.resource_manager());
    m_dialog_manager = std::make_unique<desktop_ui::PopupManager>(m_app.gfx_instance(), m_app.gfx_device(), m_app.glyph_cache(),
-                                                                 m_app.resource_manager(), m_root_window->surface());
+                                                                 m_app.resource_manager(), m_root_window->surface(), *m_root_window);
 
    m_root_widget = &m_root_window->create_root_widget<RootWidget>({
       .dialog_manager = m_dialog_manager.get(),

@@ -1,6 +1,6 @@
 #pragma once
 
-namespace triglav::renderer {
+namespace triglav::render_core {
 
 class IRenderer
 {
@@ -11,4 +11,4 @@ class IRenderer
  private:
 };
 
-}// namespace triglav::renderer
+}// namespace triglav::render_core

@@ -5,6 +5,7 @@
 
 #include "triglav/EnumFlags.hpp"
 #include "triglav/String.hpp"
+#include "triglav/Template.hpp"
 
 #include <array>
 #include <memory>
@@ -39,8 +40,8 @@ Status remove_file(const Path& path);
 
 struct ListedFile
 {
-   StringView name;
-   bool is_dir;
+   StringView name{};
+   bool is_dir{};
 };
 
 struct DirectoryStream
@@ -51,5 +52,11 @@ struct DirectoryStream
    [[nodiscard]] std::optional<ListedFile> next();
 };
 
+using DirectoryRange = StlForwardRange<ListedFile, DirectoryStream>;
+
+inline auto list_files(const Path& path)
+{
+   return DirectoryRange(*DirectoryStream::create(path));
+}
 
 }// namespace triglav::io

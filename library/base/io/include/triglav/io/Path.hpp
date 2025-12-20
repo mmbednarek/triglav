@@ -10,6 +10,7 @@ namespace triglav::io {
 class Path
 {
  public:
+   Path();
    explicit Path(std::string_view path);
 
    [[nodiscard]] Path sub(std::string_view value) const;

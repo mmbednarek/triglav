@@ -7,6 +7,11 @@
 
 namespace triglav::io {
 
+Path::Path() :
+    m_path{}
+{
+}
+
 Path::Path(const std::string_view path) :
     m_path(path)
 {

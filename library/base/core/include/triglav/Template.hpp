@@ -58,4 +58,71 @@ std::array<T, Count> span_to_array(const std::span<T> job_frames)
 template<typename T>
 using NonVoid = std::conditional_t<std::is_same_v<T, void>, std::monostate, T>;
 
+template<typename T, typename TElement>
+concept ForwardIterator = requires(T iterator) {
+   { iterator.next() } -> std::same_as<std::optional<TElement>>;
+};
+
+template<typename TElem, ForwardIterator<TElem> TIterator>
+class StlForwardIterator
+{
+ public:
+   using iterator_category = std::forward_iterator_tag;
+   using value_type = TElem;
+   using difference_type = ptrdiff_t;
+   using pointer = TElem*;
+   using reference = TElem&;
+   using Self = StlForwardIterator;
+
+   StlForwardIterator(TIterator& iterator, std::optional<TElem> value) :
+       m_iterator(iterator),
+       m_value(std::move(value))
+   {
+   }
+
+   Self& operator++()
+   {
+      m_value = m_iterator.next();
+      return *this;
+   }
+
+   [[nodiscard]] TElem operator*() const
+   {
+      return *m_value;
+   }
+
+   [[nodiscard]] bool operator!=(const Self& other) const
+   {
+      return m_value.has_value() || other.m_value.has_value();
+   }
+
+ private:
+   TIterator& m_iterator;
+   std::optional<TElem> m_value{};
+};
+
+template<typename TElem, ForwardIterator<TElem> TIterator>
+class StlForwardRange
+{
+ public:
+   template<typename... TArgs>
+   explicit StlForwardRange(TArgs... args) :
+       m_iterator(std::forward<TArgs>(args)...)
+   {
+   }
+
+   StlForwardIterator<TElem, TIterator> begin()
+   {
+      return StlForwardIterator<TElem, TIterator>{m_iterator, m_iterator.next()};
+   }
+
+   StlForwardIterator<TElem, TIterator> end()
+   {
+      return StlForwardIterator<TElem, TIterator>{m_iterator, std::nullopt};
+   }
+
+ private:
+   TIterator m_iterator;
+};
+
 }// namespace triglav

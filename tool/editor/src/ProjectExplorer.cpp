@@ -1,13 +1,12 @@
 #include "ProjectExplorer.hpp"
 
 #include "triglav/desktop_ui/TreeView.hpp"
+#include "triglav/io/File.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
-
-#include <ranges>
 
 namespace triglav::editor {
 
@@ -37,12 +36,77 @@ Vector2i resource_path_to_icon_offset(const std::string_view path)
    return {8 * 18, 18};
 }
 
+void ProjectTreeController::children(const desktop_ui::TreeItemId parent, const std::function<void(desktop_ui::TreeItemId)> callback)
+{
+   const auto cache_it = m_cache.find(parent);
+   if (cache_it != m_cache.end()) {
+      for (const auto& child : cache_it->second) {
+         callback(child);
+      }
+      return;
+   }
+
+   io::Path path = resource::PathManager::the().content_path();
+   if (parent != desktop_ui::TREE_ROOT) {
+      path = m_id_to_path.at(parent);
+   }
+
+   std::vector<desktop_ui::TreeItemId> children;
+   for (const auto [name, is_dir] : io::list_files(path)) {
+      Vector2i region;
+      if (is_dir) {
+         region = {5 * 18, 0};
+      } else {
+         region = resource_path_to_icon_offset(name.to_std());
+      }
+      m_id_to_item[m_top_item] = desktop_ui::TreeItem{
+         .icon_name = "texture/ui_icons.tex"_rc,
+         .icon_region = {region.x, region.y, 18, 18},
+         .label = {name},
+         .has_children = is_dir,
+      };
+      m_id_to_path[m_top_item] = path.sub(name.to_std());
+      children.push_back(m_top_item);
+      ++m_top_item;
+   }
+
+   std::ranges::sort(children, [&](const desktop_ui::TreeItemId left, const desktop_ui::TreeItemId right) {
+      const auto& left_it = m_id_to_item.at(left);
+      const auto& right_it = m_id_to_item.at(right);
+
+      if (left_it.has_children != right_it.has_children) {
+         return left_it.has_children;
+      }
+
+      return left_it.label < right_it.label;
+   });
+
+   for (const auto child : children) {
+      callback(child);
+   }
+
+   m_cache[parent] = std::move(children);
+}
+
+const desktop_ui::TreeItem& ProjectTreeController::item(const desktop_ui::TreeItemId id)
+{
+   return m_id_to_item.at(id);
+}
+
+void ProjectTreeController::set_label(const desktop_ui::TreeItemId id, const StringView label)
+{
+   m_id_to_item[id].label = label;
+}
+
+void ProjectTreeController::remove(const desktop_ui::TreeItemId)
+{
+   // Unsuported
+}
+
 ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
     m_state(state)
 {
-   this->init_controller();
-
    auto& background = this->create_content<ui_core::RectBox>({
       .color = TG_THEME_VAL(background_color_brighter),
       .border_radius = {},
@@ -68,43 +132,6 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
       .manager = m_state.manager,
       .controller = &m_controller,
    });
-}
-
-void ProjectExplorer::init_controller()
-{
-   const auto& name_reg = m_context.resource_manager().name_registry();
-   name_reg.iterate_names([this](const std::string& name) { this->add_controller_item(name); });
-}
-
-void ProjectExplorer::add_controller_item(const std::string_view path)
-{
-   auto pos = path.find('/');
-   auto last_pos = 0ull;
-   u32 item_id = desktop_ui::TREE_ROOT;
-   while (pos != std::string_view::npos) {
-      auto it = m_path_to_id.find(path.substr(0, pos));
-      if (it == m_path_to_id.end()) {
-         item_id = m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                                     .icon_name = "texture/ui_icons.tex"_rc,
-                                                     .icon_region = {5 * 18, 0, 18, 18},
-                                                     .label = {path.substr(last_pos, pos).data(), pos - last_pos},
-                                                     .has_children = true,
-                                                  });
-         m_path_to_id[path.substr(0, pos)] = item_id;
-      } else {
-         item_id = it->second;
-      }
-      last_pos = pos + 1;
-      pos = path.find('/', last_pos);
-   }
-
-   const auto icon_offset = resource_path_to_icon_offset(path);
-   m_controller.add_item(item_id, desktop_ui::TreeItem{
-                                     .icon_name = "texture/ui_icons.tex"_rc,
-                                     .icon_region = {icon_offset.x, icon_offset.y, 18, 18},
-                                     .label = {path.substr(last_pos).data(), path.size() - last_pos},
-                                     .has_children = false,
-                                  });
 }
 
 }// namespace triglav::editor

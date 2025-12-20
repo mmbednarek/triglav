@@ -61,9 +61,11 @@ struct TextVertex
    Vector2 uv;
 };
 
-TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport) :
+TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport,
+                           render_core::IRenderer& renderer) :
     m_device(device),
     m_glyph_cache(glyph_cache),
+    m_renderer(renderer),
     m_combined_glyph_buffer(GAPI_CHECK(device.create_buffer(
        graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst, g_max_combined_glyph_buffer_size))),
     m_vertex_allocator{memory::HeapAllocator{g_max_text_vertices}},
@@ -246,6 +248,8 @@ const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProp
    if (const auto it = m_typeface_infos.find(glyph_props.hash()); it != m_typeface_infos.end()) {
       return it->second;
    }
+
+   m_renderer.recreate_render_jobs();
 
    auto& glyph_atlas = m_glyph_cache.find_glyph_atlas(glyph_props);
 

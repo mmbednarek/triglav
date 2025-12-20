@@ -7,12 +7,13 @@ namespace triglav::renderer {
 using namespace triglav::name_literals;
 
 UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-                                               ui_core::Viewport& viewport, resource::ResourceManager& resource_manager) :
+                                               ui_core::Viewport& viewport, resource::ResourceManager& resource_manager,
+                                               render_core::IRenderer& renderer) :
     m_device(device),
     m_viewport(viewport),
     m_rectangle_renderer(viewport),
     m_sprite_renderer(viewport, resource_manager),
-    m_text_renderer(m_device, glyph_cache, viewport)
+    m_text_renderer(m_device, glyph_cache, viewport, renderer)
 {
 }
 

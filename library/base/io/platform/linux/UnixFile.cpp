@@ -60,6 +60,9 @@ Result<DirectoryStream> DirectoryStream::create(const Path& path)
    const auto* directory = ::readdir(stream->unix_handle);
    if (directory == nullptr)
       return std::nullopt;
+   if (std::strcmp(directory->d_name, ".") == 0 || std::strcmp(directory->d_name, "..") == 0) {
+      return this->next();
+   }
    return ListedFile{StringView{directory->d_name}, (directory->d_type & DT_DIR) != 0};
 }
 
