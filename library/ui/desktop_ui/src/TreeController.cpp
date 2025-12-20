@@ -11,9 +11,11 @@ TreeItemId TreeController::add_item(const TreeItemId parent, const TreeItem& ite
    return item_id;
 }
 
-const std::vector<TreeItemId>& TreeController::children(const TreeItemId parent)
+void TreeController::children(const TreeItemId parent, std::function<void(TreeItemId)> callback)
 {
-   return m_hierarchy.at(parent);
+   for (const auto child : m_hierarchy.at(parent)) {
+      callback(child);
+   }
 }
 
 const TreeItem& TreeController::item(const TreeItemId id)

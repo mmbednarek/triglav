@@ -3,8 +3,8 @@
 #include "triglav/Utf8.hpp"
 #include "triglav/desktop/Desktop.hpp"
 #include "triglav/desktop/ISurface.hpp"
+#include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/JobGraph.hpp"
-#include "triglav/render_core/ResourceStorage.hpp"
 #include "triglav/renderer/RenderSurface.hpp"
 #include "triglav/renderer/UpdateUserInterfaceJob.hpp"
 #include "triglav/ui_core/Context.hpp"
@@ -23,7 +23,7 @@ class WidgetRenderer
    using Self = WidgetRenderer;
 
    WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager,
-                  graphics_api::Device& device);
+                  graphics_api::Device& device, render_core::IRenderer& renderer);
 
    void create_update_job(render_core::BuildContext& ctx) const;
    void create_render_job(render_core::BuildContext& ctx, Name output_render_target);

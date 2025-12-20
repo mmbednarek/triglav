@@ -15,7 +15,6 @@ renderer_sources = files([
   'include/triglav/renderer/Config.hpp',
   'include/triglav/renderer/DebugWidget.hpp',
   'include/triglav/renderer/InfoDialog.hpp',
-  'include/triglav/renderer/IRenderer.hpp',
   'include/triglav/renderer/OcclusionCulling.hpp',
   'include/triglav/renderer/OrthoCamera.hpp',
   'include/triglav/renderer/RayTracingScene.hpp',

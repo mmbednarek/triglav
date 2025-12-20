@@ -5,10 +5,11 @@ namespace triglav::desktop_ui {
 using namespace name_literals;
 
 WidgetRenderer::WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyph_cache,
-                               resource::ResourceManager& resource_manager, graphics_api::Device& device) :
+                               resource::ResourceManager& resource_manager, graphics_api::Device& device,
+                               render_core::IRenderer& renderer) :
     m_surface(surface),
     m_ui_viewport(surface.dimension()),
-    m_update_ui_job(device, glyph_cache, m_ui_viewport, resource_manager),
+    m_update_ui_job(device, glyph_cache, m_ui_viewport, resource_manager, renderer),
     m_context(m_ui_viewport, glyph_cache, resource_manager),
     TG_CONNECT(m_surface, OnMouseEnter, on_mouse_enter),
     TG_CONNECT(m_surface, OnMouseMove, on_mouse_move),

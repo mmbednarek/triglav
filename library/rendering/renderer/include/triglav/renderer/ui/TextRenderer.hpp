@@ -1,9 +1,11 @@
 #pragma once
 
+
 #include "triglav/Logging.hpp"
 #include "triglav/UpdateList.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/memory/HeapAllocator.hpp"
+#include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/ui_core/Viewport.hpp"
 
@@ -48,7 +50,8 @@ class TextRenderer
  public:
    using Self = TextRenderer;
 
-   TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport);
+   TextRenderer(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport,
+                render_core::IRenderer& renderer);
 
    void on_added_text(ui_core::TextId text_id, const ui_core::Text& text);
    void on_updated_text(ui_core::TextId text_id, const ui_core::Text& text);
@@ -69,6 +72,7 @@ class TextRenderer
 
    graphics_api::Device& m_device;
    render_core::GlyphCache& m_glyph_cache;
+   render_core::IRenderer& m_renderer;
 
    std::array<UpdateList<ui_core::RectId, TextInfo>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frame_updates;
    std::vector<render_core::TextureRef> m_atlases;

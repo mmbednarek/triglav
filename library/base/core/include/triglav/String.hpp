@@ -100,6 +100,7 @@ class String
    bool operator==(const String& other) const;
    bool operator==(const char* other) const;
    bool operator==(StringView other) const;
+   [[nodiscard]] bool operator<(const String& other) const;
 
    [[nodiscard]] const char* data() const;
    [[nodiscard]] char* data();

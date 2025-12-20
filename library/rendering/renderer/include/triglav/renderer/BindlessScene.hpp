@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IRenderer.hpp"
+#include "../../../../render_core/include/triglav/render_core/IRenderer.hpp"
 #include "Scene.hpp"
 
 #include "triglav/Int.hpp"
@@ -82,7 +82,7 @@ class BindlessScene
  public:
    using Self = BindlessScene;
 
-   BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, Scene& scene, IRenderer& renderer);
+   BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, Scene& scene, render_core::IRenderer& renderer);
 
    void on_object_added_to_scene(ObjectID object_id, const SceneObject& object);
    void on_object_changed_transform(ObjectID object_id, const Transform3D& transform);
@@ -109,7 +109,7 @@ class BindlessScene
    // References
    resource::ResourceManager& m_resource_manager;
    Scene& m_scene;
-   IRenderer& m_renderer;
+   render_core::IRenderer& m_renderer;
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers

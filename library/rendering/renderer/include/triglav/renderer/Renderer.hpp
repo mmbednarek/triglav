@@ -7,7 +7,6 @@
 #include "OcclusionCulling.hpp"
 #include "RayTracingScene.hpp"
 #include "RenderSurface.hpp"
-#include "Renderer.hpp"
 #include "RenderingJob.hpp"
 #include "Scene.hpp"
 #include "UpdateUserInterfaceJob.hpp"
@@ -18,6 +17,7 @@
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
+#include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/render_core/PipelineCache.hpp"
 #include "triglav/render_core/ResourceStorage.hpp"
@@ -33,7 +33,7 @@ class ResourceStorage;
 
 namespace triglav::renderer {
 
-class Renderer final : public IRenderer
+class Renderer final : public render_core::IRenderer
 {
    TG_DEFINE_LOG_CATEGORY(Renderer)
  public:
