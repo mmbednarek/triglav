@@ -3,13 +3,12 @@
 namespace triglav::desktop_ui {
 
 PopupManager::PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-                           resource::ResourceManager& resource_manager, desktop::ISurface& root_surface, render_core::IRenderer& renderer) :
+                           resource::ResourceManager& resource_manager, desktop::ISurface& root_surface) :
     m_instance(instance),
     m_device(device),
     m_glyph_cache(glyph_cache),
     m_resource_manager(resource_manager),
-    m_root_surface(root_surface),
-    m_renderer(renderer)
+    m_root_surface(root_surface)
 {
 }
 
@@ -17,7 +16,7 @@ Dialog& PopupManager::create_popup_dialog(const Vector2i offset, const Vector2u 
 {
    std::unique_lock lk{m_popup_mtx};
    const auto& popup = m_popups.emplace_back(
-      std::make_unique<Dialog>(m_instance, m_device, m_root_surface, m_glyph_cache, m_resource_manager, m_renderer, dimensions, offset));
+      std::make_unique<Dialog>(m_instance, m_device, m_root_surface, m_glyph_cache, m_resource_manager, dimensions, offset));
    return *popup;
 }
 

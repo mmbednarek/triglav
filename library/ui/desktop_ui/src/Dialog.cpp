@@ -10,30 +10,29 @@ using namespace name_literals;
 using namespace string_literals;
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-               render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, render_core::IRenderer& renderer,
-               const Vector2u dimensions, const StringView title) :
-    Dialog(instance, device, glyph_cache, resource_manager, renderer, dimensions,
+               render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, const Vector2u dimensions,
+               const StringView title) :
+    Dialog(instance, device, glyph_cache, resource_manager, dimensions,
            display.create_surface(title, dimensions, desktop::WindowAttribute::Default))
 {
 }
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parent_surface,
-               render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, render_core::IRenderer& renderer,
-               const Vector2u dimensions, const Vector2i offset) :
-    Dialog(instance, device, glyph_cache, resource_manager, renderer, dimensions,
+               render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, const Vector2u dimensions,
+               const Vector2i offset) :
+    Dialog(instance, device, glyph_cache, resource_manager, dimensions,
            parent_surface.create_popup(dimensions, offset, desktop::WindowAttribute::None))
 {
 }
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-               resource::ResourceManager& resource_manager, render_core::IRenderer& renderer, const Vector2u dimensions,
-               std::shared_ptr<desktop::ISurface> surface) :
+               resource::ResourceManager& resource_manager, const Vector2u dimensions, std::shared_ptr<desktop::ISurface> surface) :
     m_device(device),
     m_surface(std::move(surface)),
     m_graphics_surface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resource_storage(device),
     m_render_surface(device, *m_surface, m_graphics_surface, m_resource_storage, dimensions, graphics_api::PresentMode::Immediate),
-    m_widget_renderer(*m_surface, glyph_cache, resource_manager, device, renderer),
+    m_widget_renderer(*m_surface, glyph_cache, resource_manager, device, *this),
     m_pipeline_cache(device, resource_manager),
     m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, dimensions),
     TG_CONNECT(*m_surface, OnClose, on_close),
@@ -88,6 +87,12 @@ void Dialog::update()
       return;
    if (!m_widget_renderer.ui_viewport().should_redraw())
       return;
+   if (m_should_rebuild) {
+      auto& render_ctx = m_job_graph.replace_job("render_dialog"_name);
+      this->build_rendering_job(render_ctx);
+      m_render_surface.recreate_present_jobs();
+      m_should_rebuild = false;
+   }
 
    m_render_surface.await_for_frame(m_frame_index);
 
@@ -129,6 +134,11 @@ void Dialog::on_resize(const Vector2i size)
 WidgetRenderer& Dialog::widget_renderer()
 {
    return m_widget_renderer;
+}
+
+void Dialog::recreate_render_jobs()
+{
+   m_should_rebuild = true;
 }
 
 desktop::ISurface& Dialog::surface() const
