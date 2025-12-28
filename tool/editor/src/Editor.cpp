@@ -55,7 +55,7 @@ int Editor::run()
 
       auto frame_end = std::chrono::steady_clock::now();
 
-      const auto frame_duration = frame_end - frame_start;
+      [[maybe_unused]] const auto frame_duration = frame_end - frame_start;
 
       // Limit tick to 60 fps
       // if (frame_duration < 17ms) {
