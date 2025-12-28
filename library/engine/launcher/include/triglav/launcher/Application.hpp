@@ -33,7 +33,7 @@ class Application
    Application& operator=(Application&& other) noexcept = delete;
 
    void complete_stage();
-   void intitialize();
+   void initialise();
    void tick() const;
    [[nodiscard]] bool is_init_complete() const;
    [[nodiscard]] desktop::IDisplay& display() const;

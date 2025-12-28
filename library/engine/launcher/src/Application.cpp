@@ -53,7 +53,7 @@ void Application::complete_stage()
    }
 }
 
-void Application::intitialize()
+void Application::initialise()
 {
    this->complete_stage();
 

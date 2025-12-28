@@ -19,20 +19,18 @@ class BuildContext;
 }
 namespace triglav::desktop_ui {
 
-class Dialog
+class Dialog : public render_core::IRenderer
 {
  public:
    using Self = Dialog;
 
    // Top level dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, render_core::IRenderer& renderer,
-          Vector2u dimensions, StringView title);
+          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, Vector2u dimensions, StringView title);
 
    // Popup dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parent_surface,
-          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, render_core::IRenderer& renderer,
-          Vector2u dimensions, Vector2i offset);
+          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, Vector2u dimensions, Vector2i offset);
 
    void initialize();
    void uninitialize() const;
@@ -40,6 +38,7 @@ class Dialog
    void on_close();
    void on_resize(Vector2i size);
    [[nodiscard]] WidgetRenderer& widget_renderer();
+   void recreate_render_jobs() override;
 
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
@@ -58,8 +57,7 @@ class Dialog
 
  private:
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-          resource::ResourceManager& resource_manager, render_core::IRenderer& renderer, Vector2u dimensions,
-          std::shared_ptr<desktop::ISurface> surface);
+          resource::ResourceManager& resource_manager, Vector2u dimensions, std::shared_ptr<desktop::ISurface> surface);
 
    void build_rendering_job(render_core::BuildContext& ctx);
 
@@ -75,6 +73,7 @@ class Dialog
    u32 m_frame_index{0};
    bool m_should_close{false};
    bool m_is_initialized{false};
+   bool m_should_rebuild{false};
 
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);
