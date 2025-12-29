@@ -4,7 +4,7 @@
 
 #include "triglav/Name.hpp"
 #include "triglav/ui_core/IWidget.hpp"
-#include "triglav/ui_core/Primitives.hpp"
+#include "triglav/ui_core/PrimitiveHelpers.hpp"
 
 #include <optional>
 
@@ -21,6 +21,7 @@ class TabView final : public ui_core::LayoutWidget
       DesktopUIManager* manager;
       std::vector<String> tab_names;
       u32 active_tab = 0;
+      bool allow_closing = true;
    };
 
    struct Measure
@@ -48,14 +49,15 @@ class TabView final : public ui_core::LayoutWidget
    [[nodiscard]] const Measure& get_measure(Vector2 available_size) const;
 
    State m_state;
-   std::vector<ui_core::TextId> m_labels;
+   std::vector<ui_core::TextInstance> m_labels;
+   std::vector<ui_core::SpriteInstance> m_close_buttons;
    std::map<float, u32> m_offset_to_item;
    Vector4 m_dimensions;
    Vector4 m_cropping_mask;
 
-   ui_core::RectId m_background_id{};
-   ui_core::RectId m_hover_rect_id{};
-   ui_core::RectId m_active_rect_id{};
+   ui_core::RectInstance m_background{};
+   ui_core::RectInstance m_hover_rect{};
+   ui_core::RectInstance m_active_rect{};
    u32 m_hovered_item = 0;
    bool m_is_dragging{false};
 

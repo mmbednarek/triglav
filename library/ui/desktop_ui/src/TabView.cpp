@@ -6,15 +6,34 @@
 
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/ui_core/Context.hpp"
-#include "triglav/ui_core/Viewport.hpp"
 
 namespace triglav::desktop_ui {
+
+using namespace name_literals;
 
 constexpr auto g_item_padding = 13.0f;
 
 TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::LayoutWidget(ctx, parent),
-    m_state(std::move(state))
+    m_state(std::move(state)),
+    m_background{
+       .color = TG_THEME_VAL(background_color_darker),
+       .border_radius = {0, 0, 0, 0},
+       .border_color = {0, 0, 0, 0},
+       .border_width = 0,
+    },
+    m_hover_rect{
+       .color = TG_THEME_VAL(background_color_brighter),
+       .border_radius = {0, 0, 0, 0},
+       .border_color = palette::NO_COLOR,
+       .border_width = 0.0f,
+    },
+    m_active_rect{
+       .color = TG_THEME_VAL(background_color_brighter),
+       .border_radius = {5.0f, 5.0f, 0.0f, 0.0f},
+       .border_color = palette::NO_COLOR,
+       .border_width = 0.0f,
+    }
 {
 }
 
@@ -35,18 +54,7 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
    const bool first_init = m_labels.empty();
 
    const Vector4 background_dims{dimensions.x, dimensions.y, dimensions.z, measure.tab_height};
-   if (m_background_id == 0) {
-      m_background_id = m_context.viewport().add_rectangle({
-         .rect = background_dims,
-         .color = TG_THEME_VAL(background_color_darker),
-         .border_radius = {0, 0, 0, 0},
-         .border_color = {0, 0, 0, 0},
-         .crop = cropping_mask,
-         .border_width = 0,
-      });
-   } else {
-      m_context.viewport().set_rectangle_dims(m_background_id, background_dims, m_cropping_mask);
-   }
+   m_background.add(m_context, background_dims, cropping_mask);
 
    float offset_x = dimensions.x;
    u32 index = 0;
@@ -54,32 +62,29 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
       if (index == m_state.active_tab) {
          const Vector4 active_tab_dims{offset_x, dimensions.y + 0.25f * g_item_padding, measure.tab_widths[index],
                                        measure.tab_height - 0.25f * g_item_padding};
-         if (m_active_rect_id == 0) {
-            m_active_rect_id = m_context.viewport().add_rectangle({
-               .rect = active_tab_dims,
-               .color = TG_THEME_VAL(background_color_brighter),
-               .border_radius = {5.0f, 5.0f, 0.0f, 0.0f},
-               .border_color = palette::NO_COLOR,
-               .crop = cropping_mask,
-               .border_width = 0.0f,
-            });
-         } else {
-            m_context.viewport().set_rectangle_dims(m_active_rect_id, active_tab_dims, m_cropping_mask);
-         }
+         m_active_rect.add(m_context, active_tab_dims, cropping_mask);
       }
 
       Vector2 text_pos{offset_x + g_item_padding, dimensions.y + measure.tab_height - g_item_padding};
+      Vector4 close_btn_dims{offset_x + measure.tab_widths[index] - g_item_padding, dimensions.y + g_item_padding, 16, 16};
       if (first_init) {
-         m_labels.emplace_back(m_context.viewport().add_text({
+         auto& text_instance = m_labels.emplace_back(ui_core::TextInstance{
             .content = tab_name,
             .typeface_name = TG_THEME_VAL(base_typeface),
             .font_size = TG_THEME_VAL(tab_view.font_size),
-            .position = text_pos,
             .color = TG_THEME_VAL(foreground_color),
-            .crop = cropping_mask,
-         }));
+         });
+         text_instance.add(m_context, text_pos, cropping_mask);
+
+         auto& close_btn_instance = m_close_buttons.emplace_back(ui_core::SpriteInstance{
+            .texture = "texture/ui_atlas.tex"_rc,
+            .size = {16, 16},
+            .texture_region = Vector4{0, 64, 64, 64},
+         });
+         close_btn_instance.add(m_context, close_btn_dims, cropping_mask);
       } else {
-         m_context.viewport().set_text_position(m_labels[index], text_pos, cropping_mask);
+         m_labels[index].add(m_context, text_pos, cropping_mask);
+         m_close_buttons[index].add(m_context, close_btn_dims, cropping_mask);
       }
 
       m_offset_to_item[offset_x - dimensions.x] = index;
@@ -94,15 +99,14 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
 
 void TabView::remove_from_viewport()
 {
-   for (const auto label : m_labels) {
-      m_context.viewport().remove_text(label);
+   for (auto& label : m_labels) {
+      label.remove(m_context);
    }
    m_labels.clear();
 
-   m_context.viewport().remove_rectangle(m_background_id);
-   m_background_id = 0;
-   m_context.viewport().remove_rectangle_safe(m_active_rect_id);
-   m_context.viewport().remove_rectangle_safe(m_hover_rect_id);
+   m_background.remove(m_context);
+   m_active_rect.remove(m_context);
+   m_hover_rect.remove(m_context);
 
    m_children[m_state.active_tab]->remove_from_viewport();
 }
@@ -120,10 +124,7 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
 {
    if (event.mouse_position.y > this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height) {
       m_hovered_item = ~0u;
-      if (m_hover_rect_id != 0) {
-         m_context.viewport().remove_rectangle(m_hover_rect_id);
-         m_hover_rect_id = 0;
-      }
+      m_hover_rect.remove(m_context);
       return true;
    }
 
@@ -145,27 +146,13 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
    m_hovered_item = index;
 
    if (index == ~0u || index == m_state.active_tab) {
-      if (m_hover_rect_id != 0) {
-         m_context.viewport().remove_rectangle(m_hover_rect_id);
-         m_hover_rect_id = 0;
-      }
+      m_hover_rect.remove(m_context);
       return false;
    }
 
    const auto& measure = this->get_measure({m_dimensions.z, m_dimensions.w});
    const Vector4 hover_tab_dims{m_dimensions.x + offset_x, m_dimensions.y, measure.tab_widths[index], measure.tab_height};
-   if (m_hover_rect_id == 0) {
-      m_hover_rect_id = m_context.viewport().add_rectangle({
-         .rect = hover_tab_dims,
-         .color = TG_THEME_VAL(background_color_brighter),
-         .border_radius = {0, 0, 0, 0},
-         .border_color = palette::NO_COLOR,
-         .crop = m_cropping_mask,
-         .border_width = 0.0f,
-      });
-   } else {
-      m_context.viewport().set_rectangle_dims(m_hover_rect_id, hover_tab_dims, m_cropping_mask);
-   }
+   m_hover_rect.add(m_context, hover_tab_dims, m_cropping_mask);
 
    return false;
 }
@@ -181,10 +168,7 @@ bool TabView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event
       return false;
    }
 
-   if (m_hover_rect_id != 0) {
-      m_context.viewport().remove_rectangle(m_hover_rect_id);
-      m_hover_rect_id = 0;
-   }
+   m_hover_rect.remove(m_context);
 
    this->set_active_tab(index);
    m_is_dragging = true;
