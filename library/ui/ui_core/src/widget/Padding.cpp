@@ -8,9 +8,10 @@ Padding::Padding(Context& ctx, State state, IWidget* parent) :
 {
 }
 
-Vector2 Padding::desired_size(Vector2 parent_size) const
+Vector2 Padding::desired_size(Vector2 available_size) const
 {
-   const auto child_size = m_content->desired_size({parent_size.x - m_padding.x - m_padding.z, parent_size.y - m_padding.y - m_padding.w});
+   const auto child_size =
+      m_content->desired_size({available_size.x - m_padding.x - m_padding.z, available_size.y - m_padding.y - m_padding.w});
    return {child_size.x + m_padding.x + m_padding.z, child_size.y + m_padding.y + m_padding.w};
 }
 

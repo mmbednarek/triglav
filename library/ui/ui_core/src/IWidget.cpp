@@ -42,9 +42,9 @@ ProxyWidget::ProxyWidget(Context& context, IWidget* parent) :
 {
 }
 
-Vector2 ProxyWidget::desired_size(const Vector2 parent_size) const
+Vector2 ProxyWidget::desired_size(const Vector2 available_size) const
 {
-   return m_content->desired_size(parent_size);
+   return m_content->desired_size(available_size);
 }
 
 void ProxyWidget::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)

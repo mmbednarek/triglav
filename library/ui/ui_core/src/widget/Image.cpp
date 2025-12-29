@@ -10,16 +10,16 @@ namespace triglav::ui_core {
 
 namespace {
 
-Vector2 calculate_proportional_size(const Vector2 parent_size, const Vector2 image_size)
+Vector2 calculate_proportional_size(const Vector2 available_size, const Vector2 image_size)
 {
-   const float parent_prop = parent_size.y / parent_size.x;
+   const float parent_prop = available_size.y / available_size.x;
    const float tex_prop = image_size.y / image_size.x;
 
    if (tex_prop > parent_prop) {
-      return {image_size.x * (parent_size.y / image_size.y), parent_size.y};
+      return {image_size.x * (available_size.y / image_size.y), available_size.y};
    }
 
-   return {parent_size.x, image_size.y * (parent_size.x / image_size.x)};
+   return {available_size.x, image_size.y * (available_size.x / image_size.x)};
 }
 
 }// namespace
@@ -30,7 +30,7 @@ Image::Image(Context& ctx, const State state, IWidget* /*parent*/) :
 {
 }
 
-Vector2 Image::desired_size(const Vector2 parent_size) const
+Vector2 Image::desired_size(const Vector2 available_size) const
 {
    const auto& tex = m_context.resource_manager().get(m_state.texture);
    Vector2 tex_size{tex.width(), tex.height()};
@@ -39,7 +39,7 @@ Vector2 Image::desired_size(const Vector2 parent_size) const
       tex_size = {m_state.region->z, m_state.region->w};
    }
 
-   const auto prop_size = calculate_proportional_size(parent_size, tex_size);
+   const auto prop_size = calculate_proportional_size(available_size, tex_size);
    if (!m_state.max_size.has_value() || (m_state.max_size->x >= prop_size.x && m_state.max_size->y >= prop_size.y)) {
       return prop_size;
    }

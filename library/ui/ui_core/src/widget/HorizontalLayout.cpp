@@ -8,7 +8,7 @@ HorizontalLayout::HorizontalLayout(Context& context, State state, IWidget* paren
 {
 }
 
-Vector2 HorizontalLayout::desired_size(const Vector2 parent_size) const
+Vector2 HorizontalLayout::desired_size(const Vector2 available_size) const
 {
    const Vector2 min_size{m_state.padding.x + m_state.padding.z, m_state.padding.y + m_state.padding.w};
 
@@ -16,7 +16,7 @@ Vector2 HorizontalLayout::desired_size(const Vector2 parent_size) const
       return min_size;
    }
 
-   Vector2 inner_size = parent_size - min_size;
+   Vector2 inner_size = available_size - min_size;
    Vector2 result{};
    bool is_first = true;
    for (const auto& child : m_children) {
@@ -95,14 +95,14 @@ void HorizontalLayout::on_event(const Event& event)
       return;
    }
 
-   float width = event.parent_size.x;
+   float width = event.widget_size.x;
    float x{m_state.padding.x};
 
    for (const auto& child : m_children) {
-      const auto size = child->desired_size({width, event.parent_size.y});
+      const auto size = child->desired_size({width, event.widget_size.y});
       if (event.mouse_position.x >= x && event.mouse_position.x < (x + size.x)) {
          Event sub_event{event};
-         sub_event.parent_size = size;
+         sub_event.widget_size = size;
          sub_event.mouse_position -= Vector2{x, m_state.padding.y};
          child->on_event(sub_event);
 

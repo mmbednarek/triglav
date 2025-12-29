@@ -8,12 +8,12 @@ HideableWidget::HideableWidget(Context& ctx, const State state, IWidget* parent)
 {
 }
 
-Vector2 HideableWidget::desired_size(const Vector2 parent_size) const
+Vector2 HideableWidget::desired_size(const Vector2 available_size) const
 {
    if (m_state.is_hidden) {
       return {0, 0};
    }
-   return m_content->desired_size(parent_size);
+   return m_content->desired_size(available_size);
 }
 
 void HideableWidget::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)

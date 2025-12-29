@@ -22,7 +22,7 @@ class RectBox final : public ContainerWidget
 
    RectBox(Context& context, State state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   [[nodiscard]] Vector2 desired_size(Vector2 available_size) const override;
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void set_color(Vector4 color);
@@ -33,7 +33,7 @@ class RectBox final : public ContainerWidget
  private:
    State m_state{};
    RectId m_rect_name{};
-   mutable std::optional<Vector2> m_cached_parent_size{};
+   mutable std::optional<Vector2> m_cached_available_size_size{};
    mutable Vector2 m_cached_size{};
 };
 

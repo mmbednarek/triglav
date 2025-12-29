@@ -33,7 +33,7 @@ void Context::set_active_widget(ui_core::IWidget* active_widget, const Vector4 a
       deactivate_event.event_type = Event::Type::Deactivated;
       deactivate_event.global_mouse_position = {};
       deactivate_event.mouse_position = {};
-      deactivate_event.parent_size = {};
+      deactivate_event.widget_size = {};
       m_active_widget->on_event(deactivate_event);
    }
 
@@ -84,7 +84,7 @@ void Context::toggle_active_widget() const
    activate_event.event_type = Event::Type::Activated;
    activate_event.global_mouse_position = {};
    activate_event.mouse_position = {};
-   activate_event.parent_size = {};
+   activate_event.widget_size = {};
    m_activating_widgets[id]->on_event(activate_event);
 }
 

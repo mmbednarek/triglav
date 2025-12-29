@@ -11,13 +11,13 @@ RectBox::RectBox(Context& context, State state, IWidget* parent) :
 {
 }
 
-Vector2 RectBox::desired_size(const Vector2 parent_size) const
+Vector2 RectBox::desired_size(const Vector2 available_size) const
 {
-   if (m_cached_parent_size.has_value() && *m_cached_parent_size == parent_size)
+   if (m_cached_available_size_size.has_value() && *m_cached_available_size_size == available_size)
       return m_cached_size;
 
-   m_cached_parent_size.emplace(parent_size);
-   m_cached_size = m_content->desired_size(parent_size);
+   m_cached_available_size_size.emplace(available_size);
+   m_cached_size = m_content->desired_size(available_size);
    return m_cached_size;
 }
 
@@ -66,7 +66,7 @@ void RectBox::set_color(Vector4 color)
 
 void RectBox::on_child_state_changed(IWidget& widget)
 {
-   m_cached_parent_size.reset();
+   m_cached_available_size_size.reset();
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(widget);
    }

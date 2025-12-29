@@ -24,7 +24,7 @@ MenuBar::MenuBar(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
 {
 }
 
-Vector2 MenuBar::desired_size(Vector2 /*parent_size*/) const
+Vector2 MenuBar::desired_size(Vector2 /*available_size*/) const
 {
    return this->get_measure().size;
 }

@@ -10,14 +10,14 @@ GridLayout::GridLayout(Context& context, State state, IWidget* parent) :
 {
 }
 
-Vector2 GridLayout::desired_size(const Vector2 parent_size) const
+Vector2 GridLayout::desired_size(const Vector2 available_size) const
 {
    const auto row_count = m_state.row_ratios.size();
    const auto column_count = m_state.column_ratios.size();
    assert(m_children.size() == row_count * column_count);
 
-   const Vector2 base_size = parent_size - Vector2{static_cast<float>(column_count - 1) * m_state.horizontal_spacing,
-                                                   static_cast<float>(row_count - 1) * m_state.vertical_spacing};
+   const Vector2 base_size = available_size - Vector2{static_cast<float>(column_count - 1) * m_state.horizontal_spacing,
+                                                      static_cast<float>(row_count - 1) * m_state.vertical_spacing};
 
    Vector2 result{};
    for (MemorySize row = 0; row < row_count; ++row) {
@@ -114,7 +114,7 @@ void GridLayout::on_event(const Event& event)
       Event leave_event{};
       leave_event.event_type = Event::Type::MouseLeft;
       leave_event.mouse_position = Vector2{0, 0};
-      leave_event.parent_size = rect_size(m_dimensions);
+      leave_event.widget_size = rect_size(m_dimensions);
       leave_event.global_mouse_position = event.global_mouse_position;
 
       const auto leave_index = m_last_col + m_last_row * column_count;
@@ -128,7 +128,7 @@ void GridLayout::on_event(const Event& event)
       Event enter_event{};
       enter_event.event_type = Event::Type::MouseEntered;
       enter_event.mouse_position -= Vector2{x_offset, y_offset};
-      enter_event.parent_size = rect_size(m_dimensions);
+      enter_event.widget_size = rect_size(m_dimensions);
       enter_event.global_mouse_position = event.global_mouse_position;
 
       const auto enter_index = col + row * column_count;
@@ -139,7 +139,7 @@ void GridLayout::on_event(const Event& event)
 
    Event sub_event{event};
    sub_event.mouse_position -= Vector2{x_offset, y_offset};
-   sub_event.parent_size = rect_size(m_dimensions);
+   sub_event.widget_size = rect_size(m_dimensions);
    const auto index = col + row * column_count;
    if (index < m_children.size()) {
       m_children[index]->on_event(sub_event);

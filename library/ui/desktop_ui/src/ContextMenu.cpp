@@ -13,9 +13,9 @@ ContextMenu::ContextMenu(ui_core::Context& ctx, const State state, ui_core::IWid
 {
 }
 
-Vector2 ContextMenu::desired_size(const Vector2 parent_size) const
+Vector2 ContextMenu::desired_size(const Vector2 available_size) const
 {
-   return m_content->desired_size(parent_size);
+   return m_content->desired_size(available_size);
 }
 
 void ContextMenu::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)

@@ -8,7 +8,7 @@ VerticalLayout::VerticalLayout(Context& context, State state, IWidget* parent) :
 {
 }
 
-Vector2 VerticalLayout::desired_size(const Vector2 parent_size) const
+Vector2 VerticalLayout::desired_size(const Vector2 available_size) const
 {
    const Vector2 min_size{m_state.padding.x + m_state.padding.z, m_state.padding.y + m_state.padding.w};
 
@@ -16,7 +16,7 @@ Vector2 VerticalLayout::desired_size(const Vector2 parent_size) const
       return min_size;
    }
 
-   Vector2 inner_size = parent_size - min_size;
+   Vector2 inner_size = available_size - min_size;
    Vector2 result{};
    bool is_first = true;
    for (const auto& child : m_children) {
@@ -77,14 +77,14 @@ void VerticalLayout::on_event(const Event& event)
       return;
    }
 
-   float height = event.parent_size.y;
+   float height = event.widget_size.y;
    float y{m_state.padding.y};
 
    for (const auto& child : m_children) {
-      const auto size = child->desired_size({event.parent_size.x, height});
+      const auto size = child->desired_size({event.widget_size.x, height});
       if (event.mouse_position.y >= y && event.mouse_position.y < (y + size.y)) {
          Event sub_event{event};
-         sub_event.parent_size = size;
+         sub_event.widget_size = size;
          sub_event.mouse_position -= Vector2{m_state.padding.x, y};
          child->on_event(sub_event);
 
