@@ -7,7 +7,7 @@ EmptySpace::EmptySpace(Context& /*ctx*/, const State state, IWidget* /*parent*/)
 {
 }
 
-Vector2 EmptySpace::desired_size(Vector2 /*parent_size*/) const
+Vector2 EmptySpace::desired_size(Vector2 /*available_size*/) const
 {
    return m_state.size;
 }

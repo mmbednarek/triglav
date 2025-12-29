@@ -22,9 +22,9 @@ Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidge
 {
 }
 
-Vector2 Button::desired_size(const Vector2 parent_size) const
+Vector2 Button::desired_size(const Vector2 available_size) const
 {
-   const auto child_size = m_content->desired_size(parent_size);
+   const auto child_size = m_content->desired_size(available_size);
    return child_size + 2.0f * Vector2{g_padding, g_padding};
 }
 

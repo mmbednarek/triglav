@@ -26,7 +26,7 @@ MenuList::MenuList(ui_core::Context& ctx, State state, ui_core::IWidget* parent)
 {
 }
 
-Vector2 MenuList::desired_size(const Vector2 /*parent_size*/) const
+Vector2 MenuList::desired_size(const Vector2 /*available_size*/) const
 {
    return this->get_measure().size;
 }

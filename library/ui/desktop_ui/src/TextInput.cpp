@@ -52,9 +52,9 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
    m_text_size = {measure.width, measure.height};
 }
 
-Vector2 TextInput::desired_size(const Vector2 parent_size) const
+Vector2 TextInput::desired_size(const Vector2 available_size) const
 {
-   return {parent_size.x, m_text_size.y + 2 * g_text_margin.y};
+   return {available_size.x, m_text_size.y + 2 * g_text_margin.y};
 }
 
 void TextInput::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)

@@ -43,9 +43,9 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
    });
 }
 
-Vector2 DropDownSelectorButton::desired_size(const Vector2 parent_size) const
+Vector2 DropDownSelectorButton::desired_size(const Vector2 available_size) const
 {
-   return m_button.desired_size(parent_size);
+   return m_button.desired_size(available_size);
 }
 
 void DropDownSelectorButton::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
@@ -110,9 +110,9 @@ DropDownSelector::DropDownSelector(ui_core::Context& ctx, const State state, ui_
    }
 }
 
-Vector2 DropDownSelector::desired_size(const Vector2 parent_size) const
+Vector2 DropDownSelector::desired_size(const Vector2 available_size) const
 {
-   return m_vertical_layout.desired_size(parent_size);
+   return m_vertical_layout.desired_size(available_size);
 }
 
 void DropDownSelector::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
@@ -167,7 +167,7 @@ DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget*
    });
 }
 
-Vector2 DropDownMenu::desired_size(const Vector2 /*parent_size*/) const
+Vector2 DropDownMenu::desired_size(const Vector2 /*available_size*/) const
 {
    Vector2 max{0, 0};
    const auto& atlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), 14});

@@ -10,10 +10,10 @@ ScrollBox::ScrollBox(Context& ctx, State state, IWidget* parent) :
 {
 }
 
-Vector2 ScrollBox::desired_size(const Vector2 parent_size) const
+Vector2 ScrollBox::desired_size(const Vector2 available_size) const
 {
-   const auto child_size = this->m_content->desired_size(parent_size);
-   const auto height = m_state.max_height.has_value() ? std::min(*m_state.max_height, parent_size.y) : parent_size.y;
+   const auto child_size = this->m_content->desired_size(available_size);
+   const auto height = m_state.max_height.has_value() ? std::min(*m_state.max_height, available_size.y) : available_size.y;
    return {child_size.x, height};
 }
 
@@ -47,7 +47,7 @@ void ScrollBox::on_event(const Event& event)
    } else if (event.mouse_position.y >= m_state.offset && event.mouse_position.y < (m_state.offset + m_content_size.y)) {
       Event sub_event{event};
       sub_event.mouse_position.y -= m_state.offset;
-      sub_event.parent_size = {m_content_size.x, m_height};
+      sub_event.widget_size = {m_content_size.x, m_height};
       this->m_content->on_event(sub_event);
    }
 }

@@ -40,9 +40,9 @@ LevelViewport::LevelViewport(IWidget* parent, RootWindow& root_window, LevelEdit
 {
 }
 
-Vector2 LevelViewport::desired_size(const Vector2 parent_size) const
+Vector2 LevelViewport::desired_size(const Vector2 available_size) const
 {
-   return parent_size;
+   return available_size;
 }
 
 void LevelViewport::add_to_viewport(const Vector4 dimensions, Vector4 /*cropping_mask*/)

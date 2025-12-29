@@ -194,7 +194,7 @@ void Renderer::on_mouse_move(const Vector2 position)
    event.event_type = ui_core::Event::Type::MouseMoved;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.parent_size = m_render_surface.resolution();
+   event.widget_size = m_render_surface.resolution();
    m_info_dialog.on_event(event);
 }
 
@@ -209,7 +209,7 @@ void Renderer::on_mouse_is_pressed(const desktop::MouseButton button, const Vect
    event.event_type = ui_core::Event::Type::MousePressed;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.parent_size = m_render_surface.resolution();
+   event.widget_size = m_render_surface.resolution();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_info_dialog.on_event(event);
 }
@@ -220,7 +220,7 @@ void Renderer::on_mouse_is_released(const desktop::MouseButton button, const Vec
    event.event_type = ui_core::Event::Type::MouseReleased;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.parent_size = m_render_surface.resolution();
+   event.widget_size = m_render_surface.resolution();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_info_dialog.on_event(event);
 }

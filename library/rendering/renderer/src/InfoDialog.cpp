@@ -94,9 +94,9 @@ class HideablePanel final : public ui_core::IWidget
    {
    }
 
-   [[nodiscard]] Vector2 desired_size(const Vector2 parent_size) const override
+   [[nodiscard]] Vector2 desired_size(const Vector2 available_size) const override
    {
-      return m_vertical_layout.desired_size(parent_size);
+      return m_vertical_layout.desired_size(available_size);
    }
 
    void add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask) override
@@ -258,9 +258,9 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
    }
 }
 
-Vector2 InfoDialog::desired_size(const Vector2 parent_size) const
+Vector2 InfoDialog::desired_size(const Vector2 available_size) const
 {
-   return m_root_box.desired_size(parent_size);
+   return m_root_box.desired_size(available_size);
 }
 
 void InfoDialog::add_to_viewport(Vector4 /*dimensions*/, const Vector4 cropping_mask)
@@ -289,7 +289,7 @@ void InfoDialog::on_event(const ui_core::Event& event)
    }
 
    ui_core::Event sub_event{event};
-   sub_event.parent_size = {600, 1200};
+   sub_event.widget_size = {600, 1200};
    sub_event.mouse_position = position;
 
    m_root_box.on_event(sub_event);

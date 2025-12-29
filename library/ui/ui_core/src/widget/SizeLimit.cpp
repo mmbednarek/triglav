@@ -8,10 +8,10 @@ SizeLimit::SizeLimit(Context& ctx, State state, IWidget* parent) :
 {
 }
 
-Vector2 SizeLimit::desired_size(const Vector2 parent_size) const
+Vector2 SizeLimit::desired_size(const Vector2 available_size) const
 {
    const auto child =
-      m_content->desired_size(Vector2{std::min(parent_size.x, m_state.max_size.x), std::min(parent_size.y, m_state.max_size.y)});
+      m_content->desired_size(Vector2{std::min(available_size.x, m_state.max_size.x), std::min(available_size.y, m_state.max_size.y)});
    return {std::min(child.x, m_state.max_size.x), std::min(child.y, m_state.max_size.y)};
 }
 

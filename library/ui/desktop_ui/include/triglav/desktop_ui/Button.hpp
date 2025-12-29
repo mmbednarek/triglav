@@ -25,7 +25,7 @@ class Button final : public ui_core::ContainerWidget
 
    Button(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   [[nodiscard]] Vector2 desired_size(Vector2 available_size) const override;
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;

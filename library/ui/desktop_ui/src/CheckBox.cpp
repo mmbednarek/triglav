@@ -43,10 +43,10 @@ CheckBox::CheckBox(ui_core::Context& ctx, State state, IWidget* parent) :
 {
 }
 
-Vector2 CheckBox::desired_size(const Vector2 parent_size) const
+Vector2 CheckBox::desired_size(const Vector2 available_size) const
 {
    const Vector2 padding{2.0f * TG_THEME_VAL(checkbox.padding)};
-   const auto child_size = m_content->desired_size(parent_size - padding);
+   const auto child_size = m_content->desired_size(available_size - padding);
    return child_size + padding;
 }
 

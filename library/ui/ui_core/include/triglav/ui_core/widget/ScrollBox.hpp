@@ -17,7 +17,7 @@ class ScrollBox final : public ContainerWidget
 
    ScrollBox(Context& ctx, State state, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   [[nodiscard]] Vector2 desired_size(Vector2 available_size) const override;
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
 

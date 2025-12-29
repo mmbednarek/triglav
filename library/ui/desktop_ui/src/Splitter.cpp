@@ -42,11 +42,12 @@ Splitter::Splitter(ui_core::Context& ctx, const State state, ui_core::IWidget* p
 {
 }
 
-Vector2 Splitter::desired_size(const Vector2 parent_size) const
+Vector2 Splitter::desired_size(const Vector2 available_size) const
 {
-   const float offset = calculate_offset(m_state.offset_type, m_state.offset, m_state.axis, parent_size);
-   const auto preceding_size = m_preceding->desired_size(make_vec(offset, ortho(parent_size)));
-   const auto following_size = m_following->desired_size(make_vec(parallel(parent_size) - g_splitter_size - offset, ortho(parent_size)));
+   const float offset = calculate_offset(m_state.offset_type, m_state.offset, m_state.axis, available_size);
+   const auto preceding_size = m_preceding->desired_size(make_vec(offset, ortho(available_size)));
+   const auto following_size =
+      m_following->desired_size(make_vec(parallel(available_size) - g_splitter_size - offset, ortho(available_size)));
    return make_vec(parallel(preceding_size) + parallel(following_size) + g_splitter_size,
                    std::max(ortho(preceding_size), ortho(following_size)));
 }

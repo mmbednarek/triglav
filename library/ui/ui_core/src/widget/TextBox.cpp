@@ -18,7 +18,7 @@ TextBox::TextBox(Context& ctx, State initial_state, IWidget* parent) :
 {
 }
 
-Vector2 TextBox::desired_size(const Vector2 /*parent_size*/) const
+Vector2 TextBox::desired_size(const Vector2 /*available_size*/) const
 {
    if (m_cached_desired_size.has_value()) {
       return *m_cached_desired_size;

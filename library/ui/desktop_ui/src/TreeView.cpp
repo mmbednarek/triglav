@@ -29,7 +29,7 @@ TreeView::TreeView(ui_core::Context& ctx, State state, ui_core::IWidget* parent)
 {
 }
 
-Vector2 TreeView::desired_size(Vector2 /*parent_size*/) const
+Vector2 TreeView::desired_size(Vector2 /*available_size*/) const
 {
    return this->get_measure().size;
 }

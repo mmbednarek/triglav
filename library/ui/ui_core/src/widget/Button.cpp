@@ -7,9 +7,9 @@ Button::Button(Context& ctx, State /*state*/, IWidget* parent) :
 {
 }
 
-Vector2 Button::desired_size(const Vector2 parent_size) const
+Vector2 Button::desired_size(const Vector2 available_size) const
 {
-   return m_content->desired_size(parent_size);
+   return m_content->desired_size(available_size);
 }
 
 void Button::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)

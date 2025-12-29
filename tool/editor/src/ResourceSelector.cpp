@@ -47,11 +47,11 @@ class ResourceList final : public ui_core::BaseWidget
       this->populate_text_instances(StringView{""});
    }
 
-   [[nodiscard]] Vector2 desired_size(const Vector2 parent_size) const override
+   [[nodiscard]] Vector2 desired_size(const Vector2 available_size) const override
    {
       const auto& atlas = m_context.glyph_cache().find_glyph_atlas({TG_THEME_VAL(base_typeface), TG_THEME_VAL(base_font_size)});
       const auto measure = atlas.measure_text("0"_strv);
-      return {parent_size.x, (measure.height + 2 * g_vertical_margin) * static_cast<float>(m_text_instances.size())};
+      return {available_size.x, (measure.height + 2 * g_vertical_margin) * static_cast<float>(m_text_instances.size())};
    }
 
    void add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask) override

@@ -66,7 +66,7 @@ struct Event
    };
 
    Type event_type;
-   Vector2 parent_size;
+   Vector2 widget_size;
    Vector2 mouse_position;
    Vector2 global_mouse_position;
    std::variant<std::monostate, Mouse, Keyboard, TextInput, Scroll> data;
@@ -137,8 +137,8 @@ class IWidget
  public:
    virtual ~IWidget() = default;
 
-   // Calculates widget's desired size based on parent's size.
-   [[nodiscard]] virtual Vector2 desired_size(Vector2 parent_size) const = 0;
+   // Calculates widget's desired size based on available size.
+   [[nodiscard]] virtual Vector2 desired_size(Vector2 available_size) const = 0;
 
    // Adds widget to the current viewport
    // If the widget has already been added, it
@@ -219,7 +219,7 @@ class ProxyWidget : public ContainerWidget
  public:
    ProxyWidget(Context& context, IWidget* parent);
 
-   [[nodiscard]] Vector2 desired_size(Vector2 parent_size) const override;
+   [[nodiscard]] Vector2 desired_size(Vector2 available_size) const override;
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const Event& event) override;
