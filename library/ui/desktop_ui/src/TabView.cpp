@@ -12,9 +12,35 @@ namespace triglav::desktop_ui {
 using namespace name_literals;
 
 constexpr auto g_item_padding = 13.0f;
+constexpr auto g_icon_size = 18.0f;
+constexpr auto g_separation = 8.0f;
+constexpr auto g_close_btn_size = 12.0f;
+
+BasicTabWidget::BasicTabWidget(const String& name, const ui_core::TextureRegion& icon, std::unique_ptr<ui_core::IWidget> widget) :
+    m_name(name),
+    m_icon(icon),
+    m_widget(std::move(widget))
+{
+}
+
+StringView BasicTabWidget::name() const
+{
+   return m_name.view();
+}
+
+ui_core::IWidget& BasicTabWidget::widget()
+{
+   return *m_widget;
+}
+
+const ui_core::TextureRegion& BasicTabWidget::icon() const
+{
+   return m_icon;
+}
 
 TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
-    ui_core::LayoutWidget(ctx, parent),
+    ui_core::BaseWidget(parent),
+    m_context(ctx),
     m_state(std::move(state)),
     m_background{
        .color = TG_THEME_VAL(background_color_darker),
@@ -24,7 +50,7 @@ TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     },
     m_hover_rect{
        .color = TG_THEME_VAL(background_color_brighter),
-       .border_radius = {0, 0, 0, 0},
+       .border_radius = {5, 5, 5, 5},
        .border_color = palette::NO_COLOR,
        .border_width = 0.0f,
     },
@@ -33,6 +59,10 @@ TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
        .border_radius = {5.0f, 5.0f, 0.0f, 0.0f},
        .border_color = palette::NO_COLOR,
        .border_width = 0.0f,
+    },
+    m_close_button{
+       .texture = "texture/ui_atlas.tex"_rc,
+       .texture_region = Vector4{0, 64, 64, 64},
     }
 {
 }
@@ -56,44 +86,54 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
    const Vector4 background_dims{dimensions.x, dimensions.y, dimensions.z, measure.tab_height};
    m_background.add(m_context, background_dims, cropping_mask);
 
+   if (m_tabs.empty()) {
+      m_close_button.remove(m_context);
+      m_active_rect.remove(m_context);
+      return;
+   }
+
    float offset_x = dimensions.x;
    u32 index = 0;
-   for (const auto& tab_name : m_state.tab_names) {
+   for (const auto& tab : m_tabs) {
+      auto width = measure.tab_widths[index];
       if (index == m_state.active_tab) {
-         const Vector4 active_tab_dims{offset_x, dimensions.y + 0.25f * g_item_padding, measure.tab_widths[index],
-                                       measure.tab_height - 0.25f * g_item_padding};
+         const Vector4 active_tab_dims{offset_x, dimensions.y, width, measure.tab_height};
          m_active_rect.add(m_context, active_tab_dims, cropping_mask);
+
+         Vector4 close_btn_dims{offset_x + width - g_item_padding - g_close_btn_size / 2,
+                                dimensions.y + measure.tab_height / 2 - g_close_btn_size / 2 + 1, g_close_btn_size, g_close_btn_size};
+         m_close_button.add(m_context, close_btn_dims, cropping_mask);
       }
 
-      Vector2 text_pos{offset_x + g_item_padding, dimensions.y + measure.tab_height - g_item_padding};
-      Vector4 close_btn_dims{offset_x + measure.tab_widths[index] - g_item_padding, dimensions.y + g_item_padding, 16, 16};
+      Vector4 icon_dims{offset_x + g_item_padding, dimensions.y + measure.tab_height / 2 - g_icon_size / 2 + 1, g_icon_size, g_icon_size};
+      Vector2 text_pos{offset_x + g_item_padding + g_icon_size + g_separation, dimensions.y + measure.tab_height - g_item_padding};
       if (first_init) {
+         const auto& tex_region = tab->icon();
+         auto& icon_instance = m_icons.emplace_back(ui_core::SpriteInstance{
+            .texture = tex_region.name,
+            .texture_region = tex_region.region,
+         });
+         icon_instance.add(m_context, icon_dims, cropping_mask);
+
          auto& text_instance = m_labels.emplace_back(ui_core::TextInstance{
-            .content = tab_name,
+            .content = tab->name(),
             .typeface_name = TG_THEME_VAL(base_typeface),
             .font_size = TG_THEME_VAL(tab_view.font_size),
             .color = TG_THEME_VAL(foreground_color),
          });
          text_instance.add(m_context, text_pos, cropping_mask);
-
-         auto& close_btn_instance = m_close_buttons.emplace_back(ui_core::SpriteInstance{
-            .texture = "texture/ui_atlas.tex"_rc,
-            .size = {16, 16},
-            .texture_region = Vector4{0, 64, 64, 64},
-         });
-         close_btn_instance.add(m_context, close_btn_dims, cropping_mask);
       } else {
+         m_icons[index].add(m_context, icon_dims, cropping_mask);
          m_labels[index].add(m_context, text_pos, cropping_mask);
-         m_close_buttons[index].add(m_context, close_btn_dims, cropping_mask);
       }
 
       m_offset_to_item[offset_x - dimensions.x] = index;
 
-      offset_x += measure.tab_widths[index];
+      offset_x += width;
       ++index;
    }
 
-   m_children[m_state.active_tab]->add_to_viewport(
+   m_tabs[m_state.active_tab]->widget().add_to_viewport(
       {dimensions.x, dimensions.y + measure.tab_height, dimensions.z, dimensions.w - measure.tab_height}, cropping_mask);
 }
 
@@ -103,38 +143,55 @@ void TabView::remove_from_viewport()
       label.remove(m_context);
    }
    m_labels.clear();
+   for (auto& icon : m_icons) {
+      icon.remove(m_context);
+   }
+   m_icons.clear();
 
    m_background.remove(m_context);
    m_active_rect.remove(m_context);
    m_hover_rect.remove(m_context);
 
-   m_children[m_state.active_tab]->remove_from_viewport();
+   m_tabs[m_state.active_tab]->widget().remove_from_viewport();
 }
 
 void TabView::on_event(const ui_core::Event& event)
 {
+   if (m_tabs.empty())
+      return;
    if (ui_core::visit_event<bool>(*this, event, true)) {
       ui_core::Event sub_event(event);
       sub_event.mouse_position.y -= this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height;
-      m_children[m_state.active_tab]->on_event(sub_event);
+      m_tabs[m_state.active_tab]->widget().on_event(sub_event);
    }
 }
 
 bool TabView::on_mouse_moved(const ui_core::Event& event)
 {
-   if (event.mouse_position.y > this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height) {
+   const auto& measure = this->get_measure({m_dimensions.z, m_dimensions.w});
+   if (event.mouse_position.y > measure.tab_height) {
       m_hovered_item = ~0u;
       m_hover_rect.remove(m_context);
       return true;
    }
 
    auto [offset_x, index] = this->index_from_mouse_position(event.mouse_position);
-   if (index == m_hovered_item)
-      return false;
+   if (m_state.active_tab == index) {
+      if (event.mouse_position.x > offset_x + measure.tab_widths[index] - g_icon_size - g_item_padding) {
+         m_close_button.set_region(m_context, {64, 64, 64, 64});
+      } else {
+         m_close_button.set_region(m_context, {0, 64, 64, 64});
+      }
+   } else {
+      m_close_button.set_region(m_context, {0, 64, 64, 64});
+   }
 
-   if (m_is_dragging) {
-      std::swap(m_children[index], m_children[m_state.active_tab]);
-      std::swap(m_state.tab_names[index], m_state.tab_names[m_state.active_tab]);
+   if (index == m_hovered_item) {
+      return false;
+   }
+
+   if (m_is_dragging && index != ~0u) {
+      std::swap(m_tabs[index], m_tabs[m_state.active_tab]);
       m_state.active_tab = index;
 
       m_cached_measure.reset();
@@ -150,8 +207,7 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
       return false;
    }
 
-   const auto& measure = this->get_measure({m_dimensions.z, m_dimensions.w});
-   const Vector4 hover_tab_dims{m_dimensions.x + offset_x, m_dimensions.y, measure.tab_widths[index], measure.tab_height};
+   const Vector4 hover_tab_dims{m_dimensions.x + offset_x + 4, m_dimensions.y + 4, measure.tab_widths[index] - 8, measure.tab_height - 8};
    m_hover_rect.add(m_context, hover_tab_dims, m_cropping_mask);
 
    return false;
@@ -159,13 +215,19 @@ bool TabView::on_mouse_moved(const ui_core::Event& event)
 
 bool TabView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)
 {
-   if (event.mouse_position.y > this->get_measure({m_dimensions.z, m_dimensions.w}).tab_height) {
+   const auto& measure = this->get_measure(rect_size(m_dimensions));
+   if (event.mouse_position.y > measure.tab_height) {
       return true;
    }
 
    auto [offset_x, index] = this->index_from_mouse_position(event.mouse_position);
    if (index == ~0u) {
       return false;
+   }
+   if (index == m_state.active_tab) {
+      if (event.mouse_position.x > offset_x + measure.tab_widths[index] - g_icon_size - g_item_padding) {
+         this->remove_tab(m_state.active_tab);
+      }
    }
 
    m_hover_rect.remove(m_context);
@@ -183,9 +245,38 @@ bool TabView::on_mouse_released(const ui_core::Event&, const ui_core::Event::Mou
 
 void TabView::set_active_tab(const u32 active_tab)
 {
-   m_children[m_state.active_tab]->remove_from_viewport();
+   if (active_tab >= m_tabs.size())
+      return;
+   if (m_state.active_tab < m_tabs.size()) {
+      m_tabs[m_state.active_tab]->widget().remove_from_viewport();
+   }
    m_state.active_tab = active_tab;
+   event_OnChangedActiveTab.publish(m_state.active_tab, &m_tabs[m_state.active_tab]->widget());
    this->add_to_viewport(m_dimensions, m_cropping_mask);
+}
+
+void TabView::remove_tab(const u32 tab_id)
+{
+   if (tab_id >= m_tabs.size())
+      return;
+
+   this->remove_from_viewport();
+
+   m_tabs.erase(m_tabs.begin() + m_state.active_tab);
+   if (m_state.active_tab == tab_id && tab_id == m_tabs.size() - 1 && tab_id != 0) {
+      --m_state.active_tab;
+      event_OnChangedActiveTab.publish(m_state.active_tab, &m_tabs[m_state.active_tab]->widget());
+   }
+   if (m_tabs.empty()) {
+      event_OnChangedActiveTab.publish(0, nullptr);
+   }
+
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
+}
+
+ITabWidget& TabView::add_tab(ITabWidgetPtr&& widget)
+{
+   return *m_tabs.emplace_back(std::move(widget));
 }
 
 [[nodiscard]] std::pair<float, u32> TabView::index_from_mouse_position(const Vector2 position) const
@@ -217,9 +308,9 @@ void TabView::set_active_tab(const u32 active_tab)
       .font_size = TG_THEME_VAL(tab_view.font_size),
    });
 
-   for (const auto& name : m_state.tab_names) {
-      const auto name_measure = atlas.measure_text(name.view());
-      const auto width = 2 * g_item_padding + name_measure.width;
+   for (const auto& tab : m_tabs) {
+      const auto name_measure = atlas.measure_text(tab->name());
+      const auto width = 2 * g_item_padding + g_icon_size + 2 * g_separation + name_measure.width + g_close_btn_size;
       item_widths.emplace_back(width);
       max_height = std::max(max_height, name_measure.height);
       total_tab_width += width;
@@ -231,8 +322,8 @@ void TabView::set_active_tab(const u32 active_tab)
    float max_widget_width = 0.0f;
    float max_widget_height = 0.0f;
 
-   for (const auto& widget : m_children) {
-      const auto size = widget->desired_size(widget_area);
+   for (const auto& tab : m_tabs) {
+      const auto size = tab->widget().desired_size(widget_area);
       max_widget_width = std::max(max_widget_width, size.x);
       max_widget_height = std::max(max_widget_height, size.y);
    }

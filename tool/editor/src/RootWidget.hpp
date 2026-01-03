@@ -1,9 +1,11 @@
 #pragma once
 
 #include "CommandManager.hpp"
+#include "IAssetEditor.hpp"
 
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/MenuController.hpp"
+#include "triglav/desktop_ui/TabView.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
 namespace triglav::desktop_ui {
@@ -32,6 +34,7 @@ class RootWidget final : public ui_core::ProxyWidget
    void on_command(Command command) const;
    void on_event(const ui_core::Event& event) override;
    bool on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard) const;
+   void on_changed_active_tab(u32 tab_id, ui_core::IWidget* widget);
 
  private:
    State m_state;
@@ -39,9 +42,10 @@ class RootWidget final : public ui_core::ProxyWidget
    desktop_ui::MenuController m_menu_bar_controller;
    CommandManager m_command_manager;
    desktop_ui::MenuBar* m_menu_bar;
-   LevelEditor* m_level_editor;
+   IAssetEditor* m_active_asset_editor;
 
    TG_SINK(desktop_ui::MenuController, OnClicked);
+   TG_OPT_SINK(desktop_ui::TabView, OnChangedActiveTab);
 };
 
 }// namespace triglav::editor

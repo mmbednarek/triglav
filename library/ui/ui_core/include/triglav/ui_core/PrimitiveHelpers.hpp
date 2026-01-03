@@ -37,7 +37,6 @@ struct RectInstance
 struct SpriteInstance
 {
    TextureName texture;
-   Vector2 size;
    std::optional<Vector4> texture_region;
 
    SpriteId sprite_id = 0;

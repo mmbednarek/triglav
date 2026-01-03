@@ -493,4 +493,20 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
    }
 }
 
+StringView LevelEditor::name() const
+{
+   return StringView{"demo.level"};
+}
+
+const ui_core::TextureRegion& LevelEditor::icon() const
+{
+   static const ui_core::TextureRegion region{"texture/ui_icons.tex"_rc, Vector4{7 * 18, 18, 18, 18}};
+   return region;
+}
+
+ui_core::IWidget& LevelEditor::widget()
+{
+   return dynamic_cast<ui_core::IWidget&>(*this);
+}
+
 }// namespace triglav::editor

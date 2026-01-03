@@ -2,6 +2,7 @@
 
 #include "../Command.hpp"
 #include "../HistoryManager.hpp"
+#include "../IAssetEditor.hpp"
 #include "ILevelEditorTool.hpp"
 #include "RotationTool.hpp"
 #include "ScalingTool.hpp"
@@ -10,6 +11,7 @@
 
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DropDownMenu.hpp"
+#include "triglav/desktop_ui/TabView.hpp"
 #include "triglav/renderer/BindlessScene.hpp"
 #include "triglav/renderer/OcclusionCulling.hpp"
 #include "triglav/renderer/RenderingJob.hpp"
@@ -31,7 +33,7 @@ enum class LevelEditorTool
    Scaling,
 };
 
-class LevelEditor final : public ui_core::ProxyWidget
+class LevelEditor final : public ui_core::ProxyWidget, public desktop_ui::ITabWidget, public IAssetEditor
 {
    friend class RenderViewport;
 
@@ -46,7 +48,7 @@ class LevelEditor final : public ui_core::ProxyWidget
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] renderer::Scene& scene();
-   void tick(float delta_time);
+   void tick(float delta_time) override;
    const renderer::SceneObject* selected_object() const;
    renderer::ObjectID selected_object_id() const;
    [[nodiscard]] Vector3 selected_object_position(std::optional<Vector3> position = std::nullopt) const;
@@ -67,9 +69,12 @@ class LevelEditor final : public ui_core::ProxyWidget
    void on_event(const ui_core::Event& event) override;
    void save_level() const;
    void remove_selected_item();
-   void on_command(Command command);
-   [[nodiscard]] bool accepts_key_chords() const;
+   void on_command(Command command) override;
+   [[nodiscard]] bool accepts_key_chords() const override;
    void set_active_tool(LevelEditorTool tool);
+   [[nodiscard]] StringView name() const override;
+   [[nodiscard]] const ui_core::TextureRegion& icon() const override;
+   [[nodiscard]] ui_core::IWidget& widget() override;
 
  private:
    State m_state;

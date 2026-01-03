@@ -1,5 +1,6 @@
 #include "RootWindow.hpp"
 
+#include "DefaultRenderOverlay.hpp"
 #include "level_editor/RenderViewport.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 
@@ -36,14 +37,12 @@ void RootWindow::initialize()
 
    m_widget_renderer.add_widget_to_viewport(m_surface->dimension());
 
-   assert(m_render_viewport != nullptr);
-
    auto& update_viewport_ctx = m_job_graph.add_job(renderer::UpdateViewParamsJob::JobName);
-   m_render_viewport->build_update_job(update_viewport_ctx);
+   this->render_overlay().build_update_job(update_viewport_ctx);
    m_job_graph.add_dependency_to_previous_frame(renderer::UpdateViewParamsJob::JobName);
 
-   auto& render_viewport_ctx = m_job_graph.add_job("render_viewport"_name, rect_size(m_render_viewport->dimensions()));
-   m_render_viewport->build_render_job(render_viewport_ctx);
+   auto& render_viewport_ctx = m_job_graph.add_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
+   this->render_overlay().build_render_job(render_viewport_ctx);
    m_job_graph.add_dependency("render_viewport"_name, renderer::UpdateViewParamsJob::JobName);
 
    auto& update_ui_ctx = m_job_graph.add_job("update_ui"_name);
@@ -74,10 +73,8 @@ void RootWindow::build_rendering_job(render_core::BuildContext& ctx)
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
    m_widget_renderer.create_render_job(ctx, "core.color_out"_name);
 
-   if (m_render_viewport != nullptr) {
-      ctx.copy_texture_region("render_viewport.out"_external, {0, 0}, "core.color_out"_name, rect_position(m_render_viewport->dimensions()),
-                              rect_size(m_render_viewport->dimensions()));
-   }
+   ctx.copy_texture_region("render_viewport.out"_external, {0, 0}, "core.color_out"_name,
+                           rect_position(this->render_overlay().dimensions()), rect_size(this->render_overlay().dimensions()));
 
    ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
                       graphics_api::TextureUsage::TransferSrc);
@@ -93,8 +90,8 @@ void RootWindow::update()
    if (m_should_update_viewport) {
       m_device.await_all();
 
-      auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(m_render_viewport->dimensions()));
-      m_render_viewport->build_render_job(render_viewport_ctx);
+      auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
+      this->render_overlay().build_render_job(render_viewport_ctx);
       m_job_graph.rebuild_job("render_viewport"_name);
 
       auto& render_dialog_ctx = m_job_graph.replace_job("render_dialog"_name);
@@ -110,7 +107,7 @@ void RootWindow::update()
 
    m_job_graph.build_semaphores();
 
-   m_render_viewport->update(m_job_graph, m_frame_index, 0.017f);
+   this->render_overlay().update(m_job_graph, m_frame_index, 0.017f);
 
    m_widget_renderer.prepare_resources(m_job_graph, m_frame_index);
 
@@ -140,8 +137,8 @@ void RootWindow::on_resize(const Vector2i size)
    m_widget_renderer.create_update_job(update_ui_ctx);
    m_job_graph.rebuild_job("update_ui"_name);
 
-   auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(m_render_viewport->dimensions()));
-   m_render_viewport->build_render_job(render_viewport_ctx);
+   auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
+   this->render_overlay().build_render_job(render_viewport_ctx);
    m_job_graph.rebuild_job("render_viewport"_name);
 
    auto& render_ctx = m_job_graph.replace_job("render_dialog"_name);
@@ -151,12 +148,21 @@ void RootWindow::on_resize(const Vector2i size)
    m_render_surface.recreate_swapchain(size);
 }
 
-void RootWindow::set_render_viewport(RenderViewport* viewport)
+void RootWindow::set_render_overlay(IRenderOverlay* overlay)
 {
-   m_render_viewport = viewport;
+   m_render_overlay = overlay;
    if (m_is_initialized) {
       m_should_update_viewport = true;
    }
+}
+
+IRenderOverlay& RootWindow::render_overlay() const
+{
+   static DefaultRenderOverlay default_overlay;
+   if (m_render_overlay == nullptr) {
+      return default_overlay;
+   }
+   return *m_render_overlay;
 }
 
 graphics_api::Device& RootWindow::device() const

@@ -75,20 +75,18 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
 
    auto& left_tab_view = splitter.create_preceding<desktop_ui::TabView>({
       .manager = &m_desktop_ui_manager,
-      .tab_names = {"Level Editor"},
       .active_tab = 0,
    });
-   m_level_editor = &left_tab_view.create_child<LevelEditor>({
-      .manager = &m_desktop_ui_manager,
-      .root_window = m_state.editor->root_window(),
-   });
+   TG_CONNECT_OPT(left_tab_view, OnChangedActiveTab, on_changed_active_tab);
 
-   auto& right_tab_view = splitter.create_following<desktop_ui::TabView>({
-      .manager = &m_desktop_ui_manager,
-      .tab_names = {"Project Explorer"},
-      .active_tab = 0,
-   });
-   right_tab_view.create_child<ProjectExplorer>({
+   m_active_asset_editor = &left_tab_view.emplace_tab<LevelEditor>(context,
+                                                                   LevelEditor::State{
+                                                                      .manager = &m_desktop_ui_manager,
+                                                                      .root_window = m_state.editor->root_window(),
+                                                                   },
+                                                                   &left_tab_view);
+
+   splitter.create_following<ProjectExplorer>({
       .manager = &m_desktop_ui_manager,
    });
 }
@@ -103,8 +101,9 @@ void RootWidget::on_clicked_menu_bar(const Name item_name, const desktop_ui::Men
 
 void RootWidget::tick(const float delta_time) const
 {
-   assert(m_level_editor != nullptr);
-   m_level_editor->tick(delta_time);
+   if (m_active_asset_editor != nullptr) {
+      m_active_asset_editor->tick(delta_time);
+   }
 }
 
 void RootWidget::on_command(const Command command) const
@@ -114,8 +113,8 @@ void RootWidget::on_command(const Command command) const
       return;
    }
 
-   if (m_level_editor != nullptr) {
-      m_level_editor->on_command(command);
+   if (m_active_asset_editor != nullptr) {
+      m_active_asset_editor->on_command(command);
    }
 }
 
@@ -128,7 +127,7 @@ void RootWidget::on_event(const ui_core::Event& event)
 
 bool RootWidget::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Keyboard& keyboard) const
 {
-   if (m_level_editor != nullptr && !m_level_editor->accepts_key_chords())
+   if (m_active_asset_editor != nullptr && !m_active_asset_editor->accepts_key_chords())
       return true;
 
    const auto command = m_command_manager.translate_chord({m_state.dialog_manager->root_surface().modifiers(), keyboard.key});
@@ -137,6 +136,11 @@ bool RootWidget::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::
       return false;
    }
    return true;
+}
+
+void RootWidget::on_changed_active_tab(u32 /*tab_id*/, ui_core::IWidget* widget)
+{
+   m_active_asset_editor = dynamic_cast<IAssetEditor*>(widget);
 }
 
 }// namespace triglav::editor

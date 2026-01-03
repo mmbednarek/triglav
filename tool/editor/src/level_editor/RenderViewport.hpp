@@ -1,10 +1,7 @@
 #pragma once
 
+#include "../IRenderOverlay.hpp"
 #include "LevelEditor.hpp"
-
-#include "triglav/render_core/JobGraph.hpp"
-
-#include <vector>
 
 namespace triglav::editor {
 
@@ -46,16 +43,16 @@ constexpr auto OVERLAY_SCALER_XYZ = 10;
 constexpr auto OVERLAY_COUNT = 11;
 
 
-class RenderViewport
+class RenderViewport : public IRenderOverlay
 {
  public:
    explicit RenderViewport(LevelEditor& level_editor, Vector4 dimensions);
-   void build_update_job(render_core::BuildContext& ctx);
-   void build_render_job(render_core::BuildContext& ctx);
-   void update(render_core::JobGraph& graph, u32 frame_index, float delta_time);
+   void build_update_job(render_core::BuildContext& ctx) override;
+   void build_render_job(render_core::BuildContext& ctx) override;
+   void update(render_core::JobGraph& graph, u32 frame_index, float delta_time) override;
    void reset_matrices();
 
-   [[nodiscard]] Vector4 dimensions() const;
+   [[nodiscard]] Vector4 dimensions() const override;
 
    void set_selection_matrix(u32 index, const Matrix4x4& mat);
    void set_color(u32 index, const Color& color);
