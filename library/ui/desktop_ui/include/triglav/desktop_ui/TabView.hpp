@@ -13,13 +13,41 @@ namespace triglav::desktop_ui {
 class Dialog;
 class DesktopUIManager;
 
-class TabView final : public ui_core::LayoutWidget
+class ITabWidget
 {
  public:
+   virtual ~ITabWidget() = default;
+
+   [[nodiscard]] virtual StringView name() const = 0;
+   [[nodiscard]] virtual const ui_core::TextureRegion& icon() const = 0;
+   [[nodiscard]] virtual ui_core::IWidget& widget() = 0;
+};
+
+using ITabWidgetPtr = std::unique_ptr<ITabWidget>;
+
+class BasicTabWidget final : public ITabWidget
+{
+ public:
+   BasicTabWidget(const String& name, const ui_core::TextureRegion& icon, std::unique_ptr<ui_core::IWidget> widget);
+
+   [[nodiscard]] StringView name() const override;
+   [[nodiscard]] const ui_core::TextureRegion& icon() const override;
+   [[nodiscard]] ui_core::IWidget& widget() override;
+
+ private:
+   String m_name;
+   ui_core::TextureRegion m_icon;
+   std::unique_ptr<ui_core::IWidget> m_widget;
+};
+
+class TabView final : public ui_core::BaseWidget
+{
+ public:
+   TG_EVENT(OnChangedActiveTab, u32 /*index*/, IWidget* /*widget*/)
+
    struct State
    {
       DesktopUIManager* manager;
-      std::vector<String> tab_names;
       u32 active_tab = 0;
       bool allow_closing = true;
    };
@@ -43,14 +71,25 @@ class TabView final : public ui_core::LayoutWidget
    bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&);
 
    void set_active_tab(u32 active_tab);
+   void remove_tab(u32 tab_id);
+
+   ITabWidget& add_tab(ITabWidgetPtr&& widget);
+
+   template<typename TChild, typename... TArgs>
+   TChild& emplace_tab(TArgs&&... args)
+   {
+      return dynamic_cast<TChild&>(this->add_tab(std::make_unique<TChild>(std::forward<TArgs>(args)...)));
+   }
 
  private:
    [[nodiscard]] std::pair<float, u32> index_from_mouse_position(Vector2 position) const;
    [[nodiscard]] const Measure& get_measure(Vector2 available_size) const;
 
+   ui_core::Context& m_context;
    State m_state;
+   std::vector<ITabWidgetPtr> m_tabs;
+   std::vector<ui_core::SpriteInstance> m_icons;
    std::vector<ui_core::TextInstance> m_labels;
-   std::vector<ui_core::SpriteInstance> m_close_buttons;
    std::map<float, u32> m_offset_to_item;
    Vector4 m_dimensions;
    Vector4 m_cropping_mask;
@@ -58,6 +97,7 @@ class TabView final : public ui_core::LayoutWidget
    ui_core::RectInstance m_background{};
    ui_core::RectInstance m_hover_rect{};
    ui_core::RectInstance m_active_rect{};
+   ui_core::SpriteInstance m_close_button;
    u32 m_hovered_item = 0;
    bool m_is_dragging{false};
 

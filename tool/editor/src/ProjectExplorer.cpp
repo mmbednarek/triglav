@@ -4,8 +4,10 @@
 #include "triglav/io/File.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/ui_core/Context.hpp"
+#include "triglav/ui_core/widget/Padding.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
+#include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
 namespace triglav::editor {
@@ -118,6 +120,16 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
       .padding{4, 4, 4, 4},
       .separation = 4.0f,
    });
+
+   layout.create_child<ui_core::Padding>({10, 10, 10, 10})
+      .create_content<ui_core::TextBox>({
+         .font_size = 13,
+         .typeface = "fonts/inter/regular.typeface"_rc,
+         .content = "PROJECT EXPLORER",
+         .color = {0.3, 0.3, 0.3, 1.0},
+         .horizontal_alignment = ui_core::HorizontalAlignment::Left,
+         .vertical_alignment = ui_core::VerticalAlignment::Top,
+      });
 
    auto& scroll_rect = layout.create_child<ui_core::RectBox>({
       .color = TG_THEME_VAL(background_color_darker),

@@ -231,7 +231,6 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
 
             m_arrows.emplace(child, ui_core::SpriteInstance{
                                        .texture = "texture/ui_atlas.tex"_rc,
-                                       .size = arrow_size,
                                        .texture_region = region,
                                     });
             return m_arrows.at(child);
@@ -249,7 +248,6 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
 
          m_icons.emplace(child, ui_core::SpriteInstance{
                                    .texture = item.icon_name,
-                                   .size = icon_size,
                                    .texture_region = item.icon_region,
                                 });
          return m_icons.at(child);

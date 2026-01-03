@@ -50,13 +50,14 @@ void LevelViewport::add_to_viewport(const Vector4 dimensions, Vector4 /*cropping
    m_dimensions = dimensions;
    m_level_editor.scene().update(graphics_api::Resolution{static_cast<u32>(dimensions.z), static_cast<u32>(dimensions.w)});
    m_render_viewport = std::make_unique<RenderViewport>(m_level_editor, dimensions);
-   m_root_window.set_render_viewport(m_render_viewport.get());
+   m_root_window.set_render_overlay(m_render_viewport.get());
 }
 
 void LevelViewport::remove_from_viewport()
 {
    m_render_viewport.reset();
    m_dimensions = {0, 0, 0, 0};
+   m_root_window.set_render_overlay(nullptr);
 }
 
 void LevelViewport::on_event(const ui_core::Event& event)

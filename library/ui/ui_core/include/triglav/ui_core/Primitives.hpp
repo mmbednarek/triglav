@@ -41,4 +41,10 @@ struct Sprite
    std::optional<Vector4> texture_region;
 };
 
+struct TextureRegion
+{
+   TextureName name;
+   std::optional<Vector4> region;
+};
+
 }// namespace triglav::ui_core

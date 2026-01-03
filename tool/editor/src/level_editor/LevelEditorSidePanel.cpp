@@ -23,9 +23,9 @@ namespace triglav::editor {
 
 using namespace name_literals;
 
-constexpr Color RED_OUTLINE{1.0f, 0.28f, 0.28f, 1.0f};
-constexpr Color GREEN_OUTLINE{0.35f, 1.0f, 0.35f, 1.0f};
-constexpr Color BLUE_OUTLINE{0.17f, 0.5f, 1.0f, 1.0f};
+constexpr Color RED_OUTLINE{0.62f, 0.34f, 0.33f, 1.0f};
+constexpr Color GREEN_OUTLINE{0.33f, 0.63f, 0.33f, 1.0f};
+constexpr Color BLUE_OUTLINE{0.32f, 0.43f, 0.62f, 1.0f};
 
 class PanelHeader final : public ui_core::ProxyWidget
 {

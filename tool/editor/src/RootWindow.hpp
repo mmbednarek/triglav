@@ -1,5 +1,7 @@
 #pragma once
 
+#include "IRenderOverlay.hpp"
+
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop_ui/WidgetRenderer.hpp"
@@ -18,8 +20,6 @@ class BuildContext;
 }
 namespace triglav::editor {
 
-class RenderViewport;
-
 class RootWindow final : public render_core::IRenderer
 {
  public:
@@ -34,7 +34,8 @@ class RootWindow final : public render_core::IRenderer
    void on_close();
    void on_resize(Vector2i size);
 
-   void set_render_viewport(RenderViewport* viewport);
+   void set_render_overlay(IRenderOverlay* overlay);
+   [[nodiscard]] IRenderOverlay& render_overlay() const;
 
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
@@ -62,7 +63,7 @@ class RootWindow final : public render_core::IRenderer
    desktop_ui::WidgetRenderer m_widget_renderer;
    render_core::PipelineCache m_pipeline_cache;
    render_core::JobGraph m_job_graph;
-   RenderViewport* m_render_viewport{};
+   IRenderOverlay* m_render_overlay = nullptr;
    u32 m_frame_index{0};
    bool m_should_close{false};
    bool m_is_initialized{false};

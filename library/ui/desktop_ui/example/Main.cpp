@@ -235,13 +235,19 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    auto& tab_view = scroll.create_content<triglav::desktop_ui::TabView>({
       .manager = &desktop_ui_manager,
-      .tab_names = {"Random Items"_str, "Tree Example"_str},
    });
 
-   auto& layout = tab_view.create_child<triglav::ui_core::VerticalLayout>({
-      .padding = {5.0f, 5.0f, 5.0f, 5.0f},
-      .separation = 10.0f,
-   });
+   auto& layout = dynamic_cast<triglav::ui_core::VerticalLayout&>(
+      tab_view
+         .emplace_tab<triglav::desktop_ui::BasicTabWidget>(
+            triglav::String{"Random Items"}, triglav::ui_core::TextureRegion{"texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
+            std::make_unique<triglav::ui_core::VerticalLayout>(root_dialog->widget_renderer().context(),
+                                                               triglav::ui_core::VerticalLayout::State{
+                                                                  .padding = {5.0f, 5.0f, 5.0f, 5.0f},
+                                                                  .separation = 10.0f,
+                                                               },
+                                                               &tab_view))
+         .widget());
 
 
    layout.create_child<triglav::desktop_ui::TextInput>({
@@ -345,11 +351,15 @@ int triglav_main(InputArgs& args, IDisplay& display)
                                      });
    }
 
-   tab_view.create_child<triglav::desktop_ui::TreeView>({
-      .manager = &desktop_ui_manager,
-      .controller = &controller,
-      .extended_items = {container_item},
-   });
+   tab_view.emplace_tab<triglav::desktop_ui::BasicTabWidget>(
+      triglav::String{"Tree Example"}, triglav::ui_core::TextureRegion{"texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
+      std::make_unique<triglav::desktop_ui::TreeView>(root_dialog->widget_renderer().context(),
+                                                      triglav::desktop_ui::TreeView::State{
+                                                         .manager = &desktop_ui_manager,
+                                                         .controller = &controller,
+                                                         .extended_items = {container_item},
+                                                      },
+                                                      &tab_view));
 
    root_dialog->initialize();
 
