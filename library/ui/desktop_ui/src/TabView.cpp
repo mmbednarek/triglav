@@ -289,6 +289,16 @@ void TabView::remove_tab(const u32 tab_id)
    this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
+ITabWidget& TabView::tab(const u32 tab) const
+{
+   return *m_tabs.at(tab);
+}
+
+u32 TabView::tab_count() const
+{
+   return m_tabs.size();
+}
+
 Vector4 TabView::content_area() const
 {
    const auto& measure = this->get_measure(rect_size(m_dimensions));

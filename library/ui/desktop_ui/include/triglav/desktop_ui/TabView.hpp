@@ -72,6 +72,8 @@ class TabView final : public ui_core::BaseWidget
 
    void set_active_tab(u32 active_tab);
    void remove_tab(u32 tab_id);
+   ITabWidget& tab(u32 tab) const;
+   [[nodiscard]] u32 tab_count() const;
    [[nodiscard]] Vector4 content_area() const;
 
    u32 add_tab(ITabWidgetPtr&& widget);

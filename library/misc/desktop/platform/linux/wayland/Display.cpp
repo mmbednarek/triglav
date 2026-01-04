@@ -358,8 +358,8 @@ void Display::on_pointer_button(const u32 /*serial*/, const u32 /*time*/, const 
          m_last_pointer_click = now - 1000ms;
       } else {
          (*pointer_surface)->event_OnMouseButtonIsReleased.publish(map_button(button));
+         m_last_pointer_click = now;
       }
-      m_last_pointer_click = now;
    }
 }
 

@@ -76,6 +76,7 @@ class LevelEditor final : public ui_core::ProxyWidget, public desktop_ui::ITabWi
    [[nodiscard]] StringView name() const override;
    [[nodiscard]] const ui_core::TextureRegion& icon() const override;
    [[nodiscard]] ui_core::IWidget& widget() override;
+   [[nodiscard]] ResourceName asset_name() const override;
 
  private:
    State m_state;
