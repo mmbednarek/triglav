@@ -72,8 +72,10 @@ class TabView final : public ui_core::BaseWidget
 
    void set_active_tab(u32 active_tab);
    void remove_tab(u32 tab_id);
+   [[nodiscard]] Vector4 content_area() const;
 
-   ITabWidget& add_tab(ITabWidgetPtr&& widget);
+   u32 add_tab(ITabWidgetPtr&& widget);
+   void set_default_widget(ui_core::IWidgetPtr&& widget);
 
    template<typename TChild, typename... TArgs>
    TChild& emplace_tab(TArgs&&... args)
@@ -90,6 +92,7 @@ class TabView final : public ui_core::BaseWidget
    std::vector<ITabWidgetPtr> m_tabs;
    std::vector<ui_core::SpriteInstance> m_icons;
    std::vector<ui_core::TextInstance> m_labels;
+   ui_core::IWidgetPtr m_default_widget;
    std::map<float, u32> m_offset_to_item;
    Vector4 m_dimensions;
    Vector4 m_cropping_mask;
@@ -100,6 +103,7 @@ class TabView final : public ui_core::BaseWidget
    ui_core::SpriteInstance m_close_button;
    u32 m_hovered_item = 0;
    bool m_is_dragging{false};
+   bool m_is_widget_added = false;
 
    mutable Vector2 m_cached_measure_size{};
    mutable std::optional<Measure> m_cached_measure{};

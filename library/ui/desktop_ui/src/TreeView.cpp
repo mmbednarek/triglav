@@ -130,6 +130,13 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
    this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
+void TreeView::on_mouse_double_click(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/) const
+{
+   const auto [base_offset, item_id] = this->index_from_mouse_position(event.mouse_position);
+   // log_info("Double click event: {}", item_id);
+   event_OnActivated.publish(item_id);
+}
+
 void TreeView::remove_internal(const TreeItemId item_id)
 {
    if (m_state.controller->item(item_id).has_children) {

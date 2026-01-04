@@ -14,6 +14,7 @@ extern "C"
 #include "triglav/String.hpp"
 #include "triglav/threading/SafeAccess.hpp"
 
+#include <chrono>
 #include <map>
 #include <string_view>
 #include <wayland-client.h>
@@ -72,7 +73,7 @@ class Display final : public IDisplay
    void on_pointer_relative_motion(uint32_t utime_hi, uint32_t utime_lo, int32_t dx, int32_t dy, int32_t dx_unaccel,
                                    int32_t dy_unaccel) const;
    void on_pointer_axis(uint32_t time, uint32_t axis, int32_t value) const;
-   void on_pointer_button(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const;
+   void on_pointer_button(uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
    void on_keyboard_enter(uint32_t serial, wl_surface* surface, wl_array* wls);
    void on_keymap(uint32_t format, int32_t fd, uint32_t size);
    void on_key(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
@@ -101,6 +102,7 @@ class Display final : public IDisplay
    xkb_context* m_xkb_context;
    xkb_keymap* m_xkb_keymap;
    xkb_state* m_xkb_state;
+   std::chrono::system_clock::time_point m_last_pointer_click{};
 
    std::map<wl_surface*, Surface*> m_surface_map{};
    threading::SafeReadWriteAccess<Surface*> m_pointer_surface{};

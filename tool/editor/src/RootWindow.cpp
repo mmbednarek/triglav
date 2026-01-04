@@ -1,7 +1,9 @@
 #include "RootWindow.hpp"
 
 #include "DefaultRenderOverlay.hpp"
+#include "RootWidget.hpp"
 #include "level_editor/RenderViewport.hpp"
+
 #include "triglav/render_core/BuildContext.hpp"
 
 namespace triglav::editor {
@@ -24,7 +26,8 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
     m_pipeline_cache(device, resource_manager),
     m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, DEFAULT_DIMENSIONS),
     TG_CONNECT(*m_surface, OnClose, on_close),
-    TG_CONNECT(*m_surface, OnResize, on_resize)
+    TG_CONNECT(*m_surface, OnResize, on_resize),
+    TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets)
 {
 }
 
@@ -84,11 +87,21 @@ void RootWindow::update()
 {
    if (!m_is_initialized)
       return;
+
+   if (m_is_asset_ready) {
+      dynamic_cast<RootWidget&>(m_widget_renderer.root_widget()).open_asset_editor(*m_loaded_asset);
+      m_is_asset_ready = false;
+      m_loaded_asset.reset();
+   }
    // if (!m_widget_renderer.ui_viewport().should_redraw())
    //    return;
 
    if (m_should_update_viewport) {
       m_device.await_all();
+
+      auto& update_viewport_ctx = m_job_graph.replace_job(renderer::UpdateViewParamsJob::JobName);
+      this->render_overlay().build_update_job(update_viewport_ctx);
+      m_job_graph.rebuild_job(renderer::UpdateViewParamsJob::JobName);
 
       auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
       this->render_overlay().build_render_job(render_viewport_ctx);
@@ -148,18 +161,28 @@ void RootWindow::on_resize(const Vector2i size)
    m_render_surface.recreate_swapchain(size);
 }
 
+void RootWindow::on_loaded_assets()
+{
+   if (!m_loaded_asset.has_value())
+      return;
+   log_info("Finished loading asset {}", ResourcePathMap::the().resolve(*m_loaded_asset));
+   m_is_asset_ready = true;
+}
+
 void RootWindow::set_render_overlay(IRenderOverlay* overlay)
 {
    m_render_overlay = overlay;
    if (m_is_initialized) {
       m_should_update_viewport = true;
    }
+   m_device.await_all();
 }
 
 IRenderOverlay& RootWindow::render_overlay() const
 {
    static DefaultRenderOverlay default_overlay;
    if (m_render_overlay == nullptr) {
+      default_overlay.set_dimensions(dynamic_cast<RootWidget&>(m_widget_renderer.root_widget()).asset_editor_area());
       return default_overlay;
    }
    return *m_render_overlay;
@@ -188,6 +211,17 @@ bool RootWindow::should_close() const
 void RootWindow::recreate_render_jobs()
 {
    m_should_update_viewport = true;
+}
+
+void RootWindow::open_asset(const ResourceName asset_name)
+{
+   if (asset_name.type() == ResourceType::Level) {
+      log_info("Opening asset {}", ResourcePathMap::the().resolve(asset_name));
+      m_loaded_asset.emplace(asset_name);
+      m_resource_manager.load_asset(asset_name);
+   } else {
+      log_error("No level editor to open asset: {}", ResourcePathMap::the().resolve(asset_name));
+   }
 }
 
 }// namespace triglav::editor

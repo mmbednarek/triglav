@@ -16,6 +16,7 @@ WidgetRenderer::WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCac
     TG_CONNECT(m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
     TG_CONNECT(m_surface, OnMouseButtonIsPressed, on_mouse_button_is_pressed),
     TG_CONNECT(m_surface, OnMouseButtonIsReleased, on_mouse_button_is_released),
+    TG_CONNECT(m_surface, OnMouseDoubleClick, on_mouse_double_click),
     TG_CONNECT(m_surface, OnKeyIsPressed, on_key_is_pressed),
     TG_CONNECT(m_surface, OnKeyIsReleased, on_key_is_released),
     TG_CONNECT(m_surface, OnTextInput, on_text_input)
@@ -115,6 +116,20 @@ void WidgetRenderer::on_mouse_button_is_released(desktop::MouseButton button) co
    m_root_widget->on_event(event);
 }
 
+void WidgetRenderer::on_mouse_double_click(desktop::MouseButton button) const
+{
+   if (m_root_widget == nullptr)
+      return;
+
+   ui_core::Event event;
+   event.event_type = ui_core::Event::Type::MouseDoubleClick;
+   event.mouse_position = m_mouse_position;
+   event.global_mouse_position = m_mouse_position;
+   event.widget_size = m_surface.dimension();
+   event.data.emplace<ui_core::Event::Mouse>(button);
+   m_root_widget->on_event(event);
+}
+
 void WidgetRenderer::on_key_is_pressed(desktop::Key key) const
 {
    if (m_root_widget == nullptr)
@@ -165,6 +180,12 @@ ui_core::IWidget& WidgetRenderer::set_root_widget(ui_core::IWidgetPtr&& content)
 
    m_root_widget = std::move(content);
 
+   return *m_root_widget;
+}
+
+ui_core::IWidget& WidgetRenderer::root_widget() const
+{
+   assert(m_root_widget != nullptr);
    return *m_root_widget;
 }
 

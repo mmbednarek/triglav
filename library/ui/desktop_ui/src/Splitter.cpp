@@ -38,7 +38,13 @@ float calculate_offset(const SplitterOffsetType type, const float offset, const 
 Splitter::Splitter(ui_core::Context& ctx, const State state, ui_core::IWidget* parent) :
     BaseWidget(parent),
     m_context(ctx),
-    m_state(state)
+    m_state(state),
+    m_background{
+       .color = TG_THEME_VAL(background_color_darker),
+       .border_radius = {0, 0, 0, 0},
+       .border_color = palette::NO_COLOR,
+       .border_width = 0.0f,
+    }
 {
 }
 
@@ -64,18 +70,7 @@ void Splitter::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
    Vector2 following_offset = make_vec(parallel(offset) + g_splitter_size + this->offset(), ortho(offset));
 
    Vector4 splitter_dims{make_vec(parallel(offset) + this->offset(), ortho(offset)), make_vec(g_splitter_size, ortho(size))};
-   if (m_background == 0) {
-      m_background = m_context.viewport().add_rectangle({
-         .rect = splitter_dims,
-         .color = TG_THEME_VAL(background_color_darker),
-         .border_radius = {0, 0, 0, 0},
-         .border_color = palette::NO_COLOR,
-         .crop = m_cropping_mask,
-         .border_width = 0.0f,
-      });
-   } else {
-      m_context.viewport().set_rectangle_dims(m_background, splitter_dims, m_cropping_mask);
-   }
+   m_background.add(m_context, m_dimensions, splitter_dims);
 
    m_preceding->add_to_viewport({offset, preceding_size}, cropping_mask);
    m_following->add_to_viewport({following_offset, following_size}, cropping_mask);
@@ -85,6 +80,7 @@ void Splitter::remove_from_viewport()
 {
    m_preceding->remove_from_viewport();
    m_following->remove_from_viewport();
+   m_background.remove(m_context);
 }
 
 void Splitter::on_event(const ui_core::Event& event)

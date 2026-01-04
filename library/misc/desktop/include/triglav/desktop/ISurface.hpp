@@ -52,6 +52,7 @@ class ISurface : public std::enable_shared_from_this<ISurface>
    TG_EVENT(OnMouseWheelTurn, float)
    TG_EVENT(OnMouseButtonIsPressed, MouseButton)
    TG_EVENT(OnMouseButtonIsReleased, MouseButton)
+   TG_EVENT(OnMouseDoubleClick, MouseButton)
    TG_EVENT(OnResize, Vector2i)
    TG_EVENT(OnClose)
    TG_EVENT(OnKeyIsPressed, Key)

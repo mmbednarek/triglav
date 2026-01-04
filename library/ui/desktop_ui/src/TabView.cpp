@@ -13,7 +13,7 @@ using namespace name_literals;
 
 constexpr auto g_item_padding = 13.0f;
 constexpr auto g_icon_size = 18.0f;
-constexpr auto g_separation = 8.0f;
+constexpr auto g_separation = 12.0f;
 constexpr auto g_close_btn_size = 12.0f;
 
 BasicTabWidget::BasicTabWidget(const String& name, const ui_core::TextureRegion& icon, std::unique_ptr<ui_core::IWidget> widget) :
@@ -86,9 +86,14 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
    const Vector4 background_dims{dimensions.x, dimensions.y, dimensions.z, measure.tab_height};
    m_background.add(m_context, background_dims, cropping_mask);
 
+   const Vector4 content_dims{dimensions.x, dimensions.y + measure.tab_height, dimensions.z, dimensions.w - measure.tab_height};
+
    if (m_tabs.empty()) {
       m_close_button.remove(m_context);
       m_active_rect.remove(m_context);
+      if (m_default_widget != nullptr) {
+         m_default_widget->add_to_viewport(content_dims, cropping_mask);
+      }
       return;
    }
 
@@ -100,12 +105,12 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
          const Vector4 active_tab_dims{offset_x, dimensions.y, width, measure.tab_height};
          m_active_rect.add(m_context, active_tab_dims, cropping_mask);
 
-         Vector4 close_btn_dims{offset_x + width - g_item_padding - g_close_btn_size / 2,
+         Vector4 close_btn_dims{offset_x + width - g_item_padding - g_close_btn_size,
                                 dimensions.y + measure.tab_height / 2 - g_close_btn_size / 2 + 1, g_close_btn_size, g_close_btn_size};
          m_close_button.add(m_context, close_btn_dims, cropping_mask);
       }
 
-      Vector4 icon_dims{offset_x + g_item_padding, dimensions.y + measure.tab_height / 2 - g_icon_size / 2 + 1, g_icon_size, g_icon_size};
+      Vector4 icon_dims{offset_x + g_item_padding, dimensions.y + measure.tab_height / 2 - g_icon_size / 2, g_icon_size, g_icon_size};
       Vector2 text_pos{offset_x + g_item_padding + g_icon_size + g_separation, dimensions.y + measure.tab_height - g_item_padding};
       if (first_init) {
          const auto& tex_region = tab->icon();
@@ -133,8 +138,8 @@ void TabView::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
       ++index;
    }
 
-   m_tabs[m_state.active_tab]->widget().add_to_viewport(
-      {dimensions.x, dimensions.y + measure.tab_height, dimensions.z, dimensions.w - measure.tab_height}, cropping_mask);
+   m_is_widget_added = true;
+   m_tabs[m_state.active_tab]->widget().add_to_viewport(content_dims, cropping_mask);
 }
 
 void TabView::remove_from_viewport()
@@ -152,7 +157,14 @@ void TabView::remove_from_viewport()
    m_active_rect.remove(m_context);
    m_hover_rect.remove(m_context);
 
-   m_tabs[m_state.active_tab]->widget().remove_from_viewport();
+   if (m_tabs.empty()) {
+      if (m_default_widget != nullptr) {
+         m_default_widget->remove_from_viewport();
+      }
+   } else {
+      m_tabs[m_state.active_tab]->widget().remove_from_viewport();
+   }
+   m_is_widget_added = false;
 }
 
 void TabView::on_event(const ui_core::Event& event)
@@ -248,7 +260,9 @@ void TabView::set_active_tab(const u32 active_tab)
    if (active_tab >= m_tabs.size())
       return;
    if (m_state.active_tab < m_tabs.size()) {
-      m_tabs[m_state.active_tab]->widget().remove_from_viewport();
+      if (m_is_widget_added) {
+         m_tabs[m_state.active_tab]->widget().remove_from_viewport();
+      }
    }
    m_state.active_tab = active_tab;
    event_OnChangedActiveTab.publish(m_state.active_tab, &m_tabs[m_state.active_tab]->widget());
@@ -263,20 +277,34 @@ void TabView::remove_tab(const u32 tab_id)
    this->remove_from_viewport();
 
    m_tabs.erase(m_tabs.begin() + m_state.active_tab);
-   if (m_state.active_tab == tab_id && tab_id == m_tabs.size() - 1 && tab_id != 0) {
+   if (tab_id != 0 && (tab_id >= m_tabs.size() || tab_id == m_state.active_tab)) {
       --m_state.active_tab;
       event_OnChangedActiveTab.publish(m_state.active_tab, &m_tabs[m_state.active_tab]->widget());
    }
    if (m_tabs.empty()) {
+      m_is_widget_added = false;
       event_OnChangedActiveTab.publish(0, nullptr);
    }
 
    this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
-ITabWidget& TabView::add_tab(ITabWidgetPtr&& widget)
+Vector4 TabView::content_area() const
 {
-   return *m_tabs.emplace_back(std::move(widget));
+   const auto& measure = this->get_measure(rect_size(m_dimensions));
+   return {m_dimensions.x, m_dimensions.y + measure.tab_height, m_dimensions.z, m_dimensions.w - measure.tab_height};
+}
+
+u32 TabView::add_tab(ITabWidgetPtr&& widget)
+{
+   m_cached_measure.reset();
+   m_tabs.emplace_back(std::move(widget));
+   return m_tabs.size() - 1;
+}
+
+void TabView::set_default_widget(ui_core::IWidgetPtr&& widget)
+{
+   m_default_widget = std::move(widget);
 }
 
 [[nodiscard]] std::pair<float, u32> TabView::index_from_mouse_position(const Vector2 position) const

@@ -17,6 +17,8 @@ extern "C"
 
 namespace triglav::desktop::wayland {
 
+using namespace std::chrono_literals;
+
 namespace {
 
 MouseButton map_button(const u32 button)
@@ -84,7 +86,7 @@ Display::Display() :
    };
 
    m_pointer_listener.button = [](void* data, [[maybe_unused]] wl_pointer* wl_pointer, u32 serial, u32 time, u32 button, u32 state) {
-      const auto* display = static_cast<Display*>(data);
+      auto* display = static_cast<Display*>(data);
       assert(display->m_pointer == wl_pointer);
       display->on_pointer_button(serial, time, button, state);
    };
@@ -341,7 +343,7 @@ void Display::on_pointer_axis(u32 /*time*/, u32 /*axis*/, i32 value) const
    (*pointer_surface)->event_OnMouseWheelTurn.publish(static_cast<float>(value) / 2560.0f);
 }
 
-void Display::on_pointer_button(const u32 /*serial*/, const u32 /*time*/, const u32 button, const u32 state) const
+void Display::on_pointer_button(const u32 /*serial*/, const u32 /*time*/, const u32 button, const u32 state)
 {
    auto pointer_surface = m_pointer_surface.read_access();
    if (*pointer_surface == nullptr)
@@ -350,7 +352,14 @@ void Display::on_pointer_button(const u32 /*serial*/, const u32 /*time*/, const 
    if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
       (*pointer_surface)->event_OnMouseButtonIsPressed.publish(map_button(button));
    } else if (state == WL_POINTER_BUTTON_STATE_RELEASED) {
-      (*pointer_surface)->event_OnMouseButtonIsReleased.publish(map_button(button));
+      const auto now = std::chrono::system_clock::now();
+      if (now - m_last_pointer_click < 500ms) {
+         (*pointer_surface)->event_OnMouseDoubleClick.publish(map_button(button));
+         m_last_pointer_click = now - 1000ms;
+      } else {
+         (*pointer_surface)->event_OnMouseButtonIsReleased.publish(map_button(button));
+      }
+      m_last_pointer_click = now;
    }
 }
 

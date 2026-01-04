@@ -47,6 +47,22 @@ void ResourceManager::load_asset_list(const io::Path& path)
    this->load_next_stage();
 }
 
+void ResourceManager::load_asset(const ResourceName resource_name)
+{
+   if (m_load_context != nullptr) {
+      log_error("Loading assets already in progress");
+      return;
+   }
+   m_load_context = LoadContext::from_target_asset(resource_name);
+   if (m_load_context == nullptr) {
+      log_error("Failed to create load context from asset");
+      return;
+   }
+
+   log_info("Loading {} assets", m_load_context->total_assets());
+   this->load_next_stage();
+}
+
 void ResourceManager::load_next_stage()
 {
    if (m_load_context == nullptr) {
@@ -74,11 +90,11 @@ void ResourceManager::load_next_stage()
 
       auto name = name_from_path(rc_path.view());
       m_name_registry.register_resource(name, rc_path.to_std_view());
-      threading::ThreadPool::the().issue_job([this, name, resource_path] { this->load_asset(name, resource_path); });
+      threading::ThreadPool::the().issue_job([this, name, resource_path] { this->load_asset_internal(name, resource_path); });
    }
 }
 
-void ResourceManager::load_asset(const ResourceName asset_name, const io::Path& path)
+void ResourceManager::load_asset_internal(const ResourceName asset_name, const io::Path& path)
 {
    log_info("[THREAD: {}] Loading asset {}", threading::this_thread_id(),
             m_name_registry.lookup_resource_name(asset_name).value_or("UNKNOWN"));

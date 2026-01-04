@@ -228,7 +228,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 
    m_viewport = &left_layout.emplace_child<LevelViewport>(&left_layout, *m_state.root_window, *this);
 
-   m_scene.load_level("level/demo.level"_rc);
+   m_scene.load_level(m_state.asset_name);
    m_bindless_scene.write_objects_to_buffer();
    m_scene.update_shadow_maps();
 
@@ -406,7 +406,7 @@ void LevelEditor::on_event(const ui_core::Event& event)
 void LevelEditor::save_level() const
 {
    const auto level = m_scene.to_level();
-   auto level_path = resource::PathManager::the().content_path().sub("level").sub("demo.yaml");
+   auto level_path = resource::PathManager::the().content_path().sub(ResourcePathMap::the().resolve(m_state.asset_name).to_std());
    assert(level.save_to_file(level_path));
 }
 
@@ -495,7 +495,7 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
 
 StringView LevelEditor::name() const
 {
-   return StringView{"demo.level"};
+   return ResourcePathMap::the().resolve(m_state.asset_name);
 }
 
 const ui_core::TextureRegion& LevelEditor::icon() const

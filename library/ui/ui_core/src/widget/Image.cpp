@@ -26,7 +26,11 @@ Vector2 calculate_proportional_size(const Vector2 available_size, const Vector2 
 
 Image::Image(Context& ctx, const State state, IWidget* /*parent*/) :
     m_context(ctx),
-    m_state(state)
+    m_state(state),
+    m_sprite{
+       .texture = m_state.texture,
+       .texture_region = m_state.region,
+    }
 {
 }
 
@@ -50,37 +54,22 @@ Vector2 Image::desired_size(const Vector2 available_size) const
 void Image::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
    if (!do_regions_intersect(dimensions, cropping_mask)) {
-      if (m_sprite_id != 0) {
-         m_context.viewport().remove_sprite(m_sprite_id);
-         m_sprite_id = 0;
-      }
+      m_sprite.remove(m_context);
       return;
    }
 
-   if (m_sprite_id != 0) {
-      m_context.viewport().set_sprite_position(m_sprite_id, {dimensions.x, dimensions.y}, cropping_mask);
-      return;
-   }
-
-   m_sprite_id = m_context.viewport().add_sprite(Sprite{
-      .texture = m_state.texture,
-      .position = {dimensions.x, dimensions.y},
-      .size = {dimensions.z, dimensions.w},
-      .crop = cropping_mask,
-      .texture_region = m_state.region,
-   });
+   m_sprite.add(m_context, dimensions, cropping_mask);
 }
 
 void Image::remove_from_viewport()
 {
-   m_context.viewport().remove_sprite(m_sprite_id);
-   m_sprite_id = 0;
+   m_sprite.remove(m_context);
 }
 
 void Image::set_region(const Vector4 region)
 {
    m_state.region = region;
-   m_context.viewport().set_sprite_texture_region(m_sprite_id, region);
+   m_sprite.set_region(m_context, region);
 }
 
 }// namespace triglav::ui_core

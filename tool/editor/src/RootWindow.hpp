@@ -2,6 +2,7 @@
 
 #include "IRenderOverlay.hpp"
 
+#include "triglav/Logging.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop_ui/WidgetRenderer.hpp"
@@ -22,6 +23,7 @@ namespace triglav::editor {
 
 class RootWindow final : public render_core::IRenderer
 {
+   TG_DEFINE_LOG_CATEGORY(RootWindow)
  public:
    using Self = RootWindow;
 
@@ -33,6 +35,7 @@ class RootWindow final : public render_core::IRenderer
    void update();
    void on_close();
    void on_resize(Vector2i size);
+   void on_loaded_assets();
 
    void set_render_overlay(IRenderOverlay* overlay);
    [[nodiscard]] IRenderOverlay& render_overlay() const;
@@ -48,6 +51,7 @@ class RootWindow final : public render_core::IRenderer
    [[nodiscard]] resource::ResourceManager& resource_manager() const;
    [[nodiscard]] bool should_close() const;
    void recreate_render_jobs() override;
+   void open_asset(ResourceName asset_name);
 
  private:
    void build_rendering_job(render_core::BuildContext& ctx);
@@ -68,9 +72,12 @@ class RootWindow final : public render_core::IRenderer
    bool m_should_close{false};
    bool m_is_initialized{false};
    bool m_should_update_viewport{false};
+   std::optional<ResourceName> m_loaded_asset;
+   std::atomic_bool m_is_asset_ready{false};
 
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);
+   TG_SINK(resource::ResourceManager, OnLoadedAssets);
 };
 
 }// namespace triglav::editor
