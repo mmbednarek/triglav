@@ -5,6 +5,7 @@ subdir('misc/test_util')
 
 subdir('base/core')
 subdir('base/io')
+subdir('base/meta')
 subdir('engine/memory')
 
 subdir('engine/world')
