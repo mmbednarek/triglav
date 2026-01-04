@@ -176,6 +176,16 @@ Vector4 RootWidget::asset_editor_area() const
 
 void RootWidget::open_asset_editor(const ResourceName asset_name)
 {
+   // check if already opened
+   for (u32 i = 0; i < m_tab_view->tab_count(); i++) {
+      const auto& asset_editor = dynamic_cast<IAssetEditor&>(m_tab_view->tab(i).widget());
+      if (asset_editor.asset_name() == asset_name) {
+         m_tab_view->set_active_tab(i);
+         return;
+      }
+   }
+
+   // not found create new tab
    m_tab_view->remove_from_viewport();
    const auto tab_id = m_tab_view->add_tab(std::make_unique<LevelEditor>(m_context,
                                                                          LevelEditor::State{

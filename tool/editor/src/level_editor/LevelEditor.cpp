@@ -509,4 +509,9 @@ ui_core::IWidget& LevelEditor::widget()
    return dynamic_cast<ui_core::IWidget&>(*this);
 }
 
+ResourceName LevelEditor::asset_name() const
+{
+   return m_state.asset_name;
+}
+
 }// namespace triglav::editor

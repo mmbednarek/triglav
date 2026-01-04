@@ -101,6 +101,11 @@ void ResourceManager::load_asset_internal(const ResourceName asset_name, const i
 
    this->event_OnStartedLoadingAsset.publish(asset_name);
 
+   if (this->is_name_registered(asset_name)) {
+      this->on_finished_loading_resource(asset_name);
+      return;
+   }
+
    switch (asset_name.type()) {
 #define TG_RESOURCE_TYPE(name, extension, cpp_type, stage)       \
    case ResourceType::name:                                      \
