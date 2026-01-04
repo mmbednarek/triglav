@@ -7,6 +7,7 @@ core_sources = files([
                     'include/triglav/Format.hpp',
                     'include/triglav/Int.hpp',
                     'include/triglav/Logging.hpp',
+                    'include/triglav/Macros.hpp',
                     'include/triglav/Math.hpp',
                     'include/triglav/Name.hpp',
                     'include/triglav/NameResolution.hpp',
