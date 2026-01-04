@@ -64,9 +64,6 @@ u32 LoadContext::current_stage_id() const
 
 std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
 {
-   std::vector<ResourceStage> result{};
-   result.resize(loading_stage_count());
-
    auto file = io::read_whole_file(path);
    if (file.empty()) {
       return {};
@@ -82,6 +79,22 @@ std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
       resources.insert(name_from_path(StringView{rc_path.data(), rc_path.size()}));
    }
    resolve_dependencies(resources);
+
+   return build_load_context(resources);
+}
+
+std::unique_ptr<LoadContext> LoadContext::from_target_asset(const ResourceName res_name)
+{
+   std::set<ResourceName> resources;
+   resources.insert(res_name);
+   resolve_dependencies(resources);
+   return build_load_context(resources);
+}
+
+std::unique_ptr<LoadContext> LoadContext::build_load_context(const std::set<ResourceName>& resources)
+{
+   std::vector<ResourceStage> result{};
+   result.resize(loading_stage_count());
 
    for (const auto rc : resources) {
       const auto rc_path = ResourcePathMap::the().resolve(rc);

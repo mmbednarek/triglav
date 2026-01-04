@@ -10,18 +10,19 @@
 #include <variant>
 #include <vector>
 
-#define TG_UI_EVENTS                                          \
-   TG_DEFINE_EVENT(MousePressed, on_mouse_pressed, Mouse)     \
-   TG_DEFINE_EVENT(MouseReleased, on_mouse_released, Mouse)   \
-   TG_DEFINE_EVENT_NO_PAYLOAD(MouseMoved, on_mouse_moved)     \
-   TG_DEFINE_EVENT_NO_PAYLOAD(MouseEntered, on_mouse_entered) \
-   TG_DEFINE_EVENT_NO_PAYLOAD(MouseLeft, on_mouse_left)       \
-   TG_DEFINE_EVENT(MouseScrolled, on_mouse_scrolled, Scroll)  \
-   TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)      \
-   TG_DEFINE_EVENT(KeyReleased, on_key_released, Keyboard)    \
-   TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)       \
-   TG_DEFINE_EVENT_NO_PAYLOAD(SelectAll, on_select_all)       \
-   TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_activated)        \
+#define TG_UI_EVENTS                                               \
+   TG_DEFINE_EVENT(MousePressed, on_mouse_pressed, Mouse)          \
+   TG_DEFINE_EVENT(MouseReleased, on_mouse_released, Mouse)        \
+   TG_DEFINE_EVENT(MouseDoubleClick, on_mouse_double_click, Mouse) \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseMoved, on_mouse_moved)          \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseEntered, on_mouse_entered)      \
+   TG_DEFINE_EVENT_NO_PAYLOAD(MouseLeft, on_mouse_left)            \
+   TG_DEFINE_EVENT(MouseScrolled, on_mouse_scrolled, Scroll)       \
+   TG_DEFINE_EVENT(KeyPressed, on_key_pressed, Keyboard)           \
+   TG_DEFINE_EVENT(KeyReleased, on_key_released, Keyboard)         \
+   TG_DEFINE_EVENT(TextInput, on_text_input, TextInput)            \
+   TG_DEFINE_EVENT_NO_PAYLOAD(SelectAll, on_select_all)            \
+   TG_DEFINE_EVENT_NO_PAYLOAD(Activated, on_activated)             \
    TG_DEFINE_EVENT_NO_PAYLOAD(Deactivated, on_deactivated)
 
 namespace triglav::ui_core {

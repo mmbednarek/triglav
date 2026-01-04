@@ -35,6 +35,8 @@ class RootWidget final : public ui_core::ProxyWidget
    void on_event(const ui_core::Event& event) override;
    bool on_key_pressed(const ui_core::Event& event, const ui_core::Event::Keyboard& keyboard) const;
    void on_changed_active_tab(u32 tab_id, ui_core::IWidget* widget);
+   [[nodiscard]] Vector4 asset_editor_area() const;
+   void open_asset_editor(ResourceName asset_name);
 
  private:
    State m_state;
@@ -42,7 +44,8 @@ class RootWidget final : public ui_core::ProxyWidget
    desktop_ui::MenuController m_menu_bar_controller;
    CommandManager m_command_manager;
    desktop_ui::MenuBar* m_menu_bar;
-   IAssetEditor* m_active_asset_editor;
+   IAssetEditor* m_active_asset_editor{};
+   desktop_ui::TabView* m_tab_view;
 
    TG_SINK(desktop_ui::MenuController, OnClicked);
    TG_OPT_SINK(desktop_ui::TabView, OnChangedActiveTab);

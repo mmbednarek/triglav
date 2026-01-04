@@ -1,7 +1,8 @@
 #pragma once
 
+#include "../Int.hpp"
+
 #include <array>
-#include <cstdint>
 #include <string_view>
 
 namespace triglav::detail {
@@ -10,7 +11,7 @@ constexpr u64 CRC64_ECMA_POLY = 0x42F0E1EBA9EA3693ULL;
 
 constexpr std::array<u64, 256> crc64_generate_table()
 {
-   std::array<u64, 256> result;
+   std::array<u64, 256> result{};
 
    for (u64 i = 0; i < 256; i++) {
       u64 crc = 0;
@@ -30,18 +31,13 @@ constexpr std::array<u64, 256> crc64_generate_table()
 
 static constexpr auto CRC64_LOOKUP = crc64_generate_table();
 
-constexpr uint64_t compute_crc(const char* data, const uint32_t len, uint64_t crc = 0)
+constexpr auto hash_string(const std::string_view str)
 {
-   for (uint64_t i = 0; i < len; i++) {
-      crc = CRC64_LOOKUP[*data ^ (crc & 0xFF)] ^ (crc >> 8);
-      data++;
+   u64 crc = 0;
+   for (const char ch : str) {
+      crc = CRC64_LOOKUP[static_cast<u8>(ch) ^ (crc & 0xFF)] ^ (crc >> 8);
    }
    return crc;
-}
-
-constexpr auto hash_string(const std::string_view value)
-{
-   return compute_crc(value.data(), static_cast<uint32_t>(value.size()));
 }
 
 }// namespace triglav::detail

@@ -2,7 +2,7 @@
 
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
-#include "triglav/ui_core/Primitives.hpp"
+#include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/UICore.hpp"
 
 namespace triglav::desktop_ui {
@@ -64,7 +64,7 @@ class Splitter final : public ui_core::BaseWidget
    float m_last_mouse_pos{};
    Vector4 m_dimensions{};
    Vector4 m_cropping_mask{};
-   ui_core::RectId m_background{};
+   ui_core::RectInstance m_background{};
 };
 
 }// namespace triglav::desktop_ui

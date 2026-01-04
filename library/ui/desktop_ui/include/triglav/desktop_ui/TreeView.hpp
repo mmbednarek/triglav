@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TreeController.hpp"
+#include "triglav/Logging.hpp"
 #include "triglav/event/Delegate.hpp"
 
 #include "triglav/ui_core/IWidget.hpp"
@@ -16,10 +17,12 @@ class DesktopUIManager;
 
 class TreeView final : public ui_core::BaseWidget
 {
+   TG_DEFINE_LOG_CATEGORY(TreeView)
  public:
    using Self = TreeView;
 
    TG_EVENT(OnSelected, TreeItemId)
+   TG_EVENT(OnActivated, TreeItemId)
 
    struct State
    {
@@ -47,6 +50,7 @@ class TreeView final : public ui_core::BaseWidget
    void set_label(TreeItemId item_id, StringView label);
 
    void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
+   void on_mouse_double_click(const ui_core::Event&, const ui_core::Event::Mouse&) const;
 
  private:
    void remove_internal(const TreeItemId item_id);

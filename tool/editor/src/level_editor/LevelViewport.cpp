@@ -55,9 +55,9 @@ void LevelViewport::add_to_viewport(const Vector4 dimensions, Vector4 /*cropping
 
 void LevelViewport::remove_from_viewport()
 {
+   m_root_window.set_render_overlay(nullptr);
    m_render_viewport.reset();
    m_dimensions = {0, 0, 0, 0};
-   m_root_window.set_render_overlay(nullptr);
 }
 
 void LevelViewport::on_event(const ui_core::Event& event)

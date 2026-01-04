@@ -37,11 +37,13 @@ class WidgetRenderer
    void on_mouse_wheel_turn(float amount) const;
    void on_mouse_button_is_pressed(desktop::MouseButton button) const;
    void on_mouse_button_is_released(desktop::MouseButton button) const;
+   void on_mouse_double_click(desktop::MouseButton button) const;
    void on_key_is_pressed(desktop::Key key) const;
    void on_key_is_released(desktop::Key key) const;
    void on_text_input(Rune rune) const;
 
    ui_core::IWidget& set_root_widget(ui_core::IWidgetPtr&& content);
+   [[nodiscard]] ui_core::IWidget& root_widget() const;
    [[nodiscard]] bool is_empty() const;
    [[nodiscard]] ui_core::Viewport& ui_viewport();
    [[nodiscard]] ui_core::Context& context();
@@ -72,6 +74,7 @@ class WidgetRenderer
    TG_SINK(desktop::ISurface, OnMouseWheelTurn);
    TG_SINK(desktop::ISurface, OnMouseButtonIsPressed);
    TG_SINK(desktop::ISurface, OnMouseButtonIsReleased);
+   TG_SINK(desktop::ISurface, OnMouseDoubleClick);
    TG_SINK(desktop::ISurface, OnKeyIsPressed);
    TG_SINK(desktop::ISurface, OnKeyIsReleased);
    TG_SINK(desktop::ISurface, OnTextInput);

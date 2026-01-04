@@ -1,5 +1,6 @@
 #include "RootWidget.hpp"
 
+#include "DefaultRenderOverlay.hpp"
 #include "Editor.hpp"
 #include "ProjectExplorer.hpp"
 #include "level_editor/LevelEditor.hpp"
@@ -17,6 +18,35 @@ using namespace string_literals;
 
 using desktop::Key;
 using desktop::Modifier;
+
+class DefaultTabWidget final : public ui_core::IWidget
+{
+ public:
+   explicit DefaultTabWidget(RootWindow& root_window) :
+       m_root_window(root_window)
+   {
+   }
+
+   [[nodiscard]] Vector2 desired_size(const Vector2 available_size) const override
+   {
+      return available_size;
+   }
+
+   void add_to_viewport(const Vector4 dimensions, Vector4 /*cropping_mask*/) override
+   {
+      m_default_overlay.set_dimensions(dimensions);
+      m_root_window.set_render_overlay(&m_default_overlay);
+   }
+
+   void remove_from_viewport() override
+   {
+      m_root_window.set_render_overlay(nullptr);
+   }
+
+ private:
+   RootWindow& m_root_window;
+   DefaultRenderOverlay m_default_overlay;
+};
 
 RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
@@ -73,21 +103,17 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
-   auto& left_tab_view = splitter.create_preceding<desktop_ui::TabView>({
+   m_tab_view = &splitter.create_preceding<desktop_ui::TabView>({
       .manager = &m_desktop_ui_manager,
       .active_tab = 0,
    });
-   TG_CONNECT_OPT(left_tab_view, OnChangedActiveTab, on_changed_active_tab);
+   TG_CONNECT_OPT(*m_tab_view, OnChangedActiveTab, on_changed_active_tab);
 
-   m_active_asset_editor = &left_tab_view.emplace_tab<LevelEditor>(context,
-                                                                   LevelEditor::State{
-                                                                      .manager = &m_desktop_ui_manager,
-                                                                      .root_window = m_state.editor->root_window(),
-                                                                   },
-                                                                   &left_tab_view);
+   m_tab_view->set_default_widget(std::make_unique<DefaultTabWidget>(*state.editor->root_window()));
 
    splitter.create_following<ProjectExplorer>({
       .manager = &m_desktop_ui_manager,
+      .root_window = m_state.editor->root_window(),
    });
 }
 
@@ -141,6 +167,24 @@ bool RootWidget::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::
 void RootWidget::on_changed_active_tab(u32 /*tab_id*/, ui_core::IWidget* widget)
 {
    m_active_asset_editor = dynamic_cast<IAssetEditor*>(widget);
+}
+
+Vector4 RootWidget::asset_editor_area() const
+{
+   return m_tab_view->content_area();
+}
+
+void RootWidget::open_asset_editor(const ResourceName asset_name)
+{
+   m_tab_view->remove_from_viewport();
+   const auto tab_id = m_tab_view->add_tab(std::make_unique<LevelEditor>(m_context,
+                                                                         LevelEditor::State{
+                                                                            .manager = &m_desktop_ui_manager,
+                                                                            .root_window = m_state.editor->root_window(),
+                                                                            .asset_name = asset_name,
+                                                                         },
+                                                                         m_tab_view));
+   m_tab_view->set_active_tab(tab_id);
 }
 
 }// namespace triglav::editor

@@ -38,8 +38,8 @@ class ResourceManager
    explicit ResourceManager(graphics_api::Device& device, font::FontManger& font_manager);
 
    void load_asset_list(const io::Path& path);
+   void load_asset(ResourceName resource_name);
 
-   void load_asset(ResourceName asset_name, const io::Path& path);
    [[nodiscard]] bool is_name_registered(ResourceName asset_name) const;
 
    template<ResourceType CResourceType>
@@ -83,6 +83,7 @@ class ResourceManager
    const NameRegistry& name_registry() const;
 
  private:
+   void load_asset_internal(ResourceName asset_name, const io::Path& path);
    void load_next_stage();
 
    template<ResourceType CResourceType>

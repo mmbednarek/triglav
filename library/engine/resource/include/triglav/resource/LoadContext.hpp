@@ -1,12 +1,13 @@
 #pragma once
 
 #include "triglav/Int.hpp"
+#include "triglav/Name.hpp"
 #include "triglav/String.hpp"
 #include "triglav/io/Path.hpp"
 #include "triglav/threading/SharedMutex.hpp"
 
 #include <memory>
-#include <string>
+#include <set>
 #include <vector>
 
 namespace triglav::resource {
@@ -36,8 +37,12 @@ class LoadContext
    [[nodiscard]] u32 current_stage_id() const;
 
    static std::unique_ptr<LoadContext> from_asset_list(const io::Path& path);
+   static std::unique_ptr<LoadContext> from_target_asset(ResourceName res_name);
 
  private:
+   static std::unique_ptr<LoadContext> build_load_context(const std::set<ResourceName>& resources);
+
+
    u32 m_assets_loaded_in_stage{};
    u32 m_total_assets{};
    u32 m_total_loaded_assets{};

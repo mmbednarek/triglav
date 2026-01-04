@@ -1,5 +1,6 @@
 #include "ProjectExplorer.hpp"
 
+#include "RootWindow.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/resource/ResourceManager.hpp"
@@ -105,6 +106,16 @@ void ProjectTreeController::remove(const desktop_ui::TreeItemId)
    // Unsuported
 }
 
+io::Path ProjectTreeController::path(const desktop_ui::TreeItemId id)
+{
+   return m_id_to_path.at(id);
+}
+
+bool ProjectTreeController::has_children(const desktop_ui::TreeItemId id) const
+{
+   return m_id_to_item.at(id).has_children;
+}
+
 ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
     m_state(state)
@@ -140,10 +151,22 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
 
    auto& scroll = scroll_rect.create_content<ui_core::ScrollBox>({});
 
-   scroll.create_content<desktop_ui::TreeView>({
+   auto& tree_view = scroll.create_content<desktop_ui::TreeView>({
       .manager = m_state.manager,
       .controller = &m_controller,
    });
+   TG_CONNECT_OPT(tree_view, OnActivated, on_activated);
+}
+
+void ProjectExplorer::on_activated(const desktop_ui::TreeItemId id)
+{
+   if (m_controller.has_children(id))
+      return;
+
+   const auto path = m_controller.path(id);
+   const auto prefix_size = resource::PathManager::the().content_path().string().size();
+   const auto resource_path = path.string().substr(prefix_size + 1);
+   m_state.root_window->open_asset(name_from_path(StringView{resource_path}));
 }
 
 }// namespace triglav::editor

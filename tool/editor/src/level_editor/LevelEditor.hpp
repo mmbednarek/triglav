@@ -43,6 +43,7 @@ class LevelEditor final : public ui_core::ProxyWidget, public desktop_ui::ITabWi
    {
       desktop_ui::DesktopUIManager* manager;
       RootWindow* root_window;
+      ResourceName asset_name;
    };
 
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
