@@ -57,6 +57,18 @@ class ExampleClass
    {
       m_value = value;
    }
+
+   [[nodiscard]] float indirect_value() const
+   {
+      return m_hidden_value + 2.0f;
+   }
+
+   void set_indirect_value(const float value)
+   {
+      m_hidden_value = value;
+   }
+
+   float m_hidden_value = 2.0f;
 };
 
 int ExampleClass::instance_count = 0;
@@ -85,6 +97,7 @@ TG_META_METHOD0_R(get_value, int)
 TG_META_METHOD1(set_value, int)
 TG_META_PROPERTY(m_value, int)
 TG_META_PROPERTY(m_data, example_namespace::ExampleStruct)
+TG_META_INDIRECT(indirect_value, float)
 TG_META_CLASS_END
 
 #undef TG_CLASS_NAME
@@ -113,6 +126,7 @@ TEST(MetaTest, BasicType)
   bar: "hello"
   goo: 2.4
  }
+ indirect_value: 4
 })";
       ASSERT_EQ(obj_serialized, expected_str);
 
@@ -120,9 +134,12 @@ TEST(MetaTest, BasicType)
       obj_ref.call<void>("set_value"_name, 200);
       ASSERT_EQ(obj_ref.call<int>("get_value"_name), 200);
       ASSERT_EQ(obj_ref.property<int>("m_value"_name), 200);
+      ASSERT_EQ(obj_ref.property<float>("indirect_value"_name), 4.0f);
 
+      obj_ref.property<float>("indirect_value"_name) = 12.34f;
       obj_ref.property<int>("m_value"_name) = 300;
       ASSERT_EQ(obj_ref.call<int>("get_value"_name), 300);
+      ASSERT_EQ(obj_ref.property<float>("indirect_value"_name), 14.34f);
 
       auto box = triglav::meta::TypeRegistry::the().create_box("example_namespace::ExampleClass"_name);
 

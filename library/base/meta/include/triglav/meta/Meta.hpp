@@ -14,6 +14,7 @@ enum class ClassMemberType
 {
    Function,
    Property,
+   IndirectProperty,
 };
 
 struct ClassMember
@@ -29,6 +30,13 @@ struct ClassMember
       MemorySize offset;
    };
 
+   struct IndirectPropertyPayload
+   {
+      Name type_name;
+      void* get;
+      void* set;
+   };
+
    ClassMemberType type;
    Name name;
    std::string identifier;
@@ -36,6 +44,7 @@ struct ClassMember
    {
       FunctionPayload function;
       PropertyPayload property;
+      IndirectPropertyPayload indirect;
    };
 };
 
@@ -56,6 +65,33 @@ struct Type
 struct TypeRegisterer
 {
    explicit TypeRegisterer(Type type);
+};
+
+template<typename T>
+struct PropertyAccessor
+{
+   PropertyAccessor& operator=(T value)
+   {
+      if (this->set != nullptr) {
+         this->set(this->handle, value);
+      } else {
+         *static_cast<T*>(this->handle) = value;
+      }
+      return *this;
+   }
+
+   operator T() const
+   {
+      if (this->get != nullptr) {
+         return this->get(this->handle);
+      } else {
+         return *static_cast<T*>(this->handle);
+      }
+   }
+
+   void* handle;
+   T (*get)(void* handle);
+   void (*set)(void* handle, T value);
 };
 
 class Ref
@@ -84,19 +120,28 @@ class Ref
    }
 
    template<typename TProp>
-   TProp& property(const Name name) const
+   PropertyAccessor<TProp> property(const Name name) const
    {
       const auto* member = this->find_member(name);
-      assert(member != nullptr && member->type == ClassMemberType::Property);
-      return *reinterpret_cast<TProp*>(static_cast<char*>(m_handle) + member->property.offset);
+      assert(member != nullptr && member->type != ClassMemberType::Function);
+      if (member->type == ClassMemberType::Property) {
+         return PropertyAccessor<TProp>{static_cast<char*>(m_handle) + member->property.offset, nullptr, nullptr};
+      }
+      if (member->type == ClassMemberType::IndirectProperty) {
+         return PropertyAccessor<TProp>{m_handle, reinterpret_cast<TProp (*)(void*)>(member->indirect.get),
+                                        reinterpret_cast<void (*)(void*, TProp)>(member->indirect.set)};
+      }
+      return {};
    }
 
    template<typename TVisitor>
    void visit_properties(TVisitor visitor) const
    {
       for (const auto& mem : m_members) {
-         if (mem.type == ClassMemberType::Property) {
-            visitor(mem.identifier, mem.property.type_name, mem.property.offset);
+         if (mem.type == ClassMemberType::IndirectProperty) {
+            visitor(mem.identifier, mem.indirect.type_name);
+         } else if (mem.type == ClassMemberType::Property) {
+            visitor(mem.identifier, mem.property.type_name);
          }
       }
    }
@@ -217,6 +262,22 @@ class Box : public Ref
             .type_name = ::triglav::make_name_id(TG_STRING(property_type)),  \
             .offset = offsetof(::TG_CLASS_NS::TG_CLASS_NAME, property_name), \
          },                                                                  \
+   },
+
+#define TG_META_INDIRECT(property_name, property_type)                                                                              \
+   ::triglav::meta::ClassMember{                                                                                                    \
+      .type = ::triglav::meta::ClassMemberType::IndirectProperty,                                                                   \
+      .name = ::triglav::make_name_id(#property_name),                                                                              \
+      .identifier = #property_name,                                                                                                 \
+      .indirect =                                                                                                                   \
+         {                                                                                                                          \
+            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                                         \
+            .get = reinterpret_cast<void*>(                                                                                         \
+               +[](void* handle) -> property_type { return static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->property_name(); }), \
+            .set = reinterpret_cast<void*>(+[](void* handle, property_type value) {                                                 \
+               return static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->TG_CONCAT(set_, property_name)(value);                    \
+            }),                                                                                                                     \
+         },                                                                                                                         \
    },
 
 #define TG_META_BODY(class_name)       \
