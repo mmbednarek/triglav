@@ -4,7 +4,7 @@ namespace triglav::meta {
 
 using namespace name_literals;
 
-#define TG_REGISTER_PRIMITIVE(prim_iden, prim_name)                                                                             \
+#define TG_META_PRIMITIVE(prim_iden, prim_name)                                                                                 \
    std::array TG_CONCAT(TG_META_MEMBERS_, prim_iden){                                                                           \
       ClassMember{                                                                                                              \
          .type = ClassMemberType::Property,                                                                                     \
@@ -25,20 +25,9 @@ using namespace name_literals;
       },                                                                                                                        \
    };
 
-TG_REGISTER_PRIMITIVE(char, char)
-TG_REGISTER_PRIMITIVE(int, int)
-TG_REGISTER_PRIMITIVE(i8, i8)
-TG_REGISTER_PRIMITIVE(u8, u8)
-TG_REGISTER_PRIMITIVE(i16, i16)
-TG_REGISTER_PRIMITIVE(u16, u16)
-TG_REGISTER_PRIMITIVE(i32, i32)
-TG_REGISTER_PRIMITIVE(u32, u32)
-TG_REGISTER_PRIMITIVE(i64, i64)
-TG_REGISTER_PRIMITIVE(u64, u64)
-TG_REGISTER_PRIMITIVE(float, float)
-TG_REGISTER_PRIMITIVE(double, double)
-TG_REGISTER_PRIMITIVE(std__string, std::string)
-TG_REGISTER_PRIMITIVE(std__string_view, std::string_view)
+TG_META_PRIMITIVE_LIST
+
+#undef TG_META_PRIMITIVE
 
 void TypeRegistry::register_type(Type tp)
 {
@@ -48,13 +37,18 @@ void TypeRegistry::register_type(Type tp)
 Box TypeRegistry::create_box(const Name type) const
 {
    const auto& ty = m_types.at(type);
-   return {ty.factory(), ty.members};
+   return {ty.factory(), type, ty.members};
 }
 
 TypeRegistry& TypeRegistry::the()
 {
    static TypeRegistry registry;
    return registry;
+}
+
+const Type& TypeRegistry::type_info(const Name type_name) const
+{
+   return m_types.at(type_name);
 }
 
 }// namespace triglav::meta

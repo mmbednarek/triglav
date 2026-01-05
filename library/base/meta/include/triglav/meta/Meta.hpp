@@ -61,7 +61,7 @@ struct TypeRegisterer
 class Ref
 {
  public:
-   Ref(void* handle, std::span<ClassMember> members);
+   Ref(void* handle, Name name, std::span<ClassMember> members);
 
    [[nodiscard]] const ClassMember* find_member(Name name) const;
 
@@ -92,7 +92,7 @@ class Ref
    }
 
    template<typename TVisitor>
-   void visit_properties(TVisitor visitor)
+   void visit_properties(TVisitor visitor) const
    {
       for (const auto& mem : m_members) {
          if (mem.type == ClassMemberType::Property) {
@@ -101,15 +101,26 @@ class Ref
       }
    }
 
+   [[nodiscard]] Ref property_ref(Name name) const;
+
+   [[nodiscard]] Name type() const;
+
+   template<typename T>
+   [[nodiscard]] T& as() const
+   {
+      return *static_cast<T*>(m_handle);
+   }
+
  protected:
    void* m_handle{};
+   Name m_type;
    std::span<ClassMember> m_members;
 };
 
 class Box : public Ref
 {
  public:
-   Box(void* handle, std::span<ClassMember> members);
+   Box(void* handle, Name name, std::span<ClassMember> members);
    ~Box();
 
    Box(const Box& other);
@@ -148,17 +159,17 @@ class Box : public Ref
                },                                                                                                                       \
          },
 
-#define TG_META_CLASS_END                                                                      \
-   }                                                                                           \
-   ;                                                                                           \
-   static ::triglav::meta::TypeRegisterer TG_CONCAT(TG_META_REGISTERER_, TG_CLASS_IDENTIFIER){ \
-      {.name = TG_STRING(TG_CLASS_NS::TG_CLASS_NAME),                                          \
-       .variant = ::triglav::meta::TypeVariant::Class,                                         \
-       .members = TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER),                            \
-       .factory = +[]() -> void* { return new TG_CLASS_NS::TG_CLASS_NAME(); }}};               \
-   ::triglav::meta::Ref TG_CLASS_NS::TG_CLASS_NAME::to_meta_ref()                              \
-   {                                                                                           \
-      return {this, TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER)};                         \
+#define TG_META_CLASS_END                                                                                                              \
+   }                                                                                                                                   \
+   ;                                                                                                                                   \
+   static ::triglav::meta::TypeRegisterer TG_CONCAT(TG_META_REGISTERER_, TG_CLASS_IDENTIFIER){                                         \
+      {.name = TG_STRING(TG_CLASS_NS::TG_CLASS_NAME),                                                                                  \
+       .variant = ::triglav::meta::TypeVariant::Class,                                                                                 \
+       .members = TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER),                                                                    \
+       .factory = +[]() -> void* { return new TG_CLASS_NS::TG_CLASS_NAME(); }}};                                                       \
+   ::triglav::meta::Ref TG_CLASS_NS::TG_CLASS_NAME::to_meta_ref()                                                                      \
+   {                                                                                                                                   \
+      return {this, ::triglav::make_name_id(TG_STRING(TG_CLASS_NS::TG_CLASS_NAME)), TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER)}; \
    }
 
 #define TG_META_METHOD0(method_name)                                                                                                      \
@@ -214,3 +225,19 @@ class Box : public Ref
    ::triglav::meta::Ref to_meta_ref(); \
                                        \
  private:
+
+#define TG_META_PRIMITIVE_LIST                 \
+   TG_META_PRIMITIVE(char, char)               \
+   TG_META_PRIMITIVE(int, int)                 \
+   TG_META_PRIMITIVE(i8, i8)                   \
+   TG_META_PRIMITIVE(u8, u8)                   \
+   TG_META_PRIMITIVE(i16, i16)                 \
+   TG_META_PRIMITIVE(u16, u16)                 \
+   TG_META_PRIMITIVE(i32, i32)                 \
+   TG_META_PRIMITIVE(u32, u32)                 \
+   TG_META_PRIMITIVE(i64, i64)                 \
+   TG_META_PRIMITIVE(u64, u64)                 \
+   TG_META_PRIMITIVE(float, float)             \
+   TG_META_PRIMITIVE(double, double)           \
+   TG_META_PRIMITIVE(std__string, std::string) \
+   TG_META_PRIMITIVE(std__string_view, std::string_view)

@@ -1,13 +1,15 @@
 meta_sources = files([
+                          'include/triglav/meta/Display.hpp',
                           'include/triglav/meta/Meta.hpp',
                           'include/triglav/meta/TypeRegistry.hpp',
                           'src/Box.cpp',
+                          'src/Display.cpp',
                           'src/ObjectRef.cpp',
                           'src/TypeRegisterer.cpp',
                           'src/TypeRegistry.cpp',
                       ])
 
-meta_deps = [core]
+meta_deps = [core, io]
 meta_incl = include_directories(['include', 'include/triglav/meta'])
 
 meta_lib = static_library('meta',
