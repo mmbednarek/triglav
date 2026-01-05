@@ -30,22 +30,21 @@ class StringWriter
    io::WriterIterator<char> m_iterator;
 };
 
-void display_primitive(const Ref& ref, const Name ty, StringWriter& writer)
+void display_primitive(const Ref& ref, const Name prop_name, const Name ty, StringWriter& writer)
 {
    if (ty == "std::string"_name) {
-      writer.print("\"{}\"", ref.as<std::string>());
+      writer.print("\"{}\"", static_cast<std::string>(ref.property<std::string>(prop_name)));
       return;
    }
    if (ty == "std::string_view"_name) {
-      writer.print("\"{}\"", ref.as<std::string_view>());
+      writer.print("\"{}\"", static_cast<std::string_view>(ref.property<std::string_view>(prop_name)));
       return;
    }
 
-
    switch (ty) {
-#define TG_META_PRIMITIVE(iden, name)     \
-   case make_name_id(TG_STRING(name)):    \
-      writer.print("{}", ref.as<name>()); \
+#define TG_META_PRIMITIVE(iden, name)                                       \
+   case make_name_id(TG_STRING(name)):                                      \
+      writer.print("{}", static_cast<name>(ref.property<name>(prop_name))); \
       break;
 
       TG_META_PRIMITIVE_LIST
@@ -56,17 +55,21 @@ void display_primitive(const Ref& ref, const Name ty, StringWriter& writer)
    }
 }
 
-void display_internal(const Ref& ref, StringWriter& writer, int depth = 0);
-
 void display_class(const Ref& ref, StringWriter& writer, const int depth)
 {
    writer.print("{{\n");
-   ref.visit_properties([&](const std::string_view name, const Name /*type_name*/, const size_t /*offset*/) {
+   ref.visit_properties([&](const std::string_view name, const Name type_name) {
+      const auto& info = TypeRegistry::the().type_info(type_name);
+
       for (int i = 0; i < depth + 1; ++i) {
          writer.print(" ");
       }
       writer.print("{}: ", name);
-      display_internal(ref.property_ref(make_name_id(name)), writer, depth + 1);
+      if (info.variant == TypeVariant::Class) {
+         display_class(ref.property_ref(make_name_id(name)), writer, depth + 1);
+      } else {
+         display_primitive(ref, make_name_id(name), type_name, writer);
+      }
       writer.print("\n");
    });
    for (int i = 0; i < depth; ++i) {
@@ -75,26 +78,12 @@ void display_class(const Ref& ref, StringWriter& writer, const int depth)
    writer.print("}}");
 }
 
-void display_internal(const Ref& ref, StringWriter& writer, const int depth)
-{
-   const auto ty = ref.type();
-   const auto& info = TypeRegistry::the().type_info(ty);
-   switch (info.variant) {
-   case TypeVariant::Primitive:
-      display_primitive(ref, ty, writer);
-      break;
-   case TypeVariant::Class:
-      display_class(ref, writer, depth);
-      break;
-   }
-}
-
 }// namespace
 
 void display(const Ref& ref, io::IWriter& writer)
 {
    StringWriter str_writer(writer);
-   display_internal(ref, str_writer, 0);
+   display_class(ref, str_writer, 0);
 }
 
 }// namespace triglav::meta
