@@ -14,6 +14,7 @@ class TypeRegistry
    [[nodiscard]] Box create_box(Name type) const;
 
    static TypeRegistry& the();
+   [[nodiscard]] const Type& type_info(Name type_name) const;
 
  private:
    std::map<Name, Type> m_types;

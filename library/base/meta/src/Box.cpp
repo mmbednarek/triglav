@@ -4,8 +4,8 @@ namespace triglav::meta {
 
 using namespace name_literals;
 
-Box::Box(void* handle, const std::span<ClassMember> members) :
-    Ref(handle, members)
+Box::Box(void* handle, const Name name, const std::span<ClassMember> members) :
+    Ref(handle, name, members)
 {
 }
 
@@ -15,13 +15,15 @@ Box::~Box()
 }
 
 Box::Box(const Box& other) :
-    Ref(other.checked_call<void*>("copy"_name, other.m_handle), other.m_members)
+    Ref(other.checked_call<void*>("copy"_name, other.m_handle), other.type(), other.m_members)
 {
 }
 
 Box& Box::operator=(const Box& other)
 {
    m_handle = other.checked_call<void*>("copy"_name, other.m_handle);
+   m_type = other.type();
+   m_members = other.m_members;
    return *this;
 }
 
