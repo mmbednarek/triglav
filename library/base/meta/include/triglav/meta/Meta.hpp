@@ -216,33 +216,33 @@ class Box : public Ref
 }// namespace triglav::meta
 
 
-#define TG_META_CLASS_BEGIN                                                                                                             \
-   std::array TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER)                                                                          \
-   {                                                                                                                                    \
-      ::triglav::meta::ClassMember{                                                                                                     \
-         .type = ::triglav::meta::ClassMemberType::Function,                                                                            \
-         .name = ::triglav::make_name_id("destroy"),                                                                                    \
-         .identifier = "destroy",                                                                                                       \
-         .function =                                                                                                                    \
-            {                                                                                                                           \
-               .pointer =                                                                                                               \
-                  reinterpret_cast<void*>(+[](void* handle) { static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->~TG_CLASS_NAME(); }), \
-            },                                                                                                                          \
-      },                                                                                                                                \
-         ::triglav::meta::ClassMember{                                                                                                  \
-            .type = ::triglav::meta::ClassMemberType::Function,                                                                         \
-            .name = ::triglav::make_name_id("copy"),                                                                                    \
-            .identifier = "copy",                                                                                                       \
-            .function =                                                                                                                 \
-               {                                                                                                                        \
-                  .pointer = reinterpret_cast<void*>(+[](void* handle) -> void* {                                                       \
-                     if constexpr (std::copyable<::TG_CLASS_NS::TG_CLASS_NAME>) {                                                       \
-                        return new ::TG_CLASS_NS::TG_CLASS_NAME(*static_cast<const ::TG_CLASS_NS::TG_CLASS_NAME*>(handle));             \
-                     } else {                                                                                                           \
-                        return nullptr;                                                                                                 \
-                     }                                                                                                                  \
-                  }),                                                                                                                   \
-               },                                                                                                                       \
+#define TG_META_CLASS_BEGIN                                                                                                           \
+   std::array TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER)                                                                        \
+   {                                                                                                                                  \
+      ::triglav::meta::ClassMember{                                                                                                   \
+         .type = ::triglav::meta::ClassMemberType::Function,                                                                          \
+         .name = ::triglav::make_name_id("destroy"),                                                                                  \
+         .identifier = "destroy",                                                                                                     \
+         .function =                                                                                                                  \
+            {                                                                                                                         \
+               .pointer =                                                                                                             \
+                  reinterpret_cast<void*>(+[](void* handle) { static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->~TG_CLASS_NAME(); }), \
+            },                                                                                                                        \
+      },                                                                                                                              \
+         ::triglav::meta::ClassMember{                                                                                                \
+            .type = ::triglav::meta::ClassMemberType::Function,                                                                       \
+            .name = ::triglav::make_name_id("copy"),                                                                                  \
+            .identifier = "copy",                                                                                                     \
+            .function =                                                                                                               \
+               {                                                                                                                      \
+                  .pointer = reinterpret_cast<void*>(+[](void* handle) -> void* {                                                     \
+                     if constexpr (std::copyable<TG_CLASS_NS::TG_CLASS_NAME>) {                                                       \
+                        return new TG_CLASS_NS::TG_CLASS_NAME(*static_cast<const TG_CLASS_NS::TG_CLASS_NAME*>(handle));               \
+                     } else {                                                                                                         \
+                        return nullptr;                                                                                               \
+                     }                                                                                                                \
+                  }),                                                                                                                 \
+               },                                                                                                                     \
          },
 
 #define TG_META_CLASS_END                                                                                                              \
@@ -253,90 +253,90 @@ class Box : public Ref
        .variant = ::triglav::meta::TypeVariant::Class,                                                                                 \
        .members = TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER),                                                                    \
        .factory = +[]() -> void* { return new TG_CLASS_NS::TG_CLASS_NAME(); }}};                                                       \
-   ::triglav::meta::Ref TG_CLASS_NS::TG_CLASS_NAME::to_meta_ref()                                                                      \
+   auto TG_CLASS_NS::TG_CLASS_NAME::to_meta_ref() -> ::triglav::meta::Ref                                                              \
    {                                                                                                                                   \
       return {this, ::triglav::make_name_id(TG_STRING(TG_CLASS_NS::TG_CLASS_NAME)), TG_CONCAT(TG_META_MEMBERS_, TG_CLASS_IDENTIFIER)}; \
    }
 
-#define TG_META_METHOD0(method_name)                                                                                                      \
-   ::triglav::meta::ClassMember{                                                                                                          \
-      .type = ::triglav::meta::ClassMemberType::Function,                                                                                 \
-      .name = ::triglav::make_name_id(#method_name),                                                                                      \
-      .identifier = #method_name,                                                                                                         \
-      .function =                                                                                                                         \
-         {                                                                                                                                \
-            .pointer = reinterpret_cast<void*>(+[](void* handle) { static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->method_name(); }), \
-         },                                                                                                                               \
+#define TG_META_METHOD0(method_name)                                                                                                    \
+   ::triglav::meta::ClassMember{                                                                                                        \
+      .type = ::triglav::meta::ClassMemberType::Function,                                                                               \
+      .name = ::triglav::make_name_id(#method_name),                                                                                    \
+      .identifier = #method_name,                                                                                                       \
+      .function =                                                                                                                       \
+         {                                                                                                                              \
+            .pointer = reinterpret_cast<void*>(+[](void* handle) { static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->method_name(); }), \
+         },                                                                                                                             \
    },
 
-#define TG_META_METHOD0_R(method_name, ret_type)                                                                             \
-   ::triglav::meta::ClassMember{                                                                                             \
-      .type = ::triglav::meta::ClassMemberType::Function,                                                                    \
-      .name = ::triglav::make_name_id(#method_name),                                                                         \
-      .identifier = #method_name,                                                                                            \
-      .function =                                                                                                            \
-         {                                                                                                                   \
-            .pointer = reinterpret_cast<void*>(                                                                              \
-               +[](void* handle) -> ret_type { return static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->method_name(); }), \
-         },                                                                                                                  \
+#define TG_META_METHOD0_R(method_name, ret_type)                                                                           \
+   ::triglav::meta::ClassMember{                                                                                           \
+      .type = ::triglav::meta::ClassMemberType::Function,                                                                  \
+      .name = ::triglav::make_name_id(#method_name),                                                                       \
+      .identifier = #method_name,                                                                                          \
+      .function =                                                                                                          \
+         {                                                                                                                 \
+            .pointer = reinterpret_cast<void*>(                                                                            \
+               +[](void* handle) -> ret_type { return static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->method_name(); }), \
+         },                                                                                                                \
    },
 
-#define TG_META_METHOD1(method_name, arg0_ty)                                                                               \
-   ::triglav::meta::ClassMember{                                                                                            \
-      .type = ::triglav::meta::ClassMemberType::Function,                                                                   \
-      .name = ::triglav::make_name_id(#method_name),                                                                        \
-      .identifier = #method_name,                                                                                           \
-      .function =                                                                                                           \
-         {                                                                                                                  \
-            .pointer = reinterpret_cast<void*>(                                                                             \
-               +[](void* handle, arg0_ty arg0) { static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->method_name(arg0); }), \
-         },                                                                                                                 \
+#define TG_META_METHOD1(method_name, arg0_ty)                                                                             \
+   ::triglav::meta::ClassMember{                                                                                          \
+      .type = ::triglav::meta::ClassMemberType::Function,                                                                 \
+      .name = ::triglav::make_name_id(#method_name),                                                                      \
+      .identifier = #method_name,                                                                                         \
+      .function =                                                                                                         \
+         {                                                                                                                \
+            .pointer = reinterpret_cast<void*>(                                                                           \
+               +[](void* handle, arg0_ty arg0) { static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->method_name(arg0); }), \
+         },                                                                                                               \
    },
 
-#define TG_META_PROPERTY(property_name, property_type)                       \
-   ::triglav::meta::ClassMember{                                             \
-      .type = ::triglav::meta::ClassMemberType::Property,                    \
-      .name = ::triglav::make_name_id(#property_name),                       \
-      .identifier = #property_name,                                          \
-      .property =                                                            \
-         {                                                                   \
-            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),  \
-            .offset = offsetof(::TG_CLASS_NS::TG_CLASS_NAME, property_name), \
-         },                                                                  \
+#define TG_META_PROPERTY(property_name, property_type)                      \
+   ::triglav::meta::ClassMember{                                            \
+      .type = ::triglav::meta::ClassMemberType::Property,                   \
+      .name = ::triglav::make_name_id(#property_name),                      \
+      .identifier = #property_name,                                         \
+      .property =                                                           \
+         {                                                                  \
+            .type_name = ::triglav::make_name_id(TG_STRING(property_type)), \
+            .offset = offsetof(TG_CLASS_NS::TG_CLASS_NAME, property_name),  \
+         },                                                                 \
    },
 
-#define TG_META_INDIRECT(property_name, property_type)                                                                              \
-   ::triglav::meta::ClassMember{                                                                                                    \
-      .type = ::triglav::meta::ClassMemberType::IndirectProperty,                                                                   \
-      .name = ::triglav::make_name_id(#property_name),                                                                              \
-      .identifier = #property_name,                                                                                                 \
-      .indirect =                                                                                                                   \
-         {                                                                                                                          \
-            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                                         \
-            .get = reinterpret_cast<void*>(                                                                                         \
-               +[](void* handle) -> property_type { return static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->property_name(); }), \
-            .set = reinterpret_cast<void*>(+[](void* handle, property_type value) {                                                 \
-               return static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->TG_CONCAT(set_, property_name)(value);                    \
-            }),                                                                                                                     \
-         },                                                                                                                         \
+#define TG_META_INDIRECT(property_name, property_type)                                                                            \
+   ::triglav::meta::ClassMember{                                                                                                  \
+      .type = ::triglav::meta::ClassMemberType::IndirectProperty,                                                                 \
+      .name = ::triglav::make_name_id(#property_name),                                                                            \
+      .identifier = #property_name,                                                                                               \
+      .indirect =                                                                                                                 \
+         {                                                                                                                        \
+            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                                       \
+            .get = reinterpret_cast<void*>(                                                                                       \
+               +[](void* handle) -> property_type { return static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->property_name(); }), \
+            .set = reinterpret_cast<void*>(+[](void* handle, property_type value) {                                               \
+               return static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->TG_CONCAT(set_, property_name)(value);                    \
+            }),                                                                                                                   \
+         },                                                                                                                       \
    },
 
-#define TG_META_INDIRECT_REF(property_name, property_type)                                                            \
-   ::triglav::meta::ClassMember{                                                                                      \
-      .type = ::triglav::meta::ClassMemberType::IndirectRefProperty,                                                  \
-      .name = ::triglav::make_name_id(#property_name),                                                                \
-      .identifier = #property_name,                                                                                   \
-      .indirect =                                                                                                     \
-         {                                                                                                            \
-            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                           \
-            .get = reinterpret_cast<void*>(+[](void* handle) -> const void* {                                         \
-               return static_cast<const void*>(&static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->property_name()); \
-            }),                                                                                                       \
-            .set = reinterpret_cast<void*>(+[](void* handle, const void* value) {                                     \
-               return static_cast<::TG_CLASS_NS::TG_CLASS_NAME*>(handle)->TG_CONCAT(set_, property_name)(             \
-                  *static_cast<const property_type*>(value));                                                         \
-            }),                                                                                                       \
-         },                                                                                                           \
+#define TG_META_INDIRECT_REF(property_name, property_type)                                                          \
+   ::triglav::meta::ClassMember{                                                                                    \
+      .type = ::triglav::meta::ClassMemberType::IndirectRefProperty,                                                \
+      .name = ::triglav::make_name_id(#property_name),                                                              \
+      .identifier = #property_name,                                                                                 \
+      .indirect =                                                                                                   \
+         {                                                                                                          \
+            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                         \
+            .get = reinterpret_cast<void*>(+[](void* handle) -> const void* {                                       \
+               return static_cast<const void*>(&static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->property_name()); \
+            }),                                                                                                     \
+            .set = reinterpret_cast<void*>(+[](void* handle, const void* value) {                                   \
+               return static_cast<TG_CLASS_NS::TG_CLASS_NAME*>(handle)->TG_CONCAT(set_, property_name)(             \
+                  *static_cast<const property_type*>(value));                                                       \
+            }),                                                                                                     \
+         },                                                                                                         \
    },
 
 #define TG_META_BODY(class_name)       \

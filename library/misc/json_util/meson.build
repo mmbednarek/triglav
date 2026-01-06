@@ -1,9 +1,11 @@
 json_util_sources = files([
+  'include/triglav/json_util/Deserialize.hpp',
   'include/triglav/json_util/JsonUtil.hpp',
+  'src/Deserialize.cpp',
   'src/JsonUtil.cpp',
 ])
 
-json_util_deps = [core, io, rapidjson]
+json_util_deps = [core, io, meta, rapidjson]
 json_util_incl = include_directories(['include', 'include/triglav/json_util'])
 
 json_util_lib = static_library('json_util',
@@ -17,3 +19,5 @@ json_util = declare_dependency(
   link_with: [json_util_lib],
   dependencies: json_util_deps,
 )
+
+subdir('test')
