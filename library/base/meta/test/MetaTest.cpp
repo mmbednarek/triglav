@@ -17,6 +17,13 @@ struct ExampleStruct
    float goo = 2.4f;
 };
 
+class ExampleSubClass
+{
+   TG_META_BODY(ExampleSubClass)
+ public:
+   double value = 4.5f;
+};
+
 class ExampleClass
 {
    TG_META_BODY(ExampleClass)
@@ -68,7 +75,18 @@ class ExampleClass
       m_hidden_value = value;
    }
 
+   [[nodiscard]] const ExampleSubClass& sub_class() const
+   {
+      return m_sub_class;
+   }
+
+   void set_sub_class(const ExampleSubClass& val)
+   {
+      m_sub_class = val;
+   }
+
    float m_hidden_value = 2.0f;
+   ExampleSubClass m_sub_class;
 };
 
 int ExampleClass::instance_count = 0;
@@ -89,6 +107,16 @@ TG_META_CLASS_END
 #undef TG_CLASS_NAME
 #undef TG_CLASS_IDENTIFIER
 
+#define TG_CLASS_NAME ExampleSubClass
+#define TG_CLASS_IDENTIFIER example_namespace__ExampleSubClass
+
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(value, double)
+TG_META_CLASS_END
+
+#undef TG_CLASS_NAME
+#undef TG_CLASS_IDENTIFIER
+
 #define TG_CLASS_NAME ExampleClass
 #define TG_CLASS_IDENTIFIER example_namespace__ExampleClass
 
@@ -98,6 +126,7 @@ TG_META_METHOD1(set_value, int)
 TG_META_PROPERTY(m_value, int)
 TG_META_PROPERTY(m_data, example_namespace::ExampleStruct)
 TG_META_INDIRECT(indirect_value, float)
+TG_META_INDIRECT_REF(sub_class, example_namespace::ExampleSubClass)
 TG_META_CLASS_END
 
 #undef TG_CLASS_NAME
@@ -127,6 +156,9 @@ TEST(MetaTest, BasicType)
   goo: 2.4
  }
  indirect_value: 4
+ sub_class: {
+  value: 4.5
+ }
 })";
       ASSERT_EQ(obj_serialized, expected_str);
 
@@ -140,6 +172,7 @@ TEST(MetaTest, BasicType)
       obj_ref.property<int>("m_value"_name) = 300;
       ASSERT_EQ(obj_ref.call<int>("get_value"_name), 300);
       ASSERT_EQ(obj_ref.property<float>("indirect_value"_name), 14.34f);
+      ASSERT_EQ(obj_ref.property<example_namespace::ExampleSubClass>("sub_class"_name)->value, 4.5f);
 
       auto box = triglav::meta::TypeRegistry::the().create_box("example_namespace::ExampleClass"_name);
 
