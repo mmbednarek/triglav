@@ -16,6 +16,7 @@ enum class ClassMemberType
    Property,
    IndirectProperty,
    IndirectRefProperty,
+   EnumValue,
 };
 
 struct ClassMember
@@ -38,6 +39,11 @@ struct ClassMember
       void* set;
    };
 
+   struct EnumValue
+   {
+      int underlying_value;
+   };
+
    ClassMemberType type;
    Name name;
    std::string identifier;
@@ -46,6 +52,7 @@ struct ClassMember
       FunctionPayload function;
       PropertyPayload property;
       IndirectPropertyPayload indirect;
+      EnumValue enum_value;
    };
 };
 
@@ -53,6 +60,7 @@ enum class TypeVariant
 {
    Primitive,
    Class,
+   Enum,
 };
 
 struct Type
@@ -337,6 +345,31 @@ class Box : public Ref
                   *static_cast<const property_type*>(value));                                                       \
             }),                                                                                                     \
          },                                                                                                         \
+   },
+
+#define TG_META_ENUM_BEGIN                                    \
+   std::array TG_CONCAT(TG_META_MEMBERS_, TG_ENUM_IDENTIFIER) \
+   {
+
+#define TG_META_ENUM_END                                                                       \
+   }                                                                                           \
+   ;                                                                                           \
+   static ::triglav::meta::TypeRegisterer TG_CONCAT(TG_META_REGISTERER_, TG_ENUM_IDENTIFIER){{ \
+      .name = TG_STRING(TG_CLASS_NS::TG_ENUM_NAME),                                            \
+      .variant = ::triglav::meta::TypeVariant::Enum,                                           \
+      .members = TG_CONCAT(TG_META_MEMBERS_, TG_ENUM_IDENTIFIER),                              \
+      .factory = +[]() -> void* { return new TG_CLASS_NS::TG_ENUM_NAME(); },                   \
+   }};
+
+#define TG_META_ENUM_VALUE(enum_value_name)                                                     \
+   ::triglav::meta::ClassMember{                                                                \
+      .type = ::triglav::meta::ClassMemberType::EnumValue,                                      \
+      .name = ::triglav::make_name_id(TG_STRING(enum_value_name)),                              \
+      .identifier = TG_STRING(enum_value_name),                                                 \
+      .enum_value =                                                                             \
+         {                                                                                      \
+            .underlying_value = std::to_underlying(TG_CLASS_NS::TG_ENUM_NAME::enum_value_name), \
+         },                                                                                     \
    },
 
 #define TG_META_BODY(class_name)       \

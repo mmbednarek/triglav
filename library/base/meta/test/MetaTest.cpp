@@ -24,6 +24,13 @@ class ExampleSubClass
    double value = 4.5f;
 };
 
+enum class ExampleEnum
+{
+   Foo,
+   Bar,
+   Gar,
+};
+
 class ExampleClass
 {
    TG_META_BODY(ExampleClass)
@@ -87,6 +94,7 @@ class ExampleClass
 
    float m_hidden_value = 2.0f;
    ExampleSubClass m_sub_class;
+   ExampleEnum m_enum_value = ExampleEnum::Bar;
 };
 
 int ExampleClass::instance_count = 0;
@@ -127,10 +135,23 @@ TG_META_PROPERTY(m_value, int)
 TG_META_PROPERTY(m_data, example_namespace::ExampleStruct)
 TG_META_INDIRECT(indirect_value, float)
 TG_META_INDIRECT_REF(sub_class, example_namespace::ExampleSubClass)
+TG_META_PROPERTY(m_enum_value, example_namespace::ExampleEnum)
 TG_META_CLASS_END
 
 #undef TG_CLASS_NAME
 #undef TG_CLASS_IDENTIFIER
+
+#define TG_ENUM_NAME ExampleEnum
+#define TG_ENUM_IDENTIFIER example_namespace__ExampleEnum
+
+TG_META_ENUM_BEGIN
+TG_META_ENUM_VALUE(Foo)
+TG_META_ENUM_VALUE(Bar)
+TG_META_ENUM_VALUE(Gar)
+TG_META_ENUM_END
+
+#undef TG_ENUM_IDENTIFIER
+#undef TG_ENUM_NAME
 
 #undef TG_CLASS_NS
 
@@ -159,6 +180,7 @@ TEST(MetaTest, BasicType)
  sub_class: {
   value: 4.5
  }
+ m_enum_value: Bar
 })";
       ASSERT_EQ(obj_serialized, expected_str);
 
