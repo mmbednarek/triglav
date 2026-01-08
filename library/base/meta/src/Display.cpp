@@ -55,6 +55,17 @@ void display_primitive(const Ref& ref, const Name prop_name, const Name ty, Stri
    }
 }
 
+void display_enum(const Ref& ref, const Name prop_name, const Type& type_info, StringWriter& writer)
+{
+   const auto value = ref.property<int>(prop_name);
+   const auto it = std::ranges::find_if(type_info.members, [&](const ClassMember& mem) {
+      return mem.type == ClassMemberType::EnumValue && mem.enum_value.underlying_value == value;
+   });
+   if (it != type_info.members.end()) {
+      writer.print("{}", it->identifier);
+   }
+}
+
 void display_class(const Ref& ref, StringWriter& writer, const int depth)
 {
    writer.print("{{\n");
@@ -67,6 +78,8 @@ void display_class(const Ref& ref, StringWriter& writer, const int depth)
       writer.print("{}: ", name);
       if (info.variant == TypeVariant::Class) {
          display_class(ref.property_ref(make_name_id(name)), writer, depth + 1);
+      } else if (info.variant == TypeVariant::Enum) {
+         display_enum(ref, make_name_id(name), info, writer);
       } else {
          display_primitive(ref, make_name_id(name), type_name, writer);
       }

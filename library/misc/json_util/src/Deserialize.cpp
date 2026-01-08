@@ -8,7 +8,7 @@ namespace triglav::json_util {
 
 using namespace name_literals;
 
-void deserialize_primitive_value(const meta::Ref& dst, const std::string_view name, Name type_name, const rapidjson::Value& src)
+void deserialize_primitive_value(const meta::Ref& dst, const std::string_view name, const Name type_name, const rapidjson::Value& src)
 {
    if (!src.HasMember(name.data()))
       return;
@@ -42,15 +42,40 @@ void deserialize_primitive_value(const meta::Ref& dst, const std::string_view na
    }
 }
 
+void deserialize_enum_value(const meta::Ref& dst, const Name property_name, const meta::Type& type, const rapidjson::Value& src)
+{
+   if (src.IsString()) {
+      const auto value_name = make_name_id(src.GetString());
+      for (const auto& mem : type.members) {
+         if (mem.type != meta::ClassMemberType::EnumValue)
+            continue;
+
+         if (mem.name == value_name) {
+            dst.property<int>(property_name) = mem.enum_value.underlying_value;
+            return;
+         }
+      }
+   } else if (src.IsInt()) {
+      dst.property<int>(property_name) = src.GetInt();
+   }
+}
+
 void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src)
 {
    dst.visit_properties([&](const std::string_view name, const Name type_name) {
       const auto& info = meta::TypeRegistry::the().type_info(type_name);
+      const auto name_id = make_name_id(name);
 
-      if (info.variant == meta::TypeVariant::Class) {
-         deserialize_value(dst.property_ref(make_name_id(name)), src[name.data()]);
-      } else {
+      switch (info.variant) {
+      case meta::TypeVariant::Primitive:
          deserialize_primitive_value(dst, name, type_name, src);
+         break;
+      case meta::TypeVariant::Class:
+         deserialize_value(dst.property_ref(name_id), src[name.data()]);
+         break;
+      case meta::TypeVariant::Enum:
+         deserialize_enum_value(dst, name_id, info, src[name.data()]);
+         break;
       }
    });
 }
