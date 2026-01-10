@@ -4,6 +4,13 @@
 
 namespace triglav::meta {
 
+ArrayRef::ArrayRef(void* handle, const Name contained_type, const ClassMember::PropertyArray& prop_array) :
+    m_handle(handle),
+    m_contained_type(contained_type),
+    m_prop_array(prop_array)
+{
+}
+
 Ref::Ref(void* handle, const Name type, const std::span<ClassMember> members) :
     m_handle(handle),
     m_type(type),
@@ -19,20 +26,35 @@ const ClassMember* Ref::find_member(const Name name) const
    return &(*it);
 }
 
+bool Ref::is_array_property(const Name name) const
+{
+   const auto* member = this->find_member(name);
+   if (member == nullptr)
+      return false;
+   return member->role_flags & MemberRole::Array;
+}
+
 Ref Ref::property_ref(const Name name) const
 {
    const auto* member = this->find_member(name);
-   assert(member != nullptr && (member->type == ClassMemberType::Property || member->type == ClassMemberType::IndirectRefProperty));
-   if (member->type == ClassMemberType::Property) {
+   assert(member != nullptr && member->role_flags & MemberRole::Property);
+   if (member->role_flags & MemberRole::Indirect && member->role_flags & MemberRole::Reference) {
       const auto& type_info = TypeRegistry::the().type_info(member->property.type_name);
-      return {static_cast<char*>(m_handle) + member->property.offset, member->property.type_name, type_info.members};
+      return {const_cast<void*>(reinterpret_cast<const void* (*)(void*)>(member->property.indirect.get)(m_handle)),
+              member->property.type_name, type_info.members};
    }
-   if (member->type == ClassMemberType::IndirectRefProperty) {
-      const auto& type_info = TypeRegistry::the().type_info(member->indirect.type_name);
-      return {const_cast<void*>(reinterpret_cast<const void* (*)(void*)>(member->indirect.get)(m_handle)), member->property.type_name,
-              type_info.members};
+   if (member->role_flags & MemberRole::Property) {
+      const auto& type_info = TypeRegistry::the().type_info(member->property.type_name);
+      return {static_cast<char*>(m_handle) + member->property.offset.offset, member->property.type_name, type_info.members};
    }
    return {nullptr, 0, {}};
+}
+
+ArrayRef Ref::property_array_ref(const Name name) const
+{
+   const auto* member = this->find_member(name);
+   assert(member != nullptr && member->role_flags & MemberRole::Array);
+   return ArrayRef{static_cast<char*>(m_handle), member->property.type_name, member->property.array};
 }
 
 Name Ref::type() const

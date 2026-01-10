@@ -8,36 +8,67 @@ namespace triglav::json_util {
 
 using namespace name_literals;
 
-void deserialize_primitive_value(const meta::Ref& dst, const std::string_view name, const Name type_name, const rapidjson::Value& src)
+#define TG_JSON_GETTER_char val.GetInt()
+#define TG_JSON_GETTER_int val.GetInt()
+#define TG_JSON_GETTER_i8 val.GetInt()
+#define TG_JSON_GETTER_u8 val.GetUint()
+#define TG_JSON_GETTER_i16 val.GetInt()
+#define TG_JSON_GETTER_u16 val.GetUint()
+#define TG_JSON_GETTER_i32 val.GetInt()
+#define TG_JSON_GETTER_u32 val.GetUint()
+#define TG_JSON_GETTER_i64 val.GetInt64()
+#define TG_JSON_GETTER_u64 val.GetUint64()
+#define TG_JSON_GETTER_float val.GetFloat()
+#define TG_JSON_GETTER_double val.GetDouble()
+#define TG_JSON_GETTER_std__string val.GetString()
+#define TG_JSON_GETTER_std__string_view \
+   std::string_view {}// shouldn't use string views for deserialization
+#define TG_JSON_GETTER(x) TG_CONCAT(TG_JSON_GETTER_, x)
+
+void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjson::Value& src)
 {
-   if (!src.HasMember(name.data()))
+   const auto& src_arr = src.GetArray();
+   switch (type_name) {
+#define TG_META_PRIMITIVE(iden, ty_name)                 \
+   case make_name_id(TG_STRING(ty_name)): {              \
+      for ([[maybe_unused]] const auto& val : src_arr) { \
+         const ty_name src_val = TG_JSON_GETTER(iden);   \
+         dst.append<ty_name>(src_val);                   \
+      }                                                  \
+      break;                                             \
+   }
+      TG_META_PRIMITIVE_LIST
+
+#undef TG_META_PRIMITIVE
+   default:
+      break;
+   }
+}
+
+void deserialize_primitive_value(const meta::Ref& dst, const std::string_view prop_name, const Name type_name, const rapidjson::Value& src)
+{
+   if (!src.HasMember(prop_name.data()))
       return;
 
+   const auto prop_name_id = make_name_id(prop_name);
+   const auto& val = src[prop_name.data()];
+
+   if (dst.is_array_property(prop_name_id)) {
+      auto dst_arr = dst.property_array_ref(prop_name_id);
+      deserialize_array(dst_arr, type_name, val);
+      return;
+   }
+
    switch (type_name) {
-   case "int"_name:
-      [[fallthrough]];
-   case "i32"_name:
-      dst.property<int>(make_name_id(name)) = src[name.data()].GetInt();
+#define TG_META_PRIMITIVE(iden, ty_name)                          \
+   case make_name_id(TG_STRING(ty_name)):                         \
+      dst.property<ty_name>(prop_name_id) = TG_JSON_GETTER(iden); \
       break;
-   case "unsigned"_name:
-      [[fallthrough]];
-   case "u32"_name:
-      dst.property<u32>(make_name_id(name)) = src[name.data()].GetUint();
-      break;
-   case "i64"_name:
-      dst.property<i64>(make_name_id(name)) = src[name.data()].GetInt64();
-      break;
-   case "u64"_name:
-      dst.property<u64>(make_name_id(name)) = src[name.data()].GetUint64();
-      break;
-   case "float"_name:
-      dst.property<float>(make_name_id(name)) = src[name.data()].GetFloat();
-      break;
-   case "double"_name:
-      dst.property<double>(make_name_id(name)) = src[name.data()].GetDouble();
-      break;
-   case "std::string"_name:
-      dst.property<std::string>(make_name_id(name)) = src[name.data()].GetString();
+
+      TG_META_PRIMITIVE_LIST
+
+#undef TG_META_PRIMITIVE
+   default:
       break;
    }
 }
@@ -47,7 +78,7 @@ void deserialize_enum_value(const meta::Ref& dst, const Name property_name, cons
    if (src.IsString()) {
       const auto value_name = make_name_id(src.GetString());
       for (const auto& mem : type.members) {
-         if (mem.type != meta::ClassMemberType::EnumValue)
+         if (!(mem.role_flags & meta::MemberRole::EnumValue))
             continue;
 
          if (mem.name == value_name) {

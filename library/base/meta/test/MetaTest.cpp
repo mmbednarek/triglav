@@ -95,6 +95,7 @@ class ExampleClass
    float m_hidden_value = 2.0f;
    ExampleSubClass m_sub_class;
    ExampleEnum m_enum_value = ExampleEnum::Bar;
+   std::vector<int> m_int_array = {1, 2, 3};
 };
 
 int ExampleClass::instance_count = 0;
@@ -136,6 +137,7 @@ TG_META_PROPERTY(m_data, example_namespace::ExampleStruct)
 TG_META_INDIRECT(indirect_value, float)
 TG_META_INDIRECT_REF(sub_class, example_namespace::ExampleSubClass)
 TG_META_PROPERTY(m_enum_value, example_namespace::ExampleEnum)
+TG_META_ARRAY_PROPERTY(m_int_array, int)
 TG_META_CLASS_END
 
 #undef TG_CLASS_NAME
@@ -181,6 +183,7 @@ TEST(MetaTest, BasicType)
   value: 4.5
  }
  m_enum_value: Bar
+ m_int_array: [1, 2, 3]
 })";
       ASSERT_EQ(obj_serialized, expected_str);
 

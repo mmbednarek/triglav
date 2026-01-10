@@ -5,6 +5,7 @@
 #include "triglav/io/Iterator.hpp"
 
 #include <format>
+#include <vector>
 
 namespace triglav::meta {
 
@@ -30,25 +31,57 @@ class StringWriter
    io::WriterIterator<char> m_iterator;
 };
 
+template<typename T>
+void display_value(const T& value, StringWriter& writer)
+{
+   if constexpr (std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view>) {
+      writer.print("\"{}\"", value);
+   } else {
+      writer.print("{}", value);
+   }
+}
+
+template<typename T>
+void display_array(const ArrayRef& values, StringWriter& writer)
+{
+   writer.print("[");
+
+   bool is_first = true;
+   const auto size = values.size();
+   for (size_t i = 0; i < size; ++i) {
+      if (is_first) {
+         is_first = false;
+      } else {
+         writer.print(", ");
+      }
+      display_value(values.at<T>(i), writer);
+   }
+
+   writer.print("]");
+}
+
 void display_primitive(const Ref& ref, const Name prop_name, const Name ty, StringWriter& writer)
 {
-   if (ty == "std::string"_name) {
-      writer.print("\"{}\"", static_cast<std::string>(ref.property<std::string>(prop_name)));
-      return;
-   }
-   if (ty == "std::string_view"_name) {
-      writer.print("\"{}\"", static_cast<std::string_view>(ref.property<std::string_view>(prop_name)));
+   if (ref.is_array_property(prop_name)) {
+      switch (ty) {
+#define TG_META_PRIMITIVE(iden, name)                                 \
+   case make_name_id(TG_STRING(name)):                                \
+      display_array<name>(ref.property_array_ref(prop_name), writer); \
+      break;
+         TG_META_PRIMITIVE_LIST
+#undef TG_META_PRIMITIVE
+      default:
+         writer.print("unknown");
+      }
       return;
    }
 
    switch (ty) {
-#define TG_META_PRIMITIVE(iden, name)                                       \
-   case make_name_id(TG_STRING(name)):                                      \
-      writer.print("{}", static_cast<name>(ref.property<name>(prop_name))); \
+#define TG_META_PRIMITIVE(iden, name)                                          \
+   case make_name_id(TG_STRING(name)):                                         \
+      display_value(static_cast<name>(ref.property<name>(prop_name)), writer); \
       break;
-
       TG_META_PRIMITIVE_LIST
-
 #undef TG_META_PRIMITIVE
    default:
       writer.print("unknown");
@@ -59,7 +92,7 @@ void display_enum(const Ref& ref, const Name prop_name, const Type& type_info, S
 {
    const auto value = ref.property<int>(prop_name);
    const auto it = std::ranges::find_if(type_info.members, [&](const ClassMember& mem) {
-      return mem.type == ClassMemberType::EnumValue && mem.enum_value.underlying_value == value;
+      return mem.role_flags & MemberRole::EnumValue && mem.enum_value.underlying_value == value;
    });
    if (it != type_info.members.end()) {
       writer.print("{}", it->identifier);
