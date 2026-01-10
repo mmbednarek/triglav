@@ -42,6 +42,7 @@ struct BasicStruct
    std::string bar;
    Contained contained;
    Weekday weekday;
+   std::vector<std::string> colors;
 };
 
 #define TG_CLASS_NAME BasicStruct
@@ -52,6 +53,7 @@ TG_META_PROPERTY(foo, int)
 TG_META_PROPERTY(bar, std::string)
 TG_META_PROPERTY(contained, ::Contained)
 TG_META_PROPERTY(weekday, ::Weekday)
+TG_META_ARRAY_PROPERTY(colors, std::string)
 TG_META_CLASS_END
 
 #undef TG_CLASS_NAME
@@ -84,7 +86,8 @@ TEST(JsonTest, Basic)
    "contained": {
       "value": 12.37
    },
-   "weekday": "Friday"
+   "weekday": "Friday",
+   "colors": ["white", "red", "blue"]
 }
 )";
    triglav::io::StringReader reader(json_string);
@@ -96,4 +99,6 @@ TEST(JsonTest, Basic)
    ASSERT_EQ(basic_struct.bar, "lorem ipsum");
    ASSERT_EQ(basic_struct.contained.value, 12.37);
    ASSERT_EQ(basic_struct.weekday, Weekday::Friday);
+   const std::vector<std::string> expected_colors{"white", "red", "blue"};
+   ASSERT_EQ(basic_struct.colors, expected_colors);
 }

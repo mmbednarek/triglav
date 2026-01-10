@@ -125,4 +125,9 @@ class StlForwardRange
    TIterator m_iterator;
 };
 
+template<typename T, typename TElem>
+concept HasPushBack = requires(T t, TElem elem) {
+   { t.push_back(elem) };
+};
+
 }// namespace triglav
