@@ -9,7 +9,7 @@ namespace {
 using namespace std::string_view_literals;
 using namespace name_literals;
 
-std::map<Name, std::string_view> KnownNames{
+std::map<Name, std::string_view> KnownNames {
    {"ambient_occlusion"_name, "ambient_occlusion"sv},
    {"ambient_occlusion.blurred"_name, "ambient_occlusion.blurred"sv},
    {"ambient_occlusion.target"_name, "ambient_occlusion.target"sv},
@@ -24,6 +24,7 @@ std::map<Name, std::string_view> KnownNames{
    {"blue"_name, "blue"sv},
    {"buildDir"_name, "buildDir"sv},
    {"contentDir"_name, "contentDir"sv},
+   {"copy"_name, "copy"sv},
    {"copy_from_alpha"_name, "copy_from_alpha"sv},
    {"copy_to_user"_name, "copy_to_user"sv},
    {"core.color_out"_name, "core.color_out"sv},
@@ -31,6 +32,7 @@ std::map<Name, std::string_view> KnownNames{
    {"core.frame_params.staging"_name, "core.frame_params.staging"sv},
    {"core.view_properties"_name, "core.view_properties"sv},
    {"core.view_properties.staging"_name, "core.view_properties.staging"sv},
+   {"destroy"_name, "destroy"sv},
    {"dialog_render_ui"_name, "dialog_render_ui"sv},
    {"disableValidation"_name, "disableValidation"sv},
    {"edit"_name, "edit"sv},
@@ -63,6 +65,8 @@ std::map<Name, std::string_view> KnownNames{
    {"gbuffer.depth"_name, "gbuffer.depth"sv},
    {"gbuffer.normal"_name, "gbuffer.normal"sv},
    {"gbuffer.position"_name, "gbuffer.position"sv},
+   {"get"_name, "get"sv},
+   {"get_value"_name, "get_value"sv},
    {"green"_name, "green"sv},
    {"has_buffer_changed"_name, "has_buffer_changed"sv},
    {"have_view_properties_changed"_name, "have_view_properties_changed"sv},
@@ -71,6 +75,7 @@ std::map<Name, std::string_view> KnownNames{
    {"help.about"_name, "help.about"sv},
    {"help.online_help"_name, "help.online_help"sv},
    {"increase_number"_name, "increase_number"sv},
+   {"indirect_value"_name, "indirect_value"sv},
    {"is_first_frame"_name, "is_first_frame"sv},
    {"is_last_frame"_name, "is_last_frame"sv},
    {"job.acquire_swapchain_image"_name, "job.acquire_swapchain_image"sv},
@@ -89,6 +94,7 @@ std::map<Name, std::string_view> KnownNames{
    {"metrics.gpu_time"_name, "metrics.gpu_time"sv},
    {"metrics.triangles"_name, "metrics.triangles"sv},
    {"more"_name, "more"sv},
+   {"m_value"_name, "m_value"sv},
    {"noRayTracing"_name, "noRayTracing"sv},
    {"normal"_name, "normal"sv},
    {"occlusion_culling.count_buffer"_name, "occlusion_culling.count_buffer"sv},
@@ -101,6 +107,7 @@ std::map<Name, std::string_view> KnownNames{
    {"post_processing"_name, "post_processing"sv},
    {"preferIntegratedGpu"_name, "preferIntegratedGpu"sv},
    {"presentMode"_name, "presentMode"sv},
+   {"project"_name, "project"sv},
    {"purple"_name, "purple"sv},
    {"ray_tracing.ambient_occlusion"_name, "ray_tracing.ambient_occlusion"sv},
    {"ray_tracing.ambient_occlusion.blurred"_name, "ray_tracing.ambient_occlusion.blurred"sv},
@@ -110,6 +117,7 @@ std::map<Name, std::string_view> KnownNames{
    {"render_status"_name, "render_status"sv},
    {"root"_name, "root"sv},
    {"separator"_name, "separator"sv},
+   {"set_value"_name, "set_value"sv},
    {"shader/bindless_geometry/culling.cshader"_name, "shader/bindless_geometry/culling.cshader"sv},
    {"shader/bindless_geometry/depth_prepass.fshader"_name, "shader/bindless_geometry/depth_prepass.fshader"sv},
    {"shader/bindless_geometry/depth_prepass.vshader"_name, "shader/bindless_geometry/depth_prepass.vshader"sv},
@@ -173,6 +181,7 @@ std::map<Name, std::string_view> KnownNames{
    {"shadow_map.matrices"_name, "shadow_map.matrices"sv},
    {"shadow_map.matrices.staging"_name, "shadow_map.matrices.staging"sv},
    {"splash_screen"_name, "splash_screen"sv},
+   {"sub_class"_name, "sub_class"sv},
    {"tangent"_name, "tangent"sv},
    {"test.basic_compute.output_buffer"_name, "test.basic_compute.output_buffer"sv},
    {"test.basic_compute.pattern_texture"_name, "test.basic_compute.pattern_texture"sv},
@@ -262,12 +271,13 @@ std::map<Name, std::string_view> KnownNames{
    {"yellow"_name, "yellow"sv},
 };
 
-}// namespace
+} // namespace
 
 std::string_view resolve_name(const Name name)
 {
-   const auto it = KnownNames.find(name);
-   return it == KnownNames.end() ? std::string_view{} : it->second;
+    const auto it = KnownNames.find(name);
+    return it == KnownNames.end() ? std::string_view{} : it->second;
 }
 
-}// namespace triglav
+} // namespace triglav
+

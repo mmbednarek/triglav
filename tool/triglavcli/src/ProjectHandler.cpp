@@ -1,9 +1,8 @@
 #include "Commands.hpp"
 
-#include "ProjectConfig.hpp"
-
 #include "triglav/io/Path.hpp"
 #include "triglav/json_util/JsonUtil.hpp"
+#include "triglav/project/Project.hpp"
 
 #include <print>
 #include <vector>
@@ -12,7 +11,7 @@ namespace triglav::tool::cli {
 
 ExitStatus handle_project(const CmdArgs_project& args)
 {
-   auto config = load_project_config();
+   auto config = project::load_project_config();
    if (!config.has_value())
       return EXIT_FAILURE;
 

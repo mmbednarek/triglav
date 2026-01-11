@@ -22,17 +22,11 @@ enum class Weekday
    Sunday
 };
 
-#define TG_CLASS_NS
-
-#define TG_CLASS_NAME Contained
-#define TG_CLASS_IDENTIFIER Contained
-
+#define TG_TYPE(NS) Contained
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(value, double)
 TG_META_CLASS_END
-
-#undef TG_CLASS_NAME
-#undef TG_CLASS_IDENTIFIER
+#undef TG_TYPE
 
 struct BasicStruct
 {
@@ -45,23 +39,17 @@ struct BasicStruct
    std::vector<std::string> colors;
 };
 
-#define TG_CLASS_NAME BasicStruct
-#define TG_CLASS_IDENTIFIER BasicStruct
-
+#define TG_TYPE(NS) BasicStruct
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(foo, int)
 TG_META_PROPERTY(bar, std::string)
-TG_META_PROPERTY(contained, ::Contained)
-TG_META_PROPERTY(weekday, ::Weekday)
+TG_META_PROPERTY(contained, Contained)
+TG_META_PROPERTY(weekday, Weekday)
 TG_META_ARRAY_PROPERTY(colors, std::string)
 TG_META_CLASS_END
+#undef TG_TYPE
 
-#undef TG_CLASS_NAME
-#undef TG_CLASS_IDENTIFIER
-
-#define TG_ENUM_NAME Weekday
-#define TG_ENUM_IDENTIFIER Weekday
-
+#define TG_TYPE(NS) Weekday
 TG_META_ENUM_BEGIN
 TG_META_ENUM_VALUE(Monday)
 TG_META_ENUM_VALUE(Tuesday)
@@ -71,11 +59,7 @@ TG_META_ENUM_VALUE(Friday)
 TG_META_ENUM_VALUE(Saturday)
 TG_META_ENUM_VALUE(Sunday)
 TG_META_ENUM_END
-
-#undef TG_ENUM_NAME
-#undef TG_ENUM_IDENTIFIER
-
-#undef TG_CLASS_NS
+#undef TG_TYPE
 
 TEST(JsonTest, Basic)
 {

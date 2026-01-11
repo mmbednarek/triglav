@@ -1,0 +1,6 @@
+{
+  "name": "Demo Game",
+  "identifier": "demo",
+  "type": "Tool",
+  "engine": "triglav"
+}

@@ -102,33 +102,21 @@ int ExampleClass::instance_count = 0;
 
 }// namespace example_namespace
 
-#define TG_CLASS_NS example_namespace
-
-#define TG_CLASS_NAME ExampleStruct
-#define TG_CLASS_IDENTIFIER example_namespace__ExampleStruct
-
+#define TG_TYPE(NS) NS(example_namespace, ExampleStruct)
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(foo, int)
 TG_META_PROPERTY(bar, std::string)
 TG_META_PROPERTY(goo, float)
 TG_META_CLASS_END
+#undef TG_TYPE
 
-#undef TG_CLASS_NAME
-#undef TG_CLASS_IDENTIFIER
-
-#define TG_CLASS_NAME ExampleSubClass
-#define TG_CLASS_IDENTIFIER example_namespace__ExampleSubClass
-
+#define TG_TYPE(NS) NS(example_namespace, ExampleSubClass)
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(value, double)
 TG_META_CLASS_END
+#undef TG_TYPE
 
-#undef TG_CLASS_NAME
-#undef TG_CLASS_IDENTIFIER
-
-#define TG_CLASS_NAME ExampleClass
-#define TG_CLASS_IDENTIFIER example_namespace__ExampleClass
-
+#define TG_TYPE(NS) NS(example_namespace, ExampleClass)
 TG_META_CLASS_BEGIN
 TG_META_METHOD0_R(get_value, int)
 TG_META_METHOD1(set_value, int)
@@ -139,23 +127,15 @@ TG_META_INDIRECT_REF(sub_class, example_namespace::ExampleSubClass)
 TG_META_PROPERTY(m_enum_value, example_namespace::ExampleEnum)
 TG_META_ARRAY_PROPERTY(m_int_array, int)
 TG_META_CLASS_END
+#undef TG_TYPE
 
-#undef TG_CLASS_NAME
-#undef TG_CLASS_IDENTIFIER
-
-#define TG_ENUM_NAME ExampleEnum
-#define TG_ENUM_IDENTIFIER example_namespace__ExampleEnum
-
+#define TG_TYPE(NS) NS(example_namespace, ExampleEnum)
 TG_META_ENUM_BEGIN
 TG_META_ENUM_VALUE(Foo)
 TG_META_ENUM_VALUE(Bar)
 TG_META_ENUM_VALUE(Gar)
 TG_META_ENUM_END
-
-#undef TG_ENUM_IDENTIFIER
-#undef TG_ENUM_NAME
-
-#undef TG_CLASS_NS
+#undef TG_TYPE
 
 TEST(MetaTest, BasicType)
 {

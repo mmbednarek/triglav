@@ -1,0 +1,6 @@
+{
+  "name": "Triglav Engine Editor",
+  "identifier": "triglav-editor",
+  "type": "tool",
+  "engine": "triglav"
+}

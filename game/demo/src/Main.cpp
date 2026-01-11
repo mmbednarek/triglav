@@ -1,10 +1,13 @@
 #include "GameInstance.hpp"
 
+#include "triglav/BuildInfo.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/io/Logging.hpp"
+#include "triglav/project/Name.hpp"
+#include "triglav/project/Project.hpp"
 #include "triglav/resource/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
@@ -21,9 +24,13 @@ constexpr auto g_default_height = 1080;
 constexpr auto g_min_threads = 1;
 constexpr auto g_max_threads = 64;
 
+TG_PROJECT_NAME(demo)
+
 int triglav_main(InputArgs& args, IDisplay& display)
 {
    using namespace triglav::string_literals;
+
+   [[maybe_unused]] auto proj = triglav::project::load_active_project_info();
 
    // Parse program arguments
    CommandLine::the().parse(args.arg_count, args.args);
@@ -41,6 +48,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initial_width = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_default_width));
    const auto initial_height = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_default_height));
 
+   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "build profile: " TG_STRING(TG_BUILD_PROFILE));
    std::string_view content_path{PathManager::the().content_path().string()};
    triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "content path: {}", content_path);
    std::string_view build_path{PathManager::the().build_path().string()};
