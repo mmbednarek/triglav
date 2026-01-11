@@ -22,7 +22,7 @@ Result<Path> working_path()
 
 bool is_existing_path(const Path& path)
 {
-   return ::access(path.string().c_str(), F_OK) == 0;
+   return ::access(path.string().data(), F_OK) == 0;
 }
 
 Result<std::string> full_path(const std::string_view path)

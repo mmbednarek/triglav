@@ -1,9 +1,9 @@
 #include "Commands.hpp"
-#include "ProjectConfig.hpp"
 #include "ResourceList.hpp"
-#include "triglav/ResourcePathMap.hpp"
 
+#include "triglav/ResourcePathMap.hpp"
 #include "triglav/asset/Asset.hpp"
+#include "triglav/project/Project.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -12,7 +12,7 @@
 
 namespace triglav::tool::cli {
 
-ExitStatus reimport_mesh(const ProjectInfo& info, const std::string& rc_path, const size_t range_index, const StringView path)
+ExitStatus reimport_mesh(const project::ProjectInfo& info, const std::string& rc_path, const size_t range_index, const StringView path)
 {
    const auto sys_path = info.content_path(rc_path);
 
@@ -50,7 +50,7 @@ ExitStatus handle_reimport(const CmdArgs_reimport& args)
       return 1;
    }
 
-   auto project_info = load_active_project_info();
+   auto project_info = project::load_active_project_info();
    if (!project_info.has_value()) {
       std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;

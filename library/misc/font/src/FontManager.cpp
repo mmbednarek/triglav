@@ -28,7 +28,7 @@ FontManger::~FontManger()
 Typeface FontManger::create_typeface(const io::Path& path, const int variant) const
 {
    FT_Face face;
-   const auto err = FT_New_Face(m_library, path.string().c_str(), variant, &face);
+   const auto err = FT_New_Face(m_library, path.string().data(), variant, &face);
    if (err != 0) {
       throw std::runtime_error("failed to create typeface");
    }

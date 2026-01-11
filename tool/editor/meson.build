@@ -50,6 +50,7 @@ editor_deps = [
     threading,
     shaders,
     desktop_ui,
+    project,
 ]
 
 editor = executable('editor',

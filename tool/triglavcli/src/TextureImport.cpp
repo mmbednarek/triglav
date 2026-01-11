@@ -1,6 +1,6 @@
 #include "TextureImport.hpp"
 
-#include "ProjectConfig.hpp"
+#include "triglav/project/Project.hpp"
 
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/io/File.hpp"

@@ -1,4 +1,5 @@
 // PLACEHOLDER
+#include "BuildInfo.hpp"
 #include "Format.hpp"
 #include "Int.hpp"
 #include "Logging.hpp"

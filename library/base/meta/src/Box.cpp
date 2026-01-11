@@ -4,7 +4,7 @@ namespace triglav::meta {
 
 using namespace name_literals;
 
-Box::Box(void* handle, const Name name, const std::span<ClassMember> members) :
+Box::Box(void* handle, const Name name, const std::span<Member> members) :
     Ref(handle, name, members)
 {
 }

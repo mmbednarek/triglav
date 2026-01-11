@@ -4,23 +4,29 @@
 
 namespace triglav::meta {
 
-ArrayRef::ArrayRef(void* handle, const Name contained_type, const ClassMember::PropertyArray& prop_array) :
+ArrayRef::ArrayRef(void* handle, const Name contained_type, const Member::PropertyArray& prop_array) :
     m_handle(handle),
     m_contained_type(contained_type),
     m_prop_array(prop_array)
 {
 }
 
-Ref::Ref(void* handle, const Name type, const std::span<ClassMember> members) :
+Ref ArrayRef::append_ref()
+{
+   void* appended_ptr = m_prop_array.append(m_handle);
+   return {appended_ptr, m_contained_type, TypeRegistry::the().type_info(m_contained_type).members};
+}
+
+Ref::Ref(void* handle, const Name type, const std::span<Member> members) :
     m_handle(handle),
     m_type(type),
     m_members(members)
 {
 }
 
-const ClassMember* Ref::find_member(const Name name) const
+const Member* Ref::find_member(const Name name) const
 {
-   const auto it = std::ranges::find_if(m_members, [name](const ClassMember& member) { return member.name == name; });
+   const auto it = std::ranges::find_if(m_members, [name](const Member& member) { return member.name == name; });
    if (it == m_members.end())
       return nullptr;
    return &(*it);

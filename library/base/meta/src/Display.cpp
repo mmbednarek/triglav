@@ -91,7 +91,7 @@ void display_primitive(const Ref& ref, const Name prop_name, const Name ty, Stri
 void display_enum(const Ref& ref, const Name prop_name, const Type& type_info, StringWriter& writer)
 {
    const auto value = ref.property<int>(prop_name);
-   const auto it = std::ranges::find_if(type_info.members, [&](const ClassMember& mem) {
+   const auto it = std::ranges::find_if(type_info.members, [&](const Member& mem) {
       return mem.role_flags & MemberRole::EnumValue && mem.enum_value.underlying_value == value;
    });
    if (it != type_info.members.end()) {

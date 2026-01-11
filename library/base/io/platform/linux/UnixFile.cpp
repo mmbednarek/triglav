@@ -29,7 +29,7 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileModeFlags mode)
       flags |= O_APPEND;
    }
 
-   const auto res = ::open(path.string().c_str(), flags, 0644);
+   const auto res = ::open(path.string().data(), flags, 0644);
    if (res < 0) {
       return std::unexpected{Status::InvalidFile};
    }
@@ -47,7 +47,7 @@ static_assert(sizeof(UnixDirectoryStream) == sizeof(DirectoryStream));
 Result<DirectoryStream> DirectoryStream::create(const Path& path)
 {
    UnixDirectoryStream stream{};
-   stream.unix_handle = ::opendir(path.string().c_str());
+   stream.unix_handle = ::opendir(path.string().data());
    if (stream.unix_handle == nullptr) {
       return std::unexpected{Status::InvalidDirectory};
    }
@@ -139,7 +139,7 @@ MemorySize UnixFile::position() const
 
 Result<std::monostate> remove_file(const Path& path)
 {
-   if (::unlink(path.string().c_str()) != 0)
+   if (::unlink(path.string().data()) != 0)
       return std::monostate{};
    return std::unexpected{Status::InvalidFile};
 }
