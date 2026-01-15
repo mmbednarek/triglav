@@ -135,7 +135,7 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
     TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets)
 {
    m_state = State::LoadingBaseResources;
-   m_resource_manager.load_asset_list(PathManager::the().content_path().sub("index_base.yaml"));
+   m_resource_manager.load_asset_list(PathManager::the().translate_path("index_base.yaml"_rc));
 }
 
 void GameInstance::on_loaded_assets()
@@ -146,7 +146,7 @@ void GameInstance::on_loaded_assets()
          m_state.store(State::LoadingResources);
       }
       m_base_resources_ready_cv.notify_one();
-      m_resource_manager.load_asset_list(PathManager::the().content_path().sub("index.yaml"));
+      m_resource_manager.load_asset_list(PathManager::the().translate_path("index.yaml"_rc));
    } else if (m_state.load() == State::LoadingResources &&
               m_device->enabled_features() & triglav::graphics_api::DeviceFeature::RayTracing) {
       {
@@ -154,7 +154,7 @@ void GameInstance::on_loaded_assets()
          m_state.store(State::LoadingRayTracingResources);
       }
       m_base_resources_ready_cv.notify_one();
-      m_resource_manager.load_asset_list(PathManager::the().content_path().sub("ray_tracing.yaml"));
+      m_resource_manager.load_asset_list(PathManager::the().translate_path("ray_tracing.yaml"_rc));
    } else {
       m_state.store(State::Ready);
    }

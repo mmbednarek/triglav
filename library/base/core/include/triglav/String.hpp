@@ -74,6 +74,7 @@ class StringView
    [[nodiscard]] Iterator end() const;
 
    [[nodiscard]] std::string_view to_std() const;
+   [[nodiscard]] bool starts_with(StringView prefix) const;
 
  private:
    const char* m_data;

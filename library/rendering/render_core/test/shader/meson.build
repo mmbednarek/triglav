@@ -5,9 +5,12 @@ slang_compile_rgen = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvI
 slang_compile_rmiss = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'rmiss_main', '-stage', 'miss', '-O3', '-o', '@OUTPUT@']
 slang_compile_rchit = ['slangc', '-target' , 'spirv', '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency', '@INPUT@', '-entry', 'rchit_main', '-stage', 'closesthit', '-O3', '-o', '@OUTPUT@']
 
-render_core_test_file_deps += fs.copyfile('index.yaml', 'index.yaml')
+render_core_test_file_deps += custom_target(input   : 'increase_number.slang',
+                                            output  : '@BASENAME@.cshader',
+                                            command : slang_compile_cs,
+)
 
-subdir('shader/misc')
-subdir('shader/testing')
-subdir('blob')
-subdir('texture')
+subdir('basic')
+subdir('depth_target_sample')
+subdir('multiple_passes')
+subdir('ray_tracing')

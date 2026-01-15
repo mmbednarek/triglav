@@ -7,7 +7,7 @@ render_core_test_sources = files(
 )
 
 render_core_test_file_deps = []
-subdir('content')
+subdir('shader')
 
 render_core_test_deps = [render_core,
                          test_util,

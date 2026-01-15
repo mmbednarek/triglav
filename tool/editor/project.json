@@ -1,6 +1,12 @@
 {
   "name": "Triglav Engine Editor",
-  "identifier": "triglav-editor",
-  "type": "tool",
-  "engine": "triglav"
+  "identifier": "triglav_editor",
+  "type": "Tool",
+  "engine": "triglav",
+  "resource_mapping": [
+    {
+      "engine_path": "editor/",
+      "system_path": "content"
+    }
+  ]
 }

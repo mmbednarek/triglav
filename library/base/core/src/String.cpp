@@ -102,6 +102,11 @@ std::string_view StringView::to_std() const
    return std::string_view{m_data, m_size};
 }
 
+bool StringView::starts_with(const StringView prefix) const
+{
+   return m_size >= prefix.size() && std::memcmp(m_data, prefix.data(), prefix.size()) == 0;
+}
+
 String::String() = default;
 
 String::String(const char* string) :

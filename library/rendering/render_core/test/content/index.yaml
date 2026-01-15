@@ -1,20 +1,20 @@
 version: 1
 resources:
-  - shader/testing/basic/compute.cshader
-  - shader/testing/basic/graphics.vshader
-  - shader/testing/basic/graphics.fshader
-  - shader/testing/basic/texture.vshader
-  - shader/testing/basic/texture.fshader
-  - shader/testing/basic/depth.vshader
-  - shader/testing/basic/depth.fshader
-  - shader/testing/multiple_passes/first.fshader
-  - shader/testing/multiple_passes/second.fshader
-  - shader/testing/depth_target_sample/draw.vshader
-  - shader/testing/depth_target_sample/draw.fshader
-  - shader/testing/depth_target_sample/sample.fshader
-  - shader/testing/increase_number.cshader
-  - shader/testing/ray_tracing/basic.rgenshader
-  - shader/testing/ray_tracing/basic.rmissshader
-  - shader/testing/ray_tracing/basic.rchitshader
+  - testing/shader/basic/compute.cshader
+  - testing/shader/basic/graphics.vshader
+  - testing/shader/basic/graphics.fshader
+  - testing/shader/basic/texture.vshader
+  - testing/shader/basic/texture.fshader
+  - testing/shader/basic/depth.vshader
+  - testing/shader/basic/depth.fshader
+  - testing/shader/multiple_passes/first.fshader
+  - testing/shader/multiple_passes/second.fshader
+  - testing/shader/depth_target_sample/draw.vshader
+  - testing/shader/depth_target_sample/draw.fshader
+  - testing/shader/depth_target_sample/sample.fshader
+  - testing/shader/increase_number.cshader
+  - testing/shader/ray_tracing/basic.rgenshader
+  - testing/shader/ray_tracing/basic.rmissshader
+  - testing/shader/ray_tracing/basic.rchitshader
   - shader/misc/full_screen.vshader
   - texture/sample.tex

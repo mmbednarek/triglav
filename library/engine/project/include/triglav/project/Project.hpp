@@ -13,6 +13,15 @@ enum class ProjectType
    Engine,
    Tool,
    Game,
+   Test,
+};
+
+struct ResourcePathMapping
+{
+   TG_META_STRUCT_BODY(ResourcePathMapping)
+
+   std::string engine_path;
+   std::string system_path;
 };
 
 struct ProjectMetadata
@@ -23,6 +32,7 @@ struct ProjectMetadata
    std::string identifier;
    ProjectType type;
    std::string engine;
+   std::vector<ResourcePathMapping> resource_mapping;
 };
 
 struct ImportSettings
@@ -43,6 +53,9 @@ struct ProjectInfo
    std::string full_name;
    std::string path;
    ImportSettings import_settings;
+
+   // meta: hidden
+   Name name_id;
 
    [[nodiscard]] io::Path system_path(std::string_view resource_path) const;
    [[nodiscard]] io::Path content_path(std::string_view resource_path) const;

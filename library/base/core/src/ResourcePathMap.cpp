@@ -1,5 +1,6 @@
 #include "ResourcePathMap.hpp"
 
+#include "Format.hpp"
 #include "NameResolution.hpp"
 
 #include <cassert>
@@ -39,6 +40,13 @@ ResourcePathMap& ResourcePathMap::the()
 ResourceName name_from_path(const StringView name)
 {
    return ResourcePathMap::the().store_path(name);
+}
+
+ResourceName resource_sub_path(const ResourceName parent, const StringView child)
+{
+   const auto resolved = ResourcePathMap::the().resolve(parent);
+   const auto sub_path = format("{}/{}", resolved, child);
+   return name_from_path(sub_path.view());
 }
 
 }// namespace triglav

@@ -17,9 +17,13 @@
 #endif
 
 #ifdef NDEBUG
-#define TG_ADD_BUILD_SUFFIX(x) x - r
+// clang-format off
+#define TG_ADD_BUILD_SUFFIX(x) x-r
+// clang-format on
 #else
 #define TG_ADD_BUILD_SUFFIX(x) x
 #endif
 
-#define TG_BUILD_PROFILE TG_ADD_BUILD_SUFFIX(TG_OS - TG_COMPILER)
+// clang-format off
+#define TG_BUILD_PROFILE TG_ADD_BUILD_SUFFIX(TG_OS-TG_COMPILER)
+// clang-format on

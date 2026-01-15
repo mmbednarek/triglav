@@ -3,7 +3,7 @@ nodes:
     items:
       - type: static_mesh
         name: Main Hall
-        mesh: "mesh/hall.mesh"
+        mesh: mesh/hall.mesh
         transform:
           translation:
             x: 0.000000
@@ -20,7 +20,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Arrow
-        mesh: "mesh/arrow.mesh"
+        mesh: mesh/arrow.mesh
         transform:
           translation:
             x: 15.000000
@@ -37,7 +37,7 @@ nodes:
             z: 2.000000
       - type: static_mesh
         name: Column 0
-        mesh: "mesh/column.mesh"
+        mesh: mesh/column.mesh
         transform:
           translation:
             x: 0.000000
@@ -54,7 +54,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 1
-        mesh: "mesh/column.mesh"
+        mesh: mesh/column.mesh
         transform:
           translation:
             x: 0.000000
@@ -71,7 +71,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 2
-        mesh: "mesh/column.mesh"
+        mesh: mesh/column.mesh
         transform:
           translation:
             x: 0.000000
@@ -88,7 +88,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 3
-        mesh: "mesh/column.mesh"
+        mesh: mesh/column.mesh
         transform:
           translation:
             x: 0.000000
@@ -105,7 +105,7 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Column 4
-        mesh: "mesh/column.mesh"
+        mesh: mesh/column.mesh
         transform:
           translation:
             x: 0.000000
@@ -122,10 +122,10 @@ nodes:
             z: 10.000000
       - type: static_mesh
         name: Sphere
-        mesh: "mesh/ball.mesh"
+        mesh: mesh/ball.mesh
         transform:
           translation:
-            x: 12.000000
+            x: 10.000000
             y: 24.000000
             z: -2.500000
           rotation:
@@ -139,7 +139,7 @@ nodes:
             z: 3.000000
       - type: static_mesh
         name: Cage
-        mesh: "mesh/cage.mesh"
+        mesh: mesh/cage.mesh
         transform:
           translation:
             x: 10.000000

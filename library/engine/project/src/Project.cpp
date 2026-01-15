@@ -1,6 +1,7 @@
 #include "Project.hpp"
 #include "Name.hpp"
 
+#include "triglav/io/CommandLine.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/json_util/Deserialize.hpp"
 
@@ -205,7 +206,15 @@ TG_META_ENUM_BEGIN
 TG_META_ENUM_VALUE(Engine)
 TG_META_ENUM_VALUE(Tool)
 TG_META_ENUM_VALUE(Game)
+TG_META_ENUM_VALUE(Test)
 TG_META_ENUM_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) TG_NAMESPACE(NS, ResourcePathMapping)
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(engine_path, std::string)
+TG_META_PROPERTY(system_path, std::string)
+TG_META_CLASS_END
 #undef TG_TYPE
 
 #define TG_TYPE(NS) TG_NAMESPACE(NS, ProjectMetadata)
@@ -214,6 +223,7 @@ TG_META_PROPERTY(name, std::string)
 TG_META_PROPERTY(identifier, std::string)
 TG_META_PROPERTY(type, triglav::project::ProjectType)
 TG_META_PROPERTY(engine, std::string)
+TG_META_ARRAY_PROPERTY(resource_mapping, triglav::project::ResourcePathMapping)
 TG_META_CLASS_END
 #undef TG_TYPE
 

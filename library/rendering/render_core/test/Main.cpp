@@ -4,11 +4,14 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/io/Logging.hpp"
+#include "triglav/project/Name.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/test_util/GTest.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <print>
+
+TG_PROJECT_NAME(triglav_render_core_test)
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -16,6 +19,7 @@ using triglav::desktop::WindowAttribute;
 using triglav::resource::ResourceManager;
 
 using namespace triglav::string_literals;
+using namespace triglav::name_literals;
 
 TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets)
 
@@ -44,7 +48,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    LoadAssetsAwaiter awaiter(resource_manager);
 
-   resource_manager.load_asset_list("content/index.yaml"_path);
+   resource_manager.load_asset_list(triglav::resource::PathManager::the().translate_path("index.yaml"_rc));
 
    std::println("Loading resources");
 
