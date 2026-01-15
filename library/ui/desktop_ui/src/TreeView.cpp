@@ -237,7 +237,7 @@ void TreeView::draw_level(const TreeItemId parent_id, const float offset_x, floa
             }
 
             m_arrows.emplace(child, ui_core::SpriteInstance{
-                                       .texture = "texture/ui_atlas.tex"_rc,
+                                       .texture = "engine/texture/ui_atlas.tex"_rc,
                                        .texture_region = region,
                                     });
             return m_arrows.at(child);

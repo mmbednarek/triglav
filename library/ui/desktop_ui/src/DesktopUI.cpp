@@ -9,7 +9,7 @@ using namespace name_literals;
 ThemeProperties ThemeProperties::get_default()
 {
    return {
-      .base_typeface = "fonts/inter/light.typeface"_rc,
+      .base_typeface = "engine/fonts/inter/light.typeface"_rc,
       .base_font_size = 15,
       .background_color_darker = {0.094f, 0.094f, 0.094f, 1.0f},
       .background_color_brighter = {0.12f, 0.12f, 0.12f, 1.0f},

@@ -1,4 +1,4 @@
-import "../common/common.slang";
+import "../../../shader/common/common.slang";
 
 struct VSInput
 {

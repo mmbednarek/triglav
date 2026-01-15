@@ -80,7 +80,7 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
 
          if (item.is_submenu) {
             m_icons.push_back(m_context.viewport().add_sprite({
-               .texture = "texture/ui_atlas.tex"_rc,
+               .texture = "engine/texture/ui_atlas.tex"_rc,
                .position = {dimensions.z - g_global_margin - g_indicator_margin - g_indicator_size,
                             y_offset + (measure.item_size.y - g_indicator_size) / 2},
                .size = {16, 16},

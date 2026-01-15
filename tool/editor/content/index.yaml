@@ -1,0 +1,4 @@
+resources:
+  - "editor/texture/ui_icons.tex"
+  - "editor/shader/object_selection.fshader"
+  - "editor/shader/object_selection.vshader"

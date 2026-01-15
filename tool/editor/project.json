@@ -5,7 +5,11 @@
   "engine": "triglav",
   "resource_mapping": [
     {
-      "engine_path": "editor/",
+      "engine_path": "editor/shader",
+      "system_path": "../../build/{BUILD_PROFILE}/tool/editor/shader"
+    },
+    {
+      "engine_path": "editor",
       "system_path": "content"
     }
   ]

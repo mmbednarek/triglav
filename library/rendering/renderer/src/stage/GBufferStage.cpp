@@ -58,7 +58,7 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
 
    ctx.bind_fragment_shader("shader/geometry/skybox.fshader"_rc);
 
-   ctx.bind_samplable_texture(1, "texture/skybox.tex"_rc);
+   ctx.bind_samplable_texture(1, "engine/texture/skybox.tex"_rc);
 
    ctx.set_depth_test_mode(graphics_api::DepthTestMode::Disabled);
    ctx.set_is_blending_enabled(false);

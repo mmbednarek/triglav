@@ -14,6 +14,7 @@
 #include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/CommandLine.hpp"
+#include "triglav/project/Name.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/resource/PathManager.hpp"
 #include "triglav/resource/ResourceManager.hpp"
@@ -26,6 +27,8 @@
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
+
+TG_PROJECT_NAME(triglav_desktop_ui_example)
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
@@ -119,7 +122,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    GlyphCache glyph_cache(*device, resource_manager);
 
    ResourceLoadedAwaiter resource_awaiter(resource_manager);
-   resource_manager.load_asset_list(PathManager::the().content_path().sub("index_base.yaml"));
+   resource_manager.load_asset_list(PathManager::the().translate_path("engine/index.yaml"_rc));
    resource_awaiter.await();
 
    const auto initial_width = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_default_width));
@@ -237,17 +240,15 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .manager = &desktop_ui_manager,
    });
 
-   auto& layout = dynamic_cast<triglav::ui_core::VerticalLayout&>(
-      tab_view
-         .emplace_tab<triglav::desktop_ui::BasicTabWidget>(
-            triglav::String{"Random Items"}, triglav::ui_core::TextureRegion{"texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
-            std::make_unique<triglav::ui_core::VerticalLayout>(root_dialog->widget_renderer().context(),
-                                                               triglav::ui_core::VerticalLayout::State{
-                                                                  .padding = {5.0f, 5.0f, 5.0f, 5.0f},
-                                                                  .separation = 10.0f,
-                                                               },
-                                                               &tab_view))
-         .widget());
+   const auto tab_id = tab_view.emplace_tab<triglav::desktop_ui::BasicTabWidget>(
+      triglav::String{"Random Items"}, triglav::ui_core::TextureRegion{"engine/texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
+      std::make_unique<triglav::ui_core::VerticalLayout>(root_dialog->widget_renderer().context(),
+                                                         triglav::ui_core::VerticalLayout::State{
+                                                            .padding = {5.0f, 5.0f, 5.0f, 5.0f},
+                                                            .separation = 10.0f,
+                                                         },
+                                                         &tab_view));
+   auto& layout = dynamic_cast<triglav::ui_core::VerticalLayout&>(tab_view.tab(tab_id).widget());
 
 
    layout.create_child<triglav::desktop_ui::TextInput>({
@@ -275,7 +276,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
          .is_enabled = false,
       });
       check_box.create_content<triglav::ui_core::Image>({
-         .texture = "texture/ui_atlas.tex"_rc,
+         .texture = "engine/texture/ui_atlas.tex"_rc,
          .max_size = triglav::Vector2{16, 16},
          .region = triglav::Vector4{i * 64, 0, 64, 64},
       });
@@ -295,14 +296,14 @@ int triglav_main(InputArgs& args, IDisplay& display)
    });
 
    layout.create_child<triglav::ui_core::Image>({
-      .texture = "texture/ui_images.tex"_rc,
+      .texture = "engine/texture/ui_atlas.tex"_rc,
       .max_size = triglav::Vector2{200, 200},
    });
 
    triglav::desktop_ui::TreeController controller;
 
    auto container_item = controller.add_item(TREE_ROOT, triglav::desktop_ui::TreeItem{
-                                                           .icon_name = "texture/ui_images.tex"_rc,
+                                                           .icon_name = "engine/texture/ui_atlas.tex"_rc,
                                                            .icon_region = {0, 0, 200, 200},
                                                            .label = "Collection",
                                                            .has_children = true,
@@ -310,7 +311,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    for (int i = 0; i < 2; ++i) {
       controller.add_item(container_item, triglav::desktop_ui::TreeItem{
-                                             .icon_name = "texture/ui_images.tex"_rc,
+                                             .icon_name = "engine/texture/ui_atlas.tex"_rc,
                                              .icon_region = {0, 0, 200, 200},
                                              .label = triglav::format("Sub Item {}", i),
                                              .has_children = false,
@@ -318,7 +319,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    }
 
    const auto child_item = controller.add_item(container_item, triglav::desktop_ui::TreeItem{
-                                                                  .icon_name = "texture/ui_images.tex"_rc,
+                                                                  .icon_name = "engine/texture/ui_atlas.tex"_rc,
                                                                   .icon_region = {0, 0, 200, 200},
                                                                   .label = "Child Collection",
                                                                   .has_children = true,
@@ -326,7 +327,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    for (int i = 0; i < 4; ++i) {
       controller.add_item(child_item, triglav::desktop_ui::TreeItem{
-                                         .icon_name = "texture/ui_images.tex"_rc,
+                                         .icon_name = "engine/texture/ui_atlas.tex"_rc,
                                          .icon_region = {0, 0, 200, 200},
                                          .label = triglav::format("Sub sub Item {}", i),
                                          .has_children = false,
@@ -335,7 +336,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    for (int i = 2; i < 4; ++i) {
       controller.add_item(container_item, triglav::desktop_ui::TreeItem{
-                                             .icon_name = "texture/ui_images.tex"_rc,
+                                             .icon_name = "engine/texture/ui_atlas.tex"_rc,
                                              .icon_region = {0, 0, 200, 200},
                                              .label = triglav::format("Sub Item {}", i),
                                              .has_children = false,
@@ -344,7 +345,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    for (int i = 0; i < 4; ++i) {
       controller.add_item(TREE_ROOT, triglav::desktop_ui::TreeItem{
-                                        .icon_name = "texture/ui_images.tex"_rc,
+                                        .icon_name = "engine/texture/ui_atlas.tex"_rc,
                                         .icon_region = {0, 0, 200, 200},
                                         .label = triglav::format("Test Item {}", i),
                                         .has_children = false,
@@ -352,7 +353,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    }
 
    tab_view.emplace_tab<triglav::desktop_ui::BasicTabWidget>(
-      triglav::String{"Tree Example"}, triglav::ui_core::TextureRegion{"texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
+      triglav::String{"Tree Example"}, triglav::ui_core::TextureRegion{"engine/texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
       std::make_unique<triglav::desktop_ui::TreeView>(root_dialog->widget_renderer().context(),
                                                       triglav::desktop_ui::TreeView::State{
                                                          .manager = &desktop_ui_manager,

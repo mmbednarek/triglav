@@ -64,7 +64,7 @@ void ProjectTreeController::children(const desktop_ui::TreeItemId parent, const 
          region = resource_path_to_icon_offset(name.to_std());
       }
       m_id_to_item[m_top_item] = desktop_ui::TreeItem{
-         .icon_name = "texture/ui_icons.tex"_rc,
+         .icon_name = "editor/texture/ui_icons.tex"_rc,
          .icon_region = {region.x, region.y, 18, 18},
          .label = {name},
          .has_children = is_dir,
@@ -136,7 +136,7 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
    layout.create_child<ui_core::Padding>({10, 10, 10, 10})
       .create_content<ui_core::TextBox>({
          .font_size = 13,
-         .typeface = "fonts/inter/regular.typeface"_rc,
+         .typeface = "engine/fonts/inter/regular.typeface"_rc,
          .content = "PROJECT EXPLORER",
          .color = {0.3, 0.3, 0.3, 1.0},
          .horizontal_alignment = ui_core::HorizontalAlignment::Left,

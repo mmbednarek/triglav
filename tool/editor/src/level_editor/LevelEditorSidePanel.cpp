@@ -47,7 +47,7 @@ class PanelHeader final : public ui_core::ProxyWidget
 
       layout.create_child<ui_core::TextBox>({
          .font_size = 13,
-         .typeface = "fonts/inter/regular.typeface"_rc,
+         .typeface = "engine/fonts/inter/regular.typeface"_rc,
          .content = m_state.label,
          .color = {0.3, 0.3, 0.3, 1.0},
          .horizontal_alignment = ui_core::HorizontalAlignment::Left,

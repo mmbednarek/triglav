@@ -1,4 +1,3 @@
-version: 1
 resources:
   - shader/ray_tracing/ambient_occlusion.rchitshader
   - shader/ray_tracing/ambient_occlusion.rmissshader
