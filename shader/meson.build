@@ -50,7 +50,6 @@ slang_vs_commands = [
 shader_targets = []
 
 subdir('bindless_geometry')
-subdir('editor')
 subdir('geometry')
 subdir('misc')
 subdir('particles')

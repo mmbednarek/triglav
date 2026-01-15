@@ -190,7 +190,7 @@ void DropDownMenu::add_to_viewport(const Vector4 dimensions, const Vector4 cropp
    const Vector2 sprite_pos{dimensions.x + dimensions.z - 2 * sprite_size.x, dimensions.y + dimensions.w * 0.5 - sprite_size.x * 0.5};
    if (m_down_arrow == 0) {
       m_down_arrow = m_context.viewport().add_sprite({
-         .texture = "texture/ui_atlas.tex"_rc,
+         .texture = "engine/texture/ui_atlas.tex"_rc,
          .position = sprite_pos,
          .size = sprite_size,
          .crop = {cropping_mask},

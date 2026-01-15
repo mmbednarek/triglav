@@ -135,7 +135,7 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
     TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets)
 {
    m_state = State::LoadingBaseResources;
-   m_resource_manager.load_asset_list(PathManager::the().translate_path("index_base.yaml"_rc));
+   m_resource_manager.load_asset_list(PathManager::the().translate_path("engine/index.yaml"_rc));
 }
 
 void GameInstance::on_loaded_assets()
@@ -154,7 +154,7 @@ void GameInstance::on_loaded_assets()
          m_state.store(State::LoadingRayTracingResources);
       }
       m_base_resources_ready_cv.notify_one();
-      m_resource_manager.load_asset_list(PathManager::the().translate_path("ray_tracing.yaml"_rc));
+      m_resource_manager.load_asset_list(PathManager::the().translate_path("engine/index_rt.yaml"_rc));
    } else {
       m_state.store(State::Ready);
    }

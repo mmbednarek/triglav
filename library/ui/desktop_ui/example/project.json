@@ -1,0 +1,7 @@
+{
+  "name": "Desktop UI Example",
+  "identifier": "triglav_desktop_ui_example",
+  "type": "Tool",
+  "engine": "triglav",
+  "resource_mapping": []
+}

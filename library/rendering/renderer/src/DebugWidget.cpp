@@ -23,7 +23,7 @@ DebugWidget::DebugWidget(ui_core::Context& ctx) :
 
    vertical_layout.create_child<ui_core::TextBox>({
       .font_size = 16,
-      .typeface = "fonts/cantarell/regular.typeface"_rc,
+      .typeface = "engine/fonts/cantarell/regular.typeface"_rc,
       .content = "Lorem ipsum",
       .color = {1, 1, 1, 1},
    });
@@ -35,21 +35,21 @@ DebugWidget::DebugWidget(ui_core::Context& ctx) :
 
    horizontal.create_child<ui_core::TextBox>({
       .font_size = 15,
-      .typeface = "fonts/cantarell/regular.typeface"_rc,
+      .typeface = "engine/fonts/cantarell/regular.typeface"_rc,
       .content = "beta delta",
       .color = {0, 1, 1, 1},
    });
 
    horizontal.create_child<ui_core::TextBox>({
       .font_size = 15,
-      .typeface = "fonts/cantarell/regular.typeface"_rc,
+      .typeface = "engine/fonts/cantarell/regular.typeface"_rc,
       .content = "beta delta",
       .color = {1, 1, 0, 1},
    });
 
    vertical_layout.create_child<ui_core::TextBox>({
       .font_size = 16,
-      .typeface = "fonts/cantarell/regular.typeface"_rc,
+      .typeface = "engine/fonts/cantarell/regular.typeface"_rc,
       .content = "bar foo bar",
       .color = {0, 0, 1, 1},
    });

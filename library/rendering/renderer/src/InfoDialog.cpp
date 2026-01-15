@@ -200,7 +200,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
 
    m_title = &title_layout.create_child<ui_core::TextBox>({
       .font_size = 24,
-      .typeface = "fonts/cantarell/bold.typeface"_rc,
+      .typeface = "engine/fonts/cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
       .horizontal_alignment = ui_core::HorizontalAlignment::Center,

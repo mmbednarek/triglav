@@ -61,7 +61,7 @@ TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
        .border_width = 0.0f,
     },
     m_close_button{
-       .texture = "texture/ui_atlas.tex"_rc,
+       .texture = "engine/texture/ui_atlas.tex"_rc,
        .texture_region = Vector4{0, 64, 64, 64},
     }
 {

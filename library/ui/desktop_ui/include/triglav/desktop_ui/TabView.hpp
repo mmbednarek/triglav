@@ -9,7 +9,6 @@
 #include <optional>
 
 namespace triglav::desktop_ui {
-
 class Dialog;
 class DesktopUIManager;
 
@@ -19,7 +18,9 @@ class ITabWidget
    virtual ~ITabWidget() = default;
 
    [[nodiscard]] virtual StringView name() const = 0;
+
    [[nodiscard]] virtual const ui_core::TextureRegion& icon() const = 0;
+
    [[nodiscard]] virtual ui_core::IWidget& widget() = 0;
 };
 
@@ -31,7 +32,9 @@ class BasicTabWidget final : public ITabWidget
    BasicTabWidget(const String& name, const ui_core::TextureRegion& icon, std::unique_ptr<ui_core::IWidget> widget);
 
    [[nodiscard]] StringView name() const override;
+
    [[nodiscard]] const ui_core::TextureRegion& icon() const override;
+
    [[nodiscard]] ui_core::IWidget& widget() override;
 
  private:
@@ -62,31 +65,42 @@ class TabView final : public ui_core::BaseWidget
    TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] Vector2 desired_size(Vector2 available_size) const override;
+
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
+
    void remove_from_viewport() override;
+
    void on_event(const ui_core::Event& event) override;
 
    bool on_mouse_moved(const ui_core::Event&);
+
    bool on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
+
    bool on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&);
 
    void set_active_tab(u32 active_tab);
+
    void remove_tab(u32 tab_id);
+
    ITabWidget& tab(u32 tab) const;
+
    [[nodiscard]] u32 tab_count() const;
+
    [[nodiscard]] Vector4 content_area() const;
 
    u32 add_tab(ITabWidgetPtr&& widget);
+
    void set_default_widget(ui_core::IWidgetPtr&& widget);
 
    template<typename TChild, typename... TArgs>
-   TChild& emplace_tab(TArgs&&... args)
+   u32 emplace_tab(TArgs&&... args)
    {
-      return dynamic_cast<TChild&>(this->add_tab(std::make_unique<TChild>(std::forward<TArgs>(args)...)));
+      return this->add_tab(std::make_unique<TChild>(std::forward<TArgs>(args)...));
    }
 
  private:
    [[nodiscard]] std::pair<float, u32> index_from_mouse_position(Vector2 position) const;
+
    [[nodiscard]] const Measure& get_measure(Vector2 available_size) const;
 
    ui_core::Context& m_context;
@@ -110,5 +124,4 @@ class TabView final : public ui_core::BaseWidget
    mutable Vector2 m_cached_measure_size{};
    mutable std::optional<Measure> m_cached_measure{};
 };
-
 }// namespace triglav::desktop_ui
