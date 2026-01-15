@@ -1,12 +1,39 @@
 #include "PathManager.hpp"
 
 #include "triglav/BuildInfo.hpp"
+#include "triglav/ResourcePathMap.hpp"
 #include "triglav/io/CommandLine.hpp"
-#include "triglav/project/Project.hpp"
+#include "triglav/project/ProjectManager.hpp"
 
 namespace triglav::resource {
 
 using namespace name_literals;
+
+namespace {
+
+std::string apply_constants(std::string input)
+{
+   static constexpr std::string_view build_profile_const = "{BUILD_PROFILE}";
+
+   if (const auto pos = input.find(build_profile_const); pos != std::string::npos) {
+      input.replace(pos, build_profile_const.size(), TG_STRING(TG_BUILD_PROFILE));
+   }
+
+   return input;
+}
+
+void copy_mapping(const Name proj_name, std::vector<PathMapping>& out_mappings)
+{
+   const auto* metadata = project::ProjectManager::the().project_metadata(proj_name);
+   assert(metadata);
+   for (const auto& src_mapping : metadata->resource_mapping) {
+      const io::Path base_path(project::ProjectManager::the().project_root(proj_name));
+      const auto sys_path = apply_constants(src_mapping.system_path);
+      out_mappings.emplace_back(src_mapping.engine_path, base_path.sub(sys_path));
+   }
+}
+
+}// namespace
 
 PathManager& PathManager::the()
 {
@@ -14,105 +41,32 @@ PathManager& PathManager::the()
    return instance;
 }
 
-const io::Path& PathManager::content_path()
+PathManager::PathManager()
 {
-   {
-      auto RA_content_path = m_cached_content_path.read_access();
-      if (RA_content_path->has_value()) {
-         return **RA_content_path;
-      }
+   const auto dst_mapping = m_path_mappings.access();
+
+   copy_mapping(project::engine_project(), dst_mapping.value());
+   copy_mapping(project::this_project(), dst_mapping.value());
+
+   if (project::this_project() != project::game_project()) {
+      copy_mapping(project::game_project(), dst_mapping.value());
    }
-
-   auto WA_content_path = m_cached_content_path.access();
-
-   auto command_line_arg = io::CommandLine::the().arg("contentDir"_name);
-   if (command_line_arg.has_value()) {
-      WA_content_path->emplace(*command_line_arg);
-      return **WA_content_path;
-   }
-
-   const auto proj_info = project::load_current_project_info();
-   if (proj_info.has_value()) {
-      WA_content_path->emplace(io::Path{proj_info->path}.sub("content"));
-      return **WA_content_path;
-   }
-
-   auto working_dir = io::working_path().value();
-   WA_content_path->emplace(working_dir.sub("content"));
-   return **WA_content_path;
 }
 
-std::optional<io::Path> PathManager::engine_content_path()
+io::Path PathManager::translate_path(const ResourceName rc_name) const
 {
-   {
-      auto RA_content_path = m_cached_engine_content_path.read_access();
-      if (RA_content_path->has_value()) {
-         return **RA_content_path;
-      }
+   const auto rc_string = ResourcePathMap::the().resolve(rc_name);
+
+   const auto mappings = m_path_mappings.read_access();
+   for (const auto& mapping : mappings.value()) {
+      if (!rc_string.starts_with(StringView{mapping.input_path_prefix}))
+         continue;
+
+      return mapping.output_path_prefix.sub(rc_string.to_std().substr(mapping.input_path_prefix.length()));
    }
 
-   auto WA_content_path = m_cached_engine_content_path.access();
-
-   const auto proj_info = project::load_engine_project_info();
-   if (proj_info.has_value()) {
-      WA_content_path->emplace(io::Path{proj_info->path}.sub("content"));
-      return **WA_content_path;
-   }
-
-   return std::nullopt;
-}
-
-std::optional<io::Path> PathManager::project_content_path()
-{
-   {
-      auto RA_content_path = m_cached_project_content_path.read_access();
-      if (RA_content_path->has_value()) {
-         return **RA_content_path;
-      }
-   }
-
-   auto WA_content_path = m_cached_project_content_path.access();
-
-   auto project_arg = io::CommandLine::the().arg("project"_name);
-   if (!project_arg.has_value()) {
-      return std::nullopt;
-   }
-
-   const auto proj_info = project::load_project_info(*project_arg);
-   if (proj_info.has_value()) {
-      WA_content_path->emplace(io::Path{proj_info->path}.sub("content"));
-      return **WA_content_path;
-   }
-
-   return std::nullopt;
-}
-
-const io::Path& PathManager::build_path()
-{
-   {
-      auto RA_build_path = m_cached_build_path.read_access();
-      if (RA_build_path->has_value()) {
-         return **RA_build_path;
-      }
-   }
-
-   auto WA_build_path = m_cached_build_path.access();
-
-   auto command_line_arg = io::CommandLine::the().arg("buildDir"_name);
-   if (command_line_arg.has_value()) {
-      WA_build_path->emplace(io::Path{std::move(*command_line_arg)});
-      return **WA_build_path;
-   }
-
-   const auto proj_info = project::load_engine_project_info();
-   if (proj_info.has_value()) {
-      WA_build_path->emplace(io::Path{proj_info->path}.sub("build").sub(TG_STRING(TG_BUILD_PROFILE)));
-      return **WA_build_path;
-   }
-
-   auto working_dir = io::working_path().value();
-   WA_build_path->emplace(working_dir.parent().parent());
-   return **WA_build_path;
+   assert(0);
+   return {};
 }
 
 }// namespace triglav::resource

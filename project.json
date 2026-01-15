@@ -1,5 +1,15 @@
 {
   "name": "Triglav Engine",
   "identifier": "triglav",
-  "type": "engine"
+  "type": "engine",
+  "resource_mapping": [
+    {
+      "engine_path": "engine/",
+      "system_path": "content"
+    },
+    {
+      "engine_path": "shader/",
+      "system_path": "build/{BUILD_PROFILE}/shader"
+    }
+  ]
 }

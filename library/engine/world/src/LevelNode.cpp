@@ -1,5 +1,7 @@
 #include "LevelNode.hpp"
 
+#include "triglav/ResourcePathMap.hpp"
+
 #include <ryml.hpp>
 
 namespace triglav::world {
@@ -52,7 +54,7 @@ void StaticMesh::serialize_yaml(ryml::NodeRef& node) const
 {
    node["type"] = c4::csubstr{"static_mesh"};
    node["name"] = c4::csubstr{this->name.data(), this->name.size()};
-   const auto mesh_str = std::to_string(this->mesh_name.name());
+   const auto mesh_str = ResourcePathMap::the().resolve(this->mesh_name);
    node["mesh"] << c4::csubstr{mesh_str.data(), mesh_str.size()};
    auto transform_node = node["transform"];
    transform_node |= ryml::MAP;

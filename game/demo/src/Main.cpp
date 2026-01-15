@@ -7,7 +7,7 @@
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/io/Logging.hpp"
 #include "triglav/project/Name.hpp"
-#include "triglav/project/Project.hpp"
+#include "triglav/project/ProjectManager.hpp"
 #include "triglav/resource/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
@@ -30,7 +30,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 {
    using namespace triglav::string_literals;
 
-   [[maybe_unused]] auto proj = triglav::project::load_active_project_info();
+   [[maybe_unused]] auto proj = triglav::project::ProjectManager::the().project_root("demo"_name);
 
    // Parse program arguments
    CommandLine::the().parse(args.arg_count, args.args);
@@ -49,10 +49,8 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initial_height = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_default_height));
 
    triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "build profile: " TG_STRING(TG_BUILD_PROFILE));
-   std::string_view content_path{PathManager::the().content_path().string()};
-   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "content path: {}", content_path);
-   std::string_view build_path{PathManager::the().build_path().string()};
-   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "build path: {}", build_path);
+   const auto content_path = PathManager::the().translate_path("."_rc);
+   triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "content path: {}", content_path.string());
    triglav::log_message(triglav::LogLevel::Info, "DemoGame"_strv, "initializing renderer");
 
    demo::GameInstance instance(display, {initial_width, initial_height});

@@ -406,7 +406,7 @@ void LevelEditor::on_event(const ui_core::Event& event)
 void LevelEditor::save_level() const
 {
    const auto level = m_scene.to_level();
-   auto level_path = resource::PathManager::the().content_path().sub(ResourcePathMap::the().resolve(m_state.asset_name).to_std());
+   const auto level_path = resource::PathManager::the().translate_path(m_state.asset_name);
    assert(level.save_to_file(level_path));
 }
 

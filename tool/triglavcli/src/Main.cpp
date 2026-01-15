@@ -1,12 +1,13 @@
 #include "Commands.hpp"
 
-#include "triglav/Int.hpp"
+#include "triglav/project/Name.hpp"
 
 #include <cstdlib>
 #include <optional>
 #include <print>
-#include <string>
 #include <string_view>
+
+TG_PROJECT_NAME(triglav_cli)
 
 using triglav::tool::cli::Command;
 using triglav::tool::cli::ExitStatus;

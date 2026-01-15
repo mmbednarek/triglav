@@ -9,7 +9,8 @@ namespace {
 using namespace std::string_view_literals;
 using namespace name_literals;
 
-std::map<Name, std::string_view> KnownNames {
+std::map<Name, std::string_view> KnownNames{
+   {"."_name, "."sv},
    {"ambient_occlusion"_name, "ambient_occlusion"sv},
    {"ambient_occlusion.blurred"_name, "ambient_occlusion.blurred"sv},
    {"ambient_occlusion.target"_name, "ambient_occlusion.target"sv},
@@ -21,9 +22,13 @@ std::map<Name, std::string_view> KnownNames {
    {"basic_interframe_dependency"_name, "basic_interframe_dependency"sv},
    {"basic_interframe_dependency.data"_name, "basic_interframe_dependency.data"sv},
    {"basic_interframe_dependency.user"_name, "basic_interframe_dependency.user"sv},
+   {"blob/basic_depth_expected_bitmap.dat"_name, "blob/basic_depth_expected_bitmap.dat"sv},
+   {"blob/basic_graphics_expected_bitmap.dat"_name, "blob/basic_graphics_expected_bitmap.dat"sv},
+   {"blob/basic_ray_tracing_expected_bitmap.dat"_name, "blob/basic_ray_tracing_expected_bitmap.dat"sv},
+   {"blob/basic_texture_expected_bitmap.dat"_name, "blob/basic_texture_expected_bitmap.dat"sv},
+   {"blob/depth_target_sample_expected_bitmap.dat"_name, "blob/depth_target_sample_expected_bitmap.dat"sv},
+   {"blob/multiple_passes_expected_bitmap.dat"_name, "blob/multiple_passes_expected_bitmap.dat"sv},
    {"blue"_name, "blue"sv},
-   {"buildDir"_name, "buildDir"sv},
-   {"contentDir"_name, "contentDir"sv},
    {"copy"_name, "copy"sv},
    {"copy_from_alpha"_name, "copy_from_alpha"sv},
    {"copy_to_user"_name, "copy_to_user"sv},
@@ -32,6 +37,7 @@ std::map<Name, std::string_view> KnownNames {
    {"core.frame_params.staging"_name, "core.frame_params.staging"sv},
    {"core.view_properties"_name, "core.view_properties"sv},
    {"core.view_properties.staging"_name, "core.view_properties.staging"sv},
+   {"demo"_name, "demo"sv},
    {"destroy"_name, "destroy"sv},
    {"dialog_render_ui"_name, "dialog_render_ui"sv},
    {"disableValidation"_name, "disableValidation"sv},
@@ -75,6 +81,8 @@ std::map<Name, std::string_view> KnownNames {
    {"help.about"_name, "help.about"sv},
    {"help.online_help"_name, "help.online_help"sv},
    {"increase_number"_name, "increase_number"sv},
+   {"index_base.yaml"_name, "index_base.yaml"sv},
+   {"index.yaml"_name, "index.yaml"sv},
    {"indirect_value"_name, "indirect_value"sv},
    {"is_first_frame"_name, "is_first_frame"sv},
    {"is_last_frame"_name, "is_last_frame"sv},
@@ -112,6 +120,7 @@ std::map<Name, std::string_view> KnownNames {
    {"ray_tracing.ambient_occlusion"_name, "ray_tracing.ambient_occlusion"sv},
    {"ray_tracing.ambient_occlusion.blurred"_name, "ray_tracing.ambient_occlusion.blurred"sv},
    {"ray_tracing.shadows"_name, "ray_tracing.shadows"sv},
+   {"ray_tracing.yaml"_name, "ray_tracing.yaml"sv},
    {"red"_name, "red"sv},
    {"render_dialog"_name, "render_dialog"sv},
    {"render_status"_name, "render_status"sv},
@@ -145,22 +154,6 @@ std::map<Name, std::string_view> KnownNames {
    {"shader/ray_tracing/ray_generation.rgenshader"_name, "shader/ray_tracing/ray_generation.rgenshader"sv},
    {"shader/ray_tracing/shadow.rchitshader"_name, "shader/ray_tracing/shadow.rchitshader"sv},
    {"shader/ray_tracing/shadow.rmissshader"_name, "shader/ray_tracing/shadow.rmissshader"sv},
-   {"shader/testing/basic/compute.cshader"_name, "shader/testing/basic/compute.cshader"sv},
-   {"shader/testing/basic/depth.fshader"_name, "shader/testing/basic/depth.fshader"sv},
-   {"shader/testing/basic/depth.vshader"_name, "shader/testing/basic/depth.vshader"sv},
-   {"shader/testing/basic/graphics.fshader"_name, "shader/testing/basic/graphics.fshader"sv},
-   {"shader/testing/basic/graphics.vshader"_name, "shader/testing/basic/graphics.vshader"sv},
-   {"shader/testing/basic/texture.fshader"_name, "shader/testing/basic/texture.fshader"sv},
-   {"shader/testing/basic/texture.vshader"_name, "shader/testing/basic/texture.vshader"sv},
-   {"shader/testing/depth_target_sample/draw.fshader"_name, "shader/testing/depth_target_sample/draw.fshader"sv},
-   {"shader/testing/depth_target_sample/draw.vshader"_name, "shader/testing/depth_target_sample/draw.vshader"sv},
-   {"shader/testing/depth_target_sample/sample.fshader"_name, "shader/testing/depth_target_sample/sample.fshader"sv},
-   {"shader/testing/increase_number.cshader"_name, "shader/testing/increase_number.cshader"sv},
-   {"shader/testing/multiple_passes/first.fshader"_name, "shader/testing/multiple_passes/first.fshader"sv},
-   {"shader/testing/multiple_passes/second.fshader"_name, "shader/testing/multiple_passes/second.fshader"sv},
-   {"shader/testing/ray_tracing/basic.rchitshader"_name, "shader/testing/ray_tracing/basic.rchitshader"sv},
-   {"shader/testing/ray_tracing/basic.rgenshader"_name, "shader/testing/ray_tracing/basic.rgenshader"sv},
-   {"shader/testing/ray_tracing/basic.rmissshader"_name, "shader/testing/ray_tracing/basic.rmissshader"sv},
    {"shader/ui/rectangle_insertion.cshader"_name, "shader/ui/rectangle_insertion.cshader"sv},
    {"shader/ui/rectangle_removal.cshader"_name, "shader/ui/rectangle_removal.cshader"sv},
    {"shader/ui/rectangle_render.fshader"_name, "shader/ui/rectangle_render.fshader"sv},
@@ -219,6 +212,22 @@ std::map<Name, std::string_view> KnownNames {
    {"test.depth_target_sample.render_target"_name, "test.depth_target_sample.render_target"sv},
    {"test.depth_target_sample.uniform_buffer"_name, "test.depth_target_sample.uniform_buffer"sv},
    {"test.depth_target_sample.vertex_buffer"_name, "test.depth_target_sample.vertex_buffer"sv},
+   {"testing/shader/basic/compute.cshader"_name, "testing/shader/basic/compute.cshader"sv},
+   {"testing/shader/basic/depth.fshader"_name, "testing/shader/basic/depth.fshader"sv},
+   {"testing/shader/basic/depth.vshader"_name, "testing/shader/basic/depth.vshader"sv},
+   {"testing/shader/basic/graphics.fshader"_name, "testing/shader/basic/graphics.fshader"sv},
+   {"testing/shader/basic/graphics.vshader"_name, "testing/shader/basic/graphics.vshader"sv},
+   {"testing/shader/basic/texture.fshader"_name, "testing/shader/basic/texture.fshader"sv},
+   {"testing/shader/basic/texture.vshader"_name, "testing/shader/basic/texture.vshader"sv},
+   {"testing/shader/depth_target_sample/draw.fshader"_name, "testing/shader/depth_target_sample/draw.fshader"sv},
+   {"testing/shader/depth_target_sample/draw.vshader"_name, "testing/shader/depth_target_sample/draw.vshader"sv},
+   {"testing/shader/depth_target_sample/sample.fshader"_name, "testing/shader/depth_target_sample/sample.fshader"sv},
+   {"testing/shader/increase_number.cshader"_name, "testing/shader/increase_number.cshader"sv},
+   {"testing/shader/multiple_passes/first.fshader"_name, "testing/shader/multiple_passes/first.fshader"sv},
+   {"testing/shader/multiple_passes/second.fshader"_name, "testing/shader/multiple_passes/second.fshader"sv},
+   {"testing/shader/ray_tracing/basic.rchitshader"_name, "testing/shader/ray_tracing/basic.rchitshader"sv},
+   {"testing/shader/ray_tracing/basic.rgenshader"_name, "testing/shader/ray_tracing/basic.rgenshader"sv},
+   {"testing/shader/ray_tracing/basic.rmissshader"_name, "testing/shader/ray_tracing/basic.rmissshader"sv},
    {"test.multiple_passes.output_buffer"_name, "test.multiple_passes.output_buffer"sv},
    {"test.multiple_passes.render_pass.first"_name, "test.multiple_passes.render_pass.first"sv},
    {"test.multiple_passes.render_pass.second"_name, "test.multiple_passes.render_pass.second"sv},
@@ -271,13 +280,12 @@ std::map<Name, std::string_view> KnownNames {
    {"yellow"_name, "yellow"sv},
 };
 
-} // namespace
+}// namespace
 
 std::string_view resolve_name(const Name name)
 {
-    const auto it = KnownNames.find(name);
-    return it == KnownNames.end() ? std::string_view{} : it->second;
+   const auto it = KnownNames.find(name);
+   return it == KnownNames.end() ? std::string_view{} : it->second;
 }
 
-} // namespace triglav
-
+}// namespace triglav

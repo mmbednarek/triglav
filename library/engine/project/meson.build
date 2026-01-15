@@ -1,7 +1,9 @@
 project_sources = files([
-                            'include/triglav/project/Project.hpp',
                             'include/triglav/project/Name.hpp',
+                            'include/triglav/project/Project.hpp',
+                            'include/triglav/project/ProjectManager.hpp',
                             'src/Project.cpp',
+                            'src/ProjectManager.cpp',
                         ])
 
 project_deps = [core, json_util, meta, io]

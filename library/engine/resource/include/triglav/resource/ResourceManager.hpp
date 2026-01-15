@@ -39,7 +39,6 @@ class ResourceManager
 
    void load_asset_list(const io::Path& path);
    void load_asset(ResourceName resource_name);
-   const std::vector<io::Path>& source_paths();
 
    [[nodiscard]] bool is_name_registered(ResourceName asset_name) const;
 
@@ -98,7 +97,6 @@ class ResourceManager
    NameRegistry m_name_registry;
    graphics_api::Device& m_device;
    font::FontManger& m_font_manager;
-   std::vector<io::Path> m_source_paths;
 };
 
 void resolve_dependencies(std::set<ResourceName>& resource_list);

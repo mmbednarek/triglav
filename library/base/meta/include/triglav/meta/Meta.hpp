@@ -338,39 +338,36 @@ class Box : public Ref
               TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN))};                               \
    }
 
-#define TG_META_METHOD0(method_name)                                                                                                  \
-   ::triglav::meta::Member{                                                                                                           \
-      .role_flags = ::triglav::meta::MemberRole::Function,                                                                            \
-      .name = ::triglav::make_name_id(#method_name),                                                                                  \
-      .identifier = #method_name,                                                                                                     \
-      .function =                                                                                                                     \
-         {                                                                                                                            \
-            .pointer = reinterpret_cast<void*>(+[](void* handle) { static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->method_name(); }), \
-         },                                                                                                                           \
+#define TG_META_FUNC_ARGS_CB(index, type_name) type_name TG_CONCAT(arg, index)
+#define TG_META_FUNC_ARGS(...) TG_FOR_EACH(TG_META_FUNC_ARGS_CB, __VA_ARGS__)
+
+#define TG_META_PASSED_ARGS_CB(index, type_name) TG_CONCAT(arg, index)
+#define TG_META_PASSED_ARGS(...) TG_FOR_EACH(TG_META_PASSED_ARGS_CB, __VA_ARGS__)
+
+#define TG_META_METHOD(method_name, ...)                                                                         \
+   ::triglav::meta::Member{                                                                                      \
+      .role_flags = ::triglav::meta::MemberRole::Function,                                                       \
+      .name = ::triglav::make_name_id(#method_name),                                                             \
+      .identifier = #method_name,                                                                                \
+      .function =                                                                                                \
+         {                                                                                                       \
+            .pointer = reinterpret_cast<void*>(+[](void* handle __VA_OPT__(, ) TG_META_FUNC_ARGS(__VA_ARGS__)) { \
+               static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->method_name(TG_META_PASSED_ARGS(__VA_ARGS__));    \
+            }),                                                                                                  \
+         },                                                                                                      \
    },
 
-#define TG_META_METHOD0_R(method_name, ret_type)                                                                         \
-   ::triglav::meta::Member{                                                                                              \
-      .role_flags = ::triglav::meta::MemberRole::Function,                                                               \
-      .name = ::triglav::make_name_id(#method_name),                                                                     \
-      .identifier = #method_name,                                                                                        \
-      .function =                                                                                                        \
-         {                                                                                                               \
-            .pointer = reinterpret_cast<void*>(                                                                          \
-               +[](void* handle) -> ret_type { return static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->method_name(); }), \
-         },                                                                                                              \
-   },
-
-#define TG_META_METHOD1(method_name, arg0_ty)                                                                           \
-   ::triglav::meta::Member{                                                                                             \
-      .role_flags = ::triglav::meta::MemberRole::Function,                                                              \
-      .name = ::triglav::make_name_id(#method_name),                                                                    \
-      .identifier = #method_name,                                                                                       \
-      .function =                                                                                                       \
-         {                                                                                                              \
-            .pointer = reinterpret_cast<void*>(                                                                         \
-               +[](void* handle, arg0_ty arg0) { static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->method_name(arg0); }), \
-         },                                                                                                             \
+#define TG_META_METHOD_R(method_name, ret_type, ...)                                                                         \
+   ::triglav::meta::Member{                                                                                                  \
+      .role_flags = ::triglav::meta::MemberRole::Function,                                                                   \
+      .name = ::triglav::make_name_id(#method_name),                                                                         \
+      .identifier = #method_name,                                                                                            \
+      .function =                                                                                                            \
+         {                                                                                                                   \
+            .pointer = reinterpret_cast<void*>(+[](void* handle __VA_OPT__(, ) TG_META_FUNC_ARGS(__VA_ARGS__)) -> ret_type { \
+               return static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->method_name(TG_META_PASSED_ARGS(__VA_ARGS__));         \
+            }),                                                                                                              \
+         },                                                                                                                  \
    },
 
 #define TG_META_PROPERTY(property_name, property_type)                         \

@@ -14,7 +14,7 @@ namespace triglav::resource {
 
 struct ResourceStage
 {
-   std::vector<String> resource_list;
+   std::vector<std::pair<ResourceName, io::Path>> resource_list;
 };
 
 enum class FinishLoadingAssetResult

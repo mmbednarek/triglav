@@ -118,8 +118,8 @@ TG_META_CLASS_END
 
 #define TG_TYPE(NS) NS(example_namespace, ExampleClass)
 TG_META_CLASS_BEGIN
-TG_META_METHOD0_R(get_value, int)
-TG_META_METHOD1(set_value, int)
+TG_META_METHOD_R(get_value, int)
+TG_META_METHOD(set_value, int)
 TG_META_PROPERTY(m_value, int)
 TG_META_PROPERTY(m_data, example_namespace::ExampleStruct)
 TG_META_INDIRECT(indirect_value, float)
