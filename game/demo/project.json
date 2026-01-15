@@ -1,0 +1,12 @@
+{
+  "name": "Demo Game",
+  "identifier": "demo",
+  "type": "Tool",
+  "engine": "triglav",
+  "resource_mapping": [
+    {
+      "engine_path": "",
+      "system_path": "content"
+    }
+  ]
+}

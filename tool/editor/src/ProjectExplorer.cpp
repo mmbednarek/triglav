@@ -49,13 +49,14 @@ void ProjectTreeController::children(const desktop_ui::TreeItemId parent, const 
       return;
    }
 
-   io::Path path = resource::PathManager::the().content_path();
+   ResourceName rc_path = ""_rc;
    if (parent != desktop_ui::TREE_ROOT) {
-      path = m_id_to_path.at(parent);
+      rc_path = m_id_to_path.at(parent);
    }
+   const auto sys_path = resource::PathManager::the().translate_path(rc_path);
 
    std::vector<desktop_ui::TreeItemId> children;
-   for (const auto [name, is_dir] : io::list_files(path)) {
+   for (const auto [name, is_dir] : io::list_files(sys_path)) {
       Vector2i region;
       if (is_dir) {
          region = {5 * 18, 0};
@@ -63,12 +64,12 @@ void ProjectTreeController::children(const desktop_ui::TreeItemId parent, const 
          region = resource_path_to_icon_offset(name.to_std());
       }
       m_id_to_item[m_top_item] = desktop_ui::TreeItem{
-         .icon_name = "texture/ui_icons.tex"_rc,
+         .icon_name = "editor/texture/ui_icons.tex"_rc,
          .icon_region = {region.x, region.y, 18, 18},
          .label = {name},
          .has_children = is_dir,
       };
-      m_id_to_path[m_top_item] = path.sub(name.to_std());
+      m_id_to_path[m_top_item] = resource_sub_path(rc_path, name);
       children.push_back(m_top_item);
       ++m_top_item;
    }
@@ -106,7 +107,7 @@ void ProjectTreeController::remove(const desktop_ui::TreeItemId)
    // Unsuported
 }
 
-io::Path ProjectTreeController::path(const desktop_ui::TreeItemId id)
+ResourceName ProjectTreeController::path(const desktop_ui::TreeItemId id) const
 {
    return m_id_to_path.at(id);
 }
@@ -135,7 +136,7 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
    layout.create_child<ui_core::Padding>({10, 10, 10, 10})
       .create_content<ui_core::TextBox>({
          .font_size = 13,
-         .typeface = "fonts/inter/regular.typeface"_rc,
+         .typeface = "engine/fonts/inter/regular.typeface"_rc,
          .content = "PROJECT EXPLORER",
          .color = {0.3, 0.3, 0.3, 1.0},
          .horizontal_alignment = ui_core::HorizontalAlignment::Left,
@@ -163,10 +164,7 @@ void ProjectExplorer::on_activated(const desktop_ui::TreeItemId id)
    if (m_controller.has_children(id))
       return;
 
-   const auto path = m_controller.path(id);
-   const auto prefix_size = resource::PathManager::the().content_path().string().size();
-   const auto resource_path = path.string().substr(prefix_size + 1);
-   m_state.root_window->open_asset(name_from_path(StringView{resource_path}));
+   m_state.root_window->open_asset(m_controller.path(id));
 }
 
 }// namespace triglav::editor

@@ -42,6 +42,8 @@ editor_sources = files([
                            'src/RootWindow.hpp',
                        ])
 
+subdir('shader')
+
 editor_deps = [
     renderer,
     launcher,
@@ -50,6 +52,8 @@ editor_deps = [
     threading,
     shaders,
     desktop_ui,
+    project,
+    editor_shaders,
 ]
 
 editor = executable('editor',

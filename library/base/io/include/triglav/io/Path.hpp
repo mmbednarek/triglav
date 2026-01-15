@@ -16,7 +16,7 @@ class Path
    [[nodiscard]] Path sub(std::string_view value) const;
    [[nodiscard]] Path parent() const;
    [[nodiscard]] bool exists() const;
-   [[nodiscard]] const std::string& string() const;
+   [[nodiscard]] std::string_view string() const;
    [[nodiscard]] std::string basename() const;
 
  private:

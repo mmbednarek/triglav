@@ -25,6 +25,17 @@ using namespace name_literals;
    std::string_view {}// shouldn't use string views for deserialization
 #define TG_JSON_GETTER(x) TG_CONCAT(TG_JSON_GETTER_, x)
 
+void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src);
+
+void deserialize_array_class(meta::ArrayRef& dst, const rapidjson::Value& src)
+{
+   const auto& src_arr = src.GetArray();
+   for ([[maybe_unused]] const auto& val : src_arr) {
+      auto ref = dst.append_ref();
+      deserialize_value(ref, val);
+   }
+}
+
 void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjson::Value& src)
 {
    const auto& src_arr = src.GetArray();
@@ -32,8 +43,7 @@ void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjso
 #define TG_META_PRIMITIVE(iden, ty_name)                 \
    case make_name_id(TG_STRING(ty_name)): {              \
       for ([[maybe_unused]] const auto& val : src_arr) { \
-         const ty_name src_val = TG_JSON_GETTER(iden);   \
-         dst.append<ty_name>(src_val);                   \
+         dst.append<ty_name>() = TG_JSON_GETTER(iden);   \
       }                                                  \
       break;                                             \
    }
@@ -101,9 +111,15 @@ void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src)
       case meta::TypeVariant::Primitive:
          deserialize_primitive_value(dst, name, type_name, src);
          break;
-      case meta::TypeVariant::Class:
-         deserialize_value(dst.property_ref(name_id), src[name.data()]);
+      case meta::TypeVariant::Class: {
+         if (dst.is_array_property(name_id)) {
+            auto dst_arr = dst.property_array_ref(name_id);
+            deserialize_array_class(dst_arr, src[name.data()]);
+         } else {
+            deserialize_value(dst.property_ref(name_id), src[name.data()]);
+         }
          break;
+      }
       case meta::TypeVariant::Enum:
          deserialize_enum_value(dst, name_id, info, src[name.data()]);
          break;

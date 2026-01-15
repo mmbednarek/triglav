@@ -104,7 +104,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    select_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_icons.tex"_rc,
+      .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
       .region = Vector4{3 * 22, 0, 22, 22},
    });
@@ -116,7 +116,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    move_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_icons.tex"_rc,
+      .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
       .region = Vector4{0, 0, 22, 22},
    });
@@ -128,7 +128,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    rotate_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_icons.tex"_rc,
+      .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
       .region = Vector4{22, 0, 22, 22},
    });
@@ -140,7 +140,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .is_enabled = false,
    });
    scale_btn.create_content<ui_core::Image>({
-      .texture = "texture/ui_icons.tex"_rc,
+      .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = ICON_SIZE,
       .region = Vector4{2 * 22, 0, 22, 22},
    });
@@ -170,7 +170,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       })
       .create_content<ui_core::Image>({
-         .texture = "texture/ui_icons.tex"_rc,
+         .texture = "editor/texture/ui_icons.tex"_rc,
          .max_size = ICON_SIZE,
          .region = Vector4{0, 22, 22, 22},
       });
@@ -193,7 +193,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       })
       .create_content<ui_core::Image>({
-         .texture = "texture/ui_icons.tex"_rc,
+         .texture = "editor/texture/ui_icons.tex"_rc,
          .max_size = ICON_SIZE,
          .region = Vector4{22, 22, 22, 22},
       });
@@ -215,7 +215,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       })
       .create_content<ui_core::Image>({
-         .texture = "texture/ui_icons.tex"_rc,
+         .texture = "editor/texture/ui_icons.tex"_rc,
          .max_size = ICON_SIZE,
          .region = Vector4{2 * 22, 22, 22, 22},
       });
@@ -406,7 +406,7 @@ void LevelEditor::on_event(const ui_core::Event& event)
 void LevelEditor::save_level() const
 {
    const auto level = m_scene.to_level();
-   auto level_path = resource::PathManager::the().content_path().sub(ResourcePathMap::the().resolve(m_state.asset_name).to_std());
+   const auto level_path = resource::PathManager::the().translate_path(m_state.asset_name);
    assert(level.save_to_file(level_path));
 }
 
@@ -500,7 +500,7 @@ StringView LevelEditor::name() const
 
 const ui_core::TextureRegion& LevelEditor::icon() const
 {
-   static const ui_core::TextureRegion region{"texture/ui_icons.tex"_rc, Vector4{7 * 18, 18, 18, 18}};
+   static const ui_core::TextureRegion region{"editor/texture/ui_icons.tex"_rc, Vector4{7 * 18, 18, 18, 18}};
    return region;
 }
 

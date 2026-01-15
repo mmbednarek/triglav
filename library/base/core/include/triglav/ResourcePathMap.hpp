@@ -22,5 +22,6 @@ class ResourcePathMap
 };
 
 ResourceName name_from_path(StringView name);
+ResourceName resource_sub_path(ResourceName parent, StringView child);
 
 }// namespace triglav

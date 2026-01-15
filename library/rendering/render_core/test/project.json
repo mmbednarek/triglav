@@ -1,0 +1,16 @@
+{
+  "name": "Render Core Test",
+  "identifier": "triglav_render_core_test",
+  "type": "Test",
+  "engine": "triglav",
+  "resource_mapping": [
+    {
+      "engine_path": "testing/shader",
+      "system_path": "../../../../build/{BUILD_PROFILE}/library/rendering/render_core/test/shader"
+    },
+    {
+      "engine_path": "",
+      "system_path": "content"
+    }
+  ]
+}

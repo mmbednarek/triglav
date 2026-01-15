@@ -177,7 +177,7 @@ bool Texture::write_to_stream(io::IWriter& writer) const
 
 bool Texture::write_to_file(const io::Path& path) const
 {
-   return ktxTexture_WriteToNamedFile(m_ktxTexture, path.string().c_str()) == KTX_SUCCESS;
+   return ktxTexture_WriteToNamedFile(m_ktxTexture, path.string().data()) == KTX_SUCCESS;
 }
 
 bool Texture::compress(const TextureCompression compression, const bool is_normal_map) const
@@ -301,7 +301,7 @@ std::optional<Texture> Texture::create(const TextureCreateInfo& info)
 std::optional<Texture> Texture::from_file(const io::Path& path)
 {
    ::ktxTexture* ktxTexture;
-   if (ktxTexture_CreateFromNamedFile(path.string().c_str(), KTX_TEXTURE_CREATE_ALLOC_STORAGE, &ktxTexture) != KTX_SUCCESS) {
+   if (ktxTexture_CreateFromNamedFile(path.string().data(), KTX_TEXTURE_CREATE_ALLOC_STORAGE, &ktxTexture) != KTX_SUCCESS) {
       return std::nullopt;
    }
    return Texture{ktxTexture};

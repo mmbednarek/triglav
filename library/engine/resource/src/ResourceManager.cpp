@@ -10,6 +10,7 @@
 
 #include "triglav/TypeMacroList.hpp"
 #include "triglav/io/File.hpp"
+#include "triglav/project/Project.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <ryml.hpp>
@@ -74,24 +75,17 @@ void ResourceManager::load_next_stage()
 
    log_info("Loading {} assets in stage {}", stage.resource_list.size(), m_load_context->current_stage_id());
 
-   auto build_path = PathManager::the().build_path();
-   auto content_path = PathManager::the().content_path();
-
-   for (const auto& rc_path : stage.resource_list) {
-      auto resource_path = build_path.sub(rc_path.to_std_view());
-      if (not resource_path.exists()) {
-         resource_path = content_path.sub(rc_path.to_std_view());
-
-         if (not resource_path.exists()) {
-            log_error("failed to load resource: {}, file not found", rc_path);
-            continue;
-         }
+   for (const auto& [rc_name, rc_path] : stage.resource_list) {
+      if (not rc_path.exists()) {
+         log_error("failed to load resource: {}, file not found", rc_path.string());
+         assert(0);
       }
 
-      auto name = name_from_path(rc_path.view());
-      m_name_registry.register_resource(name, rc_path.to_std_view());
-      threading::ThreadPool::the().issue_job([this, name, resource_path] { this->load_asset_internal(name, resource_path); });
+      m_name_registry.register_resource(rc_name, rc_path.string());
+      threading::ThreadPool::the().issue_job([&] { this->load_asset_internal(rc_name, rc_path); });
    }
+
+   flush_logs();
 }
 
 void ResourceManager::load_asset_internal(const ResourceName asset_name, const io::Path& path)
@@ -142,6 +136,8 @@ void ResourceManager::on_finished_loading_resource(ResourceName resource_name, c
       this->event_OnFinishedLoadingAsset.publish(resource_name, m_load_context->total_loaded_assets(), m_load_context->total_assets());
    }
 
+   flush_logs();
+
    const auto result = m_load_context->finish_loading_asset();
 
    switch (result) {
@@ -173,10 +169,7 @@ void resolve_dependencies(std::set<ResourceName>& resource_list)
 {
    std::set<ResourceName> child_deps;
    for (const auto rc : resource_list) {
-      const auto path_str = ResourcePathMap::the().resolve(rc);
-      if (path_str.size() == 0)
-         return;
-      const auto path = PathManager::the().content_path().sub(path_str.to_std());
+      const auto path = PathManager::the().translate_path(rc);
 
       rc.match([&]<typename TName>(TName /*typed_rc*/) {
          if constexpr (CollectsDependencies<Loader<TName::resource_type>>) {

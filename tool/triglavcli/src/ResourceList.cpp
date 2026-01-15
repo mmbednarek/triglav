@@ -1,8 +1,7 @@
 #include "ResourceList.hpp"
 
-#include "ProjectConfig.hpp"
-
 #include "triglav/io/File.hpp"
+#include "triglav/project/Project.hpp"
 
 #include <print>
 
@@ -78,7 +77,7 @@ bool ResourceList::save_to_file(const io::Path& path) const
 
 bool add_resource_to_index(const std::string_view name)
 {
-   auto project_info = load_active_project_info();
+   auto project_info = project::load_active_project_info();
    if (!project_info.has_value()) {
       std::print(stderr, "triglav-cli: No active project found\n");
       return false;

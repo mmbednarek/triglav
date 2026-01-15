@@ -6,7 +6,7 @@ using namespace name_literals;
 
 #define TG_META_PRIMITIVE(prim_iden, prim_name)                                                                                 \
    std::array TG_CONCAT(TG_META_MEMBERS_, prim_iden){                                                                           \
-      ClassMember{                                                                                                              \
+      Member{                                                                                                                   \
          .role_flags = MemberRole::Property,                                                                                    \
          .name = "get"_name,                                                                                                    \
          .identifier = "get",                                                                                                   \

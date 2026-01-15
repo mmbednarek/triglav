@@ -20,12 +20,12 @@ class ProjectTreeController final : public desktop_ui::ITreeController
    const desktop_ui::TreeItem& item(desktop_ui::TreeItemId id) override;
    void set_label(desktop_ui::TreeItemId id, StringView label) override;
    void remove(desktop_ui::TreeItemId /*id*/) override;
-   io::Path path(desktop_ui::TreeItemId id);
+   ResourceName path(desktop_ui::TreeItemId id) const;
    [[nodiscard]] bool has_children(desktop_ui::TreeItemId id) const;
 
  private:
    std::map<desktop_ui::TreeItemId, std::vector<desktop_ui::TreeItemId>> m_cache;
-   std::map<desktop_ui::TreeItemId, io::Path> m_id_to_path;
+   std::map<desktop_ui::TreeItemId, ResourceName> m_id_to_path;
    std::map<desktop_ui::TreeItemId, desktop_ui::TreeItem> m_id_to_item;
    desktop_ui::TreeItemId m_top_item = desktop_ui::TREE_ROOT + 1;
 };

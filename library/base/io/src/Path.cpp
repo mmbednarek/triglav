@@ -21,7 +21,7 @@ Path::Path(const std::string_view path) :
    }
 }
 
-const std::string& Path::string() const
+std::string_view Path::string() const
 {
    return m_path;
 }
