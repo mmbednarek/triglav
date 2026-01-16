@@ -296,7 +296,7 @@ ITabWidget& TabView::tab(const u32 tab) const
 
 u32 TabView::tab_count() const
 {
-   return m_tabs.size();
+   return static_cast<u32>(m_tabs.size());
 }
 
 Vector4 TabView::content_area() const
@@ -309,7 +309,7 @@ u32 TabView::add_tab(ITabWidgetPtr&& widget)
 {
    m_cached_measure.reset();
    m_tabs.emplace_back(std::move(widget));
-   return m_tabs.size() - 1;
+   return static_cast<u32>(m_tabs.size() - 1);
 }
 
 void TabView::set_default_widget(ui_core::IWidgetPtr&& widget)

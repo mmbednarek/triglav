@@ -248,6 +248,11 @@ void Surface::on_button_up(MouseButton button) const
    event_OnMouseButtonIsReleased.publish(button);
 }
 
+void Surface::on_mouse_double_click(MouseButton button) const
+{
+   event_OnMouseDoubleClick.publish(button);
+}
+
 void Surface::on_mouse_move(const int x, const int y)
 {
    if (m_current_cursor != nullptr) {
@@ -360,6 +365,10 @@ LRESULT Surface::handle_window_event(const UINT msg, const WPARAM w_param, const
    }
    case WM_MOUSEMOVE: {
       this->on_mouse_move(GET_X_LPARAM(l_param), GET_Y_LPARAM(l_param));
+      break;
+   }
+   case WM_LBUTTONDBLCLK: {
+      this->on_mouse_double_click(MouseButton::Left);
       break;
    }
    case WM_SIZE: {

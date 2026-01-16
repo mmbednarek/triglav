@@ -43,6 +43,7 @@ class Surface : public ISurface, std::enable_shared_from_this<Surface>
    void on_key_up(WPARAM key_code) const;
    void on_button_down(MouseButton button) const;
    void on_button_up(MouseButton button) const;
+   void on_mouse_double_click(MouseButton button) const;
    void on_mouse_move(int x, int y);
    void on_close() const;
    void on_resize(short x, short y);

@@ -3,6 +3,7 @@
 #include <format>
 #include <shlobj.h>
 #include <windows.h>
+#include <expected>
 
 namespace triglav::io {
 
@@ -17,7 +18,7 @@ Result<Path> working_path()
 
 bool is_existing_path(const Path& path)
 {
-   return GetFileAttributesA(path.string().c_str()) != INVALID_FILE_ATTRIBUTES;
+   return GetFileAttributesA(path.string().data()) != INVALID_FILE_ATTRIBUTES;
 }
 
 Result<std::string> full_path(const std::string_view path)
@@ -48,7 +49,16 @@ Result<Path> home_directory()
 
 std::string sub_directory(const std::string_view path, const std::string_view directory)
 {
-   return std::format("{}\\{}", path, directory);
+   std::string res(path.size() + directory.size() + 1, ' ');
+   std::memcpy(res.data(), path.data(), path.size());
+   res[path.size()] = '\\';
+   std::memcpy(res.data() + path.size() + 1, directory.data(), directory.size());
+   for (size_t i = path.size() + 1; i < res.size(); ++i) {
+      if (res[i] == '/') {
+         res[i] = '\\';
+      }
+   }
+   return res;
 }
 
 char path_seperator()

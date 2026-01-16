@@ -43,7 +43,7 @@ void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjso
 #define TG_META_PRIMITIVE(iden, ty_name)                 \
    case make_name_id(TG_STRING(ty_name)): {              \
       for ([[maybe_unused]] const auto& val : src_arr) { \
-         dst.append<ty_name>() = TG_JSON_GETTER(iden);   \
+         dst.append<ty_name>() = static_cast<ty_name>(TG_JSON_GETTER(iden));   \
       }                                                  \
       break;                                             \
    }
@@ -57,9 +57,6 @@ void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjso
 
 void deserialize_primitive_value(const meta::Ref& dst, const std::string_view prop_name, const Name type_name, const rapidjson::Value& src)
 {
-   if (!src.HasMember(prop_name.data()))
-      return;
-
    const auto prop_name_id = make_name_id(prop_name);
    const auto& val = src[prop_name.data()];
 
@@ -72,7 +69,7 @@ void deserialize_primitive_value(const meta::Ref& dst, const std::string_view pr
    switch (type_name) {
 #define TG_META_PRIMITIVE(iden, ty_name)                          \
    case make_name_id(TG_STRING(ty_name)):                         \
-      dst.property<ty_name>(prop_name_id) = TG_JSON_GETTER(iden); \
+      dst.property<ty_name>(prop_name_id) = static_cast<ty_name>(TG_JSON_GETTER(iden)); \
       break;
 
       TG_META_PRIMITIVE_LIST
@@ -104,6 +101,9 @@ void deserialize_enum_value(const meta::Ref& dst, const Name property_name, cons
 void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src)
 {
    dst.visit_properties([&](const std::string_view name, const Name type_name) {
+      if (!src.HasMember(name.data()))
+         return;
+      
       const auto& info = meta::TypeRegistry::the().type_info(type_name);
       const auto name_id = make_name_id(name);
 
