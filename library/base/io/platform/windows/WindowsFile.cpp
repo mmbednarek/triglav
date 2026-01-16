@@ -63,7 +63,7 @@ Result<DirectoryStream> DirectoryStream::create(const Path& path)
 {
    WindowsDirectoryStream stream{};
    auto sub_path = path.sub("*");
-   stream.win.file_handle = ::FindFirstFileA(sub_path.string().c_str(), &stream.win.find_data);
+   stream.win.file_handle = ::FindFirstFileA(sub_path.string().data(), &stream.win.find_data);
    if (stream.win.file_handle == INVALID_HANDLE_VALUE) {
       return std::unexpected{Status::InvalidDirectory};
    }

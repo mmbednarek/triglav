@@ -28,7 +28,7 @@ Display::Display(const HINSTANCE instance) :
 {
    WNDCLASSEXW wc;
    wc.cbSize = sizeof(WNDCLASSEXW);
-   wc.style = 0;
+   wc.style = CS_DBLCLKS;
    wc.lpfnWndProc = process_messages;
    wc.cbClsExtra = 0;
    wc.cbWndExtra = 0;
