@@ -48,7 +48,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    LoadAssetsAwaiter awaiter(resource_manager);
 
-   resource_manager.load_asset_list(triglav::resource::PathManager::the().translate_path("index.yaml"_rc));
+   resource_manager.load_asset_list(triglav::project::PathManager::the().translate_path("index.yaml"_rc));
 
    std::println("Loading resources");
 

@@ -53,7 +53,7 @@ void ProjectTreeController::children(const desktop_ui::TreeItemId parent, const 
    if (parent != desktop_ui::TREE_ROOT) {
       rc_path = m_id_to_path.at(parent);
    }
-   const auto sys_path = resource::PathManager::the().translate_path(rc_path);
+   const auto sys_path = project::PathManager::the().translate_path(rc_path);
 
    std::vector<desktop_ui::TreeItemId> children;
    for (const auto [name, is_dir] : io::list_files(sys_path)) {

@@ -1,9 +1,10 @@
 #include "Path.hpp"
 
+#include <cstring>
+#include <expected>
 #include <format>
 #include <shlobj.h>
 #include <windows.h>
-#include <expected>
 
 namespace triglav::io {
 
@@ -64,6 +65,11 @@ std::string sub_directory(const std::string_view path, const std::string_view di
 char path_seperator()
 {
    return '\\';
+}
+
+[[nodiscard]] bool make_directory(const Path& path)
+{
+   return ::CreateDirectory(path.string().data(), nullptr);
 }
 
 }// namespace triglav::io

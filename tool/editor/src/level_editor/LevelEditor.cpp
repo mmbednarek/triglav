@@ -7,12 +7,12 @@
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
 #include "triglav/renderer/stage/GBufferStage.hpp"
 #include "triglav/renderer/stage/PostProcessStage.hpp"
 #include "triglav/renderer/stage/ShadingStage.hpp"
 #include "triglav/renderer/stage/ShadowMapStage.hpp"
-#include "triglav/resource/PathManager.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
@@ -406,7 +406,7 @@ void LevelEditor::on_event(const ui_core::Event& event)
 void LevelEditor::save_level() const
 {
    const auto level = m_scene.to_level();
-   const auto level_path = resource::PathManager::the().translate_path(m_state.asset_name);
+   const auto level_path = project::PathManager::the().translate_path(m_state.asset_name);
    assert(level.save_to_file(level_path));
 }
 

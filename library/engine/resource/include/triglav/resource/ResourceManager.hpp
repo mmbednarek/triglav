@@ -8,8 +8,8 @@
 #include "NameRegistry.hpp"
 #include "Resource.hpp"
 
+#include "../../../../project/include/triglav/project/PathManager.hpp"
 #include "LoadContext.hpp"
-#include "PathManager.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/ResourcePathMap.hpp"

@@ -1,20 +1,21 @@
 #include "Commands.hpp"
-#include "ResourceList.hpp"
 
 #include "triglav/ResourcePathMap.hpp"
 #include "triglav/asset/Asset.hpp"
-#include "triglav/project/Project.hpp"
+#include "triglav/project/PathManager.hpp"
+#include "triglav/project/ProjectManager.hpp"
 
 #include <cassert>
 #include <iostream>
-#include <map>
 #include <print>
 
 namespace triglav::tool::cli {
 
-ExitStatus reimport_mesh(const project::ProjectInfo& info, const std::string& rc_path, const size_t range_index, const StringView path)
+using namespace name_literals;
+
+ExitStatus reimport_mesh(const std::string& rc_path, const size_t range_index, const StringView path)
 {
-   const auto sys_path = info.content_path(rc_path);
+   const auto sys_path = project::PathManager::the().translate_path(name_from_path(rc_path));
 
    std::optional<geometry::MeshData> mesh{};
    {
@@ -50,23 +51,9 @@ ExitStatus handle_reimport(const CmdArgs_reimport& args)
       return 1;
    }
 
-   auto project_info = project::load_active_project_info();
-   if (!project_info.has_value()) {
-      std::print(std::cerr, "triglav-cli: No active project found\n");
-      return EXIT_FAILURE;
-   }
-
-   const auto index_path = project_info->content_path("index.yaml");
-   auto res_list = ResourceList::from_file(index_path);
-   assert(res_list.has_value());
-
-   for (const auto& rc_path : res_list->resources) {
-      ResourcePathMap::the().store_path(StringView{rc_path.data(), rc_path.size()});
-   }
-
    const auto& rc_path = args.positional_args.at(0);
    if (rc_path.ends_with(".mesh")) {
-      reimport_mesh(*project_info, rc_path, args.range_index, StringView{args.material});
+      reimport_mesh(rc_path, args.range_index, StringView{args.material});
       return 0;
    }
 

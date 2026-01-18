@@ -1,12 +1,13 @@
 #include "LevelImport.hpp"
 
 #include "MeshImport.hpp"
-#include "ResourceList.hpp"
 #include "TextureImport.hpp"
+#include "triglav/ResourcePathMap.hpp"
 
 #include "triglav/gltf/Glb.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
-#include "triglav/project/Project.hpp"
+#include "triglav/project/PathManager.hpp"
+#include "triglav/project/ProjectManager.hpp"
 #include "triglav/render_objects/Material.hpp"
 #include "triglav/world/Level.hpp"
 
@@ -93,10 +94,10 @@ std::string strip_extension(const std::string_view str)
 class LevelImporter
 {
  public:
-   LevelImporter(LevelImportProps props, project::ProjectInfo&& project_info, gltf::GlbResource&& glb_resource,
+   LevelImporter(LevelImportProps props, const project::ProjectMetadata& project_md, gltf::GlbResource&& glb_resource,
                  const io::Path& glb_src_path) :
        m_props(std::move(props)),
-       m_project_info(std::move(project_info)),
+       m_project_md(project_md),
        m_glb_file(std::move(glb_resource)),
        m_glb_source_path(glb_src_path)
    {
@@ -137,11 +138,7 @@ class LevelImporter
          }
       }
 
-      auto import_path = m_project_info.default_import_path(ResourceType::Texture, texture_name_str);
-      const auto rc_name = make_rc_name(import_path);
-      assert(rc_name.type() == ResourceType::Texture);
-
-      const auto dst_path = m_project_info.content_path(import_path);
+      const auto [dst_path, rc_name] = project::PathManager::the().import_path(ResourceType::Texture, texture_name_str);
 
       TextureImportProps import_props{
          .src_path = "."_path,
@@ -166,10 +163,6 @@ class LevelImporter
          }
       } else {
          std::print(stderr, "triglav-cli: Failed to import texture {}, no URI or buffer view provided\n", texture_name_str);
-         return std::nullopt;
-      }
-
-      if (!add_resource_to_index(import_path)) {
          return std::nullopt;
       }
 
@@ -251,11 +244,7 @@ class LevelImporter
          ch = static_cast<char>(std::tolower(ch));
       }
 
-      auto import_path = m_project_info.default_import_path(ResourceType::Material, material_name_str);
-      const auto rc_name = make_rc_name(import_path);
-      assert(rc_name.type() == ResourceType::Material);
-
-      const auto dst_path = m_project_info.content_path(import_path);
+      const auto [dst_path, rc_name] = project::PathManager::the().import_path(ResourceType::Material, material_name_str);
       if (!m_props.should_override && dst_path.exists()) {
          std::print(stderr, "triglav-cli: Failed to import material to {}, file exists\n", dst_path.string());
          return std::nullopt;
@@ -276,11 +265,7 @@ class LevelImporter
          return std::nullopt;
       }
 
-      std::print(stderr, "triglav-cli: Imported material to {}\n", import_path);
-
-      if (!add_resource_to_index(import_path)) {
-         return std::nullopt;
-      }
+      std::print(stderr, "triglav-cli: Imported material to {}\n", dst_path.string());
 
       m_imported_materials.emplace(material_id, rc_name.name());
 
@@ -298,11 +283,7 @@ class LevelImporter
          ch = static_cast<char>(std::tolower(ch));
       }
 
-      auto import_path = m_project_info.default_import_path(ResourceType::Mesh, mesh_name_str);
-      const auto rc_name = make_rc_name(import_path);
-      assert(rc_name.type() == ResourceType::Mesh);
-
-      const auto dst_path = m_project_info.content_path(import_path);
+      const auto [dst_path, rc_name] = project::PathManager::the().import_path(ResourceType::Mesh, mesh_name_str);
       if (!m_props.should_override && dst_path.exists()) {
          std::print(stderr, "triglav-cli: Failed to import mesh to {}, file exists\n", dst_path.string());
          return std::nullopt;
@@ -320,11 +301,7 @@ class LevelImporter
       write_mesh_to_file(gltf_mesh, dst_path);
       m_imported_meshes.emplace(mesh_id, rc_name);
 
-      std::print(stderr, "triglav-cli: Importing mesh to {}\n", import_path);
-
-      if (!add_resource_to_index(import_path)) {
-         return std::nullopt;
-      }
+      std::print(stderr, "triglav-cli: Importing mesh to {}\n", dst_path.string());
 
       return rc_name;
    }
@@ -385,7 +362,7 @@ class LevelImporter
 
  private:
    LevelImportProps m_props;
-   project::ProjectInfo m_project_info;
+   const project::ProjectMetadata& m_project_md;
    gltf::GlbResource m_glb_file;
    io::Path m_glb_source_path;
    std::map<u32, MeshName> m_imported_meshes;
@@ -397,8 +374,8 @@ bool import_level(const LevelImportProps& props)
 {
    std::print(stderr, "triglav-cli: Importing level to {}\n", props.dst_path.string());
 
-   auto project_info = project::load_active_project_info();
-   if (!project_info.has_value()) {
+   const auto* project_md = project::ProjectManager::the().active_project_metadata();
+   if (project_md == nullptr) {
       std::print(stderr, "triglav-cli: Failed to load project info\n");
       return false;
    }
@@ -409,7 +386,7 @@ bool import_level(const LevelImportProps& props)
       return false;
    }
 
-   LevelImporter importer(props, std::move(*project_info), std::move(*glb_file), props.src_path);
+   LevelImporter importer(props, *project_md, std::move(*glb_file), props.src_path);
    if (!importer.import_scene()) {
       return false;
    }

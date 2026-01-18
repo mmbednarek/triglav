@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <format>
 #include <pwd.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -49,6 +50,11 @@ std::string sub_directory(const std::string_view path, const std::string_view di
 char path_seperator()
 {
    return '/';
+}
+
+bool make_directory(const Path& path)
+{
+   return ::mkdir(path.string().data(), 0777) == 0;
 }
 
 }// namespace triglav::io

@@ -33,6 +33,8 @@ TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(project, "Maintain project")
 TG_DECLARE_FLAG(should_list, "l", "list", "List known projects")
+TG_DECLARE_FLAG(discover, "d", "discover", "Discover projects from the current directory")
+TG_DECLARE_ARG(set_active, "a", "set-active", String, "Set active project")
 TG_END_COMMAND()
 
 TG_DECLARE_COMMAND(help, "Print help menu")

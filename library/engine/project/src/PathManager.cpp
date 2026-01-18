@@ -1,11 +1,12 @@
 #include "PathManager.hpp"
 
+#include "ProjectManager.hpp"
+
 #include "triglav/BuildInfo.hpp"
 #include "triglav/ResourcePathMap.hpp"
 #include "triglav/io/CommandLine.hpp"
-#include "triglav/project/ProjectManager.hpp"
 
-namespace triglav::resource {
+namespace triglav::project {
 
 using namespace name_literals;
 
@@ -24,10 +25,10 @@ std::string apply_constants(std::string input)
 
 void copy_mapping(const Name proj_name, std::vector<PathMapping>& out_mappings)
 {
-   const auto* metadata = project::ProjectManager::the().project_metadata(proj_name);
+   const auto* metadata = ProjectManager::the().project_metadata(proj_name);
    assert(metadata);
    for (const auto& src_mapping : metadata->resource_mapping) {
-      const io::Path base_path(project::ProjectManager::the().project_root(proj_name));
+      const io::Path base_path(ProjectManager::the().project_root(proj_name));
       const auto sys_path = apply_constants(src_mapping.system_path);
       out_mappings.emplace_back(src_mapping.engine_path, base_path.sub(sys_path));
    }
@@ -45,11 +46,11 @@ PathManager::PathManager()
 {
    const auto dst_mapping = m_path_mappings.access();
 
-   copy_mapping(project::engine_project(), dst_mapping.value());
-   copy_mapping(project::this_project(), dst_mapping.value());
+   copy_mapping(engine_project(), dst_mapping.value());
+   copy_mapping(this_project(), dst_mapping.value());
 
-   if (project::this_project() != project::game_project()) {
-      copy_mapping(project::game_project(), dst_mapping.value());
+   if (this_project() != game_project()) {
+      copy_mapping(game_project(), dst_mapping.value());
    }
 }
 
@@ -69,4 +70,15 @@ io::Path PathManager::translate_path(const ResourceName rc_name) const
    return {};
 }
 
-}// namespace triglav::resource
+std::pair<io::Path, ResourceName> PathManager::import_path(const ResourceType rc_type, const std::string_view path) const
+{
+   const auto* project_md = ProjectManager::the().project_metadata(game_project());
+   if (project_md == nullptr)
+      return {};
+
+   const auto sub_path = project_md->default_import_path(rc_type, path);
+   const auto rc_name = name_from_path(sub_path);
+   return {translate_path(name_from_path(sub_path)), rc_name};
+}
+
+}// namespace triglav::project

@@ -10,9 +10,8 @@
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
 #include "triglav/io/File.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/render_core/BuildContext.hpp"
-
-#include "triglav/resource/PathManager.hpp"
 #include "triglav/test_util/GTest.hpp"
 
 #include <cstring>
@@ -145,7 +144,7 @@ void dump_buffer(const std::span<const triglav::u8> buffer, const std::string_vi
 
 std::unique_ptr<triglav::io::IFile> open_buffer(const triglav::ResourceName name)
 {
-   const auto path = triglav::resource::PathManager::the().translate_path(name);
+   const auto path = triglav::project::PathManager::the().translate_path(name);
    auto expected_bitmap = triglav::io::open_file(path, triglav::io::FileMode::Read);
    assert(expected_bitmap.has_value());
    return std::move(*expected_bitmap);

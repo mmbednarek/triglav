@@ -3,14 +3,13 @@
 #include "LevelLoader.hpp"
 #include "MaterialLoader.hpp"
 #include "MeshLoader.hpp"
-#include "PathManager.hpp"
 #include "ShaderLoader.hpp"
 #include "TextureLoader.hpp"
 #include "TypefaceLoader.hpp"
 
 #include "triglav/TypeMacroList.hpp"
 #include "triglav/io/File.hpp"
-#include "triglav/project/Project.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <ryml.hpp>
@@ -169,7 +168,7 @@ void resolve_dependencies(std::set<ResourceName>& resource_list)
 {
    std::set<ResourceName> child_deps;
    for (const auto rc : resource_list) {
-      const auto path = PathManager::the().translate_path(rc);
+      const auto path = project::PathManager::the().translate_path(rc);
 
       rc.match([&]<typename TName>(TName /*typed_rc*/) {
          if constexpr (CollectsDependencies<Loader<TName::resource_type>>) {

@@ -97,7 +97,7 @@ std::unique_ptr<LoadContext> LoadContext::build_load_context(const std::set<Reso
    result.resize(loading_stage_count());
 
    for (const auto rc : resources) {
-      result[rc.loading_stage()].resource_list.emplace_back(rc, PathManager::the().translate_path(rc));
+      result[rc.loading_stage()].resource_list.emplace_back(rc, project::PathManager::the().translate_path(rc));
    }
 
    result.erase(std::ranges::remove_if(result, [](const ResourceStage& stage) { return stage.resource_list.empty(); }).begin(),

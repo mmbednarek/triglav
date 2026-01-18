@@ -1,5 +1,5 @@
 json_util_test_sources = files(
-    'DeserializationTest.cpp',
+    'SerializationTest.cpp',
     'Main.cpp',
 )
 

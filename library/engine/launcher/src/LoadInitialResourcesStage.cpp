@@ -2,8 +2,8 @@
 
 #include "Application.hpp"
 
+#include "triglav/project/PathManager.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
-#include "triglav/resource/PathManager.hpp"
 
 namespace triglav::launcher {
 
@@ -16,7 +16,7 @@ LoadInitialResourcesStage::LoadInitialResourcesStage(Application& app) :
    app.m_glyph_cache = std::make_unique<render_core::GlyphCache>(*app.m_gfx_device, *app.m_resource_manager);
 
    TG_CONNECT_OPT(*app.m_resource_manager, OnLoadedAssets, on_loaded_assets);
-   const auto proj_path = resource::PathManager::the().translate_path("engine/index.yaml"_rc);
+   const auto proj_path = project::PathManager::the().translate_path("engine/index.yaml"_rc);
    app.m_resource_manager->load_asset_list(proj_path);
 }
 

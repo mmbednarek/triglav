@@ -2,8 +2,8 @@
 
 #include "Application.hpp"
 
+#include "triglav/project/PathManager.hpp"
 #include "triglav/project/ProjectManager.hpp"
-#include "triglav/resource/PathManager.hpp"
 
 namespace triglav::launcher {
 using namespace name_literals;
@@ -13,7 +13,7 @@ LoadAllResourcesStage::LoadAllResourcesStage(Application& app) :
 {
    TG_CONNECT_OPT(*app.m_resource_manager, OnLoadedAssets, on_loaded_assets);
    const auto index_path = project::this_project() == "triglav_editor"_name ? "editor/index.yaml"_rc : "index.yaml"_rc;
-   const auto proj_path = resource::PathManager::the().translate_path(index_path);
+   const auto proj_path = project::PathManager::the().translate_path(index_path);
    app.m_resource_manager->load_asset_list(proj_path);
 }
 

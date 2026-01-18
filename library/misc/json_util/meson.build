@@ -1,8 +1,10 @@
 json_util_sources = files([
   'include/triglav/json_util/Deserialize.hpp',
   'include/triglav/json_util/JsonUtil.hpp',
+  'include/triglav/json_util/Serialize.hpp',
   'src/Deserialize.cpp',
   'src/JsonUtil.cpp',
+  'src/Serialize.cpp',
 ])
 
 json_util_deps = [core, io, meta, rapidjson]
