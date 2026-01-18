@@ -84,6 +84,7 @@ enum class TypeVariant
    Primitive,
    Class,
    Enum,
+   Array,// not coming from type but from property
 };
 
 struct Type
@@ -99,67 +100,120 @@ struct TypeRegisterer
    explicit TypeRegisterer(Type type);
 };
 
+class Ref;
+class ArrayRef;
+
+class PropertyRef
+{
+ public:
+   PropertyRef(void* handle, const Member* member);
+
+   template<typename T>
+   const T& get_ref() const
+   {
+      if (!(m_member->role_flags & MemberRole::Indirect)) {
+         return *reinterpret_cast<const T*>(static_cast<char*>(m_handle) + m_member->property.offset.offset);
+      }
+
+      if (m_member->role_flags & MemberRole::Reference) {
+         return *static_cast<const T*>(reinterpret_cast<const void* (*)(void*)>(m_member->property.indirect.get)(m_handle));
+      }
+
+      // shouldn't use getref on Indirect Non-reference property!
+      assert(false);
+      std::unreachable();
+   }
+
+   template<typename T>
+   T get() const
+   {
+      if (!(m_member->role_flags & MemberRole::Indirect)) {
+         return *reinterpret_cast<const T*>(static_cast<char*>(m_handle) + m_member->property.offset.offset);
+      }
+
+      if (m_member->role_flags & MemberRole::Reference) {
+         return *static_cast<const T*>(reinterpret_cast<const void* (*)(void*)>(m_member->property.indirect.get)(m_handle));
+      }
+
+      return reinterpret_cast<T (*)(void*)>(m_member->property.indirect.get)(m_handle);
+   }
+
+   template<typename T>
+   void set(T&& value) const
+   {
+      if (!(m_member->role_flags & MemberRole::Indirect)) {
+         *reinterpret_cast<T*>(static_cast<char*>(m_handle) + m_member->property.offset.offset) = std::forward<T>(value);
+         return;
+      }
+
+      if (m_member->role_flags & MemberRole::Reference) {
+         reinterpret_cast<void (*)(void*, const void*)>(m_member->property.indirect.set)(m_handle, &value);
+         return;
+      }
+
+      reinterpret_cast<void (*)(void*, T)>(m_member->property.indirect.set)(m_handle, std::forward<T>(value));
+   }
+
+   template<typename T>
+   void set(const T& value) const
+   {
+      if (!(m_member->role_flags & MemberRole::Indirect)) {
+         *reinterpret_cast<T*>(static_cast<char*>(m_handle) + m_member->property.offset.offset) = value;
+         return;
+      }
+
+      if (m_member->role_flags & MemberRole::Reference) {
+         reinterpret_cast<void (*)(void*, const void*)>(m_member->property.indirect.set)(m_handle, &value);
+         return;
+      }
+
+      reinterpret_cast<void (*)(void*, T)>(m_member->property.indirect.set)(m_handle, value);
+   }
+
+   [[nodiscard]] std::string_view identifier() const;
+   [[nodiscard]] Name name() const;
+   [[nodiscard]] Ref to_ref() const;
+   [[nodiscard]] Name type() const;
+   [[nodiscard]] bool is_array() const;
+   [[nodiscard]] ArrayRef to_array_ref() const;
+   [[nodiscard]] TypeVariant type_variant() const;
+
+ private:
+   void* m_handle;
+   const Member* m_member;
+};
+
 template<typename T>
 struct PropertyAccessor
 {
    PropertyAccessor& operator=(T&& value)
    {
-      if (this->set != nullptr) {
-         this->set(this->handle, std::forward<T>(value));
-      } else if (this->setref != nullptr) {
-         this->setref(this->handle, &value);
-      } else {
-         *static_cast<T*>(this->handle) = std::forward<T>(value);
-      }
+      m_reference.set(std::forward<T>(value));
       return *this;
    }
 
    PropertyAccessor& operator=(const T& value)
    {
-      if (this->set != nullptr) {
-         this->set(this->handle, value);
-      } else if (this->setref != nullptr) {
-         this->setref(this->handle, &value);
-      } else {
-         *static_cast<T*>(this->handle) = value;
-      }
+      m_reference.set(std::forward<T>(value));
       return *this;
    }
 
    operator T() const
    {
-      if (this->get != nullptr) {
-         return this->get(this->handle);
-      } else if (this->getref != nullptr) {
-         return *static_cast<const T*>(this->getref(this->handle));
-      } else {
-         return *static_cast<T*>(this->handle);
-      }
+      return m_reference.get<T>();
    }
 
    const T& operator*() const
    {
-      if (this->getref != nullptr) {
-         return *static_cast<const T*>(this->getref(this->handle));
-      } else {
-         return *static_cast<T*>(this->handle);
-      }
+      return m_reference.get_ref<T>();
    }
 
    const T* operator->() const
    {
-      if (this->getref != nullptr) {
-         return static_cast<const T*>(this->getref(this->handle));
-      } else {
-         return static_cast<T*>(this->handle);
-      }
+      return &m_reference.get_ref<T>();
    }
 
-   void* handle;
-   T (*get)(void* handle);
-   void (*set)(void* handle, T value);
-   const void* (*getref)(void* handle);
-   void (*setref)(void* handle, const void* value);
+   PropertyRef m_reference;
 };
 
 class Ref;
@@ -193,12 +247,15 @@ class ArrayRef
    }
 
    template<typename T>
-   [[nodiscard]] T& append()
+   [[nodiscard]] T& append() const
    {
       return *static_cast<T*>(m_prop_array.append(m_handle));
    }
 
-   [[nodiscard]] Ref append_ref();
+   [[nodiscard]] Ref at_ref(MemorySize index) const;
+   [[nodiscard]] Ref append_ref() const;
+   [[nodiscard]] Name type() const;
+   [[nodiscard]] TypeVariant type_variant() const;
 
  private:
    void* m_handle;
@@ -234,20 +291,7 @@ class Ref
    template<typename TProp>
    PropertyAccessor<TProp> property(const Name name) const
    {
-      const auto* member = this->find_member(name);
-      assert(member != nullptr && member->role_flags & MemberRole::Property);
-      if (member->role_flags & MemberRole::Indirect) {
-         if (member->role_flags & MemberRole::Reference) {
-            return PropertyAccessor<TProp>{m_handle, nullptr, nullptr,
-                                           reinterpret_cast<const void* (*)(void*)>(member->property.indirect.get),
-                                           reinterpret_cast<void (*)(void*, const void*)>(member->property.indirect.set)};
-         } else {
-            return PropertyAccessor<TProp>{m_handle, reinterpret_cast<TProp (*)(void*)>(member->property.indirect.get),
-                                           reinterpret_cast<void (*)(void*, TProp)>(member->property.indirect.set)};
-         }
-      }
-
-      return PropertyAccessor<TProp>{static_cast<char*>(m_handle) + member->property.offset.offset, nullptr, nullptr};
+      return PropertyAccessor<TProp>{this->property_ref(name)};
    }
 
    template<typename TVisitor>
@@ -255,14 +299,14 @@ class Ref
    {
       for (const auto& mem : m_members) {
          if (mem.role_flags & MemberRole::Property) {
-            visitor(mem.identifier, mem.property.type_name);
+            visitor(PropertyRef{m_handle, &mem});
          }
       }
    }
 
    [[nodiscard]] bool is_array_property(Name name) const;
 
-   [[nodiscard]] Ref property_ref(Name name) const;
+   [[nodiscard]] PropertyRef property_ref(Name name) const;
    [[nodiscard]] ArrayRef property_array_ref(Name name) const;
 
    [[nodiscard]] Name type() const;
@@ -283,12 +327,13 @@ class Box : public Ref
 {
  public:
    Box(void* handle, Name name, std::span<Member> members);
+
    ~Box();
 
    Box(const Box& other);
+
    Box& operator=(const Box& other);
 };
-
 }// namespace triglav::meta
 
 #define TG_META_JOIN_NS(x, y) x::y

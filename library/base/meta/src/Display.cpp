@@ -42,7 +42,7 @@ void display_value(const T& value, StringWriter& writer)
 }
 
 template<typename T>
-void display_array(const ArrayRef& values, StringWriter& writer)
+void display_array_val(const ArrayRef& values, StringWriter& writer)
 {
    writer.print("[");
 
@@ -60,26 +60,12 @@ void display_array(const ArrayRef& values, StringWriter& writer)
    writer.print("]");
 }
 
-void display_primitive(const Ref& ref, const Name prop_name, const Name ty, StringWriter& writer)
+void display_array(const ArrayRef& ref, const Name ty, StringWriter& writer)
 {
-   if (ref.is_array_property(prop_name)) {
-      switch (ty) {
-#define TG_META_PRIMITIVE(iden, name)                                 \
-   case make_name_id(TG_STRING(name)):                                \
-      display_array<name>(ref.property_array_ref(prop_name), writer); \
-      break;
-         TG_META_PRIMITIVE_LIST
-#undef TG_META_PRIMITIVE
-      default:
-         writer.print("unknown");
-      }
-      return;
-   }
-
    switch (ty) {
-#define TG_META_PRIMITIVE(iden, name)                                          \
-   case make_name_id(TG_STRING(name)):                                         \
-      display_value(static_cast<name>(ref.property<name>(prop_name)), writer); \
+#define TG_META_PRIMITIVE(iden, name)       \
+   case make_name_id(TG_STRING(name)):      \
+      display_array_val<name>(ref, writer); \
       break;
       TG_META_PRIMITIVE_LIST
 #undef TG_META_PRIMITIVE
@@ -88,9 +74,23 @@ void display_primitive(const Ref& ref, const Name prop_name, const Name ty, Stri
    }
 }
 
-void display_enum(const Ref& ref, const Name prop_name, const Type& type_info, StringWriter& writer)
+void display_primitive(const PropertyRef& ref, const Name ty, StringWriter& writer)
 {
-   const auto value = ref.property<int>(prop_name);
+   switch (ty) {
+#define TG_META_PRIMITIVE(iden, name)                            \
+   case make_name_id(TG_STRING(name)):                           \
+      display_value(static_cast<name>(ref.get<name>()), writer); \
+      break;
+      TG_META_PRIMITIVE_LIST
+#undef TG_META_PRIMITIVE
+   default:
+      writer.print("unknown");
+   }
+}
+
+void display_enum(const PropertyRef& ref, const Type& type_info, StringWriter& writer)
+{
+   const auto value = ref.get<int>();
    const auto it = std::ranges::find_if(type_info.members, [&](const Member& mem) {
       return mem.role_flags & MemberRole::EnumValue && mem.enum_value.underlying_value == value;
    });
@@ -99,25 +99,34 @@ void display_enum(const Ref& ref, const Name prop_name, const Type& type_info, S
    }
 }
 
+void display_class(const Ref& ref, StringWriter& writer, int depth);
+
+void display_property_ref(const PropertyRef& ref, StringWriter& writer, const int depth)
+{
+   const auto& info = TypeRegistry::the().type_info(ref.type());
+
+   for (int i = 0; i < depth + 1; ++i) {
+      writer.print(" ");
+   }
+   writer.print("{}: ", ref.identifier());
+
+   if (ref.is_array()) {
+      display_array(ref.to_array_ref(), ref.type(), writer);
+   } else if (info.variant == TypeVariant::Class) {
+      display_class(ref.to_ref(), writer, depth + 1);
+   } else if (info.variant == TypeVariant::Enum) {
+      display_enum(ref, info, writer);
+   } else {
+      display_primitive(ref, ref.type(), writer);
+   }
+
+   writer.print("\n");
+}
+
 void display_class(const Ref& ref, StringWriter& writer, const int depth)
 {
    writer.print("{{\n");
-   ref.visit_properties([&](const std::string_view name, const Name type_name) {
-      const auto& info = TypeRegistry::the().type_info(type_name);
-
-      for (int i = 0; i < depth + 1; ++i) {
-         writer.print(" ");
-      }
-      writer.print("{}: ", name);
-      if (info.variant == TypeVariant::Class) {
-         display_class(ref.property_ref(make_name_id(name)), writer, depth + 1);
-      } else if (info.variant == TypeVariant::Enum) {
-         display_enum(ref, make_name_id(name), info, writer);
-      } else {
-         display_primitive(ref, make_name_id(name), type_name, writer);
-      }
-      writer.print("\n");
-   });
+   ref.visit_properties([&](const PropertyRef& property_ref) { display_property_ref(property_ref, writer, depth); });
    for (int i = 0; i < depth; ++i) {
       writer.print(" ");
    }

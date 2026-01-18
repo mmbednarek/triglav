@@ -1,7 +1,7 @@
 #include "GameInstance.hpp"
 
+#include "../../../library/engine/project/include/triglav/project/PathManager.hpp"
 #include "triglav/io/CommandLine.hpp"
-#include "triglav/resource/PathManager.hpp"
 
 namespace demo {
 
@@ -9,7 +9,7 @@ using triglav::desktop::ISurface;
 using triglav::desktop::Key;
 using triglav::desktop::MouseButton;
 using triglav::desktop::WindowAttribute;
-using triglav::resource::PathManager;
+using triglav::project::PathManager;
 namespace gapi = triglav::graphics_api;
 
 using namespace triglav::name_literals;
@@ -111,12 +111,8 @@ gapi::DevicePickStrategy device_pick_strategy()
 
 gapi::DeviceFeatureFlags requested_features(const gapi::Instance& instance)
 {
-   if (triglav::io::CommandLine::the().is_enabled("noRayTracing"_name))
-      return {};
-
-   if (instance.are_features_supported(gapi::DeviceFeature::RayTracing)) {
+   if (triglav::io::CommandLine::the().is_enabled("rayTracing"_name) && instance.are_features_supported(gapi::DeviceFeature::RayTracing))
       return gapi::DeviceFeature::RayTracing;
-   }
 
    return {};
 }

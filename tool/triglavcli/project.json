@@ -1,0 +1,8 @@
+{
+  "name": "Triglav Engine CLI Tool",
+  "identifier": "triglav_cli",
+  "type": "Tool",
+  "engine": "triglav",
+  "resource_mapping": [],
+  "import_settings": {}
+}

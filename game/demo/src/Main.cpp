@@ -1,5 +1,6 @@
 #include "GameInstance.hpp"
 
+#include "../../../library/engine/project/include/triglav/project/PathManager.hpp"
 #include "triglav/BuildInfo.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
@@ -8,13 +9,12 @@
 #include "triglav/io/Logging.hpp"
 #include "triglav/project/Name.hpp"
 #include "triglav/project/ProjectManager.hpp"
-#include "triglav/resource/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
 using triglav::io::CommandLine;
-using triglav::resource::PathManager;
+using triglav::project::PathManager;
 using triglav::threading::ThreadPool;
 
 using namespace triglav::name_literals;

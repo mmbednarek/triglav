@@ -1,7 +1,9 @@
 #include "triglav/test_util/GTest.hpp"
 
+#include "triglav/io/DynamicWriter.hpp"
 #include "triglav/io/StringReader.hpp"
 #include "triglav/json_util/Deserialize.hpp"
+#include "triglav/json_util/Serialize.hpp"
 #include "triglav/meta/Meta.hpp"
 
 struct Contained
@@ -61,7 +63,7 @@ TG_META_ENUM_VALUE(Sunday)
 TG_META_ENUM_END
 #undef TG_TYPE
 
-TEST(JsonTest, Basic)
+TEST(JsonTest, Deserilization)
 {
    static constexpr auto json_string = R"(
 {
@@ -85,4 +87,47 @@ TEST(JsonTest, Basic)
    ASSERT_EQ(basic_struct.weekday, Weekday::Friday);
    const std::vector<std::string> expected_colors{"white", "red", "blue"};
    ASSERT_EQ(basic_struct.colors, expected_colors);
+}
+
+TEST(JsonTest, Serialization)
+{
+   BasicStruct basic_struct{};
+   basic_struct.foo = 25;
+   basic_struct.bar = "lorem ipsum";
+   basic_struct.contained.value = 12.37;
+   basic_struct.weekday = Weekday::Friday;
+   basic_struct.colors = {"white", "red", "blue"};
+
+   // standard
+   {
+      triglav::io::DynamicWriter writer(2048);
+      ASSERT_TRUE(triglav::json_util::serialize(basic_struct.to_meta_ref(), writer));
+
+      static constexpr auto expected_string =
+         R"({"foo":25,"bar":"lorem ipsum","contained":{"value":12.37},"weekday":"Friday","colors":["white","red","blue"]})";
+      const std::string result{reinterpret_cast<const char*>(writer.data()), writer.size()};
+      ASSERT_EQ(expected_string, result);
+   }
+
+   // pretty
+   {
+      triglav::io::DynamicWriter writer(2048);
+      ASSERT_TRUE(triglav::json_util::serialize(basic_struct.to_meta_ref(), writer, true));
+
+      static constexpr auto expected_string = R"({
+  "foo": 25,
+  "bar": "lorem ipsum",
+  "contained": {
+    "value": 12.37
+  },
+  "weekday": "Friday",
+  "colors": [
+    "white",
+    "red",
+    "blue"
+  ]
+})";
+      const std::string result{reinterpret_cast<const char*>(writer.data()), writer.size()};
+      ASSERT_EQ(expected_string, result);
+   }
 }

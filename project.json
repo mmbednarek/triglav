@@ -11,5 +11,11 @@
       "engine_path": "shader/",
       "system_path": "build/{BUILD_PROFILE}/shader"
     }
-  ]
+  ],
+  "import_settings": {
+    "texture_path": "engine/texture/{basename}.tex",
+    "mesh_path": "engine/mesh/{basename}.mesh",
+    "level_path": "engine/level/{basename}.level",
+    "material_path": "engine/material/{basename}.mat"
+  }
 }

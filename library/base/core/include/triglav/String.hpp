@@ -44,9 +44,15 @@ class StringView
    {
    }
 
-   explicit StringView(const char* string) :
+   StringView(const char* string) :
        m_data(string),
        m_size(std::strlen(string))
+   {
+   }
+
+   StringView(const std::string& str) :
+       m_data(str.data()),
+       m_size(str.size())
    {
    }
 

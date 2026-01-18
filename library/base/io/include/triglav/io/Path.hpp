@@ -29,6 +29,7 @@ class Path
 [[nodiscard]] Result<Path> home_directory();
 std::string sub_directory(std::string_view path, std::string_view directory);
 char path_seperator();
+[[nodiscard]] bool make_directory(const Path& path);
 
 namespace path_literals {
 

@@ -15,8 +15,8 @@
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/project/Name.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
-#include "triglav/resource/PathManager.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/threading/Scheduler.hpp"
 #include "triglav/threading/ThreadPool.hpp"
@@ -38,8 +38,8 @@ using triglav::desktop_ui::PopupManager;
 using triglav::desktop_ui::TREE_ROOT;
 using triglav::font::FontManger;
 using triglav::io::CommandLine;
+using triglav::project::PathManager;
 using triglav::render_core::GlyphCache;
-using triglav::resource::PathManager;
 using triglav::resource::ResourceManager;
 using triglav::threading::ThreadPool;
 using triglav::ui_core::HorizontalAlignment;

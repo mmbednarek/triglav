@@ -24,17 +24,6 @@ struct ResourcePathMapping
    std::string system_path;
 };
 
-struct ProjectMetadata
-{
-   TG_META_STRUCT_BODY(ProjectMetadata)
-
-   std::string name;
-   std::string identifier;
-   ProjectType type;
-   std::string engine;
-   std::vector<ResourcePathMapping> resource_mapping;
-};
-
 struct ImportSettings
 {
    TG_META_STRUCT_BODY(ImportSettings)
@@ -45,21 +34,29 @@ struct ImportSettings
    std::string material_path;
 };
 
+struct ProjectMetadata
+{
+   TG_META_STRUCT_BODY(ProjectMetadata)
+
+   std::string name;
+   std::string identifier;
+   ProjectType type;
+   std::string engine;
+   std::vector<ResourcePathMapping> resource_mapping;
+   ImportSettings import_settings;
+
+   [[nodiscard]] std::string default_import_path(ResourceType res_type, std::string_view basename) const;
+};
+
 struct ProjectInfo
 {
    TG_META_STRUCT_BODY(ProjectInfo)
 
    std::string name;
-   std::string full_name;
    std::string path;
-   ImportSettings import_settings;
 
    // meta: hidden
    Name name_id;
-
-   [[nodiscard]] io::Path system_path(std::string_view resource_path) const;
-   [[nodiscard]] io::Path content_path(std::string_view resource_path) const;
-   [[nodiscard]] std::string default_import_path(ResourceType res_type, std::string_view basename) const;
 };
 
 struct ProjectConfig
@@ -69,14 +66,5 @@ struct ProjectConfig
    std::string active_project{};
    std::vector<ProjectInfo> projects{};
 };
-
-[[nodiscard]] std::optional<ProjectConfig> load_project_config();
-[[nodiscard]] std::optional<ProjectInfo> load_active_project_info();
-[[nodiscard]] std::optional<ProjectInfo> load_current_project_info();
-[[nodiscard]] std::optional<ProjectInfo> load_engine_project_info();
-[[nodiscard]] std::optional<ProjectInfo> load_project_info(std::string_view proj_name);
-[[nodiscard]] std::optional<ProjectMetadata> load_project_metadata(std::string_view name);
-[[nodiscard]] std::optional<ProjectMetadata> load_current_project_metadata();
-[[nodiscard]] std::optional<ProjectMetadata> load_engine_metadata();
 
 }// namespace triglav::project

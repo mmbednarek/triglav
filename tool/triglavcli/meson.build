@@ -11,8 +11,6 @@ triglavcli_sources = files([
                                'src/MeshImport.hpp',
                                'src/ProjectHandler.cpp',
                                'src/ReimportHandler.cpp',
-                               'src/ResourceList.cpp',
-                               'src/ResourceList.hpp',
                                'src/TextureImport.hpp',
                                'src/TextureImport.cpp',
                            ])

@@ -27,7 +27,7 @@ using namespace name_literals;
 
 void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src);
 
-void deserialize_array_class(meta::ArrayRef& dst, const rapidjson::Value& src)
+void deserialize_array_class(const meta::ArrayRef& dst, const rapidjson::Value& src)
 {
    const auto& src_arr = src.GetArray();
    for ([[maybe_unused]] const auto& val : src_arr) {
@@ -36,16 +36,16 @@ void deserialize_array_class(meta::ArrayRef& dst, const rapidjson::Value& src)
    }
 }
 
-void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjson::Value& src)
+void deserialize_array(const meta::ArrayRef& dst, const Name type_name, const rapidjson::Value& src)
 {
    const auto& src_arr = src.GetArray();
    switch (type_name) {
-#define TG_META_PRIMITIVE(iden, ty_name)                 \
-   case make_name_id(TG_STRING(ty_name)): {              \
-      for ([[maybe_unused]] const auto& val : src_arr) { \
-         dst.append<ty_name>() = static_cast<ty_name>(TG_JSON_GETTER(iden));   \
-      }                                                  \
-      break;                                             \
+#define TG_META_PRIMITIVE(iden, ty_name)                                     \
+   case make_name_id(TG_STRING(ty_name)): {                                  \
+      for ([[maybe_unused]] const auto& val : src_arr) {                     \
+         dst.append<ty_name>() = static_cast<ty_name>(TG_JSON_GETTER(iden)); \
+      }                                                                      \
+      break;                                                                 \
    }
       TG_META_PRIMITIVE_LIST
 
@@ -55,21 +55,12 @@ void deserialize_array(meta::ArrayRef& dst, const Name type_name, const rapidjso
    }
 }
 
-void deserialize_primitive_value(const meta::Ref& dst, const std::string_view prop_name, const Name type_name, const rapidjson::Value& src)
+void deserialize_primitive_value(const meta::PropertyRef& dst, const rapidjson::Value& val)
 {
-   const auto prop_name_id = make_name_id(prop_name);
-   const auto& val = src[prop_name.data()];
-
-   if (dst.is_array_property(prop_name_id)) {
-      auto dst_arr = dst.property_array_ref(prop_name_id);
-      deserialize_array(dst_arr, type_name, val);
-      return;
-   }
-
-   switch (type_name) {
-#define TG_META_PRIMITIVE(iden, ty_name)                          \
-   case make_name_id(TG_STRING(ty_name)):                         \
-      dst.property<ty_name>(prop_name_id) = static_cast<ty_name>(TG_JSON_GETTER(iden)); \
+   switch (dst.type()) {
+#define TG_META_PRIMITIVE(iden, ty_name)                            \
+   case make_name_id(TG_STRING(ty_name)):                           \
+      dst.set<ty_name>(static_cast<ty_name>(TG_JSON_GETTER(iden))); \
       break;
 
       TG_META_PRIMITIVE_LIST
@@ -80,7 +71,7 @@ void deserialize_primitive_value(const meta::Ref& dst, const std::string_view pr
    }
 }
 
-void deserialize_enum_value(const meta::Ref& dst, const Name property_name, const meta::Type& type, const rapidjson::Value& src)
+void deserialize_enum_value(const meta::PropertyRef& dst, const meta::Type& type, const rapidjson::Value& src)
 {
    if (src.IsString()) {
       const auto value_name = make_name_id(src.GetString());
@@ -89,40 +80,45 @@ void deserialize_enum_value(const meta::Ref& dst, const Name property_name, cons
             continue;
 
          if (mem.name == value_name) {
-            dst.property<int>(property_name) = mem.enum_value.underlying_value;
+            dst.set<int>(mem.enum_value.underlying_value);
             return;
          }
       }
    } else if (src.IsInt()) {
-      dst.property<int>(property_name) = src.GetInt();
+      dst.set<int>(src.GetInt());
    }
 }
 
 void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src)
 {
-   dst.visit_properties([&](const std::string_view name, const Name type_name) {
-      if (!src.HasMember(name.data()))
+   dst.visit_properties([&](const meta::PropertyRef& ref) {
+      if (!src.HasMember(ref.identifier().data()))
          return;
-      
-      const auto& info = meta::TypeRegistry::the().type_info(type_name);
-      const auto name_id = make_name_id(name);
 
-      switch (info.variant) {
-      case meta::TypeVariant::Primitive:
-         deserialize_primitive_value(dst, name, type_name, src);
-         break;
-      case meta::TypeVariant::Class: {
-         if (dst.is_array_property(name_id)) {
-            auto dst_arr = dst.property_array_ref(name_id);
-            deserialize_array_class(dst_arr, src[name.data()]);
+      const auto& info = meta::TypeRegistry::the().type_info(ref.type());
+
+      if (ref.is_array()) {
+         if (info.variant == meta::TypeVariant::Class) {
+            deserialize_array_class(ref.to_array_ref(), src[ref.identifier().data()]);
          } else {
-            deserialize_value(dst.property_ref(name_id), src[name.data()]);
+            deserialize_array(ref.to_array_ref(), ref.type(), src[ref.identifier().data()]);
          }
-         break;
-      }
-      case meta::TypeVariant::Enum:
-         deserialize_enum_value(dst, name_id, info, src[name.data()]);
-         break;
+
+      } else {
+         switch (info.variant) {
+         case meta::TypeVariant::Primitive:
+            deserialize_primitive_value(ref, src[ref.identifier().data()]);
+            break;
+         case meta::TypeVariant::Class: {
+            deserialize_value(ref.to_ref(), src[ref.identifier().data()]);
+            break;
+         }
+         case meta::TypeVariant::Enum:
+            deserialize_enum_value(ref, info, src[ref.identifier().data()]);
+            break;
+         default:
+            break;
+         }
       }
    });
 }

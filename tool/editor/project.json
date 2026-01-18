@@ -12,5 +12,11 @@
       "engine_path": "editor",
       "system_path": "content"
     }
-  ]
+  ],
+  "import_settings": {
+    "texture_path": "editor/texture/{basename}.tex",
+    "mesh_path": "editor/mesh/{basename}.mesh",
+    "level_path": "editor/level/{basename}.level",
+    "material_path": "editor/material/{basename}.mat"
+  }
 }

@@ -11,17 +11,26 @@ It supports a PBR material system and screen space ambient occlusion.
 ## Building From Source
 
 - Install Conan as described here <https://docs.conan.io/2/installation.html>
-- Install Meson as descibed here <https://mesonbuild.com/Quick-guide.html>.
+- Install Meson as described here <https://mesonbuild.com/Quick-guide.html>.
 - Clone the source code.
-- Run `conan install . --build=missing -of buildDir`.
-- Run `conan build . -of buildDir`.
+- Configure conan profile referred to as {PROFILE} in the following commands.
+- Run `conan build . -of build/{PROFILE} -pr:a {PROFILE} --build=missing`.
+- Run `./build/{PROFILE}/tool/triglavcli/triglavcli project --discover --set-active demo`
 
 ## Running the demo
 
-Once the demo is built you can start it with the following command:
+Once the demo is built, you can start it with the following command:
 
 ```
-./buildDir/game/demo/demo -buildDir=buildDir -contentDir=game/demo/content
+./build/{PROFILE}/game/demo/demo
+```
+
+## Running the editor
+
+Once the demo is built, you can start it with the following command:
+
+```
+./build/{PROFILE}/tool/editor/editor
 ```
 
 ## Movement

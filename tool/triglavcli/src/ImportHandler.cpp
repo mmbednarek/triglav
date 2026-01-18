@@ -2,16 +2,14 @@
 
 #include "LevelImport.hpp"
 #include "MeshImport.hpp"
-#include "ResourceList.hpp"
 #include "TextureImport.hpp"
+#include "triglav/ResourcePathMap.hpp"
 
 #include "triglav/asset/Asset.hpp"
 #include "triglav/gltf/Glb.hpp"
-#include "triglav/gltf/MeshLoad.hpp"
-#include "triglav/project/Project.hpp"
-#include "triglav/world/Level.hpp"
+#include "triglav/project/PathManager.hpp"
+#include "triglav/project/ProjectManager.hpp"
 
-#include <algorithm>
 #include <format>
 #include <iostream>
 
@@ -21,7 +19,8 @@ using namespace name_literals;
 
 namespace {
 
-std::string create_dst_resource_path(const project::ProjectInfo& project_info, const io::Path& src_path, const ResourceType res_type)
+std::string create_dst_resource_path(const project::ProjectMetadata& project_metadata, const io::Path& src_path,
+                                     const ResourceType res_type)
 {
    auto basename = src_path.basename();
    auto dot_at = basename.find_last_of('.');
@@ -29,7 +28,7 @@ std::string create_dst_resource_path(const project::ProjectInfo& project_info, c
       basename = basename.substr(0, dot_at);
    }
 
-   return project_info.default_import_path(res_type, basename);
+   return project_metadata.default_import_path(res_type, basename);
 }
 
 std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_view purpose_str)
@@ -64,26 +63,27 @@ std::optional<asset::TexturePurpose> parse_texture_purpose(const std::string_vie
 
 ExitStatus handle_level_from_glb(const CmdArgs_import& args)
 {
-   auto project_info = project::load_active_project_info();
-   if (!project_info.has_value()) {
+   const auto project_info = project::ProjectManager::the().active_project_info();
+   if (project_info == nullptr) {
       std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
-   auto sub_path = args.output_path.empty()
-                      ? create_dst_resource_path(*project_info, io::Path{args.positional_args[0]}, ResourceType::Level)
-                      : args.output_path;
-
-   const LevelImportProps import_props{
-      .src_path = io::Path{args.positional_args[0]},
-      .dst_path = project_info->content_path(sub_path),
-      .should_override = args.should_override,
-   };
-   if (!import_level(import_props)) {
+   const auto project_md = project::ProjectManager::the().active_project_metadata();
+   if (project_md == nullptr) {
+      std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
-   if (!add_resource_to_index(sub_path)) {
+   auto sub_path = args.output_path.empty() ? create_dst_resource_path(*project_md, io::Path{args.positional_args[0]}, ResourceType::Level)
+                                            : args.output_path;
+
+   const LevelImportProps import_props{
+      .src_path = io::Path{args.positional_args[0]},
+      .dst_path = project::PathManager::the().translate_path(name_from_path(sub_path)),
+      .should_override = args.should_override,
+   };
+   if (!import_level(import_props)) {
       return EXIT_FAILURE;
    }
 
@@ -92,26 +92,22 @@ ExitStatus handle_level_from_glb(const CmdArgs_import& args)
 
 ExitStatus handle_mesh_import(const CmdArgs_import& args)
 {
-   auto project_info = project::load_active_project_info();
-   if (!project_info.has_value()) {
+   const auto project_md = project::ProjectManager::the().active_project_metadata();
+   if (project_md == nullptr) {
       std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
    const auto sub_path = args.output_path.empty()
-                            ? create_dst_resource_path(*project_info, io::Path{args.positional_args[0]}, ResourceType::Mesh)
+                            ? create_dst_resource_path(*project_md, io::Path{args.positional_args[0]}, ResourceType::Mesh)
                             : args.output_path;
 
    const MeshImportProps props{
       .src_path = io::Path{args.positional_args[0]},
-      .dst_path = project_info->content_path(sub_path),
+      .dst_path = project::PathManager::the().translate_path(name_from_path(sub_path)),
       .should_override = args.should_override,
    };
    if (!import_mesh(props)) {
-      return EXIT_FAILURE;
-   }
-
-   if (!add_resource_to_index(sub_path)) {
       return EXIT_FAILURE;
    }
 
@@ -177,16 +173,16 @@ std::optional<asset::SamplerProperties> parse_sampler_properties(const std::vect
 
 ExitStatus handle_texture_import(const CmdArgs_import& args)
 {
-   auto project_info = project::load_active_project_info();
-   if (!project_info.has_value()) {
+   const auto project_md = project::ProjectManager::the().active_project_metadata();
+   if (project_md == nullptr) {
       std::print(std::cerr, "triglav-cli: No active project found\n");
       return EXIT_FAILURE;
    }
 
    auto sub_path = args.output_path.empty()
-                      ? create_dst_resource_path(*project_info, io::Path{args.positional_args[0]}, ResourceType::Texture)
+                      ? create_dst_resource_path(*project_md, io::Path{args.positional_args[0]}, ResourceType::Texture)
                       : args.output_path;
-   auto dst_path = project_info->content_path(sub_path);
+   auto dst_path = project::PathManager::the().translate_path(name_from_path(sub_path));
 
    const auto purpose = parse_texture_purpose(args.texture_purpose);
    if (!purpose.has_value()) {
@@ -200,7 +196,7 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
 
    TextureImportProps import_props{
       .src_path = io::Path{args.positional_args[0]},
-      .dst_path = project_info->content_path(sub_path),
+      .dst_path = project::PathManager::the().translate_path(name_from_path(sub_path)),
       .purpose = purpose.value(),
       .sampler_properties = *sampler_props,
       .should_compress = args.should_compress,
@@ -208,10 +204,6 @@ ExitStatus handle_texture_import(const CmdArgs_import& args)
       .should_override = args.should_override,
    };
    if (!import_texture(import_props)) {
-      return EXIT_FAILURE;
-   }
-
-   if (!add_resource_to_index(sub_path)) {
       return EXIT_FAILURE;
    }
 

@@ -4,10 +4,9 @@
 #include "triglav/io/Path.hpp"
 #include "triglav/threading/SafeAccess.hpp"
 
-#include <optional>
 #include <vector>
 
-namespace triglav::resource {
+namespace triglav::project {
 
 struct PathMapping
 {
@@ -21,6 +20,7 @@ class PathManager
    PathManager();
 
    [[nodiscard]] io::Path translate_path(ResourceName rc_name) const;
+   [[nodiscard]] std::pair<io::Path, ResourceName> import_path(ResourceType rc_type, std::string_view path) const;
 
    [[nodiscard]] static PathManager& the();
 
@@ -28,4 +28,4 @@ class PathManager
    threading::SafeReadWriteAccess<std::vector<PathMapping>> m_path_mappings;
 };
 
-}// namespace triglav::resource
+}// namespace triglav::project
