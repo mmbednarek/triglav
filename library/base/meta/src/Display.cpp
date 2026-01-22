@@ -60,6 +60,49 @@ void display_array_val(const ArrayRef& values, StringWriter& writer)
    writer.print("]");
 }
 
+void display_ref(const Ref& ref, StringWriter& writer)
+{
+   switch (ref.type()) {
+#define TG_META_PRIMITIVE(iden, name)     \
+   case make_name_id(TG_STRING(name)):    \
+      writer.print("{}", ref.as<name>()); \
+      break;
+      TG_META_PRIMITIVE_LIST
+#undef TG_META_PRIMITIVE
+   default:
+      writer.print("unknown");
+   }
+}
+
+void display_optional(const OptionalRef& optional_ref, StringWriter& writer)
+{
+   if (!optional_ref.has_value()) {
+      writer.print("none");
+      return;
+   }
+   display_ref(optional_ref.get_ref(), writer);
+}
+
+void display_map(const MapRef& map_ref, StringWriter& writer)
+{
+   writer.print("{{");
+   bool is_first = true;
+   Ref key = map_ref.first_key_ref();
+   while (!key.is_nullptr()) {
+      if (!is_first) {
+         writer.print(", ");
+      } else {
+         is_first = false;
+      }
+      display_ref(key, writer);
+      writer.print(": ");
+
+      display_ref(map_ref.get_ref(key), writer);
+      key = map_ref.next_key_ref(key);
+   }
+   writer.print("}}");
+}
+
 void display_array(const ArrayRef& ref, const Name ty, StringWriter& writer)
 {
    switch (ty) {
@@ -112,6 +155,10 @@ void display_property_ref(const PropertyRef& ref, StringWriter& writer, const in
 
    if (ref.is_array()) {
       display_array(ref.to_array_ref(), ref.type(), writer);
+   } else if (ref.is_map()) {
+      display_map(ref.to_map_ref(), writer);
+   } else if (ref.is_optional()) {
+      display_optional(ref.to_optional_ref(), writer);
    } else if (info.variant == TypeVariant::Class) {
       display_class(ref.to_ref(), writer, depth + 1);
    } else if (info.variant == TypeVariant::Enum) {

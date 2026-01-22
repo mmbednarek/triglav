@@ -9,7 +9,7 @@ gltf_sources = files([
   'src/MeshLoad.cpp',
 ])
 
-gltf_deps_pub = [core, io, geometry]
+gltf_deps_pub = [core, io, geometry, meta]
 gltf_deps_priv = [core, json_util, io, geometry, render_objects]
 gltf_incl = include_directories(['include', 'include/triglav/gltf'])
 

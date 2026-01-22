@@ -3,8 +3,8 @@
 #include "triglav/Int.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/io/Stream.hpp"
+#include "triglav/meta/Meta.hpp"
 
-#include <map>
 #include <optional>
 #include <string>
 #include <vector>
@@ -15,18 +15,21 @@ constexpr u32 g_invalid_id = ~0u;
 
 struct Asset
 {
+   TG_META_STRUCT_BODY(Asset)
    std::string generator;
    std::string version;
 };
 
 struct Scene
 {
+   TG_META_STRUCT_BODY(Scene)
    std::vector<u32> nodes;
    std::optional<std::string> name;
 };
 
 struct Node
 {
+   TG_META_STRUCT_BODY(Node)
    std::vector<u32> children;
    std::optional<Matrix4x4> matrix;
    std::optional<u32> mesh;

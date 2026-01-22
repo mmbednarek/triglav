@@ -42,21 +42,68 @@ class OutputBuffer
    io::IWriter& m_writer;
 };
 
+template<typename TWriter>
+void write_vector2(TWriter& writer, Vector2 vec)
+{
+   writer.StartArray();
+   writer.Double(vec.x);
+   writer.Double(vec.y);
+   writer.EndArray();
+}
+
+template<typename TWriter>
+void write_vector3(TWriter& writer, Vector3 vec)
+{
+   writer.StartArray();
+   writer.Double(vec.x);
+   writer.Double(vec.y);
+   writer.Double(vec.z);
+   writer.EndArray();
+}
+
+template<typename TWriter>
+void write_vector4(TWriter& writer, Vector4 vec)
+{
+   writer.StartArray();
+   writer.Double(vec.x);
+   writer.Double(vec.y);
+   writer.Double(vec.z);
+   writer.Double(vec.w);
+   writer.EndArray();
+}
+
+template<typename TWriter>
+void write_matrix4x4(TWriter& writer, Matrix4x4 mat)
+{
+   writer.StartArray();
+   for (int i = 0; i < 4; ++i) {
+      writer.Double(mat[i].x);
+      writer.Double(mat[i].y);
+      writer.Double(mat[i].z);
+      writer.Double(mat[i].w);
+   }
+   writer.EndArray();
+}
+
 #define TG_JSON_SETTER_char(value) writer.Int(static_cast<int>(value))
 #define TG_JSON_SETTER_int(value) writer.Int(value)
-#define TG_JSON_SETTER_i8(value) writer.Int(static_cast<int>(value))
-#define TG_JSON_SETTER_u8(value) writer.Uint(static_cast<u32>(value))
-#define TG_JSON_SETTER_i16(value) writer.Int(static_cast<int>(value))
-#define TG_JSON_SETTER_u16(value) writer.Uint(static_cast<u32>(value))
-#define TG_JSON_SETTER_i32(value) writer.Int(value)
-#define TG_JSON_SETTER_u32(value) writer.Uint(value)
-#define TG_JSON_SETTER_i64(value) writer.Int64(value)
-#define TG_JSON_SETTER_u64(value) writer.Uint64(value)
+#define TG_JSON_SETTER_triglav__i8(value) writer.Int(static_cast<int>(value))
+#define TG_JSON_SETTER_triglav__u8(value) writer.Uint(static_cast<u32>(value))
+#define TG_JSON_SETTER_triglav__i16(value) writer.Int(static_cast<int>(value))
+#define TG_JSON_SETTER_triglav__u16(value) writer.Uint(static_cast<u32>(value))
+#define TG_JSON_SETTER_triglav__i32(value) writer.Int(value)
+#define TG_JSON_SETTER_triglav__u32(value) writer.Uint(value)
+#define TG_JSON_SETTER_triglav__i64(value) writer.Int64(value)
+#define TG_JSON_SETTER_triglav__u64(value) writer.Uint64(value)
 #define TG_JSON_SETTER_float(value) writer.Double(static_cast<double>(value))
 #define TG_JSON_SETTER_double(value) writer.Double(value)
 #define TG_JSON_SETTER_std__string(value) writer.String(value.data(), value.size(), true)
 #define TG_JSON_SETTER_std__string_view(value) \
    writer.String(value.data(), value.size(), true)// shouldn't use string views for deserialization
+#define TG_JSON_SETTER_triglav__Vector2(value) write_vector2(writer, value)
+#define TG_JSON_SETTER_triglav__Vector3(value) write_vector3(writer, value)
+#define TG_JSON_SETTER_triglav__Vector4(value) write_vector4(writer, value)
+#define TG_JSON_SETTER_triglav__Matrix4x4(value) write_matrix4x4(writer, value)
 #define TG_JSON_SETTER(x) TG_CONCAT(TG_JSON_SETTER_, x)
 
 using namespace name_literals;
@@ -172,6 +219,9 @@ bool serialize_property_ref(TWriter& writer, const meta::PropertyRef& ref)
       return serialize_enum(writer, ref);
    case meta::TypeVariant::Array:
       return serialize_array(writer, ref.to_array_ref());
+   default:
+      assert(false);
+      break;
    }
 
    return false;
