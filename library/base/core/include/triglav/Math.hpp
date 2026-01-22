@@ -213,3 +213,19 @@ struct std::formatter<triglav::Quaternion>
       return std::format_to(ctx.out(), "(Yaw: {}, Pitch: {}, Roll: {})", angles.x, angles.y, angles.z);
    }
 };
+
+template<>
+struct std::formatter<triglav::Matrix4x4>
+{
+   constexpr auto parse(std::format_parse_context& ctx)
+   {
+      return ctx.begin();
+   }
+
+   auto format(const triglav::Matrix4x4& obj, std::format_context& ctx) const
+   {
+      return std::format_to(ctx.out(), "({} {} {} {}; {} {} {} {}; {} {} {} {}; {} {} {} {})", obj[0].x, obj[0].y, obj[0].z, obj[0].w,
+                            obj[1].x, obj[1].y, obj[1].z, obj[1].w, obj[2].x, obj[2].y, obj[2].z, obj[2].w, obj[3].x, obj[3].y, obj[3].z,
+                            obj[3].w);
+   }
+};

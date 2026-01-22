@@ -8,6 +8,48 @@ using namespace triglav::name_literals;
 
 namespace example_namespace {
 
+
+template<typename TKey, typename TValue>
+struct FakeMap
+{
+   std::vector<std::pair<TKey, TValue>> values;
+
+   auto begin()
+   {
+      return values.begin();
+   }
+
+   auto end()
+   {
+      return values.end();
+   }
+
+   auto size() const
+   {
+      return values.size();
+   }
+
+   auto& at(const TKey& key)
+   {
+      return std::ranges::find_if(values, [&key](const auto& pair) { return pair.first == key; })->second;
+   }
+
+   auto find(const TKey& key)
+   {
+      return std::ranges::find_if(values, [&key](const auto& pair) { return pair.first == key; });
+   }
+
+   auto& operator[](const TKey& key)
+   {
+      auto it = find(key);
+      if (it == end()) {
+         values.emplace_back(key, TValue{});
+         return values.back().second;
+      }
+      return it->second;
+   }
+};
+
 struct ExampleStruct
 {
    TG_META_BODY(ExampleStruct)
@@ -94,8 +136,11 @@ class ExampleClass
 
    float m_hidden_value = 2.0f;
    ExampleSubClass m_sub_class;
-   ExampleEnum m_enum_value = ExampleEnum::Bar;
+   ExampleEnum m_enum_value = ExampleEnum::Gar;
    std::vector<int> m_int_array = {1, 2, 3};
+   FakeMap<std::string, int> m_mapped_values = {{std::pair<std::string, int>{"blue", 10}, std::pair<std::string, int>{"red", 20}}};
+   std::optional<float> m_empty_value;
+   std::optional<float> m_optional_value = 12.34f;
 };
 
 int ExampleClass::instance_count = 0;
@@ -126,6 +171,9 @@ TG_META_INDIRECT(indirect_value, float)
 TG_META_INDIRECT_REF(sub_class, example_namespace::ExampleSubClass)
 TG_META_PROPERTY(m_enum_value, example_namespace::ExampleEnum)
 TG_META_ARRAY_PROPERTY(m_int_array, int)
+TG_META_MAP_PROPERTY(m_mapped_values, std::string, int)
+TG_META_OPTIONAL_PROPERTY(m_empty_value, float)
+TG_META_OPTIONAL_PROPERTY(m_optional_value, float)
 TG_META_CLASS_END
 #undef TG_TYPE
 
@@ -133,11 +181,10 @@ TG_META_CLASS_END
 TG_META_ENUM_BEGIN
 TG_META_ENUM_VALUE(Foo)
 TG_META_ENUM_VALUE(Bar)
-TG_META_ENUM_VALUE(Gar)
-TG_META_ENUM_END
+TG_META_ENUM_VALUE_STR(Gar, "G_A_R") TG_META_ENUM_END
 #undef TG_TYPE
 
-TEST(MetaTest, BasicType)
+   TEST(MetaTest, BasicType)
 {
    {
       example_namespace::ExampleClass example;
@@ -162,8 +209,11 @@ TEST(MetaTest, BasicType)
  sub_class: {
   value: 4.5
  }
- m_enum_value: Bar
+ m_enum_value: G_A_R
  m_int_array: [1, 2, 3]
+ m_mapped_values: {blue: 10, red: 20}
+ m_empty_value: none
+ m_optional_value: 12.34
 })";
       ASSERT_EQ(obj_serialized, expected_str);
 
@@ -178,6 +228,13 @@ TEST(MetaTest, BasicType)
       ASSERT_EQ(obj_ref.call<int>("get_value"_name), 300);
       ASSERT_EQ(obj_ref.property<float>("indirect_value"_name), 14.34f);
       ASSERT_EQ(obj_ref.property<example_namespace::ExampleSubClass>("sub_class"_name)->value, 4.5f);
+
+      auto map_ref = obj_ref.property_map_ref("m_mapped_values"_name);
+      map_ref.set(std::string{"foo"}, 10);
+      map_ref.set(std::string{"bar"}, 20);
+
+      const int map_foo = map_ref.at<std::string, int>("bar");
+      ASSERT_EQ(map_foo, 20);
 
       auto box = triglav::meta::TypeRegistry::the().create_box("example_namespace::ExampleClass"_name);
 

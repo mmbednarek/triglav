@@ -404,3 +404,42 @@ void Document::deserialize(io::IReader& reader)
 }
 
 }// namespace triglav::gltf
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), Asset)
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(generator, std::string)
+TG_META_PROPERTY(version, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), Scene)
+TG_META_CLASS_BEGIN
+TG_META_ARRAY_PROPERTY(nodes, triglav::u32)
+TG_META_OPTIONAL_PROPERTY(name, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), Node)
+TG_META_CLASS_BEGIN
+TG_META_ARRAY_PROPERTY(children, triglav::u32)
+TG_META_OPTIONAL_PROPERTY(matrix, triglav::Matrix4x4)
+TG_META_OPTIONAL_PROPERTY(mesh, triglav::u32)
+TG_META_OPTIONAL_PROPERTY(rotation, triglav::Vector4)
+TG_META_OPTIONAL_PROPERTY(scale, triglav::Vector3)
+TG_META_OPTIONAL_PROPERTY(translation, triglav::Vector3)
+TG_META_OPTIONAL_PROPERTY(name, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), PrimitiveAttributeType)
+TG_META_ENUM_BEGIN
+TG_META_ENUM_VALUE_STR(Position, "POSITION")
+TG_META_ENUM_VALUE_STR(Normal, "NORMAL")
+TG_META_ENUM_VALUE_STR(Tangent, "TANGENT")
+TG_META_ENUM_VALUE_STR(TexCoord, "TEXCOORD")
+TG_META_ENUM_VALUE_STR(Color, "COLOR")
+TG_META_ENUM_VALUE_STR(Joints, "JOINTS")
+TG_META_ENUM_VALUE_STR(Weights, "WEIGHTS")
+TG_META_ENUM_VALUE_STR(Other, "OTHER")
+TG_META_ENUM_END
+#undef TG_TYPE

@@ -8,21 +8,68 @@ namespace triglav::json_util {
 
 using namespace name_literals;
 
+Vector2 read_vector2(const rapidjson::Value& src)
+{
+   const auto& arr = src.GetArray();
+   const auto& x = arr[0];
+   const auto& y = arr[1];
+   return {x.GetFloat(), y.GetFloat()};
+}
+
+Vector3 read_vector3(const rapidjson::Value& src)
+{
+   const auto& arr = src.GetArray();
+   const auto& x = arr[0];
+   const auto& y = arr[1];
+   const auto& z = arr[2];
+   return {x.GetFloat(), y.GetFloat(), z.GetFloat()};
+}
+
+Vector4 read_vector4(const rapidjson::Value& src)
+{
+   const auto& arr = src.GetArray();
+   const auto& x = arr[0];
+   const auto& y = arr[1];
+   const auto& z = arr[2];
+   const auto& w = arr[3];
+   return {x.GetFloat(), y.GetFloat(), z.GetFloat(), w.GetFloat()};
+}
+
+Matrix4x4 read_matrix4x4(const rapidjson::Value& src)
+{
+   const auto& arr = src.GetArray();
+   auto it = arr.begin();
+
+   Matrix4x4 result{};
+   for (int row = 0; row < 4; ++row) {
+      for (int column = 0; column < 4; ++column) {
+         result[row][column] = it->GetFloat();
+         ++it;
+      }
+   }
+
+   return result;
+}
+
 #define TG_JSON_GETTER_char val.GetInt()
 #define TG_JSON_GETTER_int val.GetInt()
-#define TG_JSON_GETTER_i8 val.GetInt()
-#define TG_JSON_GETTER_u8 val.GetUint()
-#define TG_JSON_GETTER_i16 val.GetInt()
-#define TG_JSON_GETTER_u16 val.GetUint()
-#define TG_JSON_GETTER_i32 val.GetInt()
-#define TG_JSON_GETTER_u32 val.GetUint()
-#define TG_JSON_GETTER_i64 val.GetInt64()
-#define TG_JSON_GETTER_u64 val.GetUint64()
+#define TG_JSON_GETTER_triglav__i8 val.GetInt()
+#define TG_JSON_GETTER_triglav__u8 val.GetUint()
+#define TG_JSON_GETTER_triglav__i16 val.GetInt()
+#define TG_JSON_GETTER_triglav__u16 val.GetUint()
+#define TG_JSON_GETTER_triglav__i32 val.GetInt()
+#define TG_JSON_GETTER_triglav__u32 val.GetUint()
+#define TG_JSON_GETTER_triglav__i64 val.GetInt64()
+#define TG_JSON_GETTER_triglav__u64 val.GetUint64()
 #define TG_JSON_GETTER_float val.GetFloat()
 #define TG_JSON_GETTER_double val.GetDouble()
 #define TG_JSON_GETTER_std__string val.GetString()
 #define TG_JSON_GETTER_std__string_view \
    std::string_view {}// shouldn't use string views for deserialization
+#define TG_JSON_GETTER_triglav__Vector2 read_vector2(val)
+#define TG_JSON_GETTER_triglav__Vector3 read_vector3(val)
+#define TG_JSON_GETTER_triglav__Vector4 read_vector4(val)
+#define TG_JSON_GETTER_triglav__Matrix4x4 read_matrix4x4(val)
 #define TG_JSON_GETTER(x) TG_CONCAT(TG_JSON_GETTER_, x)
 
 void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src);
