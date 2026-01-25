@@ -1,5 +1,6 @@
 #include "triglav/test_util/GTest.hpp"
 
+#include "triglav/ArrayMap.hpp"
 #include "triglav/io/DynamicWriter.hpp"
 #include "triglav/io/StringReader.hpp"
 #include "triglav/json_util/Deserialize.hpp"
@@ -39,6 +40,10 @@ struct BasicStruct
    Contained contained;
    Weekday weekday;
    std::vector<std::string> colors;
+   std::optional<int> optional_int;
+   std::optional<float> optional_float;
+   triglav::ArrayMap<std::string, float> float_map;
+   triglav::ArrayMap<Weekday, int> enum_map;
 };
 
 #define TG_TYPE(NS) BasicStruct
@@ -48,6 +53,10 @@ TG_META_PROPERTY(bar, std::string)
 TG_META_PROPERTY(contained, Contained)
 TG_META_PROPERTY(weekday, Weekday)
 TG_META_ARRAY_PROPERTY(colors, std::string)
+TG_META_OPTIONAL_PROPERTY(optional_int, int)
+TG_META_OPTIONAL_PROPERTY(optional_float, float)
+TG_META_MAP_PROPERTY(float_map, std::string, float)
+TG_META_MAP_PROPERTY(enum_map, Weekday, int)
 TG_META_CLASS_END
 #undef TG_TYPE
 
@@ -73,12 +82,22 @@ TEST(JsonTest, Deserilization)
       "value": 12.37
    },
    "weekday": "Friday",
-   "colors": ["white", "red", "blue"]
+   "colors": ["white", "red", "blue"],
+   "optional_int": 30,
+   "optional_float": null,
+   "float_map": {"pi": 3.1415, "e": 2.7183},
+   "enum_map": {"Friday": 5, "Sunday": 7}
 }
 )";
    triglav::io::StringReader reader(json_string);
 
+
    BasicStruct basic_struct{};
+   basic_struct.float_map = {{"pi", 3.14f}, {"e", 2.71f}};
+
+   [[maybe_unused]] auto it = basic_struct.float_map.find("e");
+   ASSERT_EQ(it->second, 2.71f);
+
    ASSERT_TRUE(triglav::json_util::deserialize(basic_struct.to_meta_ref(), reader));
 
    ASSERT_EQ(basic_struct.foo, 25);
@@ -87,6 +106,12 @@ TEST(JsonTest, Deserilization)
    ASSERT_EQ(basic_struct.weekday, Weekday::Friday);
    const std::vector<std::string> expected_colors{"white", "red", "blue"};
    ASSERT_EQ(basic_struct.colors, expected_colors);
+   ASSERT_EQ(basic_struct.optional_int, 30);
+   ASSERT_FALSE(basic_struct.optional_float.has_value());
+   ASSERT_EQ(basic_struct.float_map["pi"], 3.1415f);
+   ASSERT_EQ(basic_struct.float_map["e"], 2.7183f);
+   ASSERT_EQ(basic_struct.enum_map[Weekday::Friday], 5);
+   ASSERT_EQ(basic_struct.enum_map[Weekday::Sunday], 7);
 }
 
 TEST(JsonTest, Serialization)
@@ -97,6 +122,10 @@ TEST(JsonTest, Serialization)
    basic_struct.contained.value = 12.37;
    basic_struct.weekday = Weekday::Friday;
    basic_struct.colors = {"white", "red", "blue"};
+   basic_struct.optional_int = 30;
+   basic_struct.optional_float = std::nullopt;
+   basic_struct.float_map = {{"e", 2.5f}, {"pi", 3.0f}};
+   basic_struct.enum_map = {{Weekday::Monday, 1}, {Weekday::Wednesday, 3}};
 
    // standard
    {
@@ -104,7 +133,7 @@ TEST(JsonTest, Serialization)
       ASSERT_TRUE(triglav::json_util::serialize(basic_struct.to_meta_ref(), writer));
 
       static constexpr auto expected_string =
-         R"({"foo":25,"bar":"lorem ipsum","contained":{"value":12.37},"weekday":"Friday","colors":["white","red","blue"]})";
+         R"({"foo":25,"bar":"lorem ipsum","contained":{"value":12.37},"weekday":"Friday","colors":["white","red","blue"],"optional_int":30,"optional_float":null,"float_map":{"e":2.5,"pi":3.0},"enum_map":{"Monday":1,"Wednesday":3}})";
       const std::string result{reinterpret_cast<const char*>(writer.data()), writer.size()};
       ASSERT_EQ(expected_string, result);
    }
@@ -125,7 +154,17 @@ TEST(JsonTest, Serialization)
     "white",
     "red",
     "blue"
-  ]
+  ],
+  "optional_int": 30,
+  "optional_float": null,
+  "float_map": {
+    "e": 2.5,
+    "pi": 3.0
+  },
+  "enum_map": {
+    "Monday": 1,
+    "Wednesday": 3
+  }
 })";
       const std::string result{reinterpret_cast<const char*>(writer.data()), writer.size()};
       ASSERT_EQ(expected_string, result);

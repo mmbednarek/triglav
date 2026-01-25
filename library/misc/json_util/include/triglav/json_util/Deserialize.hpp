@@ -5,6 +5,6 @@
 
 namespace triglav::json_util {
 
-bool deserialize(const meta::Ref& dst, io::IReader& reader);
+bool deserialize(const meta::ClassRef& dst, io::IReader& reader);
 
 }

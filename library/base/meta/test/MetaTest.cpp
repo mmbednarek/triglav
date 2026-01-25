@@ -1,4 +1,5 @@
 #include "triglav/meta/Meta.hpp"
+#include "triglav/ArrayMap.hpp"
 #include "triglav/io/DynamicWriter.hpp"
 #include "triglav/meta/Display.hpp"
 #include "triglav/meta/TypeRegistry.hpp"
@@ -7,48 +8,6 @@
 using namespace triglav::name_literals;
 
 namespace example_namespace {
-
-
-template<typename TKey, typename TValue>
-struct FakeMap
-{
-   std::vector<std::pair<TKey, TValue>> values;
-
-   auto begin()
-   {
-      return values.begin();
-   }
-
-   auto end()
-   {
-      return values.end();
-   }
-
-   auto size() const
-   {
-      return values.size();
-   }
-
-   auto& at(const TKey& key)
-   {
-      return std::ranges::find_if(values, [&key](const auto& pair) { return pair.first == key; })->second;
-   }
-
-   auto find(const TKey& key)
-   {
-      return std::ranges::find_if(values, [&key](const auto& pair) { return pair.first == key; });
-   }
-
-   auto& operator[](const TKey& key)
-   {
-      auto it = find(key);
-      if (it == end()) {
-         values.emplace_back(key, TValue{});
-         return values.back().second;
-      }
-      return it->second;
-   }
-};
 
 struct ExampleStruct
 {
@@ -138,7 +97,8 @@ class ExampleClass
    ExampleSubClass m_sub_class;
    ExampleEnum m_enum_value = ExampleEnum::Gar;
    std::vector<int> m_int_array = {1, 2, 3};
-   FakeMap<std::string, int> m_mapped_values = {{std::pair<std::string, int>{"blue", 10}, std::pair<std::string, int>{"red", 20}}};
+   triglav::ArrayMap<std::string, int> m_mapped_values = {
+      {std::pair<std::string, int>{"blue", 10}, std::pair<std::string, int>{"red", 20}}};
    std::optional<float> m_empty_value;
    std::optional<float> m_optional_value = 12.34f;
 };
@@ -181,10 +141,11 @@ TG_META_CLASS_END
 TG_META_ENUM_BEGIN
 TG_META_ENUM_VALUE(Foo)
 TG_META_ENUM_VALUE(Bar)
-TG_META_ENUM_VALUE_STR(Gar, "G_A_R") TG_META_ENUM_END
+TG_META_ENUM_VALUE_STR(Gar, "G_A_R")
+TG_META_ENUM_END
 #undef TG_TYPE
 
-   TEST(MetaTest, BasicType)
+TEST(MetaTest, BasicType)
 {
    {
       example_namespace::ExampleClass example;
@@ -211,7 +172,7 @@ TG_META_ENUM_VALUE_STR(Gar, "G_A_R") TG_META_ENUM_END
  }
  m_enum_value: G_A_R
  m_int_array: [1, 2, 3]
- m_mapped_values: {blue: 10, red: 20}
+ m_mapped_values: {"blue": 10, "red": 20}
  m_empty_value: none
  m_optional_value: 12.34
 })";

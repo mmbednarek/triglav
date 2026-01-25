@@ -1,4 +1,5 @@
 // PLACEHOLDER
+#include "ArrayMap.hpp"
 #include "BuildInfo.hpp"
 #include "Format.hpp"
 #include "Int.hpp"

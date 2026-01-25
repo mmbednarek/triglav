@@ -130,98 +130,113 @@ bool serialize_primitive(TWriter& writer, const meta::PropertyRef& ref)
 }
 
 template<typename TWriter>
-bool serialize_class(TWriter& writer, const meta::Ref& ref)
+bool serialize_class(TWriter& writer, const meta::ClassRef& ref)
 {
-   bool result = true;
-
    writer.StartObject();
-   ref.visit_properties([&](const meta::PropertyRef& prop_ref) { result = result && serialize_property_ref(writer, prop_ref); });
+   for (const meta::PropertyRef property_ref : ref.properties()) {
+      writer.Key(property_ref.identifier().data());
+
+      if (!serialize_property_ref(writer, property_ref))
+         return false;
+   }
    writer.EndObject();
 
-   return result;
-}
-
-template<typename TWriter>
-bool serialize_enum(TWriter& writer, const meta::PropertyRef& ref)
-{
-   const auto& info = meta::TypeRegistry::the().type_info(ref.type());
-   for (const auto& mem : info.members) {
-      if (!(mem.role_flags & meta::MemberRole::EnumValue))
-         continue;
-
-      if (mem.enum_value.underlying_value == ref.get<int>()) {
-         writer.String(mem.identifier.data(), mem.identifier.size(), true);
-         return true;
-      }
-   }
-
-   return false;
-}
-
-template<typename TWriter>
-bool serialize_array_primitive(TWriter& writer, const meta::ArrayRef& ref)
-{
-   switch (ref.type()) {
-#define TG_META_PRIMITIVE(iden, type)           \
-   case make_name_id(TG_STRING(type)): {        \
-      for (size_t i = 0; i < ref.size(); ++i) { \
-         TG_JSON_SETTER(iden)(ref.at<type>(i)); \
-      }                                         \
-      break;                                    \
-   }
-      TG_META_PRIMITIVE_LIST
-#undef TG_META_PRIMITIVE
-   default:
-      return false;
-   }
    return true;
 }
 
 template<typename TWriter>
-bool serialize_array_class(TWriter& writer, const meta::ArrayRef& ref)
+bool serialize_ref(TWriter& writer, const meta::Ref& ref)
 {
-   for (size_t i = 0; i < ref.size(); ++i) {
-      serialize_class(writer, ref.at_ref(i));
-   }
+   return serialize_property_ref(writer, ref.to_property_ref());
+}
+
+template<typename TWriter>
+bool serialize_enum(TWriter& writer, const meta::EnumRef& ref)
+{
+   writer.String(ref.string().data());
    return true;
 }
 
 template<typename TWriter>
 bool serialize_array(TWriter& writer, const meta::ArrayRef& ref)
 {
-   bool is_ok = false;
    writer.StartArray();
-   switch (ref.type_variant()) {
-   case meta::TypeVariant::Primitive:
-      is_ok = serialize_array_primitive(writer, ref);
-      break;
-   case meta::TypeVariant::Class:
-      is_ok = serialize_array_class(writer, ref);
-      break;
-   default:
-      break;
+   for (size_t i = 0; i < ref.size(); ++i) {
+      if (!serialize_ref(writer, ref.at_ref(i)))
+         return false;
    }
    writer.EndArray();
-   return is_ok;
+   return true;
+}
+
+template<typename TWriter>
+bool serialize_map_enum_key(TWriter& writer, const meta::MapRef& ref)
+{
+   writer.StartObject();
+
+   auto key_ref = ref.first_key_ref();
+   while (!key_ref.is_nullptr()) {
+      writer.Key(key_ref.to_enum_ref().string().data());
+
+      auto value_ref = ref.get_ref(key_ref);
+      if (!serialize_ref(writer, value_ref))
+         return false;
+
+      key_ref = ref.next_key_ref(key_ref);
+   }
+   writer.EndObject();
+   return true;
+}
+
+template<typename TWriter>
+bool serialize_map(TWriter& writer, const meta::MapRef& ref)
+{
+   if (ref.key_type() != "std::string"_name)
+      return serialize_map_enum_key(writer, ref);
+
+   writer.StartObject();
+
+   auto key_ref = ref.first_key_ref();
+   while (!key_ref.is_nullptr()) {
+      writer.Key(key_ref.as<std::string>().data());
+
+      auto value_ref = ref.get_ref(key_ref);
+      if (!serialize_ref(writer, value_ref))
+         return false;
+
+      key_ref = ref.next_key_ref(key_ref);
+   }
+   writer.EndObject();
+   return true;
+}
+
+template<typename TWriter>
+bool serialize_optional(TWriter& writer, const meta::OptionalRef& ref)
+{
+   if (!ref.has_value()) {
+      writer.Null();
+      return true;
+   }
+
+   return serialize_ref(writer, ref.get_ref());
 }
 
 template<typename TWriter>
 bool serialize_property_ref(TWriter& writer, const meta::PropertyRef& ref)
 {
-   writer.Key(ref.identifier().data());
-
-   switch (ref.type_variant()) {
-   case meta::TypeVariant::Primitive:
+   switch (ref.ref_kind()) {
+   case meta::RefKind::Primitive:
       return serialize_primitive(writer, ref);
-   case meta::TypeVariant::Class:
-      return serialize_class(writer, ref.to_ref());
-   case meta::TypeVariant::Enum:
-      return serialize_enum(writer, ref);
-   case meta::TypeVariant::Array:
+   case meta::RefKind::Class:
+      return serialize_class(writer, ref.to_class_ref());
+   case meta::RefKind::Enum:
+      return serialize_enum(writer, ref.to_enum_ref());
+   case meta::RefKind::Array:
       return serialize_array(writer, ref.to_array_ref());
-   default:
-      assert(false);
-      break;
+   case meta::RefKind::Map:
+      return serialize_map(writer, ref.to_map_ref());
+   case meta::RefKind::Optional:
+      return serialize_optional(writer, ref.to_optional_ref());
    }
 
    return false;
@@ -230,7 +245,7 @@ bool serialize_property_ref(TWriter& writer, const meta::PropertyRef& ref)
 using JsonWriter = rapidjson::Writer<OutputBuffer>;
 using JsonPrettyWriter = rapidjson::PrettyWriter<OutputBuffer>;
 
-bool serialize(const meta::Ref& dst, io::IWriter& writer, const bool pretty_print)
+bool serialize(const meta::ClassRef& dst, io::IWriter& writer, const bool pretty_print)
 {
    OutputBuffer output_buffer(writer);
 
