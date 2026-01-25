@@ -16,25 +16,6 @@ using namespace name_literals;
 
 namespace {
 
-
-template<typename TIt, typename TValue, typename TTrans>
-TIt find_binary(TIt begin, TIt end, TValue value, TTrans trans)
-{
-   const auto saved_end = end;
-   while (begin != end) {
-      auto mid = begin + std::distance(begin, end) / 2;
-      const auto comp = trans(*mid);
-      if (comp < value) {
-         end = mid;
-      } else if (comp > value) {
-         begin = mid + 1;
-      } else {
-         return mid;
-      }
-   }
-   return saved_end;
-}
-
 std::optional<io::Path> get_project_config_path()
 {
    const auto dir = io::home_directory();

@@ -1,6 +1,7 @@
 core_sources = files([
                     'include/triglav/detail/Crc.hpp',
                     'include/triglav/Array.hpp',
+                    'include/triglav/ArrayMap.hpp',
                     'include/triglav/BuildInfo.hpp',
                     'include/triglav/CompTimeString.hpp',
                     'include/triglav/Debug.hpp',

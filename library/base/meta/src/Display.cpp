@@ -31,6 +31,10 @@ class StringWriter
    io::WriterIterator<char> m_iterator;
 };
 
+
+void display_ref(const Ref& ref, StringWriter& writer, int depth);
+void display_property_ref(const PropertyRef& ref, StringWriter& writer, const int depth);
+
 template<typename T>
 void display_value(const T& value, StringWriter& writer)
 {
@@ -41,49 +45,16 @@ void display_value(const T& value, StringWriter& writer)
    }
 }
 
-template<typename T>
-void display_array_val(const ArrayRef& values, StringWriter& writer)
-{
-   writer.print("[");
-
-   bool is_first = true;
-   const auto size = values.size();
-   for (size_t i = 0; i < size; ++i) {
-      if (is_first) {
-         is_first = false;
-      } else {
-         writer.print(", ");
-      }
-      display_value(values.at<T>(i), writer);
-   }
-
-   writer.print("]");
-}
-
-void display_ref(const Ref& ref, StringWriter& writer)
-{
-   switch (ref.type()) {
-#define TG_META_PRIMITIVE(iden, name)     \
-   case make_name_id(TG_STRING(name)):    \
-      writer.print("{}", ref.as<name>()); \
-      break;
-      TG_META_PRIMITIVE_LIST
-#undef TG_META_PRIMITIVE
-   default:
-      writer.print("unknown");
-   }
-}
-
-void display_optional(const OptionalRef& optional_ref, StringWriter& writer)
+void display_optional(const OptionalRef& optional_ref, StringWriter& writer, const int depth)
 {
    if (!optional_ref.has_value()) {
       writer.print("none");
       return;
    }
-   display_ref(optional_ref.get_ref(), writer);
+   display_ref(optional_ref.get_ref(), writer, depth);
 }
 
-void display_map(const MapRef& map_ref, StringWriter& writer)
+void display_map(const MapRef& map_ref, StringWriter& writer, const int depth)
 {
    writer.print("{{");
    bool is_first = true;
@@ -94,27 +65,29 @@ void display_map(const MapRef& map_ref, StringWriter& writer)
       } else {
          is_first = false;
       }
-      display_ref(key, writer);
+      display_ref(key, writer, depth);
       writer.print(": ");
 
-      display_ref(map_ref.get_ref(key), writer);
+      display_ref(map_ref.get_ref(key), writer, depth);
       key = map_ref.next_key_ref(key);
    }
    writer.print("}}");
 }
 
-void display_array(const ArrayRef& ref, const Name ty, StringWriter& writer)
+void display_array(const ArrayRef& ref, StringWriter& writer, const int depth)
 {
-   switch (ty) {
-#define TG_META_PRIMITIVE(iden, name)       \
-   case make_name_id(TG_STRING(name)):      \
-      display_array_val<name>(ref, writer); \
-      break;
-      TG_META_PRIMITIVE_LIST
-#undef TG_META_PRIMITIVE
-   default:
-      writer.print("unknown");
+   writer.print("[");
+   const auto array_count = ref.size();
+   bool is_first = true;
+   for (MemorySize i = 0; i < array_count; ++i) {
+      if (is_first) {
+         is_first = false;
+      } else {
+         writer.print(", ");
+      }
+      display_ref(ref.at_ref(i), writer, depth);
    }
+   writer.print("]");
 }
 
 void display_primitive(const PropertyRef& ref, const Name ty, StringWriter& writer)
@@ -131,53 +104,55 @@ void display_primitive(const PropertyRef& ref, const Name ty, StringWriter& writ
    }
 }
 
-void display_enum(const PropertyRef& ref, const Type& type_info, StringWriter& writer)
+void display_enum(const EnumRef& ref, StringWriter& writer)
 {
-   const auto value = ref.get<int>();
-   const auto it = std::ranges::find_if(type_info.members, [&](const Member& mem) {
-      return mem.role_flags & MemberRole::EnumValue && mem.enum_value.underlying_value == value;
-   });
-   if (it != type_info.members.end()) {
-      writer.print("{}", it->identifier);
-   }
+   writer.print("{}", ref.string());
 }
 
-void display_class(const Ref& ref, StringWriter& writer, int depth);
-
-void display_property_ref(const PropertyRef& ref, StringWriter& writer, const int depth)
-{
-   const auto& info = TypeRegistry::the().type_info(ref.type());
-
-   for (int i = 0; i < depth + 1; ++i) {
-      writer.print(" ");
-   }
-   writer.print("{}: ", ref.identifier());
-
-   if (ref.is_array()) {
-      display_array(ref.to_array_ref(), ref.type(), writer);
-   } else if (ref.is_map()) {
-      display_map(ref.to_map_ref(), writer);
-   } else if (ref.is_optional()) {
-      display_optional(ref.to_optional_ref(), writer);
-   } else if (info.variant == TypeVariant::Class) {
-      display_class(ref.to_ref(), writer, depth + 1);
-   } else if (info.variant == TypeVariant::Enum) {
-      display_enum(ref, info, writer);
-   } else {
-      display_primitive(ref, ref.type(), writer);
-   }
-
-   writer.print("\n");
-}
-
-void display_class(const Ref& ref, StringWriter& writer, const int depth)
+void display_class(const ClassRef& ref, StringWriter& writer, const int depth)
 {
    writer.print("{{\n");
-   ref.visit_properties([&](const PropertyRef& property_ref) { display_property_ref(property_ref, writer, depth); });
+   for (const PropertyRef property_ref : ref.properties()) {
+      for (int i = 0; i < depth + 1; ++i) {
+         writer.print(" ");
+      }
+      writer.print("{}: ", property_ref.identifier());
+      display_property_ref(property_ref, writer, depth);
+      writer.print("\n");
+   }
    for (int i = 0; i < depth; ++i) {
       writer.print(" ");
    }
    writer.print("}}");
+}
+
+void display_property_ref(const PropertyRef& ref, StringWriter& writer, const int depth)
+{
+   switch (ref.ref_kind()) {
+   case RefKind::Primitive:
+      display_primitive(ref, ref.type(), writer);
+      break;
+   case RefKind::Class:
+      display_class(ref.to_class_ref(), writer, depth + 1);
+      break;
+   case RefKind::Enum:
+      display_enum(ref.to_enum_ref(), writer);
+      break;
+   case RefKind::Array:
+      display_array(ref.to_array_ref(), writer, depth);
+      break;
+   case RefKind::Map:
+      display_map(ref.to_map_ref(), writer, depth);
+      break;
+   case RefKind::Optional:
+      display_optional(ref.to_optional_ref(), writer, depth);
+      break;
+   }
+}
+
+void display_ref(const Ref& ref, StringWriter& writer, const int depth)
+{
+   display_property_ref(ref.to_property_ref(), writer, depth);
 }
 
 }// namespace
@@ -185,7 +160,7 @@ void display_class(const Ref& ref, StringWriter& writer, const int depth)
 void display(const Ref& ref, io::IWriter& writer)
 {
    StringWriter str_writer(writer);
-   display_class(ref, str_writer, 0);
+   display_ref(ref, str_writer, -1);
 }
 
 }// namespace triglav::meta

@@ -5,6 +5,6 @@
 
 namespace triglav::json_util {
 
-bool serialize(const meta::Ref& dst, io::IWriter& writer, bool pretty_print = false);
+bool serialize(const meta::ClassRef& dst, io::IWriter& writer, bool pretty_print = false);
 
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Meta.hpp"
 #include "triglav/EnumFlags.hpp"
 #include "triglav/Int.hpp"
 #include "triglav/Macros.hpp"
@@ -61,15 +62,14 @@ struct Member
       MemorySize (*count)(void* handle);
       const void* (*first_key)(void* handle);
       const void* (*next_key)(void* handle, const void* key);
-      void* (*get_n)(void* handle, const void* key);
-      void (*set_n)(void* handle, const void* key, const void* value);// maybe null if readonly
+      void* (*get)(void* handle, const void* key);
    };
 
    struct PropertyOptional
    {
       bool (*has_value)(void* handle);
       void* (*get)(void* handle);
-      void (*set)(void* handle, void* value);
+      void (*reset)(void* handle);
    };
 
    struct Property
@@ -77,7 +77,7 @@ struct Member
       Name type_name;
       union
       {
-         PropertyOffset offset;    // available if !(role_flags & Array) && !(role_flags & Indirect)
+         PropertyOffset offset;    // available if missing any property flags
          PropertyIndirect indirect;// available if role_flags & Indirect
          PropertyArray array;      // available if role_flags & Array
          PropertyMap map;          // available if role_flags & Map
@@ -106,7 +106,14 @@ enum class TypeVariant
    Primitive,
    Class,
    Enum,
-   Array,// not coming from type but from property
+};
+
+enum class RefKind
+{
+   Primitive,
+   Class,
+   Enum,
+   Array,
    Map,
    Optional,
 };
@@ -124,10 +131,36 @@ struct TypeRegisterer
    explicit TypeRegisterer(Type type);
 };
 
-class Ref;
+class ClassRef;
 class ArrayRef;
 class MapRef;
 class OptionalRef;
+class PropertyRef;
+class EnumRef;
+
+class Ref
+{
+ public:
+   Ref(void* handle, Name type_name);
+
+   [[nodiscard]] Name type() const;
+   [[nodiscard]] bool is_nullptr() const;
+   [[nodiscard]] void* raw_handle() const;
+   [[nodiscard]] TypeVariant type_variant() const;
+   [[nodiscard]] ClassRef to_class_ref() const;
+   [[nodiscard]] PropertyRef to_property_ref() const;
+   [[nodiscard]] EnumRef to_enum_ref() const;
+
+   template<typename T>
+   [[nodiscard]] T& as() const
+   {
+      return *static_cast<T*>(m_handle);
+   }
+
+ private:
+   void* m_handle;
+   Name m_type;
+};
 
 class PropertyRef
 {
@@ -197,16 +230,22 @@ class PropertyRef
    }
 
    [[nodiscard]] std::string_view identifier() const;
+
    [[nodiscard]] Name name() const;
-   [[nodiscard]] Ref to_ref() const;
    [[nodiscard]] Name type() const;
+
    [[nodiscard]] bool is_array() const;
    [[nodiscard]] bool is_map() const;
    [[nodiscard]] bool is_optional() const;
+   [[nodiscard]] bool is_lvalue_ref() const;
+
+   [[nodiscard]] Ref to_ref() const;
+   [[nodiscard]] ClassRef to_class_ref() const;
    [[nodiscard]] ArrayRef to_array_ref() const;
    [[nodiscard]] MapRef to_map_ref() const;
    [[nodiscard]] OptionalRef to_optional_ref() const;
-   [[nodiscard]] TypeVariant type_variant() const;
+   [[nodiscard]] EnumRef to_enum_ref() const;
+   [[nodiscard]] RefKind ref_kind() const;
 
  private:
    void* m_handle;
@@ -246,7 +285,7 @@ struct PropertyAccessor
    PropertyRef m_reference;
 };
 
-class ArrayRef
+class ArrayRef : public Ref
 {
  public:
    ArrayRef(void* handle, Name contained_type, const Member::PropertyArray& prop_array);
@@ -254,44 +293,54 @@ class ArrayRef
    template<typename T>
    T& at(const MemorySize index)
    {
-      return *static_cast<T*>(m_prop_array.get_n(m_handle, index));
+      return *static_cast<T*>(m_prop_array.get_n(this->raw_handle(), index));
    }
 
    template<typename T>
    const T& at(const MemorySize index) const
    {
-      return *static_cast<const T*>(m_prop_array.get_n(m_handle, index));
+      return *static_cast<const T*>(m_prop_array.get_n(this->raw_handle(), index));
    }
 
    template<typename T>
    void set(const MemorySize index, const T& value)
    {
-      m_prop_array.set_n(m_handle, index, static_cast<const void*>(&value));
+      m_prop_array.set_n(this->raw_handle(), index, static_cast<const void*>(&value));
    }
 
    [[nodiscard]] MemorySize size() const
    {
-      return m_prop_array.count(m_handle);
+      return m_prop_array.count(this->raw_handle());
    }
 
    template<typename T>
    [[nodiscard]] T& append() const
    {
-      return *static_cast<T*>(m_prop_array.append(m_handle));
+      return *static_cast<T*>(m_prop_array.append(this->raw_handle()));
    }
 
    [[nodiscard]] Ref at_ref(MemorySize index) const;
    [[nodiscard]] Ref append_ref() const;
-   [[nodiscard]] Name type() const;
    [[nodiscard]] TypeVariant type_variant() const;
 
  private:
-   void* m_handle;
-   Name m_contained_type;
    const Member::PropertyArray& m_prop_array;
 };
 
-class MapRef
+class EnumRef : public PropertyRef
+{
+ public:
+   EnumRef(void* handle, const Member* member);
+
+   [[nodiscard]] std::string_view string() const;
+   [[nodiscard]] int value() const;
+   void set_string(std::string_view value) const;
+
+ private:
+   std::span<Member> m_members;
+};
+
+class MapRef : public Ref
 {
  public:
    MapRef(void* handle, Name value_type, const Member::PropertyMap& prop_array);
@@ -299,58 +348,64 @@ class MapRef
    template<typename TKey, typename TValue>
    TValue& at(const TKey& key)
    {
-      return *static_cast<TValue*>(m_prop_map.get_n(m_handle, &key));
+      return *static_cast<TValue*>(m_prop_map.get(this->raw_handle(), &key));
    }
 
    template<typename TKey, typename TValue>
    void set(const TKey& key, const TValue& value)
    {
-      return m_prop_map.set_n(m_handle, &key, &value);
+      *static_cast<TValue*>(m_prop_map.get(this->raw_handle(), &key)) = value;
    }
 
    template<typename TKey>
    const TKey& first_key()
    {
-      return *static_cast<const TKey*>(m_prop_map.first_key(m_handle));
+      return *static_cast<const TKey*>(m_prop_map.first_key(this->raw_handle()));
    }
 
    template<typename TKey>
    const TKey& next_key(const TKey& key)
    {
-      return *static_cast<const TKey*>(m_prop_map.next_key(m_handle, &key));
+      return *static_cast<const TKey*>(m_prop_map.next_key(this->raw_handle(), &key));
    }
 
    [[nodiscard]] Name key_type() const;
-   [[nodiscard]] Name value_type() const;
    [[nodiscard]] Ref get_ref(const Ref& key) const;
    [[nodiscard]] Ref first_key_ref() const;
    [[nodiscard]] Ref next_key_ref(const Ref& key) const;
 
  private:
-   void* m_handle;
-   Name m_value_type;
    const Member::PropertyMap& m_prop_map;
 };
 
-class OptionalRef
+class OptionalRef : public Ref
 {
  public:
    OptionalRef(void* handle, Name contained_type, const Member::PropertyOptional& prop_optional);
 
    [[nodiscard]] bool has_value() const;
    Ref get_ref() const;
+   void reset() const;
 
  private:
-   void* m_handle;
-   Name m_contained_type;
    const Member::PropertyOptional& m_prop_optional;
 };
 
-class Ref
+struct PropertyIterator
 {
+   const ClassRef* class_ref;
+   size_t member_index = 0;
+
+   std::optional<PropertyRef> next();
+};
+
+class ClassRef : public Ref
+{
+   friend struct PropertyIterator;
+
  public:
-   Ref(void* handle, Name name, std::span<Member> members);
-   Ref(void* handle, Name name);
+   ClassRef(void* handle, Name name, std::span<Member> members);
+   ClassRef(void* handle, Name name);
 
    [[nodiscard]] const Member* find_member(Name name) const;
 
@@ -359,7 +414,8 @@ class Ref
    {
       const auto* member = this->find_member(name);
       assert(member != nullptr && member->role_flags & MemberRole::Function);
-      return reinterpret_cast<TRet (*)(void*, TArgs...)>(this->find_member(name)->function.pointer)(m_handle, std::forward<TArgs>(args)...);
+      return reinterpret_cast<TRet (*)(void*, TArgs...)>(this->find_member(name)->function.pointer)(this->raw_handle(),
+                                                                                                    std::forward<TArgs>(args)...);
    }
 
    template<typename TRet, typename... TArgs>
@@ -369,7 +425,8 @@ class Ref
       if (member == nullptr || !(member->role_flags & MemberRole::Function)) {
          return TRet{};
       }
-      return reinterpret_cast<TRet (*)(void*, TArgs...)>(this->find_member(name)->function.pointer)(m_handle, std::forward<TArgs>(args)...);
+      return reinterpret_cast<TRet (*)(void*, TArgs...)>(this->find_member(name)->function.pointer)(this->raw_handle(),
+                                                                                                    std::forward<TArgs>(args)...);
    }
 
    template<typename TProp>
@@ -378,12 +435,16 @@ class Ref
       return PropertyAccessor<TProp>{this->property_ref(name)};
    }
 
+   [[nodiscard]] StlForwardRange<PropertyRef, PropertyIterator> properties() const;
+
    template<typename TVisitor>
    void visit_properties(TVisitor visitor) const
    {
       for (const auto& mem : m_members) {
+         if (mem.name == make_name_id("self"))
+            continue;
          if (mem.role_flags & MemberRole::Property) {
-            visitor(PropertyRef{m_handle, &mem});
+            visitor(PropertyRef{this->raw_handle(), &mem});
          }
       }
    }
@@ -393,24 +454,12 @@ class Ref
    [[nodiscard]] PropertyRef property_ref(Name name) const;
    [[nodiscard]] ArrayRef property_array_ref(Name name) const;
    [[nodiscard]] MapRef property_map_ref(Name name) const;
-   [[nodiscard]] bool is_nullptr() const;
-   [[nodiscard]] void* raw_handle() const;
-
-   [[nodiscard]] Name type() const;
-
-   template<typename T>
-   [[nodiscard]] T& as() const
-   {
-      return *static_cast<T*>(m_handle);
-   }
 
  protected:
-   void* m_handle{};
-   Name m_type;
    std::span<Member> m_members;
 };
 
-class Box : public Ref
+class Box : public ClassRef
 {
  public:
    Box(void* handle, Name name, std::span<Member> members);
@@ -421,6 +470,9 @@ class Box : public Ref
 
    Box& operator=(const Box& other);
 };
+
+int enum_string_to_value(Name enum_type, std::string_view str_value);
+
 }// namespace triglav::meta
 
 #define TG_META_JOIN_NS(x, y) x::y
@@ -454,6 +506,19 @@ class Box : public Ref
                      }                                                                                                  \
                   }),                                                                                                   \
                },                                                                                                       \
+         },                                                                                                             \
+         ::triglav::meta::Member{                                                                                       \
+            .role_flags = ::triglav::meta::MemberRole::Property,                                                        \
+            .name = ::triglav::make_name_id("self"),                                                                    \
+            .identifier = "self",                                                                                       \
+            .property =                                                                                                 \
+               {                                                                                                        \
+                  .type_name = ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS))),                            \
+                  .offset =                                                                                             \
+                     {                                                                                                  \
+                        .offset = 0,                                                                                    \
+                     },                                                                                                 \
+               },                                                                                                       \
          },
 
 #define TG_META_CLASS_END                                                                             \
@@ -464,7 +529,7 @@ class Box : public Ref
        .variant = ::triglav::meta::TypeVariant::Class,                                                \
        .members = TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN)),                            \
        .factory = +[]() -> void* { return new TG_TYPE(TG_META_JOIN_NS)(); }}};                        \
-   auto TG_TYPE(TG_META_JOIN_NS)::to_meta_ref() -> ::triglav::meta::Ref                               \
+   auto TG_TYPE(TG_META_JOIN_NS)::to_meta_ref() -> ::triglav::meta::ClassRef                          \
    {                                                                                                  \
       return {this, ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS))),                     \
               TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN))};                               \
@@ -517,26 +582,29 @@ class Box : public Ref
          },                                                                    \
    },
 
-#define TG_META_OPTIONAL_PROPERTY(property_name, property_type)                                                                        \
-   ::triglav::meta::Member{                                                                                                            \
-      .role_flags = ::triglav::meta::MemberRole::Property | ::triglav::meta::MemberRole::Optional,                                     \
-      .name = ::triglav::make_name_id(#property_name),                                                                                 \
-      .identifier = #property_name,                                                                                                    \
-      .property =                                                                                                                      \
-         {                                                                                                                             \
-            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                                            \
-            .optional = {                                                                                                              \
-               .has_value = [](void* handle) -> bool {                                                                                 \
-                  return static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->property_name.has_value();                                    \
-               },                                                                                                                      \
-               .get = [](void* handle) -> void* { return &static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->property_name.value(); },    \
-               .set =                                                                                                                  \
-                  [](void* handle, void* value) {                                                                                      \
-                     static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->property_name.emplace(*static_cast<const property_type*>(value)); \
-                  },                                                                                                                   \
-            },                                                                                                                         \
-                                                                                                                                       \
-         },                                                                                                                            \
+#define TG_META_OPTIONAL_PROPERTY(property_name, property_type)                                                      \
+   ::triglav::meta::Member{                                                                                          \
+      .role_flags = ::triglav::meta::MemberRole::Property | ::triglav::meta::MemberRole::Optional,                   \
+      .name = ::triglav::make_name_id(#property_name),                                                               \
+      .identifier = #property_name,                                                                                  \
+      .property =                                                                                                    \
+         {                                                                                                           \
+            .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                          \
+            .optional = {                                                                                            \
+               .has_value = [](void* handle) -> bool {                                                               \
+                  return static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->property_name.has_value();                  \
+               },                                                                                                    \
+               .get = [](void* handle) -> void* {                                                                    \
+                  auto& opt = static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->property_name;                         \
+                  if (!opt.has_value()) {                                                                            \
+                     opt.emplace();                                                                                  \
+                  }                                                                                                  \
+                  return &opt.value();                                                                               \
+               },                                                                                                    \
+               .reset = [](void* handle) { static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->property_name.reset(); }, \
+            },                                                                                                       \
+                                                                                                                     \
+         },                                                                                                          \
    },
 
 #define TG_PROPERTY_TYPE(class, property) std::decay_t<decltype(static_cast<class*>(nullptr)->property)>
@@ -607,9 +675,22 @@ class Box : public Ref
                       }},                                                                                                        \
    },
 
-#define TG_META_ENUM_BEGIN                                            \
-   std::array TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN)) \
-   {
+#define TG_META_ENUM_BEGIN                                                                \
+   std::array TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN))                     \
+   {                                                                                      \
+      ::triglav::meta::Member{                                                            \
+         .role_flags = ::triglav::meta::MemberRole::Property,                             \
+         .name = ::triglav::make_name_id("self"),                                         \
+         .identifier = "self",                                                            \
+         .property =                                                                      \
+            {                                                                             \
+               .type_name = ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS))), \
+               .offset =                                                                  \
+                  {                                                                       \
+                     .offset = 0,                                                         \
+                  },                                                                      \
+            },                                                                            \
+      },
 
 #define TG_META_ENUM_END                                                                               \
    }                                                                                                   \
@@ -664,28 +745,23 @@ class Box : public Ref
                      return nullptr;                                                                                                   \
                   return &it->first;                                                                                                   \
                },                                                                                                                      \
-               .get_n = [](void* handle, const void* key) -> void* {                                                                   \
-                  return &static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->prop_name.at(*static_cast<const prop_key_type*>(key));       \
+               .get = [](void* handle, const void* key) -> void* {                                                                     \
+                  return &(static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->prop_name[*static_cast<const prop_key_type*>(key)]);        \
                },                                                                                                                      \
-               .set_n =                                                                                                                \
-                  [](void* handle, const void* key, const void* value) {                                                               \
-                     static_cast<TG_TYPE(TG_META_JOIN_NS)*>(handle)->prop_name[*static_cast<const prop_key_type*>(key)] =              \
-                        *static_cast<const value_type*>(value);                                                                        \
-                  },                                                                                                                   \
             },                                                                                                                         \
          },                                                                                                                            \
    },
 
-#define TG_META_BODY(class_name)       \
- public:                               \
-   using Self = class_name;            \
-   ::triglav::meta::Ref to_meta_ref(); \
-                                       \
+#define TG_META_BODY(class_name)            \
+ public:                                    \
+   using Self = class_name;                 \
+   ::triglav::meta::ClassRef to_meta_ref(); \
+                                            \
  private:
 
 #define TG_META_STRUCT_BODY(class_name) \
    using Self = class_name;             \
-   ::triglav::meta::Ref to_meta_ref();
+   ::triglav::meta::ClassRef to_meta_ref();
 
 #define TG_META_PRIMITIVE_LIST                           \
    TG_META_PRIMITIVE(char, char)                         \

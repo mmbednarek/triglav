@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <span>
 #include <utility>
 #include <variant>
@@ -129,5 +130,23 @@ template<typename T, typename TElem>
 concept HasPushBack = requires(T t, TElem elem) {
    { t.push_back(elem) };
 };
+
+template<typename TIt, typename TValue, typename TTrans>
+TIt find_binary(TIt begin, TIt end, TValue value, TTrans trans)
+{
+   const auto saved_end = end;
+   while (begin != end) {
+      auto mid = begin + std::distance(begin, end) / 2;
+      const auto comp = trans(*mid);
+      if (comp < value) {
+         begin = std::next(mid);
+      } else if (comp > value) {
+         end = mid;
+      } else {
+         return mid;
+      }
+   }
+   return saved_end;
+}
 
 }// namespace triglav

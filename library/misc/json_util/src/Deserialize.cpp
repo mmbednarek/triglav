@@ -72,35 +72,9 @@ Matrix4x4 read_matrix4x4(const rapidjson::Value& src)
 #define TG_JSON_GETTER_triglav__Matrix4x4 read_matrix4x4(val)
 #define TG_JSON_GETTER(x) TG_CONCAT(TG_JSON_GETTER_, x)
 
+void deserialize_class(const meta::ClassRef& dst, const rapidjson::Value& src);
 void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src);
-
-void deserialize_array_class(const meta::ArrayRef& dst, const rapidjson::Value& src)
-{
-   const auto& src_arr = src.GetArray();
-   for ([[maybe_unused]] const auto& val : src_arr) {
-      auto ref = dst.append_ref();
-      deserialize_value(ref, val);
-   }
-}
-
-void deserialize_array(const meta::ArrayRef& dst, const Name type_name, const rapidjson::Value& src)
-{
-   const auto& src_arr = src.GetArray();
-   switch (type_name) {
-#define TG_META_PRIMITIVE(iden, ty_name)                                     \
-   case make_name_id(TG_STRING(ty_name)): {                                  \
-      for ([[maybe_unused]] const auto& val : src_arr) {                     \
-         dst.append<ty_name>() = static_cast<ty_name>(TG_JSON_GETTER(iden)); \
-      }                                                                      \
-      break;                                                                 \
-   }
-      TG_META_PRIMITIVE_LIST
-
-#undef TG_META_PRIMITIVE
-   default:
-      break;
-   }
-}
+void deserialize_property_ref(const meta::PropertyRef& dst, const rapidjson::Value& src);
 
 void deserialize_primitive_value(const meta::PropertyRef& dst, const rapidjson::Value& val)
 {
@@ -118,59 +92,101 @@ void deserialize_primitive_value(const meta::PropertyRef& dst, const rapidjson::
    }
 }
 
-void deserialize_enum_value(const meta::PropertyRef& dst, const meta::Type& type, const rapidjson::Value& src)
+void deserialize_class(const meta::ClassRef& dst, const rapidjson::Value& src)
+{
+   for (const auto property_ref : dst.properties()) {
+      const auto prop_name = property_ref.identifier().data();
+      if (!src.HasMember(prop_name))
+         return;
+
+      deserialize_property_ref(property_ref, src[prop_name]);
+   }
+}
+
+void deserialize_enum(const meta::EnumRef& dst, const rapidjson::Value& src)
 {
    if (src.IsString()) {
-      const auto value_name = make_name_id(src.GetString());
-      for (const auto& mem : type.members) {
-         if (!(mem.role_flags & meta::MemberRole::EnumValue))
-            continue;
-
-         if (mem.name == value_name) {
-            dst.set<int>(mem.enum_value.underlying_value);
-            return;
-         }
-      }
+      dst.set_string(src.GetString());
    } else if (src.IsInt()) {
       dst.set<int>(src.GetInt());
    }
 }
 
-void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src)
+void deserialize_array(const meta::ArrayRef& dst, const rapidjson::Value& src)
 {
-   dst.visit_properties([&](const meta::PropertyRef& ref) {
-      if (!src.HasMember(ref.identifier().data()))
-         return;
-
-      const auto& info = meta::TypeRegistry::the().type_info(ref.type());
-
-      if (ref.is_array()) {
-         if (info.variant == meta::TypeVariant::Class) {
-            deserialize_array_class(ref.to_array_ref(), src[ref.identifier().data()]);
-         } else {
-            deserialize_array(ref.to_array_ref(), ref.type(), src[ref.identifier().data()]);
-         }
-
-      } else {
-         switch (info.variant) {
-         case meta::TypeVariant::Primitive:
-            deserialize_primitive_value(ref, src[ref.identifier().data()]);
-            break;
-         case meta::TypeVariant::Class: {
-            deserialize_value(ref.to_ref(), src[ref.identifier().data()]);
-            break;
-         }
-         case meta::TypeVariant::Enum:
-            deserialize_enum_value(ref, info, src[ref.identifier().data()]);
-            break;
-         default:
-            break;
-         }
-      }
-   });
+   const auto& src_arr = src.GetArray();
+   for (const auto& val : src_arr) {
+      deserialize_value(dst.append_ref(), val);
+   }
 }
 
-bool deserialize(const meta::Ref& dst, io::IReader& reader)
+void deserialize_map(const meta::MapRef& dst, const rapidjson::Value& src)
+{
+   const auto& src_obj = src.GetObj();
+
+   if (dst.key_type() != "std::string"_name) {
+      // if key is not string we assume it's an enum
+
+      for (const auto& val : src_obj) {
+         std::string key_name = val.name.GetString();
+         int enum_val = meta::enum_string_to_value(dst.key_type(), key_name);
+         if (enum_val == -1)
+            continue;
+
+         meta::Ref key_ref(&enum_val, dst.key_type());
+         deserialize_value(dst.get_ref(key_ref), val.value);
+      }
+
+      return;
+   }
+
+   for (const auto& val : src_obj) {
+      std::string key_name = val.name.GetString();
+      meta::Ref key_ref(&key_name, "std::string"_name);
+
+      deserialize_value(dst.get_ref(key_ref), val.value);
+   }
+}
+
+void deserialize_optional(const meta::OptionalRef& dst, const rapidjson::Value& src)
+{
+   if (src.IsNull()) {
+      dst.reset();
+      return;
+   }
+   deserialize_value(dst.get_ref(), src);
+}
+
+void deserialize_property_ref(const meta::PropertyRef& dst, const rapidjson::Value& src)
+{
+   switch (dst.ref_kind()) {
+   case meta::RefKind::Primitive:
+      deserialize_primitive_value(dst, src);
+      break;
+   case meta::RefKind::Class:
+      deserialize_class(dst.to_class_ref(), src);
+      break;
+   case meta::RefKind::Enum:
+      deserialize_enum(dst.to_enum_ref(), src);
+      break;
+   case meta::RefKind::Array:
+      deserialize_array(dst.to_array_ref(), src);
+      break;
+   case meta::RefKind::Map:
+      deserialize_map(dst.to_map_ref(), src);
+      break;
+   case meta::RefKind::Optional:
+      deserialize_optional(dst.to_optional_ref(), src);
+      break;
+   }
+}
+
+void deserialize_value(const meta::Ref& dst, const rapidjson::Value& src)
+{
+   deserialize_property_ref(dst.to_property_ref(), src);
+}
+
+bool deserialize(const meta::ClassRef& dst, io::IReader& reader)
 {
    RapidJsonInputStream stream(reader);
 
