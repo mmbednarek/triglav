@@ -1,0 +1,71 @@
+nodes:
+  - name: root
+    items:
+      - type: static_mesh
+        name: floor
+        mesh: mesh/floor.mesh
+        transform:
+          translation:
+            x: 0.000000
+            y: 0.000000
+            z: 15.115708
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 1.000000
+            w: -0.000000
+          scale:
+            x: 7.469622
+            y: -7.469622
+            z: -0.457295
+      - type: static_mesh
+        name: wall1
+        mesh: mesh/wall1.mesh
+        transform:
+          translation:
+            x: -0.037704
+            y: -8.228489
+            z: 6.787118
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 7.645011
+            y: 0.862441
+            z: 7.908777
+      - type: static_mesh
+        name: wall2
+        mesh: mesh/wall2.mesh
+        transform:
+          translation:
+            x: 8.087761
+            y: 0.097044
+            z: 6.787118
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.707107
+            w: 0.707107
+          scale:
+            x: 7.645011
+            y: 0.862441
+            z: 7.908777
+      - type: static_mesh
+        name: table
+        mesh: mesh/table.mesh
+        transform:
+          translation:
+            x: 0.007303
+            y: -0.137278
+            z: 10.586569
+          rotation:
+            x: 0.000000
+            y: -1.000000
+            z: 0.000000
+            w: -0.000000
+          scale:
+            x: 3.586776
+            y: 3.586776
+            z: 0.242315

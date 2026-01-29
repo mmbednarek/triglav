@@ -337,6 +337,16 @@ int enum_string_to_value(const Name enum_type, const std::string_view str_value)
          return member.enum_value.underlying_value;
       }
    }
+
+   // fallback
+   for (const auto& member : type_info.members) {
+      if (member.role_flags & MemberRole::EnumValue && str_value.starts_with(member.identifier)) {
+         const auto sep_index = str_value.find('_');
+         const auto index = std::stoi(std::string(str_value.substr(sep_index + 1)));
+         return member.enum_value.underlying_value + index;
+      }
+   }
+
    return -1;
 }
 
