@@ -58,7 +58,7 @@ ProjectManager::ProjectManager() :
       project_info.name_id = make_name_id(project_info.name);
    }
    // sort so we can binary search them
-   std::ranges::sort(m_config.projects, [](const ProjectInfo& left, const ProjectInfo& right) { return left.name_id > right.name_id; });
+   std::ranges::sort(m_config.projects, [](const ProjectInfo& left, const ProjectInfo& right) { return left.name_id < right.name_id; });
 }
 
 const ProjectInfo* ProjectManager::project_info(const Name project_name) const

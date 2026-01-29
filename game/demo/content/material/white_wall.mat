@@ -1,0 +1,5 @@
+template: basic
+properties:
+  albedo: texture/table.tex1.tex
+  metallic: 0.000000
+  roughness: 0.900000

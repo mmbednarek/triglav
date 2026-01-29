@@ -14,6 +14,7 @@ class ArrayMap
  public:
    using Container = std::vector<std::pair<TKey, TValue>>;
    using iterator = typename Container::iterator;
+   using const_iterator = typename Container::const_iterator;
 
    ArrayMap() = default;
 
@@ -63,7 +64,18 @@ class ArrayMap
    {
       return m_values.begin();
    }
+
    [[nodiscard]] iterator end()
+   {
+      return m_values.end();
+   }
+
+   [[nodiscard]] const_iterator begin() const
+   {
+      return m_values.begin();
+   }
+
+   [[nodiscard]] const_iterator end() const
    {
       return m_values.end();
    }

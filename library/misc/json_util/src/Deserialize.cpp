@@ -97,7 +97,7 @@ void deserialize_class(const meta::ClassRef& dst, const rapidjson::Value& src)
    for (const auto property_ref : dst.properties()) {
       const auto prop_name = property_ref.identifier().data();
       if (!src.HasMember(prop_name))
-         return;
+         continue;
 
       deserialize_property_ref(property_ref, src[prop_name]);
    }

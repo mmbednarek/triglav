@@ -567,11 +567,11 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
          },                                                                                                                  \
    },
 
-#define TG_META_PROPERTY(property_name, property_type)                         \
+#define TG_META_PROPERTY_STR(property_name, property_string, property_type)    \
    ::triglav::meta::Member{                                                    \
       .role_flags = ::triglav::meta::MemberRole::Property,                     \
-      .name = ::triglav::make_name_id(#property_name),                         \
-      .identifier = #property_name,                                            \
+      .name = ::triglav::make_name_id(property_string),                        \
+      .identifier = property_string,                                           \
       .property =                                                              \
          {                                                                     \
             .type_name = ::triglav::make_name_id(TG_STRING(property_type)),    \
@@ -582,11 +582,13 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
          },                                                                    \
    },
 
-#define TG_META_OPTIONAL_PROPERTY(property_name, property_type)                                                      \
+#define TG_META_PROPERTY(property_name, property_type) TG_META_PROPERTY_STR(property_name, TG_STRING(property_name), property_type)
+
+#define TG_META_OPTIONAL_PROPERTY_STR(property_name, property_string, property_type)                                 \
    ::triglav::meta::Member{                                                                                          \
       .role_flags = ::triglav::meta::MemberRole::Property | ::triglav::meta::MemberRole::Optional,                   \
-      .name = ::triglav::make_name_id(#property_name),                                                               \
-      .identifier = #property_name,                                                                                  \
+      .name = ::triglav::make_name_id(property_string),                                                              \
+      .identifier = property_string,                                                                                 \
       .property =                                                                                                    \
          {                                                                                                           \
             .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                          \
@@ -607,13 +609,16 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
          },                                                                                                          \
    },
 
+#define TG_META_OPTIONAL_PROPERTY(property_name, property_type) \
+   TG_META_OPTIONAL_PROPERTY_STR(property_name, TG_STRING(property_name), property_type)
+
 #define TG_PROPERTY_TYPE(class, property) std::decay_t<decltype(static_cast<class*>(nullptr)->property)>
 
-#define TG_META_ARRAY_PROPERTY(property_name, property_type)                                                                               \
+#define TG_META_ARRAY_PROPERTY_STR(property_name, property_string, property_type)                                                          \
    ::triglav::meta::Member{                                                                                                                \
       .role_flags = ::triglav::meta::MemberRole::Property | ::triglav::meta::MemberRole::Array,                                            \
-      .name = ::triglav::make_name_id(#property_name),                                                                                     \
-      .identifier = #property_name,                                                                                                        \
+      .name = ::triglav::make_name_id(property_string),                                                                                    \
+      .identifier = property_string,                                                                                                       \
       .property =                                                                                                                          \
          {                                                                                                                                 \
             .type_name = ::triglav::make_name_id(TG_STRING(property_type)),                                                                \
@@ -638,6 +643,9 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
             },                                                                                                                             \
          },                                                                                                                                \
    },
+
+#define TG_META_ARRAY_PROPERTY(property_name, property_type) \
+   TG_META_ARRAY_PROPERTY_STR(property_name, TG_STRING(property_name), property_type)
 
 #define TG_META_INDIRECT(property_name, property_type)                                                                    \
    ::triglav::meta::Member{                                                                                               \

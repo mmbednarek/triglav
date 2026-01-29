@@ -40,10 +40,10 @@ ExitStatus handle_project(const CmdArgs_project& args)
       for (const auto& proj : project::ProjectManager::the().projects()) {
          const auto& metadata = project::ProjectManager::the().project_metadata(proj.name_id);
 
+         std::print(stderr, "-- {} --\n", metadata->name);
          std::print(stderr, "  Identifier: {}\n", proj.name);
-         std::print(stderr, "  Name: {}\n", metadata->name);
          std::print(stderr, "  Path: {}\n", proj.path);
-         std::print(stderr, "  Engine: {}\n", metadata->engine);
+         std::print(stderr, "  Engine: {}\n\n", metadata->engine);
       }
    }
 

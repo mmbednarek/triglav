@@ -51,11 +51,12 @@ template<typename TVector>
 std::vector<TVector> extract_vector(const PrimitiveAttributeType type, const Document& doc, const Primitive& prim,
                                     const BufferManager& buffer_manager)
 {
-   const auto it_pos = std::ranges::find_if(prim.attributes, [type](const PrimitiveAttribute& attrib) { return attrib.type == type; });
+   const auto it_pos =
+      std::ranges::find_if(prim.attributes, [type](const std::pair<PrimitiveAttributeType, u32>& attrib) { return attrib.first == type; });
    if (it_pos == prim.attributes.end()) {
       return {};
    }
-   return accessor_to_array<TVector>(it_pos->accessor_id, doc, buffer_manager);
+   return accessor_to_array<TVector>(it_pos->second, doc, buffer_manager);
 }
 
 }// namespace
