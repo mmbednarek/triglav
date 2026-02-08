@@ -31,6 +31,9 @@ TG_END_COMMAND()
 TG_DECLARE_COMMAND(inspect, "Print asset metadata")
 TG_END_COMMAND()
 
+TG_DECLARE_COMMAND(glb_json_extract, "Extract JSON from GLB file")
+TG_END_COMMAND()
+
 TG_DECLARE_COMMAND(project, "Maintain project")
 TG_DECLARE_FLAG(should_list, "l", "list", "List known projects")
 TG_DECLARE_FLAG(discover, "d", "discover", "Discover projects from the current directory")

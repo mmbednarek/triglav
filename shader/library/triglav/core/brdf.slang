@@ -1,6 +1,6 @@
-implementing common;
+implementing core;
 
-namespace common
+namespace triglav
 {
     float distribution_ggx(float NdotH, float roughness)
     {

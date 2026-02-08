@@ -6,7 +6,7 @@
 
 namespace triglav::tool::cli {
 
-constexpr auto g_desc_offset = 16;
+constexpr auto g_desc_offset = 32;
 
 namespace {
 

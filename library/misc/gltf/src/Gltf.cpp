@@ -15,6 +15,44 @@ void Document::deserialize(io::IReader& reader)
 
 }// namespace triglav::gltf
 
+#define TG_TYPE(NS) NS(NS(triglav, gltf), AnimationChannelTarget)
+TG_META_CLASS_BEGIN
+TG_META_OPTIONAL_PROPERTY(node, std::string)
+TG_META_PROPERTY(path, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), AnimationChannel)
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(sampler, triglav::u32)
+TG_META_PROPERTY(target, triglav::gltf::AnimationChannelTarget)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), Interpolation)
+TG_META_ENUM_BEGIN
+TG_META_ENUM_VALUE_STR(Linear, "LINEAR")
+TG_META_ENUM_VALUE_STR(Step, "STEP")
+TG_META_ENUM_VALUE_STR(CubicSpline, "CUBICSPLINE")
+TG_META_ENUM_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), AnimationSampler)
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(input, triglav::u32)
+TG_META_PROPERTY(interpolation, triglav::gltf::Interpolation)
+TG_META_PROPERTY(output, triglav::u32)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, gltf), Animation)
+TG_META_CLASS_BEGIN
+TG_META_ARRAY_PROPERTY(channels, triglav::gltf::AnimationChannel)
+TG_META_ARRAY_PROPERTY(samplers, triglav::gltf::AnimationSampler)
+TG_META_PROPERTY(name, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
 #define TG_TYPE(NS) NS(NS(triglav, gltf), Asset)
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(generator, std::string)

@@ -132,6 +132,9 @@ struct DecodedTexture
    SamplerProperties sampler_props;
 };
 
+struct Animation
+{};
+
 EncodedSamplerProperties encode_sampler_properties(const SamplerProperties& properties);
 SamplerProperties decode_sampler_properties(EncodedSamplerProperties encoded_properties);
 

@@ -1,6 +1,10 @@
 namespace triglav {
 struct InvalidType;
 
+namespace asset {
+class Animation;
+}// namespace asset
+
 namespace render_core {
 class GlyphAtlas;
 }// namespace render_core
@@ -38,7 +42,7 @@ TG_RESOURCE_TYPE(name, extension, cpp_type, loading_stage)
    TG_RESOURCE_TYPE(RayClosestHitShader, "rchitshader", ::triglav::graphics_api::Shader, 0) \
    TG_RESOURCE_TYPE(RayMissShader, "rmissshader", ::triglav::graphics_api::Shader, 0)       \
    TG_RESOURCE_TYPE(Material, "mat", ::triglav::render_objects::Material, 1)                \
-   TG_RESOURCE_TYPE(PLACEHOLDER, "placeholder", ::triglav::InvalidType, 0)                  \
+   TG_RESOURCE_TYPE(Animation, "anim", ::triglav::asset::Animation, 0)                      \
    TG_RESOURCE_TYPE(Mesh, "mesh", ::triglav::render_objects::Mesh, 0)                       \
    TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface, 0)                     \
    TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level, 0)

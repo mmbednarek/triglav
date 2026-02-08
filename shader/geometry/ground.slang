@@ -1,4 +1,4 @@
-import "../common/common.slang";
+import triglav.core;
 
 struct VSOutput
 {
@@ -13,7 +13,7 @@ struct VSOutput
 };
 
 [[vk::binding(0)]]
-ConstantBuffer<common::ViewProperties> ubo;
+ConstantBuffer<triglav::ViewProperties> ubo;
 
 static float4 g_positions[4] =
 {

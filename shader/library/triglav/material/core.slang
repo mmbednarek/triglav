@@ -1,6 +1,6 @@
 implementing material;
 
-namespace material
+namespace triglav::material
 {
     public struct VSInput
     {

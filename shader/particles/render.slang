@@ -1,8 +1,8 @@
 import particle;
-import "../common/common.slang";
+import triglav.core;
 
 [[vk::binding(0)]]
-ConstantBuffer<common::ViewProperties> ubo;
+ConstantBuffer<triglav::ViewProperties> ubo;
 
 [[vk::binding(1)]]
 StructuredBuffer<Particle> particlesIn;

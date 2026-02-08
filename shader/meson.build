@@ -1,11 +1,4 @@
-shader_lib_common = files([
-        'common/brdf.slang',
-        'common/common.slang',
-        'common/constants.slang',
-        'common/random.slang',
-        'common/shadow_map.slang',
-        'common/view_properties.slang',
-])
+subdir('library/triglav')
 
 slang_compiler = find_program('slangc')
 
@@ -14,12 +7,15 @@ if get_option('disable_shader_opt').enabled()
     shader_opt_flags = ['-g', '-O0']
 endif
 
+shader_library_dir = meson.current_source_dir() + '/library'
+
 slang_cs_commands = [
     slang_compiler,
     '-target' , 'spirv',
     '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency',
     '-entry', 'cs_main',
     '-stage', 'compute',
+    '-I', shader_library_dir,
     shader_opt_flags,
     '@INPUT@',
     '-o', '@OUTPUT@'
@@ -31,6 +27,7 @@ slang_fs_commands = [
     '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency',
     '-entry', 'fs_main',
     '-stage', 'fragment',
+    '-I', shader_library_dir,
     shader_opt_flags,
     '@INPUT@',
     '-o', '@OUTPUT@'
@@ -42,6 +39,7 @@ slang_vs_commands = [
     '-profile', 'spirv_1_6',
     '-entry', 'vs_main',
     '-stage', 'vertex',
+    '-I', shader_library_dir,
     shader_opt_flags,
     '@INPUT@',
     '-o', '@OUTPUT@'

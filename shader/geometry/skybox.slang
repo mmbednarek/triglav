@@ -1,4 +1,4 @@
-import "../common/common.slang";
+import triglav.core;
 
 struct VertexIn
 {
@@ -7,7 +7,7 @@ struct VertexIn
 };
 
 [[vk::binding(0)]]
-uniform ConstantBuffer<common::ViewProperties> viewProps;
+uniform ConstantBuffer<triglav::ViewProperties> viewProps;
 
 struct FragIn
 {

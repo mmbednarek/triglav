@@ -8,6 +8,7 @@
 #include "TypefaceLoader.hpp"
 
 #include "triglav/TypeMacroList.hpp"
+#include "triglav/asset/Asset.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
@@ -77,6 +78,7 @@ void ResourceManager::load_next_stage()
    for (const auto& [rc_name, rc_path] : stage.resource_list) {
       if (not rc_path.exists()) {
          log_error("failed to load resource: {}, file not found", rc_path.string());
+         flush_logs();
          assert(0);
       }
 

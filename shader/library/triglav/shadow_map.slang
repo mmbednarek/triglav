@@ -1,6 +1,6 @@
-implementing common;
+module shadow_map;
 
-namespace common::shadow_map
+namespace triglav::shadow_map
 {
     static const int PCR_FILTER_RANGE = 2;
     static const int PCR_FILTER_KERNEL_COUNT = (2*PCR_FILTER_RANGE + 1) * (2*PCR_FILTER_RANGE + 1);

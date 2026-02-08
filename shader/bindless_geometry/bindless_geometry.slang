@@ -1,6 +1,6 @@
-import "../common/common.slang";
-import material.material;
-import mesh.mesh;
+import triglav.core;
+import triglav.material;
+import triglav.mesh;
 
 /*
 
@@ -14,28 +14,24 @@ BINDING LAYOUT
 
 */
 
+typealias VSInput = triglav::material::VSInput;
+typealias VSOutput = triglav::material::VSOutput;
+
 [[vk::binding(0)]]
-uniform ConstantBuffer<common::ViewProperties> UboViewProps;
+uniform ConstantBuffer<triglav::ViewProperties> UboViewProps;
 
 [[vk::binding(1)]]
-uniform StructuredBuffer<mesh::SceneMesh> SceneMeshes;
-
-uint get_draw_index() {
-    return spirv_asm {
-        OpCapability DrawParameters;
-        result:$$uint = OpLoad builtin(DrawIndex:uint);
-    };
-}
+uniform StructuredBuffer<triglav::mesh::DrawCall> DrawCalls;
 
 [shader("vertex")]
-material::VSOutput vs_main(material::VSInput vsInput)
+VSOutput vs_main(VSInput vsInput)
 {
-    material::VSOutput output;
+    VSOutput output;
 
-    mesh::SceneMesh sceneMesh = SceneMeshes[get_draw_index()];
+    triglav::mesh::DrawCall drawCall = DrawCalls[triglav::get_draw_index()];
 
-    float4 viewSpace = mul(UboViewProps.view, mul(sceneMesh.transform, float4(vsInput.position, 1.0)));
-    float3x3 viewNormalMat = mul(float3x3(UboViewProps.view), float3x3(sceneMesh.normalTransform));
+    float4 viewSpace = mul(UboViewProps.view, mul(drawCall.transform, float4(vsInput.position, 1.0)));
+    float3x3 viewNormalMat = mul(float3x3(UboViewProps.view), float3x3(drawCall.normalTransform));
 
     output.texCoord = vsInput.texCoord;
     output.normal = mul(viewNormalMat, vsInput.normal);
@@ -43,7 +39,7 @@ material::VSOutput vs_main(material::VSInput vsInput)
     output.bitangent = mul(viewNormalMat, vsInput.tangent.w * cross(vsInput.normal, vsInput.tangent.xyz));
     output.viewSpacePosition = viewSpace.xyz;
     output.position = mul(UboViewProps.proj, viewSpace);
-    output.materialID = sceneMesh.materialID;
+    output.materialID = drawCall.materialID;
 
     return output;
 }

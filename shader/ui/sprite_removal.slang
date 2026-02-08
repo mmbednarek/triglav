@@ -1,4 +1,4 @@
-import sprite_api;
+import triglav.ui;
 
 [[vk::binding(0)]]
 uniform ConstantBuffer<uint> g_spriteRemovalCount;
@@ -12,7 +12,7 @@ struct SpriteCopyInfo
 StructuredBuffer<SpriteCopyInfo> g_spriteRemovalIDs : register(t0);
 
 [[vk::binding(2)]]
-RWStructuredBuffer<sprite_api::DrawCall> g_drawCallBuffer : register(u0);
+RWStructuredBuffer<triglav::ui::SpriteDrawCall> g_drawCallBuffer : register(u0);
 
 [numthreads(256, 1, 1)]
 void cs_main(uint tid: SV_DispatchThreadID)

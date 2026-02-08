@@ -1,21 +1,21 @@
-import text_processing;
+import triglav.ui;
 
 [[vk::binding(0)]]
-uniform StructuredBuffer<text_processing::UpdateInfo> g_textUpdates;
+uniform StructuredBuffer<triglav::ui::TextUpdateInfo> g_textUpdates;
 
 [[vk::binding(1)]]
 uniform StructuredBuffer<int> g_charBuffer;
 
 [[vk::binding(2)]]
-uniform StructuredBuffer<text_processing::GlyphInfo> g_glyphInfos;
+uniform StructuredBuffer<triglav::ui::GlyphInfo> g_glyphInfos;
 
 [[vk::binding(3)]]
-uniform RWStructuredBuffer<text_processing::DrawCall> g_outDrawCalls;
+uniform RWStructuredBuffer<triglav::ui::TextDrawCall> g_outDrawCalls;
 
 [[vk::binding(4)]]
-uniform RWStructuredBuffer<text_processing::Vertex> g_outVertices;
+uniform RWStructuredBuffer<triglav::ui::TextVertex> g_outVertices;
 
-groupshared text_processing::UpdateInfo g_sharedUpdateInfo;
+groupshared triglav::ui::TextUpdateInfo g_sharedUpdateInfo;
 groupshared uint g_charCountNextPow2;
 groupshared float g_position[1024];
 
@@ -58,7 +58,7 @@ void cs_main(uint3 groupID: SV_GroupID, uint3 threadID : SV_GroupThreadID)
         AllMemoryBarrierWithGroupSync();
     }
 
-    text_processing::GlyphInfo glyph = g_glyphInfos[g_sharedUpdateInfo.glyphBufferOffset + g_charBuffer[g_sharedUpdateInfo.characterOffset + threadID.x]];
+    triglav::ui::GlyphInfo glyph = g_glyphInfos[g_sharedUpdateInfo.glyphBufferOffset + g_charBuffer[g_sharedUpdateInfo.characterOffset + threadID.x]];
     const float left = g_position[threadID.x] + glyph.padding.x;
     const float right = g_position[threadID.x] + glyph.padding.x + glyph.size.x;
     const float top = -glyph.padding.y;
@@ -66,7 +66,7 @@ void cs_main(uint3 groupID: SV_GroupID, uint3 threadID : SV_GroupThreadID)
     const uint vertexOffset = g_sharedUpdateInfo.dstVertexOffset + 6*threadID.x;
 
     if (threadID.x == 0) {
-        text_processing::DrawCall drawCall;
+        triglav::ui::TextDrawCall drawCall;
         drawCall.vertexCount = g_sharedUpdateInfo.dstVertexCount;
         drawCall.firstVertex = g_sharedUpdateInfo.dstVertexOffset;
         drawCall.instanceCount = 1;
@@ -80,15 +80,15 @@ void cs_main(uint3 groupID: SV_GroupID, uint3 threadID : SV_GroupThreadID)
     }
 
     // top left
-    g_outVertices[vertexOffset] = text_processing::Vertex(float2(left, top), glyph.texCoordTopLeft);
+    g_outVertices[vertexOffset] = triglav::ui::TextVertex(float2(left, top), glyph.texCoordTopLeft);
     // bottom left
-    g_outVertices[vertexOffset + 1] = text_processing::Vertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
+    g_outVertices[vertexOffset + 1] = triglav::ui::TextVertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
     // top right
-    g_outVertices[vertexOffset + 2] = text_processing::Vertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
+    g_outVertices[vertexOffset + 2] = triglav::ui::TextVertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
     // top right
-    g_outVertices[vertexOffset + 3] = text_processing::Vertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
+    g_outVertices[vertexOffset + 3] = triglav::ui::TextVertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
     // bottom left
-    g_outVertices[vertexOffset + 4] = text_processing::Vertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
+    g_outVertices[vertexOffset + 4] = triglav::ui::TextVertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
     // bottom right
-    g_outVertices[vertexOffset + 5] = text_processing::Vertex(float2(right, bottom), glyph.texCoordBottomRight);
+    g_outVertices[vertexOffset + 5] = triglav::ui::TextVertex(float2(right, bottom), glyph.texCoordBottomRight);
 }

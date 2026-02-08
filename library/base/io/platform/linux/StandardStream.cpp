@@ -54,4 +54,27 @@ class StandardStream final : public IReader, public IConsoleWriter
    return stream;
 }
 
+MemorySize copy(IReader& input, IWriter& output)
+{
+   static constexpr auto copy_buffer_size = 4096ull;
+   std::array<u8, copy_buffer_size> copy_buffer{};
+
+   MemorySize total_copied{};
+   for (;;) {
+      const auto read_size = input.read(copy_buffer);
+      if (!read_size.has_value()) {
+         return 0;
+      }
+      if (*read_size == 0) {
+         return total_copied;
+      }
+
+      output.write({copy_buffer.data(), *read_size});
+      total_copied += *read_size;
+      if (*read_size < copy_buffer_size) {
+         return total_copied;
+      }
+   }
+}
+
 }// namespace triglav::io

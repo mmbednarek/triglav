@@ -1,4 +1,4 @@
-import "../../../shader/common/common.slang";
+import triglav.core;
 
 struct VSInput
 {
@@ -18,7 +18,7 @@ struct VSOutput
 };
 
 [[vk::binding(0)]]
-ConstantBuffer<common::ViewProperties> g_view_properties;
+ConstantBuffer<triglav::ViewProperties> g_view_properties;
 
 [[vk::binding(1)]]
 ConstantBuffer<float4> g_color;

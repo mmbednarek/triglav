@@ -4,6 +4,7 @@
 #include "Gltf.hpp"
 
 #include "triglav/Int.hpp"
+#include "triglav/io/DynamicWriter.hpp"
 #include "triglav/io/Stream.hpp"
 
 #include <memory>
@@ -42,5 +43,6 @@ struct GlbResource
 };
 
 std::optional<GlbResource> open_glb_file(const io::Path& path);
+std::optional<MemorySize> extract_glb_json(const io::Path& path, io::IWriter& output);
 
 }// namespace triglav::gltf

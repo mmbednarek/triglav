@@ -1,6 +1,6 @@
+import triglav.core;
 import ray_tracing;
 import ray_payload;
-import "../common/common.slang";
 
 [[vk::binding(0)]]
 uniform RaytracingAccelerationStructure topLevelAS;
@@ -14,7 +14,7 @@ uniform RWTexture2D<float> outAmbientOcclusionImage : register(u0);
 uniform RWTexture2D<float> outShadowsImage : register(u1);
 
 [[vk::binding(3)]]
-uniform ConstantBuffer<common::ViewProperties> transform;
+uniform ConstantBuffer<triglav::ViewProperties> transform;
 
 [shader("raygeneration")]
 void rgen_main()

@@ -1,4 +1,4 @@
-import text_processing;
+import triglav.ui;
 
 [[vk::binding(0)]]
 uniform ConstantBuffer<uint> g_textRemovalCount;
@@ -12,7 +12,7 @@ struct TextCopyInfo
 uniform StructuredBuffer<TextCopyInfo> g_textRemovalIDs;
 
 [[vk::binding(2)]]
-uniform RWStructuredBuffer<text_processing::DrawCall> g_drawCalls;
+uniform RWStructuredBuffer<triglav::ui::TextDrawCall> g_drawCalls;
 
 [numthreads(256, 1, 1)]
 void cs_main(uint3 threadID: SV_GroupThreadID)
