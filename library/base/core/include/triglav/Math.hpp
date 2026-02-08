@@ -143,6 +143,8 @@ struct Transform3D
    [[nodiscard]] Matrix4x4 to_matrix() const;
 };
 
+// static_assert(sizeof(Transform3D) % 16 == 0);
+
 [[nodiscard]] constexpr MemorySize align_size(const MemorySize size, const MemorySize alignment)
 {
    const auto offset = size % alignment;

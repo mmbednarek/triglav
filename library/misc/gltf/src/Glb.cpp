@@ -69,4 +69,23 @@ std::optional<GlbResource> open_glb_file(const io::Path& path)
    return GlbResource{.document{std::move(doc)}, .glb_file_handle{std::move(*file_handle_res)}, .buffer_manager{std::move(manager)}};
 }
 
+std::optional<MemorySize> extract_glb_json(const io::Path& path, io::IWriter& output)
+{
+   auto file_handle_res = io::open_file(path, io::FileMode::Read);
+   if (!file_handle_res.has_value()) {
+      return std::nullopt;
+   }
+   auto& file_handle = **file_handle_res;
+
+   auto glb_info = read_glb_info(file_handle);
+   if (!glb_info.has_value()) {
+      return std::nullopt;
+   }
+
+   file_handle.seek(io::SeekPosition::Begin, static_cast<MemoryOffset>(glb_info->json_offset));
+
+   io::LimitedReader json_reader(file_handle, glb_info->json_size);
+   return io::copy(json_reader, output);
+}
+
 }// namespace triglav::gltf

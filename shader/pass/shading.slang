@@ -1,4 +1,5 @@
-import "../common/common.slang";
+import triglav.core;
+import triglav.shadow_map;
 
 [[vk::binding(0)]]
 uniform Texture2D<float4> texColor;
@@ -14,7 +15,7 @@ uniform Sampler2D<float> texShadowMaps[3];
 uniform Texture2D<float> texShadow;
 
 [[vk::binding(6)]]
-uniform ConstantBuffer<common::ViewProperties> viewProperties;
+uniform ConstantBuffer<triglav::ViewProperties> viewProperties;
 
 [[vk::binding(7)]]
 uniform cbuffer ShadowMapMatrixBuffer
@@ -78,23 +79,23 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
     float shadow;
     if (g_shouldSampleShadows) {
         shadow = texShadow.Load(pixelPos);
-    } else if (common::shadow_map::test_bounds(shadowUV)) {
-        shadow = common::shadow_map::test_pcr(texShadowMaps[0], shadowUV, SHADOW_MAP_BIAS_TERM_CLOSE);
+    } else if (triglav::shadow_map::test_bounds(shadowUV)) {
+        shadow = triglav::shadow_map::test_pcr(texShadowMaps[0], shadowUV, SHADOW_MAP_BIAS_TERM_CLOSE);
 #if SHOW_SHADOW_CASCADES
         texColorSample.rgb *= float3(1.0, 0.1, 0.1);
 #endif
     } else {
         shadowUV = mul(mul(BIAS_MAT, g_shadowMapMatrices[1]), float4(position, 1.0));
         shadowUV /= shadowUV.w;
-        if (common::shadow_map::test_bounds(shadowUV)) {
-            shadow = common::shadow_map::test_pcr(texShadowMaps[1], shadowUV, SHADOW_MAP_BIAS_TERM_MID);
+        if (triglav::shadow_map::test_bounds(shadowUV)) {
+            shadow = triglav::shadow_map::test_pcr(texShadowMaps[1], shadowUV, SHADOW_MAP_BIAS_TERM_MID);
 #if SHOW_SHADOW_CASCADES
             texColorSample.rgb *= float3(0.1, 1.0, 0.1);
 #endif
         } else {
             shadowUV = mul(mul(BIAS_MAT, g_shadowMapMatrices[2]), float4(position, 1.0));
             shadowUV /= shadowUV.w;
-            shadow = common::shadow_map::test_pcr(texShadowMaps[2], shadowUV, SHADOW_MAP_BIAS_TERM_FAR);
+            shadow = triglav::shadow_map::test_pcr(texShadowMaps[2], shadowUV, SHADOW_MAP_BIAS_TERM_FAR);
 #if SHOW_SHADOW_CASCADES
             texColorSample.rgb *= float3(0.1, 0.1, 1.0);
 #endif
@@ -116,7 +117,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
     float3 viewDir = normalize(-position);
     float3 baseReflectivity = lerp(float3(0.04), albedo, metallic);
 
-    common::ShadingInfo shadingInfo;
+    triglav::ShadingInfo shadingInfo;
     shadingInfo.normal = normal;
     shadingInfo.viewDir = viewDir;
     shadingInfo.position = position;

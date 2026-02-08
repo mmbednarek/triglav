@@ -1,4 +1,4 @@
-import rectangle_api;
+import triglav.ui;
 
 [[vk::binding(0)]]
 uniform ConstantBuffer<uint> g_rectRemovalCount;
@@ -12,7 +12,7 @@ struct RectCopyInfo
 StructuredBuffer<RectCopyInfo> g_rectRemovalIDs : register(t0);
 
 [[vk::binding(2)]]
-RWStructuredBuffer<rectangle_api::DrawCall> g_drawCallBuffer : register(u0);
+RWStructuredBuffer<triglav::ui::RectDrawCall> g_drawCallBuffer : register(u0);
 
 [numthreads(256, 1, 1)]
 void cs_main(uint tid: SV_DispatchThreadID)

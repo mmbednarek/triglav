@@ -1,12 +1,12 @@
-module common;
+module core;
 
-__include constants;
-__include brdf;
-__include shadow_map;
-__include random;
-__include view_properties;
+__include core.constants;
+__include core.brdf;
+__include core.random;
+__include core.view_properties;
+__include core.math;
 
-namespace common
+namespace triglav
 {
 
 public uint get_draw_index() {

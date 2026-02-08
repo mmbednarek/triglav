@@ -1,8 +1,8 @@
-module rectangle_api;
+implementing ui;
 
-namespace rectangle_api {
+namespace triglav::ui {
 
-public struct Primitive
+public struct RectPrimitive
 {
     public float4 dimensions;
     public float4 borderRadius;
@@ -13,20 +13,20 @@ public struct Primitive
     public uint padding[3];
 };
 
-public struct WriteData
+public struct RectWriteData
 {
-    public Primitive primitive;
+    public RectPrimitive primitive;
     public uint dstIndex;
     public uint padding[3];
 };
 
-public struct DrawCall {
+public struct RectDrawCall {
     public uint vertexCount;
     public uint instanceCount;
     public uint firstVertex;
     public uint firstInstance;
 
-    public Primitive primitive;
+    public RectPrimitive primitive;
 };
 
 }

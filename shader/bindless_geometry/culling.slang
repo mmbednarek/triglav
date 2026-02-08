@@ -1,8 +1,8 @@
-import mesh.mesh;
-import "../common/common.slang";
+import triglav.core;
+import triglav.mesh;
 
 [[vk::binding(0)]]
-StructuredBuffer<mesh::SceneMesh> SceneMeshes;
+StructuredBuffer<triglav::mesh::DrawCall> SceneMeshes;
 
 [[vk::binding(1)]]
 ConstantBuffer<uint32_t> SceneMeshCount;
@@ -11,20 +11,20 @@ ConstantBuffer<uint32_t> SceneMeshCount;
 RWStructuredBuffer<uint32_t> Count;
 
 [[vk::binding(3)]]
-ConstantBuffer<common::ViewProperties> ViewProps;
+ConstantBuffer<triglav::ViewProperties> ViewProps;
 
 [[vk::binding(4)]]
 [[vk::image_format("r16")]]
 Texture2D<float> HiZBuffer;
 
 [[vk::binding(5)]]
-RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT0;
+RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT0;
 
 [[vk::binding(6)]]
-RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT1;
+RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT1;
 
 [[vk::binding(7)]]
-RWStructuredBuffer<mesh::SceneMesh> DrawCalls_MT2;
+RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT2;
 
 uint2 to_texture_space(float2 screenSpace, float2 texRes)
 {
@@ -50,11 +50,12 @@ uint32_t size_to_mip_level(uint32_t size)
     return min(mipLevel, 8);
 }
 
-bool is_object_visible(in mesh::SceneMesh mesh)
+bool is_object_visible(in triglav::mesh::DrawCall mesh)
 {
    // Do frustum culling
+    float4x4 transformMat = mesh.transform;
 
-    float4x4 mat = mul(ViewProps.proj, mul(ViewProps.view, mesh.transform));
+    float4x4 mat = mul(ViewProps.proj, mul(ViewProps.view, transformMat));
 
     const float3 points[] = {
         {mesh.boundingBoxMin.x, mesh.boundingBoxMin.y, mesh.boundingBoxMin.z},
@@ -142,12 +143,10 @@ bool is_object_visible(in mesh::SceneMesh mesh)
 [numthreads(1024, 1, 1)]
 void cs_main(uint3 threadID : SV_DispatchThreadID)
 {
-    // uint32_t meshCount, stride;
-    // SceneMeshes.GetDimensions(meshCount, stride);
     if (threadID.x >= SceneMeshCount)
         return;
 
-    mesh::SceneMesh sceneMesh = SceneMeshes[threadID.x];
+    triglav::mesh::DrawCall sceneMesh = SceneMeshes[threadID.x];
 
     if (!is_object_visible(sceneMesh))
         return;
@@ -157,6 +156,8 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
 
     uint32_t dstIndex;
     InterlockedAdd(Count[templateID], 1, dstIndex);
+
+    // triglav::mesh::DrawCall drawCall = SceneMeshes[threadID.x].to_draw_call();
 
     switch (templateID)
     {

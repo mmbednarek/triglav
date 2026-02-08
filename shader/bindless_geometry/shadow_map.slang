@@ -1,5 +1,7 @@
-import mesh.mesh;
-import "../common/common.slang";
+import triglav.core;
+import triglav.mesh;
+
+typealias DrawCall = triglav::mesh::DrawCall;
 
 struct ShadowMapProperties
 {
@@ -10,7 +12,7 @@ struct ShadowMapProperties
 uniform ConstantBuffer<ShadowMapProperties> shadowMapProps;
 
 [[vk::binding(1)]]
-uniform StructuredBuffer<mesh::SceneMesh> SceneMeshes;
+uniform StructuredBuffer<DrawCall> DrawCalls;
 
 struct VSInput
 {
@@ -21,8 +23,8 @@ struct VSInput
 [shader("vertex")]
 float4 vs_main(VSInput vsInput) : SV_Position
 {
-    mesh::SceneMesh sceneMesh = SceneMeshes[common::get_draw_index()];
-    return mul(shadowMapProps.view_proj, mul(sceneMesh.transform, float4(vsInput.position, 1.0)));
+    DrawCall drawCall = DrawCalls[triglav::get_draw_index()];
+    return mul(shadowMapProps.view_proj, mul(drawCall.transform, float4(vsInput.position, 1.0)));
 }
 
 [shader("fragment")]

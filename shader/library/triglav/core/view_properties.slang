@@ -1,6 +1,6 @@
-implementing common;
+implementing core;
 
-namespace common
+namespace triglav
 {
 
 public struct ViewProperties

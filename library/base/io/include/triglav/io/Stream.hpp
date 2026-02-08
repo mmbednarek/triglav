@@ -52,5 +52,6 @@ class IConsoleWriter : public IWriter
 [[nodiscard]] IConsoleWriter& stdout_writer();
 [[nodiscard]] IConsoleWriter& stderr_writer();
 [[nodiscard]] IReader& stdin_reader();
+MemorySize copy(IReader& input, IWriter& output);
 
 }// namespace triglav::io

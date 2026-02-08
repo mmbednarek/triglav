@@ -1,6 +1,7 @@
 triglavcli_sources = files([
                                'src/Commands.cpp',
                                'src/Commands.hpp',
+                               'src/GlbJsonExtractHandler.cpp',
                                'src/HelpHandler.cpp',
                                'src/ImportHandler.cpp',
                                'src/InspectHandler.cpp',

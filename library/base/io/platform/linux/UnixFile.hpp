@@ -2,7 +2,7 @@
 
 #include "File.hpp"
 
-namespace triglav::io::linux {
+namespace triglav::io {
 
 class UnixFile final : public IFile
 {
@@ -21,4 +21,4 @@ class UnixFile final : public IFile
    std::string m_file_path;
 };
 
-}// namespace triglav::io::linux
+}// namespace triglav::io

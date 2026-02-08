@@ -1,4 +1,4 @@
-import "../common/common.slang";
+import triglav.core;
 
 [[vk::binding(0)]]
 uniform Texture2D<float3> texPosition;
@@ -8,7 +8,7 @@ uniform Texture2D<float3> texNormal;
 uniform Texture2D<float2> texNoise;
 
 [[vk::binding(3)]]
-uniform ConstantBuffer<common::ViewProperties> viewProps;
+uniform ConstantBuffer<triglav::ViewProperties> viewProps;
 
 [[vk::binding(4)]]
 uniform cbuffer SampleBuffer

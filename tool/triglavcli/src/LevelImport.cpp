@@ -94,10 +94,8 @@ std::string strip_extension(const std::string_view str)
 class LevelImporter
 {
  public:
-   LevelImporter(LevelImportProps props, const project::ProjectMetadata& project_md, gltf::GlbResource&& glb_resource,
-                 const io::Path& glb_src_path) :
+   LevelImporter(LevelImportProps props, gltf::GlbResource&& glb_resource, const io::Path& glb_src_path) :
        m_props(std::move(props)),
-       m_project_md(project_md),
        m_glb_file(std::move(glb_resource)),
        m_glb_source_path(glb_src_path)
    {
@@ -362,7 +360,6 @@ class LevelImporter
 
  private:
    LevelImportProps m_props;
-   const project::ProjectMetadata& m_project_md;
    gltf::GlbResource m_glb_file;
    io::Path m_glb_source_path;
    std::map<u32, MeshName> m_imported_meshes;
@@ -374,19 +371,13 @@ bool import_level(const LevelImportProps& props)
 {
    std::print(stderr, "triglav-cli: Importing level to {}\n", props.dst_path.string());
 
-   const auto* project_md = project::ProjectManager::the().active_project_metadata();
-   if (project_md == nullptr) {
-      std::print(stderr, "triglav-cli: Failed to load project info\n");
-      return false;
-   }
-
    auto glb_file = gltf::open_glb_file(props.src_path);
    if (!glb_file.has_value()) {
       std::print(stderr, "triglav-cli: Failed to load GLB file\n");
       return false;
    }
 
-   LevelImporter importer(props, *project_md, std::move(*glb_file), props.src_path);
+   LevelImporter importer(props, std::move(*glb_file), props.src_path);
    if (!importer.import_scene()) {
       return false;
    }

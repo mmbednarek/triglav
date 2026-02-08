@@ -118,7 +118,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_render_surface.recreate_present_jobs();
 
-   stage::ShadingStage::initialize_particles(m_job_graph);
+   // stage::ShadingStage::initialize_particles(m_job_graph);
 
    StatisticManager::the().initialize();
 

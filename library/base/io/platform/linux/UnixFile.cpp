@@ -34,7 +34,7 @@ Result<IFileUPtr> open_file(const io::Path& path, const FileModeFlags mode)
       return std::unexpected{Status::InvalidFile};
    }
 
-   return std::make_unique<linux::UnixFile>(res, std::string{path.string()});
+   return std::make_unique<UnixFile>(res, std::string{path.string()});
 }
 
 union UnixDirectoryStream
@@ -68,7 +68,7 @@ Result<DirectoryStream> DirectoryStream::create(const Path& path)
 
 }// namespace triglav::io
 
-namespace triglav::io::linux {
+namespace triglav::io {
 
 UnixFile::UnixFile(int file_descriptor, std::string&& file_path) :
     m_file_descriptor(file_descriptor),
@@ -137,11 +137,11 @@ MemorySize UnixFile::position() const
    return res;
 }
 
-Result<std::monostate> remove_file(const Path& path)
+Status remove_file(const Path& path)
 {
    if (::unlink(path.string().data()) != 0)
-      return std::monostate{};
-   return std::unexpected{Status::InvalidFile};
+      return Status::Success;
+   return Status::InvalidFile;
 }
 
-}// namespace triglav::io::linux
+}// namespace triglav::io

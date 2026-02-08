@@ -2,6 +2,10 @@
 
 #include "Macros.hpp"
 
+#ifdef linux
+#undef linux
+#endif
+
 #ifdef __linux__
 #define TG_OS linux
 #elifdef _WIN32

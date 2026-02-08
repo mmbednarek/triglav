@@ -150,6 +150,8 @@ struct BoundingBox
    }
 };
 
+// static_assert(sizeof(BoundingBox) % 16 == 0);
+
 struct MeshData
 {
    VertexData vertex_data;

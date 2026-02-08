@@ -1,5 +1,5 @@
-import "../common/common.slang";
-import sprite_api;
+import triglav.core;
+import triglav.ui;
 
 [[vk::binding(0)]]
 cbuffer VertUBO
@@ -8,7 +8,7 @@ cbuffer VertUBO
 };
 
 [[vk::binding(1)]]
-StructuredBuffer<sprite_api::DrawCall> g_drawCallBuffer;
+StructuredBuffer<triglav::ui::SpriteDrawCall> g_drawCallBuffer;
 
 struct VSOutput
 {
@@ -40,7 +40,7 @@ static float2 g_vertexIndex[] = {
 
 VSOutput vs_main(uint vid: SV_VertexID)
 {
-    const sprite_api::Primitive prim = g_drawCallBuffer[common::get_draw_index()].primitive;
+    const triglav::ui::SpritePrimitive prim = g_drawCallBuffer[triglav::get_draw_index()].primitive;
 
     float2 vertex = g_vertexIndex[vid];
     float2 ssPosition = round(prim.spriteRect.xy) + vertex*round(prim.spriteRect.zw);

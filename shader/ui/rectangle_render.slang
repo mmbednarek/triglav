@@ -1,5 +1,5 @@
-import "../common/common.slang";
-import rectangle_api;
+import triglav.core;
+import triglav.ui;
 
 [[vk::binding(0)]]
 cbuffer VertUBO
@@ -8,7 +8,7 @@ cbuffer VertUBO
 };
 
 [[vk::binding(1)]]
-StructuredBuffer<rectangle_api::DrawCall> g_drawCallBuffer;
+StructuredBuffer<triglav::ui::RectDrawCall> g_drawCallBuffer;
 
 struct VSOutput
 {
@@ -52,7 +52,7 @@ static float2 g_vertexIndex[] = {
 
 VSOutput vs_main(uint vid: SV_VertexID)
 {
-    const rectangle_api::Primitive prim = g_drawCallBuffer[common::get_draw_index()].primitive;
+    const triglav::ui::RectPrimitive prim = g_drawCallBuffer[triglav::get_draw_index()].primitive;
 
     const float2 vertex = g_vertexIndex[vid];
     const float2 posOnRect = round(vertex * prim.dimensions.zw);
@@ -64,8 +64,8 @@ VSOutput vs_main(uint vid: SV_VertexID)
     out.screenOffset = prim.dimensions.xy;
     out.rectSize = prim.dimensions.zw;
     out.borderRadius = prim.borderRadius;
-    out.borderColor = common::to_linear_color(prim.borderColor);
-    out.backgroundColor = common::to_linear_color(prim.backgroundColor);
+    out.borderColor = triglav::to_linear_color(prim.borderColor);
+    out.backgroundColor = triglav::to_linear_color(prim.backgroundColor);
     out.croppingMask = prim.croppingMask;
     out.borderWidth = prim.borderWidth;
     return out;

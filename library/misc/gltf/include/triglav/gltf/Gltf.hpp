@@ -14,6 +14,47 @@ namespace triglav::gltf {
 
 constexpr u32 g_invalid_id = ~0u;
 
+struct AnimationChannelTarget
+{
+   TG_META_STRUCT_BODY(AnimationChannelTarget)
+
+   std::optional<u32> node;
+   std::string path;
+};
+
+struct AnimationChannel
+{
+   TG_META_STRUCT_BODY(AnimationChannel)
+
+   u32 sampler;
+   AnimationChannelTarget target;
+};
+
+enum class Interpolation
+{
+   Linear,
+   Step,
+   CubicSpline,
+};
+
+struct AnimationSampler
+{
+   TG_META_STRUCT_BODY(AnimationSampler)
+
+   u32 input;
+   Interpolation interpolation{};
+   u32 output;
+};
+
+struct Animation
+{
+   TG_META_STRUCT_BODY(Animation)
+
+   std::vector<AnimationChannel> channels;
+   std::vector<AnimationSampler> samplers;
+   std::string name;
+};
+
 struct Asset
 {
    TG_META_STRUCT_BODY(Asset)

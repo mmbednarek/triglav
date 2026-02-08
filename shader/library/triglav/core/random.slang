@@ -1,6 +1,6 @@
-implementing common;
+implementing core;
 
-namespace common
+namespace triglav
 {
 
 public static constexpr uint RANDOM_MULTIPLIER = 0xCE66DU;

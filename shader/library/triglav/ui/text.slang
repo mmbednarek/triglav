@@ -1,8 +1,8 @@
-module text_processing;
+implementing ui;
 
-namespace text_processing
+namespace triglav::ui
 {
-    public struct UpdateInfo
+    public struct TextUpdateInfo
     {
         public float4 color;
         public float4 crop;
@@ -18,7 +18,7 @@ namespace text_processing
         public uint dstVertexCount;
     };
 
-    public struct DrawCall
+    public struct TextDrawCall
     {
         public uint vertexCount;
         public uint instanceCount;
@@ -31,7 +31,7 @@ namespace text_processing
         public uint atlasID;
     };
 
-    public struct Vertex
+    public struct TextVertex
     {
         [[vk::location(0)]]
         public float2 position : POSITION0;

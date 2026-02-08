@@ -16,6 +16,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-copy"
 #pragma GCC diagnostic ignored "-Wdeprecated-literal-operator"
+#pragma GCC diagnostic ignored "-Wpedantic"
 #elifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4996 4456 4245 4267 4244 4305 4458 5054 4702 5030 5222)
