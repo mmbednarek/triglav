@@ -1,13 +1,15 @@
 subdir('external/mikktspace')
 subdir('external/stbi')
 
-subdir('misc/test_util')
+subdir('misc/testing_core')
 
 subdir('base/core')
 subdir('base/io')
 subdir('base/meta')
 subdir('engine/memory')
 subdir('base/threading')
+
+subdir('misc/testing_render_util')
 
 subdir('misc/json_util')
 subdir('engine/project')

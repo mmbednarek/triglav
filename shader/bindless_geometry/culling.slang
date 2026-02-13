@@ -2,7 +2,7 @@ import triglav.core;
 import triglav.mesh;
 
 [[vk::binding(0)]]
-StructuredBuffer<triglav::mesh::DrawCall> SceneMeshes;
+StructuredBuffer<triglav::mesh::SceneMesh> SceneMeshes;
 
 [[vk::binding(1)]]
 ConstantBuffer<uint32_t> SceneMeshCount;
@@ -50,22 +50,22 @@ uint32_t size_to_mip_level(uint32_t size)
     return min(mipLevel, 8);
 }
 
-bool is_object_visible(in triglav::mesh::DrawCall mesh)
+bool is_object_visible(in triglav::mesh::SceneMesh mesh)
 {
    // Do frustum culling
-    float4x4 transformMat = mesh.transform;
+    float4x4 transformMat = mesh.transform.matrix();
 
     float4x4 mat = mul(ViewProps.proj, mul(ViewProps.view, transformMat));
 
     const float3 points[] = {
-        {mesh.boundingBoxMin.x, mesh.boundingBoxMin.y, mesh.boundingBoxMin.z},
-        {mesh.boundingBoxMin.x, mesh.boundingBoxMin.y, mesh.boundingBoxMax.z},
-        {mesh.boundingBoxMin.x, mesh.boundingBoxMax.y, mesh.boundingBoxMin.z},
-        {mesh.boundingBoxMin.x, mesh.boundingBoxMax.y, mesh.boundingBoxMax.z},
-        {mesh.boundingBoxMax.x, mesh.boundingBoxMin.y, mesh.boundingBoxMin.z},
-        {mesh.boundingBoxMax.x, mesh.boundingBoxMin.y, mesh.boundingBoxMax.z},
-        {mesh.boundingBoxMax.x, mesh.boundingBoxMax.y, mesh.boundingBoxMin.z},
-        {mesh.boundingBoxMax.x, mesh.boundingBoxMax.y, mesh.boundingBoxMax.z},
+        {mesh.boundingBox.min.x, mesh.boundingBox.min.y, mesh.boundingBox.min.z},
+        {mesh.boundingBox.min.x, mesh.boundingBox.min.y, mesh.boundingBox.max.z},
+        {mesh.boundingBox.min.x, mesh.boundingBox.max.y, mesh.boundingBox.min.z},
+        {mesh.boundingBox.min.x, mesh.boundingBox.max.y, mesh.boundingBox.max.z},
+        {mesh.boundingBox.max.x, mesh.boundingBox.min.y, mesh.boundingBox.min.z},
+        {mesh.boundingBox.max.x, mesh.boundingBox.min.y, mesh.boundingBox.max.z},
+        {mesh.boundingBox.max.x, mesh.boundingBox.max.y, mesh.boundingBox.min.z},
+        {mesh.boundingBox.max.x, mesh.boundingBox.max.y, mesh.boundingBox.max.z},
     };
 
     float3 minPoint = float3(1.#INF, 1.#INF, 1.#INF);
@@ -146,7 +146,8 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
     if (threadID.x >= SceneMeshCount)
         return;
 
-    triglav::mesh::DrawCall sceneMesh = SceneMeshes[threadID.x];
+    triglav::mesh::SceneMesh sceneMesh = SceneMeshes[threadID.x];
+    // triglav::mesh::SceneMesh sceneMesh; // = SceneMeshes[threadID.x];
 
     if (!is_object_visible(sceneMesh))
         return;
@@ -157,18 +158,18 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
     uint32_t dstIndex;
     InterlockedAdd(Count[templateID], 1, dstIndex);
 
-    // triglav::mesh::DrawCall drawCall = SceneMeshes[threadID.x].to_draw_call();
+    triglav::mesh::DrawCall drawCall = sceneMesh.to_draw_call();
 
     switch (templateID)
     {
     case 0:
-        DrawCalls_MT0[dstIndex] = sceneMesh;
+        DrawCalls_MT0[dstIndex] = drawCall;
         break;
     case 1:
-        DrawCalls_MT1[dstIndex] = sceneMesh;
+        DrawCalls_MT1[dstIndex] = drawCall;
         break;
     case 2:
-        DrawCalls_MT2[dstIndex] = sceneMesh;
+        DrawCalls_MT2[dstIndex] = drawCall;
         break;
     default: break;
     }

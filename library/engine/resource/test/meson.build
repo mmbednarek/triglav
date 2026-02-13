@@ -3,7 +3,7 @@ resource_test_sources = files(
     'ParserTest.cpp'
 )
 
-resource_test_deps = [resource, test_util, io]
+resource_test_deps = [resource, testing_core, io]
 
 resource_test = executable('resource_test',
                            sources: resource_test_sources,

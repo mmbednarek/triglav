@@ -1,19 +1,19 @@
-#include "TestingSupport.hpp"
+#include "RenderSupport.hpp"
 
 #include <cassert>
 #ifdef TG_ENABLE_RENDERDOC
 #include <renderdoc_app.h>
 #endif// TG_ENABLE_RENDERDOC
 
-namespace triglav::test {
+namespace triglav::testing_render_util {
 
-TestingSupport& TestingSupport::the()
+RenderSupport& RenderSupport::the()
 {
-   static TestingSupport testing_support;
+   static RenderSupport testing_support;
    return testing_support;
 }
 
-void TestingSupport::initialize_render_doc()
+void RenderSupport::initialize_render_doc()
 {
 #ifdef TG_ENABLE_RENDERDOC
    m_library = std::make_unique<io::DynLibrary>("/usr/lib/librenderdoc.so");
@@ -22,7 +22,7 @@ void TestingSupport::initialize_render_doc()
 #endif
 }
 
-void TestingSupport::on_quit() const
+void RenderSupport::on_quit() const
 {
 #ifdef TG_ENABLE_RENDERDOC
    if (m_render_doc_api != nullptr) {
@@ -31,20 +31,20 @@ void TestingSupport::on_quit() const
 #endif
 }
 
-graphics_api::Device& TestingSupport::device()
+graphics_api::Device& RenderSupport::device()
 {
    return *the().m_device;
 }
 
-resource::ResourceManager& TestingSupport::resource_manager()
+resource::ResourceManager& RenderSupport::resource_manager()
 {
    return *the().m_resource_manager;
 }
 
-RENDERDOC_API_1_6_0& TestingSupport::render_doc()
+RENDERDOC_API_1_6_0& RenderSupport::render_doc()
 {
    assert(the().m_render_doc_api != nullptr);
    return *the().m_render_doc_api;
 }
 
-}// namespace triglav::test
+}// namespace triglav::testing_render_util

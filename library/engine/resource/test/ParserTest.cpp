@@ -1,7 +1,7 @@
 #include "triglav/Int.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/io/Path.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 #include <fstream>
 #include <ryml.hpp>

@@ -1,8 +1,8 @@
-#include "TestingSupport.hpp"
+#include "../../../misc/testing_render_util/include/triglav/testing_render_util/RenderSupport.hpp"
 
 #include "triglav/Ranges.hpp"
 #include "triglav/render_core/JobGraph.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 #include <iostream>
 
@@ -13,7 +13,7 @@ using triglav::graphics_api::PipelineStage;
 using triglav::render_core::JobGraph;
 using triglav::render_core::PipelineCache;
 using triglav::render_core::ResourceStorage;
-using triglav::test::TestingSupport;
+using triglav::testing_render_util::RenderSupport;
 
 using namespace triglav::name_literals;
 using namespace triglav::render_core::literals;
@@ -38,9 +38,9 @@ void write_buffer(triglav::graphics_api::Buffer& buffer, T value)
 
 TEST(JobGraphTest, BasicDependency)
 {
-   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage(TestingSupport::device());
-   JobGraph graph(TestingSupport::device(), TestingSupport::resource_manager(), pipeline_cache, storage, Vector2i{800, 600});
+   PipelineCache pipeline_cache(RenderSupport::device(), RenderSupport::resource_manager());
+   ResourceStorage storage(RenderSupport::device());
+   JobGraph graph(RenderSupport::device(), RenderSupport::resource_manager(), pipeline_cache, storage, Vector2i{800, 600});
 
    auto& first_ctx = graph.add_job("basic_dependency.first"_name);
    auto& second_ctx = graph.add_job("basic_dependency.second"_name);
@@ -61,7 +61,7 @@ TEST(JobGraphTest, BasicDependency)
 
    graph.build_jobs("basic_dependency.third"_name);
 
-   auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   auto fence = GAPI_CHECK(RenderSupport::device().create_fence());
    fence.await();
 
    for (int frame_index : triglav::Range(0, triglav::render_core::FRAMES_IN_FLIGHT_COUNT)) {
@@ -73,9 +73,9 @@ TEST(JobGraphTest, BasicDependency)
 
 TEST(JobGraphTest, BasicInterframeDependency)
 {
-   PipelineCache pipeline_cache(TestingSupport::device(), TestingSupport::resource_manager());
-   ResourceStorage storage(TestingSupport::device());
-   JobGraph graph(TestingSupport::device(), TestingSupport::resource_manager(), pipeline_cache, storage, Vector2i{800, 600});
+   PipelineCache pipeline_cache(RenderSupport::device(), RenderSupport::resource_manager());
+   ResourceStorage storage(RenderSupport::device());
+   JobGraph graph(RenderSupport::device(), RenderSupport::resource_manager(), pipeline_cache, storage, Vector2i{800, 600});
 
    auto& build_context = graph.add_job("basic_interframe_dependency"_name);
    graph.add_dependency_to_previous_frame("basic_interframe_dependency"_name, "basic_interframe_dependency"_name);
@@ -103,7 +103,7 @@ TEST(JobGraphTest, BasicInterframeDependency)
 
    graph.build_jobs("basic_interframe_dependency"_name);
 
-   auto fence = GAPI_CHECK(TestingSupport::device().create_fence());
+   auto fence = GAPI_CHECK(RenderSupport::device().create_fence());
    fence.await();
 
    graph.enable_flag("basic_interframe_dependency"_name, "is_first_frame"_name);

@@ -29,6 +29,41 @@ public float3x3 normal_transform_matrix(const in float4x4 matrix) {
     return transpose(invert_f3x3(float3x3(matrix)));
 }
 
+public float4x4 translation_to_matrix(float3 translation) {
+    return float4x4(
+        1, 0, 0, translation.x,
+        0, 1, 0, translation.y,
+        0, 0, 1, translation.z,
+        0, 0, 0, 1,
+    );
+}
+
+public float4x4 scale_to_matrix(float3 scale) {
+    return float4x4(
+        scale.x,    0,    0,       0,
+        0,       scale.y, 0,       0,
+        0,       0,       scale.z, 0,
+        0,       0,       0,       1);
+}
+
+public float4x4 quaterion_rot_to_matrix(float4 quat) {
+    float4 q = normalize(quat);
+    return float4x4(
+        1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z, 2.0*q.x*q.y - 2.0*q.z*q.w,       2.0*q.x*q.z + 2.0*q.y*q.w,       0.0,
+        2.0*q.x*q.y + 2.0*q.z*q.w,       1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z, 2.0*q.y*q.z - 2.0*q.x*q.w,       0.0,
+        2.0*q.x*q.z - 2.0*q.y*q.w,       2.0*q.y*q.z + 2.0*q.x*q.w,       1.0 - 2.0*q.x*q.x - 2.0*q.y*q.y, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    );
+}
+
+public float4x4 extent_mat3x3(float3x3 matrix) {
+    return float4x4(
+        matrix._m00, matrix._m01, matrix._m02, 0.0,
+        matrix._m10, matrix._m11, matrix._m12, 0.0,
+        matrix._m20, matrix._m21, matrix._m22, 0.0,
+        0.0, 0.0, 0.0, 1.0);
+}
+
 public struct Transform
 {
     public float4 rotation;
@@ -37,29 +72,10 @@ public struct Transform
 
     public float4x4 matrix()
     {
-        // scale
-        const float4x4 scale = float4x4(
-            scale.x,    0,    0,       0,
-            0,       scale.y, 0,       0,
-            0,       0,       scale.z, 0,
-            0,       0,       0,       1);
-
-        // rotation
-        const float4x4 rotation = float4x4(
-            cos(rotation.w), -sin(rotation.w), 0, 0,
-            sin(rotation.w), cos(rotation.w),  0, 0,
-            0,               0,                1, 0,
-            0,               0,                0, 1);
-
-        // translation
-        const float4x4 translation = float4x4(
-            1, 0, 0, translation.x,
-            0, 1, 0, translation.y,
-            0, 0, 1, translation.z,
-            0, 0, 0, 1,
-        );
-
-        return mul(mul(scale, rotation), translation);
+        const float4x4 scale = scale_to_matrix(scale);
+        const float4x4 rotation = quaterion_rot_to_matrix(rotation);
+        const float4x4 translation = translation_to_matrix(translation);
+        return mul(translation, mul(rotation, scale));
     }
 };
 

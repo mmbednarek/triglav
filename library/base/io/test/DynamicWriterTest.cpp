@@ -1,6 +1,6 @@
 #include "triglav/io/DynamicWriter.hpp"
 #include "triglav/io/Iterator.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 #include <cstring>
 

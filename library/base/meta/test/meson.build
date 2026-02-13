@@ -3,7 +3,7 @@ meta_test_sources = files(
     'MetaTest.cpp',
 )
 
-meta_test_deps = [core, test_util, meta]
+meta_test_deps = [core, testing_core, meta]
 
 meta_test = executable('meta_test',
                      sources : meta_test_sources,

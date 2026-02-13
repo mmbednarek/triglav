@@ -1,4 +1,4 @@
-#include "TestingSupport.hpp"
+#include "../../../misc/testing_render_util/include/triglav/testing_render_util/RenderSupport.hpp"
 
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
@@ -6,7 +6,7 @@
 #include "triglav/io/Logging.hpp"
 #include "triglav/project/Name.hpp"
 #include "triglav/resource/ResourceManager.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <print>
@@ -38,13 +38,13 @@ int triglav_main(InputArgs& args, IDisplay& display)
    auto device = GAPI_CHECK(instance.create_device(nullptr, triglav::graphics_api::DevicePickStrategy::PreferDedicated,
                                                    triglav::graphics_api::DeviceFeature::RayTracing));
 
-   triglav::test::TestingSupport::the().m_device = device.get();
+   triglav::testing_render_util::RenderSupport::the().m_device = device.get();
 
    triglav::font::FontManger font_manager;
    ResourceManager resource_manager(*device, font_manager);
-   triglav::test::TestingSupport::the().m_resource_manager = &resource_manager;
+   triglav::testing_render_util::RenderSupport::the().m_resource_manager = &resource_manager;
 
-   triglav::test::TestingSupport::the().initialize_render_doc();
+   triglav::testing_render_util::RenderSupport::the().initialize_render_doc();
 
    LoadAssetsAwaiter awaiter(resource_manager);
 
@@ -61,7 +61,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    testing::InitGoogleTest(&args.arg_count, const_cast<char**>(args.args));
    status = RUN_ALL_TESTS();
 
-   triglav::test::TestingSupport::the().on_quit();
+   triglav::testing_render_util::RenderSupport::the().on_quit();
    triglav::threading::ThreadPool::the().quit();
 
    return status;

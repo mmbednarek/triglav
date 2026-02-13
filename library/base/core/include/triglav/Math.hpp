@@ -134,13 +134,14 @@ constexpr auto g_pi = 3.14159265358979323846f;
 
 struct Transform3D
 {
-   Quaternion rotation;
-   Vector3 scale;
-   Vector3 translation;
+   alignas(16) Quaternion rotation;
+   alignas(16) Vector3 scale;
+   alignas(16) Vector3 translation;
 
    static Transform3D identity();
    static Transform3D from_matrix(const Matrix4x4& matrix);
    [[nodiscard]] Matrix4x4 to_matrix() const;
+   [[nodiscard]] Matrix4x4 to_normal_matrix() const;
 };
 
 // static_assert(sizeof(Transform3D) % 16 == 0);

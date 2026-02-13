@@ -64,15 +64,14 @@ void ShadowMapStage::render_cascade(render_core::BuildContext& ctx, const Name p
    ctx.bind_vertex_layout(g_vertex_layout);
 
    ctx.bind_uniform_buffer(0, view_props);
-   ctx.bind_storage_buffer(1, &m_bindless_scene.scene_object_buffer());
+   ctx.bind_storage_buffer(1, "occlusion_culling.passthrough"_external);
 
    ctx.bind_fragment_shader("shader/bindless_geometry/shadow_map.fshader"_rc);
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());
 
-   ctx.draw_indexed_indirect_with_count(&m_bindless_scene.scene_object_buffer(), &m_bindless_scene.count_buffer(), 128,
-                                        sizeof(BindlessSceneObject));
+   ctx.draw_indexed_indirect_with_count("occlusion_culling.passthrough"_external, &m_bindless_scene.count_buffer(), 128, sizeof(DrawCall));
 }
 
 void ShadowMapStage::on_resource_definition(render_core::BuildContext& ctx) const

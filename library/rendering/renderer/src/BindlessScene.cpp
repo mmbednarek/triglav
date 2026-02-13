@@ -45,11 +45,9 @@ class DrawCallUpdateWriter
       bso.index_offset = mesh_info.index_offset;
       bso.instance_count = 1;
       bso.instance_offset = 0;
-      bso.bounding_box_min = mesh_info.bounding_box_min;
-      bso.bounding_box_max = mesh_info.bounding_box_max;
+      bso.bounding_box = {mesh_info.bounding_box_min, mesh_info.bounding_box_max};
       bso.material_id = mesh_info.material_id;
-      bso.transform = pending_object.object->model_matrix();
-      bso.normal_transform = glm::transpose(glm::inverse(glm::mat3(pending_object.object->model_matrix())));
+      bso.transform = pending_object.object->transform;
 
       m_staging_ptr[m_top_staging_index] = bso;
       m_cmd_list.copy_buffer(m_staging_buffer, m_dst_buffer, m_top_staging_index * sizeof(BindlessSceneObject),
@@ -142,22 +140,16 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
 
       u32 stage_index = 0;
       for (const auto& [object_id, transform] : m_pending_transform) {
-         std::array<Matrix4x4, 2> transforms{
-            transform.to_matrix(),
-            glm::transpose(glm::inverse(glm::mat3(transform.to_matrix()))),
-         };
-         transform_mapping.write_offset(transforms.data(), transforms.size() * sizeof(Matrix4x4),
-                                        stage_index * transforms.size() * sizeof(Matrix4x4));
+         transform_mapping.write_offset(&transform, sizeof(Transform3D), stage_index * sizeof(Transform3D));
 
          auto& obj = m_scene.object(object_id);
          auto& mesh = m_resource_manager.get(obj.model);
          for (u32 i = 0; i < mesh.range.size(); ++i) {
-            auto offset = m_draw_call_update_list.key_map().at(std::make_pair(object_id, i));
+            const auto offset = m_draw_call_update_list.key_map().at(std::make_pair(object_id, i));
 
-            cmd_list.copy_buffer(m_transform_stage.buffer(), m_scene_objects.buffer(),
-                                 static_cast<u32>(stage_index * transforms.size() * sizeof(Matrix4x4)),
+            cmd_list.copy_buffer(m_transform_stage.buffer(), m_scene_objects.buffer(), static_cast<u32>(stage_index * sizeof(Transform3D)),
                                  static_cast<u32>(offset * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform)),
-                                 static_cast<u32>(transforms.size() * sizeof(Matrix4x4)));
+                                 sizeof(Transform3D));
          }
 
          ++stage_index;

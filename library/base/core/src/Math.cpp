@@ -31,6 +31,11 @@ Matrix4x4 Transform3D::to_matrix() const
    return glm::translate(glm::mat4(1.0f), this->translation) * glm::mat4_cast(this->rotation) * glm::scale(glm::mat4(1.0f), this->scale);
 }
 
+Matrix4x4 Transform3D::to_normal_matrix() const
+{
+   return glm::transpose(glm::inverse(glm::mat3(this->to_matrix())));
+}
+
 Vector3 find_closest_point_between_lines(const Vector3 origin_a, const Vector3 dir_a, const Vector3 origin_b, const Vector3 dir_b)
 {
    const auto r = origin_b - origin_a;

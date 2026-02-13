@@ -23,11 +23,26 @@ struct BindlessSceneObject
    u32 vertex_offset{};
    u32 instance_offset{};
    u32 material_id{};
-   alignas(16) glm::mat4 transform{};
-   alignas(16) glm::mat4 normal_transform{};
-   alignas(16) glm::vec3 bounding_box_min{};
-   alignas(16) glm::vec3 bounding_box_max{};
+   Transform3D transform{};
+   geometry::BoundingBox bounding_box{};
 };
+
+static_assert(sizeof(BindlessSceneObject) % 16 == 0);
+
+struct DrawCall
+{
+   u32 indexCount;
+   u32 instanceCount;
+   u32 indexOffset;
+   u32 vertexOffset;
+   u32 instanceOffset;
+   u32 materialID;
+   u32 padding[2];
+   Matrix4x4 transform;
+   Matrix4x4 normalTransform;
+};
+
+static_assert(sizeof(DrawCall) % 16 == 0);
 
 struct BindlessMeshInfo
 {
@@ -126,7 +141,7 @@ class BindlessScene
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
-   graphics_api::StagingArray<Matrix4x4> m_transform_stage;
+   graphics_api::StagingArray<Transform3D> m_transform_stage;
    graphics_api::StorageArray<BindlessSceneObject> m_scene_objects;
    graphics_api::VertexArray<geometry::Vertex> m_combined_vertex_buffer;
    graphics_api::IndexArray m_combined_index_buffer;

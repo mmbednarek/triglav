@@ -1,8 +1,6 @@
 render_core_test_sources = files(
     'BuildContextTest.cpp',
     'JobGraphTest.cpp',
-    'TestingSupport.cpp',
-    'TestingSupport.hpp',
     'Main.cpp',
 )
 
@@ -10,7 +8,8 @@ render_core_test_file_deps = []
 subdir('shader')
 
 render_core_test_deps = [render_core,
-                         test_util,
+                         testing_core,
+                         testing_render_util,
                          desktop,
 ]
 

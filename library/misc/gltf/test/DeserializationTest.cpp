@@ -4,7 +4,7 @@
 #include "triglav/gltf/Gltf.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
 #include "triglav/io/StringReader.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 TEST(DerserializationTest, BasicDeserialization)
 {

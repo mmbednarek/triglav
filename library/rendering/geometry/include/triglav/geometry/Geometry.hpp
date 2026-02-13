@@ -82,8 +82,8 @@ struct Ray
 
 struct BoundingBox
 {
-   Vector3 min;
-   Vector3 max;
+   alignas(16) Vector3 min;
+   alignas(16) Vector3 max;
 
    [[nodiscard]] constexpr Vector3 centroid() const
    {
