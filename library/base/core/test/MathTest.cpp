@@ -1,5 +1,5 @@
 #include "triglav/Math.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 #include <random>
 

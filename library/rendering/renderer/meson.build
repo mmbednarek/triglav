@@ -58,9 +58,6 @@ renderer_sources = files([
   'src/Util.cpp',
 ])
 
-
-
-
 renderer_deps = [glm, graphics_api, geometry, font, io, resource, render_core, ui_core, memory]
 renderer_incl = include_directories(['include', 'include/triglav/renderer'])
 
@@ -75,3 +72,5 @@ renderer = declare_dependency(
   link_with: [renderer_lib],
   dependencies: renderer_deps,
 )
+
+subdir('test')

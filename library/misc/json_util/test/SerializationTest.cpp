@@ -1,4 +1,4 @@
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 #include "triglav/ArrayMap.hpp"
 #include "triglav/io/DynamicWriter.hpp"

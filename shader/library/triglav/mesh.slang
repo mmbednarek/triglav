@@ -14,8 +14,6 @@ namespace triglav::mesh
         public uint32_t materialID;
         public float4x4 transform;
         public float4x4 normalTransform;
-        public float3 boundingBoxMin;
-        public float3 boundingBoxMax;
     };
 
     public struct SceneMesh
@@ -39,15 +37,9 @@ namespace triglav::mesh
             dc.instanceOffset = instanceOffset;
             dc.materialID = materialID;
 
-            // const float4x4 transform_matrix = transform.matrix();
-            const float4x4 transform_matrix = float4x4(
-                        1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0, 1, 0,
-                        0, 0, 0, 1);
+            const float4x4 transform_matrix = transform.matrix();
             dc.transform = transform_matrix;
-            dc.normalTransform = transform_matrix;
-            // dc.normalTransform = normal_transform_matrix(transform_matrix);
+            dc.normalTransform = extent_mat3x3(normal_transform_matrix(transform_matrix));
 
             return dc;
         }

@@ -5,7 +5,7 @@ geometry_test_sources = files(
 
 geometry_test_file_deps = []
 
-geometry_test_deps = [geometry, test_util]
+geometry_test_deps = [geometry, testing_core]
 
 geometry_test = executable('geometry_test',
                               sources : geometry_test_sources,

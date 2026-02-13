@@ -3,7 +3,7 @@
 #include "triglav/io/DynamicWriter.hpp"
 #include "triglav/meta/Display.hpp"
 #include "triglav/meta/TypeRegistry.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 using namespace triglav::name_literals;
 

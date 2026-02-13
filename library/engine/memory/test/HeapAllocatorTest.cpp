@@ -1,6 +1,6 @@
 #define TG_HEAP_ALLOCATOR_TEST 1
 #include "triglav/memory/HeapAllocator.hpp"
-#include "triglav/test_util/GTest.hpp"
+#include "triglav/testing_core/GTest.hpp"
 
 #include <random>
 #include <vector>

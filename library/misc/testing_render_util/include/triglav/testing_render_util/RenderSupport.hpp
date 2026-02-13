@@ -14,12 +14,12 @@ namespace triglav::resource {
 class ResourceManager;
 }
 
-namespace triglav::test {
+namespace triglav::testing_render_util {
 
-class TestingSupport
+class RenderSupport
 {
  public:
-   static TestingSupport& the();
+   static RenderSupport& the();
 
    graphics_api::Device* m_device;
    resource::ResourceManager* m_resource_manager;
@@ -34,4 +34,4 @@ class TestingSupport
    static RENDERDOC_API_1_6_0& render_doc();
 };
 
-}// namespace triglav::test
+}// namespace triglav::testing_render_util

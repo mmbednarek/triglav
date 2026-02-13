@@ -1,4 +1,3 @@
-#include "../../../misc/testing_render_util/include/triglav/testing_render_util/RenderSupport.hpp"
 
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
@@ -7,6 +6,7 @@
 #include "triglav/project/Name.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/testing_core/GTest.hpp"
+#include "triglav/testing_render_util/RenderSupport.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
 #include <print>
@@ -30,7 +30,6 @@ int triglav_main(InputArgs& args, IDisplay& display)
    // Initialize logger
    triglav::LogManager::the().register_listener<triglav::io::StreamLogger>(triglav::io::stdout_writer());
 
-   auto surface = display.create_surface("Testing window"_strv, {400, 400}, WindowAttribute::Default);
    auto instance = GAPI_CHECK(triglav::graphics_api::Instance::create_instance(&display));
 
    triglav::threading::ThreadPool::the().initialize(4);
@@ -48,7 +47,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    LoadAssetsAwaiter awaiter(resource_manager);
 
-   resource_manager.load_asset_list(triglav::project::PathManager::the().translate_path("index.yaml"_rc));
+   resource_manager.load_asset_list(triglav::project::PathManager::the().translate_path("engine/index.yaml"_rc));
 
    std::println("Loading resources");
 

@@ -2,6 +2,7 @@ shader_lib_triglav_core = files([
                                     'core.slang',
                                     'core/brdf.slang',
                                     'core/constants.slang',
+                                    'core/math.slang',
                                     'core/random.slang',
                                     'core/view_properties.slang',
                                 ])

@@ -118,7 +118,7 @@ void GBufferStage::draw_objects_with_material_template(render_core::BuildContext
 
    ctx.set_is_blending_enabled(false);
 
-   ctx.draw_indexed_indirect_with_count(visible_objects, "occlusion_culling.count_buffer"_external, 80, sizeof(BindlessSceneObject),
+   ctx.draw_indexed_indirect_with_count(visible_objects, "occlusion_culling.count_buffer"_external, 80, sizeof(DrawCall),
                                         sizeof(u32) * material_template_index);
 }
 

@@ -3,7 +3,7 @@ threading_test_sources = files(
     'Main.cpp',
 )
 
-threading_test_deps = [threading, test_util]
+threading_test_deps = [threading, testing_core]
 
 threading_test = executable('threading_test',
                        sources : threading_test_sources,
