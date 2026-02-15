@@ -1,13 +1,8 @@
 import triglav.mesh;
 
-struct AnimationKeyFrame
-{
-    float time_stamp;
-    float3 translation;
-};
-
+// w is used as timestamp
 [[vk::binding(0)]]
-StructuredBuffer<AnimationKeyFrame> KeyFrames;
+StructuredBuffer<float4> KeyFrames;
 
 struct ChannelState
 {
@@ -40,11 +35,12 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
         return;
 
     ChannelState s = ChannelStates[threadID];
+    float animation_time = AnimationStateCB.current_time - s.start_time;
 
     // Find keyframe index
-    while (KeyFrames[s.target_keyframe].time_stamp < AnimationStateCB.current_time) {
-        if (s.target_keyframe == s.last_keyframe) {
-            SceneMeshes[s.target_mesh].transform.translation = KeyFrames[s.target_keyframe].translation;
+    while (KeyFrames[s.target_keyframe].w < animation_time) {
+        if (s.target_keyframe > s.last_keyframe) {
+            SceneMeshes[s.target_mesh].transform.translation = KeyFrames[s.target_keyframe].xyz;
             ChannelStates[threadID].target_keyframe = s.target_keyframe;
             return;
         }
@@ -53,10 +49,10 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
 
     const uint32_t previous_keyframe = s.target_keyframe - 1;
 
-    const float time_offset = AnimationStateCB.current_time - KeyFrames[previous_keyframe].time_stamp;
-    const float time_ratio = time_offset / (KeyFrames[s.target_keyframe].time_stamp - KeyFrames[previous_keyframe].time_stamp);
+    const float time_offset = animation_time - KeyFrames[previous_keyframe].w;
+    const float time_ratio = time_offset / (KeyFrames[s.target_keyframe].w - KeyFrames[previous_keyframe].w);
 
-    SceneMeshes[s.target_mesh].transform.translation = lerp(KeyFrames[previous_keyframe].translation, KeyFrames[s.target_keyframe].translation, time_ratio);
+    SceneMeshes[s.target_mesh].transform.translation = lerp(KeyFrames[previous_keyframe].xyz, KeyFrames[s.target_keyframe].xyz, time_ratio);
 
     ChannelStates[threadID].target_keyframe = s.target_keyframe;
 }

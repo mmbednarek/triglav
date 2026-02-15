@@ -15,7 +15,5 @@ void cs_main(uint thread_id : SV_DispatchThreadID)
     if (thread_id >= in_mesh_count)
         return;
 
-    // triglav::mesh::SceneMesh sceneMesh // = SceneMeshes[threadID.x];
-    // out_draw_calls[thread_id] = sceneMesh.to_draw_call();
     out_draw_calls[thread_id] = in_scene_meshes[thread_id].to_draw_call();
 }

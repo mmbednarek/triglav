@@ -31,15 +31,15 @@ static_assert(sizeof(BindlessSceneObject) % 16 == 0);
 
 struct DrawCall
 {
-   u32 indexCount;
-   u32 instanceCount;
-   u32 indexOffset;
-   u32 vertexOffset;
-   u32 instanceOffset;
-   u32 materialID;
+   u32 index_count;
+   u32 instance_count;
+   u32 index_offset;
+   u32 vertex_offset;
+   u32 instance_offset;
+   u32 material_id;
    u32 padding[2];
    Matrix4x4 transform;
-   Matrix4x4 normalTransform;
+   Matrix4x4 normal_transform;
 };
 
 static_assert(sizeof(DrawCall) % 16 == 0);
