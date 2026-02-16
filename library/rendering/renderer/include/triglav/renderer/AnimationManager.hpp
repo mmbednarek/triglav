@@ -15,6 +15,7 @@ struct AnimationState
 {
    AnimationName animation_name;
    ObjectID target_object_id;
+   u32 last_frame_id;
    float start_time;
 };
 
@@ -22,6 +23,8 @@ class AnimationManager
 {
  public:
    TG_EVENT(OnAnimationBegan, AnimationID, const AnimationState&)
+
+   AnimationManager();
 
    using StateContainer = std::map<AnimationID, AnimationState>;
 

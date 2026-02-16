@@ -1,5 +1,7 @@
 #pragma once
 
+#include "triglav/Logging.hpp"
+#include "triglav/Name.hpp"
 #include "triglav/graphics_api/Buffer.hpp"
 
 namespace triglav::render_core {
@@ -15,8 +17,11 @@ class BindlessScene;
 
 class AnimationJob
 {
+   TG_DEFINE_LOG_CATEGORY(Animation)
  public:
-   AnimationJob(AnimationManager& m_animation_manager, BindlessScene& m_bindless_scene);
+   static constexpr auto JobName = make_name_id("job.animation");
+
+   AnimationJob(AnimationManager& animation_manager, BindlessScene& bindless_scene);
 
    void build_job(render_core::BuildContext& ctx) const;
 

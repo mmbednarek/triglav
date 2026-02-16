@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 
+#include "AnimationJob.hpp"
 #include "Config.hpp"
 #include "StatisticManager.hpp"
 #include "stage/AmbientOcclusionStage.hpp"
@@ -67,6 +68,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_render_surface(m_device, desktop_surface, surface, m_resource_storage, {resolution.width, resolution.height}, get_present_mode()),
     m_pipeline_cache(m_device, m_resource_manager),
     m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage, {resolution.width, resolution.height}),
+    m_animation_job(m_animation_manager, m_bindless_scene),
     m_update_view_params_job(m_scene),
     m_update_user_interface_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager, *this),
     m_occlusion_culling(m_update_view_params_job, m_bindless_scene),
@@ -98,6 +100,9 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    m_rendering_job.emplace_stage<stage::ShadingStage>();
    m_rendering_job.emplace_stage<stage::PostProcessStage>(&m_update_user_interface_job, "core.color_out"_name);
 
+   auto& animation_job = m_job_graph.add_job(AnimationJob::JobName);
+   m_animation_job.build_job(animation_job);
+
    auto& update_view_params_ctx = m_job_graph.add_job(UpdateViewParamsJob::JobName);
    m_update_view_params_job.build_job(update_view_params_ctx);
 
@@ -109,6 +114,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_job_graph.add_dependency_to_previous_frame(UpdateViewParamsJob::JobName, UpdateViewParamsJob::JobName);
    m_job_graph.add_dependency_to_previous_frame(UpdateUserInterfaceJob::JobName, UpdateUserInterfaceJob::JobName);
+   m_job_graph.add_dependency(UpdateUserInterfaceJob::JobName, AnimationJob::JobName);
    m_job_graph.add_dependency(RenderingJob::JobName, UpdateViewParamsJob::JobName);
    m_job_graph.add_dependency(RenderingJob::JobName, UpdateUserInterfaceJob::JobName);
 
@@ -125,6 +131,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    m_scene.update_shadow_maps();
 
    m_info_dialog.init_config_labels();
+
+   m_animation_manager.start_animation("animation/sample.anim"_rc, 7);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)
@@ -169,6 +177,7 @@ void Renderer::on_render()
 
    m_render_surface.await_for_frame(m_frame_index);
 
+   m_animation_job.prepare_frame(m_job_graph, m_frame_index);
    m_update_view_params_job.prepare_frame(m_job_graph, m_frame_index, delta_time);
    m_update_user_interface_job.prepare_frame(m_job_graph, m_frame_index);
 

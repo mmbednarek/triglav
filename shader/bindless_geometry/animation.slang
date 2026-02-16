@@ -40,7 +40,7 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
     // Find keyframe index
     while (KeyFrames[s.target_keyframe].w < animation_time) {
         if (s.target_keyframe > s.last_keyframe) {
-            SceneMeshes[s.target_mesh].transform.translation = KeyFrames[s.target_keyframe].xyz;
+            SceneMeshes[s.target_mesh].transform.translation = KeyFrames[s.last_keyframe].xyz;
             ChannelStates[threadID].target_keyframe = s.target_keyframe;
             return;
         }

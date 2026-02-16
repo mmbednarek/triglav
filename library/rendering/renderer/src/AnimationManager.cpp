@@ -2,6 +2,11 @@
 
 namespace triglav::renderer {
 
+AnimationManager::AnimationManager()
+{
+   m_base_time = std::chrono::system_clock::now();
+}
+
 AnimationID AnimationManager::start_animation(const AnimationName animation_name, const ObjectID target_object_id)
 {
    const auto id = m_top_animation_id++;
