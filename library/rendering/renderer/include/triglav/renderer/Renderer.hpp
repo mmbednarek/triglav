@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AnimationJob.hpp"
+#include "AnimationManager.hpp"
 #include "BindlessScene.hpp"
 #include "Config.hpp"
 #include "DebugWidget.hpp"
@@ -98,6 +100,8 @@ class Renderer final : public render_core::IRenderer
    RenderSurface m_render_surface;
    render_core::PipelineCache m_pipeline_cache;
    render_core::JobGraph m_job_graph;
+   AnimationManager m_animation_manager;
+   AnimationJob m_animation_job;
    UpdateViewParamsJob m_update_view_params_job;
    UpdateUserInterfaceJob m_update_user_interface_job;
    OcclusionCulling m_occlusion_culling;
