@@ -46,6 +46,11 @@ void* MappedMemory::operator*() const
    return m_pointer;
 }
 
+void* MappedMemory::ptr() const
+{
+   return m_pointer;
+}
+
 void MappedMemory::write(const void* source, const size_t length) const
 {
    std::memcpy(m_pointer, source, length);

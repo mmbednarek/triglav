@@ -27,6 +27,7 @@ class MappedMemory
    MappedMemory& operator=(MappedMemory&& other) noexcept;
 
    [[nodiscard]] void* operator*() const;
+   [[nodiscard]] void* ptr() const;
 
    template<typename T>
    [[nodiscard]] T& cast() const

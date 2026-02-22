@@ -7,9 +7,9 @@
 #include "triglav/String.hpp"
 #include "triglav/io/Deserializer.hpp"
 #include "triglav/io/DisplacedStream.hpp"
+#include "triglav/json_util/Deserialize.hpp"
+#include "triglav/json_util/Serialize.hpp"
 #include "triglav/ktx/Texture.hpp"
-
-#include <triglav/io/Serializer.hpp>
 
 namespace triglav::asset {
 
@@ -240,4 +240,40 @@ std::optional<DecodedTexture> decode_texture(io::IFile& stream)
                          decode_sampler_properties(tex_header.sampler_properties)};
 }
 
+bool encode_animation(io::IWriter& writer, Animation& animation)
+{
+   return json_util::serialize(animation.to_meta_ref(), writer, true);
+}
+
+std::optional<Animation> decode_animation(io::IReader& reader)
+{
+   Animation animation{};
+   if (!json_util::deserialize(animation.to_meta_ref(), reader)) {
+      return std::nullopt;
+   }
+   return animation;
+}
+
 }// namespace triglav::asset
+
+#define TG_TYPE(NS) NS(NS(triglav, asset), AnimationChannelType)
+TG_META_ENUM_BEGIN
+TG_META_ENUM_VALUE(Position)
+TG_META_ENUM_VALUE(Rotation)
+TG_META_ENUM_VALUE(Scale)
+TG_META_ENUM_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, asset), AnimationChannel)
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(type, triglav::asset::AnimationChannelType)
+TG_META_ARRAY_PROPERTY(keyframes, triglav::Vector4)
+TG_META_ARRAY_PROPERTY(timestamps, float)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(NS) NS(NS(triglav, asset), Animation)
+TG_META_CLASS_BEGIN
+TG_META_ARRAY_PROPERTY(channels, triglav::asset::AnimationChannel)
+TG_META_CLASS_END
+#undef TG_TYPE

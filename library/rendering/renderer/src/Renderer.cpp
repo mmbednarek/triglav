@@ -68,6 +68,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_render_surface(m_device, desktop_surface, surface, m_resource_storage, {resolution.width, resolution.height}, get_present_mode()),
     m_pipeline_cache(m_device, m_resource_manager),
     m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage, {resolution.width, resolution.height}),
+    m_animation_manager(m_device, m_resource_manager),
     m_animation_job(m_animation_manager, m_bindless_scene),
     m_update_view_params_job(m_scene),
     m_update_user_interface_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager, *this),
@@ -132,7 +133,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_info_dialog.init_config_labels();
 
-   m_animation_manager.start_animation("animation/sample.anim"_rc, 7);
+   m_animation_manager.start_animation("animation/example.anim"_rc, 7);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)

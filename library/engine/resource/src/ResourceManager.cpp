@@ -1,5 +1,6 @@
 #include "ResourceManager.hpp"
 
+#include "AnimationLoader.hpp"
 #include "LevelLoader.hpp"
 #include "MaterialLoader.hpp"
 #include "MeshLoader.hpp"
@@ -9,7 +10,6 @@
 
 #include "triglav/TypeMacroList.hpp"
 #include "triglav/asset/Asset.hpp"
-#include "triglav/io/File.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 

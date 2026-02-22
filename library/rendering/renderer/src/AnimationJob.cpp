@@ -43,17 +43,13 @@ void AnimationJob::build_job(render_core::BuildContext& ctx) const
    ctx.copy_buffer("animation_job.channel_states_staging"_name, "animation_job.channel_states"_name);
    ctx.copy_buffer("animation_job.state_staging"_name, "animation_job.state"_name);
 
-   ctx.init_buffer("animation_job.keyframes"_name,
-                   std::array<Vector4, 5>{Vector4{0.0f, -20.0f, -10.0f, 0.0f}, Vector4{0.0f, 0.0f, -10.0f, 2000.0f},
-                                          Vector4{10.0f, 0.0f, 10.0f, 10000.0f}, Vector4{10.0f, 0.0f, -20.0f, 10500.0f},
-                                          Vector4{-10.0f, 0.0f, -5.0f, 12500.0f}});
-
    ctx.bind_compute_shader("shader/bindless_geometry/animation.cshader"_rc);
 
-   ctx.bind_storage_buffer(0, "animation_job.keyframes"_name);
-   ctx.bind_storage_buffer(1, "animation_job.channel_states"_name);
-   ctx.bind_storage_buffer(2, "animation_job.state"_name);
-   ctx.bind_storage_buffer(3, &m_bindless_scene.scene_object_buffer());
+   ctx.bind_storage_buffer(0, &m_animation_manager.keyframe_buffer());
+   ctx.bind_storage_buffer(1, &m_animation_manager.timestamp_buffer());
+   ctx.bind_storage_buffer(2, "animation_job.channel_states"_name);
+   ctx.bind_storage_buffer(3, "animation_job.state"_name);
+   ctx.bind_storage_buffer(4, &m_bindless_scene.scene_object_buffer());
 
    ctx.dispatch({1, 1, 1});
 }

@@ -3,6 +3,7 @@
 #include "triglav/geometry/Mesh.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/io/Stream.hpp"
+#include "triglav/meta/Meta.hpp"
 
 #include <optional>
 #include <string_view>
@@ -132,8 +133,28 @@ struct DecodedTexture
    SamplerProperties sampler_props;
 };
 
+enum class AnimationChannelType
+{
+   Position,
+   Rotation,
+   Scale,
+};
+
+struct AnimationChannel
+{
+   TG_META_STRUCT_BODY(AnimationChannel)
+
+   AnimationChannelType type;
+   std::vector<Vector4> keyframes;
+   std::vector<float> timestamps;
+};
+
 struct Animation
-{};
+{
+   TG_META_STRUCT_BODY(Animation)
+
+   std::vector<AnimationChannel> channels;
+};
 
 EncodedSamplerProperties encode_sampler_properties(const SamplerProperties& properties);
 SamplerProperties decode_sampler_properties(EncodedSamplerProperties encoded_properties);
@@ -146,5 +167,8 @@ std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, u32 version);
 
 bool encode_texture(io::IWriter& writer, TexturePurpose purpose, const ktx::Texture& tex, const SamplerProperties& sampler);
 std::optional<DecodedTexture> decode_texture(io::IFile& stream);
+
+bool encode_animation(io::IWriter& writer, Animation& animation);
+std::optional<Animation> decode_animation(io::IReader& reader);
 
 }// namespace triglav::asset
