@@ -10,11 +10,13 @@
 namespace triglav::renderer {
 
 using AnimationID = u32;
-//
-// struct ChannelState
-// {
-//
-// };
+
+struct ChannelState
+{
+   u32 first_keyframe;
+   u32 last_keyframe;
+   u32 channel_type;
+};
 
 struct AnimationState
 {
@@ -22,6 +24,7 @@ struct AnimationState
    ObjectID target_object_id;
    u32 last_frame_id;
    float start_time;
+   std::vector<ChannelState> channels;
 };
 
 class AnimationManager

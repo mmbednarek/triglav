@@ -26,14 +26,27 @@ AnimationManager::AnimationManager(graphics_api::Device& device, resource::Resou
 
 AnimationID AnimationManager::start_animation(const AnimationName animation_name, const ObjectID target_object_id)
 {
+   const auto& animation = m_resource_manager.get(animation_name);
+
+   std::vector<ChannelState> channel_states(animation.channels.size());
+   std::ranges::transform(animation.channels, channel_states.begin(),
+                          [offset = static_cast<u32>(m_keyframe_offset / sizeof(Vector4))](const auto& channel) mutable {
+                             ChannelState state{
+                                .first_keyframe = offset,
+                                .last_keyframe = static_cast<u32>(offset + channel.keyframes.size() - 1),
+                                .channel_type = static_cast<u32>(channel.type),
+                             };
+                             offset += channel.keyframes.size();
+                             return state;
+                          });
+
    const auto id = m_top_animation_id++;
    m_states[id] = AnimationState{
       .animation_name = animation_name,
       .target_object_id = target_object_id,
       .start_time = this->current_time(),
+      .channels = std::move(channel_states),
    };
-
-   const auto& animation = m_resource_manager.get(animation_name);
 
    MemorySize stage_keyframe_offset = 0;
    MemorySize stage_timestamp_offset = 0;

@@ -2,7 +2,7 @@ shader_targets += custom_target('shader_bindless_geometry_animation_compute',
                                 input : 'animation.slang',
                                 output : 'animation.cshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_mesh],
-                                command : slang_cs_commands,
+                                command : [slang_cs_commands],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_vertex',
