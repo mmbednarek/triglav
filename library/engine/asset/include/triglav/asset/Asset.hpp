@@ -135,7 +135,7 @@ struct DecodedTexture
 
 enum class AnimationChannelType
 {
-   Position,
+   Translation,
    Rotation,
    Scale,
 };

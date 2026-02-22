@@ -258,7 +258,7 @@ std::optional<Animation> decode_animation(io::IReader& reader)
 
 #define TG_TYPE(NS) NS(NS(triglav, asset), AnimationChannelType)
 TG_META_ENUM_BEGIN
-TG_META_ENUM_VALUE(Position)
+TG_META_ENUM_VALUE(Translation)
 TG_META_ENUM_VALUE(Rotation)
 TG_META_ENUM_VALUE(Scale)
 TG_META_ENUM_END

@@ -10,12 +10,13 @@ namespace triglav::renderer {
 
 using namespace name_literals;
 
-struct ChannelState
+struct ChannelStateGPU
 {
    float start_time;
    u32 target_mesh;
    u32 last_keyframe;
    u32 target_keyframe;
+   u32 channel_type;
 };
 
 struct AnimationStateGPU
@@ -35,8 +36,8 @@ AnimationJob::AnimationJob(AnimationManager& animation_manager, BindlessScene& b
 
 void AnimationJob::build_job(render_core::BuildContext& ctx) const
 {
-   ctx.declare_staging_buffer("animation_job.channel_states_staging"_name, sizeof(ChannelState) * MAX_CHANNEL_STATE_COUNT);
-   ctx.declare_buffer("animation_job.channel_states"_name, sizeof(ChannelState) * MAX_CHANNEL_STATE_COUNT);
+   ctx.declare_staging_buffer("animation_job.channel_states_staging"_name, sizeof(ChannelStateGPU) * MAX_CHANNEL_STATE_COUNT);
+   ctx.declare_buffer("animation_job.channel_states"_name, sizeof(ChannelStateGPU) * MAX_CHANNEL_STATE_COUNT);
    ctx.declare_staging_buffer("animation_job.state_staging"_name, sizeof(AnimationStateGPU));
    ctx.declare_buffer("animation_job.state"_name, sizeof(AnimationStateGPU));
 
@@ -56,23 +57,25 @@ void AnimationJob::build_job(render_core::BuildContext& ctx) const
 
 void AnimationJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_index)
 {
-   const auto state_mapping = GAPI_CHECK(graph.resources().buffer("animation_job.state_staging"_name, frame_index).map_memory());
-   state_mapping.cast<AnimationStateGPU>() = AnimationStateGPU{m_animation_manager.current_time(), m_animation_manager.channel_count()};
-
    const auto channel_states_mapping =
       GAPI_CHECK(graph.resources().buffer("animation_job.channel_states_staging"_name, frame_index).map_memory());
-   auto& states = channel_states_mapping.cast<std::array<ChannelState, MAX_CHANNEL_STATE_COUNT>>();
+   auto& states = channel_states_mapping.cast<std::array<ChannelStateGPU, MAX_CHANNEL_STATE_COUNT>>();
 
-   auto it = m_animation_manager.animation_states().begin();
-   for (MemorySize i = 0; i < m_animation_manager.channel_count(); ++i) {
-      auto& dst_state = states[i];
-      const auto& src_state = it->second;
-      dst_state.start_time = src_state.start_time;
-      dst_state.last_keyframe = 4;
-      dst_state.target_keyframe = 1;
-      dst_state.target_mesh = src_state.target_object_id;
-      ++it;
+   u32 i = 0;
+   for (const auto& [id, anim] : m_animation_manager.animation_states()) {
+      for (const auto& channel : anim.channels) {
+         auto& dst_state = states[i];
+         dst_state.start_time = anim.start_time;
+         dst_state.last_keyframe = channel.last_keyframe;
+         dst_state.target_keyframe = channel.first_keyframe + 1;
+         dst_state.target_mesh = anim.target_object_id;
+         dst_state.channel_type = channel.channel_type;
+         ++i;
+      }
    }
+
+   const auto state_mapping = GAPI_CHECK(graph.resources().buffer("animation_job.state_staging"_name, frame_index).map_memory());
+   state_mapping.cast<AnimationStateGPU>() = AnimationStateGPU{m_animation_manager.current_time(), i};
 }
 
 }// namespace triglav::renderer

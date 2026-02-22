@@ -133,7 +133,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_info_dialog.init_config_labels();
 
-   m_animation_manager.start_animation("animation/example.anim"_rc, 7);
+   m_animation_manager.start_animation("animation/example.anim"_rc, 1);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)
