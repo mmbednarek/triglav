@@ -1,4 +1,5 @@
 resources:
+  - "animation/example.anim"
   - "fonts/segoeui/bold.typeface"
   - "fonts/segoeui/regular.typeface"
   - "level/demo.level"

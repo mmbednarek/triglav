@@ -4,6 +4,9 @@ import triglav.mesh;
 [[vk::binding(0)]]
 StructuredBuffer<float4> KeyFrames;
 
+[[vk::binding(1)]]
+StructuredBuffer<float> TimeStamps;
+
 struct ChannelState
 {
     float start_time;
@@ -12,7 +15,7 @@ struct ChannelState
     uint32_t target_keyframe;
 };
 
-[[vk::binding(1)]]
+[[vk::binding(2)]]
 RWStructuredBuffer<ChannelState> ChannelStates;
 
 struct AnimationState {
@@ -20,10 +23,10 @@ struct AnimationState {
     uint32_t channel_count;
 };
 
-[[vk::binding(2)]]
+[[vk::binding(3)]]
 ConstantBuffer<AnimationState> AnimationStateCB;
 
-[[vk::binding(3)]]
+[[vk::binding(4)]]
 RWStructuredBuffer<triglav::mesh::SceneMesh> SceneMeshes;
 
 
@@ -38,7 +41,7 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
     float animation_time = AnimationStateCB.current_time - s.start_time;
 
     // Find keyframe index
-    while (KeyFrames[s.target_keyframe].w < animation_time) {
+    while (TimeStamps[s.target_keyframe] < animation_time) {
         if (s.target_keyframe > s.last_keyframe) {
             SceneMeshes[s.target_mesh].transform.translation = KeyFrames[s.last_keyframe].xyz;
             ChannelStates[threadID].target_keyframe = s.target_keyframe;
@@ -49,8 +52,8 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
 
     const uint32_t previous_keyframe = s.target_keyframe - 1;
 
-    const float time_offset = animation_time - KeyFrames[previous_keyframe].w;
-    const float time_ratio = time_offset / (KeyFrames[s.target_keyframe].w - KeyFrames[previous_keyframe].w);
+    const float time_offset = animation_time - TimeStamps[previous_keyframe];
+    const float time_ratio = time_offset / (TimeStamps[s.target_keyframe] - TimeStamps[previous_keyframe]);
 
     SceneMeshes[s.target_mesh].transform.translation = lerp(KeyFrames[previous_keyframe].xyz, KeyFrames[s.target_keyframe].xyz, time_ratio);
 

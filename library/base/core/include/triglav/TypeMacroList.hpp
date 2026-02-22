@@ -2,7 +2,7 @@ namespace triglav {
 struct InvalidType;
 
 namespace asset {
-class Animation;
+struct Animation;
 }// namespace asset
 
 namespace render_core {
