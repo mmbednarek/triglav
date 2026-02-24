@@ -263,9 +263,10 @@ Vector2 InfoDialog::desired_size(const Vector2 available_size) const
    return m_root_box.desired_size(available_size);
 }
 
-void InfoDialog::add_to_viewport(Vector4 /*dimensions*/, const Vector4 cropping_mask)
+void InfoDialog::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
 {
-   const auto size = this->desired_size({600, 1200});
+   const auto size = this->desired_size(rect_size(dimensions));
+   m_dimensions = dimensions;
    m_cropping_mask = cropping_mask;
    m_root_box.add_to_viewport({m_dialog_offset.x, m_dialog_offset.y, size.x, size.y}, cropping_mask);
 }
@@ -277,19 +278,19 @@ void InfoDialog::remove_from_viewport()
 
 void InfoDialog::on_child_state_changed(IWidget& /*widget*/)
 {
-   this->add_to_viewport({}, m_cropping_mask);
+   this->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
 void InfoDialog::on_event(const ui_core::Event& event)
 {
-   const auto size = this->desired_size({600, 1200});
+   const auto size = this->desired_size(event.widget_size);
    const auto position = event.mouse_position - m_dialog_offset;
    if (position.x > size.x || position.y > size.y) {
       return;
    }
 
    ui_core::Event sub_event{event};
-   sub_event.widget_size = {600, 1200};
+   sub_event.widget_size = event.widget_size - m_dialog_offset;
    sub_event.mouse_position = position;
 
    m_root_box.on_event(sub_event);

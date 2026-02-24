@@ -180,7 +180,7 @@ Vector2u Viewport::dimensions() const
    return m_dimensions;
 }
 
-void Viewport::set_dimensions(Vector2u dimensions)
+void Viewport::set_dimensions(const Vector2u dimensions)
 {
    m_dimensions = dimensions;
 }

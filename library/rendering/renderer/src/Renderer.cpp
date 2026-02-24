@@ -81,7 +81,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
       m_ray_tracing_scene.emplace(m_device, m_resource_manager, m_scene);
    }
 
-   m_info_dialog.add_to_viewport({}, {0, 0, resolution.width, resolution.height});
+   m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
    m_scene.load_level("level/demo.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
@@ -349,13 +349,14 @@ void Renderer::recreate_jobs(const Vector2u dimensions)
 
    m_job_graph.set_screen_size(dimensions);
    m_ui_viewport.set_dimensions(dimensions);
+   m_info_dialog.add_to_viewport({0, 0, dimensions}, {0, 0, dimensions});
 
    auto& update_user_interface_ctx = m_job_graph.replace_job(UpdateUserInterfaceJob::JobName);
    m_update_user_interface_job.build_job(update_user_interface_ctx);
+   m_job_graph.rebuild_job(UpdateUserInterfaceJob::JobName);
 
    auto& rendering_ctx = m_job_graph.replace_job(RenderingJob::JobName);
    m_rendering_job.build_job(rendering_ctx);
-
    m_job_graph.rebuild_job(RenderingJob::JobName);
 
    m_render_surface.recreate_present_jobs();
