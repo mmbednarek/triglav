@@ -57,6 +57,7 @@ class InfoDialog final : public ui_core::IWidget
    std::map<Name, ui_core::TextBox*> m_values;
    bool m_is_dragging{false};
    Vector2 m_dialog_offset{20, 20};
+   Vector4 m_dimensions;
    Vector4 m_cropping_mask;
    std::optional<Vector2> m_drag_offset;
    ui_core::TextBox* m_title;
