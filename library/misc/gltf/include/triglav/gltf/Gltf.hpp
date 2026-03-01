@@ -253,6 +253,7 @@ struct Document
    Asset asset;
    u32 scene;
    std::vector<Scene> scenes;
+   std::vector<Animation> animations;
    std::vector<Node> nodes;
    std::vector<Mesh> meshes;
    std::vector<Accessor> accessors;

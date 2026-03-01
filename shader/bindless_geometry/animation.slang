@@ -49,6 +49,12 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
     ChannelState s = ChannelStates[threadID];
     float animation_time = AnimationStateCB.current_time - s.start_time;
 
+    if (s.target_keyframe > s.last_keyframe) {
+        set_target_value(s, KeyFrames[s.last_keyframe]);
+        ChannelStates[threadID].target_keyframe = s.target_keyframe;
+        return;
+    }
+
     // Find keyframe index
     while (TimeStamps[s.target_keyframe] < animation_time) {
         if (s.target_keyframe > s.last_keyframe) {

@@ -13,6 +13,7 @@
     "texture_path": "texture/{basename}.tex",
     "mesh_path": "mesh/{basename}.mesh",
     "level_path": "level/{basename}.level",
-    "material_path": "material/{basename}.mat"
+    "material_path": "material/{basename}.mat",
+    "animation_path": "animation/{basename}.anim"
   }
 }

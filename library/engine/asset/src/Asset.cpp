@@ -173,8 +173,8 @@ std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, const u32 ver
       // individually
       io::Deserializer decoder(reader);
       for (u32 i = 0; i < mesh_header.group_count; ++i) {
-         const auto offset = decoder.read_MemorySize();
-         const auto size = decoder.read_MemorySize();
+         const auto offset = decoder.read_mem_size();
+         const auto size = decoder.read_mem_size();
          const auto rc_path_len = decoder.read_u32();
          assert(rc_path_len != 0);
 

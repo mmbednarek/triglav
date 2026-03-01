@@ -4,10 +4,10 @@
 
 namespace triglav::renderer {
 
-constexpr MemorySize STAGING_BUFFER_SIZE = 1024;
-constexpr MemorySize STAGING_TIMESTAMP_OFFSET = 512;
-constexpr MemorySize TIMESTAMP_BUFFER_SIZE = 4096;
-constexpr MemorySize KEYFRAME_BUFFER_SIZE = 4096;
+constexpr MemorySize STAGING_BUFFER_SIZE = 8 * 1024;
+constexpr MemorySize STAGING_TIMESTAMP_OFFSET = 8 * 512;
+constexpr MemorySize TIMESTAMP_BUFFER_SIZE = 8 * 4096;
+constexpr MemorySize KEYFRAME_BUFFER_SIZE = 8 * 4096;
 
 namespace gapi = graphics_api;
 
@@ -66,6 +66,7 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
          stage_timestamp_offset += channel.timestamps.size() * sizeof(float);
       }
    }
+   assert(stage_keyframe_offset <= STAGING_TIMESTAMP_OFFSET);
 
    auto cmd_list = m_device.create_command_list();
    assert(cmd_list.has_value());
