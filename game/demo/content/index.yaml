@@ -1,7 +1,9 @@
 resources:
   - "animation/example.anim"
+  - "animation/animated_cubeaction.anim"
   - "fonts/segoeui/bold.typeface"
   - "fonts/segoeui/regular.typeface"
+  - "level/animated_example.level"
   - "level/demo.level"
   - "material/stone.mat"
   - "mesh/teapot.mesh"

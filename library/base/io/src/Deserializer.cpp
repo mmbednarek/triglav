@@ -18,8 +18,8 @@ T Deserializer::read_value_internal()
    return result;
 }
 
-#define TG_IO_TYPE(TYPE)                        \
-   TYPE Deserializer::read_##TYPE()             \
+#define TG_IO_TYPE(TYPE, FUNC)                  \
+   TYPE Deserializer::FUNC()                    \
    {                                            \
       return this->read_value_internal<TYPE>(); \
    }

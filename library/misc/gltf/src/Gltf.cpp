@@ -17,7 +17,7 @@ void Document::deserialize(io::IReader& reader)
 
 #define TG_TYPE(NS) NS(NS(triglav, gltf), AnimationChannelTarget)
 TG_META_CLASS_BEGIN
-TG_META_OPTIONAL_PROPERTY(node, std::string)
+TG_META_OPTIONAL_PROPERTY(node, triglav::u32)
 TG_META_PROPERTY(path, std::string)
 TG_META_CLASS_END
 #undef TG_TYPE
@@ -241,6 +241,7 @@ TG_META_CLASS_BEGIN
 TG_META_PROPERTY(asset, triglav::gltf::Asset)
 TG_META_PROPERTY(scene, triglav::u32)
 TG_META_ARRAY_PROPERTY(scenes, triglav::gltf::Scene)
+TG_META_ARRAY_PROPERTY(animations, triglav::gltf::Animation)
 TG_META_ARRAY_PROPERTY(nodes, triglav::gltf::Node)
 TG_META_ARRAY_PROPERTY(meshes, triglav::gltf::Mesh)
 TG_META_ARRAY_PROPERTY(accessors, triglav::gltf::Accessor)

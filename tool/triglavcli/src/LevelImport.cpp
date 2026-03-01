@@ -6,6 +6,7 @@
 
 #include "triglav/gltf/Glb.hpp"
 #include "triglav/gltf/MeshLoad.hpp"
+#include "triglav/json_util/Serialize.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/project/ProjectManager.hpp"
 #include "triglav/render_objects/Material.hpp"
@@ -28,6 +29,8 @@ inline c4::csubstr to_csubstr(std::string const& s) noexcept
 }// namespace c4
 
 namespace triglav::tool::cli {
+
+constexpr auto MILLISECOND_MULTIPLIER = 1000.0f;
 
 using namespace name_literals;
 using namespace io::path_literals;
@@ -87,6 +90,18 @@ std::string strip_extension(const std::string_view str)
       return std::string{str};
    }
    return std::string{str.substr(0, dot_at)};
+}
+
+asset::AnimationChannelType channel_type_from_path(const std::string_view path)
+{
+   if (path == "translation")
+      return asset::AnimationChannelType::Translation;
+   if (path == "rotation")
+      return asset::AnimationChannelType::Rotation;
+   if (path == "scale")
+      return asset::AnimationChannelType::Scale;
+
+   return {};
 }
 
 }// namespace
@@ -304,6 +319,77 @@ class LevelImporter
       return rc_name;
    }
 
+   [[nodiscard]] std::optional<AnimationName> import_animation(const u32 animation_id)
+   {
+      asset::Animation dst_animation{};
+      auto& src_animation = m_glb_file.document->animations[animation_id];
+
+      for (const auto& channel : src_animation.channels) {
+         asset::AnimationChannel dst_channel{};
+         dst_channel.type = channel_type_from_path(channel.target.path);
+
+         const auto& src_sampler = src_animation.samplers.at(channel.sampler);
+
+         const auto& input_accessor = m_glb_file.document->accessors.at(src_sampler.input);
+         const auto& output_accessor = m_glb_file.document->accessors.at(src_sampler.output);
+
+         assert(input_accessor.type == gltf::AccessorType::Scalar);
+         assert(output_accessor.component_type == gltf::ComponentType::Float);
+         assert(input_accessor.component_type == gltf::ComponentType::Float);
+
+         dst_channel.timestamps.resize(input_accessor.count);
+         dst_channel.keyframes.resize(output_accessor.count);
+
+         auto input_stream = m_glb_file.buffer_manager.read_buffer_view(input_accessor.buffer_view);
+         for (MemorySize i = 0; i < input_accessor.count; ++i) {
+            dst_channel.timestamps[i] = input_stream.read_float() * MILLISECOND_MULTIPLIER;
+         }
+
+         auto output_stream = m_glb_file.buffer_manager.read_buffer_view(output_accessor.buffer_view);
+
+         switch (output_accessor.type) {
+         case gltf::AccessorType::Vector3: {
+            for (MemorySize i = 0; i < output_accessor.count; ++i) {
+               dst_channel.keyframes[i] = Vector4{output_stream.read_vec3(), 0.0f};
+            }
+            break;
+         }
+         case gltf::AccessorType::Vector4: {
+            for (MemorySize i = 0; i < output_accessor.count; ++i) {
+               dst_channel.keyframes[i] = output_stream.read_vec4();
+            }
+         }
+         default:
+            break;
+         }
+
+         dst_animation.channels.emplace_back(std::move(dst_channel));
+      }
+
+      auto animation_name_str = src_animation.name;
+      if (animation_name_str.empty()) {
+         animation_name_str = std::format("{}.anim{}", strip_extension(m_props.src_path.basename()), animation_id);
+      }
+      for (char& ch : animation_name_str) {
+         ch = static_cast<char>(std::tolower(ch));
+      }
+
+      const auto [dst_path, rc_name] = project::PathManager::the().import_path(ResourceType::Animation, animation_name_str);
+
+      const auto dst_file = io::open_file(dst_path, io::FileMode::Write | io::FileMode::Create);
+      if (!dst_file.has_value()) {
+         return std::nullopt;
+      }
+
+      if (!json_util::serialize(dst_animation.to_meta_ref(), **dst_file)) {
+         return std::nullopt;
+      }
+
+      std::print(stderr, "triglav-cli: Importing animation to {}\n", dst_path.string());
+
+      return rc_name;
+   }
+
    [[nodiscard]] bool import_scene()
    {
       if (!m_props.should_override && m_props.dst_path.exists()) {
@@ -349,6 +435,13 @@ class LevelImporter
 
       world::Level level;
       level.add_node("root"_name, std::move(root_node));
+
+      // import animations
+      for (u32 animation_id = 0; animation_id < m_glb_file.document->animations.size(); ++animation_id) {
+         if (!this->import_animation(animation_id).has_value()) {
+            std::print(stderr, "triglav-cli: Failed to import animation {}\n", animation_id);
+         }
+      }
 
       if (!level.save_to_file(m_props.dst_path)) {
          std::print(stderr, "triglav-cli: Failed to save level file\n");

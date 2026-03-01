@@ -1,0 +1,20 @@
+nodes:
+  - name: root
+    items:
+      - type: static_mesh
+        name: animated_cube
+        mesh: mesh/animated_cube.mesh
+        transform:
+          translation:
+            x: 0.000000
+            y: 0.624163
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 1.000000
+            y: 1.000000
+            z: 1.000000

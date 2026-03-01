@@ -23,6 +23,9 @@ std::string ProjectMetadata::default_import_path(const ResourceType res_type, co
    case ResourceType::Material:
       result = this->import_settings.material_path;
       break;
+   case ResourceType::Animation:
+      result = this->import_settings.animation_path;
+      break;
    default:
       return "";
    }
@@ -61,6 +64,7 @@ TG_META_PROPERTY(texture_path, std::string)
 TG_META_PROPERTY(mesh_path, std::string)
 TG_META_PROPERTY(level_path, std::string)
 TG_META_PROPERTY(material_path, std::string)
+TG_META_PROPERTY(animation_path, std::string)
 TG_META_CLASS_END
 #undef TG_TYPE
 
