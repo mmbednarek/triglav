@@ -28,9 +28,10 @@ class GBufferStage final : public IStage
 
  private:
    void draw_objects_with_material_template(render_core::BuildContext& ctx, render_core::BufferRef visible_objects,
-                                            FragmentShaderName fs_name, u32 material_template_index) const;
+                                            VertexShaderName vs_name, FragmentShaderName fs_name, u32 material_template_index,
+                                            geometry::VertexComponentFlags vertex_components) const;
 
-   render_objects::GpuMesh m_mesh;
+   geometry::DeviceMesh m_mesh;
    BindlessScene& m_bindless_scene;
 };
 

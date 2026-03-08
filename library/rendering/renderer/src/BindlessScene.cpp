@@ -10,8 +10,8 @@ using namespace name_literals;
 
 constexpr auto STAGING_BUFFER_ELEM_COUNT = 128;
 constexpr auto SCENE_ELEM_COUNT = 256;
-constexpr auto VERTEX_BUFFER_SIZE = 1 << 20;
-constexpr auto INDEX_BUFFER_SIZE = 1 << 20;
+constexpr auto VERTEX_BUFFER_SIZE = 1 << 21;
+constexpr auto INDEX_BUFFER_SIZE = 1 << 21;
 
 namespace {
 
@@ -81,7 +81,8 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_scene_object_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_transform_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_scene_objects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect | gapi::BufferUsage::TransferSrc),
-    m_combined_vertex_buffer(device, VERTEX_BUFFER_SIZE),
+    m_combined_vertex_buffer(GAPI_CHECK(
+       device.create_buffer(graphics_api::BufferUsage::VertexBuffer | graphics_api::BufferUsage::TransferDst, VERTEX_BUFFER_SIZE))),
     m_combined_index_buffer(device, INDEX_BUFFER_SIZE),
     m_count_buffer(device, gapi::BufferUsage::Indirect),
     m_material_props_albedo_tex(device, 100),
@@ -96,13 +97,13 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
    TG_SET_DEBUG_NAME(m_transform_stage.buffer(), "bindless_scene.object_transform.staging");
    TG_SET_DEBUG_NAME(m_count_buffer.buffer(), "bindless_scene.count_buffer");
    TG_SET_DEBUG_NAME(m_combined_index_buffer.buffer(), "bindless_scene.combined_index_buffer");
-   TG_SET_DEBUG_NAME(m_combined_vertex_buffer.buffer(), "bindless_scene.combined_vertex_buffer");
+   TG_SET_DEBUG_NAME(m_combined_vertex_buffer, "bindless_scene.combined_vertex_buffer");
 }
 
 void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const SceneObject& object)
 {
    const auto& model = m_resource_manager.get(object.model);
-   for (u32 i = 0; i < model.range.size(); ++i) {
+   for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
       m_draw_call_update_list.add_or_update(std::make_pair(object_id, i), PendingObject{&object, object_id, i});
    }
    m_should_write_objects = true;
@@ -119,7 +120,7 @@ void BindlessScene::on_object_removed(const ObjectID object_id)
    auto& obj = m_scene.object(object_id);
    const auto& model = m_resource_manager.get(obj.model);
 
-   for (u32 i = 0; i < model.range.size(); ++i) {
+   for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
       m_draw_call_update_list.remove(std::make_pair(object_id, i));
    }
    m_should_write_objects = true;
@@ -144,7 +145,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
 
          auto& obj = m_scene.object(object_id);
          auto& mesh = m_resource_manager.get(obj.model);
-         for (u32 i = 0; i < mesh.range.size(); ++i) {
+         for (u32 i = 0; i < mesh.device_mesh.ranges.size(); ++i) {
             const auto offset = m_draw_call_update_list.key_map().at(std::make_pair(object_id, i));
 
             cmd_list.copy_buffer(m_transform_stage.buffer(), m_scene_objects.buffer(), static_cast<u32>(stage_index * sizeof(Transform3D)),
@@ -183,7 +184,7 @@ void BindlessScene::write_objects_to_buffer()
 
 gapi::Buffer& BindlessScene::combined_vertex_buffer()
 {
-   return m_combined_vertex_buffer.buffer();
+   return m_combined_vertex_buffer;
 }
 
 gapi::Buffer& BindlessScene::combined_index_buffer()
@@ -241,20 +242,28 @@ const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::C
 
    auto& model = m_resource_manager.get(name);
 
-   const auto vertex_offset = m_vertex_buffer_heap.allocate(model.mesh.vertices.count());
-   assert(vertex_offset.has_value());
-
-   const auto index_offset = m_index_buffer_heap.allocate(model.mesh.indices.count());
-   assert(index_offset.has_value());
-
    std::vector<BindlessMeshInfo> result;
 
-   assert(!model.range.empty());
-   for (const auto& material : model.range) {
+   // Index head is per u32
+   const auto index_offset = m_index_buffer_heap.allocate(model.device_mesh.index_buffer.count());
+   assert(index_offset.has_value());
+
+   assert(!model.device_mesh.ranges.empty());
+   for (const auto& material : model.device_mesh.ranges) {
+      const auto vertex_size = geometry::get_vertex_size(material.components);
+
+      // Index head is per u8
+      const auto vertex_offset = m_vertex_buffer_heap.allocate(material.vertex_size, vertex_size);
+      assert(vertex_offset.has_value());
+      assert(*vertex_offset % vertex_size == 0);
+
+      cmd_list.copy_buffer(model.device_mesh.vertex_buffer, m_combined_vertex_buffer, material.vertex_offset, *vertex_offset,
+                           material.vertex_size);
+
       BindlessMeshInfo mesh_info;
-      mesh_info.index_count = static_cast<u32>(material.size);
-      mesh_info.index_offset = static_cast<u32>(*index_offset + material.offset);
-      mesh_info.vertex_offset = static_cast<u32>(*vertex_offset);
+      mesh_info.index_count = material.index_size;
+      mesh_info.index_offset = *index_offset + material.index_offset;
+      mesh_info.vertex_offset = static_cast<u32>(*vertex_offset / vertex_size);
       mesh_info.bounding_box_max = model.bounding_box.max;
       mesh_info.bounding_box_min = model.bounding_box.min;
       mesh_info.material_id = this->get_material_id(cmd_list, m_resource_manager.get(material.material_name));
@@ -264,12 +273,9 @@ const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::C
    auto [emplaced_it, ok] = m_models.emplace(name, std::move(result));
    assert(ok);
 
-   cmd_list.copy_buffer(model.mesh.vertices.buffer(), m_combined_vertex_buffer.buffer(), 0,
-                        static_cast<u32>(*vertex_offset * sizeof(geometry::Vertex)),
-                        static_cast<u32>(model.mesh.vertices.count() * sizeof(geometry::Vertex)));
-
-   cmd_list.copy_buffer(model.mesh.indices.buffer(), m_combined_index_buffer.buffer(), 0, static_cast<u32>(*index_offset * sizeof(u32)),
-                        static_cast<u32>(model.mesh.indices.count() * sizeof(u32)));
+   cmd_list.copy_buffer(model.device_mesh.index_buffer.buffer(), m_combined_index_buffer.buffer(), 0,
+                        static_cast<u32>(*index_offset * sizeof(u32)),
+                        static_cast<u32>(model.device_mesh.index_buffer.count() * sizeof(u32)));
 
    return emplaced_it->second;
 }

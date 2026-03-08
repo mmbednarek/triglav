@@ -13,9 +13,6 @@ using namespace render_core::literals;
 
 namespace gapi = graphics_api;
 
-static render_core::VertexLayout g_vertex_layout =
-   render_core::VertexLayout(sizeof(geometry::Vertex)).add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
-
 constexpr graphics_api::SamplerProperties g_shadow_map_props{
    .min_filter = graphics_api::FilterType::Linear,
    .mag_filter = graphics_api::FilterType::Linear,
@@ -59,19 +56,29 @@ void ShadowMapStage::render_cascade(render_core::BuildContext& ctx, const Name p
 {
    render_core::RenderPassScope rt_scope(ctx, pass_name, target_name);
 
+   this->render_geometry(ctx, view_props, geometry::VertexComponent::Core | geometry::VertexComponent::Texture,
+                         "occlusion_culling.passthrough.vl0"_external);
+   this->render_geometry(ctx, view_props,
+                         geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap,
+                         "occlusion_culling.passthrough.vl1"_external);
+}
+void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const render_core::BufferRef view_props,
+                                     const geometry::VertexComponentFlags components, const render_core::BufferRef draw_buffer) const
+{
    ctx.bind_vertex_shader("shader/bindless_geometry/shadow_map.vshader"_rc);
 
-   ctx.bind_vertex_layout(g_vertex_layout);
+   const auto layout = render_core::vertex_layout_from_components_for_depth_only(components);
+   ctx.bind_vertex_layout(layout);
 
    ctx.bind_uniform_buffer(0, view_props);
-   ctx.bind_storage_buffer(1, "occlusion_culling.passthrough"_external);
+   ctx.bind_storage_buffer(1, draw_buffer);
 
    ctx.bind_fragment_shader("shader/bindless_geometry/shadow_map.fshader"_rc);
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());
 
-   ctx.draw_indexed_indirect_with_count("occlusion_culling.passthrough"_external, &m_bindless_scene.count_buffer(), 128, sizeof(DrawCall));
+   ctx.draw_indexed_indirect_with_count(draw_buffer, &m_bindless_scene.count_buffer(), 128, sizeof(DrawCall));
 }
 
 void ShadowMapStage::on_resource_definition(render_core::BuildContext& ctx) const

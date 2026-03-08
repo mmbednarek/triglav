@@ -1,4 +1,5 @@
 #include "Mesh.hpp"
+
 #include "InternalMesh.hpp"
 
 namespace triglav::geometry {

@@ -31,6 +31,7 @@
 #include "triglav/io/Stream.hpp"
 
 #include "Geometry.hpp"
+#include "MeshData.hpp"
 
 namespace triglav::geometry {
 

@@ -360,7 +360,7 @@ InternalMesh InternalMesh::from_obj_file(io::IReader& stream)
          }
       } else if (name == "o") {
          assert(arguments.size() == 1);
-         last_group_index = result.add_group({arguments[0], "material/stone.mat"_rc});
+         last_group_index = result.add_group({arguments[0], VERTEX_COMPONENTS_SIMPLE, "material/stone.mat"_rc});
       } else if (name == "usemtl") {
          assert(arguments.size() == 1);
          if (not result.m_groups.empty()) {
@@ -385,14 +385,53 @@ DeviceMesh InternalMesh::upload_to_device(graphics_api::Device& device, const gr
 {
    auto vertex_data = this->to_vertex_data();
 
-   graphics_api::VertexArray<Vertex> gpu_vertices{device, vertex_data.vertices.size(), usage_flags};
-   GAPI_CHECK_STATUS(gpu_vertices.write(vertex_data.vertices.data(), vertex_data.vertices.size()));
+   graphics_api::Buffer vertex_buffer = GAPI_CHECK(device.create_buffer(
+      usage_flags | graphics_api::BufferUsage::VertexBuffer | graphics_api::BufferUsage::TransferDst, vertex_data.vertex_buffer.size()));
+   GAPI_CHECK_STATUS(vertex_buffer.write_indirect(vertex_data.vertex_buffer.data(), vertex_data.vertex_buffer.size()));
 
-   graphics_api::IndexArray gpu_indices{device, vertex_data.indices.size(), usage_flags};
-   GAPI_CHECK_STATUS(gpu_indices.write(vertex_data.indices.data(), vertex_data.indices.size()));
+   graphics_api::IndexArray index_buffer{device, vertex_data.index_buffer.size(), usage_flags};
+   GAPI_CHECK_STATUS(index_buffer.write(vertex_data.index_buffer.data(), vertex_data.index_buffer.size()));
 
-   return {{std::move(gpu_vertices), std::move(gpu_indices)}, std::move(vertex_data.ranges)};
+   return {std::move(vertex_buffer), std::move(index_buffer), vertex_data.vertex_buffer.vertex_groups()};
 }
+
+struct CompleteVertex
+{
+   Vector3 position;
+   Vector3 normal;
+   Vector2 uv;
+   Vector4 tangent;
+
+   bool operator==(const CompleteVertex&) const = default;
+   bool operator<(const CompleteVertex& other) const
+   {
+      if (position.x != other.position.x)
+         return position.x < other.position.x;
+      if (position.y != other.position.y)
+         return position.y < other.position.y;
+      if (position.z != other.position.z)
+         return position.z < other.position.z;
+      if (normal.x != other.normal.x)
+         return normal.x < other.normal.x;
+      if (normal.y != other.normal.y)
+         return normal.y < other.normal.y;
+      if (normal.z != other.normal.z)
+         return normal.z < other.normal.z;
+      if (uv.x != other.uv.x)
+         return uv.x < other.uv.x;
+      if (uv.y != other.uv.y)
+         return uv.y < other.uv.y;
+      if (tangent.x != other.tangent.x)
+         return tangent.x < other.tangent.x;
+      if (tangent.y != other.tangent.y)
+         return tangent.y < other.tangent.y;
+      if (tangent.z != other.tangent.z)
+         return tangent.z < other.tangent.z;
+      if (tangent.w != other.tangent.w)
+         return tangent.w < other.tangent.w;
+      return false;
+   }
+};
 
 VertexData InternalMesh::to_vertex_data()
 {
@@ -400,23 +439,43 @@ VertexData InternalMesh::to_vertex_data()
       throw std::runtime_error("mesh must be triangulated before calculating vertex data");
    assert(not m_mesh.faces().empty());
 
-   std::unordered_map<Vertex, u32> vertex_map{};
-   std::vector<Vertex> out_vertices{};
+   std::map<CompleteVertex, u32> vertex_map{};
+   std::vector<CompleteVertex> group_vertices{};
 
-   std::vector<MaterialRange> material_ranges{};
-   MaterialName current_material;
+   std::vector<uint32_t> out_indices{};
+   VertexBuffer out_vertex_buffer;
+
+   MaterialName current_material{0};
+   VertexComponentFlags components{};
 
    size_t last_offset{};
 
-   std::vector<uint32_t> out_indices{};
+   const auto process_vertex_group = [&]() {
+      const auto buff_group_id = out_vertex_buffer.allocate_group(components, current_material, group_vertices.size(), last_offset,
+                                                                  out_indices.size() - last_offset);
+      auto buff_group = out_vertex_buffer.group(buff_group_id);
+      u32 dst_index = 0;
+      for (const auto& vert : group_vertices) {
+         buff_group.get<VertexComponentCore>(dst_index) = {vert.position, vert.normal};
+         buff_group.get<VertexComponentTexture>(dst_index).uv = vert.uv;
+         if (components & VertexComponent::NormalMap) {
+            buff_group.get<VertexComponentNormalMap>(dst_index).tangent = vert.tangent;
+         }
+         ++dst_index;
+      }
+      vertex_map.clear();
+      group_vertices.clear();
+   };
+
    for (const auto face_index : this->faces()) {
       const auto group_id = m_group_ids[face_index];
       if (group_id != g_invalid_index) {
          const auto& group = m_groups[group_id];
          if (group.material != current_material) {
-            if (last_offset != out_indices.size()) {
-               material_ranges.push_back(MaterialRange{last_offset, out_indices.size() - last_offset, current_material});
+            if (!group_vertices.empty()) {
+               process_vertex_group();
             }
+            components = group.components;
             current_material = group.material;
             last_offset = out_indices.size();
          }
@@ -427,28 +486,28 @@ VertexData InternalMesh::to_vertex_data()
          const auto normal_vector = m_normals[halfedge_index].value_or(glm::vec3{0.0f, 1.0f, 0.0f});
          const auto tangent = m_tangents[halfedge_index].value_or(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
 
-         Vertex vertex{
+         CompleteVertex vertex{
             this->location(vertex_index),
-            m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)),
             normal_vector,
+            m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)),
             tangent,
          };
 
          if (vertex_map.contains(vertex)) {
             out_indices.push_back(vertex_map[vertex]);
          } else {
-            out_vertices.push_back(vertex);
-            vertex_map[vertex] = static_cast<u32>(out_vertices.size() - 1);
-            out_indices.push_back(static_cast<u32>(out_vertices.size() - 1));
+            group_vertices.push_back(vertex);
+            vertex_map[vertex] = static_cast<u32>(group_vertices.size() - 1);
+            out_indices.push_back(static_cast<u32>(group_vertices.size() - 1));
          }
       }
    }
 
    if (last_offset != out_indices.size()) {
-      material_ranges.push_back(MaterialRange{last_offset, out_indices.size() - last_offset, current_material});
+      process_vertex_group();
    }
 
-   return {.vertices{std::move(out_vertices)}, .indices{std::move(out_indices)}, .ranges{std::move(material_ranges)}};
+   return {.vertex_buffer{std::move(out_vertex_buffer)}, .index_buffer{std::move(out_indices)}};
 }
 
 void InternalMesh::reverse_orientation()

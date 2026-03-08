@@ -5,11 +5,18 @@ shader_targets += custom_target('shader_bindless_geometry_animation_compute',
                                 command : [slang_cs_commands],
 )
 
-shader_targets += custom_target('shader_bindless_geometry_vertex',
+shader_targets += custom_target('shader_bindless_geometry_vertex_vl0',
                                 input : 'bindless_geometry.slang',
-                                output : 'vertex.vshader',
+                                output : 'vertex_vl0.vshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
-                                command : slang_vs_commands,
+                                command : [slang_vs_commands, '-DMT_USE_NORMAL_MAP=0'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_vertex_vl1',
+                                input : 'bindless_geometry.slang',
+                                output : 'vertex_vl1.vshader',
+                                depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
+                                command : [slang_vs_commands, '-DMT_USE_NORMAL_MAP=1'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_culling_compute',

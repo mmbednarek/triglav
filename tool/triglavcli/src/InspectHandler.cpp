@@ -72,15 +72,17 @@ ExitStatus handle_inspect(const CmdArgs_inspect& args)
          return EXIT_FAILURE;
       }
 
-      std::print("vertex count: {}\n", mesh->vertex_data.vertices.size());
-      std::print("index count: {}\n", mesh->vertex_data.indices.size());
+      std::print("vertex count: {}\n", mesh->vertex_data.vertex_buffer.size());
+      std::print("index count: {}\n", mesh->vertex_data.index_buffer.size());
       std::print("bounding box min: {}\n", mesh->bounding_box.min);
       std::print("bounding box max: {}\n", mesh->bounding_box.max);
       std::print("ranges:\n");
-      for (const auto& range : mesh->vertex_data.ranges) {
+      for (const auto& range : mesh->vertex_data.vertex_buffer.vertex_groups()) {
          std::print("\t- name: {}\n", ResourcePathMap::the().resolve(range.material_name));
-         std::print("\t  offset: {}\n", range.offset);
-         std::print("\t  size: {}\n", range.size);
+         std::print("\t  vertex offset: {}\n", range.vertex_offset);
+         std::print("\t  vertex size: {}\n", range.vertex_size);
+         std::print("\t  index offset: {}\n", range.index_offset);
+         std::print("\t  index size: {}\n", range.index_size);
       }
    }
    if (header->type == ResourceType::Texture) {

@@ -20,15 +20,75 @@ constexpr bool is_valid(const Index index)
    return index != g_invalid_index;
 }
 
-struct Vertex
+enum class VertexComponent : u32
 {
-   glm::vec3 location;
-   glm::vec2 uv;
-   glm::vec3 normal;
-   glm::vec4 tangent;
-
-   bool operator==(const Vertex& rhs) const = default;
+   Core = (1 << 0),
+   Texture = (1 << 1),
+   NormalMap = (1 << 2),
+   Skeleton = (1 << 3),
 };
+
+TRIGLAV_DECL_FLAGS(VertexComponent);
+
+struct VertexComponentCore
+{
+   static constexpr VertexComponent Component = VertexComponent::Core;
+
+   Vector3 location;
+   Vector3 normal;
+
+   bool operator==(const VertexComponentCore& rhs) const = default;
+};
+
+struct VertexComponentTexture
+{
+   static constexpr auto Component = VertexComponent::Texture;
+
+   Vector2 uv;
+
+   bool operator==(const VertexComponentTexture& rhs) const = default;
+};
+
+struct VertexComponentNormalMap
+{
+   static constexpr auto Component = VertexComponent::NormalMap;
+
+   Vector4 tangent;
+
+   bool operator==(const VertexComponentNormalMap& rhs) const = default;
+};
+
+struct VertexComponentSkeleton
+{
+   static constexpr auto Component = VertexComponent::Skeleton;
+
+   Vector4i indices;
+   Vector4 weights;
+
+   bool operator==(const VertexComponentSkeleton& rhs) const = default;
+};
+
+[[nodiscard]] constexpr MemorySize get_vertex_size(const VertexComponentFlags components)
+{
+   MemorySize result{};
+   if (components & VertexComponent::Core) {
+      result += sizeof(VertexComponentCore);
+   }
+   if (components & VertexComponent::NormalMap) {
+      result += sizeof(VertexComponentNormalMap);
+   }
+   if (components & VertexComponent::Texture) {
+      result += sizeof(VertexComponentTexture);
+   }
+   if (components & VertexComponent::Skeleton) {
+      result += sizeof(VertexComponentSkeleton);
+   }
+   return result;
+}
+
+constexpr VertexComponentFlags VERTEX_COMPONENTS_SIMPLE = VertexComponent::Core | VertexComponent::Texture;
+constexpr VertexComponentFlags VERTEX_COMPONENTS_NORMAL_MAPPED =
+   VertexComponent::Core | VertexComponent::Texture | VertexComponent::NormalMap;
 
 struct IndexedVertex
 {
@@ -50,27 +110,18 @@ struct Extent3D
 struct MeshGroup
 {
    std::string name;
+   VertexComponentFlags components;
    MaterialName material;
 };
 
-struct MaterialRange
+struct VertexGroup
 {
-   size_t offset;
-   size_t size;
+   VertexComponentFlags components;
    MaterialName material_name;
-};
-
-struct DeviceMesh
-{
-   graphics_api::Mesh<Vertex> mesh;
-   std::vector<MaterialRange> ranges;
-};
-
-struct VertexData
-{
-   std::vector<Vertex> vertices;
-   std::vector<u32> indices;
-   std::vector<MaterialRange> ranges;
+   size_t vertex_offset;
+   size_t vertex_size;
+   size_t index_offset;
+   size_t index_size;
 };
 
 struct Ray
@@ -152,12 +203,6 @@ struct BoundingBox
 
 // static_assert(sizeof(BoundingBox) % 16 == 0);
 
-struct MeshData
-{
-   VertexData vertex_data;
-   BoundingBox bounding_box;
-};
-
 constexpr double g_pi = 3.1415926535897932;
 
 }// namespace triglav::geometry
@@ -165,7 +210,7 @@ constexpr double g_pi = 3.1415926535897932;
 namespace std {
 
 template<>
-struct hash<glm::vec3>
+struct hash<triglav::Vector3>
 {
    size_t operator()(const glm::vec3 value) const noexcept
    {
@@ -174,21 +219,11 @@ struct hash<glm::vec3>
 };
 
 template<>
-struct hash<glm::vec2>
+struct hash<triglav::Vector2>
 {
    size_t operator()(const glm::vec2 value) const noexcept
    {
       return static_cast<size_t>(6878071.0f * value.x + 8562683.0f * value.y);
-   }
-};
-
-template<>
-struct hash<triglav::geometry::Vertex>
-{
-   size_t operator()(const triglav::geometry::Vertex& value) const noexcept
-   {
-      return 62327 * std::hash<glm::vec3>{}(value.location) + 36067 * std::hash<glm::vec3>{}(value.normal) +
-             44381 * std::hash<glm::vec2>{}(value.uv) + 15937 * std::hash<glm::vec3>{}(value.tangent);
    }
 };
 

@@ -60,6 +60,20 @@ c4::substr resolve_name(const ResourceName name)
 
 }// namespace
 
+geometry::VertexComponentFlags material_template_to_vertex_component_flags(const MaterialTemplate mat_template)
+{
+   switch (mat_template) {
+   case MaterialTemplate::Basic:
+      return geometry::VertexComponent::Core | geometry::VertexComponent::Texture;
+   case MaterialTemplate::NormalMap:
+      return geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap;
+   case MaterialTemplate::FullPBR:
+      return geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap;
+   }
+
+   return {};
+}
+
 void MTProperties_Basic::deserialize_yaml(const c4::yml::ConstNodeRef& node)
 {
    this->albedo = to_texture_name(node["albedo"].val());

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/Name.hpp"
+#include "triglav/geometry/Geometry.hpp"
 
 #include <variant>
 
@@ -19,6 +20,8 @@ enum class MaterialTemplate
    NormalMap,
    FullPBR,
 };
+
+geometry::VertexComponentFlags material_template_to_vertex_component_flags(MaterialTemplate mat_template);
 
 struct MTProperties_Basic
 {

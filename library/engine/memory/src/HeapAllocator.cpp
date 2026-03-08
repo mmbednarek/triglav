@@ -1,6 +1,7 @@
 #include "HeapAllocator.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <ranges>
 
 namespace triglav::memory {
@@ -10,10 +11,22 @@ HeapAllocator::HeapAllocator(const SizeType size)
    m_free_list.emplace(0, size);
 }
 
-std::optional<MemorySize> HeapAllocator::allocate(const MemorySize size)
+static constexpr MemorySize last_alignment(const MemorySize offset, const MemorySize alignment)
 {
+   return offset - (offset % alignment);
+}
+
+std::optional<MemorySize> HeapAllocator::allocate(const MemorySize size, const MemorySize alignment)
+{
+   if (size % alignment != 0) {
+      return std::nullopt;
+   }
+
    // TODO: Find something better than linear search
-   const auto it = std::ranges::find_if(m_free_list, [size](const std::pair<OffsetType, SizeType>& item) { return item.second >= size; });
+   const auto it = std::ranges::find_if(m_free_list, [size, alignment](const std::pair<OffsetType, SizeType>& item) {
+      const auto aligned_offset = last_alignment(item.first + item.second, alignment);
+      return aligned_offset >= item.first && (aligned_offset - item.first) >= size;
+   });
    if (it == m_free_list.end()) {
       return std::nullopt;
    }
@@ -24,7 +37,13 @@ std::optional<MemorySize> HeapAllocator::allocate(const MemorySize size)
       return offset;
    }
 
-   it->second -= size;
+   const auto mod = (it->first + it->second) % alignment;
+   if (mod != 0) {
+      m_free_list.emplace(it->first + it->second - mod, mod);
+   }
+
+   const auto total_size = size + mod;
+   it->second -= total_size;
    return it->first + it->second;
 }
 

@@ -82,11 +82,4 @@ using StagingArray = Array<BufferUsage::StorageBuffer | BufferUsage::HostVisible
 
 using IndexArray = Array<BufferUsage::IndexBuffer, uint32_t>;
 
-template<typename TVertex>
-struct Mesh
-{
-   VertexArray<TVertex> vertices;
-   IndexArray indices;
-};
-
 }// namespace triglav::graphics_api

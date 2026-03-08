@@ -7,11 +7,13 @@ namespace triglav::material
         [[vk::location(0)]]
         public float3 position : POSITION0;
         [[vk::location(1)]]
-        public float2 texCoord : TEXCOORD0;
-        [[vk::location(2)]]
         public float3 normal : NORMAL0;
+        [[vk::location(2)]]
+        public float2 texCoord : TEXCOORD0;
+#if MT_USE_NORMAL_MAP
         [[vk::location(3)]]
         public float4 tangent : TANGENT0;
+#endif
     };
 
     public struct FSInput
@@ -21,16 +23,18 @@ namespace triglav::material
         [[vk::location(0)]]
         public float3 viewSpacePosition : POSITION0;
         [[vk::location(1)]]
-        public float2 texCoord : TEXCOORD0;
-        [[vk::location(2)]]
         public float3 normal : NORMAL;
+        [[vk::location(2)]]
+        public float2 texCoord : TEXCOORD0;
         [[vk::location(3)]]
-        public float3 tangent : TANGENT0;
-        [[vk::location(4)]]
-        public float3 bitangent : TANGENT1;
-
-        [[vk::location(5)]]
         public nointerpolation uint materialID;
+
+#if MT_USE_NORMAL_MAP
+        [[vk::location(4)]]
+        public float3 tangent : TANGENT0;
+        [[vk::location(5)]]
+        public float3 bitangent : TANGENT1;
+#endif
     };
 
     public typedef FSInput VSOutput;

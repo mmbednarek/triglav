@@ -32,7 +32,8 @@ void OcclusionCulling::on_resource_definition(render_core::BuildContext& ctx) co
    ctx.declare_buffer("occlusion_culling.visible_objects.mt0"_name, sizeof(DrawCall) * g_bindless_object_limit);
    ctx.declare_buffer("occlusion_culling.visible_objects.mt1"_name, sizeof(DrawCall) * g_bindless_object_limit);
    ctx.declare_buffer("occlusion_culling.visible_objects.mt2"_name, sizeof(DrawCall) * g_bindless_object_limit);
-   ctx.declare_buffer("occlusion_culling.passthrough"_name, sizeof(DrawCall) * g_bindless_object_limit * 3);
+   ctx.declare_buffer("occlusion_culling.passthrough.vl0"_name, sizeof(DrawCall) * g_bindless_object_limit * 3);
+   ctx.declare_buffer("occlusion_culling.passthrough.vl1"_name, sizeof(DrawCall) * g_bindless_object_limit * 3);
 
    // rts
    ctx.declare_proportional_depth_target("occlusion_culling.depth_prepass_target"_name, GAPI_FORMAT(D, UNorm16), 0.5f);
@@ -45,9 +46,15 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       render_core::RenderPassScope rt_scope(ctx, "occlusion_culling.depth_prepass"_name, "occlusion_culling.depth_prepass_target"_name);
       ctx.clear_depth_stencil("occlusion_culling.depth_prepass_target"_name, 1.0f, 0);
 
-      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt0"_last_frame, "occlusion_culling.count_buffer"_last_frame, 0);
-      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt1"_last_frame, "occlusion_culling.count_buffer"_last_frame, 1);
-      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt2"_last_frame, "occlusion_culling.count_buffer"_last_frame, 2);
+      const auto base_components = geometry::VertexComponent::Core | geometry::VertexComponent::Texture;
+      const auto normal_map_components = base_components | geometry::VertexComponent::NormalMap;
+
+      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt0"_last_frame, "occlusion_culling.count_buffer"_last_frame,
+                                  base_components, 0);
+      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt1"_last_frame, "occlusion_culling.count_buffer"_last_frame,
+                                  normal_map_components, 1);
+      this->draw_pre_pass_objects(ctx, "occlusion_culling.visible_objects.mt2"_last_frame, "occlusion_culling.count_buffer"_last_frame,
+                                  normal_map_components, 2);
    }
 
    // Copy depth buffer to the highest mip of Hi-Z
@@ -97,7 +104,8 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
 
    ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
    ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
-   ctx.bind_storage_buffer(2, "occlusion_culling.passthrough"_name);
+   ctx.bind_storage_buffer(2, "occlusion_culling.passthrough.vl0"_name);
+   ctx.bind_storage_buffer(3, "occlusion_culling.passthrough.vl1"_name);
 
    ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 256), 1, 1});
 }
@@ -109,7 +117,8 @@ void OcclusionCulling::on_view_properties_not_changed(render_core::BuildContext&
    ctx.copy_buffer("occlusion_culling.visible_objects.mt1"_last_frame, "occlusion_culling.visible_objects.mt1"_name);
    ctx.copy_buffer("occlusion_culling.visible_objects.mt2"_last_frame, "occlusion_culling.visible_objects.mt2"_name);
    ctx.copy_buffer("occlusion_culling.count_buffer"_last_frame, "occlusion_culling.count_buffer"_name);
-   ctx.copy_buffer("occlusion_culling.passthrough"_last_frame, "occlusion_culling.passthrough"_name);
+   ctx.copy_buffer("occlusion_culling.passthrough.vl0"_last_frame, "occlusion_culling.passthrough.vl0"_name);
+   ctx.copy_buffer("occlusion_culling.passthrough.vl1"_last_frame, "occlusion_culling.passthrough.vl1"_name);
 }
 
 void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
@@ -122,18 +131,20 @@ void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
    ctx.export_buffer("occlusion_culling.count_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
-   ctx.export_buffer("occlusion_culling.passthrough"_name, graphics_api::PipelineStage::DrawIndirect,
+   ctx.export_buffer("occlusion_culling.passthrough.vl0"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
+   ctx.export_buffer("occlusion_culling.passthrough.vl1"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
 }
 
 void OcclusionCulling::draw_pre_pass_objects(render_core::BuildContext& ctx, const render_core::BufferRef object_buffer,
-                                             const render_core::BufferRef count_buffer, const u32 index) const
+                                             const render_core::BufferRef count_buffer,
+                                             const geometry::VertexComponentFlags vertex_components, const u32 index) const
 {
    ctx.bind_vertex_shader("shader/bindless_geometry/depth_prepass.vshader"_rc);
 
-   render_core::VertexLayout layout(sizeof(geometry::Vertex));
-   layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
-   ctx.bind_vertex_layout(layout);
+   const auto vertex_layout = render_core::vertex_layout_from_components_for_depth_only(vertex_components);
+   ctx.bind_vertex_layout(vertex_layout);
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_name);
    ctx.bind_storage_buffer(1, object_buffer);

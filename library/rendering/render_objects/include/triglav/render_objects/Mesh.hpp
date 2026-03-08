@@ -14,9 +14,8 @@ namespace triglav::render_objects {
 
 struct Mesh
 {
-   graphics_api::Mesh<geometry::Vertex> mesh;
+   geometry::DeviceMesh device_mesh;
    geometry::BoundingBox bounding_box;
-   std::vector<geometry::MaterialRange> range;
 };
 
 struct ModelShaderMapProperties

@@ -21,6 +21,8 @@ class ShadowMapStage final : public IStage
 
    void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
    void render_cascade(render_core::BuildContext& ctx, Name pass_name, Name target_name, render_core::BufferRef view_props) const;
+   void render_geometry(render_core::BuildContext& ctx, render_core::BufferRef view_props, geometry::VertexComponentFlags components,
+                        render_core::BufferRef draw_buffer) const;
 
    void on_resource_definition(render_core::BuildContext& ctx) const;
    void on_view_properties_changed(render_core::BuildContext& ctx) const;

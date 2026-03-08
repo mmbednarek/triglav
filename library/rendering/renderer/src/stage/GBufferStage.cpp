@@ -14,12 +14,12 @@ using namespace render_core::literals;
 
 namespace {
 
-render_objects::GpuMesh create_skybox_mesh(graphics_api::Device& device)
+geometry::DeviceMesh create_skybox_mesh(graphics_api::Device& device)
 {
    auto mesh = geometry::create_box({50, 50, 50});
    mesh.reverse_orientation();
    mesh.triangulate();
-   return mesh.upload_to_device(device).mesh;
+   return mesh.upload_to_device(device);
 }
 
 }// namespace
@@ -52,9 +52,8 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
 
-   render_core::VertexLayout layout(sizeof(geometry::Vertex));
-   layout.add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location));
-   ctx.bind_vertex_layout(layout);
+   const auto vertex_layout = render_core::vertex_layout_from_components(m_mesh.ranges[0].components);
+   ctx.bind_vertex_layout(vertex_layout);
 
    ctx.bind_fragment_shader("shader/geometry/skybox.fshader"_rc);
 
@@ -83,28 +82,30 @@ void GBufferStage::build_ground(render_core::BuildContext& ctx) const
    ctx.draw_primitives(4, 0);
 }
 
-static const auto bindless_geo_vert_layout = render_core::VertexLayout(sizeof(geometry::Vertex))
-                                                .add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, location))
-                                                .add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(geometry::Vertex, uv))
-                                                .add("normal"_name, GAPI_FORMAT(RGB, Float32), offsetof(geometry::Vertex, normal))
-                                                .add("tangent"_name, GAPI_FORMAT(RGBA, Float32), offsetof(geometry::Vertex, tangent));
-
 void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 {
-   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt0"_external,
-                                             "shader/bindless_geometry/render_mt0.fshader"_rc, 0);
-   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt1"_external,
-                                             "shader/bindless_geometry/render_mt1.fshader"_rc, 1);
-   this->draw_objects_with_material_template(ctx, "occlusion_culling.visible_objects.mt2"_external,
-                                             "shader/bindless_geometry/render_mt2.fshader"_rc, 2);
+   this->draw_objects_with_material_template(
+      ctx, "occlusion_culling.visible_objects.mt0"_external, "shader/bindless_geometry/vertex_vl0.vshader"_rc,
+      "shader/bindless_geometry/render_mt0.fshader"_rc, 0, geometry::VertexComponent::Core | geometry::VertexComponent::Texture);
+   this->draw_objects_with_material_template(
+      ctx, "occlusion_culling.visible_objects.mt1"_external, "shader/bindless_geometry/vertex_vl1.vshader"_rc,
+      "shader/bindless_geometry/render_mt1.fshader"_rc, 1,
+      geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap);
+   this->draw_objects_with_material_template(
+      ctx, "occlusion_culling.visible_objects.mt2"_external, "shader/bindless_geometry/vertex_vl1.vshader"_rc,
+      "shader/bindless_geometry/render_mt2.fshader"_rc, 2,
+      geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap);
 }
 
 void GBufferStage::draw_objects_with_material_template(render_core::BuildContext& ctx, const render_core::BufferRef visible_objects,
-                                                       const FragmentShaderName fs_name, const u32 material_template_index) const
+                                                       VertexShaderName vs_name, const FragmentShaderName fs_name,
+                                                       const u32 material_template_index,
+                                                       const geometry::VertexComponentFlags vertex_components) const
 {
-   ctx.bind_vertex_shader("shader/bindless_geometry/vertex.vshader"_rc);
+   ctx.bind_vertex_shader(vs_name);
 
-   ctx.bind_vertex_layout(bindless_geo_vert_layout);
+   const auto layout = render_core::vertex_layout_from_components(vertex_components);
+   ctx.bind_vertex_layout(layout);
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
    ctx.bind_storage_buffer(1, visible_objects);
 
