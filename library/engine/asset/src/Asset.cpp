@@ -11,12 +11,15 @@
 #include "triglav/json_util/Serialize.hpp"
 #include "triglav/ktx/Texture.hpp"
 
+#include <map>
+
 namespace triglav::asset {
 
 using namespace string_literals;
+using namespace name_literals;
 
 constexpr u32 g_magic_number = 0x53414754;
-constexpr u32 g_last_version = 0x2501;
+constexpr u32 g_last_version = 0x2502;
 
 enum class MeshVertexLayout : u32
 {
@@ -25,10 +28,24 @@ enum class MeshVertexLayout : u32
    SkeletalMesh,
 };
 
+struct LegacyVertex
+{
+   Vector3 location;
+   Vector2 uv;
+   Vector3 normal;
+   Vector4 tangent;
+};
+
+struct LegacyMaterialRange
+{
+   MemorySize offset;
+   MemorySize size;
+   MaterialName material_name;
+};
+
 struct MeshHeader
 {
-   MeshVertexLayout vertex_layout;
-   u32 vertex_count;
+   u32 vertex_buffer_size;
    u32 index_count;
    u32 group_count;
    Vector3 bounding_box_min;
@@ -45,7 +62,6 @@ bool write_header(io::IWriter& writer, const ResourceType resource_type)
    header.type = resource_type;
    return writer.write({reinterpret_cast<const u8*>(&header), sizeof(AssetHeader)}).has_value();
 }
-
 
 }// namespace
 
@@ -101,24 +117,33 @@ bool encode_mesh_data(io::IWriter& writer, const geometry::MeshData& mesh_data)
    write_header(writer, ResourceType::Mesh);
 
    MeshHeader mesh_header{};
-   mesh_header.vertex_layout = MeshVertexLayout::NormalMapped;
-   mesh_header.vertex_count = static_cast<u32>(mesh_data.vertex_data.vertices.size());
-   mesh_header.index_count = static_cast<u32>(mesh_data.vertex_data.indices.size());
-   mesh_header.group_count = static_cast<u32>(mesh_data.vertex_data.ranges.size());
+   mesh_header.vertex_buffer_size = static_cast<u32>(mesh_data.vertex_data.vertex_buffer.size());
+   mesh_header.index_count = static_cast<u32>(mesh_data.vertex_data.index_buffer.size());
+   mesh_header.group_count = static_cast<u32>(mesh_data.vertex_data.vertex_buffer.vertex_groups().size());
    mesh_header.bounding_box_min = mesh_data.bounding_box.min;
    mesh_header.bounding_box_max = mesh_data.bounding_box.max;
    if (!writer.write({reinterpret_cast<const u8*>(&mesh_header), sizeof(MeshHeader)}).has_value()) {
       return false;
    }
 
-   for (const auto& range : mesh_data.vertex_data.ranges) {
+   for (const auto& range : mesh_data.vertex_data.vertex_buffer.vertex_groups()) {
       auto name = ResourcePathMap::the().resolve(range.material_name);
       assert(name.size() != 0);
 
-      if (!writer.write({reinterpret_cast<const u8*>(&range.offset), sizeof(MemorySize)}).has_value())
+      const auto vertex_size = geometry::get_vertex_size(range.components);
+      assert(range.vertex_size % vertex_size == 0);
+      const MemorySize vertex_count = range.vertex_size / vertex_size;
+
+      if (!writer.write({reinterpret_cast<const u8*>(&range.components), sizeof(geometry::VertexComponentFlags)}).has_value())
          return false;
 
-      if (!writer.write({reinterpret_cast<const u8*>(&range.size), sizeof(MemorySize)}).has_value())
+      if (!writer.write({reinterpret_cast<const u8*>(&vertex_count), sizeof(MemorySize)}).has_value())
+         return false;
+
+      if (!writer.write({reinterpret_cast<const u8*>(&range.index_offset), sizeof(MemorySize)}).has_value())
+         return false;
+
+      if (!writer.write({reinterpret_cast<const u8*>(&range.index_size), sizeof(MemorySize)}).has_value())
          return false;
 
       const auto name_size = static_cast<u32>(name.size());
@@ -129,15 +154,13 @@ bool encode_mesh_data(io::IWriter& writer, const geometry::MeshData& mesh_data)
          return false;
    }
 
-   if (!writer
-           .write({reinterpret_cast<const u8*>(mesh_data.vertex_data.vertices.data()),
-                   sizeof(geometry::Vertex) * mesh_data.vertex_data.vertices.size()})
-           .has_value()) {
+   if (!writer.write({mesh_data.vertex_data.vertex_buffer.data(), mesh_data.vertex_data.vertex_buffer.size()}).has_value()) {
       return false;
    }
 
    if (!writer
-           .write({reinterpret_cast<const u8*>(mesh_data.vertex_data.indices.data()), sizeof(u32) * mesh_data.vertex_data.indices.size()})
+           .write({reinterpret_cast<const u8*>(mesh_data.vertex_data.index_buffer.data()),
+                   sizeof(u32) * mesh_data.vertex_data.index_buffer.size()})
            .has_value()) {
       return false;
    }
@@ -145,14 +168,33 @@ bool encode_mesh_data(io::IWriter& writer, const geometry::MeshData& mesh_data)
    return true;
 }
 
+geometry::VertexComponentFlags component_flags_from_material(const MaterialName name)
+{
+   if (name == "material/bark.mat"_rc || name == "material/brick.mat"_rc || name == "material/gold.mat"_rc ||
+       name == "material/grass.mat"_rc || name == "material/metal.mat"_rc || name == "material/pine.mat"_rc) {
+      return geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap;
+   }
+
+   return geometry::VertexComponent::Core | geometry::VertexComponent::Texture;
+}
+
 std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, const u32 version)
 {
-   MeshHeader mesh_header{};
-   if (!reader.read({reinterpret_cast<u8*>(&mesh_header), sizeof(MeshHeader)}).has_value()) {
+   if (version <= 0x2500) {
+      // unsupported
       return std::nullopt;
    }
 
-   if (mesh_header.vertex_layout != MeshVertexLayout::NormalMapped) {
+   [[maybe_unused]] u32 layout{};
+   if (version <= 0x2501) {
+      // Layout is per material range starting 0.25.02
+      if (!reader.read({reinterpret_cast<u8*>(&layout), sizeof(MeshVertexLayout)}).has_value()) {
+         return std::nullopt;
+      }
+   }
+
+   MeshHeader mesh_header{};
+   if (!reader.read({reinterpret_cast<u8*>(&mesh_header), sizeof(MeshHeader)}).has_value()) {
       return std::nullopt;
    }
 
@@ -160,17 +202,11 @@ std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, const u32 ver
    mesh_data.bounding_box.min = mesh_header.bounding_box_min;
    mesh_data.bounding_box.max = mesh_header.bounding_box_max;
 
-   mesh_data.vertex_data.ranges.resize(mesh_header.group_count);
+   // Starting 0.25.1, we encode resource names as strings, so we read each range
+   // individually.
+   if (version <= 0x2501) {
+      std::vector<LegacyMaterialRange> material_ranges(mesh_header.group_count);
 
-   if (version <= 0x2500) {
-      // until version 0.25.0 we just load the whole thing
-      if (!reader
-              .read({reinterpret_cast<u8*>(mesh_data.vertex_data.ranges.data()), sizeof(geometry::MaterialRange) * mesh_header.group_count})
-              .has_value())
-         return std::nullopt;
-   } else {
-      // from 0.25.1 resources are encoded by strings so we read each range
-      // individually
       io::Deserializer decoder(reader);
       for (u32 i = 0; i < mesh_header.group_count; ++i) {
          const auto offset = decoder.read_mem_size();
@@ -182,23 +218,84 @@ std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, const u32 ver
          if (auto res = reader.read({reinterpret_cast<u8*>(path.data()), rc_path_len}); !res.has_value())
             return std::nullopt;
 
-         mesh_data.vertex_data.ranges[i] = geometry::MaterialRange{
+         material_ranges[i] = LegacyMaterialRange{
             .offset = offset,
             .size = size,
             .material_name = name_from_path(path.view()),
          };
       }
-   }
 
-   mesh_data.vertex_data.vertices.resize(mesh_header.vertex_count);
-   if (!reader.read({reinterpret_cast<u8*>(mesh_data.vertex_data.vertices.data()), sizeof(geometry::Vertex) * mesh_header.vertex_count})
-           .has_value()) {
-      return std::nullopt;
-   }
+      std::vector<LegacyVertex> vertices;
+      vertices.resize(mesh_header.vertex_buffer_size);
+      if (!reader.read({reinterpret_cast<u8*>(vertices.data()), vertices.size() * sizeof(LegacyVertex)}).has_value()) {
+         return std::nullopt;
+      }
 
-   mesh_data.vertex_data.indices.resize(mesh_header.index_count);
-   if (!reader.read({reinterpret_cast<u8*>(mesh_data.vertex_data.indices.data()), sizeof(u32) * mesh_header.index_count}).has_value()) {
-      return std::nullopt;
+      std::vector<u32> indices(mesh_header.index_count);
+      if (!reader.read({reinterpret_cast<u8*>(indices.data()), sizeof(u32) * mesh_header.index_count}).has_value()) {
+         return std::nullopt;
+      }
+
+      mesh_data.vertex_data.index_buffer.resize(mesh_header.index_count);
+
+      for (const auto& range : material_ranges) {
+         u32 top_vertex_index = 0;
+         std::map<u32, u32> unique_vertices{};
+
+         for (u32 index = range.offset; index < range.offset + range.size; ++index) {
+            const u32 vertex_index = indices[index];
+            if (!unique_vertices.contains(vertex_index)) {
+               unique_vertices[vertex_index] = top_vertex_index;
+               ++top_vertex_index;
+            }
+            mesh_data.vertex_data.index_buffer[index] = unique_vertices[vertex_index];
+         }
+
+         const auto vertex_components = component_flags_from_material(range.material_name);
+         const auto group_id = mesh_data.vertex_data.vertex_buffer.allocate_group(vertex_components, range.material_name,
+                                                                                  unique_vertices.size(), range.offset, range.size);
+
+         auto group = mesh_data.vertex_data.vertex_buffer.group(group_id);
+         for (const auto [global_index, group_index] : unique_vertices) {
+            const auto& vertex = vertices[global_index];
+            group.get<geometry::VertexComponentCore>(group_index) = {vertex.location, vertex.normal};
+            group.get<geometry::VertexComponentTexture>(group_index) = {vertex.uv};
+            if (vertex_components & geometry::VertexComponent::NormalMap) {
+               group.get<geometry::VertexComponentNormalMap>(group_index) = {vertex.tangent};
+            }
+         }
+      }
+   } else {
+      io::Deserializer decoder(reader);
+      for (u32 i = 0; i < mesh_header.group_count; ++i) {
+         const auto vertex_components = geometry::VertexComponentFlags(decoder.read_u32());
+         const auto vertex_count = decoder.read_mem_size();
+
+         const auto index_offset = decoder.read_mem_size();
+         const auto index_size = decoder.read_mem_size();
+
+         const auto rc_path_len = decoder.read_u32();
+         assert(rc_path_len != 0);
+
+         String path("\0"_rune, rc_path_len);
+         if (auto res = reader.read({reinterpret_cast<u8*>(path.data()), rc_path_len}); !res.has_value())
+            return std::nullopt;
+
+         mesh_data.vertex_data.vertex_buffer.allocate_group(vertex_components, name_from_path(path.view()), vertex_count, index_offset,
+                                                            index_size);
+      }
+
+      assert(mesh_data.vertex_data.vertex_buffer.size() == mesh_header.vertex_buffer_size);
+
+      if (!reader.read({mesh_data.vertex_data.vertex_buffer.data(), mesh_data.vertex_data.vertex_buffer.size()}).has_value()) {
+         return std::nullopt;
+      }
+
+      mesh_data.vertex_data.index_buffer.resize(mesh_header.index_count);
+      if (!reader.read({reinterpret_cast<u8*>(mesh_data.vertex_data.index_buffer.data()), sizeof(u32) * mesh_header.index_count})
+              .has_value()) {
+         return std::nullopt;
+      }
    }
 
    return mesh_data;

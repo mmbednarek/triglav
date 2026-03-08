@@ -431,6 +431,13 @@ void BuildContext::write_descriptor(ResourceStorage& storage, const graphics_api
    }
 }
 
+void BuildContext::draw_mesh(const geometry::DeviceMesh& mesh)
+{
+   this->bind_vertex_buffer(&mesh.vertex_buffer);
+   this->bind_index_buffer(&mesh.index_buffer.buffer());
+   this->draw_indexed_primitives(static_cast<u32>(mesh.index_buffer.count()), 0, 0);
+}
+
 void BuildContext::add_texture_usage(const Name tex_name, const graphics_api::TextureUsageFlags flags)
 {
    if (!m_declarations.contains(tex_name)) {

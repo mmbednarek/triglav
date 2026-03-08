@@ -31,8 +31,10 @@ ExitStatus reimport_mesh(const std::string& rc_path, const size_t range_index, c
    }
    assert(mesh.has_value());
 
-   if (!path.is_empty() && range_index < mesh->vertex_data.ranges.size()) {
-      mesh->vertex_data.ranges[range_index].material_name = name_from_path(path);
+   if (!path.is_empty() && range_index < mesh->vertex_data.vertex_buffer.vertex_groups().size()) {
+      // mesh->vertex_data.vertex_buffer.vertex_groups()[range_index].material_name = name_from_path(path);
+      std::println(std::cerr, "triglav-cli: Updating material is temporarily disabled");
+      return EXIT_FAILURE;
    }
 
    const auto mesh_file_output = io::open_file(sys_path, io::FileMode::Write);

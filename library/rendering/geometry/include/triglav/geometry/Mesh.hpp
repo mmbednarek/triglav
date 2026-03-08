@@ -7,6 +7,7 @@
 #include "triglav/io/Path.hpp"
 
 #include "Geometry.hpp"
+#include "MeshData.hpp"
 
 namespace triglav::geometry {
 

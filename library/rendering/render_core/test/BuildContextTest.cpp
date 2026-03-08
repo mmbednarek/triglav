@@ -271,15 +271,16 @@ TEST(BuildContext, BasicDepth)
    build_context.declare_sized_render_target("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
    build_context.declare_sized_depth_target("test.basic_depth.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
    build_context.declare_staging_buffer("test.basic_depth.output_buffer"_name, buffer_size);
-   build_context.declare_buffer("test.basic_depth.vertex_buffer"_name, box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
-   build_context.declare_buffer("test.basic_depth.index_buffer"_name, box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.declare_buffer("test.basic_depth.vertex_buffer"_name,
+                                box_mesh_data.vertex_buffer.size() * sizeof(triglav::geometry::Vertex));
+   build_context.declare_buffer("test.basic_depth.index_buffer"_name, box_mesh_data.index_buffer.size() * sizeof(triglav::u32));
    build_context.declare_buffer("test.basic_depth.uniform_buffer"_name, 2 * sizeof(triglav::Matrix4x4));
 
    // Fill buffers with values
-   build_context.fill_buffer_raw("test.basic_depth.vertex_buffer"_name, box_mesh_data.vertices.data(),
-                                 box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
-   build_context.fill_buffer_raw("test.basic_depth.index_buffer"_name, box_mesh_data.indices.data(),
-                                 box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.fill_buffer_raw("test.basic_depth.vertex_buffer"_name, box_mesh_data.vertex_buffer.data(),
+                                 box_mesh_data.vertex_buffer.size() * sizeof(triglav::geometry::Vertex));
+   build_context.fill_buffer_raw("test.basic_depth.index_buffer"_name, box_mesh_data.index_buffer.data(),
+                                 box_mesh_data.index_buffer.size() * sizeof(triglav::u32));
    build_context.fill_buffer("test.basic_depth.uniform_buffer"_name, std::array{transform, offset});
 
    {
@@ -303,7 +304,7 @@ TEST(BuildContext, BasicDepth)
       build_context.bind_fragment_shader("testing/shader/basic/depth.fshader"_rc);
 
       // Draw
-      build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.indices.size()), 0, 0, 2, 0);
+      build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.index_buffer.size()), 0, 0, 2, 0);
    }
 
    // Copy the render target to staging buffer
@@ -455,14 +456,14 @@ TEST(BuildContext, DepthTargetSample)
    build_context.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
    build_context.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, buffer_size);
    build_context.declare_buffer("test.depth_target_sample.vertex_buffer"_name,
-                                box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
-   build_context.declare_buffer("test.depth_target_sample.index_buffer"_name, box_mesh_data.indices.size() * sizeof(triglav::u32));
+                                box_mesh_data.vertex_buffer.size() * sizeof(triglav::geometry::Vertex));
+   build_context.declare_buffer("test.depth_target_sample.index_buffer"_name, box_mesh_data.index_buffer.size() * sizeof(triglav::u32));
    build_context.declare_buffer("test.depth_target_sample.uniform_buffer"_name, sizeof(triglav::Matrix4x4));
 
-   build_context.fill_buffer_raw("test.depth_target_sample.vertex_buffer"_name, box_mesh_data.vertices.data(),
-                                 box_mesh_data.vertices.size() * sizeof(triglav::geometry::Vertex));
-   build_context.fill_buffer_raw("test.depth_target_sample.index_buffer"_name, box_mesh_data.indices.data(),
-                                 box_mesh_data.indices.size() * sizeof(triglav::u32));
+   build_context.fill_buffer_raw("test.depth_target_sample.vertex_buffer"_name, box_mesh_data.vertex_buffer.data(),
+                                 box_mesh_data.vertex_buffer.size() * sizeof(triglav::geometry::Vertex));
+   build_context.fill_buffer_raw("test.depth_target_sample.index_buffer"_name, box_mesh_data.index_buffer.data(),
+                                 box_mesh_data.index_buffer.size() * sizeof(triglav::u32));
    build_context.fill_buffer("test.depth_target_sample.uniform_buffer"_name, transform);
 
    {
@@ -485,7 +486,7 @@ TEST(BuildContext, DepthTargetSample)
       build_context.bind_fragment_shader("testing/shader/depth_target_sample/draw.fshader"_rc);
 
       // Draw
-      build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.indices.size()), 0, 0, 1, 0);
+      build_context.draw_indexed_primitives(static_cast<u32>(box_mesh_data.index_buffer.size()), 0, 0, 1, 0);
    }
    {
       // Second pass

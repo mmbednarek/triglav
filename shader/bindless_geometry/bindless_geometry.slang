@@ -14,6 +14,10 @@ BINDING LAYOUT
 
 */
 
+// MT_USE_NORMAL_MAP
+// MT_USE_ROUGHNESS_MAP
+// MT_USE_METALIC_MAP
+
 typealias VSInput = triglav::material::VSInput;
 typealias VSOutput = triglav::material::VSOutput;
 
@@ -35,8 +39,10 @@ VSOutput vs_main(VSInput vsInput)
 
     output.texCoord = vsInput.texCoord;
     output.normal = mul(viewNormalMat, vsInput.normal);
+#if MT_USE_NORMAL_MAP
     output.tangent = mul(viewNormalMat, vsInput.tangent.xyz);
     output.bitangent = mul(viewNormalMat, vsInput.tangent.w * cross(vsInput.normal, vsInput.tangent.xyz));
+#endif
     output.viewSpacePosition = viewSpace.xyz;
     output.position = mul(UboViewProps.proj, viewSpace);
     output.materialID = drawCall.materialID;

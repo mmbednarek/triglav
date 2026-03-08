@@ -31,7 +31,7 @@ class OcclusionCulling
 
  private:
    void draw_pre_pass_objects(render_core::BuildContext& ctx, render_core::BufferRef object_buffer, render_core::BufferRef count_buffer,
-                              u32 index) const;
+                              geometry::VertexComponentFlags vertex_components, u32 index) const;
 
    BindlessScene& m_bindless_scene;
 

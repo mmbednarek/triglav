@@ -3,15 +3,18 @@ geometry_sources = files([
   'include/triglav/geometry/DebugMesh.hpp',
   'include/triglav/geometry/Geometry.hpp',
   'include/triglav/geometry/Mesh.hpp',
+  'include/triglav/geometry/MeshData.hpp',
   'include/triglav/geometry/Parser.hpp',
+  'include/triglav/geometry/VertexBuffer.hpp',
   'src/DebugMesh.cpp',
   'src/InternalMesh.cpp',
   'src/InternalMesh.hpp',
   'src/Mesh.cpp',
   'src/Parser.cpp',
+  'src/VertexBuffer.cpp',
 ])
 
-geometry_pub_deps = [glm, graphics_api, io]
+geometry_pub_deps = [glm, graphics_api, io, memory]
 
 geometry_priv_deps = geometry_pub_deps
 geometry_priv_deps += cgal

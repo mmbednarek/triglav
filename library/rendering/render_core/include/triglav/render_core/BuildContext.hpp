@@ -25,6 +25,10 @@ class Pipeline;
 class Device;
 }// namespace triglav::graphics_api
 
+namespace triglav::geometry {
+class DeviceMesh;
+}// namespace triglav::geometry
+
 namespace triglav::render_core {
 
 namespace detail {
@@ -198,14 +202,7 @@ class BuildContext
    [[nodiscard]] graphics_api::SamplerProperties& texture_sampler_properties(Name name);
    void set_sampler_properties(Name name, const graphics_api::SamplerProperties& sampler_props);
 
-   template<typename TVertex>
-   void draw_mesh(const graphics_api::Mesh<TVertex>& mesh)
-   {
-      this->bind_vertex_buffer(&mesh.vertices.buffer());
-      this->bind_index_buffer(&mesh.indices.buffer());
-      this->draw_indexed_primitives(static_cast<u32>(mesh.indices.count()), 0, 0);
-   }
-
+   void draw_mesh(const geometry::DeviceMesh& mesh);
    void add_texture_usage(Name tex_name, graphics_api::TextureUsageFlags flags);
    void add_buffer_usage(Name buff_name, graphics_api::BufferUsageFlags flags);
    void set_bind_stages(graphics_api::PipelineStageFlags stages);

@@ -68,11 +68,14 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
 
    geometry::Mesh dst_mesh;
 
-   const auto invalid_group_id = dst_mesh.add_group(geometry::MeshGroup{.name = "invalid", .material = "material/stone.mat"_rc});
+   const auto invalid_group_id = dst_mesh.add_group(
+      geometry::MeshGroup{.name = "invalid", .components = geometry::VERTEX_COMPONENTS_SIMPLE, .material = "material/stone.mat"_rc});
 
    std::map<u32, geometry::Index> index_to_name;
    for (const auto& [index, name] : materials) {
-      index_to_name[index] = dst_mesh.add_group(geometry::MeshGroup{.name = std::format("group{}", index), .material = name});
+      // TODO: Add complex material support
+      index_to_name[index] = dst_mesh.add_group(
+         geometry::MeshGroup{.name = std::format("group{}", index), .components = geometry::VERTEX_COMPONENTS_SIMPLE, .material = name});
    }
 
    std::unordered_map<Vector3, geometry::Index> unique_position_map;

@@ -18,7 +18,7 @@ class HeapAllocator
    explicit HeapAllocator(SizeType size);
 
    // Returns offset
-   std::optional<MemorySize> allocate(MemorySize size);
+   std::optional<MemorySize> allocate(MemorySize size, MemorySize alignment = 1);
    void free(Area area);
 
 #if TG_HEAP_ALLOCATOR_TEST

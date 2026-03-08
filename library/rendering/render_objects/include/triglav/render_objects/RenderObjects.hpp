@@ -27,6 +27,4 @@ struct ShadowMapUBO
    alignas(16) glm::mat4 mvp;
 };
 
-using GpuMesh = graphics_api::Mesh<geometry::Vertex>;
-
 }// namespace triglav::render_objects

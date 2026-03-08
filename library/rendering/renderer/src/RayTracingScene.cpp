@@ -69,20 +69,22 @@ void RayTracingScene::build_acceleration_structures()
 
 void RayTracingScene::on_object_added_to_scene(const SceneObject& object)
 {
+   // TODO: Fix!!!
    m_must_update_acceleration_structures = true;
 
    const auto& model = m_resource_manager.get(object.model);
-   const auto vertex_count = static_cast<u32>(model.mesh.vertices.count());
-   const auto triangle_count = static_cast<u32>(model.mesh.indices.count() / 3);
-   m_build_blcontext.add_triangle_buffer(model.mesh.vertices.buffer(), model.mesh.indices.buffer(), GAPI_FORMAT(RGB, Float32),
-                                         sizeof(geo::Vertex), vertex_count, triangle_count);
+   const auto vertex_size = geometry::get_vertex_size(model.device_mesh.ranges[0].components);
+   const auto vertex_count = static_cast<u32>(model.device_mesh.vertex_buffer.size() / vertex_size);
+   const auto triangle_count = static_cast<u32>(model.device_mesh.index_buffer.count() / 3);
+   m_build_blcontext.add_triangle_buffer(model.device_mesh.vertex_buffer, model.device_mesh.index_buffer.buffer(),
+                                         GAPI_FORMAT(RGB, Float32), vertex_size, vertex_count, triangle_count);
 
    auto* acc_struct = m_build_blcontext.commit_triangles();
 
    m_instance_builder.add_instance(*acc_struct, object.model_matrix(), m_objects.size());
 
-   m_objects.emplace_back(ObjectDesc{.index_buffer = model.mesh.indices.buffer().buffer_address(),
-                                     .vertex_buffer = model.mesh.vertices.buffer().buffer_address()});
+   m_objects.emplace_back(ObjectDesc{.index_buffer = model.device_mesh.index_buffer.buffer().buffer_address(),
+                                     .vertex_buffer = model.device_mesh.vertex_buffer.buffer_address()});
 }
 
 

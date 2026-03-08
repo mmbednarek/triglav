@@ -92,6 +92,8 @@ struct PendingObject
 
 class BindlessScene
 {
+   TG_DEFINE_LOG_CATEGORY(BindlessScene)
+
    friend class DrawCallUpdateWriter;
 
  public:
@@ -143,7 +145,7 @@ class BindlessScene
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
    graphics_api::StagingArray<Transform3D> m_transform_stage;
    graphics_api::StorageArray<BindlessSceneObject> m_scene_objects;
-   graphics_api::VertexArray<geometry::Vertex> m_combined_vertex_buffer;
+   graphics_api::Buffer m_combined_vertex_buffer;
    graphics_api::IndexArray m_combined_index_buffer;
    graphics_api::UniformBuffer<u32> m_count_buffer;
    graphics_api::StorageArray<Properties_MT0> m_material_props_albedo_tex;

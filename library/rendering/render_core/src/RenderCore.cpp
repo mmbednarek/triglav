@@ -4,6 +4,8 @@
 
 namespace triglav::render_core {
 
+using namespace name_literals;
+
 namespace {
 
 constexpr std::array<PipelineHash, 16> DESCRIPTOR_PRIMES = {
@@ -200,6 +202,57 @@ PipelineHash RayTracingPipelineState::hash() const
       result += RAY_SHADER_GROUP_PRIMES[index] * shader_group.hash();
    }
 
+   return result;
+}
+
+VertexLayout vertex_layout_from_components(const geometry::VertexComponentFlags flags)
+{
+   VertexLayout result{};
+
+   MemorySize offset = 0;
+   if (flags & geometry::VertexComponent::Core) {
+      result.add("position"_name, GAPI_FORMAT(RGB, Float32), offset);
+      result.add("normal"_name, GAPI_FORMAT(RGB, Float32), offset + offsetof(geometry::VertexComponentCore, normal));
+      offset += sizeof(geometry::VertexComponentCore);
+   }
+   if (flags & geometry::VertexComponent::Texture) {
+      result.add("uv"_name, GAPI_FORMAT(RG, Float32), offset);
+      offset += sizeof(geometry::VertexComponentTexture);
+   }
+   if (flags & geometry::VertexComponent::NormalMap) {
+      result.add("tangent"_name, GAPI_FORMAT(RGBA, Float32), offset);
+      offset += sizeof(geometry::VertexComponentNormalMap);
+   }
+   if (flags & geometry::VertexComponent::Skeleton) {
+      result.add("indices"_name, GAPI_FORMAT(RGBA, UInt), offset);
+      result.add("weights"_name, GAPI_FORMAT(RGBA, Float32), offset + offsetof(geometry::VertexComponentSkeleton, weights));
+      offset += sizeof(geometry::VertexComponentSkeleton);
+   }
+
+   result.stride = offset;
+   return result;
+}
+
+VertexLayout vertex_layout_from_components_for_depth_only(const geometry::VertexComponentFlags flags)
+{
+   VertexLayout result{};
+
+   MemorySize offset = 0;
+   if (flags & geometry::VertexComponent::Core) {
+      result.add("position"_name, GAPI_FORMAT(RGB, Float32), offset);
+      offset += sizeof(geometry::VertexComponentCore);
+   }
+   if (flags & geometry::VertexComponent::Texture) {
+      offset += sizeof(geometry::VertexComponentTexture);
+   }
+   if (flags & geometry::VertexComponent::NormalMap) {
+      offset += sizeof(geometry::VertexComponentNormalMap);
+   }
+   if (flags & geometry::VertexComponent::Skeleton) {
+      offset += sizeof(geometry::VertexComponentSkeleton);
+   }
+
+   result.stride = offset;
    return result;
 }
 

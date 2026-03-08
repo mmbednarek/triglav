@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "triglav/Name.hpp"
+#include "triglav/geometry/Geometry.hpp"
 #include "triglav/graphics_api/Array.hpp"
 
 namespace triglav::render_core {
@@ -186,6 +187,9 @@ inline Name make_rt_shader_name(const ResourceName res_name)
 {
    return res_name.name() * static_cast<u64>(res_name.type());
 }
+
+VertexLayout vertex_layout_from_components(geometry::VertexComponentFlags flags);
+VertexLayout vertex_layout_from_components_for_depth_only(geometry::VertexComponentFlags flags);
 
 namespace literals {
 
