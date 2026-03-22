@@ -463,6 +463,16 @@ bool BuildContext::is_ray_tracing_supported() const
    return m_device.enabled_features() & gapi::DeviceFeature::RayTracing;
 }
 
+void BuildContext::begin_debug_label(std::string label, Vector4 color)
+{
+   this->add_command<detail::cmd::BeginDebugLabel>(std::move(label), color);
+}
+
+void BuildContext::end_debug_label()
+{
+   this->add_command<detail::cmd::EndDebugLabel>();
+}
+
 void BuildContext::export_texture(const Name tex_name, const graphics_api::PipelineStage pipeline_stage,
                                   const graphics_api::TextureState state, const graphics_api::TextureUsageFlags flags)
 {
@@ -651,6 +661,17 @@ void BuildContext::reset_resource_states()
          },
          decl);
    }
+}
+
+DebugLabelScope::DebugLabelScope(BuildContext& build_context, std::string label, Vector4 color) :
+    m_build_context(build_context)
+{
+   m_build_context.begin_debug_label(std::move(label), color);
+}
+
+DebugLabelScope::~DebugLabelScope()
+{
+   m_build_context.end_debug_label();
 }
 
 void BuildContext::set_vertex_topology(const graphics_api::VertexTopology topology)

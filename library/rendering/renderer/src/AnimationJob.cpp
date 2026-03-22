@@ -13,7 +13,7 @@ using namespace name_literals;
 struct ChannelStateGPU
 {
    float start_time;
-   u32 target_mesh;
+   u32 target_transform_id;
    u32 last_keyframe;
    u32 target_keyframe;
    u32 channel_type;
@@ -36,6 +36,8 @@ AnimationJob::AnimationJob(AnimationManager& animation_manager, BindlessScene& b
 
 void AnimationJob::build_job(render_core::BuildContext& ctx) const
 {
+   TG_DEBUG_LABEL(ctx, "Animation", {0.8f, 0.2f, 0.2f, 1.0f})
+
    ctx.declare_staging_buffer("animation_job.channel_states_staging"_name, sizeof(ChannelStateGPU) * MAX_CHANNEL_STATE_COUNT);
    ctx.declare_buffer("animation_job.channel_states"_name, sizeof(ChannelStateGPU) * MAX_CHANNEL_STATE_COUNT);
    ctx.declare_staging_buffer("animation_job.state_staging"_name, sizeof(AnimationStateGPU));
@@ -50,7 +52,7 @@ void AnimationJob::build_job(render_core::BuildContext& ctx) const
    ctx.bind_storage_buffer(1, &m_animation_manager.timestamp_buffer());
    ctx.bind_storage_buffer(2, "animation_job.channel_states"_name);
    ctx.bind_storage_buffer(3, "animation_job.state"_name);
-   ctx.bind_storage_buffer(4, &m_bindless_scene.scene_object_buffer());
+   ctx.bind_storage_buffer(4, &m_bindless_scene.transform_buffer());
 
    ctx.dispatch({1, 1, 1});
 }
@@ -68,7 +70,7 @@ void AnimationJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_i
          dst_state.start_time = anim.start_time;
          dst_state.last_keyframe = channel.last_keyframe;
          dst_state.target_keyframe = channel.first_keyframe + 1;
-         dst_state.target_mesh = anim.target_object_id;
+         dst_state.target_transform_id = anim.target_transform_id;
          dst_state.channel_type = channel.channel_type;
          ++i;
       }

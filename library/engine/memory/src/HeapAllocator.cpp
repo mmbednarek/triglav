@@ -6,7 +6,8 @@
 
 namespace triglav::memory {
 
-HeapAllocator::HeapAllocator(const SizeType size)
+HeapAllocator::HeapAllocator(const SizeType size) :
+    m_size(size)
 {
    m_free_list.emplace(0, size);
 }
@@ -76,6 +77,22 @@ void HeapAllocator::free(const Area area)
    if (should_next_be_erased) {
       m_free_list.erase(next);
    }
+}
+
+Area HeapAllocator::allocated_area() const
+{
+   if (m_free_list.empty()) {
+      return {.size = 0, .offset = 0};
+   }
+
+   auto [first_off, first_size] = *m_free_list.begin();
+   if (m_free_list.size() == 1) {
+      return {.size = m_size - first_size, .offset = first_off + first_size};
+   }
+
+   auto [last_off, last_size] = *std::prev(m_free_list.end());
+
+   return {.size = last_off - (first_off + first_size), .offset = first_off + first_size};
 }
 
 }// namespace triglav::memory

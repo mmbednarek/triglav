@@ -24,10 +24,10 @@ namespace triglav::mesh
         public uint32_t vertexOffset;
         public uint32_t instanceOffset;
         public uint32_t materialID;
-        public Transform transform;
+        public uint32_t transformID;
         public BoundingBox boundingBox;
 
-        public DrawCall to_draw_call()
+        public DrawCall to_draw_call(StructuredBuffer<float4x4> matrix_buffer)
         {
             DrawCall dc;
             dc.indexCount = indexCount;
@@ -37,7 +37,7 @@ namespace triglav::mesh
             dc.instanceOffset = instanceOffset;
             dc.materialID = materialID;
 
-            const float4x4 transform_matrix = transform.matrix();
+            const float4x4 transform_matrix = matrix_buffer[transformID];
             dc.transform = transform_matrix;
             dc.normalTransform = extent_mat3x3(normal_transform_matrix(transform_matrix));
 

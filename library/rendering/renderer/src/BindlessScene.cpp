@@ -1,6 +1,5 @@
 #include "BindlessScene.hpp"
 
-#include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 
 namespace triglav::renderer {
@@ -12,6 +11,8 @@ constexpr auto STAGING_BUFFER_ELEM_COUNT = 128;
 constexpr auto SCENE_ELEM_COUNT = 256;
 constexpr auto VERTEX_BUFFER_SIZE = 1 << 21;
 constexpr auto INDEX_BUFFER_SIZE = 1 << 21;
+constexpr auto TRANSFORM_BUFF_COUNT = 1024;
+constexpr auto TRANSFORM_MATRIX_BUFF_COUNT = 1024;
 
 namespace {
 
@@ -26,12 +27,13 @@ class DrawCallUpdateWriter
 {
  public:
    DrawCallUpdateWriter(BindlessScene& bindless_scene, const gapi::CommandList& cmd_list, gapi::Buffer& staging_buffer,
-                        gapi::Buffer& dst_buffer, BindlessSceneObject* staging_ptr) :
+                        gapi::Buffer& dst_buffer, BindlessSceneObject* staging_ptr, Transform3D* transform_stage_ptr) :
        m_bindless_scene(bindless_scene),
        m_cmd_list(cmd_list),
        m_staging_buffer(staging_buffer),
        m_dst_buffer(dst_buffer),
-       m_staging_ptr(staging_ptr)
+       m_staging_ptr(staging_ptr),
+       m_transform_stage_ptr(transform_stage_ptr)
    {
    }
 
@@ -45,9 +47,10 @@ class DrawCallUpdateWriter
       bso.index_offset = mesh_info.index_offset;
       bso.instance_count = 1;
       bso.instance_offset = 0;
-      bso.bounding_box = {mesh_info.bounding_box_min, mesh_info.bounding_box_max};
+      bso.bounding_box = mesh_info.bounding_box;
       bso.material_id = mesh_info.material_id;
-      bso.transform = pending_object.object->transform;
+      bso.transform_id =
+         m_bindless_scene.get_transform_id(m_cmd_list, pending_object.object_id, m_transform_stage_ptr, pending_object.object->transform);
 
       m_staging_ptr[m_top_staging_index] = bso;
       m_cmd_list.copy_buffer(m_staging_buffer, m_dst_buffer, m_top_staging_index * sizeof(BindlessSceneObject),
@@ -67,6 +70,7 @@ class DrawCallUpdateWriter
    gapi::Buffer& m_staging_buffer;
    gapi::Buffer& m_dst_buffer;
    BindlessSceneObject* m_staging_ptr;
+   Transform3D* m_transform_stage_ptr;
    u32 m_top_staging_index = 0;
 };
 
@@ -78,6 +82,7 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_device(device),
     m_vertex_buffer_heap(VERTEX_BUFFER_SIZE),
     m_index_buffer_heap(INDEX_BUFFER_SIZE),
+    m_transform_buffer_heap(TRANSFORM_BUFF_COUNT),
     m_scene_object_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_transform_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_scene_objects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect | gapi::BufferUsage::TransferSrc),
@@ -85,6 +90,11 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
        device.create_buffer(graphics_api::BufferUsage::VertexBuffer | graphics_api::BufferUsage::TransferDst, VERTEX_BUFFER_SIZE))),
     m_combined_index_buffer(device, INDEX_BUFFER_SIZE),
     m_count_buffer(device, gapi::BufferUsage::Indirect),
+    m_transform_offset_count_buffer(device, gapi::BufferUsage::Indirect),
+    m_transform_buffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
+                                                       TRANSFORM_BUFF_COUNT * sizeof(Transform3D)))),
+    m_transform_matrix_buffer(
+       GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer, TRANSFORM_BUFF_COUNT * sizeof(Matrix4x4)))),
     m_material_props_albedo_tex(device, 100),
     m_material_props_albedo_normal_tex(device, 100),
     m_material_props_all_tex(device, 100),
@@ -128,36 +138,35 @@ void BindlessScene::on_object_removed(const ObjectID object_id)
 
 void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
 {
+   m_transform_stage_index = 0;
+
    const auto object_mapping{GAPI_CHECK(m_scene_object_stage.buffer().map_memory())};
+   const auto transform_mapping{GAPI_CHECK(m_transform_stage.buffer().map_memory())};
    DrawCallUpdateWriter writer(*this, cmd_list, m_scene_object_stage.buffer(), m_scene_objects.buffer(),
-                               static_cast<BindlessSceneObject*>(*object_mapping));
+                               static_cast<BindlessSceneObject*>(*object_mapping), static_cast<Transform3D*>(*transform_mapping));
    m_draw_call_update_list.write_to_buffers(writer);
 
    *m_count_buffer = m_draw_call_update_list.top_index();
 
    {
       assert(m_pending_transform.size() < STAGING_BUFFER_ELEM_COUNT);
-      auto transform_mapping{GAPI_CHECK(m_transform_stage.buffer().map_memory())};
 
-      u32 stage_index = 0;
       for (const auto& [object_id, transform] : m_pending_transform) {
-         transform_mapping.write_offset(&transform, sizeof(Transform3D), stage_index * sizeof(Transform3D));
+         transform_mapping.write_offset(&transform, sizeof(Transform3D), m_transform_stage_index * sizeof(Transform3D));
 
-         auto& obj = m_scene.object(object_id);
-         auto& mesh = m_resource_manager.get(obj.model);
-         for (u32 i = 0; i < mesh.device_mesh.ranges.size(); ++i) {
-            const auto offset = m_draw_call_update_list.key_map().at(std::make_pair(object_id, i));
+         const auto transform_id = m_object_id_to_transform_id.at(object_id);
+         cmd_list.copy_buffer(m_transform_stage.buffer(), m_transform_buffer,
+                              static_cast<u32>(m_transform_stage_index * sizeof(Transform3D)),
+                              static_cast<u32>(transform_id * sizeof(Transform3D)), sizeof(Transform3D));
 
-            cmd_list.copy_buffer(m_transform_stage.buffer(), m_scene_objects.buffer(), static_cast<u32>(stage_index * sizeof(Transform3D)),
-                                 static_cast<u32>(offset * sizeof(BindlessSceneObject) + offsetof(BindlessSceneObject, transform)),
-                                 sizeof(Transform3D));
-         }
-
-         ++stage_index;
+         ++m_transform_stage_index;
       }
 
       m_pending_transform.clear();
    }
+
+   const auto transform_area = m_transform_buffer_heap.allocated_area();
+   *m_transform_offset_count_buffer = {.offset = static_cast<u32>(transform_area.offset), .count = static_cast<u32>(transform_area.size)};
 }
 
 void BindlessScene::write_objects_to_buffer()
@@ -180,6 +189,11 @@ void BindlessScene::write_objects_to_buffer()
    GAPI_CHECK_STATUS(m_device.submit_command_list(copy_objects_cmd_list, empty, empty, &fence, graphics_api::WorkType::Transfer));
 
    fence.await();
+}
+
+u32 BindlessScene::transform_id(const ObjectID id) const
+{
+   return m_object_id_to_transform_id.at(id);
 }
 
 gapi::Buffer& BindlessScene::combined_vertex_buffer()
@@ -214,6 +228,26 @@ const gapi::Buffer& BindlessScene::count_buffer() const
    return m_count_buffer.buffer();
 }
 
+const graphics_api::Buffer& BindlessScene::transform_offset_count_buffer() const
+{
+   return m_transform_offset_count_buffer.buffer();
+}
+
+const graphics_api::Buffer& BindlessScene::transform_buffer() const
+{
+   return m_transform_buffer;
+}
+
+const graphics_api::Buffer& BindlessScene::transform_matrix_buffer() const
+{
+   return m_transform_matrix_buffer;
+}
+
+memory::Area BindlessScene::transform_allocated_area() const
+{
+   return m_transform_buffer_heap.allocated_area();
+}
+
 u32 BindlessScene::scene_object_count() const
 {
    return m_draw_call_update_list.top_index();
@@ -234,13 +268,30 @@ std::vector<render_core::TextureRef>& BindlessScene::scene_texture_refs()
    return m_scene_texture_refs;
 }
 
+u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, const ObjectID object_id, Transform3D* stage_ptr,
+                                    const Transform3D& transform)
+{
+   const auto transform_dst_index = m_transform_buffer_heap.allocate(1);
+   assert(transform_dst_index.has_value());
+
+   stage_ptr[m_transform_stage_index] = transform;
+
+   cmd_list.copy_buffer(m_transform_stage.buffer(), m_transform_buffer, static_cast<u32>(m_transform_stage_index * sizeof(Transform3D)),
+                        *transform_dst_index * sizeof(Transform3D), sizeof(Transform3D));
+   ++m_transform_stage_index;
+
+   m_object_id_to_transform_id[object_id] = *transform_dst_index;
+
+   return *transform_dst_index;
+}
+
 const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::CommandList& cmd_list, const MeshName name)
 {
    if (const auto it = m_models.find(name); it != m_models.end()) {
       return it->second;
    }
 
-   auto& model = m_resource_manager.get(name);
+   const auto& model = m_resource_manager.get(name);
 
    std::vector<BindlessMeshInfo> result;
 
@@ -264,9 +315,8 @@ const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::C
       mesh_info.index_count = material.index_size;
       mesh_info.index_offset = *index_offset + material.index_offset;
       mesh_info.vertex_offset = static_cast<u32>(*vertex_offset / vertex_size);
-      mesh_info.bounding_box_max = model.bounding_box.max;
-      mesh_info.bounding_box_min = model.bounding_box.min;
       mesh_info.material_id = this->get_material_id(cmd_list, m_resource_manager.get(material.material_name));
+      mesh_info.bounding_box = model.bounding_box;
       result.emplace_back(mesh_info);
    }
 

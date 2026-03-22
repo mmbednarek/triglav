@@ -1,4 +1,4 @@
-import triglav.mesh;
+import triglav.core;
 
 // w is used as timestamp
 [[vk::binding(0)]]
@@ -10,7 +10,7 @@ StructuredBuffer<float> TimeStamps;
 struct ChannelState
 {
     float start_time;
-    uint32_t target_mesh;
+    uint32_t target_transform;
     uint32_t last_keyframe;
     uint32_t target_keyframe;
     uint32_t channel_type;
@@ -28,14 +28,14 @@ struct AnimationState {
 ConstantBuffer<AnimationState> AnimationStateCB;
 
 [[vk::binding(4)]]
-RWStructuredBuffer<triglav::mesh::SceneMesh> SceneMeshes;
+RWStructuredBuffer<triglav::Transform> SB_Transforms;
 
 void set_target_value(in ChannelState state, float4 value)
 {
     if (state.channel_type == 0) {
-        SceneMeshes[state.target_mesh].transform.translation = value.xyz;
+        SB_Transforms[state.target_transform].translation = value.xyz;
     } else if (state.channel_type == 1) {
-        SceneMeshes[state.target_mesh].transform.rotation = value;
+        SB_Transforms[state.target_transform].rotation = value;
     }
 }
 

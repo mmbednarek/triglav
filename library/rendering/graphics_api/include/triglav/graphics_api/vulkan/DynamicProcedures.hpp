@@ -14,7 +14,9 @@
    TRIGLAV_HANDLE(vkCmdDrawIndexedIndirectCount)              \
    TRIGLAV_HANDLE(vkCmdTraceRaysKHR)                          \
    TRIGLAV_HANDLE(vkCmdPushDescriptorSetKHR)                  \
-   TRIGLAV_HANDLE(vkSetDebugUtilsObjectNameEXT)
+   TRIGLAV_HANDLE(vkSetDebugUtilsObjectNameEXT)               \
+   TRIGLAV_HANDLE(vkCmdBeginDebugUtilsLabelEXT)               \
+   TRIGLAV_HANDLE(vkCmdEndDebugUtilsLabelEXT)
 
 
 namespace triglav::graphics_api::vulkan {
@@ -76,5 +78,10 @@ void vkCmdDrawIndexedIndirectCount(VkCommandBuffer command_buffer, VkBuffer buff
                                    VkDeviceSize count_buffer_offset, uint32_t max_draw_count, uint32_t stride);
 
 VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* p_name_info);
+
+void vkCmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo);
+
+void vkCmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer);
+
 
 }// namespace triglav::graphics_api::vulkan

@@ -103,6 +103,9 @@ class CommandList
    void begin_query(const QueryPool& query_pool, u32 query_index) const;
    void end_query(const QueryPool& query_pool, u32 query_index) const;
 
+   void begin_debug_label(std::string_view label, Vector4 color) const;
+   void end_debug_label() const;
+
    template<typename TIndexArray>
    void bind_index_array(const TIndexArray& array) const
    {

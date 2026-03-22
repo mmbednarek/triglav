@@ -41,8 +41,12 @@ void OcclusionCulling::on_resource_definition(render_core::BuildContext& ctx) co
 
 void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx) const
 {
+   TG_DEBUG_LABEL(ctx, "Occlusion culling", {0.2f, 0.2f, 0.8f, 1.0f})
+
    // Render Depth Pre-Pass
    {
+      TG_DEBUG_LABEL(ctx, "Depth pre pass", {0.8f, 0.2f, 0.2f, 1.0f})
+
       render_core::RenderPassScope rt_scope(ctx, "occlusion_culling.depth_prepass"_name, "occlusion_culling.depth_prepass_target"_name);
       ctx.clear_depth_stencil("occlusion_culling.depth_prepass_target"_name, 1.0f, 0);
 
@@ -57,57 +61,79 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
                                   normal_map_components, 2);
    }
 
-   // Copy depth buffer to the highest mip of Hi-Z
+   {
+      TG_DEBUG_LABEL(ctx, "Pre-pass texture to hi-z bottom", {0.8f, 0.2f, 0.2f, 1.0f})
 
-   ctx.copy_texture_to_buffer("occlusion_culling.depth_prepass_target"_name, "occlusion_culling.staging_depth_buffer"_name);
-   ctx.copy_buffer_to_texture("occlusion_culling.staging_depth_buffer"_name, "occlusion_culling.hierarchical_depth_buffer"_name);
+      // Copy depth buffer to the highest mip of Hi-Z
+      ctx.copy_texture_to_buffer("occlusion_culling.depth_prepass_target"_name, "occlusion_culling.staging_depth_buffer"_name);
+      ctx.copy_buffer_to_texture("occlusion_culling.staging_depth_buffer"_name, "occlusion_culling.hierarchical_depth_buffer"_name);
+   }
 
-   // Generate the hierarchy
+   {
+      TG_DEBUG_LABEL(ctx, "Generate hi-Z", {0.8f, 0.2f, 0.2f, 1.0f})
 
-   const u32 mip_count = render_core::calculate_mip_count(ctx.screen_size() / 2);
-   int depth_width = ctx.screen_size().x / 4;
-   int depth_height = ctx.screen_size().y / 4;
+      // Generate the hierarchy
+      const u32 mip_count = render_core::calculate_mip_count(ctx.screen_size() / 2);
+      int depth_width = ctx.screen_size().x / 4;
+      int depth_height = ctx.screen_size().y / 4;
 
-   for (const u32 mip_index : Range(0u, mip_count - 1)) {
-      ctx.bind_compute_shader("shader/bindless_geometry/hi_zbuffer_construct.cshader"_rc);
+      for (const u32 mip_index : Range(0u, mip_count - 1)) {
+         ctx.bind_compute_shader("shader/bindless_geometry/hi_zbuffer_construct.cshader"_rc);
 
-      ctx.bind_texture(0, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index});
-      ctx.bind_rw_texture(1, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index + 1});
+         ctx.bind_texture(0, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index});
+         ctx.bind_rw_texture(1, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index + 1});
 
-      ctx.dispatch({divide_rounded_up(depth_width, 32), divide_rounded_up(depth_height, 32), 1});
+         ctx.dispatch({divide_rounded_up(depth_width, 32), divide_rounded_up(depth_height, 32), 1});
 
-      depth_width = std::max(depth_width / 2, 1);
-      depth_height = std::max(depth_height / 2, 1);
+         depth_width = std::max(depth_width / 2, 1);
+         depth_height = std::max(depth_height / 2, 1);
+      }
+   }
+
+
+   {
+      TG_DEBUG_LABEL(ctx, "Generate transform matrices", {0.8f, 0.2f, 0.2f, 1.0f})
+      ctx.bind_compute_shader("shader/bindless_geometry/transform_to_matrix.cshader"_rc);
+
+      ctx.bind_storage_buffer(0, &m_bindless_scene.transform_buffer());
+      ctx.bind_storage_buffer(1, &m_bindless_scene.transform_matrix_buffer());
+      ctx.bind_uniform_buffer(2, &m_bindless_scene.transform_offset_count_buffer());
+
+      ctx.dispatch({divide_rounded_up(m_bindless_scene.transform_allocated_area().size, 256), 1, 1});
    }
 
    // Reset the count and cull the objects
+   {
+      TG_DEBUG_LABEL(ctx, "Cull objects", {0.8f, 0.2f, 0.2f, 1.0f})
+      ctx.fill_buffer("occlusion_culling.count_buffer"_name, std::array<u32, 3>{0, 0, 0});
 
-   ctx.fill_buffer("occlusion_culling.count_buffer"_name, std::array<u32, 3>{0, 0, 0});
+      ctx.bind_compute_shader("shader/bindless_geometry/culling.cshader"_rc);
 
-   ctx.bind_compute_shader("shader/bindless_geometry/culling.cshader"_rc);
+      ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
+      ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
+      ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
+      ctx.bind_storage_buffer(3, "occlusion_culling.count_buffer"_name);
+      ctx.bind_uniform_buffer(4, "core.view_properties"_name);
+      ctx.bind_texture(5, "occlusion_culling.hierarchical_depth_buffer"_name);
+      ctx.bind_storage_buffer(6, "occlusion_culling.visible_objects.mt0"_name);
+      ctx.bind_storage_buffer(7, "occlusion_culling.visible_objects.mt1"_name);
+      ctx.bind_storage_buffer(8, "occlusion_culling.visible_objects.mt2"_name);
 
-   ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
-   ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
-   ctx.bind_storage_buffer(2, "occlusion_culling.count_buffer"_name);
-   ctx.bind_uniform_buffer(3, "core.view_properties"_name);
-   ctx.bind_texture(4, "occlusion_culling.hierarchical_depth_buffer"_name);
+      ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 1024), 1, 1});
+   }
 
-   ctx.bind_storage_buffer(5, "occlusion_culling.visible_objects.mt0"_name);
-   ctx.bind_storage_buffer(6, "occlusion_culling.visible_objects.mt1"_name);
-   ctx.bind_storage_buffer(7, "occlusion_culling.visible_objects.mt2"_name);
+   {
+      TG_DEBUG_LABEL(ctx, "Cull passthrough", {0.8f, 0.2f, 0.2f, 1.0f})
+      ctx.bind_compute_shader("shader/bindless_geometry/passthrough.cshader"_rc);
 
-   ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 1024), 1, 1});
+      ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
+      ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
+      ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
+      ctx.bind_storage_buffer(3, "occlusion_culling.passthrough.vl0"_name);
+      ctx.bind_storage_buffer(4, "occlusion_culling.passthrough.vl1"_name);
 
-   // Passthrough
-
-   ctx.bind_compute_shader("shader/bindless_geometry/passthrough.cshader"_rc);
-
-   ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
-   ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
-   ctx.bind_storage_buffer(2, "occlusion_culling.passthrough.vl0"_name);
-   ctx.bind_storage_buffer(3, "occlusion_culling.passthrough.vl1"_name);
-
-   ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 256), 1, 1});
+      ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 256), 1, 1});
+   }
 }
 
 void OcclusionCulling::on_view_properties_not_changed(render_core::BuildContext& ctx) const

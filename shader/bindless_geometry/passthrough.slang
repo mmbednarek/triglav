@@ -7,6 +7,9 @@ StructuredBuffer<triglav::mesh::SceneMesh> in_scene_meshes;
 ConstantBuffer<uint> in_mesh_count;
 
 [[vk::binding(2)]]
+StructuredBuffer<float4x4> SB_TransformMatrices;
+
+[[vk::binding(3)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_base;
 RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_normal_map;
 
@@ -31,10 +34,10 @@ void cs_main(uint thread_id : SV_DispatchThreadID)
     if (template_id == 0) {
         uint dst_index = 0;
         InterlockedAdd(out_counts[0], 1, dst_index);
-        out_draw_calls_base[dst_index] = mesh.to_draw_call();
+        out_draw_calls_base[dst_index] = mesh.to_draw_call(SB_TransformMatrices);
     } else {
         uint dst_index = 0;
         InterlockedAdd(out_counts[1], 1, dst_index);
-        out_draw_calls_normal_map[dst_index] = mesh.to_draw_call();
+        out_draw_calls_normal_map[dst_index] = mesh.to_draw_call(SB_TransformMatrices);
     }
 }
