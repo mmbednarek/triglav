@@ -87,3 +87,10 @@ shader_targets += custom_target('shader_bindless_geometry_render_mt2',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
                                 command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=1', '-DMT_USE_METALIC_MAP=1'],
 )
+
+shader_targets += custom_target('shader_bindless_geometry_transform_to_matrix',
+                                input : 'transform_to_matrix.slang',
+                                output : 'transform_to_matrix.cshader',
+                                depend_files : [shader_lib_triglav_core],
+                                command : slang_cs_commands,
+)

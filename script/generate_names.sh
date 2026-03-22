@@ -2,16 +2,16 @@
 
 touch tmp_names
 
-for line in $(grep -rohE '"[A-Za-z_/.]*"_name' $(find game library tool -regextype posix-extended -regex '^.*\.(cpp|h|hpp)$'));
+for line in $(grep -rohE '"[A-Za-z0-9_/.]*"_name' $(find game library tool -regextype posix-extended -regex '^.*\.(cpp|h|hpp)$'));
 do
-  if [[ $line =~ \"([A-Za-z_/.]*)\"_name ]]; then
+  if [[ $line =~ \"([A-Za-z0-9_/.]*)\"_name ]]; then
     echo "${BASH_REMATCH[1]}" >> tmp_names
   fi
 done
 
-for line in $(grep -rohE '"[A-Za-z_/]*\.[a-z]*"_rc' $(find game library tool -regextype posix-extended -regex '^.*\.(cpp|h|hpp)$'));
+for line in $(grep -rohE '"[A-Za-z0-9_/]*\.[a-z]*"_rc' $(find game library tool -regextype posix-extended -regex '^.*\.(cpp|h|hpp)$'));
 do
-  if [[ $line =~ \"([A-Za-z_/]*\.[a-z]*)\"_rc ]]; then
+  if [[ $line =~ \"([A-Za-z0-9_/]*\.[a-z]*)\"_rc ]]; then
     echo "${BASH_REMATCH[1]}" >> tmp_names
   fi
 done

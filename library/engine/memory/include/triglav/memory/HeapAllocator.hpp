@@ -20,6 +20,7 @@ class HeapAllocator
    // Returns offset
    std::optional<MemorySize> allocate(MemorySize size, MemorySize alignment = 1);
    void free(Area area);
+   Area allocated_area() const;
 
 #if TG_HEAP_ALLOCATOR_TEST
    std::map<OffsetType, SizeType>& free_list()
@@ -29,6 +30,7 @@ class HeapAllocator
 #endif// TG_HEAP_ALLOCATOR_TEST
 
  private:
+   SizeType m_size;
    std::map<OffsetType, SizeType> m_free_list;
 };
 

@@ -8,22 +8,25 @@ StructuredBuffer<triglav::mesh::SceneMesh> SceneMeshes;
 ConstantBuffer<uint32_t> SceneMeshCount;
 
 [[vk::binding(2)]]
-RWStructuredBuffer<uint32_t> Count;
+StructuredBuffer<float4x4> SB_TransformMatrices;
 
 [[vk::binding(3)]]
-ConstantBuffer<triglav::ViewProperties> ViewProps;
+RWStructuredBuffer<uint32_t> Count;
 
 [[vk::binding(4)]]
+ConstantBuffer<triglav::ViewProperties> ViewProps;
+
+[[vk::binding(5)]]
 [[vk::image_format("r16")]]
 Texture2D<float> HiZBuffer;
 
-[[vk::binding(5)]]
+[[vk::binding(6)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT0;
 
-[[vk::binding(6)]]
+[[vk::binding(7)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT1;
 
-[[vk::binding(7)]]
+[[vk::binding(8)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT2;
 
 uint2 to_texture_space(float2 screenSpace, float2 texRes)
@@ -53,7 +56,7 @@ uint32_t size_to_mip_level(uint32_t size)
 bool is_object_visible(in triglav::mesh::SceneMesh mesh)
 {
    // Do frustum culling
-    float4x4 transformMat = mesh.transform.matrix();
+    float4x4 transformMat = SB_TransformMatrices[mesh.transformID];
 
     float4x4 mat = mul(ViewProps.proj, mul(ViewProps.view, transformMat));
 
@@ -147,7 +150,6 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
         return;
 
     triglav::mesh::SceneMesh sceneMesh = SceneMeshes[threadID.x];
-    // triglav::mesh::SceneMesh sceneMesh; // = SceneMeshes[threadID.x];
 
     if (!is_object_visible(sceneMesh))
         return;
@@ -158,7 +160,7 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
     uint32_t dstIndex;
     InterlockedAdd(Count[templateID], 1, dstIndex);
 
-    triglav::mesh::DrawCall drawCall = sceneMesh.to_draw_call();
+    triglav::mesh::DrawCall drawCall = sceneMesh.to_draw_call(SB_TransformMatrices);
 
     switch (templateID)
     {

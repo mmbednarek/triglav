@@ -53,6 +53,8 @@ class GenerateCommandListPass
    void visit(const detail::cmd::BeginQuery& cmd) const;
    void visit(const detail::cmd::EndQuery& cmd) const;
    void visit(const detail::cmd::SetViewport& cmd) const;
+   void visit(const detail::cmd::BeginDebugLabel& cmd) const;
+   void visit(const detail::cmd::EndDebugLabel& cmd) const;
 
    void default_visit(const detail::Command&) const;
 

@@ -1,5 +1,7 @@
 #include "AnimationManager.hpp"
 
+#include "BindlessScene.hpp"
+
 #include "triglav/asset/Asset.hpp"
 
 namespace triglav::renderer {
@@ -11,9 +13,11 @@ constexpr MemorySize KEYFRAME_BUFFER_SIZE = 8 * 4096;
 
 namespace gapi = graphics_api;
 
-AnimationManager::AnimationManager(graphics_api::Device& device, resource::ResourceManager& resource_manager) :
+AnimationManager::AnimationManager(graphics_api::Device& device, resource::ResourceManager& resource_manager,
+                                   BindlessScene& bindless_scene) :
     m_device(device),
     m_resource_manager(resource_manager),
+    m_bindless_scene(bindless_scene),
     m_stage_buffer(GAPI_CHECK(m_device.create_buffer(
        gapi::BufferUsage::TransferSrc | gapi::BufferUsage::UniformBuffer | gapi::BufferUsage::HostVisible, STAGING_BUFFER_SIZE))),
     m_keyframe_buffer(
@@ -43,7 +47,7 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
    const auto id = m_top_animation_id++;
    m_states[id] = AnimationState{
       .animation_name = animation_name,
-      .target_object_id = target_object_id,
+      .target_transform_id = m_bindless_scene.transform_id(target_object_id),
       .start_time = this->current_time(),
       .channels = std::move(channel_states),
    };

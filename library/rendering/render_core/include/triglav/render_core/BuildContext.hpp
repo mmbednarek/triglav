@@ -9,6 +9,7 @@
 #include "detail/Descriptors.hpp"
 
 #include "triglav/Logging.hpp"
+#include "triglav/Macros.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/GraphicsApi.hpp"
@@ -207,6 +208,8 @@ class BuildContext
    void add_buffer_usage(Name buff_name, graphics_api::BufferUsageFlags flags);
    void set_bind_stages(graphics_api::PipelineStageFlags stages);
    [[nodiscard]] bool is_ray_tracing_supported() const;
+   void begin_debug_label(std::string label, Vector4 color);
+   void end_debug_label();
 
 
  private:
@@ -312,6 +315,21 @@ class RenderPassScope
    BuildContext& m_build_context;
 };
 
+class DebugLabelScope
+{
+ public:
+   DebugLabelScope(BuildContext& build_context, std::string label, Vector4 color);
+   ~DebugLabelScope();
+
+   DebugLabelScope(const DebugLabelScope& other) = delete;
+   DebugLabelScope(DebugLabelScope&& other) noexcept = delete;
+   DebugLabelScope& operator=(const DebugLabelScope& other) = delete;
+   DebugLabelScope& operator=(DebugLabelScope&& other) noexcept = delete;
+
+ private:
+   BuildContext& m_build_context;
+};
+
 template<typename TVisitor, typename TCommand>
 concept HasOverrideForCommand = requires(TVisitor visitor, TCommand command) {
    { visitor.visit(command) };
@@ -332,3 +350,7 @@ void visit_command(TVisitor& visitor, const detail::Command& cmd_variant)
 }
 
 }// namespace triglav::render_core
+
+
+#define TG_DEBUG_LABEL(ctx, label, ...) \
+   ::triglav::render_core::DebugLabelScope TG_CONCAT(tg_debug_scope_, __COUNTER__){ctx, label, __VA_ARGS__};

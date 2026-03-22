@@ -9,6 +9,8 @@
 
 namespace triglav::renderer {
 
+class BindlessScene;
+
 using AnimationID = u32;
 
 struct ChannelState
@@ -21,7 +23,7 @@ struct ChannelState
 struct AnimationState
 {
    AnimationName animation_name;
-   ObjectID target_object_id;
+   u32 target_transform_id;
    u32 last_frame_id;
    float start_time;
    std::vector<ChannelState> channels;
@@ -32,7 +34,7 @@ class AnimationManager
  public:
    TG_EVENT(OnAnimationBegan, AnimationID, const AnimationState&)
 
-   AnimationManager(graphics_api::Device& device, resource::ResourceManager& resource_manager);
+   AnimationManager(graphics_api::Device& device, resource::ResourceManager& resource_manager, BindlessScene& bindless_scene);
 
    using StateContainer = std::map<AnimationID, AnimationState>;
 
@@ -50,6 +52,7 @@ class AnimationManager
  private:
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resource_manager;
+   BindlessScene& m_bindless_scene;
    AnimationID m_top_animation_id = 0;
    std::chrono::system_clock::time_point m_base_time;
    StateContainer m_states;

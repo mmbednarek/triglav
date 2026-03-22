@@ -4,6 +4,7 @@
 #include "PipelineCache.hpp"
 #include "ResourceStorage.hpp"
 
+#include "triglav/NameResolution.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 
 namespace triglav::render_core {
@@ -185,13 +186,27 @@ void GenerateCommandListPass::visit(const detail::cmd::FillBuffer& cmd) const
 
 void GenerateCommandListPass::visit(const detail::cmd::BeginRenderPass& cmd) const
 {
-   auto rendering_info = m_context.create_rendering_info(m_resource_storage, cmd, m_frame_index);
+#ifndef NDEBUG
+   const auto resolved_name = resolve_name(cmd.pass_name);
+   std::string name;
+   if (resolved_name.empty()) {
+      name = "Unnamed Render Pass";
+   } else {
+      name = std::format("Render Pass: {}", resolved_name);
+   }
+   m_command_list.begin_debug_label(name, {0.1f, 0.5f, 0.1f, 1.0f});
+#endif
+
+   const auto rendering_info = m_context.create_rendering_info(m_resource_storage, cmd, m_frame_index);
    m_command_list.begin_rendering(rendering_info);
 }
 
 void GenerateCommandListPass::visit(const detail::cmd::EndRenderPass& /*cmd*/) const
 {
    m_command_list.end_rendering();
+#ifndef NDEBUG
+   m_command_list.end_debug_label();
+#endif
 }
 
 void GenerateCommandListPass::visit(const detail::cmd::PushConstant& cmd) const
@@ -232,6 +247,16 @@ void GenerateCommandListPass::visit(const detail::cmd::EndQuery& cmd) const
 void GenerateCommandListPass::visit(const detail::cmd::SetViewport& cmd) const
 {
    m_command_list.set_viewport(cmd.dimensions, cmd.min_depth, cmd.max_depth);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::BeginDebugLabel& cmd) const
+{
+   m_command_list.begin_debug_label(cmd.debug_label, cmd.color);
+}
+
+void GenerateCommandListPass::visit(const detail::cmd::EndDebugLabel& /*cmd*/) const
+{
+   m_command_list.end_debug_label();
 }
 
 void GenerateCommandListPass::default_visit(const detail::Command&) const

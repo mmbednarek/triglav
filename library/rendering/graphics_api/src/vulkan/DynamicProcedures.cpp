@@ -95,4 +95,14 @@ VkResult vkSetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectN
    return DynamicProcedures::the().proc_vkSetDebugUtilsObjectNameEXT()(device, p_name_info);
 }
 
+void vkCmdBeginDebugUtilsLabelEXT(const VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo)
+{
+   return DynamicProcedures::the().proc_vkCmdBeginDebugUtilsLabelEXT()(commandBuffer, pLabelInfo);
+}
+
+void vkCmdEndDebugUtilsLabelEXT(const VkCommandBuffer commandBuffer)
+{
+   return DynamicProcedures::the().proc_vkCmdEndDebugUtilsLabelEXT()(commandBuffer);
+}
+
 }// namespace triglav::graphics_api::vulkan

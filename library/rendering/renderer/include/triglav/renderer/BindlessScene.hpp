@@ -23,7 +23,7 @@ struct BindlessSceneObject
    u32 vertex_offset{};
    u32 instance_offset{};
    u32 material_id{};
-   Transform3D transform{};
+   u32 transform_id{};
    geometry::BoundingBox bounding_box{};
 };
 
@@ -50,8 +50,7 @@ struct BindlessMeshInfo
    u32 index_offset{};
    u32 vertex_offset{};
    u32 material_id{};
-   glm::vec3 bounding_box_min{};
-   glm::vec3 bounding_box_max{};
+   geometry::BoundingBox bounding_box{};
 };
 
 enum class BindlessValueSource
@@ -90,6 +89,12 @@ struct PendingObject
    u32 material_index{};
 };
 
+struct OffsetCount
+{
+   u32 offset;
+   u32 count;
+};
+
 class BindlessScene
 {
    TG_DEFINE_LOG_CATEGORY(BindlessScene)
@@ -108,17 +113,25 @@ class BindlessScene
 
    void write_objects_to_buffer();
 
+   [[nodiscard]] u32 transform_id(ObjectID id) const;
+
    [[nodiscard]] graphics_api::Buffer& combined_vertex_buffer();
    [[nodiscard]] graphics_api::Buffer& combined_index_buffer();
    [[nodiscard]] graphics_api::Buffer& scene_object_buffer();
    [[nodiscard]] graphics_api::Buffer& material_template_properties(u32 material_template_id);
    [[nodiscard]] const graphics_api::Buffer& count_buffer() const;
+   [[nodiscard]] const graphics_api::Buffer& transform_offset_count_buffer() const;
+   [[nodiscard]] const graphics_api::Buffer& transform_buffer() const;
+   [[nodiscard]] const graphics_api::Buffer& transform_matrix_buffer() const;
+   [[nodiscard]] memory::Area transform_allocated_area() const;
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
    [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
 
  private:
+   u32 get_transform_id(const graphics_api::CommandList& cmd_list, ObjectID object_id, Transform3D* stage_ptr,
+                        const Transform3D& transform);
    const std::vector<BindlessMeshInfo>& get_mesh_infos(const graphics_api::CommandList& cmd_list, MeshName name);
    u32 get_material_id(const graphics_api::CommandList& cmd_list, const render_objects::Material& material);
    u32 get_texture_id(TextureName texture_name);
@@ -139,7 +152,10 @@ class BindlessScene
    bool m_should_write_objects{false};
    memory::HeapAllocator m_vertex_buffer_heap;
    memory::HeapAllocator m_index_buffer_heap;
+   memory::HeapAllocator m_transform_buffer_heap;
    UpdateList<std::pair<ObjectID, u32>, PendingObject> m_draw_call_update_list;
+   std::map<ObjectID, u32> m_object_id_to_transform_id;
+   u32 m_transform_stage_index{0};
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
@@ -148,6 +164,9 @@ class BindlessScene
    graphics_api::Buffer m_combined_vertex_buffer;
    graphics_api::IndexArray m_combined_index_buffer;
    graphics_api::UniformBuffer<u32> m_count_buffer;
+   graphics_api::UniformBuffer<OffsetCount> m_transform_offset_count_buffer;
+   graphics_api::Buffer m_transform_buffer;
+   graphics_api::Buffer m_transform_matrix_buffer;
    graphics_api::StorageArray<Properties_MT0> m_material_props_albedo_tex;
    graphics_api::StorageArray<Properties_MT1> m_material_props_albedo_normal_tex;
    graphics_api::StorageArray<Properties_MT2> m_material_props_all_tex;
