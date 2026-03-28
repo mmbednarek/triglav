@@ -51,7 +51,7 @@ void AnimationJob::build_job(render_core::BuildContext& ctx) const
    ctx.bind_storage_buffer(0, &m_animation_manager.keyframe_buffer());
    ctx.bind_storage_buffer(1, &m_animation_manager.timestamp_buffer());
    ctx.bind_storage_buffer(2, "animation_job.channel_states"_name);
-   ctx.bind_storage_buffer(3, "animation_job.state"_name);
+   ctx.bind_uniform_buffer(3, "animation_job.state"_name);
    ctx.bind_storage_buffer(4, &m_bindless_scene.transform_buffer());
 
    ctx.dispatch({1, 1, 1});

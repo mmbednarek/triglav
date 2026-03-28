@@ -167,6 +167,7 @@ class BindlessScene
    graphics_api::UniformBuffer<OffsetCount> m_transform_offset_count_buffer;
    graphics_api::Buffer m_transform_buffer;
    graphics_api::Buffer m_transform_matrix_buffer;
+   // graphics_api::Buffer m_hierarchy_buffer;
    graphics_api::StorageArray<Properties_MT0> m_material_props_albedo_tex;
    graphics_api::StorageArray<Properties_MT1> m_material_props_albedo_normal_tex;
    graphics_api::StorageArray<Properties_MT2> m_material_props_all_tex;

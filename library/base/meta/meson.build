@@ -3,6 +3,7 @@ meta_sources = files([
                           'include/triglav/meta/Meta.hpp',
                           'include/triglav/meta/TypeRegistry.hpp',
                           'src/Box.cpp',
+                          'src/CoreTypes.cpp',
                           'src/Display.cpp',
                           'src/ObjectRef.cpp',
                           'src/TypeRegisterer.cpp',

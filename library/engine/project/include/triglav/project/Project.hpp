@@ -33,6 +33,7 @@ struct ImportSettings
    std::string level_path;
    std::string material_path;
    std::string animation_path;
+   std::string armature_path;
 };
 
 struct ProjectMetadata

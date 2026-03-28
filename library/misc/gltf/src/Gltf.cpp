@@ -67,6 +67,15 @@ TG_META_OPTIONAL_PROPERTY(name, std::string)
 TG_META_CLASS_END
 #undef TG_TYPE
 
+#define TG_TYPE(NS) NS(NS(triglav, gltf), Skin)
+TG_META_CLASS_BEGIN
+TG_META_OPTIONAL_PROPERTY_STR(inverse_bind_matrices, "inverseBindMatrices", triglav::u32)
+TG_META_OPTIONAL_PROPERTY(skeleton, triglav::u32)
+TG_META_ARRAY_PROPERTY(joints, triglav::u32)
+TG_META_OPTIONAL_PROPERTY(name, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
 #define TG_TYPE(NS) NS(NS(triglav, gltf), Node)
 TG_META_CLASS_BEGIN
 TG_META_ARRAY_PROPERTY(children, triglav::u32)
@@ -241,6 +250,7 @@ TG_META_CLASS_BEGIN
 TG_META_PROPERTY(asset, triglav::gltf::Asset)
 TG_META_PROPERTY(scene, triglav::u32)
 TG_META_ARRAY_PROPERTY(scenes, triglav::gltf::Scene)
+TG_META_ARRAY_PROPERTY(skins, triglav::gltf::Skin)
 TG_META_ARRAY_PROPERTY(animations, triglav::gltf::Animation)
 TG_META_ARRAY_PROPERTY(nodes, triglav::gltf::Node)
 TG_META_ARRAY_PROPERTY(meshes, triglav::gltf::Mesh)

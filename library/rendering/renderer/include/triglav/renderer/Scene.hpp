@@ -26,6 +26,7 @@ struct SceneObject
    MeshName model;
    String name;
    Transform3D transform;
+   std::optional<ArmatureName> armature;
 
    [[nodiscard]] Matrix4x4 model_matrix() const;
 };

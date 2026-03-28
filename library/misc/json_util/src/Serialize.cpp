@@ -85,6 +85,17 @@ void write_matrix4x4(TWriter& writer, Matrix4x4 mat)
    writer.EndArray();
 }
 
+template<typename TWriter>
+void write_quaternion(TWriter& writer, Quaternion vec)
+{
+   writer.StartArray();
+   writer.Double(vec.x);
+   writer.Double(vec.y);
+   writer.Double(vec.z);
+   writer.Double(vec.w);
+   writer.EndArray();
+}
+
 #define TG_JSON_SETTER_char(value) writer.Int(static_cast<int>(value))
 #define TG_JSON_SETTER_int(value) writer.Int(value)
 #define TG_JSON_SETTER_triglav__i8(value) writer.Int(static_cast<int>(value))
@@ -104,6 +115,7 @@ void write_matrix4x4(TWriter& writer, Matrix4x4 mat)
 #define TG_JSON_SETTER_triglav__Vector3(value) write_vector3(writer, value)
 #define TG_JSON_SETTER_triglav__Vector4(value) write_vector4(writer, value)
 #define TG_JSON_SETTER_triglav__Matrix4x4(value) write_matrix4x4(writer, value)
+#define TG_JSON_SETTER_triglav__Quaternion(value) write_quaternion(writer, value)
 #define TG_JSON_SETTER(x) TG_CONCAT(TG_JSON_SETTER_, x)
 
 using namespace name_literals;

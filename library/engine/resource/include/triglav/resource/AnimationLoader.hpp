@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Loader.hpp"
+
 #include "triglav/ResourceType.hpp"
 
 namespace triglav::resource {

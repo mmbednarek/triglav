@@ -9,6 +9,7 @@
 #include "triglav/json_util/Serialize.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/project/ProjectManager.hpp"
+#include "triglav/render_objects/Armature.hpp"
 #include "triglav/render_objects/Material.hpp"
 #include "triglav/world/Level.hpp"
 
@@ -102,6 +103,24 @@ asset::AnimationChannelType channel_type_from_path(const std::string_view path)
       return asset::AnimationChannelType::Scale;
 
    return {};
+}
+
+Transform3D transform_from_node(const gltf::Node& node)
+{
+   auto transform = Transform3D::identity();
+   if (node.matrix.has_value()) {
+      transform = Transform3D::from_matrix(node.matrix.value());
+   }
+   if (node.rotation.has_value()) {
+      transform.rotation = {node.rotation->w, node.rotation->x, node.rotation->y, node.rotation->z};
+   }
+   if (node.translation.has_value()) {
+      transform.translation = node.translation.value();
+   }
+   if (node.scale.has_value()) {
+      transform.scale = node.scale.value();
+   }
+   return transform;
 }
 
 }// namespace
@@ -390,6 +409,55 @@ class LevelImporter
       return rc_name;
    }
 
+   [[nodiscard]] std::optional<ArmatureName> import_armature(const u32 skin_id)
+   {
+      const auto& skin = m_glb_file.document->skins[skin_id];
+
+      render_objects::BoneList bone_list{};
+      bone_list.bones.resize(skin.joints.size());
+
+      std::map<u32, u32> node_id_to_bone_id;
+      MemorySize bone_id = 0;
+      for (const auto joint_id : skin.joints) {
+         bone_list.bones[bone_id].parent = render_objects::BONE_ID_NO_PARENT;
+         node_id_to_bone_id[joint_id] = bone_id;
+         ++bone_id;
+      }
+
+      bone_id = 0;
+      for (const auto joint_id : skin.joints) {
+         const auto& joint_node = m_glb_file.document->nodes[joint_id];
+         render_objects::Bone& dst_bone = bone_list.bones[bone_id];
+         dst_bone.transform = transform_from_node(joint_node);
+         for (const auto child_id : joint_node.children) {
+            const auto child_bone_id = node_id_to_bone_id[child_id];
+            bone_list.bones[child_bone_id].parent = bone_id;
+         }
+         ++bone_id;
+      }
+
+      auto armature_name_str = skin.name.value_or("");
+      if (armature_name_str.empty()) {
+         armature_name_str = std::format("{}.armature{}", strip_extension(m_props.src_path.basename()), skin_id);
+      }
+      for (char& ch : armature_name_str) {
+         ch = static_cast<char>(std::tolower(ch));
+      }
+
+      const auto [dst_path, rc_name] = project::PathManager::the().import_path(ResourceType::Armature, armature_name_str);
+
+      const auto dst_file = io::open_file(dst_path, io::FileMode::Write | io::FileMode::Create);
+      if (!dst_file.has_value()) {
+         return std::nullopt;
+      }
+
+      if (!json_util::serialize(bone_list.to_meta_ref(), **dst_file)) {
+         return std::nullopt;
+      }
+
+      return rc_name;
+   }
+
    [[nodiscard]] bool import_scene()
    {
       if (!m_props.should_override && m_props.dst_path.exists()) {
@@ -406,19 +474,7 @@ class LevelImporter
          if (!glb_node.mesh.has_value())
             continue;
 
-         auto transform = Transform3D::identity();
-         if (glb_node.matrix.has_value()) {
-            transform = Transform3D::from_matrix(glb_node.matrix.value());
-         }
-         if (glb_node.rotation.has_value()) {
-            transform.rotation = {glb_node.rotation->w, glb_node.rotation->x, glb_node.rotation->y, glb_node.rotation->z};
-         }
-         if (glb_node.translation.has_value()) {
-            transform.translation = glb_node.translation.value();
-         }
-         if (glb_node.scale.has_value()) {
-            transform.scale = glb_node.scale.value();
-         }
+         auto transform = transform_from_node(glb_node);
 
          auto mesh_name = this->import_mesh(glb_node.name, *glb_node.mesh);
          if (!mesh_name.has_value()) {
@@ -440,6 +496,12 @@ class LevelImporter
       for (u32 animation_id = 0; animation_id < m_glb_file.document->animations.size(); ++animation_id) {
          if (!this->import_animation(animation_id).has_value()) {
             std::print(stderr, "triglav-cli: Failed to import animation {}\n", animation_id);
+         }
+      }
+
+      for (u32 skin_id = 0; skin_id < m_glb_file.document->skins.size(); ++skin_id) {
+         if (!this->import_armature(skin_id).has_value()) {
+            std::print(stderr, "triglav-cli: Failed to import armature {}\n", skin_id);
          }
       }
 

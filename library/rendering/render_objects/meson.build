@@ -1,13 +1,15 @@
 render_objects_sources = files([
+                                   'include/triglav/render_objects/Armature.hpp',
                                    'include/triglav/render_objects/Material.hpp',
                                    'include/triglav/render_objects/Mesh.hpp',
                                    'include/triglav/render_objects/RenderObjects.hpp',
+                                   'src/Armature.cpp',
                                    'src/Material.cpp',
                                    'src/RenderObjects.cpp'
                                ])
 
-render_objects_deps_priv = [glm, graphics_api, core, geometry, rapidyaml]
-render_objects_deps_pub = [glm, graphics_api, core, geometry]
+render_objects_deps_priv = [glm, graphics_api, core, geometry, rapidyaml, meta]
+render_objects_deps_pub = [glm, graphics_api, core, geometry, meta]
 render_objects_incl = include_directories(['include', 'include/triglav/render_objects'])
 
 render_objects_lib = static_library('render_objects',

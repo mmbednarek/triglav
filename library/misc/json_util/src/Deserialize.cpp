@@ -51,6 +51,16 @@ Matrix4x4 read_matrix4x4(const rapidjson::Value& src)
    return result;
 }
 
+Vector4 read_quaternion(const rapidjson::Value& src)
+{
+   const auto& arr = src.GetArray();
+   const auto& x = arr[0];
+   const auto& y = arr[1];
+   const auto& z = arr[2];
+   const auto& w = arr[3];
+   return {x.GetFloat(), y.GetFloat(), z.GetFloat(), w.GetFloat()};
+}
+
 #define TG_JSON_GETTER_char val.GetInt()
 #define TG_JSON_GETTER_int val.GetInt()
 #define TG_JSON_GETTER_triglav__i8 val.GetInt()
@@ -70,6 +80,7 @@ Matrix4x4 read_matrix4x4(const rapidjson::Value& src)
 #define TG_JSON_GETTER_triglav__Vector3 read_vector3(val)
 #define TG_JSON_GETTER_triglav__Vector4 read_vector4(val)
 #define TG_JSON_GETTER_triglav__Matrix4x4 read_matrix4x4(val)
+#define TG_JSON_GETTER_triglav__Quaternion read_quaternion(val)
 #define TG_JSON_GETTER(x) TG_CONCAT(TG_JSON_GETTER_, x)
 
 void deserialize_class(const meta::ClassRef& dst, const rapidjson::Value& src);
