@@ -94,3 +94,10 @@ shader_targets += custom_target('shader_bindless_geometry_transform_to_matrix',
                                 depend_files : [shader_lib_triglav_core],
                                 command : slang_cs_commands,
 )
+
+shader_targets += custom_target('shader_bindless_geometry_matrix_multiply',
+                                input : 'matrix_multiply.slang',
+                                output : 'matrix_multiply.cshader',
+                                depend_files : [shader_lib_triglav_core],
+                                command : slang_cs_commands,
+)

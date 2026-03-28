@@ -1,5 +1,6 @@
 resource_sources = files([
                              'include/triglav/resource/AnimationLoader.hpp',
+                             'include/triglav/resource/ArmatureLoader.hpp',
                              'include/triglav/resource/Container.hpp',
                              'include/triglav/resource/LevelLoader.hpp',
                              'include/triglav/resource/LoadContext.hpp',
@@ -13,6 +14,7 @@ resource_sources = files([
                              'include/triglav/resource/TextureLoader.hpp',
                              'include/triglav/resource/TypefaceLoader.hpp',
                              'src/AnimationLoader.cpp',
+                             'src/ArmatureLoader.cpp',
                              'src/LevelLoader.cpp',
                              'src/LoadContext.cpp',
                              'src/MaterialLoader.cpp',

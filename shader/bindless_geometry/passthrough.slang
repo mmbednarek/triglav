@@ -11,6 +11,8 @@ StructuredBuffer<float4x4> SB_TransformMatrices;
 
 [[vk::binding(3)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_base;
+
+[[vk::binding(4)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_normal_map;
 
 groupshared uint out_counts[2];

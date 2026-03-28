@@ -1,6 +1,7 @@
 #include "ResourceManager.hpp"
 
 #include "AnimationLoader.hpp"
+#include "ArmatureLoader.hpp"
 #include "LevelLoader.hpp"
 #include "MaterialLoader.hpp"
 #include "MeshLoader.hpp"

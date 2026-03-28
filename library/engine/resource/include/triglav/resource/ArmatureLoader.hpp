@@ -3,15 +3,16 @@
 #include "Loader.hpp"
 
 #include "triglav/ResourceType.hpp"
+#include "triglav/render_objects/Armature.hpp"
 
 namespace triglav::resource {
 
 template<>
-struct Loader<ResourceType::Animation>
+struct Loader<ResourceType::Armature>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Static};
 
-   static asset::Animation load(const io::Path& path);
+   static render_objects::Armature load(const io::Path& path);
    static void collect_dependencies(std::set<ResourceName>& out_dependencies, const io::Path& path);
 };
 

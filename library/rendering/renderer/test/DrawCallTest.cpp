@@ -6,6 +6,7 @@
 
 using triglav::Matrix4x4;
 using triglav::MemorySize;
+using triglav::Transform3D;
 using triglav::u32;
 using triglav::Vector4;
 using triglav::render_core::BuildContext;
@@ -95,6 +96,30 @@ struct RenderTestState
 
 constexpr auto SCENE_MESH_COUNT = 3;
 
+const std::array<Transform3D, SCENE_MESH_COUNT> SCENE_TRANSFORMS{
+   Transform3D{
+      .rotation = {std::sqrt(2.0f) / 2.0f, 0.5, 0.5, 0},
+      .scale = {2, 3, 0.5f},
+      .translation = {5, -5, 10},
+   },
+   Transform3D{
+      .rotation = {std::sqrt(2.0f) / 2.0f, 0.5, 0.5, 0},
+      .scale = {2, 3, 0.5f},
+      .translation = {5, -5, 10},
+   },
+   Transform3D{
+      .rotation = {0.271f, 0.653f, 0.271f, 0.653f},
+      .scale = {10, 1, 1},
+      .translation = {0, -10, 0},
+   },
+};
+
+const std::array<Matrix4x4, SCENE_MESH_COUNT> SCENE_MATRICES{
+   SCENE_TRANSFORMS[0].to_matrix(),
+   SCENE_TRANSFORMS[1].to_matrix(),
+   SCENE_TRANSFORMS[2].to_matrix(),
+};
+
 const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
    BindlessSceneObject{
       .index_count = 64,
@@ -102,13 +127,8 @@ const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
       .index_offset = 0,
       .vertex_offset = 0,
       .instance_offset = 0,
-      .material_id = 1,
-      .transform =
-         {
-            .rotation = {1, 0, 0, 0},
-            .scale = {1, 1, 1},
-            .translation = {0, 0, 0},
-         },
+      .material_id = 0,
+      .transform_id = 0,
       .bounding_box =
          {
             .min = {-1, -1, -1},
@@ -121,13 +141,8 @@ const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
       .index_offset = 1,
       .vertex_offset = 2,
       .instance_offset = 3,
-      .material_id = 4,
-      .transform =
-         {
-            .rotation = {std::sqrt(2.0f) / 2.0f, 0.5, 0.5, 0},
-            .scale = {2, 3, 0.5f},
-            .translation = {5, -5, 10},
-         },
+      .material_id = 0,
+      .transform_id = 1,
       .bounding_box =
          {
             .min = {-1, -1, -1},
@@ -140,13 +155,8 @@ const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
       .index_offset = 0,
       .vertex_offset = 100,
       .instance_offset = 200,
-      .material_id = 2,
-      .transform =
-         {
-            .rotation = {0.271f, 0.653f, 0.271f, 0.653f},
-            .scale = {10, 1, 1},
-            .translation = {0, -10, 0},
-         },
+      .material_id = 0,
+      .transform_id = 2,
       .bounding_box =
          {
             .min = {-1, -1, -1},
@@ -162,9 +172,9 @@ const std::array<DrawCall, SCENE_MESH_COUNT> EXPECTED_DRAW_CALLS{
       .index_offset = 0,
       .vertex_offset = 0,
       .instance_offset = 0,
-      .material_id = 1,
-      .transform = SCENE_OBJECTS[0].transform.to_matrix(),
-      .normal_transform = SCENE_OBJECTS[0].transform.to_normal_matrix(),
+      .material_id = 0,
+      .transform = SCENE_MATRICES[0],
+      .normal_transform = SCENE_TRANSFORMS[0].to_normal_matrix(),
    },
    DrawCall{
       .index_count = 32,
@@ -172,9 +182,9 @@ const std::array<DrawCall, SCENE_MESH_COUNT> EXPECTED_DRAW_CALLS{
       .index_offset = 1,
       .vertex_offset = 2,
       .instance_offset = 3,
-      .material_id = 4,
-      .transform = SCENE_OBJECTS[1].transform.to_matrix(),
-      .normal_transform = SCENE_OBJECTS[1].transform.to_normal_matrix(),
+      .material_id = 0,
+      .transform = SCENE_MATRICES[1],
+      .normal_transform = SCENE_TRANSFORMS[1].to_normal_matrix(),
    },
    DrawCall{
       .index_count = 20,
@@ -182,9 +192,9 @@ const std::array<DrawCall, SCENE_MESH_COUNT> EXPECTED_DRAW_CALLS{
       .index_offset = 0,
       .vertex_offset = 100,
       .instance_offset = 200,
-      .material_id = 2,
-      .transform = SCENE_OBJECTS[2].transform.to_matrix(),
-      .normal_transform = SCENE_OBJECTS[2].transform.to_normal_matrix(),
+      .material_id = 0,
+      .transform = SCENE_MATRICES[2],
+      .normal_transform = SCENE_TRANSFORMS[2].to_normal_matrix(),
    },
 };
 
@@ -194,25 +204,33 @@ TEST(DrawCallTest, Passthrough)
 
    state.bctx.declare_staging_buffer("scene_upload"_name, 16 * sizeof(BindlessSceneObject));
    state.bctx.declare_staging_buffer("draw_call_fetch"_name, 16 * sizeof(DrawCall));
+   state.bctx.declare_staging_buffer("matrices_upload"_name, 16 * sizeof(Matrix4x4));
 
    state.bctx.declare_buffer("scene_meshes"_name, 16 * sizeof(BindlessSceneObject));
-   state.bctx.declare_buffer("draw_calls"_name, 16 * sizeof(DrawCall));
+   state.bctx.declare_buffer("matrices"_name, 16 * sizeof(Matrix4x4));
+   state.bctx.declare_buffer("draw_calls_base"_name, 16 * sizeof(DrawCall));
+   state.bctx.declare_buffer("draw_calls_normal_map"_name, 16 * sizeof(DrawCall));
    state.bctx.init_buffer("mesh_count"_name, SCENE_MESH_COUNT);
 
    state.bctx.copy_buffer("scene_upload"_name, "scene_meshes"_name);
+   state.bctx.copy_buffer("matrices_upload"_name, "matrices"_name);
 
    state.bctx.bind_compute_shader("shader/bindless_geometry/passthrough.cshader"_rc);
 
    state.bctx.bind_storage_buffer(0, "scene_meshes"_name);
    state.bctx.bind_uniform_buffer(1, "mesh_count"_name);
-   state.bctx.bind_uniform_buffer(2, "draw_calls"_name);
+   state.bctx.bind_storage_buffer(2, "matrices"_name);
+   state.bctx.bind_storage_buffer(3, "draw_calls_base"_name);
+   state.bctx.bind_storage_buffer(4, "draw_calls_normal_map"_name);
 
    state.bctx.dispatch({1, 1, 1});
 
-   state.bctx.copy_buffer("draw_calls"_name, "draw_call_fetch"_name);
+   state.bctx.copy_buffer("draw_calls_base"_name, "draw_call_fetch"_name);
 
    state.build();
 
+   state.map_buffer("matrices_upload"_name,
+                    [](void* buffer) { std::memcpy(buffer, SCENE_MATRICES.data(), sizeof(Matrix4x4) * SCENE_MATRICES.size()); });
    state.map_buffer("scene_upload"_name,
                     [](void* buffer) { std::memcpy(buffer, SCENE_OBJECTS.data(), sizeof(BindlessSceneObject) * SCENE_OBJECTS.size()); });
 
@@ -242,6 +260,7 @@ struct ChannelState
    uint32_t target_mesh;
    uint32_t last_keyframe;
    uint32_t target_keyframe;
+   uint32_t channel_type;
 };
 
 struct AnimationState
@@ -250,21 +269,26 @@ struct AnimationState
    uint32_t channel_count;
 };
 
-// w component used for timestamp
+std::array<float, 5> TIMESTAMPS = {
+   0.0f, 100.0f, 150.0f, 0.0f, 200.0f,
+};
+
 std::array<Vector4, 5> KEYFRAMES = {
-   Vector4{-1.0f, -1.0f, 0.0f, 0.0f}, Vector4{1.0f, -1.0f, 0.0f, 100.0f}, Vector4{1.0f, 1.0f, 0.0f, 150.0f},
-   Vector4{0.0f, 0.0f, 10.0f, 0.0f},  Vector4{0.0f, 0.0f, 20.0f, 200.0f},
+   Vector4{-1.0f, -1.0f, 0.0f, 0.0f}, Vector4{1.0f, -1.0f, 0.0f, 0.0f}, Vector4{1.0f, 1.0f, 0.0f, 0.0f},
+   Vector4{0.0f, 0.0f, 10.0f, 0.0f},  Vector4{0.0f, 0.0f, 20.0f, 0.0f},
 };
 
 TEST(DrawCallTest, AnimationTest)
 {
    RenderTestState state;
 
-   state.bctx.declare_staging_buffer("scene_stage"_name, 16 * sizeof(BindlessSceneObject));
+   state.bctx.declare_staging_buffer("transform_stage"_name, 16 * sizeof(Transform3D));
    state.bctx.declare_staging_buffer("keyframes_upload"_name, 16 * sizeof(Vector4));
+   state.bctx.declare_staging_buffer("timestamp_upload"_name, 16 * sizeof(float));
 
-   state.bctx.declare_buffer("scene"_name, 16 * sizeof(BindlessSceneObject));
+   state.bctx.declare_buffer("transform"_name, 16 * sizeof(Transform3D));
    state.bctx.declare_buffer("keyframes"_name, 16 * sizeof(Vector4));
+   state.bctx.declare_buffer("timestamp"_name, 16 * sizeof(float));
 
    state.bctx.init_buffer("animation_state"_name, AnimationState{100.0f, 2});
    state.bctx.init_buffer("channel_states"_name, std::array{ChannelState{
@@ -272,42 +296,106 @@ TEST(DrawCallTest, AnimationTest)
                                                                .target_mesh = 1,
                                                                .last_keyframe = 2,
                                                                .target_keyframe = 1,
+                                                               .channel_type = 0,
                                                             },
                                                             ChannelState{
                                                                .start_time = 20.0f,
                                                                .target_mesh = 2,
                                                                .last_keyframe = 4,
                                                                .target_keyframe = 4,
+                                                               .channel_type = 0,
                                                             }});
 
-   state.bctx.copy_buffer("scene_stage"_name, "scene"_name);
+   state.bctx.copy_buffer("transform_stage"_name, "transform"_name);
    state.bctx.copy_buffer("keyframes_upload"_name, "keyframes"_name);
+   state.bctx.copy_buffer("timestamp_upload"_name, "timestamp"_name);
 
    state.bctx.bind_compute_shader("shader/bindless_geometry/animation.cshader"_rc);
 
    state.bctx.bind_storage_buffer(0, "keyframes"_name);
-   state.bctx.bind_storage_buffer(1, "channel_states"_name);
-   state.bctx.bind_uniform_buffer(2, "animation_state"_name);
-   state.bctx.bind_storage_buffer(3, "scene"_name);
+   state.bctx.bind_storage_buffer(1, "timestamp"_name);
+   state.bctx.bind_storage_buffer(2, "channel_states"_name);
+   state.bctx.bind_uniform_buffer(3, "animation_state"_name);
+   state.bctx.bind_storage_buffer(4, "transform"_name);
    state.bctx.dispatch({1, 1, 1});
 
-   state.bctx.copy_buffer("scene"_name, "scene_stage"_name);
+   state.bctx.copy_buffer("transform"_name, "transform_stage"_name);
 
    state.build();
 
-   state.map_buffer("scene_stage"_name,
-                    [](void* buffer) { std::memcpy(buffer, SCENE_OBJECTS.data(), sizeof(BindlessSceneObject) * SCENE_OBJECTS.size()); });
+   state.map_buffer("transform_stage"_name,
+                    [](void* buffer) { std::memcpy(buffer, SCENE_TRANSFORMS.data(), sizeof(Transform3D) * SCENE_TRANSFORMS.size()); });
    state.map_buffer("keyframes_upload"_name,
                     [](void* buffer) { std::memcpy(buffer, KEYFRAMES.data(), sizeof(Vector4) * KEYFRAMES.size()); });
+   state.map_buffer("timestamp_upload"_name,
+                    [](void* buffer) { std::memcpy(buffer, TIMESTAMPS.data(), sizeof(float) * TIMESTAMPS.size()); });
 
    state.execute_and_await();
 
-   state.map_buffer("scene_stage"_name, [](void* buffer) {
-      const auto& got = *static_cast<std::array<BindlessSceneObject, 3>*>(buffer);
-      ASSERT_EQ(got[0].transform.translation, SCENE_OBJECTS[0].transform.translation);
+   state.map_buffer("transform_stage"_name, [](void* buffer) {
+      const auto& got = *static_cast<std::array<Transform3D, 3>*>(buffer);
+      ASSERT_EQ(got[0].translation, SCENE_TRANSFORMS[0].translation);
       triglav::Vector3 expected1{0.0f, -1.0f, 0.0f};
-      ASSERT_EQ(got[1].transform.translation, expected1);
+      ASSERT_EQ(got[1].translation, expected1);
       triglav::Vector3 expected2{0.0f, 0.0f, 14.0f};
-      ASSERT_EQ(got[2].transform.translation, expected2);
+      ASSERT_EQ(got[2].translation, expected2);
+   });
+}
+
+
+constexpr uint MAX_MATRICES = 6;
+
+struct MatrixMulTask
+{
+   uint destination_id;
+   uint matrix_count;
+   uint matrix_ids[MAX_MATRICES];
+};
+
+const std::array<MatrixMulTask, 2> MATRIX_MUL_TASKS{MatrixMulTask{.destination_id = 3, .matrix_count = 2, .matrix_ids = {1, 2}},
+                                                    MatrixMulTask{.destination_id = 4, .matrix_count = 3, .matrix_ids = {2, 0, 1}}};
+
+const std::array<Matrix4x4, 5> MATRICES{
+   SCENE_TRANSFORMS[0].to_matrix(), SCENE_TRANSFORMS[1].to_matrix(), SCENE_TRANSFORMS[2].to_matrix(), Matrix4x4{}, Matrix4x4{},
+};
+
+TEST(DrawCallTest, MatrixMulTest)
+{
+   RenderTestState state;
+
+   state.bctx.declare_staging_buffer("task_stage"_name, 16 * sizeof(MatrixMulTask));
+   state.bctx.declare_staging_buffer("matrix_stage"_name, 16 * sizeof(Matrix4x4));
+   state.bctx.declare_buffer("task"_name, 16 * sizeof(MatrixMulTask));
+   state.bctx.declare_buffer("matrix"_name, 16 * sizeof(Matrix4x4));
+
+   state.bctx.copy_buffer("task_stage"_name, "task"_name);
+   state.bctx.copy_buffer("matrix_stage"_name, "matrix"_name);
+   state.bctx.init_buffer("count"_name, static_cast<int>(MATRIX_MUL_TASKS.size()));
+
+   state.bctx.bind_compute_shader("shader/bindless_geometry/matrix_multiply.cshader"_rc);
+
+   state.bctx.bind_storage_buffer(0, "task"_name);
+   state.bctx.bind_uniform_buffer(1, "count"_name);
+   state.bctx.bind_storage_buffer(2, "matrix"_name);
+
+   state.bctx.dispatch({1, 1, 1});
+
+   state.bctx.copy_buffer("matrix"_name, "matrix_stage"_name);
+
+   state.build();
+
+   state.map_buffer("task_stage"_name,
+                    [&](void* buffer) { std::memcpy(buffer, MATRIX_MUL_TASKS.data(), sizeof(MatrixMulTask) * MATRIX_MUL_TASKS.size()); });
+   state.map_buffer("matrix_stage"_name, [&](void* buffer) { std::memcpy(buffer, MATRICES.data(), sizeof(Matrix4x4) * MATRICES.size()); });
+
+   state.execute_and_await();
+
+   state.map_buffer("matrix_stage"_name, [&](void* buffer) {
+      const auto* matrices = static_cast<const Matrix4x4*>(buffer);
+
+      const auto expected_mat1 = MATRICES[1] * MATRICES[2];
+      compare_matrices(matrices[3], expected_mat1);
+      const auto expected_mat2 = MATRICES[2] * MATRICES[0] * MATRICES[1];
+      compare_matrices(matrices[4], expected_mat2);
    });
 }

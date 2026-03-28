@@ -25,6 +25,7 @@ resources:
   - "shader/bindless_geometry/depth_prepass.fshader"
   - "shader/bindless_geometry/depth_prepass.vshader"
   - "shader/bindless_geometry/hi_zbuffer_construct.cshader"
+  - "shader/bindless_geometry/matrix_multiply.cshader"
   - "shader/bindless_geometry/passthrough.cshader"
   - "shader/bindless_geometry/render_mt0.fshader"
   - "shader/bindless_geometry/render_mt1.fshader"

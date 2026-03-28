@@ -1,6 +1,5 @@
 #include "GameInstance.hpp"
 
-#include "../../../library/engine/project/include/triglav/project/PathManager.hpp"
 #include "triglav/BuildInfo.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
@@ -8,6 +7,7 @@
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/io/Logging.hpp"
 #include "triglav/project/Name.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/project/ProjectManager.hpp"
 #include "triglav/threading/ThreadPool.hpp"
 
@@ -29,8 +29,6 @@ TG_PROJECT_NAME(demo)
 int triglav_main(InputArgs& args, IDisplay& display)
 {
    using namespace triglav::string_literals;
-
-   [[maybe_unused]] auto proj = triglav::project::ProjectManager::the().project_root("demo"_name);
 
    // Parse program arguments
    CommandLine::the().parse(args.arg_count, args.args);

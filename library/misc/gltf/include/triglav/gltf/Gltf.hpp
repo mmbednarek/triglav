@@ -71,6 +71,16 @@ struct Scene
    std::optional<std::string> name;
 };
 
+struct Skin
+{
+   TG_META_STRUCT_BODY(Skin)
+
+   std::optional<u32> inverse_bind_matrices;
+   std::optional<u32> skeleton;
+   std::vector<u32> joints;
+   std::optional<std::string> name;
+};
+
 struct Node
 {
    TG_META_STRUCT_BODY(Node)
@@ -253,6 +263,7 @@ struct Document
    Asset asset;
    u32 scene;
    std::vector<Scene> scenes;
+   std::vector<Skin> skins;
    std::vector<Animation> animations;
    std::vector<Node> nodes;
    std::vector<Mesh> meshes;
