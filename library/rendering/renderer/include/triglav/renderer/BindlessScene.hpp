@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../../../../render_core/include/triglav/render_core/IRenderer.hpp"
 #include "Scene.hpp"
 
 #include "triglav/Int.hpp"
@@ -9,6 +8,7 @@
 #include "triglav/graphics_api/Array.hpp"
 #include "triglav/graphics_api/Pipeline.hpp"
 #include "triglav/memory/HeapAllocator.hpp"
+#include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 
 #include <vector>
@@ -18,12 +18,11 @@ namespace triglav::renderer {
 struct BindlessSceneObject
 {
    u32 index_count{};
-   u32 instance_count{};
    u32 index_offset{};
    u32 vertex_offset{};
-   u32 instance_offset{};
    u32 material_id{};
    u32 transform_id{};
+   u32 matrix_offset{};
    geometry::BoundingBox bounding_box{};
 };
 
@@ -144,6 +143,7 @@ class BindlessScene
 
    // Caches and temporary buffers
    std::vector<std::pair<ObjectID, Transform3D>> m_pending_transform;
+   std::vector<std::pair<ObjectID, ArmatureName>> m_pending_armatures;
    std::map<MeshName, std::vector<BindlessMeshInfo>> m_models;
    std::map<TextureName, u32> m_texture_ids;
    std::vector<const graphics_api::Texture*> m_scene_textures;
@@ -156,6 +156,8 @@ class BindlessScene
    UpdateList<std::pair<ObjectID, u32>, PendingObject> m_draw_call_update_list;
    std::map<ObjectID, u32> m_object_id_to_transform_id;
    u32 m_transform_stage_index{0};
+   u32 m_hierarchy_stage_index{0};
+   u32 m_written_hierarchy_count{0};
 
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
@@ -167,7 +169,8 @@ class BindlessScene
    graphics_api::UniformBuffer<OffsetCount> m_transform_offset_count_buffer;
    graphics_api::Buffer m_transform_buffer;
    graphics_api::Buffer m_transform_matrix_buffer;
-   // graphics_api::Buffer m_hierarchy_buffer;
+   graphics_api::Buffer m_hierarchy_stage;
+   graphics_api::Buffer m_hierarchy_buffer;
    graphics_api::StorageArray<Properties_MT0> m_material_props_albedo_tex;
    graphics_api::StorageArray<Properties_MT1> m_material_props_albedo_normal_tex;
    graphics_api::StorageArray<Properties_MT2> m_material_props_all_tex;

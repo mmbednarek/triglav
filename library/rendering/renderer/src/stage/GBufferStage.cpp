@@ -84,43 +84,39 @@ void GBufferStage::build_ground(render_core::BuildContext& ctx) const
 
 void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 {
-   this->draw_objects_with_material_template(
-      ctx, "occlusion_culling.visible_objects.mt0"_external, "shader/bindless_geometry/vertex_vl0.vshader"_rc,
-      "shader/bindless_geometry/render_mt0.fshader"_rc, 0, geometry::VertexComponent::Core | geometry::VertexComponent::Texture);
-   this->draw_objects_with_material_template(
-      ctx, "occlusion_culling.visible_objects.mt1"_external, "shader/bindless_geometry/vertex_vl1.vshader"_rc,
-      "shader/bindless_geometry/render_mt1.fshader"_rc, 1,
-      geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap);
-   this->draw_objects_with_material_template(
-      ctx, "occlusion_culling.visible_objects.mt2"_external, "shader/bindless_geometry/vertex_vl1.vshader"_rc,
-      "shader/bindless_geometry/render_mt2.fshader"_rc, 2,
-      geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap);
+   for (const auto& info : render_objects::GEOMETRY_RENDER_INFOS) {
+      this->draw_objects_with_render_info(ctx, info);
+   }
 }
 
-void GBufferStage::draw_objects_with_material_template(render_core::BuildContext& ctx, const render_core::BufferRef visible_objects,
-                                                       VertexShaderName vs_name, const FragmentShaderName fs_name,
-                                                       const u32 material_template_index,
-                                                       const geometry::VertexComponentFlags vertex_components) const
+void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,
+                                                 const render_objects::MaterialGeometryRenderInfo& info) const
 {
-   ctx.bind_vertex_shader(vs_name);
+   const auto& vertex_layout_info = render_objects::VERTEX_LAYOUT_INFOS[info.vertex_layout_id];
 
-   const auto layout = render_core::vertex_layout_from_components(vertex_components);
+   ctx.bind_vertex_shader(vertex_layout_info.vertex_shader);
+
+   const auto layout = render_core::vertex_layout_from_components(vertex_layout_info.components);
    ctx.bind_vertex_layout(layout);
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
-   ctx.bind_storage_buffer(1, visible_objects);
+   ctx.bind_storage_buffer(1, render_core::External(info.draw_call_buffer));
 
-   ctx.bind_fragment_shader(fs_name);
+   ctx.bind_fragment_shader(info.fragment_shader);
 
    ctx.bind_sampled_texture_array(2, m_bindless_scene.scene_texture_refs());
-   ctx.bind_storage_buffer(3, &m_bindless_scene.material_template_properties(material_template_index));
+   ctx.bind_storage_buffer(3, &m_bindless_scene.material_template_properties(info.index));
+
+   if (vertex_layout_info.components & geometry::VertexComponent::Skeleton) {
+      ctx.bind_storage_buffer(4, &m_bindless_scene.transform_matrix_buffer());
+   }
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());
 
    ctx.set_is_blending_enabled(false);
 
-   ctx.draw_indexed_indirect_with_count(visible_objects, "occlusion_culling.count_buffer"_external, 80, sizeof(DrawCall),
-                                        sizeof(u32) * material_template_index);
+   ctx.draw_indexed_indirect_with_count(render_core::External(info.draw_call_buffer), "occlusion_culling.count_buffer"_external, 80,
+                                        sizeof(DrawCall), sizeof(u32) * info.index);
 }
 
 }// namespace triglav::renderer::stage

@@ -48,6 +48,14 @@ class Mesh
    template<typename... TTangents>
    void set_face_tangents(Index face, TTangents... vertices);
 
+   void set_face_joint_indices_range(Index face, std::span<Vector4i> indices);
+   template<typename... TIndices>
+   void set_face_joint_indices(Index face, TIndices... indices);
+
+   void set_face_weights_range(Index face, std::span<Vector4> indices);
+   template<typename... TWeights>
+   void set_face_weights(Index face, TWeights... indices);
+
    void set_face_group(Index face, Index group);
    void set_material(Index mesh_group, MaterialName material);
 
@@ -96,6 +104,22 @@ void Mesh::set_face_tangents(Index face, TTangents... vertices)
    static_assert(sizeof...(vertices) >= 3);
    std::array<Vector4, sizeof...(vertices)> in_vertices{vertices...};
    this->set_face_tangents_range(face, in_vertices);
+}
+
+template<typename... TIndices>
+void Mesh::set_face_joint_indices(Index face, TIndices... vertices)
+{
+   static_assert(sizeof...(vertices) >= 3);
+   std::array<Vector4i, sizeof...(vertices)> in_vertices{vertices...};
+   this->set_face_joint_indices_range(face, in_vertices);
+}
+
+template<typename... TWeights>
+void Mesh::set_face_weights(Index face, TWeights... vertices)
+{
+   static_assert(sizeof...(vertices) >= 3);
+   std::array<Vector4, sizeof...(vertices)> in_vertices{vertices...};
+   this->set_face_weights_range(face, in_vertices);
 }
 
 }// namespace triglav::geometry

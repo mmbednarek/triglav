@@ -4,15 +4,15 @@ namespace triglav::material
 {
     public struct VSInput
     {
-        [[vk::location(0)]]
         public float3 position : POSITION0;
-        [[vk::location(1)]]
         public float3 normal : NORMAL0;
-        [[vk::location(2)]]
         public float2 texCoord : TEXCOORD0;
 #if MT_USE_NORMAL_MAP
-        [[vk::location(3)]]
         public float4 tangent : TANGENT0;
+#endif
+#if MT_USE_BONES
+        public int4 bone_ids : BLENDINDICES0;
+        public float4 bone_weights : BLENDWEIGHT0;
 #endif
     };
 

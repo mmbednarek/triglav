@@ -29,6 +29,15 @@ RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT1;
 [[vk::binding(8)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT2;
 
+[[vk::binding(9)]]
+RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT3;
+
+[[vk::binding(10)]]
+RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT4;
+
+[[vk::binding(11)]]
+RWStructuredBuffer<triglav::mesh::DrawCall> DrawCalls_MT5;
+
 uint2 to_texture_space(float2 screenSpace, float2 texRes)
 {
     return uint2(clamp(0.5*(screenSpace + float2(1, 1)) * texRes, float2(0,0), texRes - float2(1, 1)));
@@ -157,12 +166,14 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
     const uint templateID = sceneMesh.materialID & 0b111;
     sceneMesh.materialID >>= 3;
 
+    const uint geometry_type = (sceneMesh.is_skeletal() ? 3 : 0) + templateID;
+
     uint32_t dstIndex;
-    InterlockedAdd(Count[templateID], 1, dstIndex);
+    InterlockedAdd(Count[geometry_type], 1, dstIndex);
 
     triglav::mesh::DrawCall drawCall = sceneMesh.to_draw_call(SB_TransformMatrices);
 
-    switch (templateID)
+    switch (geometry_type)
     {
     case 0:
         DrawCalls_MT0[dstIndex] = drawCall;
@@ -172,6 +183,15 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
         break;
     case 2:
         DrawCalls_MT2[dstIndex] = drawCall;
+        break;
+    case 3:
+        DrawCalls_MT3[dstIndex] = drawCall;
+        break;
+    case 4:
+        DrawCalls_MT4[dstIndex] = drawCall;
+        break;
+    case 5:
+        DrawCalls_MT5[dstIndex] = drawCall;
         break;
     default: break;
     }
