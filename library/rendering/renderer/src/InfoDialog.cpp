@@ -70,16 +70,16 @@ class HideablePanel final : public ui_core::IWidget
                          this),
        m_label_box(m_vertical_layout.create_child<ui_core::Button>({})),
        m_label_layout(m_label_box.create_content<ui_core::HorizontalLayout>({
-          .separation = 10.0f,
+          .separation = 2.5f,
           .gravity = ui_core::HorizontalAlignment::Center,
        })),
        m_image(m_label_layout.create_child<ui_core::Image>({
           .texture = "texture/ui_images.tex"_rc,
-          .max_size = Vector2{20, 20},
+          .max_size = Vector2{12, 12},
           .region = Vector4{400, 0, 200, 200},
        })),
        m_label_text(m_label_layout.create_child<ui_core::TextBox>({
-          .font_size = 20,
+          .font_size = 10,
           .typeface = "fonts/segoeui/bold.typeface"_rc,
           .content = state.label,
           .color = {1.0f, 1.0f, 0.4f, 1.0f},
@@ -181,8 +181,8 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
     TG_CONNECT(m_config_manager, OnPropertyChanged, on_config_property_changed)
 {
    auto& viewport = m_root_box.create_content<ui_core::VerticalLayout>({
-      .padding = {25.0f, 25.0f, 25.0f, 25.0f},
-      .separation = 10.0f,
+      .padding = {12.0f, 12.0f, 12.0f, 12.0f},
+      .separation = 5.0f,
    });
 
    auto& title_button = viewport.create_child<ui_core::Button>({});
@@ -194,12 +194,12 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
 
    title_layout.create_child<ui_core::Image>({
       .texture = "texture/ui_images.tex"_rc,
-      .max_size = Vector2{32, 32},
+      .max_size = Vector2{20, 20},
       .region = Vector4{0, 0, 200, 200},
    });
 
    m_title = &title_layout.create_child<ui_core::TextBox>({
-      .font_size = 24,
+      .font_size = 13,
       .typeface = "engine/fonts/cantarell/bold.typeface"_rc,
       .content = "Triglav Render Demo",
       .color = {1.0f, 1.0f, 1.0f, 1.0f},
@@ -212,35 +212,35 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
    TG_CONNECT_OPT(title_button, OnLeave, on_title_leave);
 
    viewport.create_child<ui_core::EmptySpace>({
-      .size = {1.0f, 4.0f},
+      .size = {1.0f, 2.0f},
    });
 
    for (const auto& [group_label, group] : g_label_groups) {
       auto& panel = viewport.create_child<HideablePanel>({
-         .separation = 8.0f,
+         .separation = 4.0f,
          .label = group_label,
          .surface = &m_surface,
       });
 
       auto& label_box = panel.create_child<ui_core::HorizontalLayout>({
-         .padding = {0.0f, 15.0f, 0.0f, 10.0f},
-         .separation = 10.0f,
+         .padding = {0.0f, 7.0f, 0.0f, 5.0f},
+         .separation = 5.0f,
          .gravity = ui_core::HorizontalAlignment::Center,
       });
 
       auto& left_panel = label_box.create_child<ui_core::VerticalLayout>({
-         .padding = {0, 0.0f, 5.0f, 0.0f},
-         .separation = 10.0f,
+         .padding = {0, 0.0f, 2.5f, 0.0f},
+         .separation = 5.0f,
       });
 
       auto& right_panel = label_box.create_child<ui_core::VerticalLayout>({
-         .padding = {5.0f, 0.0f, 0, 0.0f},
-         .separation = 10.0f,
+         .padding = {2.5f, 0.0f, 0, 0.0f},
+         .separation = 5.0f,
       });
 
       for (const auto& [name, content] : group) {
          left_panel.create_child<ui_core::TextBox>({
-            .font_size = 18,
+            .font_size = 10,
             .typeface = "fonts/segoeui/regular.typeface"_rc,
             .content = content,
             .color = {1.0f, 1.0f, 1.0f, 1.0f},
@@ -248,7 +248,7 @@ InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager,
          });
 
          m_values[name] = &right_panel.create_child<ui_core::TextBox>({
-            .font_size = 18,
+            .font_size = 10,
             .typeface = "fonts/segoeui/regular.typeface"_rc,
             .content = "none",
             .color = {1.0f, 1.0f, 0.4f, 1.0f},

@@ -160,8 +160,8 @@ void cs_main(uint3 threadID : SV_DispatchThreadID)
 
     triglav::mesh::SceneMesh sceneMesh = SceneMeshes[threadID.x];
 
-    // if (!is_object_visible(sceneMesh))
-    // return;
+    if (!is_object_visible(sceneMesh))
+        return;
 
     const uint templateID = sceneMesh.materialID & 0b111;
     sceneMesh.materialID >>= 3;
