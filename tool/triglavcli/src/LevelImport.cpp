@@ -14,7 +14,9 @@
 #include "triglav/world/Level.hpp"
 
 #include <print>
+#include <queue>
 #include <ryml.hpp>
+#include <set>
 #include <utility>
 
 namespace c4 {
@@ -411,6 +413,9 @@ class LevelImporter
 
    [[nodiscard]] std::optional<ArmatureName> import_armature(const u32 skin_id)
    {
+      if (m_imported_armatures.contains(skin_id)) {
+         return m_imported_armatures.at(skin_id);
+      }
       const auto& skin = m_glb_file.document->skins[skin_id];
 
       render_objects::BoneList bone_list{};
@@ -455,6 +460,7 @@ class LevelImporter
          return std::nullopt;
       }
 
+      m_imported_armatures.emplace(skin_id, rc_name);
       return rc_name;
    }
 
@@ -468,25 +474,49 @@ class LevelImporter
       const auto& glb_scene = m_glb_file.document->scenes[m_glb_file.document->scene];
 
       world::LevelNode root_node("root");
-      for (const u32 node_id : glb_scene.nodes) {
-         auto& glb_node = m_glb_file.document->nodes[node_id];
+      std::queue<std::pair<u32, Transform3D>> nodes;
 
-         if (!glb_node.mesh.has_value())
+      for (const u32 node_id : glb_scene.nodes) {
+         nodes.emplace(node_id, Transform3D::identity());
+      }
+
+      std::set<u32> visited_nodes;
+
+      while (!nodes.empty()) {
+         auto [node_id, parent_transform] = nodes.front();
+         nodes.pop();
+
+         if (visited_nodes.contains(node_id))
             continue;
 
-         auto transform = transform_from_node(glb_node);
+         visited_nodes.insert(node_id);
 
-         auto mesh_name = this->import_mesh(glb_node.name, *glb_node.mesh);
-         if (!mesh_name.has_value()) {
-            return false;
+         const auto& glb_node = m_glb_file.document->nodes[node_id];
+         auto transform = parent_transform.combine(transform_from_node(glb_node));
+
+         for (const auto child_id : glb_node.children) {
+            nodes.emplace(child_id, transform);
          }
 
-         world::StaticMesh mesh;
-         mesh.name = glb_node.name.value_or(std::format("static_mesh{}", node_id));
-         mesh.transform = transform;
-         mesh.mesh_name = *mesh_name;
+         std::optional<ArmatureName> armature_name;
+         if (glb_node.skin.has_value()) {
+            armature_name = this->import_armature(*glb_node.skin);
+         }
 
-         root_node.add_static_mesh(std::move(mesh));
+         if (glb_node.mesh.has_value()) {
+            auto mesh_name = this->import_mesh(glb_node.name, *glb_node.mesh);
+            if (!mesh_name.has_value()) {
+               return false;
+            }
+
+            world::StaticMesh mesh;
+            mesh.name = glb_node.name.value_or(std::format("static_mesh{}", node_id));
+            mesh.transform = transform;
+            mesh.mesh_name = *mesh_name;
+            mesh.armature_name = armature_name;
+
+            root_node.add_static_mesh(std::move(mesh));
+         }
       }
 
       world::Level level;
@@ -496,12 +526,6 @@ class LevelImporter
       for (u32 animation_id = 0; animation_id < m_glb_file.document->animations.size(); ++animation_id) {
          if (!this->import_animation(animation_id).has_value()) {
             std::print(stderr, "triglav-cli: Failed to import animation {}\n", animation_id);
-         }
-      }
-
-      for (u32 skin_id = 0; skin_id < m_glb_file.document->skins.size(); ++skin_id) {
-         if (!this->import_armature(skin_id).has_value()) {
-            std::print(stderr, "triglav-cli: Failed to import armature {}\n", skin_id);
          }
       }
 
@@ -519,6 +543,7 @@ class LevelImporter
    io::Path m_glb_source_path;
    std::map<u32, MeshName> m_imported_meshes;
    std::map<u32, MaterialName> m_imported_materials;
+   std::map<u32, ArmatureName> m_imported_armatures;
    std::map<std::pair<u32, std::optional<TextureChannel>>, TextureName> m_imported_textures;
 };
 

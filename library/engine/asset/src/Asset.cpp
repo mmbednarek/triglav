@@ -364,6 +364,7 @@ TG_META_ENUM_END
 #define TG_TYPE(NS) NS(NS(triglav, asset), AnimationChannel)
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(type, triglav::asset::AnimationChannelType)
+TG_META_PROPERTY(channel_index, triglav::u32)
 TG_META_ARRAY_PROPERTY(keyframes, triglav::Vector4)
 TG_META_ARRAY_PROPERTY(timestamps, float)
 TG_META_CLASS_END

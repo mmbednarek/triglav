@@ -13,6 +13,7 @@
    TG_IO_TYPE(MemorySize, read_mem_size) \
    TG_IO_TYPE(u32, read_u32)             \
    TG_IO_TYPE(u16, read_u16)             \
+   TG_IO_TYPE(u8, read_u8)               \
    TG_IO_TYPE(float, read_float)
 
 namespace triglav::io {

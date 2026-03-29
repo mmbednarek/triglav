@@ -50,7 +50,12 @@ class DrawCallUpdateWriter
 
    void set_object(const u32 dst, const PendingObject& pending_object)
    {
-      const auto& mesh_info = m_bindless_scene.get_mesh_infos(m_cmd_list, pending_object.object->model)[pending_object.material_index];
+      u32 matrix_offset = ~0u;
+      if (const auto it = m_matrix_offsets.find(pending_object.object_id); it != m_matrix_offsets.end()) {
+         matrix_offset = it->second;
+      }
+      const auto& mesh_info =
+         m_bindless_scene.get_mesh_infos(m_cmd_list, pending_object.object->model, matrix_offset != ~0u)[pending_object.material_index];
 
       BindlessSceneObject bso;
       bso.vertex_offset = mesh_info.vertex_offset;
@@ -60,10 +65,7 @@ class DrawCallUpdateWriter
       bso.material_id = mesh_info.material_id;
       bso.transform_id =
          m_bindless_scene.get_transform_id(m_cmd_list, pending_object.object_id, m_transform_stage_ptr, pending_object.object->transform);
-      bso.matrix_offset = ~0u;
-      if (const auto it = m_matrix_offsets.find(pending_object.object_id); it != m_matrix_offsets.end()) {
-         bso.matrix_offset = it->second;
-      }
+      bso.matrix_offset = matrix_offset;
 
       m_staging_ptr[m_top_staging_index] = bso;
       m_cmd_list.copy_buffer(m_staging_buffer, m_dst_buffer, m_top_staging_index * sizeof(BindlessSceneObject),
@@ -112,7 +114,10 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_hierarchy_stage(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::HostVisible |
                                                          graphics_api::BufferUsage::TransferSrc,
                                                       STAGING_BUFFER_ELEM_COUNT * sizeof(Hierarchy)))),
-    m_hierarchy_buffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer, HIERARCHY_COUNT * sizeof(Hierarchy)))),
+    m_hierarchy_buffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
+                                                       HIERARCHY_COUNT * sizeof(Hierarchy)))),
+    m_hierarchy_count_buffer(
+       GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::UniformBuffer | graphics_api::BufferUsage::TransferDst, sizeof(u32)))),
     m_material_props_albedo_tex(device, 100),
     m_material_props_albedo_normal_tex(device, 100),
     m_material_props_all_tex(device, 100),
@@ -176,8 +181,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
 
       matrix_offsets[object_ids] = *transform_allocation;
 
-      cmd_list.copy_buffer(m_transform_stage.buffer(), m_transform_buffer, 0, *transform_allocation,
-                           2 * armature.bone_count() * sizeof(Transform3D));
+      cmd_list.copy_buffer(m_transform_stage.buffer(), m_transform_buffer, 0, *transform_allocation * sizeof(Transform3D),
+                           armature.bone_count() * sizeof(Transform3D));
       cmd_list.copy_buffer(m_hierarchy_stage, m_hierarchy_buffer, 0, m_written_hierarchy_count * sizeof(Hierarchy),
                            armature.bone_count() * sizeof(Hierarchy));
       m_written_hierarchy_count += armature.bone_count() * sizeof(Hierarchy);
@@ -210,6 +215,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
          ++m_hierarchy_stage_index;
       }
    }
+
+   GAPI_CHECK_STATUS(m_hierarchy_count_buffer.write_indirect(&m_written_hierarchy_count, sizeof(u32)));
 
    DrawCallUpdateWriter writer(*this, cmd_list, m_scene_object_stage.buffer(), m_scene_objects.buffer(),
                                static_cast<BindlessSceneObject*>(*object_mapping), static_cast<Transform3D*>(*transform_mapping),
@@ -313,6 +320,16 @@ const graphics_api::Buffer& BindlessScene::transform_matrix_buffer() const
    return m_transform_matrix_buffer;
 }
 
+const graphics_api::Buffer& BindlessScene::matrix_hierarchy_buffer() const
+{
+   return m_hierarchy_buffer;
+}
+
+const graphics_api::Buffer& BindlessScene::matrix_hierarchy_count_buffer() const
+{
+   return m_hierarchy_count_buffer;
+}
+
 memory::Area BindlessScene::transform_allocated_area() const
 {
    return m_transform_buffer_heap.allocated_area();
@@ -338,6 +355,11 @@ std::vector<render_core::TextureRef>& BindlessScene::scene_texture_refs()
    return m_scene_texture_refs;
 }
 
+u32 BindlessScene::matrix_hierarchy_count() const
+{
+   return m_written_hierarchy_count;
+}
+
 u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, const ObjectID object_id, Transform3D* stage_ptr,
                                     const Transform3D& transform)
 {
@@ -355,7 +377,8 @@ u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, c
    return *transform_dst_index;
 }
 
-const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::CommandList& cmd_list, const MeshName name)
+const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::CommandList& cmd_list, const MeshName name,
+                                                                   const bool is_skeletal_mesh)
 {
    if (const auto it = m_models.find(name); it != m_models.end()) {
       return it->second;
@@ -371,7 +394,11 @@ const std::vector<BindlessMeshInfo>& BindlessScene::get_mesh_infos(const gapi::C
 
    assert(!model.device_mesh.ranges.empty());
    for (const auto& material : model.device_mesh.ranges) {
-      const auto vertex_size = geometry::get_vertex_size(material.components);
+      auto components = material.components;
+      if (is_skeletal_mesh) {
+         components |= geometry::VertexComponent::Skeleton;
+      }
+      const auto vertex_size = geometry::get_vertex_size(components);
 
       // Index head is per u8
       const auto vertex_offset = m_vertex_buffer_heap.allocate(material.vertex_size, vertex_size);

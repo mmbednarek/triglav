@@ -4,6 +4,7 @@ resources:
   - "fonts/segoeui/bold.typeface"
   - "fonts/segoeui/regular.typeface"
   - "level/animated_example.level"
+  - "level/basic_bones.level"
   - "level/demo.level"
   - "material/stone.mat"
   - "mesh/teapot.mesh"

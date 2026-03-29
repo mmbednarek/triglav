@@ -87,7 +87,6 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       }
    }
 
-
    {
       TG_DEBUG_LABEL(ctx, "Generate transform matrices", {0.8f, 0.2f, 0.2f, 1.0f})
       ctx.bind_compute_shader("shader/bindless_geometry/transform_to_matrix.cshader"_rc);
@@ -97,6 +96,17 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       ctx.bind_uniform_buffer(2, &m_bindless_scene.transform_offset_count_buffer());
 
       ctx.dispatch({divide_rounded_up(m_bindless_scene.transform_allocated_area().size, 256), 1, 1});
+   }
+
+   {
+      TG_DEBUG_LABEL(ctx, "Multiply matrix hierarchy", {0.8f, 0.2f, 0.2f, 1.0f})
+      ctx.bind_compute_shader("shader/bindless_geometry/matrix_multiply.cshader"_rc);
+
+      ctx.bind_storage_buffer(0, &m_bindless_scene.matrix_hierarchy_buffer());
+      ctx.bind_uniform_buffer(1, &m_bindless_scene.matrix_hierarchy_count_buffer());
+      ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
+
+      ctx.dispatch({std::max(divide_rounded_up(m_bindless_scene.matrix_hierarchy_count(), 256), 1u), 1, 1});
    }
 
    // Reset the count and cull the objects

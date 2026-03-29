@@ -24,7 +24,8 @@ std::vector<TAccessorType> accessor_to_array(const u32 accessor_id, const Docume
    if (std::is_same_v<TAccessorType, u16>) {
       assert(accessor.component_type == ComponentType::UnsignedShort);
    } else if (std::is_same_v<TAccessorType, Vector4i>) {
-      assert(accessor.component_type == ComponentType::UnsignedInt);
+      assert(accessor.component_type == ComponentType::UnsignedInt ||
+             (accessor.type == AccessorType::Vector4 && accessor.component_type == ComponentType::UnsignedByte));
    } else {
       assert(accessor.component_type == ComponentType::Float);
    }
@@ -44,8 +45,25 @@ std::vector<TAccessorType> accessor_to_array(const u32 accessor_id, const Docume
    result.resize(accessor.count);
 
    auto buffer_view = buffer_manager.read_buffer_view(accessor.buffer_view, accessor.byte_offset);
-   for (const u32 i : Range(0u, accessor.count)) {
-      result[i] = buffer_view.read_value<TAccessorType>();
+   if constexpr (std::is_same_v<TAccessorType, Vector4i>) {
+      if (accessor.component_type == ComponentType::UnsignedByte) {
+         for (const u32 i : Range(0u, accessor.count)) {
+            u8 v[4];
+            v[0] = buffer_view.read_value<u8>();
+            v[1] = buffer_view.read_value<u8>();
+            v[2] = buffer_view.read_value<u8>();
+            v[3] = buffer_view.read_value<u8>();
+            result[i] = Vector4i{static_cast<int>(v[0]), static_cast<int>(v[1]), static_cast<int>(v[2]), static_cast<int>(v[3])};
+         }
+      } else {
+         for (const u32 i : Range(0u, accessor.count)) {
+            result[i] = buffer_view.read_value<TAccessorType>();
+         }
+      }
+   } else {
+      for (const u32 i : Range(0u, accessor.count)) {
+         result[i] = buffer_view.read_value<TAccessorType>();
+      }
    }
 
    return result;
@@ -124,6 +142,8 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
             continue;
          dst_mesh.set_face_normals(face_id, normals[c], normals[b], normals[a]);
          dst_mesh.set_face_uvs(face_id, uvs[c], uvs[b], uvs[a]);
+         dst_mesh.set_face_joint_indices(face_id, joints[c], joints[b], joints[a]);
+         dst_mesh.set_face_weights(face_id, weights[c], weights[b], weights[a]);
          dst_mesh.set_face_group(face_id, group_id);
          if (!tangents.empty()) {
             dst_mesh.set_face_tangents(face_id, tangents[c], tangents[b], tangents[a]);

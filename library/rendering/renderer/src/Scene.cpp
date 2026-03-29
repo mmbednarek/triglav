@@ -62,6 +62,7 @@ void Scene::load_level(const LevelName name)
          .model = mesh.mesh_name,
          .name = mesh.name.c_str(),
          .transform = mesh.transform,
+         .armature = mesh.armature_name,
       });
    }
 }

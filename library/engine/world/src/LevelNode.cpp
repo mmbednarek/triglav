@@ -56,6 +56,10 @@ void StaticMesh::serialize_yaml(ryml::NodeRef& node) const
    node["name"] = c4::csubstr{this->name.data(), this->name.size()};
    const auto mesh_str = ResourcePathMap::the().resolve(this->mesh_name);
    node["mesh"] << c4::csubstr{mesh_str.data(), mesh_str.size()};
+   if (this->armature_name.has_value()) {
+      const auto armature_name_str = ResourcePathMap::the().resolve(*this->armature_name);
+      node["armature"] << c4::csubstr{armature_name_str.data(), armature_name_str.size()};
+   }
    auto transform_node = node["transform"];
    transform_node |= ryml::MAP;
    serialize_transform(transform_node, this->transform);
