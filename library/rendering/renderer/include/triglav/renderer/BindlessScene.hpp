@@ -122,16 +122,19 @@ class BindlessScene
    [[nodiscard]] const graphics_api::Buffer& transform_offset_count_buffer() const;
    [[nodiscard]] const graphics_api::Buffer& transform_buffer() const;
    [[nodiscard]] const graphics_api::Buffer& transform_matrix_buffer() const;
+   [[nodiscard]] const graphics_api::Buffer& matrix_hierarchy_buffer() const;
+   [[nodiscard]] const graphics_api::Buffer& matrix_hierarchy_count_buffer() const;
    [[nodiscard]] memory::Area transform_allocated_area() const;
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
    [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
+   [[nodiscard]] u32 matrix_hierarchy_count() const;
 
  private:
    u32 get_transform_id(const graphics_api::CommandList& cmd_list, ObjectID object_id, Transform3D* stage_ptr,
                         const Transform3D& transform);
-   const std::vector<BindlessMeshInfo>& get_mesh_infos(const graphics_api::CommandList& cmd_list, MeshName name);
+   const std::vector<BindlessMeshInfo>& get_mesh_infos(const graphics_api::CommandList& cmd_list, MeshName name, bool is_skeletal_mesh);
    u32 get_material_id(const graphics_api::CommandList& cmd_list, const render_objects::Material& material);
    u32 get_texture_id(TextureName texture_name);
 
@@ -171,6 +174,7 @@ class BindlessScene
    graphics_api::Buffer m_transform_matrix_buffer;
    graphics_api::Buffer m_hierarchy_stage;
    graphics_api::Buffer m_hierarchy_buffer;
+   graphics_api::Buffer m_hierarchy_count_buffer;
    graphics_api::StorageArray<Properties_MT0> m_material_props_albedo_tex;
    graphics_api::StorageArray<Properties_MT1> m_material_props_albedo_normal_tex;
    graphics_api::StorageArray<Properties_MT2> m_material_props_all_tex;

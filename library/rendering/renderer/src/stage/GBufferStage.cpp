@@ -100,15 +100,14 @@ void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,
    ctx.bind_vertex_layout(layout);
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
    ctx.bind_storage_buffer(1, render_core::External(info.draw_call_buffer));
+   if (vertex_layout_info.components & geometry::VertexComponent::Skeleton) {
+      ctx.bind_storage_buffer(4, &m_bindless_scene.transform_matrix_buffer());
+   }
 
    ctx.bind_fragment_shader(info.fragment_shader);
 
    ctx.bind_sampled_texture_array(2, m_bindless_scene.scene_texture_refs());
    ctx.bind_storage_buffer(3, &m_bindless_scene.material_template_properties(info.index));
-
-   if (vertex_layout_info.components & geometry::VertexComponent::Skeleton) {
-      ctx.bind_storage_buffer(4, &m_bindless_scene.transform_matrix_buffer());
-   }
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());

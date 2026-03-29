@@ -145,6 +145,7 @@ struct AnimationChannel
    TG_META_STRUCT_BODY(AnimationChannel)
 
    AnimationChannelType type;
+   u32 channel_index;
    std::vector<Vector4> keyframes;
    std::vector<float> timestamps;
 };

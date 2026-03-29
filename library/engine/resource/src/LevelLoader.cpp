@@ -67,11 +67,17 @@ world::StaticMesh parse_static_mesh(const ryml::ConstNodeRef node)
 {
    const auto mesh_name = node["mesh"].val();
    const auto name = node["name"].val();
+   std::optional<ArmatureName> armature_name{};
+   if (node.has_child("armature")) {
+      const auto armature = node["armature"].val();
+      armature_name.emplace(name_from_path({armature.data(), armature.size()}));
+   }
 
    return world::StaticMesh{
       .mesh_name = to_typed_name<ResourceType::Mesh>(mesh_name),
       .name = {name.data(), name.size()},
       .transform = parse_transformation(node["transform"]),
+      .armature_name = armature_name,
    };
 }
 
@@ -113,6 +119,9 @@ void Loader<ResourceType::Level>::collect_dependencies(std::set<ResourceName>& o
 
    for (const auto& mesh : level.root().static_meshes()) {
       out_dependencies.insert(mesh.mesh_name);
+      if (mesh.armature_name.has_value()) {
+         out_dependencies.insert(*mesh.armature_name);
+      }
    }
 }
 

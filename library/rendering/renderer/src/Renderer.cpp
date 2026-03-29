@@ -82,7 +82,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
-   m_scene.load_level("level/demo.level"_rc);
+   m_scene.load_level("level/basic_bones.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -133,7 +133,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_info_dialog.init_config_labels();
 
-   m_animation_manager.start_animation("animation/animated_cubeaction.anim"_rc, 1);
+   m_animation_manager.start_animation("animation/animated_cubeaction.anim"_rc, 0);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)

@@ -91,6 +91,7 @@ struct Node
    std::optional<Vector4> rotation;
    std::optional<Vector3> scale;
    std::optional<Vector3> translation;
+   std::optional<u32> skin;
    std::optional<std::string> name;
 };
 

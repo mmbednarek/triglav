@@ -84,6 +84,7 @@ TG_META_OPTIONAL_PROPERTY(mesh, triglav::u32)
 TG_META_OPTIONAL_PROPERTY(rotation, triglav::Vector4)
 TG_META_OPTIONAL_PROPERTY(scale, triglav::Vector3)
 TG_META_OPTIONAL_PROPERTY(translation, triglav::Vector3)
+TG_META_OPTIONAL_PROPERTY(skin, triglav::u32)
 TG_META_OPTIONAL_PROPERTY(name, std::string)
 TG_META_CLASS_END
 #undef TG_TYPE

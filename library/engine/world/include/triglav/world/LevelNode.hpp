@@ -3,6 +3,7 @@
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -17,6 +18,7 @@ struct StaticMesh
    MeshName mesh_name{0};
    std::string name;
    Transform3D transform{};
+   std::optional<ArmatureName> armature_name{};
 
    void serialize_yaml(c4::yml::NodeRef& node) const;
 };

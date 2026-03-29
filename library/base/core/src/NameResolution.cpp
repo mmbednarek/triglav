@@ -118,7 +118,7 @@ std::map<Name, std::string_view> KnownNames{
    {"job.present_swapchain_image"_name, "job.present_swapchain_image"sv},
    {"keyframes"_name, "keyframes"sv},
    {"keyframes_upload"_name, "keyframes_upload"sv},
-   {"level/demo.level"_name, "level/demo.level"sv},
+   {"level/basic_bones.level"_name, "level/basic_bones.level"sv},
    {"location"_name, "location"sv},
    {"location.orientation"_name, "location.orientation"sv},
    {"location.position"_name, "location.position"sv},

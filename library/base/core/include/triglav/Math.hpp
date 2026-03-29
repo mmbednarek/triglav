@@ -142,6 +142,7 @@ struct Transform3D
    static Transform3D from_matrix(const Matrix4x4& matrix);
    [[nodiscard]] Matrix4x4 to_matrix() const;
    [[nodiscard]] Matrix4x4 to_normal_matrix() const;
+   [[nodiscard]] Transform3D combine(const Transform3D& child) const;
 };
 
 static_assert(sizeof(Transform3D) % 16 == 0);
