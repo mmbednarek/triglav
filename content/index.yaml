@@ -34,6 +34,8 @@ resources:
   - "shader/bindless_geometry/shadow_map.vshader"
   - "shader/bindless_geometry/vertex_vl0.vshader"
   - "shader/bindless_geometry/vertex_vl1.vshader"
+  - "shader/bindless_geometry/vertex_vl2.vshader"
+  - "shader/bindless_geometry/vertex_vl3.vshader"
   - "shader/bindless_geometry/transform_to_matrix.cshader"
   - "shader/geometry/ground.fshader"
   - "shader/geometry/ground.vshader"

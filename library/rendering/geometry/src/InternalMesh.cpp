@@ -74,7 +74,9 @@ InternalMesh::InternalMesh() :
     m_normals(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec3>>("h:normals", std::nullopt).first),
     m_uvs(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec2>>("h:uvs", std::nullopt).first),
     m_group_ids(m_mesh.add_property_map<FaceIndex, Index>("f:groups", g_invalid_index).first),
-    m_tangents(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec4>>("h:tangents", std::nullopt).first)
+    m_tangents(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec4>>("h:tangents", std::nullopt).first),
+    m_joints(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::ivec4>>("h:joints", std::nullopt).first),
+    m_weights(m_mesh.add_property_map<HalfedgeIndex, std::optional<glm::vec4>>("h:weights", std::nullopt).first)
 {
 }
 
@@ -230,6 +232,30 @@ void InternalMesh::set_face_tangents(const Index face, const std::span<Vector4> 
       if (it == tangents.end())
          break;
       m_tangents[halfedge] = *it;
+      ++it;
+   }
+}
+
+void InternalMesh::set_face_joints(const Index face, const std::span<Vector4i> joints)
+{
+   m_is_skeletal = true;
+   auto it = joints.begin();
+   for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
+      if (it == joints.end())
+         break;
+      m_joints[halfedge] = *it;
+      ++it;
+   }
+}
+
+void InternalMesh::set_face_weights(const Index face, const std::span<Vector4> weights)
+{
+   m_is_skeletal = true;
+   auto it = weights.begin();
+   for (const auto halfedge : m_mesh.halfedges_around_face(m_mesh.halfedge(FaceIndex{face}))) {
+      if (it == weights.end())
+         break;
+      m_weights[halfedge] = *it;
       ++it;
    }
 }
@@ -401,6 +427,8 @@ struct CompleteVertex
    Vector3 normal;
    Vector2 uv;
    Vector4 tangent;
+   Vector4i indices;
+   Vector4 weights;
 
    bool operator==(const CompleteVertex&) const = default;
    bool operator<(const CompleteVertex& other) const
@@ -411,16 +439,19 @@ struct CompleteVertex
          return position.y < other.position.y;
       if (position.z != other.position.z)
          return position.z < other.position.z;
+
       if (normal.x != other.normal.x)
          return normal.x < other.normal.x;
       if (normal.y != other.normal.y)
          return normal.y < other.normal.y;
       if (normal.z != other.normal.z)
          return normal.z < other.normal.z;
+
       if (uv.x != other.uv.x)
          return uv.x < other.uv.x;
       if (uv.y != other.uv.y)
          return uv.y < other.uv.y;
+
       if (tangent.x != other.tangent.x)
          return tangent.x < other.tangent.x;
       if (tangent.y != other.tangent.y)
@@ -429,6 +460,25 @@ struct CompleteVertex
          return tangent.z < other.tangent.z;
       if (tangent.w != other.tangent.w)
          return tangent.w < other.tangent.w;
+
+      if (indices.x != other.indices.x)
+         return indices.x < other.indices.x;
+      if (indices.y != other.indices.y)
+         return indices.y < other.indices.y;
+      if (indices.z != other.indices.z)
+         return indices.z < other.indices.z;
+      if (indices.w != other.indices.w)
+         return indices.w < other.indices.w;
+
+      if (weights.x != other.weights.x)
+         return weights.x < other.weights.x;
+      if (weights.y != other.weights.y)
+         return weights.y < other.weights.y;
+      if (weights.z != other.weights.z)
+         return weights.z < other.weights.z;
+      if (weights.w != other.weights.w)
+         return weights.w < other.weights.w;
+
       return false;
    }
 };
@@ -461,6 +511,11 @@ VertexData InternalMesh::to_vertex_data()
          if (components & VertexComponent::NormalMap) {
             buff_group.get<VertexComponentNormalMap>(dst_index).tangent = vert.tangent;
          }
+         if (components & VertexComponent::Skeleton) {
+            auto& vertex_skel = buff_group.get<VertexComponentSkeleton>(dst_index);
+            vertex_skel.indices = vert.indices;
+            vertex_skel.weights = vert.weights;
+         }
          ++dst_index;
       }
       vertex_map.clear();
@@ -476,6 +531,9 @@ VertexData InternalMesh::to_vertex_data()
                process_vertex_group();
             }
             components = group.components;
+            if (m_is_skeletal) {
+               components |= VertexComponent::Skeleton;
+            }
             current_material = group.material;
             last_offset = out_indices.size();
          }
@@ -485,12 +543,11 @@ VertexData InternalMesh::to_vertex_data()
          const auto vertex_index = this->halfedge_target(halfedge_index);
          const auto normal_vector = m_normals[halfedge_index].value_or(glm::vec3{0.0f, 1.0f, 0.0f});
          const auto tangent = m_tangents[halfedge_index].value_or(glm::vec4{1.0f, 0.0f, 0.0f, 1.0f});
+         const auto joints = m_joints[halfedge_index].value_or(glm::ivec4{0, 0, 0, 0});
+         const auto weights = m_weights[halfedge_index].value_or(glm::vec4{0.0f, 0.0f, 0.0f, 0.0f});
 
          CompleteVertex vertex{
-            this->location(vertex_index),
-            normal_vector,
-            m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)),
-            tangent,
+            this->location(vertex_index), normal_vector, m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)), tangent, joints, weights,
          };
 
          if (vertex_map.contains(vertex)) {

@@ -9,14 +9,28 @@ shader_targets += custom_target('shader_bindless_geometry_vertex_vl0',
                                 input : 'bindless_geometry.slang',
                                 output : 'vertex_vl0.vshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
-                                command : [slang_vs_commands, '-DMT_USE_NORMAL_MAP=0'],
+                                command : [slang_vs_commands, '-DMT_USE_BONES=0', '-DMT_USE_NORMAL_MAP=0'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_vertex_vl1',
                                 input : 'bindless_geometry.slang',
                                 output : 'vertex_vl1.vshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
-                                command : [slang_vs_commands, '-DMT_USE_NORMAL_MAP=1'],
+                                command : [slang_vs_commands, '-DMT_USE_BONES=0', '-DMT_USE_NORMAL_MAP=1'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_vertex_vl2',
+                                input : 'bindless_geometry.slang',
+                                output : 'vertex_vl2.vshader',
+                                depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
+                                command : [slang_vs_commands, '-DMT_USE_BONES=1', '-DMT_USE_NORMAL_MAP=0'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_vertex_vl3',
+                                input : 'bindless_geometry.slang',
+                                output : 'vertex_vl3.vshader',
+                                depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
+                                command : [slang_vs_commands, '-DMT_USE_BONES=1', '-DMT_USE_NORMAL_MAP=1'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_culling_compute',
@@ -71,21 +85,21 @@ shader_targets += custom_target('shader_bindless_geometry_render_mt0',
                                 input : 'render_geometry.slang',
                                 output : 'render_mt0.fshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
-                                command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=0', '-DMT_USE_ROUGHNESS_MAP=0', '-DMT_USE_METALIC_MAP=0'],
+                                command : [slang_fs_commands, '-DMT_USE_BONES=0', '-DMT_USE_NORMAL_MAP=0', '-DMT_USE_ROUGHNESS_MAP=0', '-DMT_USE_METALIC_MAP=0'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_render_mt1',
                                 input : 'render_geometry.slang',
                                 output : 'render_mt1.fshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
-                                command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=0', '-DMT_USE_METALIC_MAP=0'],
+                                command : [slang_fs_commands, '-DMT_USE_BONES=0', '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=0', '-DMT_USE_METALIC_MAP=0'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_render_mt2',
                                 input : 'render_geometry.slang',
                                 output : 'render_mt2.fshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_material, shader_lib_triglav_mesh],
-                                command : [slang_fs_commands, '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=1', '-DMT_USE_METALIC_MAP=1'],
+                                command : [slang_fs_commands, '-DMT_USE_BONES=0', '-DMT_USE_NORMAL_MAP=1', '-DMT_USE_ROUGHNESS_MAP=1', '-DMT_USE_METALIC_MAP=1'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_transform_to_matrix',

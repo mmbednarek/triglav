@@ -30,8 +30,7 @@ class OcclusionCulling
    static void reset_buffers(graphics_api::Device& device, render_core::JobGraph& graph);
 
  private:
-   void draw_pre_pass_objects(render_core::BuildContext& ctx, render_core::BufferRef object_buffer, render_core::BufferRef count_buffer,
-                              geometry::VertexComponentFlags vertex_components, u32 index) const;
+   void draw_pre_pass_objects(render_core::BuildContext& ctx, const render_objects::MaterialGeometryRenderInfo& info) const;
 
    BindlessScene& m_bindless_scene;
 

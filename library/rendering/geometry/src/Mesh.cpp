@@ -96,6 +96,20 @@ void Mesh::set_face_tangents_range(const Index face, const std::span<Vector4> ta
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
+void Mesh::set_face_joint_indices_range(const Index face, const std::span<Vector4i> indices)
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->set_face_joints(face, indices);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void Mesh::set_face_weights_range(const Index face, const std::span<Vector4> indices)
+{
+   assert(m_mesh != nullptr);
+   return m_mesh->set_face_weights(face, indices);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
 void Mesh::set_face_group(const Index face, const Index group)
 {
    assert(m_mesh != nullptr);

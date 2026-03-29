@@ -51,6 +51,8 @@ class InternalMesh
    using NormalPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec3>>;
    using TangentPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec4>>;
    using UvPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec2>>;
+   using JointIndicesPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::ivec4>>;
+   using WeightsPropMap = SurfaceMesh::Property_map<HalfedgeIndex, std::optional<glm::vec4>>;
    using GroupPropMap = SurfaceMesh::Property_map<FaceIndex, Index>;
 
    InternalMesh();
@@ -72,6 +74,8 @@ class InternalMesh
    void set_face_uvs(Index face, std::span<glm::vec2> uvs);
    void set_face_normals(Index face, std::span<glm::vec3> normals);
    void set_face_tangents(Index face, std::span<Vector4> tangents);
+   void set_face_joints(Index face, std::span<Vector4i> joints);
+   void set_face_weights(Index face, std::span<Vector4> weights);
    void set_face_group(Index face, Index group);
    void set_material(Index mesh_group, MaterialName material);
 
@@ -95,8 +99,11 @@ class InternalMesh
    UvPropMap m_uvs;
    GroupPropMap m_group_ids;
    TangentPropMap m_tangents;
+   JointIndicesPropMap m_joints;
+   WeightsPropMap m_weights;
    std::vector<MeshGroup> m_groups;
    bool m_is_triangulated{false};
+   bool m_is_skeletal{false};
 };
 
 }// namespace triglav::geometry

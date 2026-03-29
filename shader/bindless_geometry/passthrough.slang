@@ -15,6 +15,12 @@ RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_base;
 [[vk::binding(4)]]
 RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_normal_map;
 
+[[vk::binding(5)]]
+RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_skeletal;
+
+[[vk::binding(6)]]
+RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_skeletal_normal_map;
+
 groupshared uint out_counts[2];
 
 [numthreads(256, 1, 1)]
@@ -31,15 +37,27 @@ void cs_main(uint thread_id : SV_DispatchThreadID)
 
     var mesh = in_scene_meshes[thread_id];
     const uint template_id = mesh.materialID & 0b111;
+    const uint vertex_layout_id = (mesh.is_skeletal() ? 2 : 0) + (template_id == 0 ? 0 : 1);
+
     mesh.materialID >>= 3;
 
-    if (template_id == 0) {
-        uint dst_index = 0;
-        InterlockedAdd(out_counts[0], 1, dst_index);
-        out_draw_calls_base[dst_index] = mesh.to_draw_call(SB_TransformMatrices);
-    } else {
-        uint dst_index = 0;
-        InterlockedAdd(out_counts[1], 1, dst_index);
-        out_draw_calls_normal_map[dst_index] = mesh.to_draw_call(SB_TransformMatrices);
+    uint dst_index = 0;
+    InterlockedAdd(out_counts[vertex_layout_id], 1, dst_index);
+
+    triglav::mesh::DrawCall draw_call = mesh.to_draw_call(SB_TransformMatrices);
+
+    switch (vertex_layout_id) {
+    case 0:
+        out_draw_calls_base[dst_index] = draw_call;
+        break;
+    case 1:
+        out_draw_calls_normal_map[dst_index] = draw_call;
+        break;
+    case 2:
+        out_draw_calls_skeletal[dst_index] = draw_call;
+        break;
+    case 3:
+        out_draw_calls_skeletal_normal_map[dst_index] = draw_call;
+        break;
     }
 }

@@ -6,7 +6,7 @@
 
 namespace triglav {
 
-template<typename std::array<char, 0>::size_type CSize>
+template<std::array<char, 0>::size_type CSize>
 struct CompTimeString
 {
    using size_type = typename std::array<char, 0>::size_type;

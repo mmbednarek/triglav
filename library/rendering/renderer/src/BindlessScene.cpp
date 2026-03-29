@@ -1,6 +1,7 @@
 #include "BindlessScene.hpp"
 
 #include "triglav/graphics_api/PipelineBuilder.hpp"
+#include "triglav/render_objects/Armature.hpp"
 
 namespace triglav::renderer {
 
@@ -13,8 +14,16 @@ constexpr auto VERTEX_BUFFER_SIZE = 1 << 21;
 constexpr auto INDEX_BUFFER_SIZE = 1 << 21;
 constexpr auto TRANSFORM_BUFF_COUNT = 1024;
 constexpr auto TRANSFORM_MATRIX_BUFF_COUNT = 1024;
+constexpr auto HIERARCHY_COUNT = 1024;
 
 namespace {
+
+struct Hierarchy
+{
+   uint destination_id;
+   uint matrix_count;
+   uint matrix_ids[6];
+};
 
 constexpr auto encode_material_id(const u32 template_id, const u32 instance_id)
 {
@@ -27,13 +36,15 @@ class DrawCallUpdateWriter
 {
  public:
    DrawCallUpdateWriter(BindlessScene& bindless_scene, const gapi::CommandList& cmd_list, gapi::Buffer& staging_buffer,
-                        gapi::Buffer& dst_buffer, BindlessSceneObject* staging_ptr, Transform3D* transform_stage_ptr) :
+                        gapi::Buffer& dst_buffer, BindlessSceneObject* staging_ptr, Transform3D* transform_stage_ptr,
+                        const std::map<ObjectID, MemorySize>& matrix_offsets) :
        m_bindless_scene(bindless_scene),
        m_cmd_list(cmd_list),
        m_staging_buffer(staging_buffer),
        m_dst_buffer(dst_buffer),
        m_staging_ptr(staging_ptr),
-       m_transform_stage_ptr(transform_stage_ptr)
+       m_transform_stage_ptr(transform_stage_ptr),
+       m_matrix_offsets(matrix_offsets)
    {
    }
 
@@ -45,12 +56,14 @@ class DrawCallUpdateWriter
       bso.vertex_offset = mesh_info.vertex_offset;
       bso.index_count = mesh_info.index_count;
       bso.index_offset = mesh_info.index_offset;
-      bso.instance_count = 1;
-      bso.instance_offset = 0;
       bso.bounding_box = mesh_info.bounding_box;
       bso.material_id = mesh_info.material_id;
       bso.transform_id =
          m_bindless_scene.get_transform_id(m_cmd_list, pending_object.object_id, m_transform_stage_ptr, pending_object.object->transform);
+      bso.matrix_offset = ~0u;
+      if (const auto it = m_matrix_offsets.find(pending_object.object_id); it != m_matrix_offsets.end()) {
+         bso.matrix_offset = it->second;
+      }
 
       m_staging_ptr[m_top_staging_index] = bso;
       m_cmd_list.copy_buffer(m_staging_buffer, m_dst_buffer, m_top_staging_index * sizeof(BindlessSceneObject),
@@ -72,6 +85,7 @@ class DrawCallUpdateWriter
    BindlessSceneObject* m_staging_ptr;
    Transform3D* m_transform_stage_ptr;
    u32 m_top_staging_index = 0;
+   const std::map<ObjectID, MemorySize>& m_matrix_offsets;
 };
 
 BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene,
@@ -95,6 +109,10 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
                                                        TRANSFORM_BUFF_COUNT * sizeof(Transform3D)))),
     m_transform_matrix_buffer(
        GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer, TRANSFORM_BUFF_COUNT * sizeof(Matrix4x4)))),
+    m_hierarchy_stage(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::HostVisible |
+                                                         graphics_api::BufferUsage::TransferSrc,
+                                                      STAGING_BUFFER_ELEM_COUNT * sizeof(Hierarchy)))),
+    m_hierarchy_buffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer, HIERARCHY_COUNT * sizeof(Hierarchy)))),
     m_material_props_albedo_tex(device, 100),
     m_material_props_albedo_normal_tex(device, 100),
     m_material_props_all_tex(device, 100),
@@ -115,6 +133,9 @@ void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const Sce
    const auto& model = m_resource_manager.get(object.model);
    for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
       m_draw_call_update_list.add_or_update(std::make_pair(object_id, i), PendingObject{&object, object_id, i});
+   }
+   if (object.armature.has_value()) {
+      m_pending_armatures.emplace_back(std::make_pair(object_id, object.armature.value()));
    }
    m_should_write_objects = true;
 }
@@ -139,11 +160,60 @@ void BindlessScene::on_object_removed(const ObjectID object_id)
 void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
 {
    m_transform_stage_index = 0;
+   m_hierarchy_stage_index = 0;
 
    const auto object_mapping{GAPI_CHECK(m_scene_object_stage.buffer().map_memory())};
    const auto transform_mapping{GAPI_CHECK(m_transform_stage.buffer().map_memory())};
+   const auto hierarchy_mapping{GAPI_CHECK(m_hierarchy_stage.map_memory())};
+
+   std::map<ObjectID, MemorySize> matrix_offsets;
+
+   for (const auto& [object_ids, armature_name] : m_pending_armatures) {
+      const auto& armature = m_resource_manager.get(armature_name);
+
+      const auto transform_allocation = m_transform_buffer_heap.allocate(2 * armature.bone_count());
+      assert(transform_allocation.has_value());
+
+      matrix_offsets[object_ids] = *transform_allocation;
+
+      cmd_list.copy_buffer(m_transform_stage.buffer(), m_transform_buffer, 0, *transform_allocation,
+                           2 * armature.bone_count() * sizeof(Transform3D));
+      cmd_list.copy_buffer(m_hierarchy_stage, m_hierarchy_buffer, 0, m_written_hierarchy_count * sizeof(Hierarchy),
+                           armature.bone_count() * sizeof(Hierarchy));
+      m_written_hierarchy_count += armature.bone_count() * sizeof(Hierarchy);
+
+      for (MemorySize bone_id = 0; bone_id < armature.bone_count(); ++bone_id) {
+         const auto& bone = armature.bone(bone_id);
+         transform_mapping.write_offset(&bone.transform, sizeof(Transform3D), m_transform_stage_index * sizeof(Transform3D));
+         ++m_transform_stage_index;
+
+         std::array<u32, 8> matrices{};
+
+         u32 dst_matrix = 0;
+         u32 parent_id = bone_id;
+         matrices[dst_matrix] = *transform_allocation + bone_id;
+         while (parent_id != render_objects::BONE_ID_NO_PARENT) {
+            ++dst_matrix;
+            parent_id = armature.bone(parent_id).parent;
+            matrices[dst_matrix] = *transform_allocation + parent_id;
+         }
+
+         Hierarchy hierarchy{
+            .destination_id = static_cast<u32>(*transform_allocation + armature.bone_count() + bone_id),
+            .matrix_count = dst_matrix + 1,
+            .matrix_ids = {},
+         };
+         for (u32 i = 0; i <= dst_matrix; ++i) {
+            hierarchy.matrix_ids[i] = matrices[dst_matrix - i];
+         }
+         hierarchy_mapping.write_offset(&hierarchy, sizeof(Hierarchy), m_hierarchy_stage_index * sizeof(Hierarchy));
+         ++m_hierarchy_stage_index;
+      }
+   }
+
    DrawCallUpdateWriter writer(*this, cmd_list, m_scene_object_stage.buffer(), m_scene_objects.buffer(),
-                               static_cast<BindlessSceneObject*>(*object_mapping), static_cast<Transform3D*>(*transform_mapping));
+                               static_cast<BindlessSceneObject*>(*object_mapping), static_cast<Transform3D*>(*transform_mapping),
+                               matrix_offsets);
    m_draw_call_update_list.write_to_buffers(writer);
 
    *m_count_buffer = m_draw_call_update_list.top_index();

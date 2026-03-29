@@ -23,6 +23,8 @@ std::vector<TAccessorType> accessor_to_array(const u32 accessor_id, const Docume
    auto& accessor = doc.accessors.at(accessor_id);
    if (std::is_same_v<TAccessorType, u16>) {
       assert(accessor.component_type == ComponentType::UnsignedShort);
+   } else if (std::is_same_v<TAccessorType, Vector4i>) {
+      assert(accessor.component_type == ComponentType::UnsignedInt);
    } else {
       assert(accessor.component_type == ComponentType::Float);
    }
@@ -31,6 +33,8 @@ std::vector<TAccessorType> accessor_to_array(const u32 accessor_id, const Docume
    } else if constexpr (std::is_same_v<TAccessorType, Vector3>) {
       assert(accessor.type == AccessorType::Vector3);
    } else if constexpr (std::is_same_v<TAccessorType, Vector4>) {
+      assert(accessor.type == AccessorType::Vector4);
+   } else if constexpr (std::is_same_v<TAccessorType, Vector4i>) {
       assert(accessor.type == AccessorType::Vector4);
    } else if constexpr (std::is_same_v<TAccessorType, u16>) {
       assert(accessor.type == AccessorType::Scalar);
@@ -105,6 +109,9 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
 
       std::vector<Vector4> tangents{};
       tangents = extract_vector<Vector4>(PrimitiveAttributeType::Tangent, doc, prim, buffer_manager);
+
+      auto joints = extract_vector<Vector4i>(PrimitiveAttributeType::Joints, doc, prim, buffer_manager);
+      auto weights = extract_vector<Vector4>(PrimitiveAttributeType::Weights, doc, prim, buffer_manager);
 
       auto indices_it = indices.begin();
       while (indices_it != indices.end()) {
