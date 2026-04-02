@@ -70,7 +70,7 @@ void AnimationJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_i
          dst_state.start_time = anim.start_time;
          dst_state.last_keyframe = channel.last_keyframe;
          dst_state.target_keyframe = channel.first_keyframe + 1;
-         dst_state.target_transform_id = anim.target_transform_id;
+         dst_state.target_transform_id = channel.target_transform_id;
          dst_state.channel_type = channel.channel_type;
          ++i;
       }

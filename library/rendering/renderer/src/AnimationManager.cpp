@@ -34,11 +34,12 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
 
    std::vector<ChannelState> channel_states(animation.channels.size());
    std::ranges::transform(animation.channels, channel_states.begin(),
-                          [offset = static_cast<u32>(m_keyframe_offset / sizeof(Vector4))](const auto& channel) mutable {
+                          [&, offset = static_cast<u32>(m_keyframe_offset / sizeof(Vector4))](const auto& channel) mutable {
                              ChannelState state{
                                 .first_keyframe = offset,
                                 .last_keyframe = static_cast<u32>(offset + channel.keyframes.size() - 1),
                                 .channel_type = static_cast<u32>(channel.type),
+                                .target_transform_id = m_bindless_scene.transform_id(target_object_id, channel.channel_index),
                              };
                              offset += channel.keyframes.size();
                              return state;
@@ -47,7 +48,6 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
    const auto id = m_top_animation_id++;
    m_states[id] = AnimationState{
       .animation_name = animation_name,
-      .target_transform_id = m_bindless_scene.transform_id(target_object_id),
       .start_time = this->current_time(),
       .channels = std::move(channel_states),
    };

@@ -112,7 +112,7 @@ class BindlessScene
 
    void write_objects_to_buffer();
 
-   [[nodiscard]] u32 transform_id(ObjectID id) const;
+   [[nodiscard]] u32 transform_id(ObjectID id, u32 transform_index = 0) const;
 
    [[nodiscard]] graphics_api::Buffer& combined_vertex_buffer();
    [[nodiscard]] graphics_api::Buffer& combined_index_buffer();
@@ -158,6 +158,7 @@ class BindlessScene
    memory::HeapAllocator m_transform_buffer_heap;
    UpdateList<std::pair<ObjectID, u32>, PendingObject> m_draw_call_update_list;
    std::map<ObjectID, u32> m_object_id_to_transform_id;
+   std::map<ObjectID, MemorySize> m_transform_offsets;
    u32 m_transform_stage_index{0};
    u32 m_hierarchy_stage_index{0};
    u32 m_written_hierarchy_count{0};
@@ -165,6 +166,7 @@ class BindlessScene
    // GPU Buffers
    graphics_api::StagingArray<BindlessSceneObject> m_scene_object_stage;
    graphics_api::StagingArray<Transform3D> m_transform_stage;
+   graphics_api::StagingArray<Matrix4x4> m_matrix_stage;
    graphics_api::StorageArray<BindlessSceneObject> m_scene_objects;
    graphics_api::Buffer m_combined_vertex_buffer;
    graphics_api::IndexArray m_combined_index_buffer;

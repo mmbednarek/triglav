@@ -18,6 +18,7 @@ struct Bone
 
    BoneID parent;
    Transform3D transform;
+   Matrix4x4 inverse_bind;
 };
 
 struct BoneList
@@ -38,8 +39,6 @@ class Armature
    [[nodiscard]] MemorySize bone_count() const;
 
  private:
-   void sort();
-
    std::vector<Bone> m_bones;
 };
 

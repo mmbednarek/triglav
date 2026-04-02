@@ -38,7 +38,7 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
       case ColorFormatPart::UNorm16:
          return VK_FORMAT_R16G16B16A16_UNORM;
       case ColorFormatPart::UInt:
-         return VK_FORMAT_R8G8B8A8_UINT;
+         return VK_FORMAT_R32G32B32A32_UINT;
       case ColorFormatPart::Float16:
          return VK_FORMAT_R16G16B16A16_SFLOAT;
       case ColorFormatPart::Float32:

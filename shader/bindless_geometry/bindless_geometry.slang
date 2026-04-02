@@ -47,7 +47,7 @@ VSOutput vs_main(VSInput vertex_input)
             continue;
 
         const float4 local_position = mul(sb_matrices[drawCall.matrixOffset + bone_id], vertex_position);
-        position += local_position * vertex_input.bone_weights[bone_id];
+        position += local_position * vertex_input.bone_weights[i];
     }
 #else
     const float4 position = float4(vertex_input.position, 1);

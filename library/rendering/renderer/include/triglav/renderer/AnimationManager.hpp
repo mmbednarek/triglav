@@ -18,12 +18,12 @@ struct ChannelState
    u32 first_keyframe;
    u32 last_keyframe;
    u32 channel_type;
+   u32 target_transform_id;
 };
 
 struct AnimationState
 {
    AnimationName animation_name;
-   u32 target_transform_id;
    u32 last_frame_id;
    float start_time;
    std::vector<ChannelState> channels;

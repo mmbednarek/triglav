@@ -1,0 +1,21 @@
+nodes:
+  - name: root
+    items:
+      - type: static_mesh
+        name: dancing_cube
+        mesh: mesh/dancing_cube.mesh
+        armature: armature/cube_armature.arm
+        transform:
+          translation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 1.000000
+            y: 1.000000
+            z: 1.000000

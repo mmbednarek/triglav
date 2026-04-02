@@ -101,6 +101,7 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_transform_buffer_heap(TRANSFORM_BUFF_COUNT),
     m_scene_object_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_transform_stage(device, STAGING_BUFFER_ELEM_COUNT),
+    m_matrix_stage(device, STAGING_BUFFER_ELEM_COUNT),
     m_scene_objects(device, SCENE_ELEM_COUNT, gapi::BufferUsage::Indirect | gapi::BufferUsage::TransferSrc),
     m_combined_vertex_buffer(GAPI_CHECK(
        device.create_buffer(graphics_api::BufferUsage::VertexBuffer | graphics_api::BufferUsage::TransferDst, VERTEX_BUFFER_SIZE))),
@@ -169,6 +170,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
 
    const auto object_mapping{GAPI_CHECK(m_scene_object_stage.buffer().map_memory())};
    const auto transform_mapping{GAPI_CHECK(m_transform_stage.buffer().map_memory())};
+   const auto matrix_mapping{GAPI_CHECK(m_matrix_stage.buffer().map_memory())};
    const auto hierarchy_mapping{GAPI_CHECK(m_hierarchy_stage.map_memory())};
 
    std::map<ObjectID, MemorySize> matrix_offsets;
@@ -176,13 +178,16 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
    for (const auto& [object_ids, armature_name] : m_pending_armatures) {
       const auto& armature = m_resource_manager.get(armature_name);
 
-      const auto transform_allocation = m_transform_buffer_heap.allocate(2 * armature.bone_count());
+      const auto transform_allocation = m_transform_buffer_heap.allocate(3 * armature.bone_count());
       assert(transform_allocation.has_value());
 
-      matrix_offsets[object_ids] = *transform_allocation;
+      m_transform_offsets[object_ids] = *transform_allocation;
+      matrix_offsets[object_ids] = *transform_allocation + 2 * armature.bone_count();
 
       cmd_list.copy_buffer(m_transform_stage.buffer(), m_transform_buffer, 0, *transform_allocation * sizeof(Transform3D),
-                           armature.bone_count() * sizeof(Transform3D));
+                           2 * armature.bone_count() * sizeof(Transform3D));
+      cmd_list.copy_buffer(m_matrix_stage.buffer(), m_transform_matrix_buffer, 0,
+                           (*transform_allocation + armature.bone_count()) * sizeof(Matrix4x4), armature.bone_count() * sizeof(Matrix4x4));
       cmd_list.copy_buffer(m_hierarchy_stage, m_hierarchy_buffer, 0, m_written_hierarchy_count * sizeof(Hierarchy),
                            armature.bone_count() * sizeof(Hierarchy));
       m_written_hierarchy_count += armature.bone_count() * sizeof(Hierarchy);
@@ -190,29 +195,36 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
       for (MemorySize bone_id = 0; bone_id < armature.bone_count(); ++bone_id) {
          const auto& bone = armature.bone(bone_id);
          transform_mapping.write_offset(&bone.transform, sizeof(Transform3D), m_transform_stage_index * sizeof(Transform3D));
+         matrix_mapping.write_offset(&bone.inverse_bind, sizeof(Matrix4x4), m_transform_stage_index * sizeof(Matrix4x4));
          ++m_transform_stage_index;
 
          std::array<u32, 8> matrices{};
 
          u32 dst_matrix = 0;
          u32 parent_id = bone_id;
-         matrices[dst_matrix] = *transform_allocation + bone_id;
          while (parent_id != render_objects::BONE_ID_NO_PARENT) {
+            matrices[dst_matrix] = *transform_allocation + parent_id;
             ++dst_matrix;
             parent_id = armature.bone(parent_id).parent;
-            matrices[dst_matrix] = *transform_allocation + parent_id;
          }
 
          Hierarchy hierarchy{
-            .destination_id = static_cast<u32>(*transform_allocation + armature.bone_count() + bone_id),
+            .destination_id = static_cast<u32>(*transform_allocation + 2 * armature.bone_count() + bone_id),
             .matrix_count = dst_matrix + 1,
             .matrix_ids = {},
          };
-         for (u32 i = 0; i <= dst_matrix; ++i) {
-            hierarchy.matrix_ids[i] = matrices[dst_matrix - i];
+         for (u32 i = 0; i < dst_matrix; ++i) {
+            hierarchy.matrix_ids[i] = matrices[dst_matrix - 1 - i];
          }
+         hierarchy.matrix_ids[dst_matrix] = *transform_allocation + armature.bone_count() + bone_id;// inverse bind
          hierarchy_mapping.write_offset(&hierarchy, sizeof(Hierarchy), m_hierarchy_stage_index * sizeof(Hierarchy));
          ++m_hierarchy_stage_index;
+      }
+
+      const Transform3D null_transform = Transform3D::null();
+      for (MemorySize bone_id = 0; bone_id < armature.bone_count(); ++bone_id) {
+         transform_mapping.write_offset(&null_transform, sizeof(Transform3D), m_transform_stage_index * sizeof(Transform3D));
+         ++m_transform_stage_index;
       }
    }
 
@@ -268,9 +280,12 @@ void BindlessScene::write_objects_to_buffer()
    fence.await();
 }
 
-u32 BindlessScene::transform_id(const ObjectID id) const
+u32 BindlessScene::transform_id(const ObjectID id, const u32 transform_index) const
 {
-   return m_object_id_to_transform_id.at(id);
+   if (transform_index == 0) {
+      return m_object_id_to_transform_id.at(id);
+   }
+   return m_transform_offsets.at(id) + transform_index - 1;
 }
 
 gapi::Buffer& BindlessScene::combined_vertex_buffer()

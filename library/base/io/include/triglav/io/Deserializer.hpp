@@ -10,6 +10,7 @@
    TG_IO_TYPE(Vector2, read_vec2)        \
    TG_IO_TYPE(Vector3, read_vec3)        \
    TG_IO_TYPE(Vector4, read_vec4)        \
+   TG_IO_TYPE(Matrix4x4, read_matrix4x4) \
    TG_IO_TYPE(MemorySize, read_mem_size) \
    TG_IO_TYPE(u32, read_u32)             \
    TG_IO_TYPE(u16, read_u16)             \

@@ -32,10 +32,16 @@ RWStructuredBuffer<triglav::Transform> SB_Transforms;
 
 void set_target_value(in ChannelState state, float4 value)
 {
-    if (state.channel_type == 0) {
+    switch (state.channel_type) {
+    case 0:
         SB_Transforms[state.target_transform].translation = value.xyz;
-    } else if (state.channel_type == 1) {
+        break;
+    case 1:
         SB_Transforms[state.target_transform].rotation = value;
+        break;
+    case 2:
+        SB_Transforms[state.target_transform].scale = value.xyz;
+        break;
     }
 }
 

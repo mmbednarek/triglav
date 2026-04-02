@@ -136,15 +136,19 @@ geometry::Mesh mesh_from_document(const Document& doc, const u32 mesh_index, con
          const auto a = *indices_it++;
          const auto b = *indices_it++;
          const auto c = *indices_it++;
+
          const auto face_id =
             dst_mesh.add_face(unique_position_map[positions[c]], unique_position_map[positions[b]], unique_position_map[positions[a]]);
          if (face_id == ~0u)
             continue;
+
          dst_mesh.set_face_normals(face_id, normals[c], normals[b], normals[a]);
          dst_mesh.set_face_uvs(face_id, uvs[c], uvs[b], uvs[a]);
-         dst_mesh.set_face_joint_indices(face_id, joints[c], joints[b], joints[a]);
-         dst_mesh.set_face_weights(face_id, weights[c], weights[b], weights[a]);
          dst_mesh.set_face_group(face_id, group_id);
+         if (!joints.empty() && !weights.empty()) {
+            dst_mesh.set_face_joint_indices(face_id, joints[c], joints[b], joints[a]);
+            dst_mesh.set_face_weights(face_id, weights[c], weights[b], weights[a]);
+         }
          if (!tangents.empty()) {
             dst_mesh.set_face_tangents(face_id, tangents[c], tangents[b], tangents[a]);
          }
