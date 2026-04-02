@@ -130,6 +130,19 @@ Transform3D transform_from_node(const gltf::Node& node)
 class LevelImporter
 {
  public:
+   enum class NodeType
+   {
+      Collection,
+      Mesh,
+      Bone,
+   };
+
+   struct NodeInfo
+   {
+      NodeType type = NodeType::Collection;
+      u32 bone_id{};
+   };
+
    LevelImporter(LevelImportProps props, gltf::GlbResource&& glb_resource, const io::Path& glb_src_path) :
        m_props(std::move(props)),
        m_glb_file(std::move(glb_resource)),
@@ -349,6 +362,14 @@ class LevelImporter
          asset::AnimationChannel dst_channel{};
          dst_channel.type = channel_type_from_path(channel.target.path);
 
+         if (const auto it = m_node_infos.find(channel.target.node.value_or(0)); it != m_node_infos.end()) {
+            if (it->second.type == NodeType::Mesh) {
+               dst_channel.channel_index = 0;
+            } else {
+               dst_channel.channel_index = it->second.bone_id + 1;
+            }
+         }
+
          const auto& src_sampler = src_animation.samplers.at(channel.sampler);
 
          const auto& input_accessor = m_glb_file.document->accessors.at(src_sampler.input);
@@ -424,9 +445,25 @@ class LevelImporter
       std::map<u32, u32> node_id_to_bone_id;
       MemorySize bone_id = 0;
       for (const auto joint_id : skin.joints) {
+         m_node_infos[joint_id] = NodeInfo{
+            .type = NodeType::Bone,
+            .bone_id = static_cast<u32>(bone_id),
+         };
          bone_list.bones[bone_id].parent = render_objects::BONE_ID_NO_PARENT;
          node_id_to_bone_id[joint_id] = bone_id;
          ++bone_id;
+      }
+
+      std::vector<Matrix4x4> inverse_bind_matrices(skin.joints.size());
+      if (skin.inverse_bind_matrices.has_value()) {
+         auto& accessor = m_glb_file.document->accessors[skin.inverse_bind_matrices.value()];
+         assert(accessor.component_type == gltf::ComponentType::Float);
+         assert(accessor.type == gltf::AccessorType::Matrix4x4);
+
+         auto input_stream = m_glb_file.buffer_manager.read_buffer_view(accessor.buffer_view);
+         for (auto& dst_mat : inverse_bind_matrices) {
+            dst_mat = input_stream.read_matrix4x4();
+         }
       }
 
       bone_id = 0;
@@ -434,6 +471,7 @@ class LevelImporter
          const auto& joint_node = m_glb_file.document->nodes[joint_id];
          render_objects::Bone& dst_bone = bone_list.bones[bone_id];
          dst_bone.transform = transform_from_node(joint_node);
+         dst_bone.inverse_bind = inverse_bind_matrices[bone_id];
          for (const auto child_id : joint_node.children) {
             const auto child_bone_id = node_id_to_bone_id[child_id];
             bone_list.bones[child_bone_id].parent = bone_id;
@@ -504,6 +542,10 @@ class LevelImporter
          }
 
          if (glb_node.mesh.has_value()) {
+            m_node_infos[node_id] = NodeInfo{
+               .type = NodeType::Mesh,
+               .bone_id = ~0u,
+            };
             auto mesh_name = this->import_mesh(glb_node.name, *glb_node.mesh);
             if (!mesh_name.has_value()) {
                return false;
@@ -545,6 +587,7 @@ class LevelImporter
    std::map<u32, MaterialName> m_imported_materials;
    std::map<u32, ArmatureName> m_imported_armatures;
    std::map<std::pair<u32, std::optional<TextureChannel>>, TextureName> m_imported_textures;
+   std::map<u32, NodeInfo> m_node_infos;
 };
 
 bool import_level(const LevelImportProps& props)

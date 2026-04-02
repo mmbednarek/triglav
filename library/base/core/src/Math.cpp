@@ -26,6 +26,11 @@ Transform3D Transform3D::from_matrix(const Matrix4x4& matrix)
    return Transform3D{.rotation = rotation / sign(rotation.w), .scale = scale, .translation = translation};
 }
 
+Transform3D Transform3D::null()
+{
+   return Transform3D{.rotation = {0, 0, 0, 0}, .scale = {0, 0, 0}, .translation = {0, 0, 0}};
+}
+
 Matrix4x4 Transform3D::to_matrix() const
 {
    return glm::translate(glm::mat4(1.0f), this->translation) * glm::mat4_cast(this->rotation) * glm::scale(glm::mat4(1.0f), this->scale);

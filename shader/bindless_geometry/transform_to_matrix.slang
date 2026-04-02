@@ -23,5 +23,9 @@ void cs_main(uint thread_id : SV_DispatchThreadID)
         return;
 
     const uint index = CB_TransformOffsetCount.offset + thread_id;
+    triglav::Transform src_transform = SB_Transforms[index];
+    if (src_transform.scale.x == 0.0)
+        return;
+
     SB_Matrices[index] = SB_Transforms[index].matrix();
 }

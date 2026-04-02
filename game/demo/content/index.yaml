@@ -1,10 +1,11 @@
 resources:
   - "animation/example.anim"
   - "animation/animated_cubeaction.anim"
+  - "animation/cube_armature_animation.anim"
   - "fonts/segoeui/bold.typeface"
   - "fonts/segoeui/regular.typeface"
   - "level/animated_example.level"
-  - "level/basic_bones.level"
+  - "level/dancing_cube.level"
   - "level/demo.level"
   - "material/stone.mat"
   - "mesh/teapot.mesh"

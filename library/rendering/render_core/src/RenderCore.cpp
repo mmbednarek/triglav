@@ -224,7 +224,7 @@ VertexLayout vertex_layout_from_components(const geometry::VertexComponentFlags 
       offset += sizeof(geometry::VertexComponentNormalMap);
    }
    if (flags & geometry::VertexComponent::Skeleton) {
-      result.add("indices"_name, GAPI_FORMAT(RGBA, UInt), offset);
+      result.add("indices"_name, GAPI_FORMAT(RGBA, UInt), offset + offsetof(geometry::VertexComponentSkeleton, indices));
       result.add("weights"_name, GAPI_FORMAT(RGBA, Float32), offset + offsetof(geometry::VertexComponentSkeleton, weights));
       offset += sizeof(geometry::VertexComponentSkeleton);
    }

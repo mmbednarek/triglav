@@ -140,6 +140,7 @@ struct Transform3D
 
    static Transform3D identity();
    static Transform3D from_matrix(const Matrix4x4& matrix);
+   static Transform3D null();
    [[nodiscard]] Matrix4x4 to_matrix() const;
    [[nodiscard]] Matrix4x4 to_normal_matrix() const;
    [[nodiscard]] Transform3D combine(const Transform3D& child) const;
