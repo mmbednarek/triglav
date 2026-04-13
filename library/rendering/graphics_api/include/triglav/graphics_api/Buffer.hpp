@@ -16,7 +16,7 @@ using DeviceMemory = WrappedObject<VkDeviceMemory, vkAllocateMemory, vkFreeMemor
 class MappedMemory
 {
  public:
-   MappedMemory(void* pointer, VkDevice device, VkDeviceMemory device_memory);
+   MappedMemory(void* pointer, MemorySize buffer_size, VkDevice device, VkDeviceMemory device_memory);
 
    ~MappedMemory();
 
@@ -40,6 +40,7 @@ class MappedMemory
 
  private:
    void* m_pointer;
+   MemorySize m_buffer_size;
    VkDevice m_device;
    VkDeviceMemory m_device_memory;
 };

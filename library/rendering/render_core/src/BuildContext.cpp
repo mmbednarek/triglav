@@ -887,6 +887,11 @@ void BuildContext::end_if()
    this->add_command<detail::cmd::EndIfCond>();
 }
 
+void BuildContext::buffer_barrier(const BufferBarrier& barrier)
+{
+   this->add_command<detail::cmd::PlaceBufferBarrier>(std::make_unique<BufferBarrier>(barrier));
+}
+
 void BuildContext::bind_rt_generation_shader(RayGenShaderName ray_gen_shader)
 {
    m_work_types |= gapi::WorkType::Graphics;

@@ -80,7 +80,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    VkPolygonMode m_polygon_mode = VK_POLYGON_MODE_FILL;
    VkPrimitiveTopology m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
    VkFrontFace m_front_face = VK_FRONT_FACE_CLOCKWISE;
-   VkCullModeFlags m_cull_mode = VK_CULL_MODE_FRONT_BIT;
+   VkCullModeFlags m_cull_mode = VK_CULL_MODE_BACK_BIT;
    DepthTestMode m_depth_test_mode{DepthTestMode::Disabled};
    bool m_blending_enabled{true};
    float m_line_width{1.0f};

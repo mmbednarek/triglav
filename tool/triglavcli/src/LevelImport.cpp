@@ -442,7 +442,6 @@ class LevelImporter
       render_objects::BoneList bone_list{};
       bone_list.bones.resize(skin.joints.size());
 
-      std::map<u32, u32> node_id_to_bone_id;
       MemorySize bone_id = 0;
       for (const auto joint_id : skin.joints) {
          m_node_infos[joint_id] = NodeInfo{
@@ -450,7 +449,6 @@ class LevelImporter
             .bone_id = static_cast<u32>(bone_id),
          };
          bone_list.bones[bone_id].parent = render_objects::BONE_ID_NO_PARENT;
-         node_id_to_bone_id[joint_id] = bone_id;
          ++bone_id;
       }
 
@@ -473,10 +471,19 @@ class LevelImporter
          dst_bone.transform = transform_from_node(joint_node);
          dst_bone.inverse_bind = inverse_bind_matrices[bone_id];
          for (const auto child_id : joint_node.children) {
-            const auto child_bone_id = node_id_to_bone_id[child_id];
+            const auto child_bone_id = m_node_infos[child_id].bone_id;
+            assert(bone_list.bones[child_bone_id].parent == render_objects::BONE_ID_NO_PARENT);
             bone_list.bones[child_bone_id].parent = bone_id;
          }
          ++bone_id;
+      }
+
+      {
+         const render_objects::Armature test_armature(render_objects::BoneList{bone_list});
+         if (!test_armature.validate_armature()) {
+            std::print(stderr, "triglav-cli: Failed to import armature, invalid binding matrices\n");
+            return std::nullopt;
+         }
       }
 
       auto armature_name_str = skin.name.value_or("");

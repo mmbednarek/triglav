@@ -89,10 +89,10 @@ template<typename TWriter>
 void write_quaternion(TWriter& writer, Quaternion vec)
 {
    writer.StartArray();
+   writer.Double(vec.w);
    writer.Double(vec.x);
    writer.Double(vec.y);
    writer.Double(vec.z);
-   writer.Double(vec.w);
    writer.EndArray();
 }
 

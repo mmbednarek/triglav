@@ -32,7 +32,9 @@ bool TranslationTool::on_use_start(const geometry::Ray& ray)
 void TranslationTool::on_mouse_moved(const Vector2 position)
 {
    const auto normalized_pos = position / rect_size(m_level_editor.viewport().dimensions());
-   const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
+   auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
+   viewport_coord.y *= -1.0f;
+
    const auto ray = m_level_editor.scene().camera().viewport_ray(viewport_coord);
 
    if (m_transform_axis.has_value()) {

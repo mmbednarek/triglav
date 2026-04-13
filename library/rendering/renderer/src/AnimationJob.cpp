@@ -55,6 +55,14 @@ void AnimationJob::build_job(render_core::BuildContext& ctx) const
    ctx.bind_storage_buffer(4, &m_bindless_scene.transform_buffer());
 
    ctx.dispatch({1, 1, 1});
+
+   render_core::BufferBarrier barrier;
+   barrier.buffer_ref = &m_bindless_scene.transform_buffer();
+   barrier.src_stage_flags = graphics_api::PipelineStage::ComputeShader;
+   barrier.src_buffer_access = graphics_api::BufferAccess::ShaderWrite;
+   barrier.dst_stage_flags = graphics_api::PipelineStage::ComputeShader;
+   barrier.dst_buffer_access = graphics_api::BufferAccess::ShaderRead;
+   ctx.buffer_barrier(barrier);
 }
 
 void AnimationJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_index)
@@ -63,8 +71,12 @@ void AnimationJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_i
       GAPI_CHECK(graph.resources().buffer("animation_job.channel_states_staging"_name, frame_index).map_memory());
    auto& states = channel_states_mapping.cast<std::array<ChannelStateGPU, MAX_CHANNEL_STATE_COUNT>>();
 
+   m_animation_manager.update_anim_states();
+
    u32 i = 0;
    for (const auto& [id, anim] : m_animation_manager.animation_states()) {
+      assert(anim.start_time <= m_animation_manager.current_time());
+      log_info("Start Time: {}, Time: {}", anim.start_time, m_animation_manager.current_time());
       for (const auto& channel : anim.channels) {
          auto& dst_state = states[i];
          dst_state.start_time = anim.start_time;

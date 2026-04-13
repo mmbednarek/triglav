@@ -37,7 +37,7 @@ void set_target_value(in ChannelState state, float4 value)
         SB_Transforms[state.target_transform].translation = value.xyz;
         break;
     case 1:
-        SB_Transforms[state.target_transform].rotation = value;
+        SB_Transforms[state.target_transform].rotation = normalize(value);
         break;
     case 2:
         SB_Transforms[state.target_transform].scale = value.xyz;
@@ -55,7 +55,7 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
     ChannelState s = ChannelStates[threadID];
     float animation_time = AnimationStateCB.current_time - s.start_time;
 
-    if (s.target_keyframe > s.last_keyframe) {
+    if (s.target_keyframe >= s.last_keyframe) {
         set_target_value(s, KeyFrames[s.last_keyframe]);
         ChannelStates[threadID].target_keyframe = s.target_keyframe;
         return;
@@ -63,7 +63,7 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
 
     // Find keyframe index
     while (TimeStamps[s.target_keyframe] < animation_time) {
-        if (s.target_keyframe > s.last_keyframe) {
+        if (s.target_keyframe >= s.last_keyframe) {
             set_target_value(s, KeyFrames[s.last_keyframe]);
             ChannelStates[threadID].target_keyframe = s.target_keyframe;
             return;
@@ -76,7 +76,16 @@ void cs_main(uint32_t threadID : SV_DispatchThreadID)
     const float time_offset = animation_time - TimeStamps[previous_keyframe];
     const float time_ratio = time_offset / (TimeStamps[s.target_keyframe] - TimeStamps[previous_keyframe]);
 
-    set_target_value(s, lerp(KeyFrames[previous_keyframe], KeyFrames[s.target_keyframe], time_ratio));
+    float4 kf_prev = KeyFrames[previous_keyframe];
+    float4 kf_target = KeyFrames[s.target_keyframe];
+    if (s.channel_type == 1) { // rotation
+        float kf_dot = dot(kf_prev, kf_target);
+        if (kf_dot < 0.0) {
+            kf_target = -kf_target;
+        }
+    }
+
+    set_target_value(s, lerp(kf_prev, kf_target, time_ratio));
 
     ChannelStates[threadID].target_keyframe = s.target_keyframe;
 }

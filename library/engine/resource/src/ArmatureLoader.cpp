@@ -14,7 +14,9 @@ render_objects::Armature Loader<ResourceType::Armature>::load(const io::Path& pa
    assert(file.has_value());
    json_util::deserialize(bone_list.to_meta_ref(), **file);
 
-   return render_objects::Armature{std::move(bone_list)};
+   auto armature = render_objects::Armature{std::move(bone_list)};
+   assert(armature.validate_armature());
+   return armature;
 }
 
 void Loader<ResourceType::Armature>::collect_dependencies(std::set<ResourceName>& /*out_dependencies*/, const io::Path& /*path*/) {}

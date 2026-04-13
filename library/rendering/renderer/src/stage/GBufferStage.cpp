@@ -107,7 +107,7 @@ void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,
    ctx.bind_fragment_shader(info.fragment_shader);
 
    ctx.bind_sampled_texture_array(2, m_bindless_scene.scene_texture_refs());
-   ctx.bind_storage_buffer(3, &m_bindless_scene.material_template_properties(info.index));
+   ctx.bind_storage_buffer(3, &m_bindless_scene.material_template_properties(info.materialPropIndex));
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());

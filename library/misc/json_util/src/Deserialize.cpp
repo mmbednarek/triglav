@@ -42,23 +42,25 @@ Matrix4x4 read_matrix4x4(const rapidjson::Value& src)
 
    Matrix4x4 result{};
    for (int row = 0; row < 4; ++row) {
-      for (int column = 0; column < 4; ++column) {
-         result[row][column] = it->GetFloat();
-         ++it;
-      }
+      Vector4 vec{};
+      vec.x = (it++)->GetFloat();
+      vec.y = (it++)->GetFloat();
+      vec.z = (it++)->GetFloat();
+      vec.w = (it++)->GetFloat();
+      result[row] = vec;
    }
 
    return result;
 }
 
-Vector4 read_quaternion(const rapidjson::Value& src)
+Quaternion read_quaternion(const rapidjson::Value& src)
 {
    const auto& arr = src.GetArray();
-   const auto& x = arr[0];
-   const auto& y = arr[1];
-   const auto& z = arr[2];
-   const auto& w = arr[3];
-   return {x.GetFloat(), y.GetFloat(), z.GetFloat(), w.GetFloat()};
+   const auto& w = arr[0];
+   const auto& x = arr[1];
+   const auto& y = arr[2];
+   const auto& z = arr[3];
+   return {w.GetFloat(), x.GetFloat(), y.GetFloat(), z.GetFloat()};
 }
 
 #define TG_JSON_GETTER_char val.GetInt()

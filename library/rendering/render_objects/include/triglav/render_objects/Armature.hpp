@@ -37,6 +37,8 @@ class Armature
    [[nodiscard]] const Bone& bone(BoneID id) const;
    [[nodiscard]] Bone& bone(BoneID id);
    [[nodiscard]] MemorySize bone_count() const;
+   void recalculate_inverse_bind_matrices();
+   bool validate_armature() const;
 
  private:
    std::vector<Bone> m_bones;

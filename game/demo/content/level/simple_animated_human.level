@@ -1,0 +1,38 @@
+nodes:
+  - name: root
+    items:
+      - type: static_mesh
+        name: simple_human_anim_floor
+        mesh: mesh/simple_human_anim_floor.mesh
+        transform:
+          translation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 13.535122
+            y: 13.535122
+            z: 13.535122
+      - type: static_mesh
+        name: simple_human
+        mesh: mesh/simple_human.mesh
+        armature: armature/simple_human_rig.arm
+        transform:
+          translation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+          rotation:
+            x: 0.000000
+            y: 0.000000
+            z: 0.000000
+            w: 1.000000
+          scale:
+            x: 1.000000
+            y: 1.000000
+            z: 1.000000

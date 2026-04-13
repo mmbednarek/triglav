@@ -31,11 +31,11 @@ typealias FSInput = VSOutput;
 
 static float2 g_vertexIndex[] = {
     float2(0, 0),
-    float2(0, 1),
-    float2(1, 0),
     float2(1, 0),
     float2(0, 1),
+    float2(1, 0),
     float2(1, 1),
+    float2(0, 1),
 };
 
 VSOutput vs_main(uint vid: SV_VertexID)

@@ -19,6 +19,7 @@ const glm::mat4& Camera::projection_matrix() const
 {
    if (not m_has_cached_projection_matrix) {
       m_projection_mat = glm::perspective(m_angle, m_viewport_aspect, this->near_plane(), this->far_plane());
+      m_projection_mat[1][1] *= -1.0f;
       m_has_cached_projection_matrix = true;
    }
 

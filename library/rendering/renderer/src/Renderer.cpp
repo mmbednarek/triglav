@@ -77,12 +77,14 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_debug_widget(m_ui_context),
     TG_CONNECT(m_config_manager, OnPropertyChanged, on_config_property_changed)
 {
+   m_scene.camera().set_position({-7.42f, 2.32f, 5.0f});
+
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
       m_ray_tracing_scene.emplace(m_device, m_resource_manager, m_scene);
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
-   m_scene.load_level("level/dancing_cube.level"_rc);
+   m_scene.load_level("level/simple_animated_human.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -133,7 +135,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_info_dialog.init_config_labels();
 
-   m_animation_manager.start_animation("animation/cube_armature_animation.anim"_rc, 0);
+   // m_animation_manager.start_animation("animation/funny_y_anim.anim"_rc, 0);
+   m_animation_manager.start_animation("animation/simple_human_walk.anim"_rc, 1, true);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)
@@ -210,7 +213,7 @@ void Renderer::on_mouse_move(const Vector2 position)
 
 void Renderer::on_mouse_relative_move(const float dx, const float dy)
 {
-   m_mouse_offset += glm::vec2{-dx * 0.1f, dy * 0.1f};
+   m_mouse_offset -= glm::vec2{dx * 0.1f, dy * 0.1f};
 }
 
 void Renderer::on_mouse_is_pressed(const desktop::MouseButton button, const Vector2 position)
@@ -285,7 +288,7 @@ void Renderer::on_key_pressed(const Key key)
       m_config_manager.toggle_rendering_particles();
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
-      m_motion.z += -16.0f;
+      m_motion.z += 16.0f;
       m_on_ground = false;
    }
 }
@@ -402,15 +405,15 @@ void Renderer::update_uniform_data(const float delta_time)
       updated = true;
    }
 
-   if (m_scene.camera().position().z > -5.0f) {
+   if (m_scene.camera().position().z < 5.0f) {
       m_motion = glm::vec3{0.0f};
       glm::vec3 cam_pos{m_scene.camera().position()};
-      cam_pos.z = -5.0f;
+      cam_pos.z = 5.0f;
       m_scene.camera().set_position(cam_pos);
       m_on_ground = true;
       updated = true;
    } else if (!m_on_ground) {
-      m_motion.z += 30.0f * delta_time;
+      m_motion.z -= 30.0f * delta_time;
    }
 
    if (m_config_manager.config().is_smooth_camera_enabled) {

@@ -104,10 +104,10 @@ class Scene
 
  private:
    resource::ResourceManager& m_resource_manager;
-   float m_yaw{};
-   float m_pitch{};
+   float m_yaw{4.42f};
+   float m_pitch{-0.6f};
    Camera m_camera{};
-   glm::quat m_directional_light_orientation{glm::vec3{geometry::g_pi * 0.1f, 0, geometry::g_pi * 1.5f}};
+   glm::quat m_directional_light_orientation{glm::vec3{-0.2f, 0.0f, 1.62f}};
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
    std::map<ObjectID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;

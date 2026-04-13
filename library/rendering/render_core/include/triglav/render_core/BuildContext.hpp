@@ -162,6 +162,9 @@ class BuildContext
    void if_disabled(Name flag);
    void end_if();
 
+   // Barriers
+   void buffer_barrier(const BufferBarrier& barrier);
+
    // Ray tracing
    void bind_rt_generation_shader(RayGenShaderName ray_gen_shader);
    void bind_rt_closest_hit_shader(RayClosestHitShaderName ray_closest_hit_shader);

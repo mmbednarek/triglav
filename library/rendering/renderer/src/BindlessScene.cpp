@@ -15,6 +15,7 @@ constexpr auto INDEX_BUFFER_SIZE = 1 << 21;
 constexpr auto TRANSFORM_BUFF_COUNT = 1024;
 constexpr auto TRANSFORM_MATRIX_BUFF_COUNT = 1024;
 constexpr auto HIERARCHY_COUNT = 1024;
+constexpr auto MAX_MATRIX_IDS = 18;
 
 namespace {
 
@@ -22,7 +23,7 @@ struct Hierarchy
 {
    uint destination_id;
    uint matrix_count;
-   uint matrix_ids[6];
+   uint matrix_ids[MAX_MATRIX_IDS];
 };
 
 constexpr auto encode_material_id(const u32 template_id, const u32 instance_id)
@@ -190,7 +191,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
                            (*transform_allocation + armature.bone_count()) * sizeof(Matrix4x4), armature.bone_count() * sizeof(Matrix4x4));
       cmd_list.copy_buffer(m_hierarchy_stage, m_hierarchy_buffer, 0, m_written_hierarchy_count * sizeof(Hierarchy),
                            armature.bone_count() * sizeof(Hierarchy));
-      m_written_hierarchy_count += armature.bone_count() * sizeof(Hierarchy);
+      m_written_hierarchy_count += armature.bone_count();
 
       for (MemorySize bone_id = 0; bone_id < armature.bone_count(); ++bone_id) {
          const auto& bone = armature.bone(bone_id);
@@ -198,7 +199,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
          matrix_mapping.write_offset(&bone.inverse_bind, sizeof(Matrix4x4), m_transform_stage_index * sizeof(Matrix4x4));
          ++m_transform_stage_index;
 
-         std::array<u32, 8> matrices{};
+         std::array<u32, MAX_MATRIX_IDS> matrices{};
 
          u32 dst_matrix = 0;
          u32 parent_id = bone_id;
@@ -207,6 +208,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
             ++dst_matrix;
             parent_id = armature.bone(parent_id).parent;
          }
+
+         assert(dst_matrix < MAX_MATRIX_IDS);
 
          Hierarchy hierarchy{
             .destination_id = static_cast<u32>(*transform_allocation + 2 * armature.bone_count() + bone_id),
@@ -227,6 +230,8 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
          ++m_transform_stage_index;
       }
    }
+
+   m_pending_armatures.clear();
 
    GAPI_CHECK_STATUS(m_hierarchy_count_buffer.write_indirect(&m_written_hierarchy_count, sizeof(u32)));
 

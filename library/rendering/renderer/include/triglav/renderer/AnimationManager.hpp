@@ -26,6 +26,8 @@ struct AnimationState
    AnimationName animation_name;
    u32 last_frame_id;
    float start_time;
+   bool is_repeating;
+   float total_duration;
    std::vector<ChannelState> channels;
 };
 
@@ -38,7 +40,7 @@ class AnimationManager
 
    using StateContainer = std::map<AnimationID, AnimationState>;
 
-   AnimationID start_animation(AnimationName animation_name, ObjectID target_object_id);
+   AnimationID start_animation(AnimationName animation_name, ObjectID target_object_id, bool is_repeating);
    float current_time() const;
    u32 channel_count() const;
    graphics_api::Buffer& keyframe_buffer();
@@ -48,6 +50,8 @@ class AnimationManager
    const graphics_api::Buffer& timestamp_buffer() const;
 
    const StateContainer& animation_states() const;
+
+   void update_anim_states();
 
  private:
    graphics_api::Device& m_device;
