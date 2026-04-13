@@ -1,4 +1,4 @@
-static const uint MAX_MATRICES = 6;
+static const uint MAX_MATRICES = 18;
 
 struct Task {
     uint destination_id;

@@ -1,9 +1,9 @@
 static const float2 screenVertices[4] =
 {
   float2(-1, -1),
-  float2(-1, 1),
-  float2(1, 1),
   float2(1, -1),
+  float2(1, 1),
+  float2(-1, 1),
 };
 
 struct FullScreenOut

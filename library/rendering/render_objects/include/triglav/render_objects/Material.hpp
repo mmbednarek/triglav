@@ -104,6 +104,7 @@ constexpr std::array<MaterialVertexLayoutInfo, 4> VERTEX_LAYOUT_INFOS{
 struct MaterialGeometryRenderInfo
 {
    u32 index;
+   u32 materialPropIndex;
    MaterialVertexLayoutID vertex_layout_id;
    FragmentShaderName fragment_shader;
    Name draw_call_buffer;
@@ -112,36 +113,42 @@ struct MaterialGeometryRenderInfo
 constexpr std::array<MaterialGeometryRenderInfo, 6> GEOMETRY_RENDER_INFOS{
    MaterialGeometryRenderInfo{
       .index = 0,
+      .materialPropIndex = 0,
       .vertex_layout_id = 0,
       .fragment_shader = make_rc_name("shader/bindless_geometry/render_mt0.fshader"),
       .draw_call_buffer = make_name_id("occlusion_culling.visible_objects.mt0"),
    },
    MaterialGeometryRenderInfo{
       .index = 1,
+      .materialPropIndex = 1,
       .vertex_layout_id = 1,
       .fragment_shader = make_rc_name("shader/bindless_geometry/render_mt1.fshader"),
       .draw_call_buffer = make_name_id("occlusion_culling.visible_objects.mt1"),
    },
    MaterialGeometryRenderInfo{
       .index = 2,
+      .materialPropIndex = 2,
       .vertex_layout_id = 1,
       .fragment_shader = make_rc_name("shader/bindless_geometry/render_mt2.fshader"),
       .draw_call_buffer = make_name_id("occlusion_culling.visible_objects.mt2"),
    },
    MaterialGeometryRenderInfo{
       .index = 3,
+      .materialPropIndex = 0,
       .vertex_layout_id = 2,
       .fragment_shader = make_rc_name("shader/bindless_geometry/render_mt0.fshader"),
       .draw_call_buffer = make_name_id("occlusion_culling.visible_objects.mt3"),
    },
    MaterialGeometryRenderInfo{
       .index = 4,
+      .materialPropIndex = 1,
       .vertex_layout_id = 3,
       .fragment_shader = make_rc_name("shader/bindless_geometry/render_mt1.fshader"),
       .draw_call_buffer = make_name_id("occlusion_culling.visible_objects.mt4"),
    },
    MaterialGeometryRenderInfo{
       .index = 5,
+      .materialPropIndex = 2,
       .vertex_layout_id = 3,
       .fragment_shader = make_rc_name("shader/bindless_geometry/render_mt2.fshader"),
       .draw_call_buffer = make_name_id("occlusion_culling.visible_objects.mt5"),

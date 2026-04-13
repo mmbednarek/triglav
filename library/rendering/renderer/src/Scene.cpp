@@ -75,6 +75,7 @@ world::Level Scene::to_level() const
          .mesh_name = object->model,
          .name = object->name.to_std(),
          .transform = object->transform,
+         .armature_name = object->armature,
       });
    }
 

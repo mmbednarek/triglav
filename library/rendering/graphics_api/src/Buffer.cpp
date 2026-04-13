@@ -8,8 +8,9 @@
 
 namespace triglav::graphics_api {
 
-MappedMemory::MappedMemory(void* pointer, const VkDevice device, const VkDeviceMemory device_memory) :
+MappedMemory::MappedMemory(void* pointer, MemorySize buffer_size, const VkDevice device, const VkDeviceMemory device_memory) :
     m_pointer(pointer),
+    m_buffer_size(buffer_size),
     m_device(device),
     m_device_memory(device_memory)
 {
@@ -24,6 +25,7 @@ MappedMemory::~MappedMemory()
 
 MappedMemory::MappedMemory(MappedMemory&& other) noexcept :
     m_pointer(std::exchange(other.m_pointer, nullptr)),
+    m_buffer_size(std::exchange(other.m_buffer_size, 0)),
     m_device(std::exchange(other.m_device, nullptr)),
     m_device_memory(std::exchange(other.m_device_memory, nullptr))
 {
@@ -35,6 +37,7 @@ MappedMemory& MappedMemory::operator=(MappedMemory&& other) noexcept
       return *this;
 
    m_pointer = std::exchange(other.m_pointer, nullptr);
+   m_buffer_size = std::exchange(other.m_buffer_size, 0);
    m_device = std::exchange(other.m_device, nullptr);
    m_device_memory = std::exchange(other.m_device_memory, nullptr);
 
@@ -58,6 +61,11 @@ void MappedMemory::write(const void* source, const size_t length) const
 
 void MappedMemory::write_offset(const void* source, const MemorySize length, const MemorySize offset) const
 {
+   if (length == 0)
+      return;
+
+   assert(offset < m_buffer_size);
+   assert((offset + length) <= m_buffer_size);
    std::memcpy(static_cast<u8*>(m_pointer) + offset, source, length);
 }
 
@@ -92,7 +100,7 @@ Result<MappedMemory> Buffer::map_memory()
       return std::unexpected(Status::UnsupportedDevice);
    }
 
-   return MappedMemory(pointer, m_memory.parent(), *m_memory);
+   return MappedMemory(pointer, m_size, m_memory.parent(), *m_memory);
 }
 
 VkBuffer Buffer::vulkan_buffer() const

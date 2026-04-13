@@ -81,14 +81,14 @@ void cs_main(uint3 groupID: SV_GroupID, uint3 threadID : SV_GroupThreadID)
 
     // top left
     g_outVertices[vertexOffset] = triglav::ui::TextVertex(float2(left, top), glyph.texCoordTopLeft);
-    // bottom left
-    g_outVertices[vertexOffset + 1] = triglav::ui::TextVertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
     // top right
-    g_outVertices[vertexOffset + 2] = triglav::ui::TextVertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
+    g_outVertices[vertexOffset + 1] = triglav::ui::TextVertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
+    // bottom left
+    g_outVertices[vertexOffset + 2] = triglav::ui::TextVertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
     // top right
     g_outVertices[vertexOffset + 3] = triglav::ui::TextVertex(float2(right, top), float2(glyph.texCoordBottomRight.x, glyph.texCoordTopLeft.y));
-    // bottom left
-    g_outVertices[vertexOffset + 4] = triglav::ui::TextVertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
     // bottom right
-    g_outVertices[vertexOffset + 5] = triglav::ui::TextVertex(float2(right, bottom), glyph.texCoordBottomRight);
+    g_outVertices[vertexOffset + 4] = triglav::ui::TextVertex(float2(right, bottom), glyph.texCoordBottomRight);
+    // bottom left
+    g_outVertices[vertexOffset + 5] = triglav::ui::TextVertex(float2(left, bottom), float2(glyph.texCoordTopLeft.x, glyph.texCoordBottomRight.y));
 }

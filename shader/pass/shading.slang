@@ -128,7 +128,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     float3 Lo = float3(0);
 
-    float3 lightDir = normalize(mul(float3x3(viewProperties.view), float3(-1, 0.0, -0.4)));
+    float3 lightDir = normalize(mul(float3x3(viewProperties.view), float3(1, 0.0, -0.4)));
     Lo += shadingInfo.calculate_directional_light(lightDir);
 
     Lo += shadingInfo.calculate_point_light(mul(viewProperties.view, g_lightPosition).xyz, float3(1, 0.6, 0.05), 24.0);

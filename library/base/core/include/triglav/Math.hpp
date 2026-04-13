@@ -105,6 +105,7 @@ using Matrix4x4 = glm::mat4x4;
    return 1 + (nominator / denominator);
 }
 
+constexpr auto MATH_PI = 3.14159265358979323846f;
 constexpr auto g_pi = 3.14159265358979323846f;
 
 [[nodiscard]] constexpr float lerp(const float a, const float b, const float t)

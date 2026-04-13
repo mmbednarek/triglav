@@ -46,7 +46,7 @@ FragOut fs_main(FragIn fragIn) {
     float3 normal = normalize(fragIn.worldPos);
     float yaw = oneOverTwoPi * (pi + atan2(normal.y, normal.x));
     float pitch = oneOverPi * (halfPi + asin(normal.z));
-    float2 uv = float2(yaw, pitch);
+    float2 uv = float2(yaw, 1 - pitch);
 
     FragOut output;
     output.color = skyboxTex.Sample(uv);

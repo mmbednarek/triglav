@@ -90,11 +90,11 @@ void LevelViewport::tick(const float delta_time)
          break;
       }
       case CamMovement::Up: {
-         direction = Vector3{0, 0, -1};
+         direction = Vector3{0, 0, 1};
          break;
       }
       case CamMovement::Down: {
-         direction = Vector3{0, 0, 1};
+         direction = Vector3{0, 0, -1};
          break;
       }
       default:
@@ -158,7 +158,8 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       m_root_window.surface().lock_cursor();
    } else if (mouse.button == desktop::MouseButton::Left) {
       const auto normalized_pos = event.mouse_position / rect_size(m_dimensions);
-      const auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
+      auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
+      viewport_coord.y *= -1.0f;
 
       const auto ray = m_level_editor.scene().camera().viewport_ray(viewport_coord);
       if (!m_level_editor.tool().on_use_start(ray)) {
@@ -186,7 +187,7 @@ void LevelViewport::on_mouse_relative_move(const Vector2 difference)
 {
    if (!m_is_moving)
       return;
-   m_mouse_motion += g_mouse_speed * Vector2{-difference.x, difference.y};
+   m_mouse_motion -= g_mouse_speed * Vector2{difference.x, difference.y};
 }
 
 Vector4 LevelViewport::dimensions() const

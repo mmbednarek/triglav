@@ -1,5 +1,7 @@
 #include "CameraBase.hpp"
 
+#include "triglav/Logging.hpp"
+
 namespace triglav::renderer {
 
 void CameraBase::set_position(const glm::vec3 position)

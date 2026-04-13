@@ -44,9 +44,9 @@ Matrix4x4 Transform3D::to_normal_matrix() const
 Transform3D Transform3D::combine(const Transform3D& child) const
 {
    return {
-      .rotation = this->rotation * child.rotation,
+      .rotation = glm::normalize(this->rotation * child.rotation),
       .scale = this->scale * child.scale,
-      .translation = this->translation + child.translation,
+      .translation = this->translation + this->rotation * (child.translation * this->scale),
    };
 }
 

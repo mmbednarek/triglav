@@ -6,10 +6,10 @@
 
 namespace triglav::renderer {
 
-constexpr MemorySize STAGING_BUFFER_SIZE = 8 * 1024;
-constexpr MemorySize STAGING_TIMESTAMP_OFFSET = 8 * 512;
-constexpr MemorySize TIMESTAMP_BUFFER_SIZE = 8 * 4096;
-constexpr MemorySize KEYFRAME_BUFFER_SIZE = 8 * 4096;
+constexpr MemorySize STAGING_BUFFER_SIZE = 256 * 1024;
+constexpr MemorySize STAGING_TIMESTAMP_OFFSET = 128 * 1024;
+constexpr MemorySize TIMESTAMP_BUFFER_SIZE = 1024 * 1024;
+constexpr MemorySize KEYFRAME_BUFFER_SIZE = 1024 * 1024;
 
 namespace gapi = graphics_api;
 
@@ -28,9 +28,16 @@ AnimationManager::AnimationManager(graphics_api::Device& device, resource::Resou
    m_base_time = std::chrono::system_clock::now();
 }
 
-AnimationID AnimationManager::start_animation(const AnimationName animation_name, const ObjectID target_object_id)
+AnimationID AnimationManager::start_animation(const AnimationName animation_name, const ObjectID target_object_id, const bool is_repeating)
 {
    const auto& animation = m_resource_manager.get(animation_name);
+   float total_duration = 0.0f;
+   for (const auto& anim_channel : animation.channels) {
+      const float max_ts = *std::ranges::max_element(anim_channel.timestamps);
+      if (max_ts > total_duration) {
+         total_duration = max_ts;
+      }
+   }
 
    std::vector<ChannelState> channel_states(animation.channels.size());
    std::ranges::transform(animation.channels, channel_states.begin(),
@@ -49,6 +56,9 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
    m_states[id] = AnimationState{
       .animation_name = animation_name,
       .start_time = this->current_time(),
+      // .start_time = 0.0f,
+      .is_repeating = is_repeating,
+      .total_duration = total_duration,
       .channels = std::move(channel_states),
    };
 
@@ -71,6 +81,7 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
       }
    }
    assert(stage_keyframe_offset <= STAGING_TIMESTAMP_OFFSET);
+   assert(stage_timestamp_offset + STAGING_TIMESTAMP_OFFSET <= STAGING_BUFFER_SIZE);
 
    auto cmd_list = m_device.create_command_list();
    assert(cmd_list.has_value());
@@ -122,6 +133,19 @@ const graphics_api::Buffer& AnimationManager::timestamp_buffer() const
 const AnimationManager::StateContainer& AnimationManager::animation_states() const
 {
    return m_states;
+}
+
+void AnimationManager::update_anim_states()
+{
+   const auto now = this->current_time();
+   for (auto& [id, state] : m_states) {
+      if (!state.is_repeating)
+         continue;
+
+      while (now > state.start_time + state.total_duration) {
+         state.start_time += state.total_duration;
+      }
+   }
 }
 
 }// namespace triglav::renderer
