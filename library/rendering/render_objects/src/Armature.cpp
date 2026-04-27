@@ -7,6 +7,7 @@
 namespace triglav::render_objects {
 
 Armature::Armature(BoneList&& bones) :
+    m_root_transform(bones.root_transform),
     m_bones(std::move(bones.bones))
 {
 }
@@ -95,12 +96,13 @@ bool Armature::validate_armature() const
    static constexpr auto TOLERANCE = 0.01f;
 
    for (BoneID id = 0; id < m_bones.size(); ++id) {
-      auto mat = Matrix4x4{1};
+      Matrix4x4 mat{1};
       auto parent = id;
       while (parent != BONE_ID_NO_PARENT) {
          mat = m_bones[parent].transform.to_matrix() * mat;
          parent = m_bones[parent].parent;
       }
+      mat = m_root_transform.to_matrix() * mat;
 
       const auto test = mat * m_bones[id].inverse_bind;
       const auto err = mat4_error(test, Matrix4x4{1});
@@ -123,6 +125,7 @@ TG_META_CLASS_END
 
 #define TG_TYPE(NS) NS(NS(triglav, render_objects), BoneList)
 TG_META_CLASS_BEGIN
+TG_META_PROPERTY(root_transform, triglav::Transform3D)
 TG_META_ARRAY_PROPERTY(bones, triglav::render_objects::Bone)
 TG_META_CLASS_END
 #undef TG_TYPE

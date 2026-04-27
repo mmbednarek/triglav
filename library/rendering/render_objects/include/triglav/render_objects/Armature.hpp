@@ -25,6 +25,7 @@ struct BoneList
 {
    TG_META_STRUCT_BODY(BoneList)
 
+   Transform3D root_transform;
    std::vector<Bone> bones;
 };
 
@@ -41,6 +42,7 @@ class Armature
    bool validate_armature() const;
 
  private:
+   Transform3D m_root_transform;
    std::vector<Bone> m_bones;
 };
 

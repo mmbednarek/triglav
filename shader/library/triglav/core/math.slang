@@ -48,8 +48,6 @@ public float4x4 scale_to_matrix(float3 scale) {
 
 public float4x4 quaterion_rot_to_matrix(float4 quat) {
     float4 q = normalize(quat);
-    // q = q.xzyw;
-    // float4 q = quat;
     return float4x4(
         1.0 - 2.0*q.y*q.y - 2.0*q.z*q.z, 2.0*q.x*q.y - 2.0*q.z*q.w,       2.0*q.x*q.z + 2.0*q.y*q.w,       0.0,
         2.0*q.x*q.y + 2.0*q.z*q.w,       1.0 - 2.0*q.x*q.x - 2.0*q.z*q.z, 2.0*q.y*q.z - 2.0*q.x*q.w,       0.0,

@@ -1,4 +1,5 @@
 renderer_test_sources = files(
+    'CameraTest.cpp',
     'DrawCallTest.cpp',
     'Main.cpp',
 )

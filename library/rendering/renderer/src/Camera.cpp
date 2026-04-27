@@ -28,14 +28,14 @@ const glm::mat4& Camera::projection_matrix() const
 
 float Camera::to_linear_depth(const float depth) const
 {
-   return (2.0f * near_plane()) / (far_plane() + near_plane() - depth * (far_plane() - near_plane()));
+   return (2.0f * near_plane() * far_plane()) / (far_plane() + near_plane() - depth * (far_plane() - near_plane()));
 }
 
 OrthoCameraProperties Camera::calculate_shadow_map(const glm::quat light_orientation, const float frustum_range, float back_extension) const
 {
    const auto right_vec = this->right_vector();
    const auto forward_vec = this->forward_vector();
-   const auto up_vec = this->down_vector();
+   const auto up_vec = this->up_vector();
 
    const auto near_plane_point = this->position() + forward_vec * this->near_plane();
    const auto far_plane_point = this->position() + forward_vec * frustum_range;
@@ -105,13 +105,31 @@ geometry::Ray Camera::viewport_ray(const Vector2 coord, const float distance) co
    const auto near_height_half = std::tan(m_angle / 2) * this->near_plane();
    const auto near_width_half = near_height_half * m_viewport_aspect;
 
-   const auto origin = near_place_mid + coord.x * near_width_half * this->right_vector() + coord.y * near_height_half * this->down_vector();
+   const auto origin = near_place_mid + coord.x * near_width_half * this->right_vector() + coord.y * near_height_half * this->up_vector();
 
    return {
       .origin = origin,
       .direction = normalize(origin - this->position()),
       .distance = distance,
    };
+}
+
+Vector3 Camera::view_space_dir(const Vector2 coord) const
+{
+   const auto near_height_half = std::tan(m_angle / 2) * this->near_plane();
+   const auto near_width_half = near_height_half * m_viewport_aspect;
+   return glm::normalize(this->near_plane() * Vector3{0, 0, -1} + coord.x * near_width_half * Vector3{1, 0, 0} +
+                         coord.y * near_height_half * Vector3{0, 1, 0});
+}
+
+float Camera::viewport_aspect() const
+{
+   return m_viewport_aspect;
+}
+
+float Camera::angle() const
+{
+   return m_angle;
 }
 
 }// namespace triglav::renderer

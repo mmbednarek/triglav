@@ -54,18 +54,25 @@ shader_targets += custom_target('shader_bindless_geometry_depth_prepass_fragment
                                 command : slang_fs_commands,
 )
 
-shader_targets += custom_target('shader_bindless_geometry_shadow_map_vertex',
+shader_targets += custom_target('shader_bindless_geometry_shadow_map_vertex_static',
                                 input : 'shadow_map.slang',
-                                output : 'shadow_map.vshader',
+                                output : 'shadow_map_static.vshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_mesh],
-                                command : slang_vs_commands,
+                                command : [slang_vs_commands, '-DMT_USE_BONES=0'],
+)
+
+shader_targets += custom_target('shader_bindless_geometry_shadow_map_vertex_bones',
+                                input : 'shadow_map.slang',
+                                output : 'shadow_map_bones.vshader',
+                                depend_files : [shader_lib_triglav_core, shader_lib_triglav_mesh],
+                                command : [slang_vs_commands, '-DMT_USE_BONES=1'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_shadow_map_fragment',
                                 input : 'shadow_map.slang',
                                 output : 'shadow_map.fshader',
                                 depend_files : [shader_lib_triglav_core, shader_lib_triglav_mesh],
-                                command : slang_fs_commands,
+                                command : [slang_fs_commands, '-DMT_USE_BONES=0'],
 )
 
 shader_targets += custom_target('shader_bindless_geometry_hi_z_compute',

@@ -70,8 +70,10 @@ struct Material
 
 struct MaterialVertexLayoutInfo
 {
+   u32 index;
    geometry::VertexComponentFlags components;
    VertexShaderName vertex_shader;
+   VertexShaderName vertex_shader_shadow_map;
    Name passthrough_buffer;
 };
 
@@ -79,24 +81,32 @@ using MaterialVertexLayoutID = u32;
 
 constexpr std::array<MaterialVertexLayoutInfo, 4> VERTEX_LAYOUT_INFOS{
    MaterialVertexLayoutInfo{
+      .index = 0,
       .components = geometry::VertexComponent::Core | geometry::VertexComponent::Texture,
       .vertex_shader = make_rc_name("shader/bindless_geometry/vertex_vl0.vshader"),
+      .vertex_shader_shadow_map = make_rc_name("shader/bindless_geometry/shadow_map_static.vshader"),
       .passthrough_buffer = make_name_id("occlusion_culling.passthrough.vl0"),
    },
    MaterialVertexLayoutInfo{
+      .index = 1,
       .components = geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap,
       .vertex_shader = make_rc_name("shader/bindless_geometry/vertex_vl1.vshader"),
+      .vertex_shader_shadow_map = make_rc_name("shader/bindless_geometry/shadow_map_static.vshader"),
       .passthrough_buffer = make_name_id("occlusion_culling.passthrough.vl1"),
    },
    MaterialVertexLayoutInfo{
+      .index = 2,
       .components = geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::Skeleton,
       .vertex_shader = make_rc_name("shader/bindless_geometry/vertex_vl2.vshader"),
+      .vertex_shader_shadow_map = make_rc_name("shader/bindless_geometry/shadow_map_bones.vshader"),
       .passthrough_buffer = make_name_id("occlusion_culling.passthrough.vl2"),
    },
    MaterialVertexLayoutInfo{
+      .index = 3,
       .components = geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap |
                     geometry::VertexComponent::Skeleton,
       .vertex_shader = make_rc_name("shader/bindless_geometry/vertex_vl3.vshader"),
+      .vertex_shader_shadow_map = make_rc_name("shader/bindless_geometry/shadow_map_bones.vshader"),
       .passthrough_buffer = make_name_id("occlusion_culling.passthrough.vl3"),
    },
 };

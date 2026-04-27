@@ -10,18 +10,19 @@ ConstantBuffer<uint> in_mesh_count;
 StructuredBuffer<float4x4> SB_TransformMatrices;
 
 [[vk::binding(3)]]
-RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_base;
+RWStructuredBuffer<uint32_t> SB_CountBuffer;
 
 [[vk::binding(4)]]
-RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_normal_map;
+RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_base;
 
 [[vk::binding(5)]]
-RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_skeletal;
+RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_normal_map;
 
 [[vk::binding(6)]]
-RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_skeletal_normal_map;
+RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_skeletal;
 
-groupshared uint out_counts[2];
+[[vk::binding(7)]]
+RWStructuredBuffer<triglav::mesh::DrawCall> out_draw_calls_skeletal_normal_map;
 
 [numthreads(256, 1, 1)]
 void cs_main(uint thread_id : SV_DispatchThreadID)
@@ -30,8 +31,9 @@ void cs_main(uint thread_id : SV_DispatchThreadID)
         return;
 
     if (thread_id == 0) {
-        out_counts[0] = 0;
-        out_counts[1] = 0;
+        for (int i = 0; i < 4; ++i) {
+            SB_CountBuffer[i] = 0;
+        }
         GroupMemoryBarrier();
     }
 
@@ -42,7 +44,7 @@ void cs_main(uint thread_id : SV_DispatchThreadID)
     mesh.materialID >>= 3;
 
     uint dst_index = 0;
-    InterlockedAdd(out_counts[vertex_layout_id], 1, dst_index);
+    InterlockedAdd(SB_CountBuffer[vertex_layout_id], 1, dst_index);
 
     triglav::mesh::DrawCall draw_call = mesh.to_draw_call(SB_TransformMatrices);
 

@@ -17,13 +17,19 @@ namespace triglav::renderer {
 
 struct ViewProperties
 {
-   alignas(16) Matrix4x4 view;
-   alignas(16) Matrix4x4 projection;
-   alignas(16) Matrix4x4 inverted_view;
-   alignas(16) Matrix4x4 inverted_projection;
-   alignas(16) Matrix4x4 orientation;
+   Matrix4x4 view;
+   Matrix4x4 projection;
+   Matrix4x4 inverted_view;
+   Matrix4x4 inverted_projection;
+   Matrix4x4 orientation;
+   Vector4 view_position;
+   Vector4 forward;
+   Vector4 right;
+   Vector4 up;
    float near_plane;
    float far_plane;
+   float angle;
+   float aspect;
 };
 
 class UpdateViewParamsJob

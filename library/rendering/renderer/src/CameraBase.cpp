@@ -132,17 +132,17 @@ bool CameraBase::is_bounding_box_visible(const geometry::BoundingBox& bounding_b
 
 Vector3 CameraBase::forward_vector() const
 {
-   return m_orientation * Vector3{0, 1, 0};
+   return glm::normalize(m_orientation * Vector3{0, 1, 0});
 }
 
 Vector3 CameraBase::right_vector() const
 {
-   return m_orientation * Vector3{1, 0, 0};
+   return glm::normalize(m_orientation * Vector3{1, 0, 0});
 }
 
-Vector3 CameraBase::down_vector() const
+Vector3 CameraBase::up_vector() const
 {
-   return m_orientation * Vector3{0, 0, 1};
+   return glm::normalize(m_orientation * Vector3{0, 0, 1});
 }
 
 const glm::mat4& CameraBase::view_matrix() const

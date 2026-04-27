@@ -32,6 +32,10 @@ uniform StructuredBuffer<triglav::mesh::DrawCall> DrawCalls;
 uniform StructuredBuffer<float4x4> sb_matrices;
 #endif
 
+float3 fix_normal(float3 v) {
+    return float3(v.x, v.y, v.z);
+}
+
 [shader("vertex")]
 VSOutput vs_main(VSInput vertex_input)
 {
@@ -53,16 +57,18 @@ VSOutput vs_main(VSInput vertex_input)
     const float4 position = float4(vertex_input.position, 1);
 #endif
 
-    float4 viewSpace = mul(UboViewProps.view, mul(drawCall.transform, position));
-    float3x3 viewNormalMat = mul(float3x3(UboViewProps.view), float3x3(drawCall.normalTransform));
+    float4 pos = mul(drawCall.transform, position);
+    float4 viewSpace = mul(UboViewProps.view, pos);
+    // float3x3 viewNormalMat = mul(float3x3(UboViewProps.view), float3x3(drawCall.normalTransform));
+    float3x3 normalTrans = float3x3(drawCall.normalTransform);
 
     output.texCoord = vertex_input.texCoord;
-    output.normal = mul(viewNormalMat, vertex_input.normal);
+    output.normal = mul(normalTrans, vertex_input.normal);
 #if MT_USE_NORMAL_MAP
-    output.tangent = mul(viewNormalMat, vertex_input.tangent.xyz);
-    output.bitangent = mul(viewNormalMat, vertex_input.tangent.w * cross(vertex_input.normal, vertex_input.tangent.xyz));
+    output.tangent = mul(normalTrans, vertex_input.tangent.xyz);
+    output.bitangent = mul(normalTrans, vertex_input.tangent.w * cross(vertex_input.normal, vertex_input.tangent.xyz));
 #endif
-    output.viewSpacePosition = viewSpace.xyz;
+    output.viewSpacePosition = pos.xyz;
     output.position = mul(UboViewProps.proj, viewSpace);
     output.materialID = drawCall.materialID;
 

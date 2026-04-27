@@ -29,6 +29,7 @@ void OcclusionCulling::on_resource_definition(render_core::BuildContext& ctx) co
    ctx.declare_buffer("occlusion_culling.count_buffer"_name, render_objects::GEOMETRY_RENDER_INFOS.size() * sizeof(u32));
    ctx.declare_proportional_texture("occlusion_culling.hierarchical_depth_buffer"_name, GAPI_FORMAT(R, UNorm16), 0.5f, true);
    ctx.declare_proportional_buffer("occlusion_culling.staging_depth_buffer"_name, 0.5f, sizeof(u16));
+   ctx.declare_buffer("occlusion_culling.passthrough.count_buffer"_name, render_objects::VERTEX_LAYOUT_INFOS.size() * sizeof(u32));
 
    for (const auto& render_info : render_objects::GEOMETRY_RENDER_INFOS) {
       ctx.declare_buffer(render_info.draw_call_buffer, sizeof(DrawCall) * g_bindless_object_limit);
@@ -139,8 +140,9 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       ctx.bind_storage_buffer(0, &m_bindless_scene.scene_object_buffer());
       ctx.bind_uniform_buffer(1, &m_bindless_scene.count_buffer());
       ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
+      ctx.bind_storage_buffer(3, "occlusion_culling.passthrough.count_buffer"_name);
 
-      u32 descriptor_index = 3;
+      u32 descriptor_index = 4;
       for (const auto& info : render_objects::VERTEX_LAYOUT_INFOS) {
          ctx.bind_storage_buffer(descriptor_index, info.passthrough_buffer);
          ++descriptor_index;
@@ -176,6 +178,9 @@ void OcclusionCulling::on_finalize(render_core::BuildContext& ctx) const
                         graphics_api::BufferUsage::Indirect);
    }
    ctx.export_buffer("occlusion_culling.count_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
+                     graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
+
+   ctx.export_buffer("occlusion_culling.passthrough.count_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
 }
 

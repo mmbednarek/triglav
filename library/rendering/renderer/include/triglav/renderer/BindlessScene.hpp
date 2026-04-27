@@ -23,6 +23,7 @@ struct BindlessSceneObject
    u32 material_id{};
    u32 transform_id{};
    u32 matrix_offset{};
+   u32 padding[2];
    geometry::BoundingBox bounding_box{};
 };
 
@@ -36,7 +37,8 @@ struct DrawCall
    u32 vertex_offset;
    u32 instance_offset;
    u32 material_id;
-   u32 padding[2];
+   u32 matrix_offset;
+   u32 padding;
    Matrix4x4 transform;
    Matrix4x4 normal_transform;
 };

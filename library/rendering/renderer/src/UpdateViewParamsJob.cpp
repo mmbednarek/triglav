@@ -81,14 +81,20 @@ void UpdateViewParamsJob::prepare_frame(render_core::JobGraph& graph, const u32 
 void UpdateViewParamsJob::on_updated(const Camera& camera)
 {
    m_updated_view_properties = true;
-   m_view_properties.projection = camera.projection_matrix();
    m_view_properties.view = camera.view_matrix();
+   m_view_properties.projection = camera.projection_matrix();
    m_view_properties.inverted_view = glm::inverse(camera.view_matrix());
    m_view_properties.inverted_projection = glm::inverse(camera.projection_matrix());
    m_view_properties.orientation =
       glm::inverse(glm::rotate(glm::mat4(camera.orientation()), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
-   m_view_properties.far_plane = camera.far_plane();
+   m_view_properties.view_position = Vector4(camera.position(), 1.0f);
+   m_view_properties.forward = Vector4(camera.forward_vector(), 1.0f);
+   m_view_properties.right = Vector4(camera.right_vector(), 1.0f);
+   m_view_properties.up = Vector4(camera.up_vector(), 1.0f);
    m_view_properties.near_plane = camera.near_plane();
+   m_view_properties.far_plane = camera.far_plane();
+   m_view_properties.angle = camera.angle();
+   m_view_properties.aspect = camera.viewport_aspect();
 }
 
 }// namespace triglav::renderer
