@@ -56,29 +56,33 @@ void ShadowMapStage::render_cascade(render_core::BuildContext& ctx, const Name p
 {
    render_core::RenderPassScope rt_scope(ctx, pass_name, target_name);
 
-   this->render_geometry(ctx, view_props, geometry::VertexComponent::Core | geometry::VertexComponent::Texture,
-                         "occlusion_culling.passthrough.vl0"_external);
-   this->render_geometry(ctx, view_props,
-                         geometry::VertexComponent::Core | geometry::VertexComponent::Texture | geometry::VertexComponent::NormalMap,
-                         "occlusion_culling.passthrough.vl1"_external);
+   for (const auto& layout_info : render_objects::VERTEX_LAYOUT_INFOS) {
+      this->render_geometry(ctx, view_props, layout_info);
+   }
 }
-void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const render_core::BufferRef view_props,
-                                     const geometry::VertexComponentFlags components, const render_core::BufferRef draw_buffer) const
-{
-   ctx.bind_vertex_shader("shader/bindless_geometry/shadow_map.vshader"_rc);
 
-   const auto layout = render_core::vertex_layout_from_components_for_depth_only(components);
+void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const render_core::BufferRef view_props,
+                                     const render_objects::MaterialVertexLayoutInfo& layout_info) const
+{
+   ctx.bind_vertex_shader(layout_info.vertex_shader_shadow_map);
+
+   const auto layout = render_core::vertex_layout_from_components_for_depth_only(layout_info.components);
    ctx.bind_vertex_layout(layout);
 
    ctx.bind_uniform_buffer(0, view_props);
-   ctx.bind_storage_buffer(1, draw_buffer);
+   ctx.bind_storage_buffer(1, render_core::External{layout_info.passthrough_buffer});
+   if (layout_info.components & geometry::VertexComponent::Skeleton) {
+      ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
+   }
 
    ctx.bind_fragment_shader("shader/bindless_geometry/shadow_map.fshader"_rc);
 
    ctx.bind_vertex_buffer(&m_bindless_scene.combined_vertex_buffer());
    ctx.bind_index_buffer(&m_bindless_scene.combined_index_buffer());
 
-   ctx.draw_indexed_indirect_with_count(draw_buffer, &m_bindless_scene.count_buffer(), 128, sizeof(DrawCall));
+   ctx.draw_indexed_indirect_with_count(render_core::External{layout_info.passthrough_buffer},
+                                        "occlusion_culling.passthrough.count_buffer"_external, 128, sizeof(DrawCall),
+                                        layout_info.index * sizeof(u32));
 }
 
 void ShadowMapStage::on_resource_definition(render_core::BuildContext& ctx) const
@@ -124,13 +128,11 @@ void ShadowMapStage::on_finalize(render_core::BuildContext& ctx) const
 
 void ShadowMapStage::on_prepare_frame(render_core::JobGraph& graph, const u32 frame_index) const
 {
-   const auto inverse_view_mat = glm::inverse(m_scene.camera().view_matrix());
-
    const auto mapped_mem = GAPI_CHECK(graph.resources().buffer("shadow_map.matrices.staging"_name, frame_index).map_memory());
    auto& matrices = mapped_mem.cast<std::array<Matrix4x4, 3>>();
-   matrices[0] = m_scene.shadow_map_camera(0).view_projection_matrix() * inverse_view_mat;
-   matrices[1] = m_scene.shadow_map_camera(1).view_projection_matrix() * inverse_view_mat;
-   matrices[2] = m_scene.shadow_map_camera(2).view_projection_matrix() * inverse_view_mat;
+   matrices[0] = m_scene.shadow_map_camera(0).view_projection_matrix();
+   matrices[1] = m_scene.shadow_map_camera(1).view_projection_matrix();
+   matrices[2] = m_scene.shadow_map_camera(2).view_projection_matrix();
 
    const auto mapped_mem_view_props0 =
       GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade0.staging"_name, frame_index).map_memory());

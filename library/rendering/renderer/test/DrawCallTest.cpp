@@ -123,12 +123,11 @@ const std::array<Matrix4x4, SCENE_MESH_COUNT> SCENE_MATRICES{
 const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
    BindlessSceneObject{
       .index_count = 64,
-      .instance_count = 1,
       .index_offset = 0,
       .vertex_offset = 0,
-      .instance_offset = 0,
       .material_id = 0,
       .transform_id = 0,
+      .matrix_offset = ~0u,
       .bounding_box =
          {
             .min = {-1, -1, -1},
@@ -137,12 +136,11 @@ const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
    },
    BindlessSceneObject{
       .index_count = 32,
-      .instance_count = 2,
       .index_offset = 1,
       .vertex_offset = 2,
-      .instance_offset = 3,
       .material_id = 0,
       .transform_id = 1,
+      .matrix_offset = ~0u,
       .bounding_box =
          {
             .min = {-1, -1, -1},
@@ -151,12 +149,11 @@ const std::array<BindlessSceneObject, SCENE_MESH_COUNT> SCENE_OBJECTS{
    },
    BindlessSceneObject{
       .index_count = 20,
-      .instance_count = 1,
       .index_offset = 0,
       .vertex_offset = 100,
-      .instance_offset = 200,
       .material_id = 0,
       .transform_id = 2,
+      .matrix_offset = ~0u,
       .bounding_box =
          {
             .min = {-1, -1, -1},
@@ -173,16 +170,18 @@ const std::array<DrawCall, SCENE_MESH_COUNT> EXPECTED_DRAW_CALLS{
       .vertex_offset = 0,
       .instance_offset = 0,
       .material_id = 0,
+      .matrix_offset = ~0u,
       .transform = SCENE_MATRICES[0],
       .normal_transform = SCENE_TRANSFORMS[0].to_normal_matrix(),
    },
    DrawCall{
       .index_count = 32,
-      .instance_count = 2,
+      .instance_count = 1,
       .index_offset = 1,
       .vertex_offset = 2,
-      .instance_offset = 3,
+      .instance_offset = 0,
       .material_id = 0,
+      .matrix_offset = ~0u,
       .transform = SCENE_MATRICES[1],
       .normal_transform = SCENE_TRANSFORMS[1].to_normal_matrix(),
    },
@@ -191,8 +190,9 @@ const std::array<DrawCall, SCENE_MESH_COUNT> EXPECTED_DRAW_CALLS{
       .instance_count = 1,
       .index_offset = 0,
       .vertex_offset = 100,
-      .instance_offset = 200,
+      .instance_offset = 0,
       .material_id = 0,
+      .matrix_offset = ~0u,
       .transform = SCENE_MATRICES[2],
       .normal_transform = SCENE_TRANSFORMS[2].to_normal_matrix(),
    },
@@ -205,11 +205,15 @@ TEST(DrawCallTest, Passthrough)
    state.bctx.declare_staging_buffer("scene_upload"_name, 16 * sizeof(BindlessSceneObject));
    state.bctx.declare_staging_buffer("draw_call_fetch"_name, 16 * sizeof(DrawCall));
    state.bctx.declare_staging_buffer("matrices_upload"_name, 16 * sizeof(Matrix4x4));
+   state.bctx.declare_staging_buffer("count_buffer_stage"_name, triglav::render_objects::VERTEX_LAYOUT_INFOS.size() * sizeof(u32));
 
    state.bctx.declare_buffer("scene_meshes"_name, 16 * sizeof(BindlessSceneObject));
    state.bctx.declare_buffer("matrices"_name, 16 * sizeof(Matrix4x4));
    state.bctx.declare_buffer("draw_calls_base"_name, 16 * sizeof(DrawCall));
    state.bctx.declare_buffer("draw_calls_normal_map"_name, 16 * sizeof(DrawCall));
+   state.bctx.declare_buffer("draw_calls_skeletal"_name, 16 * sizeof(DrawCall));
+   state.bctx.declare_buffer("draw_calls_skeletal_normal_map"_name, 16 * sizeof(DrawCall));
+   state.bctx.declare_buffer("count_buffer"_name, triglav::render_objects::VERTEX_LAYOUT_INFOS.size() * sizeof(u32));
    state.bctx.init_buffer("mesh_count"_name, SCENE_MESH_COUNT);
 
    state.bctx.copy_buffer("scene_upload"_name, "scene_meshes"_name);
@@ -220,11 +224,15 @@ TEST(DrawCallTest, Passthrough)
    state.bctx.bind_storage_buffer(0, "scene_meshes"_name);
    state.bctx.bind_uniform_buffer(1, "mesh_count"_name);
    state.bctx.bind_storage_buffer(2, "matrices"_name);
-   state.bctx.bind_storage_buffer(3, "draw_calls_base"_name);
-   state.bctx.bind_storage_buffer(4, "draw_calls_normal_map"_name);
+   state.bctx.bind_storage_buffer(3, "count_buffer"_name);
+   state.bctx.bind_storage_buffer(4, "draw_calls_base"_name);
+   state.bctx.bind_storage_buffer(5, "draw_calls_normal_map"_name);
+   state.bctx.bind_storage_buffer(6, "draw_calls_skeletal"_name);
+   state.bctx.bind_storage_buffer(7, "draw_calls_skeletal_normal_map"_name);
 
    state.bctx.dispatch({1, 1, 1});
 
+   state.bctx.copy_buffer("count_buffer"_name, "count_buffer_stage"_name);
    state.bctx.copy_buffer("draw_calls_base"_name, "draw_call_fetch"_name);
 
    state.build();
@@ -235,6 +243,14 @@ TEST(DrawCallTest, Passthrough)
                     [](void* buffer) { std::memcpy(buffer, SCENE_OBJECTS.data(), sizeof(BindlessSceneObject) * SCENE_OBJECTS.size()); });
 
    state.execute_and_await();
+
+   state.map_buffer("count_buffer_stage"_name, [](void* count_buffer) {
+      const auto& arr = *static_cast<std::array<u32, triglav::render_objects::VERTEX_LAYOUT_INFOS.size()>*>(count_buffer);
+      ASSERT_EQ(arr[0], 3u);
+      ASSERT_EQ(arr[1], 0u);
+      ASSERT_EQ(arr[2], 0u);
+      ASSERT_EQ(arr[3], 0u);
+   });
 
    state.map_buffer("draw_call_fetch"_name, [](void* draw_call) {
       const auto& arr = *static_cast<std::array<DrawCall, SCENE_MESH_COUNT>*>(draw_call);
@@ -257,7 +273,7 @@ TEST(DrawCallTest, Passthrough)
 struct ChannelState
 {
    float start_time;
-   uint32_t target_mesh;
+   uint32_t target_transform;
    uint32_t last_keyframe;
    uint32_t target_keyframe;
    uint32_t channel_type;
@@ -293,16 +309,16 @@ TEST(DrawCallTest, AnimationTest)
    state.bctx.init_buffer("animation_state"_name, AnimationState{100.0f, 2});
    state.bctx.init_buffer("channel_states"_name, std::array{ChannelState{
                                                                .start_time = 50.0f,
-                                                               .target_mesh = 1,
+                                                               .target_transform = 1,
                                                                .last_keyframe = 2,
                                                                .target_keyframe = 1,
                                                                .channel_type = 0,
                                                             },
                                                             ChannelState{
                                                                .start_time = 20.0f,
-                                                               .target_mesh = 2,
+                                                               .target_transform = 2,
                                                                .last_keyframe = 4,
-                                                               .target_keyframe = 4,
+                                                               .target_keyframe = 3,
                                                                .channel_type = 0,
                                                             }});
 

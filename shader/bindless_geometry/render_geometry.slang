@@ -58,8 +58,8 @@ FSOutput fs_main(FSInput fsInput)
 #endif
 
     FSOutput output;
-    output.color = float4(albedoColor.xyz, roughness);
-    output.normal = float4(normalVec, 1.0);
-    output.position = float4(fsInput.viewSpacePosition.xyz, metallic);
+    output.color = float4(albedoColor.xyz, 1.0);
+    output.material = float2(roughness, metallic);
+    output.normal = float3(normalVec);
     return output;
 }

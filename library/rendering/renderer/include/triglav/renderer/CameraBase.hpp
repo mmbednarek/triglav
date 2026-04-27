@@ -37,7 +37,7 @@ class CameraBase
    [[nodiscard]] bool is_bounding_box_visible(const geometry::BoundingBox& bounding_box, const glm::mat4& model_mat) const;
    [[nodiscard]] Vector3 forward_vector() const;
    [[nodiscard]] Vector3 right_vector() const;
-   [[nodiscard]] Vector3 down_vector() const;
+   [[nodiscard]] Vector3 up_vector() const;
 
    [[nodiscard]] virtual const glm::mat4& projection_matrix() const = 0;
    [[nodiscard]] virtual float to_linear_depth(float depth) const = 0;

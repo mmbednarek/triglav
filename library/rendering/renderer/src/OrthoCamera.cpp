@@ -34,6 +34,7 @@ const glm::mat4& OrthoCamera::projection_matrix() const
       const auto half_height = 0.5f * m_view_space_width / m_aspect;
 
       m_projection_mat = glm::ortho(-half_width, half_width, -half_height, half_height, this->near_plane(), this->far_plane());
+      m_projection_mat[1][1] *= -1.0f;
       //      m_projection_mat = glm::perspective(static_cast<float>(geometry::g_pi / 2), m_aspect, 0.01f, this->far_plane());
       m_has_cached_projection_matrix = true;
    }

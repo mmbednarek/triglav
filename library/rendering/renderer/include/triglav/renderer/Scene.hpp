@@ -54,6 +54,7 @@ struct RayHit
 
 class Scene
 {
+   TG_DEFINE_LOG_CATEGORY(Scene)
  public:
    TG_EVENT(OnObjectAddedToScene, ObjectID, const SceneObject&)
    TG_EVENT(OnObjectChangedTransform, ObjectID, const Transform3D&)
@@ -107,7 +108,7 @@ class Scene
    float m_yaw{4.42f};
    float m_pitch{-0.6f};
    Camera m_camera{};
-   glm::quat m_directional_light_orientation{glm::vec3{-0.2f, 0.0f, 1.62f}};
+   glm::quat m_directional_light_orientation{glm::vec3{-0.3f, 0.0f, 1.62f}};
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
    std::map<ObjectID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;

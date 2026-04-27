@@ -44,9 +44,9 @@ namespace triglav::material
         [[vk::location(0)]]
         public float4 color : SV_TARGET0;
         [[vk::location(1)]]
-        public float4 position : SV_TARGET1;
+        public float2 material : SV_TARGET1;
         [[vk::location(2)]]
-        public float4 normal : SV_TARGET2;
+        public float3 normal : SV_TARGET2;
     };
 }
 

@@ -33,11 +33,11 @@ GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless
 void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& /*config*/) const
 {
    ctx.declare_render_target("gbuffer.albedo"_name, GAPI_FORMAT(RGBA, Float16));
-   ctx.declare_render_target("gbuffer.position"_name, GAPI_FORMAT(RGBA, Float16));
+   ctx.declare_render_target("gbuffer.material"_name, GAPI_FORMAT(RG, Float16));
    ctx.declare_render_target("gbuffer.normal"_name, GAPI_FORMAT(RGBA, Float16));
    ctx.declare_depth_target("gbuffer.depth"_name, GAPI_FORMAT(D, UNorm16));
 
-   ctx.begin_render_pass("gbuffer"_name, "gbuffer.albedo"_name, "gbuffer.position"_name, "gbuffer.normal"_name, "gbuffer.depth"_name);
+   ctx.begin_render_pass("gbuffer"_name, "gbuffer.albedo"_name, "gbuffer.material"_name, "gbuffer.normal"_name, "gbuffer.depth"_name);
 
    this->build_skybox(ctx);
    // this->build_ground(ctx);

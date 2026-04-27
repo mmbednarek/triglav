@@ -4,20 +4,22 @@ import triglav.shadow_map;
 [[vk::binding(0)]]
 uniform Texture2D<float4> texColor;
 [[vk::binding(1)]]
-uniform Texture2D<float4> texPosition;
+uniform Texture2D<float> texDepth;
 [[vk::binding(2)]]
-uniform Texture2D<float3> texNormal;
+uniform Texture2D<float2> texMaterial;
 [[vk::binding(3)]]
-uniform Texture2D<float> texAmbientOcclusion;
+uniform Texture2D<float3> texNormal;
 [[vk::binding(4)]]
-uniform Sampler2D<float> texShadowMaps[3];
+uniform Texture2D<float> texAmbientOcclusion;
 [[vk::binding(5)]]
+uniform Sampler2D<float> texShadowMaps[3];
+[[vk::binding(6)]]
 uniform Texture2D<float> texShadow;
 
-[[vk::binding(6)]]
+[[vk::binding(7)]]
 uniform ConstantBuffer<triglav::ViewProperties> viewProperties;
 
-[[vk::binding(7)]]
+[[vk::binding(8)]]
 uniform cbuffer ShadowMapMatrixBuffer
 {
     float4x4 g_shadowMapMatrices[3];
@@ -39,9 +41,11 @@ static const float4x4 BIAS_MAT = float4x4(
 );
 
 static const float STATIC_AMBIENT_TERM = 0.5;
-static const float SHADOW_MAP_BIAS_TERM_CLOSE = 0.0015;
-static const float SHADOW_MAP_BIAS_TERM_MID = 0.002;
-static const float SHADOW_MAP_BIAS_TERM_FAR = 0.004;
+static const float SHADOW_MAP_BIAS_TERM_CLOSE = 0.002;
+static const float SHADOW_MAP_BIAS_TERM_MID = 0.004;
+static const float SHADOW_MAP_BIAS_TERM_FAR = 0.008;
+
+#define SHOW_SHADOW_CASCADES 0
 
 struct FragOutput
 {
@@ -58,6 +62,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
     texColor.GetDimensions(0, texDims.x, texDims.y, texDims.z);
     int3 pixelPos = int3(int2(screenCoord * float2(texDims.xy)), 0);
 
+    float2 material = texMaterial.Load(pixelPos);
     float3 normal = texNormal.Load(pixelPos);
     float4 texColorSample = texColor.Load(pixelPos);
 
@@ -70,8 +75,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     normal = normalize(normal);
 
-    float4 texPositionSample = texPosition.Load(pixelPos);
-    float3 position = texPositionSample.xyz;
+    float3 position = viewProperties.depth_world_pos(texDepth, screenCoord);
 
     float4 shadowUV = mul(mul(BIAS_MAT, g_shadowMapMatrices[0]), float4(position, 1.0));
     shadowUV /= shadowUV.w;
@@ -109,12 +113,10 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     float3 albedo = texColorSample.rgb;
 
-    const float roughness = texColorSample.w;
-    const float metallic = texPositionSample.w;
-    // const float roughness = texPositionSample.w;
-    // const float metallic = texColorSample.w;
+    const float roughness = material.x;
+    const float metallic = material.y;
 
-    float3 viewDir = normalize(-position);
+    float3 viewDir = normalize(viewProperties.viewPos.xyz - position);
     float3 baseReflectivity = lerp(float3(0.04), albedo, metallic);
 
     triglav::ShadingInfo shadingInfo;
@@ -128,10 +130,10 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     float3 Lo = float3(0);
 
-    float3 lightDir = normalize(mul(float3x3(viewProperties.view), float3(1, 0.0, -0.4)));
+    const float3 lightDir = float3(0.954, 0.045, 0.296);
     Lo += shadingInfo.calculate_directional_light(lightDir);
 
-    Lo += shadingInfo.calculate_point_light(mul(viewProperties.view, g_lightPosition).xyz, float3(1, 0.6, 0.05), 24.0);
+    Lo += shadingInfo.calculate_point_light(g_lightPosition.xyz, float3(1, 0.6, 0.05), 24.0);
 
     float3 ambient = albedo * ambientValue;
     float3 color = 0.5 * ambient + 1.2 * shadow * Lo;

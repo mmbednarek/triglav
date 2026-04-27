@@ -80,7 +80,7 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
 
    ctx.bind_fragment_shader("shader/pass/ambient_occlusion.fshader"_rc);
 
-   ctx.bind_texture(0, "gbuffer.position"_name);
+   ctx.bind_texture(0, "gbuffer.depth"_name);
    ctx.bind_texture(1, "gbuffer.normal"_name);
    ctx.bind_texture(2, &m_noise_texture);
    ctx.bind_uniform_buffer(3, "core.view_properties"_external);

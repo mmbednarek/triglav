@@ -1,7 +1,7 @@
 import triglav.core;
 
 [[vk::binding(0)]]
-uniform Texture2D<float3> texPosition;
+uniform Texture2D<float> texDepth;
 [[vk::binding(1)]]
 uniform Texture2D<float3> texNormal;
 [[vk::binding(2)]]
@@ -30,8 +30,9 @@ float4 fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0) : SV_Target0
     }
 
     normal = normalize(normal);
+    normal = normalize(mul(float3x3(viewProps.view), normal));
 
-    float3 position = texPosition.Load(pixelPos);
+    float3 position = viewProps.depth_view_pos(texDepth, screenCoord);
 
     uint3 noiseDims;
     texNoise.GetDimensions(0, noiseDims.x, noiseDims.y, noiseDims.z);
@@ -53,10 +54,9 @@ float4 fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0) : SV_Target0
         offset = mul(viewProps.proj, offset);
         offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5 + 0.5;
-        int3 offsetPos = int3(int2(offset.xy * float2(texDims.xy)), 0);
 
-        if (offsetPos.x >= 0 && offsetPos.y >= 0 && offsetPos.x < texDims.x && offsetPos.y < texDims.y) {
-            float3 occluderPos = texPosition.Load(offsetPos);
+        if (offset.x >= 0 && offset.y >= 0 && offset.x < 1 && offset.y < 1) {
+            float3 occluderPos = viewProps.depth_view_pos(texDepth, offset.xy);
             float rangeCheck = smoothstep(0.0, 1.0, g_radius / length(position - occluderPos));
             occlusion += (occluderPos.z >= s.z + 0.1 ? rangeCheck : 0.0);
             ++good_samples;

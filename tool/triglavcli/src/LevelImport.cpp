@@ -432,7 +432,7 @@ class LevelImporter
       return rc_name;
    }
 
-   [[nodiscard]] std::optional<ArmatureName> import_armature(const u32 skin_id)
+   [[nodiscard]] std::optional<ArmatureName> import_armature(const u32 skin_id, Transform3D root_transform)
    {
       if (m_imported_armatures.contains(skin_id)) {
          return m_imported_armatures.at(skin_id);
@@ -440,6 +440,7 @@ class LevelImporter
       const auto& skin = m_glb_file.document->skins[skin_id];
 
       render_objects::BoneList bone_list{};
+      bone_list.root_transform = root_transform;
       bone_list.bones.resize(skin.joints.size());
 
       MemorySize bone_id = 0;
@@ -545,7 +546,7 @@ class LevelImporter
 
          std::optional<ArmatureName> armature_name;
          if (glb_node.skin.has_value()) {
-            armature_name = this->import_armature(*glb_node.skin);
+            armature_name = this->import_armature(*glb_node.skin, transform);
          }
 
          if (glb_node.mesh.has_value()) {
