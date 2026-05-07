@@ -16,6 +16,7 @@
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
+#include "triglav/ui_core/widget/HorizontalLayout.hpp"
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -34,6 +35,7 @@ class PanelHeader final : public ui_core::ProxyWidget
    {
       desktop_ui::DesktopUIManager* manager{};
       String label;
+      Vector4 icon_region;
    };
 
    PanelHeader(ui_core::Context& context, State state, IWidget* parent) :
@@ -45,7 +47,18 @@ class PanelHeader final : public ui_core::ProxyWidget
          .separation = 8.0f,
       });
 
-      layout.create_child<ui_core::TextBox>({
+      auto& hor_layout = layout.create_child<ui_core::HorizontalLayout>({
+         .padding = {},
+         .separation = 8.0f,
+      });
+
+      hor_layout.create_child<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = Vector2{18, 18},
+         .region = m_state.icon_region,
+      });
+
+      hor_layout.create_child<ui_core::TextBox>({
          .font_size = 13,
          .typeface = "engine/fonts/inter/regular.typeface"_rc,
          .content = m_state.label,
@@ -334,7 +347,7 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .separation = 7.0f,
    });
 
-   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "TRANSFORM"});
+   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "TRANSFORM", .icon_region = {5 * 18, 2 * 18, 18, 18}});
 
    m_transform_widget = &layout.create_child<TransformWidget>({
       .manager = m_state.manager,
@@ -345,7 +358,7 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .size = {10.0f, 5.0f},
    });
 
-   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "PROPERTIES"});
+   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "MESH", .icon_region = {7 * 18, 0 * 18, 18, 18}});
 
    auto& prop_layout = layout.create_child<ui_core::GridLayout>({
       .column_ratios = {0.3f, 0.7f},

@@ -35,6 +35,12 @@ Vector2i resource_path_to_icon_offset(const std::string_view path)
    if (path.ends_with(".level")) {
       return {7 * 18, 18};
    }
+   if (path.ends_with(".anim")) {
+      return {6 * 18, 2 * 18};
+   }
+   if (path.ends_with(".arm")) {
+      return {7 * 18, 2 * 18};
+   }
 
    return {8 * 18, 18};
 }
