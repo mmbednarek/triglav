@@ -139,7 +139,7 @@ void ScalingTool::on_view_updated()
    m_scaler_y_bb = scaler_bb.transform(transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = Quaternion{Vector3{g_pi, 0, 0}},
+      .rotation = Quaternion{Vector3{g_pi, g_pi, 0}},
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };

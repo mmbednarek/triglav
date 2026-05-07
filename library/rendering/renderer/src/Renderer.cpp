@@ -84,7 +84,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
-   m_scene.load_level("level/simple_animated_human.level"_rc);
+   m_scene.load_level("level/demo.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -136,7 +136,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    m_info_dialog.init_config_labels();
 
    // m_animation_manager.start_animation("animation/funny_y_anim.anim"_rc, 0);
-   m_animation_manager.start_animation("animation/simple_human_walk.anim"_rc, 1, true);
+   // m_animation_manager.start_animation("animation/simple_human_walk.anim"_rc, 1, true);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)

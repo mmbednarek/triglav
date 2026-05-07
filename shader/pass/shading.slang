@@ -42,8 +42,8 @@ static const float4x4 BIAS_MAT = float4x4(
 
 static const float STATIC_AMBIENT_TERM = 0.5;
 static const float SHADOW_MAP_BIAS_TERM_CLOSE = 0.002;
-static const float SHADOW_MAP_BIAS_TERM_MID = 0.004;
-static const float SHADOW_MAP_BIAS_TERM_FAR = 0.008;
+static const float SHADOW_MAP_BIAS_TERM_MID = 0.005;
+static const float SHADOW_MAP_BIAS_TERM_FAR = 0.010;
 
 #define SHOW_SHADOW_CASCADES 0
 
