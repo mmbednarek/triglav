@@ -98,6 +98,25 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
                                 .gravity = ui_core::HorizontalAlignment::Left,
                              });
 
+   toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+      .manager = m_state.manager,
+      .items = {"Object Mode", "Terrain Mode"},
+      .selected_item = 0,
+   });
+
+   // Separation
+   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+   toolbar_layout
+      .create_child<ui_core::RectBox>({
+         .color = {0.2f, 0.2f, 0.2f, 1.0f},
+      })
+      .create_content<ui_core::EmptySpace>({
+         .size = {2.0f, ICON_SIZE.y},
+      });
+
+   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
    auto& select_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
       .manager = m_state.manager,
       .radio_group = &m_tool_radio_group,
