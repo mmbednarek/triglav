@@ -32,7 +32,7 @@ void RadioGroup::highlight(const u32 target_index)
 }
 
 CheckBox::CheckBox(ui_core::Context& ctx, State state, IWidget* parent) :
-    ContainerWidget(ctx, parent),
+    DesktopContainerWidget(ctx, parent),
     m_state(state),
     m_background{
        .color = TG_THEME_VAL(background_color_brighter),

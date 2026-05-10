@@ -40,7 +40,7 @@ const ui_core::TextureRegion& BasicTabWidget::icon() const
 
 TabView::TabView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::BaseWidget(parent),
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(std::move(state)),
     m_background{
        .color = TG_THEME_VAL(background_color_darker),
@@ -315,6 +315,11 @@ u32 TabView::add_tab(ITabWidgetPtr&& widget)
 void TabView::set_default_widget(ui_core::IWidgetPtr&& widget)
 {
    m_default_widget = std::move(widget);
+}
+
+DesktopContext& TabView::desktop_context() const
+{
+   return m_context;
 }
 
 [[nodiscard]] std::pair<float, u32> TabView::index_from_mouse_position(const Vector2 position) const

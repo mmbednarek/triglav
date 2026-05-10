@@ -4,13 +4,13 @@ namespace triglav::desktop_ui {
 
 using namespace name_literals;
 
-WidgetRenderer::WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyph_cache,
+WidgetRenderer::WidgetRenderer(PopupManager& popup_manager, desktop::ISurface& surface, render_core::GlyphCache& glyph_cache,
                                resource::ResourceManager& resource_manager, graphics_api::Device& device,
                                render_core::IRenderer& renderer) :
     m_surface(surface),
     m_ui_viewport(surface.dimension()),
     m_update_ui_job(device, glyph_cache, m_ui_viewport, resource_manager, renderer),
-    m_context(m_ui_viewport, glyph_cache, resource_manager),
+    m_context(m_ui_viewport, glyph_cache, resource_manager, ThemeProperties::get_default(), surface, popup_manager),
     TG_CONNECT(m_surface, OnMouseEnter, on_mouse_enter),
     TG_CONNECT(m_surface, OnMouseMove, on_mouse_move),
     TG_CONNECT(m_surface, OnMouseWheelTurn, on_mouse_wheel_turn),
@@ -199,7 +199,7 @@ ui_core::Viewport& WidgetRenderer::ui_viewport()
    return m_ui_viewport;
 }
 
-ui_core::Context& WidgetRenderer::context()
+DesktopContext& WidgetRenderer::context()
 {
    return m_context;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DesktopContainerWidget.hpp"
 #include "DesktopUI.hpp"
 
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
@@ -11,7 +12,7 @@ class RectBox;
 }// namespace triglav::ui_core
 namespace triglav::desktop_ui {
 
-class Button final : public ui_core::ContainerWidget
+class Button final : public DesktopContainerWidget
 {
  public:
    using Self = Button;
@@ -20,7 +21,7 @@ class Button final : public ui_core::ContainerWidget
 
    struct State
    {
-      DesktopUIManager* manager;
+      bool is_pressed = false;
    };
 
    Button(ui_core::Context& ctx, State state, ui_core::IWidget* parent);

@@ -128,13 +128,11 @@ int triglav_main(InputArgs& args, IDisplay& display)
    const auto initial_width = static_cast<triglav::u32>(CommandLine::the().arg_int("width"_name).value_or(g_default_width));
    const auto initial_height = static_cast<triglav::u32>(CommandLine::the().arg_int("height"_name).value_or(g_default_height));
 
-   auto root_dialog = std::make_unique<Dialog>(instance, *device, display, glyph_cache, resource_manager,
+   PopupManager dialog_manager(instance, *device, glyph_cache, resource_manager);
+
+   auto root_dialog = std::make_unique<Dialog>(instance, *device, display, glyph_cache, resource_manager, dialog_manager,
                                                triglav::Vector2i{initial_width, initial_height}, "Desktop UI Example"_strv);
-
-   PopupManager dialog_manager(instance, *device, glyph_cache, resource_manager, root_dialog->surface());
-
-   triglav::desktop_ui::DesktopUIManager desktop_ui_manager(triglav::desktop_ui::ThemeProperties::get_default(), root_dialog->surface(),
-                                                            dialog_manager);
+   dialog_manager.set_root_surface(root_dialog->surface());
 
    auto& global_ver_layout = root_dialog->create_root_widget<triglav::ui_core::VerticalLayout>({
       .padding = {0.0f, 0.0f, 0.0f, 0.0f},
@@ -165,18 +163,15 @@ int triglav_main(InputArgs& args, IDisplay& display)
    menu_bar_controller.add_subitem("help"_name, "help.about"_name, "About"_strv);
 
    global_ver_layout.create_child<triglav::desktop_ui::MenuBar>({
-      .manager = &desktop_ui_manager,
       .controller = &menu_bar_controller,
    });
 
    auto& splitter = global_ver_layout.create_child<triglav::desktop_ui::Splitter>({
-      .manager = &desktop_ui_manager,
       .offset = static_cast<float>(g_default_width) / 2,
       .axis = triglav::ui_core::Axis::Horizontal,
    });
 
    auto& vert_splitter = splitter.create_preceding<triglav::desktop_ui::Splitter>({
-      .manager = &desktop_ui_manager,
       .offset = static_cast<float>(g_default_height) / 2,
       .axis = triglav::ui_core::Axis::Vertical,
    });
@@ -195,7 +190,6 @@ int triglav_main(InputArgs& args, IDisplay& display)
    context_menu_controller.add_subitem("more"_name, "purple"_name, "Purple"_strv);
 
    auto& context_menu = vert_splitter.create_following<triglav::desktop_ui::ContextMenu>({
-      .manager = &desktop_ui_manager,
       .controller = &context_menu_controller,
    });
 
@@ -236,9 +230,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    rect2.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
 
 
-   auto& tab_view = scroll.create_content<triglav::desktop_ui::TabView>({
-      .manager = &desktop_ui_manager,
-   });
+   auto& tab_view = scroll.create_content<triglav::desktop_ui::TabView>({});
 
    const auto tab_id = tab_view.emplace_tab<triglav::desktop_ui::BasicTabWidget>(
       triglav::String{"Random Items"}, triglav::ui_core::TextureRegion{"engine/texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
@@ -252,12 +244,10 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
 
    layout.create_child<triglav::desktop_ui::TextInput>({
-      .manager = &desktop_ui_manager,
       .text = "Text Edit",
    });
 
    layout.create_child<triglav::desktop_ui::DropDownMenu>({
-      .manager = &desktop_ui_manager,
       .items = {"Monday"_str, "Tuesday"_str, "Wednesday"_str, "Thursday"_str, "Friday"_str, "Saturday"_str, "Sunday"_str},
       .selected_item = 0,
    });
@@ -271,7 +261,6 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    for (int i = 0; i < 4; ++i) {
       auto& check_box = check_box_layout.create_child<triglav::desktop_ui::CheckBox>({
-         .manager = &desktop_ui_manager,
          .radio_group = &radio_group,
          .is_enabled = false,
       });
@@ -283,12 +272,10 @@ int triglav_main(InputArgs& args, IDisplay& display)
       radio_group.add_check_box(&check_box);
    }
 
-   auto& btn = layout.create_child<triglav::desktop_ui::Button>({
-      .manager = &desktop_ui_manager,
-   });
+   auto& btn = layout.create_child<triglav::desktop_ui::Button>({});
    btn.create_content<triglav::ui_core::TextBox>({
       .font_size = 10,
-      .typeface = desktop_ui_manager.properties().base_typeface,
+      .typeface = root_dialog->widget_renderer().context().properties().base_typeface,
       .content = "Click Me!",
       .color = triglav::palette::WHITE,
       .horizontal_alignment = HorizontalAlignment::Center,
@@ -356,7 +343,6 @@ int triglav_main(InputArgs& args, IDisplay& display)
       triglav::String{"Tree Example"}, triglav::ui_core::TextureRegion{"engine/texture/ui_atlas.tex"_rc, triglav::Vector4{0, 0, 64, 64}},
       std::make_unique<triglav::desktop_ui::TreeView>(root_dialog->widget_renderer().context(),
                                                       triglav::desktop_ui::TreeView::State{
-                                                         .manager = &desktop_ui_manager,
                                                          .controller = &controller,
                                                          .extended_items = {container_item},
                                                       },

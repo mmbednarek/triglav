@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/desktop_ui/DesktopContainerWidget.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
@@ -11,14 +12,13 @@ namespace triglav::editor {
 class ResourceList;
 class ResourceSelectTrigger;
 
-class ResourceSelector : public ui_core::ProxyWidget
+class ResourceSelector : public desktop_ui::DesktopProxyWidget
 {
  public:
    using Self = ResourceSelector;
 
    struct State
    {
-      desktop_ui::DesktopUIManager* manager;
       ResourceSelectTrigger* trigger;
    };
 
@@ -34,7 +34,7 @@ class ResourceSelector : public ui_core::ProxyWidget
    TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
 };
 
-class ResourceSelectTrigger final : public ui_core::ProxyWidget
+class ResourceSelectTrigger final : public desktop_ui::DesktopProxyWidget
 {
  public:
    using Self = ResourceSelector;
@@ -43,7 +43,6 @@ class ResourceSelectTrigger final : public ui_core::ProxyWidget
 
    struct State
    {
-      desktop_ui::DesktopUIManager* manager;
       String suffix;
    };
    ResourceSelectTrigger(ui_core::Context& ctx, State state, ui_core::IWidget* parent);
@@ -56,7 +55,7 @@ class ResourceSelectTrigger final : public ui_core::ProxyWidget
 
  private:
    State m_state;
-   std::unique_ptr<desktop_ui::DesktopUIManager> m_desktop_manager;
+   std::unique_ptr<desktop_ui::DesktopContext> m_desktop_manager;
    desktop_ui::Dialog* m_dialog = nullptr;
    Vector4 m_dimensions{};
 };

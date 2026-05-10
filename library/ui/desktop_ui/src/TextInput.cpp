@@ -16,7 +16,7 @@ constexpr Vector2 g_text_margin{8, 10};
 constexpr float g_carret_margin{6};
 
 TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_core::IWidget* /*parent*/) :
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(state),
     m_background_rect{
        .color = TG_THEME_VAL(text_input.bg_inactive),
@@ -44,7 +44,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
     },
     m_caret_position(static_cast<u32>(m_state.text.rune_count()))
 {
-   const auto& props = m_state.manager->properties();
+   const auto& props = m_context.properties();
 
    auto& glyph_atlas = m_context.glyph_cache().find_glyph_atlas({props.base_typeface, props.button.font_size});
    const auto measure = glyph_atlas.measure_text("0"_strv);
@@ -150,14 +150,14 @@ void TextInput::on_mouse_moved(const ui_core::Event& event)
 
 void TextInput::on_mouse_entered(const ui_core::Event& /*event*/)
 {
-   m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Edit);
+   m_context.surface().set_cursor_icon(desktop::CursorIcon::Edit);
    m_background_rect.set_color(m_context, TG_THEME_VAL(text_input.bg_hover));
 }
 
 void TextInput::on_mouse_left(const ui_core::Event& /*event*/)
 {
    if (!m_is_active) {
-      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+      m_context.surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_background_rect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
    }
 }
@@ -242,13 +242,13 @@ void TextInput::on_activated(const ui_core::Event& /*event*/)
    m_context.set_active_widget(this, m_dimensions, {ET::TextInput, ET::KeyPressed, ET::MouseMoved, ET::MouseReleased, ET::SelectAll});
 
    m_background_rect.set_color(m_context, TG_THEME_VAL(text_input.bg_active));
-   m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
+   m_context.surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Text | desktop::KeyboardInputMode::Direct);
 }
 
 void TextInput::on_deactivated(const ui_core::Event& /*event*/)
 {
-   m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
-   m_state.manager->surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
+   m_context.surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+   m_context.surface().set_keyboard_input_mode(desktop::KeyboardInputMode::Direct);
    m_background_rect.set_color(m_context, TG_THEME_VAL(text_input.bg_inactive));
    m_selection_rect.remove(m_context);
    m_selected_count = 0;
@@ -292,6 +292,11 @@ const String& TextInput::content() const
    return m_state.text;
 }
 
+DesktopContext& TextInput::desktop_context() const
+{
+   return m_context;
+}
+
 void TextInput::recalculate_caret_offset(const bool removal)
 {
    float caret_offset = 0.0f;
@@ -300,7 +305,7 @@ void TextInput::recalculate_caret_offset(const bool removal)
       m_caret_position = rune_count;
    }
 
-   const auto& props = m_state.manager->properties();
+   const auto& props = m_context.properties();
 
    if (m_caret_position != 0) {
       const auto substr = m_state.text.subview(0, static_cast<i32>(m_caret_position));

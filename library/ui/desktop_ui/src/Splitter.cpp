@@ -37,7 +37,7 @@ float calculate_offset(const SplitterOffsetType type, const float offset, const 
 
 Splitter::Splitter(ui_core::Context& ctx, const State state, ui_core::IWidget* parent) :
     BaseWidget(parent),
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(state),
     m_background{
        .color = TG_THEME_VAL(background_color_darker),
@@ -96,7 +96,7 @@ void Splitter::on_event(const ui_core::Event& event)
          m_is_moving = false;
       }
    } else if (m_is_showing_cursor && (mouse_pos < this->offset() || mouse_pos > this->offset() + g_splitter_size)) {
-      m_state.manager->popup_manager().root_surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+      m_context.popup_manager().root_surface().set_cursor_icon(desktop::CursorIcon::Arrow);
       m_is_showing_cursor = false;
    }
 
@@ -109,7 +109,7 @@ void Splitter::on_event(const ui_core::Event& event)
    } else {
       switch (event.event_type) {
       case ui_core::Event::Type::MouseMoved: {
-         m_state.manager->popup_manager().root_surface().set_cursor_icon(axis_to_cursor_icon(m_state.axis));
+         m_context.popup_manager().root_surface().set_cursor_icon(axis_to_cursor_icon(m_state.axis));
          m_is_showing_cursor = true;
          break;
       }
@@ -122,6 +122,11 @@ void Splitter::on_event(const ui_core::Event& event)
          break;
       }
    }
+}
+
+DesktopContext& Splitter::desktop_context() const
+{
+   return m_context;
 }
 
 ui_core::IWidget& Splitter::set_preceding(ui_core::IWidgetPtr&& widget)

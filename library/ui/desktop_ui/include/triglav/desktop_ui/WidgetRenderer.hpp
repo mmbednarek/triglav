@@ -1,8 +1,11 @@
 #pragma once
 
+#include "DesktopUI.hpp"
+
 #include "triglav/Utf8.hpp"
 #include "triglav/desktop/Desktop.hpp"
 #include "triglav/desktop/ISurface.hpp"
+#include "triglav/graphics_api/Instance.hpp"
 #include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 #include "triglav/renderer/RenderSurface.hpp"
@@ -17,13 +20,15 @@ class GlyphCache;
 
 namespace triglav::desktop_ui {
 
+class PopupManager;
+
 class WidgetRenderer
 {
  public:
    using Self = WidgetRenderer;
 
-   WidgetRenderer(desktop::ISurface& surface, render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager,
-                  graphics_api::Device& device, render_core::IRenderer& renderer);
+   WidgetRenderer(PopupManager& popup_manager, desktop::ISurface& surface, render_core::GlyphCache& glyph_cache,
+                  resource::ResourceManager& resource_manager, graphics_api::Device& device, render_core::IRenderer& renderer);
 
    void create_update_job(render_core::BuildContext& ctx) const;
    void create_render_job(render_core::BuildContext& ctx, Name output_render_target);
@@ -46,7 +51,7 @@ class WidgetRenderer
    [[nodiscard]] ui_core::IWidget& root_widget() const;
    [[nodiscard]] bool is_empty() const;
    [[nodiscard]] ui_core::Viewport& ui_viewport();
-   [[nodiscard]] ui_core::Context& context();
+   [[nodiscard]] DesktopContext& context();
 
    template<ui_core::ConstructableWidget T>
    T& create_root_widget(typename T::State&& state)
@@ -65,7 +70,7 @@ class WidgetRenderer
 
    ui_core::Viewport m_ui_viewport;
    renderer::UpdateUserInterfaceJob m_update_ui_job;
-   ui_core::Context m_context;
+   DesktopContext m_context;
    ui_core::IWidgetPtr m_root_widget{};
    Vector2 m_mouse_position{};
 

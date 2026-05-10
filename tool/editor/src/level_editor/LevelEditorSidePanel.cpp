@@ -12,11 +12,11 @@
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/GridLayout.hpp"
 #include "triglav/ui_core/widget/HideableWidget.hpp"
+#include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
-#include "triglav/ui_core/widget/HorizontalLayout.hpp"
 
 #include <glm/gtx/euler_angles.hpp>
 
@@ -28,18 +28,17 @@ constexpr Color RED_OUTLINE{0.62f, 0.34f, 0.33f, 1.0f};
 constexpr Color GREEN_OUTLINE{0.33f, 0.63f, 0.33f, 1.0f};
 constexpr Color BLUE_OUTLINE{0.32f, 0.43f, 0.62f, 1.0f};
 
-class PanelHeader final : public ui_core::ProxyWidget
+class PanelHeader final : public desktop_ui::DesktopProxyWidget
 {
  public:
    struct State
    {
-      desktop_ui::DesktopUIManager* manager{};
       String label;
       Vector4 icon_region;
    };
 
    PanelHeader(ui_core::Context& context, State state, IWidget* parent) :
-       ui_core::ProxyWidget(context, parent),
+       desktop_ui::DesktopProxyWidget(context, parent),
        m_state(std::move(state))
    {
       auto& layout = this->create_content<ui_core::VerticalLayout>({
@@ -88,12 +87,11 @@ class PanelHeader final : public ui_core::ProxyWidget
 
 class TransformInput;
 
-class TransformWidget final : public ui_core::ProxyWidget
+class TransformWidget final : public desktop_ui::DesktopProxyWidget
 {
  public:
    struct State
    {
-      desktop_ui::DesktopUIManager* manager{};
       LevelEditor* editor{};
    };
 
@@ -129,7 +127,7 @@ class TransformInput final : public ui_core::ProxyWidget
 
    struct State
    {
-      desktop_ui::DesktopUIManager* manager{};
+      desktop_ui::DesktopContext* manager{};
       TransformWidget* widget;
       Color border_color{};
       float* destination;
@@ -142,7 +140,6 @@ class TransformInput final : public ui_core::ProxyWidget
       static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
 
       m_text_input = &this->create_content<desktop_ui::TextInput>({
-         .manager = m_state.manager,
          .text = "0",
          .filter_func = num_only,
          .border_color = m_state.border_color,
@@ -170,7 +167,7 @@ class TransformInput final : public ui_core::ProxyWidget
 };
 
 TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget* parent) :
-    ui_core::ProxyWidget(context, parent),
+    desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state)
 {
    auto& transform_layout = this->create_content<ui_core::GridLayout>({
@@ -190,19 +187,16 @@ TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget
    });
 
    m_translate_x = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = RED_OUTLINE,
       .destination = &m_pending_translate.x,
    });
    m_translate_y = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = GREEN_OUTLINE,
       .destination = &m_pending_translate.y,
    });
    m_translate_z = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = BLUE_OUTLINE,
       .destination = &m_pending_translate.z,
@@ -218,19 +212,16 @@ TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget
    });
 
    m_rotate_x = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = RED_OUTLINE,
       .destination = &m_pending_rotation.x,
    });
    m_rotate_y = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = GREEN_OUTLINE,
       .destination = &m_pending_rotation.y,
    });
    m_rotate_z = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = BLUE_OUTLINE,
       .destination = &m_pending_rotation.z,
@@ -246,19 +237,16 @@ TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget
    });
 
    m_scale_x = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = RED_OUTLINE,
       .destination = &m_pending_scale.x,
    });
    m_scale_y = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = GREEN_OUTLINE,
       .destination = &m_pending_scale.y,
    });
    m_scale_z = &transform_layout.create_child<TransformInput>({
-      .manager = m_state.manager,
       .widget = this,
       .border_color = BLUE_OUTLINE,
       .destination = &m_pending_scale.z,
@@ -316,18 +304,16 @@ void TransformWidget::apply_transform()
 }
 
 LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent) :
-    ui_core::ProxyWidget(context, parent),
+    desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state)
 {
    auto& split = this->create_content<desktop_ui::Splitter>({
-      .manager = m_state.manager,
       .offset = 300,
       .axis = ui_core::Axis::Vertical,
       .offset_type = desktop_ui::SplitterOffsetType::Preceeding,
    });
 
    m_scene_view = &split.create_preceding<SceneView>({
-      .manager = m_state.manager,
       .editor = m_state.editor,
    });
 
@@ -347,10 +333,9 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .separation = 7.0f,
    });
 
-   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "TRANSFORM", .icon_region = {5 * 18, 2 * 18, 18, 18}});
+   layout.create_child<PanelHeader>({.label = "TRANSFORM", .icon_region = {5 * 18, 2 * 18, 18, 18}});
 
    m_transform_widget = &layout.create_child<TransformWidget>({
-      .manager = m_state.manager,
       .editor = m_state.editor,
    });
 
@@ -358,7 +343,7 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .size = {10.0f, 5.0f},
    });
 
-   layout.create_child<PanelHeader>({.manager = m_state.manager, .label = "MESH", .icon_region = {7 * 18, 0 * 18, 18, 18}});
+   layout.create_child<PanelHeader>({.label = "MESH", .icon_region = {7 * 18, 0 * 18, 18, 18}});
 
    auto& prop_layout = layout.create_child<ui_core::GridLayout>({
       .column_ratios = {0.3f, 0.7f},
@@ -376,7 +361,6 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
    m_name_input = &prop_layout.create_child<desktop_ui::TextInput>({
-      .manager = m_state.manager,
       .text = "",
       .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
    });
@@ -391,7 +375,6 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
       .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
    m_mesh_input = &prop_layout.create_child<desktop_ui::TextInput>({
-      .manager = m_state.manager,
       .text = "",
       .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
    });

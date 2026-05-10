@@ -49,7 +49,7 @@ renderer::Config get_default_config()
 }// namespace
 
 LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
-    ProxyWidget(context, parent),
+    desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state),
     m_scene(context.resource_manager()),
     m_bindless_scene(m_state.root_window->device(), context.resource_manager(), m_scene, *m_state.root_window),
@@ -65,14 +65,12 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     TG_CONNECT(m_tool_radio_group, OnSelection, on_selected_tool)
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
-      .manager = m_state.manager,
       .offset = 300,
       .axis = ui_core::Axis::Horizontal,
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
    m_side_panel = &splitter.create_following<LevelEditorSidePanel>({
-      .manager = m_state.manager,
       .editor = this,
    });
 
@@ -99,7 +97,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
                              });
 
    toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .manager = m_state.manager,
       .items = {"Object Mode", "Terrain Mode"},
       .selected_item = 0,
    });
@@ -118,7 +115,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
 
    auto& select_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .manager = m_state.manager,
       .radio_group = &m_tool_radio_group,
       .is_enabled = false,
    });
@@ -130,7 +126,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_tool_radio_group.add_check_box(&select_btn);
 
    auto& move_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .manager = m_state.manager,
       .radio_group = &m_tool_radio_group,
       .is_enabled = false,
    });
@@ -142,7 +137,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_tool_radio_group.add_check_box(&move_btn);
 
    auto& rotate_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .manager = m_state.manager,
       .radio_group = &m_tool_radio_group,
       .is_enabled = false,
    });
@@ -154,7 +148,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_tool_radio_group.add_check_box(&rotate_btn);
 
    auto& scale_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .manager = m_state.manager,
       .radio_group = &m_tool_radio_group,
       .is_enabled = false,
    });
@@ -195,7 +188,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       });
 
    m_origin_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .manager = m_state.manager,
       .items = {"Origin", "Centroid", "World"},
       .selected_item = 0,
    });
@@ -218,7 +210,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       });
 
    m_snap_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .manager = m_state.manager,
       .items = {"Off", "0.25", "0.5", "1", "2", "4"},
       .selected_item = 0,
    });
@@ -240,7 +231,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       });
 
    m_speed_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .manager = m_state.manager,
       .items = {"8.0", "16.0", "32.0", "64.0", "128.0"},
       .selected_item = 1,
    });

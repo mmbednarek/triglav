@@ -124,7 +124,7 @@ bool ProjectTreeController::has_children(const desktop_ui::TreeItemId id) const
 }
 
 ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core::IWidget* parent) :
-    ui_core::ProxyWidget(context, parent),
+    desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state)
 {
    auto& background = this->create_content<ui_core::RectBox>({
@@ -159,7 +159,6 @@ ProjectExplorer::ProjectExplorer(ui_core::Context& context, State state, ui_core
    auto& scroll = scroll_rect.create_content<ui_core::ScrollBox>({});
 
    auto& tree_view = scroll.create_content<desktop_ui::TreeView>({
-      .manager = m_state.manager,
       .controller = &m_controller,
    });
    TG_CONNECT_OPT(tree_view, OnActivated, on_activated);

@@ -7,7 +7,7 @@
 
 namespace triglav::desktop_ui {
 
-class DesktopUIManager;
+class DesktopContext;
 
 enum class SplitterOffsetType
 {
@@ -22,7 +22,6 @@ class Splitter final : public ui_core::BaseWidget
 
    struct State
    {
-      DesktopUIManager* manager;
       float offset;
       ui_core::Axis axis;
       SplitterOffsetType offset_type;
@@ -34,6 +33,7 @@ class Splitter final : public ui_core::BaseWidget
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
+   [[nodiscard]] DesktopContext& desktop_context() const;
 
    IWidget& set_preceding(ui_core::IWidgetPtr&& widget);
    IWidget& set_following(ui_core::IWidgetPtr&& widget);
@@ -55,7 +55,7 @@ class Splitter final : public ui_core::BaseWidget
    void add_offset(float diff);
    TG_DECLARE_AXIS_FUNCS(m_state.axis)
 
-   ui_core::Context& m_context;
+   DesktopContext& m_context;
    State m_state;
    ui_core::IWidgetPtr m_preceding;
    ui_core::IWidgetPtr m_following;

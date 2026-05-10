@@ -13,19 +13,20 @@ class PopupManager
    using Self = PopupManager;
 
    PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-                resource::ResourceManager& resource_manager, desktop::ISurface& root_surface);
+                resource::ResourceManager& resource_manager);
 
    [[nodiscard]] Dialog& create_popup_dialog(Vector2i offset, Vector2u dimensions);
    void tick();
    void close_popup(Dialog* dialog);
    [[nodiscard]] desktop::ISurface& root_surface() const;
+   void set_root_surface(desktop::ISurface& surface);
 
  private:
    const graphics_api::Instance& m_instance;
    graphics_api::Device& m_device;
    render_core::GlyphCache& m_glyph_cache;
    resource::ResourceManager& m_resource_manager;
-   desktop::ISurface& m_root_surface;
+   desktop::ISurface* m_root_surface = nullptr;
    std::vector<std::unique_ptr<Dialog>> m_popups;
    std::vector<Dialog*> m_popups_to_erase;
    std::mutex m_popup_mtx;

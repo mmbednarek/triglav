@@ -16,8 +16,8 @@ namespace triglav::editor {
 
 using namespace string_literals;
 
-SceneView::SceneView(ui_core::Context& context, const State state, IWidget* parent) :
-    ui_core::ProxyWidget(context, parent),
+SceneView::SceneView(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
+    desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state),
     TG_CONNECT(m_state.editor->scene(), OnObjectAddedToScene, on_object_added_to_scene),
     TG_CONNECT(m_state.editor->scene(), OnObjectChangedName, on_object_changed_name)
@@ -42,23 +42,18 @@ SceneView::SceneView(ui_core::Context& context, const State state, IWidget* pare
    });
 
    auto& add_trigger = buttons.create_child<ResourceSelectTrigger>({
-      .manager = m_state.manager,
       .suffix = ".mesh",
    });
    TG_CONNECT_NAMED_OPT(add_trigger, OnSelected, OnResourceSelected, on_resource_selected);
 
-   auto& add_button = add_trigger.create_content<desktop_ui::Button>({
-      .manager = m_state.manager,
-   });
+   auto& add_button = add_trigger.create_content<desktop_ui::Button>({});
    add_button.create_content<ui_core::Image>({
       .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = Vector2{22, 22},
       .region = Vector4{0, 2 * 22, 22, 22},
    });
 
-   auto& add_dir_button = buttons.create_child<desktop_ui::Button>({
-      .manager = m_state.manager,
-   });
+   auto& add_dir_button = buttons.create_child<desktop_ui::Button>({});
    add_dir_button.create_content<ui_core::Image>({
       .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = Vector2{22, 22},
@@ -66,9 +61,7 @@ SceneView::SceneView(ui_core::Context& context, const State state, IWidget* pare
    });
    TG_CONNECT_NAMED_OPT(add_dir_button, OnClick, AddDirectory, on_clicked_add_directory);
 
-   auto& delete_button = buttons.create_child<desktop_ui::Button>({
-      .manager = m_state.manager,
-   });
+   auto& delete_button = buttons.create_child<desktop_ui::Button>({});
    delete_button.create_content<ui_core::Image>({
       .texture = "editor/texture/ui_icons.tex"_rc,
       .max_size = Vector2{22, 22},
@@ -87,7 +80,6 @@ SceneView::SceneView(ui_core::Context& context, const State state, IWidget* pare
                         .offset = 0.0f,
                      })
                      .create_content<desktop_ui::TreeView>({
-                        .manager = m_state.manager,
                         .controller = &m_tree_controller,
                         .extended_items = {},
                      });

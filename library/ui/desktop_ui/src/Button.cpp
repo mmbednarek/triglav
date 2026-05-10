@@ -11,7 +11,7 @@ namespace triglav::desktop_ui {
 constexpr auto g_padding = 5.0f;
 
 Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidget* parent) :
-    ui_core::ContainerWidget(ctx, parent),
+    DesktopContainerWidget(ctx, parent),
     m_state(state),
     m_background{
        .color = TG_THEME_VAL(background_color_brighter),
@@ -45,19 +45,19 @@ void Button::on_event(const ui_core::Event& event)
 {
    switch (event.event_type) {
    case ui_core::Event::Type::MousePressed:
-      m_background.set_color(m_context, m_state.manager->properties().background_color_darker);
+      m_background.set_color(m_context, TG_THEME_VAL(background_color_darker));
       break;
    case ui_core::Event::Type::MouseReleased:
-      m_background.set_color(m_context, m_state.manager->properties().active_color);
+      m_background.set_color(m_context, TG_THEME_VAL(active_color));
       event_OnClick.publish();
       break;
    case ui_core::Event::Type::MouseEntered:
-      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Hand);
-      m_background.set_color(m_context, m_state.manager->properties().active_color);
+      desktop_context().surface().set_cursor_icon(desktop::CursorIcon::Hand);
+      m_background.set_color(m_context, TG_THEME_VAL(active_color));
       break;
    case ui_core::Event::Type::MouseLeft:
-      m_state.manager->surface().set_cursor_icon(desktop::CursorIcon::Arrow);
-      m_background.set_color(m_context, m_state.manager->properties().background_color_brighter);
+      desktop_context().surface().set_cursor_icon(desktop::CursorIcon::Arrow);
+      m_background.set_color(m_context, TG_THEME_VAL(background_color_brighter));
       break;
    default:
       break;

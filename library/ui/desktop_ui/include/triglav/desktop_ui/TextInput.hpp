@@ -26,7 +26,6 @@ class TextInput final : public ui_core::IWidget
 
    struct State
    {
-      DesktopUIManager* manager;
       String text;
       std::function<bool(Rune)> filter_func = [](Rune) { return true; };
       Color border_color = {0.1f, 0.1f, 0.1f, 1.0f};
@@ -41,6 +40,7 @@ class TextInput final : public ui_core::IWidget
    void update_carret_state();
    void set_content(StringView content);
    [[nodiscard]] const String& content() const;
+   [[nodiscard]] DesktopContext& desktop_context() const;
 
    void on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
    void on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
@@ -63,7 +63,7 @@ class TextInput final : public ui_core::IWidget
    void enable_caret();
    void remove_selected();
 
-   ui_core::Context& m_context;
+   DesktopContext& m_context;
    State m_state;
 
    ui_core::RectInstance m_background_rect;

@@ -15,14 +15,13 @@ class GlyphCache;
 namespace triglav::desktop_ui {
 
 class Dialog;
-class DesktopUIManager;
+class DesktopContext;
 
 class MenuList final : public ui_core::BaseWidget
 {
  public:
    struct State
    {
-      DesktopUIManager* manager;
       MenuController* controller;
       Name list_name;
       Vector2 screen_offset;
@@ -47,11 +46,14 @@ class MenuList final : public ui_core::BaseWidget
    void on_mouse_moved(const ui_core::Event&);
    void on_mouse_released(const ui_core::Event&, const ui_core::Event::Mouse&);
 
+   [[nodiscard]] DesktopContext& desktop_context();
+   [[nodiscard]] const DesktopContext& desktop_context() const;
+
  private:
    [[nodiscard]] std::pair<float, Name> index_from_mouse_position(Vector2 position) const;
    [[nodiscard]] Measure get_measure() const;
 
-   ui_core::Context& m_context;
+   DesktopContext& m_context;
    State m_state;
    std::vector<ui_core::TextId> m_labels;
    std::vector<ui_core::SpriteId> m_icons;

@@ -51,7 +51,8 @@ class DefaultTabWidget final : public ui_core::IWidget
 RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget* parent) :
     ui_core::ProxyWidget(context, parent),
     m_state(state),
-    m_desktop_ui_manager(desktop_ui::ThemeProperties::get_default(), m_state.dialog_manager->root_surface(), *m_state.dialog_manager),
+    m_desktop_ui_manager(context, desktop_ui::ThemeProperties::get_default(), m_state.dialog_manager->root_surface(),
+                         *m_state.dialog_manager),
     TG_CONNECT(m_menu_bar_controller, OnClicked, on_clicked_menu_bar)
 {
    auto& event_gen = this->emplace_content<desktop_ui::SecondaryEventGenerator>(m_context, this, m_state.dialog_manager->root_surface());
@@ -92,19 +93,16 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
    m_command_manager.register_command({Modifier::Empty, Key::E}, Command::SelectionTool);
 
    m_menu_bar = &global_layout.create_child<desktop_ui::MenuBar>({
-      .manager = &m_desktop_ui_manager,
       .controller = &m_menu_bar_controller,
    });
 
    auto& splitter = global_layout.create_child<desktop_ui::Splitter>({
-      .manager = &m_desktop_ui_manager,
       .offset = 260,
       .axis = ui_core::Axis::Horizontal,
       .offset_type = desktop_ui::SplitterOffsetType::Following,
    });
 
    m_tab_view = &splitter.create_preceding<desktop_ui::TabView>({
-      .manager = &m_desktop_ui_manager,
       .active_tab = 0,
    });
    TG_CONNECT_OPT(*m_tab_view, OnChangedActiveTab, on_changed_active_tab);
@@ -112,7 +110,6 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
    m_tab_view->set_default_widget(std::make_unique<DefaultTabWidget>(*state.editor->root_window()));
 
    splitter.create_following<ProjectExplorer>({
-      .manager = &m_desktop_ui_manager,
       .root_window = m_state.editor->root_window(),
    });
 }
@@ -189,7 +186,6 @@ void RootWidget::open_asset_editor(const ResourceName asset_name)
    m_tab_view->remove_from_viewport();
    const auto tab_id = m_tab_view->add_tab(std::make_unique<LevelEditor>(m_context,
                                                                          LevelEditor::State{
-                                                                            .manager = &m_desktop_ui_manager,
                                                                             .root_window = m_state.editor->root_window(),
                                                                             .asset_name = asset_name,
                                                                          },
