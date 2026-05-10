@@ -19,7 +19,7 @@ constexpr auto g_global_margin = 6.0f;
 
 MenuBar::MenuBar(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::BaseWidget(parent),
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(state)
 {
 }
@@ -138,7 +138,6 @@ void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
 
    const Vector2 offset{m_hovered_item_offset, m_dimensions.y + m_dimensions.w};
    MenuList::State child_state{
-      .manager = m_state.manager,
       .controller = m_state.controller,
       .list_name = m_hovered_item,
       .screen_offset = offset,
@@ -146,7 +145,7 @@ void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
    const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
    const auto size = temporary_menu->desired_size({});
 
-   auto& popup = m_state.manager->popup_manager().create_popup_dialog(offset, size);
+   auto& popup = this->desktop_context().popup_manager().create_popup_dialog(offset, size);
    popup.create_root_widget<MenuList>(MenuList::State{child_state});
    popup.initialize();
    m_sub_menu = &popup;
@@ -155,7 +154,7 @@ void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
 void MenuBar::on_mouse_left(const ui_core::Event& /*event*/)
 {
    if (m_sub_menu != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_sub_menu);
+      this->desktop_context().popup_manager().close_popup(m_sub_menu);
       m_sub_menu = nullptr;
    }
 
@@ -163,6 +162,11 @@ void MenuBar::on_mouse_left(const ui_core::Event& /*event*/)
       m_context.viewport().remove_rectangle(m_hover_rect_id);
       m_hover_rect_id = 0;
    }
+}
+
+DesktopContext& MenuBar::desktop_context() const
+{
+   return m_context;
 }
 
 std::pair<float, Name> MenuBar::index_from_mouse_position(const Vector2 position) const
@@ -188,7 +192,7 @@ void MenuBar::close_submenu()
    }
 
    if (m_sub_menu != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_sub_menu);
+      m_context.popup_manager().close_popup(m_sub_menu);
       m_sub_menu = nullptr;
    }
 }

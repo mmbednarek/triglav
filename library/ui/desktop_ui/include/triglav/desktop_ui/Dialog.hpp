@@ -26,11 +26,13 @@ class Dialog : public render_core::IRenderer
 
    // Top level dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, Vector2u dimensions, StringView title);
+          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, PopupManager& popup_manager,
+          Vector2u dimensions, StringView title);
 
    // Popup dialog
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::ISurface& parent_surface,
-          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, Vector2u dimensions, Vector2i offset);
+          render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, PopupManager& popup_manager,
+          Vector2u dimensions, Vector2i offset);
 
    void initialize();
    void uninitialize() const;
@@ -57,7 +59,8 @@ class Dialog : public render_core::IRenderer
 
  private:
    Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-          resource::ResourceManager& resource_manager, Vector2u dimensions, std::shared_ptr<desktop::ISurface> surface);
+          resource::ResourceManager& resource_manager, PopupManager& popup_manager, Vector2u dimensions,
+          std::shared_ptr<desktop::ISurface> surface);
 
    void build_rendering_job(render_core::BuildContext& ctx);
 

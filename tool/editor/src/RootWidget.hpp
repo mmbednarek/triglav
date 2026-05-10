@@ -40,7 +40,7 @@ class RootWidget final : public ui_core::ProxyWidget
 
  private:
    State m_state;
-   desktop_ui::DesktopUIManager m_desktop_ui_manager;
+   desktop_ui::DesktopContext m_desktop_ui_manager;
    desktop_ui::MenuController m_menu_bar_controller;
    CommandManager m_command_manager;
    desktop_ui::MenuBar* m_menu_bar;

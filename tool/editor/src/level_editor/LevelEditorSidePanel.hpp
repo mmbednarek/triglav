@@ -19,14 +19,13 @@ class LevelEditor;
 class TransformWidget;
 class SceneView;
 
-class LevelEditorSidePanel final : public ui_core::ProxyWidget
+class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
 {
  public:
    using Self = LevelEditorSidePanel;
 
    struct State
    {
-      desktop_ui::DesktopUIManager* manager;
       LevelEditor* editor;
    };
 

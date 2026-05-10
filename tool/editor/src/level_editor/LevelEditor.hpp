@@ -33,7 +33,7 @@ enum class LevelEditorTool
    Scaling,
 };
 
-class LevelEditor final : public ui_core::ProxyWidget, public desktop_ui::ITabWidget, public IAssetEditor
+class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_ui::ITabWidget, public IAssetEditor
 {
    friend class RenderViewport;
 
@@ -41,7 +41,6 @@ class LevelEditor final : public ui_core::ProxyWidget, public desktop_ui::ITabWi
    using Self = LevelEditor;
    struct State
    {
-      desktop_ui::DesktopUIManager* manager;
       RootWindow* root_window;
       ResourceName asset_name;
    };

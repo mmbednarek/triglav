@@ -28,7 +28,7 @@ class RootWindow final : public render_core::IRenderer
    using Self = RootWindow;
 
    RootWindow(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
-              render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager);
+              render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, desktop_ui::PopupManager& popup_manager);
 
    void initialize();
    void uninitialize() const;

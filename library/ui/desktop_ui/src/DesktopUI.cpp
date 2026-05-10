@@ -54,29 +54,42 @@ ThemeProperties ThemeProperties::get_default()
    };
 }
 
-DesktopUIManager::DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager) :
-    m_properties(std::move(properties)),
+DesktopContext::DesktopContext(ui_core::Viewport& viewport, render_core::GlyphCache& glyph_cache,
+                               resource::ResourceManager& resource_manager, ThemeProperties properties, desktop::ISurface& surface,
+                               PopupManager& dialog_manager) :
+    ui_core::Context(viewport, glyph_cache, resource_manager),
+    m_properties(properties),
     m_surface(surface),
     m_popup_manager(dialog_manager)
 {
 }
 
-const ThemeProperties& DesktopUIManager::properties() const
+
+DesktopContext::DesktopContext(ui_core::Context& ctx, ThemeProperties properties, desktop::ISurface& surface,
+                               PopupManager& dialog_manager) :
+    ui_core::Context(ctx),
+    m_properties(properties),
+    m_surface(surface),
+    m_popup_manager(dialog_manager)
+{
+}
+
+const ThemeProperties& DesktopContext::properties() const
 {
    return m_properties;
 }
 
-const desktop::ISurface& DesktopUIManager::surface() const
+const desktop::ISurface& DesktopContext::surface() const
 {
    return m_surface;
 }
 
-desktop::ISurface& DesktopUIManager::surface()
+desktop::ISurface& DesktopContext::surface()
 {
    return m_surface;
 }
 
-PopupManager& DesktopUIManager::popup_manager() const
+PopupManager& DesktopContext::popup_manager() const
 {
    return m_popup_manager;
 }

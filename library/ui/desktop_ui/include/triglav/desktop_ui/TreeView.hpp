@@ -13,7 +13,7 @@
 
 namespace triglav::desktop_ui {
 
-class DesktopUIManager;
+class DesktopContext;
 
 class TreeView final : public ui_core::BaseWidget
 {
@@ -26,7 +26,6 @@ class TreeView final : public ui_core::BaseWidget
 
    struct State
    {
-      DesktopUIManager* manager;
       ITreeController* controller;
       std::set<TreeItemId> extended_items;
       float icon_size = 18.0f;
@@ -48,6 +47,7 @@ class TreeView final : public ui_core::BaseWidget
    void set_selected_item(TreeItemId item_id);
    void remove_item(TreeItemId item_id);
    void set_label(TreeItemId item_id, StringView label);
+   [[nodiscard]] DesktopContext& desktop_context() const;
 
    void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
    void on_mouse_double_click(const ui_core::Event&, const ui_core::Event::Mouse&) const;
@@ -60,7 +60,7 @@ class TreeView final : public ui_core::BaseWidget
    void draw_level(TreeItemId parent_id, float offset_x, float& offset_y);
    void remove_level(TreeItemId parent_id);
 
-   ui_core::Context& m_context;
+   DesktopContext& m_context;
    State m_state;
    Vector4 m_dimensions{};
    Vector4 m_cropping_mask{};

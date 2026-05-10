@@ -16,6 +16,7 @@ using namespace name_literals;
 // -- DropDownSelectorButton --
 
 DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(std::move(state)),
     m_parent(parent),
     m_button(ctx, {}, this),
@@ -24,7 +25,7 @@ DropDownSelectorButton::DropDownSelectorButton(ui_core::Context& ctx, State stat
     TG_CONNECT(m_button, OnLeave, on_leave)
 {
    m_rect = &m_button.create_content<ui_core::RectBox>({
-      .color = m_state.menu->m_state.manager->properties().dropdown.bg,
+      .color = this->desktop_context().properties().dropdown.bg,
       .border_radius = {0, 0, 0, 0},
       .border_color = {0, 0, 0, 0},
       .border_width = 0.0f,
@@ -69,6 +70,11 @@ void DropDownSelectorButton::on_child_state_changed(IWidget& widget)
    }
 }
 
+DesktopContext& DropDownSelectorButton::desktop_context() const
+{
+   return m_context;
+}
+
 void DropDownSelectorButton::on_click(const desktop::MouseButton button) const
 {
    if (button != desktop::MouseButton::Left)
@@ -79,12 +85,12 @@ void DropDownSelectorButton::on_click(const desktop::MouseButton button) const
 
 void DropDownSelectorButton::on_enter() const
 {
-   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown.bg_hover);
+   m_rect->set_color(TG_THEME_VAL(dropdown.bg_hover));
 }
 
 void DropDownSelectorButton::on_leave() const
 {
-   m_rect->set_color(m_state.menu->m_state.manager->properties().dropdown.bg);
+   m_rect->set_color(TG_THEME_VAL(dropdown.bg));
 }
 
 // -- DropDownSelector --
@@ -102,7 +108,6 @@ DropDownSelector::DropDownSelector(ui_core::Context& ctx, const State state, ui_
    assert(m_state.menu != nullptr);
    for (const auto& [index, item] : Enumerate(m_state.menu->m_state.items)) {
       m_vertical_layout.create_child<DropDownSelectorButton>({
-         .manager = m_state.menu->m_state.manager,
          .menu = m_state.menu,
          .label = item,
          .index = static_cast<u32>(index),
@@ -140,28 +145,27 @@ void DropDownSelector::on_child_state_changed(IWidget& widget)
 // -- DropDownMenu --
 
 DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(std::move(state)),
     m_parent(parent),
     m_rect(ctx,
            {
-              .color = m_state.manager->properties().dropdown.bg,
+              .color = TG_THEME_VAL(dropdown.bg),
               .border_radius = {10.0f, 10.0f, 10.0f, 10.0f},
-              .border_color = m_state.manager->properties().dropdown.border,
-              .border_width = m_state.manager->properties().dropdown.border_width,
+              .border_color = TG_THEME_VAL(dropdown.border),
+              .border_width = TG_THEME_VAL(dropdown.border_width),
            },
            this)
 {
-   const auto& props = m_state.manager->properties();
    auto& layout = m_rect.create_content<ui_core::VerticalLayout>({
       .padding{8.0f, 8.0f, 8.0f, 8.0f},
       .separation = 0.0f,
    });
    m_label = &layout.create_child<ui_core::TextBox>({
       .font_size = 14,
-      .typeface = props.base_typeface,
+      .typeface = TG_THEME_VAL(base_typeface),
       .content = m_state.items[m_state.selected_item],
-      .color = props.foreground_color,
+      .color = TG_THEME_VAL(foreground_color),
       .horizontal_alignment = ui_core::HorizontalAlignment::Left,
       .vertical_alignment = ui_core::VerticalAlignment::Center,
    });
@@ -218,6 +222,11 @@ void DropDownMenu::on_child_state_changed(IWidget& /*widget*/)
    m_rect.add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
+DesktopContext& DropDownMenu::desktop_context() const
+{
+   return m_context;
+}
+
 u32 DropDownMenu::selected_item() const
 {
    return m_state.selected_item;
@@ -231,7 +240,7 @@ void DropDownMenu::set_selected_item(const u32 index)
    m_context.viewport().set_sprite_texture_region(m_down_arrow, {0, 0, 64, 64});
 
    if (m_current_popup != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_current_popup);
+      m_context.popup_manager().close_popup(m_current_popup);
       m_current_popup = nullptr;
    }
 
@@ -241,7 +250,7 @@ void DropDownMenu::set_selected_item(const u32 index)
 void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_core::Event::Mouse& /*mouse*/)
 {
    if (m_current_popup != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_current_popup);
+      m_context.popup_manager().close_popup(m_current_popup);
       m_current_popup = nullptr;
       m_context.viewport().set_sprite_texture_region(m_down_arrow, {0, 0, 64, 64});
       return;
@@ -252,8 +261,8 @@ void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_c
    const auto desired_dims = selector->desired_size({m_dimensions.x, 1024});
 
    // TODO: Add ability to update context.
-   auto& popup = m_state.manager->popup_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w},
-                                                                      {m_dimensions.z, desired_dims.y});
+   auto& popup =
+      m_context.popup_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w}, {m_dimensions.z, desired_dims.y});
    popup.create_root_widget<DropDownSelector>({this});
    popup.initialize();
    m_current_popup = &popup;
@@ -263,12 +272,12 @@ void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_c
 
 void DropDownMenu::on_mouse_entered(const ui_core::Event& /*event*/)
 {
-   m_rect.set_color(m_state.manager->properties().dropdown.bg_hover);
+   m_rect.set_color(m_context.properties().dropdown.bg_hover);
 }
 
 void DropDownMenu::on_mouse_left(const ui_core::Event& /*event*/)
 {
-   m_rect.set_color(m_state.manager->properties().dropdown.bg);
+   m_rect.set_color(m_context.properties().dropdown.bg);
 }
 
 }// namespace triglav::desktop_ui

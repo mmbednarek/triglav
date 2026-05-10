@@ -27,6 +27,8 @@ class Context
  public:
    Context(Viewport& viewport, render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager);
 
+   virtual ~Context() = default;
+
    [[nodiscard]] Viewport& viewport() const;
    [[nodiscard]] render_core::GlyphCache& glyph_cache() const;
    [[nodiscard]] resource::ResourceManager& resource_manager() const;

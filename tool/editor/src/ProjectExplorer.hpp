@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/desktop_ui/DesktopContainerWidget.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TreeController.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
@@ -30,13 +31,12 @@ class ProjectTreeController final : public desktop_ui::ITreeController
    desktop_ui::TreeItemId m_top_item = desktop_ui::TREE_ROOT + 1;
 };
 
-class ProjectExplorer final : public ui_core::ProxyWidget
+class ProjectExplorer final : public desktop_ui::DesktopProxyWidget
 {
  public:
    using Self = ProjectExplorer;
    struct State
    {
-      desktop_ui::DesktopUIManager* manager;
       RootWindow* root_window;
    };
 

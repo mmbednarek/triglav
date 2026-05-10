@@ -21,7 +21,7 @@ constexpr auto g_separator_height = 2.0f;
 
 MenuList::MenuList(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::BaseWidget(parent),
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(state)
 {
 }
@@ -97,7 +97,7 @@ void MenuList::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_
 void MenuList::remove_from_viewport()
 {
    if (m_sub_menu != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_sub_menu);
+      this->desktop_context().popup_manager().close_popup(m_sub_menu);
       m_sub_menu = nullptr;
    }
    for (const auto label : m_labels) {
@@ -131,7 +131,7 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
    m_hovered_item = new_hovered_item;
 
    if (m_sub_menu != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_sub_menu);
+      this->desktop_context().popup_manager().close_popup(m_sub_menu);
       m_sub_menu = nullptr;
    }
 
@@ -162,7 +162,6 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
       const Vector2 offset = m_state.screen_offset + Vector2{measure.size.x, offset_y};
 
       State child_state{
-         .manager = m_state.manager,
          .controller = m_state.controller,
          .list_name = m_hovered_item,
          .screen_offset = offset,
@@ -170,7 +169,7 @@ void MenuList::on_mouse_moved(const ui_core::Event& event)
       const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
       const auto size = temporary_menu->desired_size({});
 
-      auto& popup = m_state.manager->popup_manager().create_popup_dialog(offset, size);
+      auto& popup = this->desktop_context().popup_manager().create_popup_dialog(offset, size);
       popup.create_root_widget<MenuList>(State{child_state});
       popup.initialize();
       m_sub_menu = &popup;
@@ -182,6 +181,16 @@ void MenuList::on_mouse_released(const ui_core::Event& /*event*/, const ui_core:
    if (m_hovered_item != 0) {
       m_state.controller->trigger_on_clicked(m_hovered_item);
    }
+}
+
+DesktopContext& MenuList::desktop_context()
+{
+   return m_context;
+}
+
+const DesktopContext& MenuList::desktop_context() const
+{
+   return m_context;
 }
 
 std::pair<float, Name> MenuList::index_from_mouse_position(const Vector2 position) const

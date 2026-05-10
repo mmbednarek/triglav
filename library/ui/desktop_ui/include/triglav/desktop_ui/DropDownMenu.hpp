@@ -21,7 +21,6 @@ class DropDownSelectorButton final : public ui_core::IWidget
 
    struct State
    {
-      DesktopUIManager* manager;
       DropDownMenu* menu;
       String label;
       u32 index;
@@ -34,12 +33,14 @@ class DropDownSelectorButton final : public ui_core::IWidget
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
+   [[nodiscard]] DesktopContext& desktop_context() const;
 
    void on_click(desktop::MouseButton button) const;
    void on_enter() const;
    void on_leave() const;
 
  private:
+   DesktopContext& m_context;
    State m_state;
    ui_core::IWidget* m_parent;
    ui_core::Button m_button;
@@ -88,7 +89,6 @@ class DropDownMenu final : public ui_core::IWidget
 
    struct State
    {
-      DesktopUIManager* manager;
       std::vector<String> items;
       u32 selected_item;
    };
@@ -100,6 +100,7 @@ class DropDownMenu final : public ui_core::IWidget
    void remove_from_viewport() override;
    void on_event(const ui_core::Event& event) override;
    void on_child_state_changed(IWidget& widget) override;
+   [[nodiscard]] DesktopContext& desktop_context() const;
 
    [[nodiscard]] u32 selected_item() const;
    void set_selected_item(u32 index);
@@ -109,7 +110,7 @@ class DropDownMenu final : public ui_core::IWidget
    void on_mouse_left(const ui_core::Event& event);
 
  private:
-   [[maybe_unused]] ui_core::Context& m_context;
+   [[maybe_unused]] DesktopContext& m_context;
    State m_state;
 
    [[maybe_unused]] ui_core::IWidget* m_parent;

@@ -32,13 +32,12 @@ class ResourceList final : public ui_core::BaseWidget
  public:
    struct State
    {
-      desktop_ui::DesktopUIManager* manager;
       ResourceSelectTrigger* trigger;
    };
 
    ResourceList(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
        ui_core::BaseWidget(parent),
-       m_context(ctx),
+       m_context(dynamic_cast<desktop_ui::DesktopContext&>(ctx)),
        m_state(state),
        m_selection{
           .color = TG_THEME_VAL(active_color),
@@ -142,8 +141,13 @@ class ResourceList final : public ui_core::BaseWidget
       }
    }
 
+   desktop_ui::DesktopContext& desktop_context() const
+   {
+      return m_context;
+   }
+
  private:
-   ui_core::Context& m_context;
+   desktop_ui::DesktopContext& m_context;
    State m_state;
    ui_core::RectInstance m_selection;
    std::vector<ui_core::TextInstance> m_text_instances;
@@ -154,7 +158,7 @@ class ResourceList final : public ui_core::BaseWidget
 };
 
 ResourceSelector::ResourceSelector(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
-    ui_core::ProxyWidget(ctx, parent),
+    desktop_ui::DesktopProxyWidget(ctx, parent),
     m_state(state)
 {
    auto& background = this->create_content<ui_core::RectBox>({
@@ -169,7 +173,6 @@ ResourceSelector::ResourceSelector(ui_core::Context& ctx, State state, ui_core::
    });
 
    auto& text_input = layout.create_child<desktop_ui::TextInput>({
-      .manager = m_state.manager,
       .text = "",
    });
    TG_CONNECT_OPT(text_input, OnTyping, on_typing);
@@ -180,7 +183,6 @@ ResourceSelector::ResourceSelector(ui_core::Context& ctx, State state, ui_core::
                             .offset = 0.0f,
                          })
                          .create_content<ResourceList>({
-                            .manager = m_state.manager,
                             .trigger = m_state.trigger,
                          });
 }
@@ -197,7 +199,7 @@ void ResourceSelector::on_text_changed(const StringView /*text*/) const
 }
 
 ResourceSelectTrigger::ResourceSelectTrigger(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
-    ui_core::ProxyWidget(ctx, parent),
+    desktop_ui::DesktopProxyWidget(ctx, parent),
     m_state(std::move(state))
 {
 }
@@ -212,14 +214,13 @@ void ResourceSelectTrigger::on_event(const ui_core::Event& event)
 {
    if (event.event_type == ui_core::Event::Type::MousePressed) {
       auto& popup =
-         m_state.manager->popup_manager().create_popup_dialog(rect_position(m_dimensions) + Vector2{0, m_dimensions.w}, {240, 400});
+         desktop_context().popup_manager().create_popup_dialog(rect_position(m_dimensions) + Vector2{0, m_dimensions.w}, {240, 400});
       auto& root_widget =
          popup.emplace_root_widget<desktop_ui::SecondaryEventGenerator>(popup.widget_renderer().context(), nullptr, popup.surface());
 
-      m_desktop_manager =
-         std::make_unique<desktop_ui::DesktopUIManager>(m_state.manager->properties(), popup.surface(), m_state.manager->popup_manager());
+      m_desktop_manager = std::make_unique<desktop_ui::DesktopContext>(m_context, desktop_context().properties(), popup.surface(),
+                                                                       desktop_context().popup_manager());
       root_widget.create_content<ResourceSelector>({
-         .manager = m_desktop_manager.get(),
          .trigger = this,
       });
       popup.initialize();
@@ -239,7 +240,7 @@ void ResourceSelectTrigger::dispatch_select(String result)
 {
    event_OnSelected.publish(std::move(result));
    if (m_dialog != nullptr) {
-      m_state.manager->popup_manager().close_popup(m_dialog);
+      this->desktop_context().popup_manager().close_popup(m_dialog);
       m_dialog = nullptr;
    }
 }

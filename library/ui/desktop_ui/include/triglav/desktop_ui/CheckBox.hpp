@@ -1,12 +1,14 @@
 #pragma once
 
+#include "DesktopContainerWidget.hpp"
+
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/Primitives.hpp"
 
 namespace triglav::desktop_ui {
-class DesktopUIManager;
+class DesktopContext;
 
 class CheckBox;
 
@@ -25,12 +27,11 @@ class RadioGroup
    std::vector<CheckBox*> m_check_boxes;
 };
 
-class CheckBox : public ui_core::ContainerWidget
+class CheckBox : public DesktopContainerWidget
 {
  public:
    struct State
    {
-      DesktopUIManager* manager;
       RadioGroup* radio_group;
       bool is_enabled;
    };

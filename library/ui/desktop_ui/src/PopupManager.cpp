@@ -3,12 +3,11 @@
 namespace triglav::desktop_ui {
 
 PopupManager::PopupManager(const graphics_api::Instance& instance, graphics_api::Device& device, render_core::GlyphCache& glyph_cache,
-                           resource::ResourceManager& resource_manager, desktop::ISurface& root_surface) :
+                           resource::ResourceManager& resource_manager) :
     m_instance(instance),
     m_device(device),
     m_glyph_cache(glyph_cache),
-    m_resource_manager(resource_manager),
-    m_root_surface(root_surface)
+    m_resource_manager(resource_manager)
 {
 }
 
@@ -16,7 +15,7 @@ Dialog& PopupManager::create_popup_dialog(const Vector2i offset, const Vector2u 
 {
    std::unique_lock lk{m_popup_mtx};
    const auto& popup = m_popups.emplace_back(
-      std::make_unique<Dialog>(m_instance, m_device, m_root_surface, m_glyph_cache, m_resource_manager, dimensions, offset));
+      std::make_unique<Dialog>(m_instance, m_device, *m_root_surface, m_glyph_cache, m_resource_manager, *this, dimensions, offset));
    return *popup;
 }
 
@@ -50,7 +49,14 @@ void PopupManager::close_popup(Dialog* dialog)
 
 desktop::ISurface& PopupManager::root_surface() const
 {
-   return m_root_surface;
+   assert(m_root_surface != nullptr);
+   return *m_root_surface;
+}
+
+void PopupManager::set_root_surface(desktop::ISurface& surface)
+{
+   std::unique_lock lk{m_popup_mtx};
+   m_root_surface = &surface;
 }
 
 }// namespace triglav::desktop_ui

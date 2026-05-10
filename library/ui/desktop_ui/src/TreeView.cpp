@@ -18,7 +18,7 @@ constexpr auto g_item_padding = 6.0f;
 
 TreeView::TreeView(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
     ui_core::BaseWidget(parent),
-    m_context(ctx),
+    m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(std::move(state)),
     m_item_highlight{
        .color = TG_THEME_VAL(active_color),
@@ -98,6 +98,11 @@ void TreeView::set_label(const TreeItemId item_id, const StringView label)
 {
    m_state.controller->set_label(item_id, label);
    this->add_to_viewport(m_dimensions, m_cropping_mask);
+}
+
+DesktopContext& TreeView::desktop_context() const
+{
+   return m_context;
 }
 
 void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/)

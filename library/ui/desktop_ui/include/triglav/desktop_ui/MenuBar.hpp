@@ -11,14 +11,13 @@
 namespace triglav::desktop_ui {
 
 class Dialog;
-class DesktopUIManager;
+class DesktopContext;
 
 class MenuBar final : public ui_core::BaseWidget
 {
  public:
    struct State
    {
-      DesktopUIManager* manager;
       MenuController* controller;
    };
 
@@ -40,12 +39,14 @@ class MenuBar final : public ui_core::BaseWidget
    void on_mouse_pressed(const ui_core::Event&, const ui_core::Event::Mouse&);
    void on_mouse_left(const ui_core::Event&);
 
+   [[nodiscard]] DesktopContext& desktop_context() const;
+
  private:
    [[nodiscard]] std::pair<float, Name> index_from_mouse_position(Vector2 position) const;
    void close_submenu();
    [[nodiscard]] Measure get_measure() const;
 
-   ui_core::Context& m_context;
+   DesktopContext& m_context;
    State m_state;
    std::vector<ui_core::TextId> m_labels;
    std::map<float, Name> m_offset_to_item;

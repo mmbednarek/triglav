@@ -10,7 +10,7 @@
 #include "triglav/ui_core/IWidget.hpp"
 
 namespace triglav::desktop_ui {
-class DesktopUIManager;
+class DesktopContext;
 }
 
 namespace triglav::editor {
@@ -19,7 +19,7 @@ class LevelEditor;
 
 using namespace name_literals;
 
-class SceneView final : public ui_core::ProxyWidget
+class SceneView final : public desktop_ui::DesktopProxyWidget
 {
    TG_DEFINE_LOG_CATEGORY(SceneView)
  public:
@@ -27,7 +27,6 @@ class SceneView final : public ui_core::ProxyWidget
 
    struct State
    {
-      desktop_ui::DesktopUIManager* manager{};
       LevelEditor* editor{};
    };
 

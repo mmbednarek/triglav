@@ -2,6 +2,7 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/ui_core/Context.hpp"
 
 namespace triglav::desktop {
 class ISurface;
@@ -69,12 +70,14 @@ struct ThemeProperties
    static ThemeProperties get_default();
 };
 
-#define TG_THEME_VAL(name) m_state.manager->properties().name
+#define TG_THEME_VAL(name) this->desktop_context().properties().name
 
-class DesktopUIManager
+class DesktopContext : public ui_core::Context
 {
  public:
-   DesktopUIManager(ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager);
+   DesktopContext(ui_core::Viewport& viewport, render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager,
+                  ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager);
+   DesktopContext(ui_core::Context& ctx, ThemeProperties properties, desktop::ISurface& surface, PopupManager& dialog_manager);
 
    [[nodiscard]] const ThemeProperties& properties() const;
    [[nodiscard]] const desktop::ISurface& surface() const;

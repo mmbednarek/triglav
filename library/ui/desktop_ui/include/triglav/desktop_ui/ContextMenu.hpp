@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DesktopContainerWidget.hpp"
 #include "DesktopUI.hpp"
 #include "MenuList.hpp"
 
@@ -7,13 +8,12 @@ namespace triglav::desktop_ui {
 
 class Dialog;
 
-class ContextMenu final : public ui_core::ContainerWidget
+class ContextMenu final : public DesktopContainerWidget
 {
  public:
    using Self = ContextMenu;
    struct State
    {
-      DesktopUIManager* manager;
       MenuController* controller;
    };
 
