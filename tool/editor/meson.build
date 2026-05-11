@@ -40,6 +40,8 @@ editor_sources = files([
                            'src/RootWidget.hpp',
                            'src/RootWindow.cpp',
                            'src/RootWindow.hpp',
+                           'src/UIContext.cpp',
+                           'src/UIContext.hpp',
                        ])
 
 subdir('shader')

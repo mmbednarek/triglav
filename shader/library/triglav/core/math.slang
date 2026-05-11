@@ -85,4 +85,12 @@ public struct BoundingBox
     public float3 max;
 };
 
+public float3 encode_normal_unorm(float3 norm) {
+    return (norm + float3(1)) * 0.5;
+}
+
+public float3 decode_normal_unorm(float3 enc_norm) {
+    return normalize(2.0 * enc_norm - float3(1));
+}
+
 }

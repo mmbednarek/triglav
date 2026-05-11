@@ -42,8 +42,8 @@ static const float4x4 BIAS_MAT = float4x4(
 
 static const float STATIC_AMBIENT_TERM = 0.5;
 static const float SHADOW_MAP_BIAS_TERM_CLOSE = 0.002;
-static const float SHADOW_MAP_BIAS_TERM_MID = 0.005;
-static const float SHADOW_MAP_BIAS_TERM_FAR = 0.010;
+static const float SHADOW_MAP_BIAS_TERM_MID = 0.004;
+static const float SHADOW_MAP_BIAS_TERM_FAR = 0.008;
 
 #define SHOW_SHADOW_CASCADES 0
 
@@ -73,7 +73,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
         return result;
     }
 
-    normal = normalize(normal);
+    normal = triglav::decode_normal_unorm(normal);
 
     float3 position = viewProperties.depth_world_pos(texDepth, screenCoord);
 
@@ -143,6 +143,8 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     FragOutput result;
     result.color = float4(color, 1.0);
+    // result.color = float4(float3(ambient_oc), 1.0);
+    // result.color = float4(position / 32.0, 1.0);
     result.bloom = float4(0.0);
     return result;
 }

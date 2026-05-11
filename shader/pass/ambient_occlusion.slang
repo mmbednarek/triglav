@@ -29,7 +29,7 @@ float4 fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0) : SV_Target0
         return float4(1.0, 1.0, 1.0, 1.0);
     }
 
-    normal = normalize(normal);
+    normal = triglav::decode_normal_unorm(normal);
     normal = normalize(mul(float3x3(viewProps.view), normal));
 
     float3 position = viewProps.depth_view_pos(texDepth, screenCoord);

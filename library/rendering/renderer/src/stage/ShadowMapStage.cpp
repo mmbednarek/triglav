@@ -38,9 +38,9 @@ ShadowMapStage::ShadowMapStage(Scene& scene, BindlessScene& bindless_scene, Upda
 
 void ShadowMapStage::build_stage(render_core::BuildContext& ctx, const Config& /*config*/) const
 {
-   ctx.declare_sized_depth_target("shadow_map.cascade0"_name, g_shadow_map_size, GAPI_FORMAT(D, UNorm16));
-   ctx.declare_sized_depth_target("shadow_map.cascade1"_name, g_shadow_map_size, GAPI_FORMAT(D, UNorm16));
-   ctx.declare_sized_depth_target("shadow_map.cascade2"_name, g_shadow_map_size, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_sized_depth_target("shadow_map.cascade0"_name, g_shadow_map_size, GAPI_FORMAT(D, Float32));
+   ctx.declare_sized_depth_target("shadow_map.cascade1"_name, g_shadow_map_size, GAPI_FORMAT(D, Float32));
+   ctx.declare_sized_depth_target("shadow_map.cascade2"_name, g_shadow_map_size, GAPI_FORMAT(D, Float32));
 
    ctx.set_sampler_properties("shadow_map.cascade0"_name, g_shadow_map_props);
    ctx.set_sampler_properties("shadow_map.cascade1"_name, g_shadow_map_props);
