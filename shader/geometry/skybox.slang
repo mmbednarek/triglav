@@ -50,8 +50,8 @@ FragOut fs_main(FragIn fragIn) {
 
     FragOut output;
     output.color = skyboxTex.Sample(uv);
-    output.position = float4(fragIn.worldPos, 1.0f);
-    output.normal = float4(0.0f, 0.0f, 0.0f, 1.0f);
+    output.position = float4(fragIn.worldPos, 1.0);
+    output.normal = float4(0.0, 0.0, 0.0, 1.0);
 
     return output;
 }

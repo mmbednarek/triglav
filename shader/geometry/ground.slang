@@ -61,7 +61,7 @@ FSOutput fs_main(VSOutput input) {
     FSOutput output;
     output.color = float4(float3(color), 1.0 - 0.4*color);
     output.position = float4(input.viewPos.xyz, 0.0);
-    output.normal = float4(normalize(input.normal), 1.0);
+    output.normal = float4(triglav::encode_normal_unorm(input.normal), 1.0);
 
     return output;
 }

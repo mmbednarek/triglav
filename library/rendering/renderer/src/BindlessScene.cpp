@@ -383,6 +383,10 @@ u32 BindlessScene::matrix_hierarchy_count() const
 u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, const ObjectID object_id, Transform3D* stage_ptr,
                                     const Transform3D& transform)
 {
+   if (const auto it = m_object_id_to_transform_id.find(object_id); it != m_object_id_to_transform_id.end()) {
+      return it->second;
+   }
+
    const auto transform_dst_index = m_transform_buffer_heap.allocate(1);
    assert(transform_dst_index.has_value());
 
