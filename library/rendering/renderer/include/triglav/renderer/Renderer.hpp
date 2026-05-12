@@ -55,7 +55,7 @@ class Renderer final : public render_core::IRenderer
             resource::ResourceManager& resource_manager, const graphics_api::Resolution& resolution);
 
    void update_debug_info(bool is_first_frame);
-   void on_render();
+   void on_render(float delta_time);
    void on_resize(uint32_t width, uint32_t height);
    void on_close();
    void on_mouse_move(Vector2 position);
@@ -69,6 +69,9 @@ class Renderer final : public render_core::IRenderer
    [[nodiscard]] graphics_api::Device& device() const;
    void on_config_property_changed(ConfigProperty property, const Config& config);
    void recreate_render_jobs() override;
+
+   Scene& scene();
+   AnimationManager& animation_manager();
 
  private:
    void update_uniform_data(float delta_time);

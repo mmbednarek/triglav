@@ -62,3 +62,16 @@ TEST(MathTest, ClosestPointToLine)
    const auto result = triglav::find_closest_point_on_line({0, 0, 0}, glm::normalize(Vector3{1, 1, 0}), Vector3{1, 2, 0});
    EXPECT_TRUE(glm::dot(result - Vector3(1.5, 1.5, 0), Vector3{1, 1, 1}) < 0.001f);
 }
+
+TEST(MathTest, QuaternionTest)
+{
+   const auto forward = Vector3{0.0f, 1.0f, 0.0f};
+
+   const auto quat = Quaternion{Vector3{triglav::MATH_PI / 2, -triglav::MATH_PI / 4, triglav::MATH_PI / 2}};
+   const auto rotated = quat * forward;
+
+   const auto recon = glm::rotation(Vector3{0.0f, 1.0f, 0.0f}, glm::normalize(rotated));
+   const auto also_rotated = recon * Vector3{0.0f, 1.0f, 0.0f};
+
+   EXPECT_TRUE(vec3_equals(rotated, also_rotated));
+}

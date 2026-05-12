@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CharacterController.hpp"
 #include "SplashScreen.hpp"
 
 #include "triglav/desktop/IDisplay.hpp"
@@ -22,7 +23,7 @@ class EventListener final
  public:
    using Self = EventListener;
 
-   EventListener(triglav::desktop::ISurface& surface, triglav::renderer::Renderer& renderer);
+   EventListener(triglav::desktop::ISurface& surface, triglav::renderer::Renderer& renderer, CharacterController& character_controller);
 
    void on_mouse_move(triglav::Vector2 position);
    void on_mouse_relative_move(triglav::Vector2 offset) const;
@@ -39,6 +40,7 @@ class EventListener final
  private:
    triglav::desktop::ISurface& m_surface;
    triglav::renderer::Renderer& m_renderer;
+   CharacterController& m_character_controller;
    bool m_is_running{true};
    triglav::Vector2 m_mouse_position;
 
@@ -73,6 +75,8 @@ class GameInstance
    void loop(triglav::desktop::IDisplay& display);
 
  private:
+   float calculate_delta_time();
+
    std::shared_ptr<triglav::desktop::ISurface> m_splash_screen_surface;
    std::shared_ptr<triglav::desktop::ISurface> m_demo_surface;
    triglav::graphics_api::Resolution m_resolution;
@@ -88,6 +92,8 @@ class GameInstance
    std::mutex m_state_mtx;
    std::atomic<State> m_state{State::Uninitialized};
    std::condition_variable m_base_resources_ready_cv;
+   std::unique_ptr<CharacterController> m_character_controller;
+   std::chrono::steady_clock::time_point m_last_frame_tp;
 
    TG_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
 };
