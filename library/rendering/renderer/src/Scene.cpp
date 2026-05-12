@@ -35,8 +35,9 @@ void Scene::update(const graphics_api::Resolution& resolution)
 ObjectID Scene::add_object(SceneObject object)
 {
    const auto object_id = m_top_object_id;
+   ++m_top_object_id;
 
-   const auto& [it, ok] = m_objects.emplace(m_top_object_id++, std::make_unique<SceneObject>(std::move(object)));
+   const auto& [it, ok] = m_objects.emplace(object_id, std::make_unique<SceneObject>(std::move(object)));
    assert(ok);
    event_OnObjectAddedToScene.publish(it->first, *it->second);
    this->update_bvh();

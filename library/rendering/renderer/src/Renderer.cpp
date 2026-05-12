@@ -84,8 +84,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
-   // m_scene.load_level("level/demo.level"_rc);
-   m_scene.load_level("level/simple_animated_human.level"_rc);
+   m_scene.load_level("level/demo.level"_rc);
+   // m_scene.load_level("level/simple_animated_human.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -155,11 +155,11 @@ void Renderer::update_debug_info(const bool is_first_frame)
    m_info_dialog.set_orientation({m_scene.pitch(), m_scene.yaw()});
 }
 
-void Renderer::on_render()
+void Renderer::on_render(const float delta_time)
 {
    static bool is_first_frame = true;
 
-   const auto delta_time = calculate_frame_duration();
+   m_bindless_scene.write_objects_to_buffer();
 
    if (m_must_recreate_jobs) {
       this->recreate_jobs(m_render_surface.resolution());
@@ -290,12 +290,10 @@ void Renderer::on_key_pressed(const Key key)
    if (key == Key::T) {
       log_info("Playing Animation...");
       flush_logs();
-      m_current_animation_id = m_animation_manager.start_animation("animation/simple_human_walk.anim"_rc, 1, true);
    }
    if (key == Key::Y) {
       log_info("Stopping Animation...");
       flush_logs();
-      m_animation_manager.stop_animation(m_current_animation_id);
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += 16.0f;
@@ -399,6 +397,16 @@ void Renderer::recreate_render_jobs()
    m_must_recreate_jobs = true;
 }
 
+Scene& Renderer::scene()
+{
+   return m_scene;
+}
+
+AnimationManager& Renderer::animation_manager()
+{
+   return m_animation_manager;
+}
+
 constexpr auto g_moving_speed = 10.0f;
 
 void Renderer::update_uniform_data(const float delta_time)
@@ -427,13 +435,13 @@ void Renderer::update_uniform_data(const float delta_time)
    }
 
    if (m_config_manager.config().is_smooth_camera_enabled) {
-      m_scene.update_orientation(m_mouse_offset.x * delta_time, m_mouse_offset.y * delta_time);
+      // m_scene.update_orientation(m_mouse_offset.x * delta_time, m_mouse_offset.y * delta_time);
       m_mouse_offset += m_mouse_offset * (static_cast<float>(pow(0.5f, 50.0f * delta_time)) - 1.0f);
       if (m_mouse_offset.x < 0.0001f && m_mouse_offset.y < 0.0001f) {
          m_mouse_offset = glm::vec2{0.0f};
       }
    } else {
-      m_scene.update_orientation(0.05f * m_mouse_offset.x, 0.05f * m_mouse_offset.y);
+      // m_scene.update_orientation(0.05f * m_mouse_offset.x, 0.05f * m_mouse_offset.y);
       m_mouse_offset = {0.0f, 0.0f};
    }
 

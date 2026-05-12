@@ -1,4 +1,6 @@
 demo_sources = files([
+  'src/CharacterController.cpp',
+  'src/CharacterController.hpp',
   'src/GameInstance.cpp',
   'src/GameInstance.hpp',
   'src/Main.cpp',

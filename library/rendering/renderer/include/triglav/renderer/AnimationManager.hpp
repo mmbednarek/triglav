@@ -12,6 +12,7 @@ namespace triglav::renderer {
 class BindlessScene;
 
 using AnimationID = u32;
+constexpr AnimationID NO_ANIMATION = ~0u;
 
 struct ChannelState
 {

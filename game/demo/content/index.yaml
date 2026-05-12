@@ -1,11 +1,13 @@
 resources:
   - "animation/simple_human_walk.anim"
+  - "armature/simple_human_rig.arm"
   - "fonts/segoeui/bold.typeface"
   - "fonts/segoeui/regular.typeface"
   - "level/demo.level"
   - "level/simple_animated_human.level"
   - "material/stone.mat"
   - "mesh/teapot.mesh"
+  - "mesh/simple_human.mesh"
   - "texture/board.tex"
   - "texture/particle.tex"
   - "texture/ui_images.tex"

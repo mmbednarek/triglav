@@ -15,9 +15,10 @@ namespace gapi = triglav::graphics_api;
 using namespace triglav::name_literals;
 using namespace triglav::string_literals;
 
-EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& renderer) :
+EventListener::EventListener(ISurface& surface, triglav::renderer::Renderer& renderer, CharacterController& character_controller) :
     m_surface(surface),
     m_renderer(renderer),
+    m_character_controller(character_controller),
     TG_CONNECT(surface, OnMouseMove, on_mouse_move),
     TG_CONNECT(surface, OnMouseRelativeMove, on_mouse_relative_move),
     TG_CONNECT(surface, OnMouseLeave, on_mouse_leave),
@@ -41,7 +42,8 @@ void EventListener::on_mouse_relative_move(const triglav::Vector2 offset) const
    if (not m_surface.is_cursor_locked())
       return;
 
-   m_renderer.on_mouse_relative_move(offset.x, offset.y);
+   // m_renderer.on_mouse_relative_move(offset.x, offset.y);
+   m_character_controller.on_analog_action(AnalogAction::View, offset);
 }
 
 void EventListener::on_mouse_leave() const
@@ -53,7 +55,7 @@ void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
 {
    m_renderer.on_mouse_is_pressed(button, m_mouse_position);
 
-   if (not m_surface.is_cursor_locked() && button == MouseButton::Middle) {
+   if (not m_surface.is_cursor_locked()) {
       m_surface.lock_cursor();
       m_surface.hide_cursor();
    }
@@ -62,10 +64,6 @@ void EventListener::on_mouse_button_is_pressed(const MouseButton button) const
 void EventListener::on_mouse_button_is_released(const MouseButton button) const
 {
    m_renderer.on_mouse_is_released(button, m_mouse_position);
-
-   if (m_surface.is_cursor_locked() && button == MouseButton::Middle) {
-      m_surface.unlock_cursor();
-   }
 }
 
 void EventListener::on_resize(const triglav::Vector2i resolution) const
@@ -80,18 +78,33 @@ void EventListener::on_close()
 
 void EventListener::on_key_is_pressed(const Key key) const
 {
-   // W - 17
-   // A - 30
-   // S - 31
-   // S - 32
-   // std::cout << "pressed key: " << key << '\n';
-   m_renderer.on_key_pressed(key);
+   // m_renderer.on_key_pressed(key);
+   switch (key) {
+   case Key::W:
+      m_character_controller.on_analog_action(AnalogAction::Movement, triglav::Vector2{1.0f, 0.0f});
+      break;
+   case Key::A:
+      m_character_controller.on_analog_action(AnalogAction::Movement, triglav::Vector2{0.0f, -1.0f});
+      break;
+   case Key::S:
+      m_character_controller.on_analog_action(AnalogAction::Movement, triglav::Vector2{-1.0f, 0.0f});
+      break;
+   case Key::D:
+      m_character_controller.on_analog_action(AnalogAction::Movement, triglav::Vector2{0.0f, 1.0f});
+      break;
+   case Key::Alt:
+      m_surface.unlock_cursor();
+      break;
+   default:
+      break;
+   }
 }
 
-void EventListener::on_key_is_released(const Key key) const
+void EventListener::on_key_is_released(const Key /*key*/) const
 {
    // std::cout << "released key: " << key << '\n';
-   m_renderer.on_key_released(key);
+   // m_renderer.on_key_released(key);
+   m_character_controller.stop_character();
 }
 
 [[nodiscard]] bool EventListener::is_running() const
@@ -132,6 +145,7 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
 {
    m_state = State::LoadingBaseResources;
    m_resource_manager.load_asset_list(PathManager::the().translate_path("engine/index.yaml"_rc));
+   m_last_frame_tp = std::chrono::steady_clock::now();
 }
 
 void GameInstance::on_loaded_assets()
@@ -186,16 +200,32 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
 
    m_renderer =
       std::make_unique<triglav::renderer::Renderer>(*m_demo_surface, *m_graphics_demo_surface, *m_device, m_resource_manager, m_resolution);
-   m_event_listener.emplace(*m_demo_surface, *m_renderer);
+
+   m_character_controller = std::make_unique<CharacterController>(m_renderer->scene(), m_renderer->animation_manager());
+
+   m_event_listener.emplace(*m_demo_surface, *m_renderer, *m_character_controller);
 
    auto& event_listener = dynamic_cast<EventListener&>(*m_event_listener);
 
+   m_character_controller->setup_character();
+
    while (event_listener.is_running()) {
-      m_renderer->on_render();
+      const float delta_time = this->calculate_delta_time();
+      m_renderer->on_render(delta_time);
+      m_character_controller->tick(delta_time);
       display.dispatch_messages();
    }
 
    m_renderer->on_close();
+}
+
+float GameInstance::calculate_delta_time()
+{
+   const auto now = std::chrono::steady_clock::now();
+   const auto diff = now - m_last_frame_tp;
+   m_last_frame_tp = now;
+
+   return static_cast<float>(std::chrono::duration_cast<std::chrono::microseconds>(diff).count()) / 1000000.0f;
 }
 
 }// namespace demo
