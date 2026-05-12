@@ -39,9 +39,9 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
       ctx.declare_screen_size_texture("ray_tracing.shadows"_name, GAPI_FORMAT(R, UNorm8));
    }
 
-   ctx.declare_render_target("shading.color"_name, GAPI_FORMAT(RGBA, Float16));
-   ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, Float16));
-   ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_render_target("shading.color"_name, GAPI_FORMAT(RGBA, UNorm8));
+   ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, UNorm8));
+   ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, Float32));
 
    // if (config.is_rendering_particles) {
    //    this->prepare_particles(ctx);

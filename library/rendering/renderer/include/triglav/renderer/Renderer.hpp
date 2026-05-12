@@ -107,6 +107,7 @@ class Renderer final : public render_core::IRenderer
    OcclusionCulling m_occlusion_culling;
    RenderingJob m_rendering_job;
    u32 m_frame_index{0};
+   AnimationID m_current_animation_id{0};
 
    DebugWidget m_debug_widget;
 

@@ -76,7 +76,6 @@ void AnimationJob::prepare_frame(render_core::JobGraph& graph, const u32 frame_i
    u32 i = 0;
    for (const auto& [id, anim] : m_animation_manager.animation_states()) {
       assert(anim.start_time <= m_animation_manager.current_time());
-      log_info("Start Time: {}, Time: {}", anim.start_time, m_animation_manager.current_time());
       for (const auto& channel : anim.channels) {
          auto& dst_state = states[i];
          dst_state.start_time = anim.start_time;
