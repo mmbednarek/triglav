@@ -84,7 +84,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
-   m_scene.load_level("level/demo.level"_rc);
+   // m_scene.load_level("level/demo.level"_rc);
+   m_scene.load_level("level/simple_animated_human.level"_rc);
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -136,7 +137,6 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    m_info_dialog.init_config_labels();
 
    // m_animation_manager.start_animation("animation/funny_y_anim.anim"_rc, 0);
-   // m_animation_manager.start_animation("animation/simple_human_walk.anim"_rc, 1, true);
 }
 
 void Renderer::update_debug_info(const bool is_first_frame)
@@ -286,6 +286,16 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::F10) {
       m_config_manager.toggle_rendering_particles();
+   }
+   if (key == Key::T) {
+      log_info("Playing Animation...");
+      flush_logs();
+      m_current_animation_id = m_animation_manager.start_animation("animation/simple_human_walk.anim"_rc, 1, true);
+   }
+   if (key == Key::Y) {
+      log_info("Stopping Animation...");
+      flush_logs();
+      m_animation_manager.stop_animation(m_current_animation_id);
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += 16.0f;

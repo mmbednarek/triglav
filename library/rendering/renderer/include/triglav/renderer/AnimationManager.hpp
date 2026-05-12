@@ -35,12 +35,14 @@ class AnimationManager
 {
  public:
    TG_EVENT(OnAnimationBegan, AnimationID, const AnimationState&)
+   TG_EVENT(OnAnimationFinish, AnimationID)
 
    AnimationManager(graphics_api::Device& device, resource::ResourceManager& resource_manager, BindlessScene& bindless_scene);
 
    using StateContainer = std::map<AnimationID, AnimationState>;
 
    AnimationID start_animation(AnimationName animation_name, ObjectID target_object_id, bool is_repeating);
+   void stop_animation(AnimationID id);
    float current_time() const;
    u32 channel_count() const;
    graphics_api::Buffer& keyframe_buffer();

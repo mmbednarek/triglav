@@ -99,6 +99,12 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
    return id;
 }
 
+void AnimationManager::stop_animation(const AnimationID id)
+{
+   event_OnAnimationFinish.publish(id);
+   m_states.erase(id);
+}
+
 float AnimationManager::current_time() const
 {
    return static_cast<float>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now() - m_base_time).count()) /
