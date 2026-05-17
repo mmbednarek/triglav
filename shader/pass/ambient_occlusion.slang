@@ -3,7 +3,7 @@ import triglav.core;
 [[vk::binding(0)]]
 uniform Texture2D<float> texDepth;
 [[vk::binding(1)]]
-uniform Texture2D<float3> texNormal;
+uniform Texture2D<float4> texNormal;
 [[vk::binding(2)]]
 uniform Texture2D<float2> texNoise;
 
@@ -24,7 +24,7 @@ float4 fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0) : SV_Target0
     texNormal.GetDimensions(0, texDims.x, texDims.y, texDims.z);
     int3 pixelPos = int3(int2(screenCoord * float2(texDims.xy)), 0);
 
-    float3 normal = texNormal.Load(pixelPos);
+    float3 normal = texNormal.Load(pixelPos).xyz;
     if (all(normal == float3(0.0))) {
         return float4(1.0, 1.0, 1.0, 1.0);
     }

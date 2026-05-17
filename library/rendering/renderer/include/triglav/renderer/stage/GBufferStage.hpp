@@ -25,11 +25,14 @@ class GBufferStage final : public IStage
    void build_skybox(render_core::BuildContext& ctx) const;
    void build_ground(render_core::BuildContext& ctx) const;
    void build_geometry(render_core::BuildContext& ctx) const;
+   void build_terrain(render_core::BuildContext& ctx) const;
 
  private:
    void draw_objects_with_render_info(render_core::BuildContext& ctx, const render_objects::MaterialGeometryRenderInfo& info) const;
 
    geometry::DeviceMesh m_mesh;
+   graphics_api::Texture m_terrain_texture;
+   graphics_api::Buffer m_terrain_vertices;
    BindlessScene& m_bindless_scene;
 };
 

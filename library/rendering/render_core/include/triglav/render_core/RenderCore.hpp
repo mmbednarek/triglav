@@ -81,6 +81,8 @@ struct GraphicPipelineState
 {
    std::optional<VertexShaderName> vertex_shader;
    std::optional<FragmentShaderName> fragment_shader;
+   std::optional<HullShaderName> hull_shader;
+   std::optional<DomainShaderName> domain_shader;
    VertexLayout vertex_layout;
    DescriptorState descriptor_state;
    std::vector<graphics_api::ColorFormat> render_target_formats;
@@ -90,6 +92,7 @@ struct GraphicPipelineState
    std::vector<PushConstantDesc> push_constants;
    float line_width{1.0f};
    bool is_blending_enabled{true};
+   u32 tesselation_control_points{0};
 
    [[nodiscard]] PipelineHash hash() const;
 };

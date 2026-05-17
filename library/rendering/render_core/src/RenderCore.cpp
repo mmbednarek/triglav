@@ -108,6 +108,12 @@ PipelineHash GraphicPipelineState::hash() const
    if (this->vertex_shader.has_value()) {
       result += 1252177 * this->vertex_shader->name();
    }
+   if (this->hull_shader.has_value()) {
+      result += 786942833 * this->hull_shader->name();
+   }
+   if (this->domain_shader.has_value()) {
+      result += 432910817 * this->domain_shader->name();
+   }
    result += 1887451 * this->vertex_layout.hash();
    result += 5973041 * this->descriptor_state.hash();
 
@@ -121,6 +127,7 @@ PipelineHash GraphicPipelineState::hash() const
    result += 2723521 * static_cast<u32>(depth_test_mode);
    result += 6378731 * static_cast<u32>(is_blending_enabled);
    result += 61075103 * static_cast<u32>(line_width * 10.0f);
+   result += 991581853 * tesselation_control_points;
 
    for (const auto [index, push_constant] : Enumerate(this->push_constants)) {
       result += PUSH_CONSTANT_PRIMES[index] * push_constant.hash();

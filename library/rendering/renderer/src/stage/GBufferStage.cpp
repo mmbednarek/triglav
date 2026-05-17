@@ -22,10 +22,60 @@ geometry::DeviceMesh create_skybox_mesh(graphics_api::Device& device)
    return mesh.upload_to_device(device);
 }
 
+struct TerrainVertex
+{
+   Vector3 position;
+   Vector2 uv;
+};
+
+const render_core::VertexLayout terrain_layout = render_core::VertexLayout{sizeof(TerrainVertex)}
+                                                    .add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(TerrainVertex, position))
+                                                    .add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(TerrainVertex, uv));
+
+graphics_api::Texture generate_terrain_bitmap(graphics_api::Device& device, const u32 w, const u32 h)
+{
+   std::vector<float> terrain_vertices(w * h);
+   for (u32 y = 0; y < h; ++y) {
+      for (u32 x = 0; x < w; ++x) {
+         const float xx = 2.0f * (static_cast<float>(x) / static_cast<float>(w)) - 1.0f;
+         const float yy = 2.0f * (static_cast<float>(y) / static_cast<float>(h)) - 1.0f;
+
+         terrain_vertices[y * w + x] = xx * xx + yy * yy;
+      }
+   }
+
+   auto tex = GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, Float32), graphics_api::Resolution{w, h}));
+   GAPI_CHECK_STATUS(tex.write(device, reinterpret_cast<const uint8_t*>(terrain_vertices.data())));
+
+   tex.sampler_properties().address_u = graphics_api::TextureAddressMode::Clamp;
+   tex.sampler_properties().address_v = graphics_api::TextureAddressMode::Clamp;
+   tex.sampler_properties().address_w = graphics_api::TextureAddressMode::Clamp;
+   return tex;
+}
+
+graphics_api::Buffer generate_terrain_vertices(graphics_api::Device& device)
+{
+   constexpr float SIZE = 120.0;
+   const std::array<TerrainVertex, 4> verts{
+      TerrainVertex{Vector3{-SIZE / 2.0f, -SIZE / 2.0f, 0}, Vector2{0.0f, 0.0f}},
+      TerrainVertex{Vector3{-SIZE / 2.0f, SIZE / 2.0f, 0}, Vector2{0.0f, 1.0f}},
+      TerrainVertex{Vector3{SIZE / 2.0f, SIZE / 2.0f, 0}, Vector2{1.0f, 1.0f}},
+      TerrainVertex{Vector3{SIZE / 2.0f, -SIZE / 2.0f, 0}, Vector2{1.0f, 0.0f}},
+   };
+
+   auto buff = GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::TransferDst | graphics_api::BufferUsage::VertexBuffer,
+                                               verts.size() * sizeof(TerrainVertex)));
+   GAPI_CHECK_STATUS(buff.write_indirect(verts.data(), verts.size() * sizeof(TerrainVertex)));
+   return buff;
+}
+
+
 }// namespace
 
 GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless_scene) :
     m_mesh(create_skybox_mesh(device)),
+    m_terrain_texture(generate_terrain_bitmap(device, 1024, 1024)),
+    m_terrain_vertices(generate_terrain_vertices(device)),
     m_bindless_scene(bindless_scene)
 {
 }
@@ -41,6 +91,7 @@ void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& /*c
 
    this->build_skybox(ctx);
    // this->build_ground(ctx);
+   this->build_terrain(ctx);
    this->build_geometry(ctx);
 
    ctx.end_render_pass();
@@ -87,6 +138,30 @@ void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
    for (const auto& info : render_objects::GEOMETRY_RENDER_INFOS) {
       this->draw_objects_with_render_info(ctx, info);
    }
+}
+
+void GBufferStage::build_terrain(render_core::BuildContext& ctx) const
+{
+   ctx.bind_vertex_shader("shader/terrain/vertex.vshader"_rc);
+
+   ctx.bind_hull_shader("shader/terrain/hull.hshader"_rc);
+
+   ctx.bind_uniform_buffer(0, "core.view_properties"_external);
+
+   ctx.bind_domain_shader("shader/terrain/domain.dshader"_rc);
+
+   ctx.bind_uniform_buffer(1, "core.view_properties"_external);
+   ctx.bind_samplable_texture(2, &m_terrain_texture);
+
+   ctx.bind_fragment_shader("shader/terrain/fragment.fshader"_rc);
+
+   ctx.set_vertex_topology(graphics_api::VertexTopology::PatchList);
+
+   ctx.bind_vertex_layout(terrain_layout);
+   ctx.bind_vertex_buffer(&m_terrain_vertices);
+   ctx.set_tesselation_control_points(4);
+
+   ctx.draw_primitives(4, 0, 1, 0);
 }
 
 void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,

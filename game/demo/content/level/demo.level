@@ -142,9 +142,9 @@ nodes:
         mesh: mesh/cage.mesh
         transform:
           translation:
-            x: -11.406351
+            x: -7.000000
             y: 9.000000
-            z: 7.399823
+            z: 0.300000
           rotation:
             x: 0.000000
             y: 1.000000

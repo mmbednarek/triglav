@@ -51,6 +51,10 @@ resources:
   - "shader/pass/ambient_occlusion.fshader"
   - "shader/pass/post_processing.fshader"
   - "shader/pass/shading.fshader"
+  - "shader/terrain/domain.dshader"
+  - "shader/terrain/fragment.fshader"
+  - "shader/terrain/hull.hshader"
+  - "shader/terrain/vertex.vshader"
   # UI
   - "engine/texture/ui_atlas.tex"
   # Graphics

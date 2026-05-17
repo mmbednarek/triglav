@@ -32,7 +32,7 @@ struct FragOut
     [[vk::location(0)]]
     float4 color : SV_Target0;
     [[vk::location(1)]]
-    float4 position : SV_Target1;
+    float2 material : SV_Target1;
     [[vk::location(2)]]
     float4 normal : SV_Target1;
 };
@@ -50,7 +50,7 @@ FragOut fs_main(FragIn fragIn) {
 
     FragOut output;
     output.color = skyboxTex.Sample(uv);
-    output.position = float4(fragIn.worldPos, 1.0);
+    output.material = float2(0, 0);
     output.normal = float4(0.0, 0.0, 0.0, 1.0);
 
     return output;

@@ -8,7 +8,7 @@ uniform Texture2D<float> texDepth;
 [[vk::binding(2)]]
 uniform Texture2D<float2> texMaterial;
 [[vk::binding(3)]]
-uniform Texture2D<float3> texNormal;
+uniform Texture2D<float4> texNormal;
 [[vk::binding(4)]]
 uniform Texture2D<float> texAmbientOcclusion;
 [[vk::binding(5)]]
@@ -63,7 +63,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
     int3 pixelPos = int3(int2(screenCoord * float2(texDims.xy)), 0);
 
     float2 material = texMaterial.Load(pixelPos);
-    float3 normal = texNormal.Load(pixelPos);
+    float3 normal = texNormal.Load(pixelPos).xyz;
     float4 texColorSample = texColor.Load(pixelPos);
 
     if (all(normal == float3(0.0, 0.0, 0.0))) {
@@ -143,6 +143,7 @@ FragOutput fs_main([[vk::location(0)]] float2 screenCoord : TEXCOORD0)
 
     FragOutput result;
     result.color = float4(color, 1.0);
+    // result.color = float4(texNormal.Load(pixelPos).xyz, 1.0);
     // result.color = float4(float3(ambient_oc), 1.0);
     // result.color = float4(position / 32.0, 1.0);
     result.bloom = float4(0.0);

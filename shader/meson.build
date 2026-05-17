@@ -45,6 +45,30 @@ slang_vs_commands = [
     '-o', '@OUTPUT@'
 ]
 
+slang_ds_commands = [
+    slang_compiler,
+    '-target' , 'spirv',
+    '-profile', 'spirv_1_6',
+    '-entry', 'ds_main',
+    '-stage', 'domain',
+    '-I', shader_library_dir,
+    shader_opt_flags,
+    '@INPUT@',
+    '-o', '@OUTPUT@'
+]
+
+slang_hs_commands = [
+    slang_compiler,
+    '-target' , 'spirv',
+    '-profile', 'spirv_1_6',
+    '-entry', 'hs_main',
+    '-stage', 'hull',
+    '-I', shader_library_dir,
+    shader_opt_flags,
+    '@INPUT@',
+    '-o', '@OUTPUT@'
+]
+
 shader_targets = []
 
 subdir('bindless_geometry')
@@ -53,6 +77,7 @@ subdir('misc')
 subdir('particles')
 subdir('pass')
 subdir('ray_tracing')
+subdir('terrain')
 subdir('ui')
 
 shaders = declare_dependency(sources: [shader_targets])

@@ -10,7 +10,7 @@ using triglav::Vector3;
 namespace demo {
 
 constexpr float CAMERA_DISTANCE = 16.0f;
-constexpr float PLAYER_SPEED = 5.0f;
+constexpr float PLAYER_SPEED = 20.0f;
 
 CharacterController::CharacterController(triglav::renderer::Scene& scene, triglav::renderer::AnimationManager& animation_manager) :
     m_scene(scene),
@@ -54,6 +54,7 @@ void CharacterController::stop_character()
    m_character_state = CharacterState::Idle;
    if (m_character_animation_id != triglav::renderer::NO_ANIMATION) {
       m_animation_manager.stop_animation(m_character_animation_id);
+      m_character_animation_id = triglav::renderer::NO_ANIMATION;
    }
 }
 

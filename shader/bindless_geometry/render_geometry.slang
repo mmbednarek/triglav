@@ -59,7 +59,7 @@ FSOutput fs_main(FSInput fsInput)
 
     FSOutput output;
     output.color = float4(albedoColor.xyz, 1.0);
-    output.material = float2(roughness, metallic);
-    output.normal = triglav::encode_normal_unorm(float3(normalVec));
+    output.material = float4(roughness, metallic, 0.0, 1.0);
+    output.normal = float4(triglav::encode_normal_unorm(float3(normalVec)), 1);
     return output;
 }
