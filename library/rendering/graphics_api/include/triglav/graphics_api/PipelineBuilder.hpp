@@ -49,6 +49,8 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
 
    GraphicsPipelineBuilder& fragment_shader(const Shader& shader);
    GraphicsPipelineBuilder& vertex_shader(const Shader& shader);
+   GraphicsPipelineBuilder& hull_shader(const Shader& shader);
+   GraphicsPipelineBuilder& domain_shader(const Shader& shader);
    GraphicsPipelineBuilder& vertex_attribute(const ColorFormat& format, size_t offset);
    GraphicsPipelineBuilder& end_vertex_layout();
    GraphicsPipelineBuilder& descriptor_binding(DescriptorType descriptor_type, PipelineStage shader_stage);
@@ -65,6 +67,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    GraphicsPipelineBuilder& color_attachment(ColorFormat format);
    GraphicsPipelineBuilder& depth_attachment(ColorFormat format);
    GraphicsPipelineBuilder& line_width(float line_width);
+   GraphicsPipelineBuilder& tesselation_patch_control_points(u32 count);
 
    [[nodiscard]] Result<Pipeline> build() const;
 
@@ -84,6 +87,7 @@ class GraphicsPipelineBuilder : public PipelineBuilderBase
    DepthTestMode m_depth_test_mode{DepthTestMode::Disabled};
    bool m_blending_enabled{true};
    float m_line_width{1.0f};
+   u32 m_tessellation_patch_control_points{0};
    std::vector<ColorFormat> m_color_attachment_formats;
    std::optional<ColorFormat> m_depth_attachment_format;
 

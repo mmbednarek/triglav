@@ -63,7 +63,7 @@ class PanelHeader final : public desktop_ui::DesktopProxyWidget
          .content = m_state.label,
          .color = {0.3, 0.3, 0.3, 1.0},
          .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-         .vertical_alignment = ui_core::VerticalAlignment::Top,
+         .vertical_alignment = ui_core::VerticalAlignment::Center,
       });
 
       layout
@@ -329,23 +329,43 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
                        });
 
    auto& layout = m_object_info->create_content<ui_core::VerticalLayout>({
-      .padding = {10.0f, 10.0f, 10.0f, 10.0f},
+      .padding = {6, 6, 6, 6},
+      .separation = 8.0f,
+   });
+
+   auto& transform_box = layout.create_child<ui_core::RectBox>({
+      .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
+      .border_radius = {8, 8, 8, 8},
+      .border_color = palette::NO_COLOR,
+      .border_width = 0.0f,
+   });
+
+   auto& transform_layout = transform_box.create_content<ui_core::VerticalLayout>({
+      .padding = {8, 8, 8, 8},
       .separation = 7.0f,
    });
 
-   layout.create_child<PanelHeader>({.label = "TRANSFORM", .icon_region = {5 * 18, 2 * 18, 18, 18}});
+   transform_layout.create_child<PanelHeader>({.label = "TRANSFORM", .icon_region = {5 * 18, 2 * 18, 18, 18}});
 
-   m_transform_widget = &layout.create_child<TransformWidget>({
+   m_transform_widget = &transform_layout.create_child<TransformWidget>({
       .editor = m_state.editor,
    });
 
-   layout.create_child<ui_core::EmptySpace>({
-      .size = {10.0f, 5.0f},
+   auto& mesh_box = layout.create_child<ui_core::RectBox>({
+      .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
+      .border_radius = {8, 8, 8, 8},
+      .border_color = palette::NO_COLOR,
+      .border_width = 0.0f,
    });
 
-   layout.create_child<PanelHeader>({.label = "MESH", .icon_region = {7 * 18, 0 * 18, 18, 18}});
+   auto& mesh_layout = mesh_box.create_content<ui_core::VerticalLayout>({
+      .padding = {8, 8, 8, 8},
+      .separation = 7.0f,
+   });
 
-   auto& prop_layout = layout.create_child<ui_core::GridLayout>({
+   mesh_layout.create_child<PanelHeader>({.label = "MESH", .icon_region = {7 * 18, 0 * 18, 18, 18}});
+
+   auto& prop_layout = mesh_layout.create_child<ui_core::GridLayout>({
       .column_ratios = {0.3f, 0.7f},
       .row_ratios = {0.5f, 0.5f},
       .horizontal_spacing = 5.0f,

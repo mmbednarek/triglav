@@ -249,6 +249,10 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
    switch (stage) {
    case PipelineStage::VertexShader:
       return VK_SHADER_STAGE_VERTEX_BIT;
+   case PipelineStage::HullShader:
+      return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+   case PipelineStage::DomainShader:
+      return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
    case PipelineStage::FragmentShader:
       return VK_SHADER_STAGE_FRAGMENT_BIT;
    case PipelineStage::ComputeShader:
@@ -270,11 +274,17 @@ VkShaderStageFlagBits to_vulkan_shader_stage(const PipelineStage stage)
    return static_cast<VkShaderStageFlagBits>(0);
 }
 
-VkShaderStageFlags to_vulkan_shader_stage_flags(PipelineStageFlags flags)
+VkShaderStageFlags to_vulkan_shader_stage_flags(const PipelineStageFlags flags)
 {
    VkShaderStageFlags result{};
    if (flags & PipelineStage::VertexShader) {
       result |= VK_SHADER_STAGE_VERTEX_BIT;
+   }
+   if (flags & PipelineStage::HullShader) {
+      result |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+   }
+   if (flags & PipelineStage::DomainShader) {
+      result |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
    }
    if (flags & PipelineStage::FragmentShader) {
       result |= VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -311,6 +321,10 @@ VkPipelineStageFlagBits to_vulkan_pipeline_stage(const PipelineStage stage)
       return VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
    case PipelineStage::VertexShader:
       return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+   case PipelineStage::HullShader:
+      return VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
+   case PipelineStage::DomainShader:
+      return VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
    case PipelineStage::FragmentShader:
       return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
    case PipelineStage::EarlyZ:
@@ -355,6 +369,12 @@ VkPipelineStageFlags to_vulkan_pipeline_stage_flags(const PipelineStageFlags fla
    }
    if (flags & PipelineStage::VertexShader) {
       result |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+   }
+   if (flags & PipelineStage::HullShader) {
+      result |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
+   }
+   if (flags & PipelineStage::DomainShader) {
+      result |= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
    }
    if (flags & PipelineStage::FragmentShader) {
       result |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;

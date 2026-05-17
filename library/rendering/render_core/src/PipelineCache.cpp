@@ -109,6 +109,12 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
 
    builder.vertex_shader(m_resource_manager.get(state.vertex_shader.value()));
    builder.fragment_shader(m_resource_manager.get(state.fragment_shader.value()));
+   if (state.hull_shader.has_value()) {
+      builder.hull_shader(m_resource_manager.get(state.hull_shader.value()));
+   }
+   if (state.domain_shader.has_value()) {
+      builder.domain_shader(m_resource_manager.get(state.domain_shader.value()));
+   }
 
    write_descriptor_state(builder, state.descriptor_state);
 
@@ -130,6 +136,7 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
    builder.vertex_topology(state.vertex_topology);
    builder.depth_test_mode(state.depth_test_mode);
    builder.line_width(state.line_width);
+   builder.tesselation_patch_control_points(state.tesselation_control_points);
 
    for (const auto push_constant : state.push_constants) {
       builder.push_constant(push_constant.flags, push_constant.size);

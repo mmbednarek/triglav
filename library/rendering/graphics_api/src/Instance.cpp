@@ -235,6 +235,7 @@ Result<DeviceUPtr> Instance::create_device(const Surface* surface, const DeviceP
    device_features.features.shaderInt64 = true;
    device_features.features.pipelineStatisticsQuery = true;
    device_features.features.textureCompressionBC = true;
+   device_features.features.tessellationShader = true;
 
    VkPhysicalDeviceVulkan13Features vulkan13_features{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES};
    vulkan13_features.dynamicRendering = true;

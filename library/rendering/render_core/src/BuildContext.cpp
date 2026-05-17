@@ -134,6 +134,21 @@ void BuildContext::bind_fragment_shader(FragmentShaderName fs_name)
    m_active_pipeline_stages = gapi::PipelineStage::FragmentShader;
 }
 
+void BuildContext::bind_hull_shader(const HullShaderName hs_name)
+{
+   m_work_types |= gapi::WorkType::Graphics;
+   m_graphic_pipeline_state.hull_shader = hs_name;
+   m_active_pipeline_stages = gapi::PipelineStage::HullShader;
+}
+
+void BuildContext::bind_domain_shader(const DomainShaderName ds_name)
+{
+   m_work_types |= gapi::WorkType::Graphics;
+   m_graphic_pipeline_state.domain_shader = ds_name;
+   m_active_pipeline_stages = gapi::PipelineStage::DomainShader;
+}
+
+
 void BuildContext::bind_compute_shader(ComputeShaderName cs_name)
 {
    m_work_types |= gapi::WorkType::Compute;
@@ -598,6 +613,11 @@ void BuildContext::handle_pending_graphic_state()
    m_graphic_pipeline_state.depth_test_mode = graphics_api::DepthTestMode::Enabled;
    m_graphic_pipeline_state.push_constants.clear();
    m_graphic_pipeline_state.is_blending_enabled = true;
+   m_graphic_pipeline_state.tesselation_control_points = 0;
+   m_graphic_pipeline_state.vertex_shader.reset();
+   m_graphic_pipeline_state.fragment_shader.reset();
+   m_graphic_pipeline_state.hull_shader.reset();
+   m_graphic_pipeline_state.domain_shader.reset();
 
    ++m_descriptor_counts.total_descriptor_sets;
 
@@ -697,6 +717,11 @@ void BuildContext::set_viewport(const Vector4 dimensions, const float min_depth,
 void BuildContext::set_line_width(const float width)
 {
    m_graphic_pipeline_state.line_width = width;
+}
+
+void BuildContext::set_tesselation_control_points(const u32 count)
+{
+   m_graphic_pipeline_state.tesselation_control_points = count;
 }
 
 void BuildContext::draw_primitives(const u32 vertex_count, const u32 vertex_offset, u32 instance_count, u32 instance_offset)
@@ -1056,7 +1081,8 @@ void BuildContext::set_pipeline_state_descriptor(const graphics_api::PipelineSta
                                                  const DescriptorInfo& info)
 {
    assert(index < MAX_DESCRIPTOR_COUNT);
-   if (stages & gapi::PipelineStage::FragmentShader || stages & gapi::PipelineStage::VertexShader) {
+   if (stages & gapi::PipelineStage::FragmentShader || stages & gapi::PipelineStage::VertexShader ||
+       stages & gapi::PipelineStage::DomainShader || stages & gapi::PipelineStage::HullShader) {
       m_graphic_pipeline_state.descriptor_state.descriptors[index] = info;
       m_graphic_pipeline_state.descriptor_state.descriptor_count =
          std::max(m_graphic_pipeline_state.descriptor_state.descriptor_count, index + 1);

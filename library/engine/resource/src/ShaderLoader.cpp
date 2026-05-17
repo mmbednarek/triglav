@@ -20,6 +20,20 @@ graphics_api::Shader Loader<ResourceType::VertexShader>::load_gpu(graphics_api::
    return shader;
 }
 
+graphics_api::Shader Loader<ResourceType::HullShader>::load_gpu(graphics_api::Device& device, HullShaderName name, const io::Path& path)
+{
+   auto shader = GAPI_CHECK(device.create_shader(graphics_api::PipelineStage::HullShader, "main", io::read_whole_file(path)));
+   TG_SET_DEBUG_NAME(shader, resolve_name(name.name()));
+   return shader;
+}
+
+graphics_api::Shader Loader<ResourceType::DomainShader>::load_gpu(graphics_api::Device& device, DomainShaderName name, const io::Path& path)
+{
+   auto shader = GAPI_CHECK(device.create_shader(graphics_api::PipelineStage::DomainShader, "main", io::read_whole_file(path)));
+   TG_SET_DEBUG_NAME(shader, resolve_name(name.name()));
+   return shader;
+}
+
 graphics_api::Shader Loader<ResourceType::ComputeShader>::load_gpu(graphics_api::Device& device, const ComputeShaderName /*name*/,
                                                                    const io::Path& path)
 {

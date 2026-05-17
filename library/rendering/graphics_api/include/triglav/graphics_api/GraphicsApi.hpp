@@ -119,21 +119,25 @@ enum class PipelineStage : uint32_t
    DrawIndirect = (1 << 1),
    VertexInput = (1 << 2),
    VertexShader = (1 << 3),
-   FragmentShader = (1 << 4),
-   EarlyZ = (1 << 5),
-   LateZ = (1 << 6),
-   AttachmentOutput = (1 << 7),
-   ComputeShader = (1 << 8),
 
-   RayGenerationShader = (1 << 9),
-   AnyHitShader = (1 << 10),
-   ClosestHitShader = (1 << 11),
-   MissShader = (1 << 12),
-   IntersectionShader = (1 << 13),
-   CallableShader = (1 << 14),
+   HullShader = (1 << 4),
+   DomainShader = (1 << 5),
 
-   Transfer = (1 << 15),
-   End = (1 << 16),
+   FragmentShader = (1 << 6),
+   EarlyZ = (1 << 7),
+   LateZ = (1 << 8),
+   AttachmentOutput = (1 << 9),
+   ComputeShader = (1 << 10),
+
+   RayGenerationShader = (1 << 11),
+   AnyHitShader = (1 << 12),
+   ClosestHitShader = (1 << 13),
+   MissShader = (1 << 14),
+   IntersectionShader = (1 << 15),
+   CallableShader = (1 << 16),
+
+   Transfer = (1 << 17),
+   End = (1 << 18),
 };
 
 TRIGLAV_DECL_FLAGS(PipelineStage)
@@ -358,6 +362,7 @@ enum class VertexTopology
    TriangleStrip,
    LineStrip,
    LineList,
+   PatchList,
 };
 
 enum class RasterizationMethod

@@ -81,6 +81,8 @@ class BuildContext
    // Shader binding
    void bind_vertex_shader(VertexShaderName vs_name);
    void bind_fragment_shader(FragmentShaderName fs_name);
+   void bind_hull_shader(HullShaderName hs_name);
+   void bind_domain_shader(DomainShaderName ds_name);
    void bind_compute_shader(ComputeShaderName cs_name);
 
    // Descriptor binding
@@ -133,6 +135,7 @@ class BuildContext
    void set_is_blending_enabled(bool enabled);
    void set_viewport(Vector4 dimensions, float min_depth, float max_depth);
    void set_line_width(float width);
+   void set_tesselation_control_points(u32 count);
 
    void draw_primitives(u32 vertex_count, u32 vertex_offset, u32 instance_count = 1, u32 instance_offset = 0);
    void draw_indexed_primitives(u32 index_count, u32 index_offset, u32 vertex_offset);

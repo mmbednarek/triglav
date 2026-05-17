@@ -165,6 +165,20 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_shader(const Shader& sh
    return *this;
 }
 
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::hull_shader(const Shader& shader)
+{
+   assert(shader.stage() == PipelineStage::HullShader);
+   this->add_shader(shader);
+   return *this;
+}
+
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::domain_shader(const Shader& shader)
+{
+   assert(shader.stage() == PipelineStage::DomainShader);
+   this->add_shader(shader);
+   return *this;
+}
+
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_attribute(const ColorFormat& format, const size_t offset)
 {
    VkVertexInputAttributeDescription vertex_attribute{};
@@ -248,6 +262,9 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::vertex_topology(const VertexTo
    case VertexTopology::LineList:
       m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
       break;
+   case VertexTopology::PatchList:
+      m_primitive_topology = VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+      break;
    }
    return *this;
 }
@@ -309,6 +326,12 @@ GraphicsPipelineBuilder& GraphicsPipelineBuilder::depth_attachment(ColorFormat f
 GraphicsPipelineBuilder& GraphicsPipelineBuilder::line_width(const float line_width)
 {
    m_line_width = line_width;
+   return *this;
+}
+
+GraphicsPipelineBuilder& GraphicsPipelineBuilder::tesselation_patch_control_points(const u32 count)
+{
+   m_tessellation_patch_control_points = count;
    return *this;
 }
 
@@ -430,6 +453,9 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
       rendering_info.depthAttachmentFormat = GAPI_CHECK(vulkan::to_vulkan_color_format(*m_depth_attachment_format));
    }
 
+   VkPipelineTessellationStateCreateInfo tesselation_info{VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO};
+   tesselation_info.patchControlPoints = m_tessellation_patch_control_points;
+
    VkGraphicsPipelineCreateInfo pipeline_info{};
    pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
    pipeline_info.layout = *pipeline_layout;
@@ -443,6 +469,9 @@ Result<Pipeline> GraphicsPipelineBuilder::build() const
    pipeline_info.pVertexInputState = &vertex_input_info;
    pipeline_info.pInputAssemblyState = &input_assembly_info;
    pipeline_info.pDepthStencilState = &depth_stencil_state_info;
+   if (m_tessellation_patch_control_points != 0) {
+      pipeline_info.pTessellationState = &tesselation_info;
+   }
    pipeline_info.renderPass = nullptr;
    pipeline_info.subpass = 0;
    pipeline_info.basePipelineHandle = nullptr;

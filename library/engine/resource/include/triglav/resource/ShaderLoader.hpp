@@ -29,6 +29,22 @@ struct Loader<ResourceType::VertexShader>
 };
 
 template<>
+struct Loader<ResourceType::HullShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, HullShaderName name, const io::Path& path);
+};
+
+template<>
+struct Loader<ResourceType::DomainShader>
+{
+   constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
+
+   static graphics_api::Shader load_gpu(graphics_api::Device& device, DomainShaderName name, const io::Path& path);
+};
+
+template<>
 struct Loader<ResourceType::ComputeShader>
 {
    constexpr static ResourceLoadType type{ResourceLoadType::Graphics};
