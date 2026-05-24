@@ -17,6 +17,8 @@ class StringView
  public:
    class Iterator
    {
+      friend class StringView;
+
     public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = Rune;
@@ -65,6 +67,12 @@ class StringView
    constexpr StringView(const char* string, const MemorySize size) :
        m_data(string),
        m_size(size)
+   {
+   }
+
+   constexpr explicit StringView(const iterator& it) :
+       m_data(it.m_iterator),
+       m_size(it.m_end - it.m_iterator)
    {
    }
 

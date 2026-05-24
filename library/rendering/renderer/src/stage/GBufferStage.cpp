@@ -40,7 +40,9 @@ graphics_api::Texture generate_terrain_bitmap(graphics_api::Device& device, cons
          const float xx = 2.0f * (static_cast<float>(x) / static_cast<float>(w)) - 1.0f;
          const float yy = 2.0f * (static_cast<float>(y) / static_cast<float>(h)) - 1.0f;
 
-         terrain_vertices[y * w + x] = xx * xx + yy * yy;
+         terrain_vertices[y * w + x] = 0.2f * xx * xx + 0.2f * yy * yy;
+         terrain_vertices[y * w + x] += 0.12f * (xx - 0.5f) * (xx - 0.5f) + 0.12f * (yy + 0.2f) * (yy + 0.2f);
+         // terrain_vertices[y * w + x] = static_cast<float>(rand() % 10) / 60.0f;
       }
    }
 
@@ -55,17 +57,36 @@ graphics_api::Texture generate_terrain_bitmap(graphics_api::Device& device, cons
 
 graphics_api::Buffer generate_terrain_vertices(graphics_api::Device& device)
 {
+   static constexpr u32 w = 8;
+   static constexpr u32 h = 8;
+   static constexpr u32 vertices_count = 4 * w * h;
+   std::vector<TerrainVertex> vertices(vertices_count);
    constexpr float SIZE = 120.0;
-   const std::array<TerrainVertex, 4> verts{
-      TerrainVertex{Vector3{-SIZE / 2.0f, -SIZE / 2.0f, 0}, Vector2{0.0f, 0.0f}},
-      TerrainVertex{Vector3{-SIZE / 2.0f, SIZE / 2.0f, 0}, Vector2{0.0f, 1.0f}},
-      TerrainVertex{Vector3{SIZE / 2.0f, SIZE / 2.0f, 0}, Vector2{1.0f, 1.0f}},
-      TerrainVertex{Vector3{SIZE / 2.0f, -SIZE / 2.0f, 0}, Vector2{1.0f, 0.0f}},
-   };
+
+
+   for (u32 y = 0; y < h; ++y) {
+      for (u32 x = 0; x < w; ++x) {
+         const float uv_left = static_cast<float>(x) / static_cast<float>(w);
+         const float uv_right = static_cast<float>(x + 1) / static_cast<float>(w);
+         const float uv_bottom = static_cast<float>(y) / static_cast<float>(h);
+         const float uv_top = static_cast<float>(y + 1) / static_cast<float>(h);
+
+         const float pos_left = SIZE * (2.0f * uv_left - 1.0f);
+         const float pos_right = SIZE * (2.0f * uv_right - 1.0f);
+         const float pos_bottom = SIZE * (2.0f * uv_bottom - 1.0f);
+         const float pos_top = SIZE * (2.0f * uv_top - 1.0f);
+
+         const auto index = x + y * w;
+         vertices[4 * index + 0] = {Vector3{pos_left, pos_bottom, 0.0f}, Vector2{uv_left, uv_bottom}};
+         vertices[4 * index + 1] = {Vector3{pos_left, pos_top, 0.0f}, Vector2{uv_left, uv_top}};
+         vertices[4 * index + 2] = {Vector3{pos_right, pos_top, 0.0f}, Vector2{uv_right, uv_top}};
+         vertices[4 * index + 3] = {Vector3{pos_right, pos_bottom, 0.0f}, Vector2{uv_right, uv_bottom}};
+      }
+   }
 
    auto buff = GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::TransferDst | graphics_api::BufferUsage::VertexBuffer,
-                                               verts.size() * sizeof(TerrainVertex)));
-   GAPI_CHECK_STATUS(buff.write_indirect(verts.data(), verts.size() * sizeof(TerrainVertex)));
+                                               vertices.size() * sizeof(TerrainVertex)));
+   GAPI_CHECK_STATUS(buff.write_indirect(vertices.data(), vertices.size() * sizeof(TerrainVertex)));
    return buff;
 }
 
@@ -155,13 +176,15 @@ void GBufferStage::build_terrain(render_core::BuildContext& ctx) const
 
    ctx.bind_fragment_shader("shader/terrain/fragment.fshader"_rc);
 
+   ctx.bind_samplable_texture(3, "engine/texture/grass.tex"_rc);
+
    ctx.set_vertex_topology(graphics_api::VertexTopology::PatchList);
 
    ctx.bind_vertex_layout(terrain_layout);
    ctx.bind_vertex_buffer(&m_terrain_vertices);
    ctx.set_tesselation_control_points(4);
 
-   ctx.draw_primitives(4, 0, 1, 0);
+   ctx.draw_primitives(8 * 8 * 4, 0, 1, 0);
 }
 
 void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,

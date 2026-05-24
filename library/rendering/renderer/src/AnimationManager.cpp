@@ -103,6 +103,9 @@ void AnimationManager::stop_animation(const AnimationID id)
 {
    event_OnAnimationFinish.publish(id);
    m_states.erase(id);
+
+   m_keyframe_offset = 0;
+   m_timestamp_offset = 0;
 }
 
 float AnimationManager::current_time() const

@@ -45,8 +45,8 @@ class CameraBase
  private:
    glm::vec3 m_position{};
    glm::quat m_orientation{0.0f, 0.0f, 0.0f, 1.0f};
-   float m_near_plane{0.1f};
-   float m_far_plane{200.0f};
+   float m_near_plane{0.2f};
+   float m_far_plane{1000.0f};
 
    mutable bool m_has_cached_view_matrix{false};
    mutable glm::mat4 m_view_mat{};
