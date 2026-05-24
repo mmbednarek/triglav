@@ -16,6 +16,7 @@
 #include "triglav/renderer/stage/ShadowMapStage.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
+#include "triglav/ui_core/widget/AlternativeView.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
@@ -49,6 +50,241 @@ renderer::Config get_default_config()
 
 }// namespace
 
+
+class ObjectModePanel final : public desktop_ui::DesktopProxyWidget
+{
+   friend class LevelEditor;
+
+ public:
+   using Self = ObjectModePanel;
+
+   struct State
+   {
+      LevelEditor* level_editor;
+   };
+
+   ObjectModePanel(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
+       desktop_ui::DesktopProxyWidget(context, parent),
+       m_state(state),
+       TG_CONNECT(m_tool_radio_group, OnSelection, on_selected_tool)
+   {
+      auto& toolbar_layout = this->create_content<ui_core::HorizontalLayout>({
+         .padding = {0, 0, 0, 0},
+         .separation = 4.0f,
+         .gravity = ui_core::HorizontalAlignment::Left,
+      });
+
+      m_select_button = &toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      m_select_button->create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{3 * 22, 0, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(m_select_button);
+
+      auto& move_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      move_btn.create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{0, 0, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(&move_btn);
+
+      auto& rotate_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      rotate_btn.create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{22, 0, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(&rotate_btn);
+
+      auto& scale_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      scale_btn.create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{2 * 22, 0, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(&scale_btn);
+
+      // Separation
+      toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+      toolbar_layout
+         .create_child<ui_core::RectBox>({
+            .color = {0.2f, 0.2f, 0.2f, 1.0f},
+         })
+         .create_content<ui_core::EmptySpace>({
+            .size = {2.0f, ICON_SIZE.y},
+         });
+
+      toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+      toolbar_layout
+         .create_child<ui_core::SizeLimit>({
+            .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+         })
+         .create_content<ui_core::AlignmentBox>({
+            .horizontal_alignment = std::nullopt,
+            .vertical_alignment = ui_core::VerticalAlignment::Center,
+         })
+         .create_content<ui_core::Image>({
+            .texture = "editor/texture/ui_icons.tex"_rc,
+            .max_size = ICON_SIZE,
+            .region = Vector4{0, 22, 22, 22},
+         });
+
+      m_origin_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+         .items = {"Origin", "Centroid", "World"},
+         .selected_item = 0,
+      });
+      TG_CONNECT_OPT(*m_origin_selector, OnSelected, on_origin_selected);
+
+      toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+      toolbar_layout
+         .create_child<ui_core::SizeLimit>({
+            .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+         })
+         .create_content<ui_core::AlignmentBox>({
+            .horizontal_alignment = std::nullopt,
+            .vertical_alignment = ui_core::VerticalAlignment::Center,
+         })
+         .create_content<ui_core::Image>({
+            .texture = "editor/texture/ui_icons.tex"_rc,
+            .max_size = ICON_SIZE,
+            .region = Vector4{22, 22, 22, 22},
+         });
+
+      m_snap_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+         .items = {"Off", "0.25", "0.5", "1", "2", "4"},
+         .selected_item = 0,
+      });
+
+      toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+      toolbar_layout
+         .create_child<ui_core::SizeLimit>({
+            .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+         })
+         .create_content<ui_core::AlignmentBox>({
+            .horizontal_alignment = std::nullopt,
+            .vertical_alignment = ui_core::VerticalAlignment::Center,
+         })
+         .create_content<ui_core::Image>({
+            .texture = "editor/texture/ui_icons.tex"_rc,
+            .max_size = ICON_SIZE,
+            .region = Vector4{2 * 22, 22, 22, 22},
+         });
+
+      m_speed_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+         .items = {"8.0", "16.0", "32.0", "64.0", "128.0"},
+         .selected_item = 1,
+      });
+   }
+
+   void on_mode_selected()
+   {
+      m_tool_radio_group.set_active(m_select_button);
+   }
+
+   void on_selected_tool(const u32 id) const
+   {
+      m_state.level_editor->on_selected_tool(id);
+   }
+
+   void on_origin_selected(const u32 id) const
+   {
+      m_state.level_editor->on_origin_selected(id);
+   }
+
+ private:
+   State m_state;
+   desktop_ui::RadioGroup m_tool_radio_group;
+   desktop_ui::CheckBox* m_select_button;
+   desktop_ui::DropDownMenu* m_origin_selector;
+   desktop_ui::DropDownMenu* m_snap_selector;
+   desktop_ui::DropDownMenu* m_speed_selector;
+
+   TG_SINK(desktop_ui::RadioGroup, OnSelection);
+   TG_OPT_SINK(desktop_ui::DropDownMenu, OnSelected);
+};
+
+class TerrainModePanel : public desktop_ui::DesktopProxyWidget
+{
+   friend class LevelEditor;
+
+ public:
+   using Self = TerrainModePanel;
+
+   struct State
+   {
+      LevelEditor* level_editor;
+   };
+
+   TerrainModePanel(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
+       desktop_ui::DesktopProxyWidget(context, parent),
+       m_state(state),
+       TG_CONNECT(m_tool_radio_group, OnSelection, on_selected_tool)
+   {
+      auto& toolbar_layout = this->create_content<ui_core::HorizontalLayout>({
+         .padding = {0, 0, 0, 0},
+         .separation = 4.0f,
+         .gravity = ui_core::HorizontalAlignment::Left,
+      });
+
+      m_grow_button = &toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      m_grow_button->create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{0 * 22, 3 * 22, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(m_grow_button);
+
+      auto& level_button = toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      level_button.create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{1 * 22, 3 * 22, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(&level_button);
+   }
+
+   void on_selected_tool(const u32 id) const
+   {
+      m_state.level_editor->on_selected_tool(4 + id);
+   }
+
+
+   void on_mode_selected()
+   {
+      m_tool_radio_group.set_active(m_grow_button);
+   }
+
+ private:
+   State m_state;
+   desktop_ui::RadioGroup m_tool_radio_group;
+   desktop_ui::CheckBox* m_grow_button;
+   TG_SINK(desktop_ui::RadioGroup, OnSelection);
+};
+
 LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
     desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state),
@@ -62,8 +298,8 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_translation_tool(*this),
     m_rotation_tool(*this),
     m_scaling_tool(*this),
-    m_current_tool(&m_selection_tool),
-    TG_CONNECT(m_tool_radio_group, OnSelection, on_selected_tool)
+    m_terrain_shift_tool(*this),
+    m_current_tool(&m_selection_tool)
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
       .offset = 300,
@@ -97,69 +333,12 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
                                 .gravity = ui_core::HorizontalAlignment::Left,
                              });
 
-   toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+   m_mode_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
       .items = {"Object Mode", "Terrain Mode"},
       .selected_item = 0,
    });
 
-   // Separation
-   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
-
-   toolbar_layout
-      .create_child<ui_core::RectBox>({
-         .color = {0.2f, 0.2f, 0.2f, 1.0f},
-      })
-      .create_content<ui_core::EmptySpace>({
-         .size = {2.0f, ICON_SIZE.y},
-      });
-
-   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
-
-   auto& select_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .radio_group = &m_tool_radio_group,
-      .is_enabled = false,
-   });
-   select_btn.create_content<ui_core::Image>({
-      .texture = "editor/texture/ui_icons.tex"_rc,
-      .max_size = ICON_SIZE,
-      .region = Vector4{3 * 22, 0, 22, 22},
-   });
-   m_tool_radio_group.add_check_box(&select_btn);
-
-   auto& move_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .radio_group = &m_tool_radio_group,
-      .is_enabled = false,
-   });
-   move_btn.create_content<ui_core::Image>({
-      .texture = "editor/texture/ui_icons.tex"_rc,
-      .max_size = ICON_SIZE,
-      .region = Vector4{0, 0, 22, 22},
-   });
-   m_tool_radio_group.add_check_box(&move_btn);
-
-   auto& rotate_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .radio_group = &m_tool_radio_group,
-      .is_enabled = false,
-   });
-   rotate_btn.create_content<ui_core::Image>({
-      .texture = "editor/texture/ui_icons.tex"_rc,
-      .max_size = ICON_SIZE,
-      .region = Vector4{22, 0, 22, 22},
-   });
-   m_tool_radio_group.add_check_box(&rotate_btn);
-
-   auto& scale_btn = toolbar_layout.create_child<desktop_ui::CheckBox>({
-      .radio_group = &m_tool_radio_group,
-      .is_enabled = false,
-   });
-   scale_btn.create_content<ui_core::Image>({
-      .texture = "editor/texture/ui_icons.tex"_rc,
-      .max_size = ICON_SIZE,
-      .region = Vector4{2 * 22, 0, 22, 22},
-   });
-   m_tool_radio_group.add_check_box(&scale_btn);
-
-   m_tool_radio_group.set_active(&select_btn);
+   TG_CONNECT_OPT(*m_mode_selector, OnSelected, on_mode_selected);
 
    // Separation
    toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
@@ -174,66 +353,16 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 
    toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
 
-   toolbar_layout
-      .create_child<ui_core::SizeLimit>({
-         .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
-      })
-      .create_content<ui_core::AlignmentBox>({
-         .horizontal_alignment = std::nullopt,
-         .vertical_alignment = ui_core::VerticalAlignment::Center,
-      })
-      .create_content<ui_core::Image>({
-         .texture = "editor/texture/ui_icons.tex"_rc,
-         .max_size = ICON_SIZE,
-         .region = Vector4{0, 22, 22, 22},
-      });
-
-   m_origin_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .items = {"Origin", "Centroid", "World"},
-      .selected_item = 0,
+   m_panel_view = &toolbar_layout.create_child<ui_core::AlternativeView>({
+      .visible_view = 0,
    });
-   TG_CONNECT_OPT(*m_origin_selector, OnSelected, on_origin_selected);
-
-   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
-
-   toolbar_layout
-      .create_child<ui_core::SizeLimit>({
-         .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
-      })
-      .create_content<ui_core::AlignmentBox>({
-         .horizontal_alignment = std::nullopt,
-         .vertical_alignment = ui_core::VerticalAlignment::Center,
-      })
-      .create_content<ui_core::Image>({
-         .texture = "editor/texture/ui_icons.tex"_rc,
-         .max_size = ICON_SIZE,
-         .region = Vector4{22, 22, 22, 22},
-      });
-
-   m_snap_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .items = {"Off", "0.25", "0.5", "1", "2", "4"},
-      .selected_item = 0,
+   m_object_mode_panel = &m_panel_view->create_child<ObjectModePanel>({
+      .level_editor = this,
    });
+   m_object_mode_panel->on_mode_selected();
 
-   toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
-
-   toolbar_layout
-      .create_child<ui_core::SizeLimit>({
-         .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
-      })
-      .create_content<ui_core::AlignmentBox>({
-         .horizontal_alignment = std::nullopt,
-         .vertical_alignment = ui_core::VerticalAlignment::Center,
-      })
-      .create_content<ui_core::Image>({
-         .texture = "editor/texture/ui_icons.tex"_rc,
-         .max_size = ICON_SIZE,
-         .region = Vector4{2 * 22, 22, 22, 22},
-      });
-
-   m_speed_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
-      .items = {"8.0", "16.0", "32.0", "64.0", "128.0"},
-      .selected_item = 1,
+   m_terrain_mode_panel = &m_panel_view->create_child<TerrainModePanel>({
+      .level_editor = this,
    });
 
    m_viewport = &left_layout.emplace_child<LevelViewport>(&left_layout, *m_state.root_window, *this);
@@ -279,7 +408,7 @@ Vector3 LevelEditor::selected_object_position(const std::optional<Vector3> posit
    const auto* object = this->selected_object();
    const auto translation = position.value_or(object->transform.translation);
 
-   switch (m_origin_selector->selected_item()) {
+   switch (m_object_mode_panel->m_origin_selector->selected_item()) {
    case 0:
       return translation;
    case 1: {
@@ -329,6 +458,12 @@ void LevelEditor::on_selected_tool(const u32 id)
    case 3:
       this->set_active_tool(LevelEditorTool::Scaling);
       break;
+   case 4:
+      this->set_active_tool(LevelEditorTool::TerrainShift);
+      break;
+   case 5:
+      this->set_active_tool(LevelEditorTool::TerrainLevel);
+      break;
    default:
       break;
    }
@@ -343,16 +478,16 @@ float LevelEditor::snap_offset(const float offset) const
 {
    static constexpr float values[] = {0.0f, 0.25f, 0.5f, 1.0f, 2.0f, 4.0f};
 
-   if (m_snap_selector->selected_item() == 0)
+   if (m_object_mode_panel->m_snap_selector->selected_item() == 0)
       return offset;
 
-   const float step = values[m_snap_selector->selected_item()];
+   const float step = values[m_object_mode_panel->m_snap_selector->selected_item()];
    return std::round(offset / step) * step;
 }
 
 Vector3 LevelEditor::snap_offset(const Vector3 offset) const
 {
-   if (m_snap_selector->selected_item() == 0)
+   if (m_object_mode_panel->m_snap_selector->selected_item() == 0)
       return offset;
 
    const auto length = glm::length(offset);
@@ -364,7 +499,7 @@ Vector3 LevelEditor::snap_offset(const Vector3 offset) const
 float LevelEditor::speed() const
 {
    static constexpr float values[] = {8.0f, 16.0f, 32.0f, 64.0f, 128.0f};
-   return values[m_speed_selector->selected_item()];
+   return values[m_object_mode_panel->m_speed_selector->selected_item()];
 }
 
 void LevelEditor::finish_using_tool() const
@@ -480,19 +615,23 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
    switch (tool) {
    case LevelEditorTool::Selection:
       m_current_tool = &m_selection_tool;
-      m_tool_radio_group.highlight(0);
+      m_object_mode_panel->m_tool_radio_group.highlight(0);
       break;
    case LevelEditorTool::Translation:
       m_current_tool = &m_translation_tool;
-      m_tool_radio_group.highlight(1);
+      m_object_mode_panel->m_tool_radio_group.highlight(1);
       break;
    case LevelEditorTool::Rotation:
       m_current_tool = &m_rotation_tool;
-      m_tool_radio_group.highlight(2);
+      m_object_mode_panel->m_tool_radio_group.highlight(2);
       break;
    case LevelEditorTool::Scaling:
       m_current_tool = &m_scaling_tool;
-      m_tool_radio_group.highlight(3);
+      m_object_mode_panel->m_tool_radio_group.highlight(3);
+      break;
+   case LevelEditorTool::TerrainShift:
+      m_current_tool = &m_terrain_shift_tool;
+      m_terrain_mode_panel->m_tool_radio_group.highlight(0);
       break;
    default:
       break;
@@ -534,6 +673,16 @@ ui_core::IWidget& LevelEditor::widget()
 ResourceName LevelEditor::asset_name() const
 {
    return m_state.asset_name;
+}
+
+void LevelEditor::on_mode_selected(const u32 id) const
+{
+   m_panel_view->set_visible_widget(id);
+   if (id == 0) {
+      m_object_mode_panel->on_mode_selected();
+   } else {
+      m_terrain_mode_panel->on_mode_selected();
+   }
 }
 
 }// namespace triglav::editor

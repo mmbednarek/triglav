@@ -49,8 +49,13 @@ void Display::dispatch_messages()
       case ButtonPress: {
          auto surface = this->surface_by_window(event.xbutton.window);
          if (surface) {
-            surface->dispatch_button_press(event);
+            if (event.xbutton.time - m_last_click_time < 300) {
+               surface->dispatch_double_click(event);
+            } else {
+               surface->dispatch_button_press(event);
+            }
          }
+         m_last_click_time = event.xbutton.time;
          break;
       }
       case ButtonRelease: {

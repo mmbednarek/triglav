@@ -7,6 +7,7 @@
 #include "RotationTool.hpp"
 #include "ScalingTool.hpp"
 #include "SelectionTool.hpp"
+#include "TerrainShiftTool.hpp"
 #include "TranslationTool.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
@@ -19,11 +20,21 @@
 #include "triglav/renderer/UpdateViewParamsJob.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
+namespace triglav::ui_core {
+class AlternativeView;
+}
+
 namespace triglav::editor {
 
 class LevelViewport;
 class RootWindow;
 class LevelEditorSidePanel;
+
+enum class LevelEditorMode
+{
+   Object,
+   Terrain
+};
 
 enum class LevelEditorTool
 {
@@ -31,7 +42,12 @@ enum class LevelEditorTool
    Translation,
    Rotation,
    Scaling,
+   TerrainShift,
+   TerrainLevel,
 };
+
+class ObjectModePanel;
+class TerrainModePanel;
 
 class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_ui::ITabWidget, public IAssetEditor
 {
@@ -76,10 +92,10 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    [[nodiscard]] const ui_core::TextureRegion& icon() const override;
    [[nodiscard]] ui_core::IWidget& widget() override;
    [[nodiscard]] ResourceName asset_name() const override;
+   void on_mode_selected(u32 id) const;
 
  private:
    State m_state;
-   desktop_ui::RadioGroup m_tool_radio_group;
    renderer::Scene m_scene;
    renderer::BindlessScene m_bindless_scene;
    renderer::Config m_config;
@@ -93,15 +109,17 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    TranslationTool m_translation_tool;
    RotationTool m_rotation_tool;
    ScalingTool m_scaling_tool;
-   LevelEditorSidePanel* m_side_panel;
-   desktop_ui::DropDownMenu* m_origin_selector;
-   desktop_ui::DropDownMenu* m_snap_selector;
-   desktop_ui::DropDownMenu* m_speed_selector;
+   TerrainShiftTool m_terrain_shift_tool;
+   LevelEditorSidePanel* m_side_panel{};
    HistoryManager m_history_manager;
+   ui_core::AlternativeView* m_panel_view{};
+   ObjectModePanel* m_object_mode_panel{};
+   TerrainModePanel* m_terrain_mode_panel{};
+   desktop_ui::DropDownMenu* m_mode_selector;
+   LevelEditorMode m_active_mode{LevelEditorMode::Object};
 
    ILevelEditorTool* m_current_tool = nullptr;
 
-   TG_SINK(desktop_ui::RadioGroup, OnSelection);
    TG_OPT_SINK(desktop_ui::DropDownMenu, OnSelected);
 };
 

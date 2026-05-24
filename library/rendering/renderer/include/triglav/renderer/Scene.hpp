@@ -64,6 +64,7 @@ class Scene
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
    TG_EVENT(OnViewUpdated, const Camera&)
+   TG_EVENT(OnTerrainUpdated, Vector2i, const std::vector<float>&)
 
    explicit Scene(resource::ResourceManager& resource_manager);
 
@@ -92,6 +93,8 @@ class Scene
    void add_bounding_box(const geometry::BoundingBox& box) const;
    [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
    RayHit trace_ray(const geometry::Ray& ray) const;
+   std::vector<float>& terrain();
+   void publish_terrain_changes();
 
    [[nodiscard]] std::map<ObjectID, SceneObjectUPtr>::const_iterator begin() const
    {
@@ -112,6 +115,7 @@ class Scene
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
    std::map<ObjectID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;
+   std::vector<float> m_terrain;
    ObjectID m_top_object_id = 0;
 };
 

@@ -94,11 +94,14 @@ graphics_api::Buffer generate_terrain_vertices(graphics_api::Device& device)
 }// namespace
 
 GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless_scene) :
+    m_device(device),
     m_mesh(create_skybox_mesh(device)),
     m_terrain_texture(generate_terrain_bitmap(device, 1024, 1024)),
     m_terrain_vertices(generate_terrain_vertices(device)),
-    m_bindless_scene(bindless_scene)
+    m_bindless_scene(bindless_scene),
+    TG_CONNECT(m_bindless_scene.scene(), OnTerrainUpdated, on_terrain_updated)
 {
+   this->on_terrain_updated(Vector2i{1024, 1024}, m_bindless_scene.scene().terrain());
 }
 
 void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& /*config*/) const
@@ -185,6 +188,11 @@ void GBufferStage::build_terrain(render_core::BuildContext& ctx) const
    ctx.set_tesselation_control_points(4);
 
    ctx.draw_primitives(8 * 8 * 4, 0, 1, 0);
+}
+
+void GBufferStage::on_terrain_updated(const Vector2i /*size*/, const std::vector<float>& data) const
+{
+   GAPI_CHECK_STATUS(m_terrain_texture.write(m_device, reinterpret_cast<const uint8_t*>(data.data())));
 }
 
 void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,

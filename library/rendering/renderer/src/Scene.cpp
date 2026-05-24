@@ -21,6 +21,8 @@ Matrix4x4 SceneObject::model_matrix() const
 Scene::Scene(resource::ResourceManager& resource_manager) :
     m_resource_manager(resource_manager)
 {
+   m_terrain.resize(1024 * 1024);
+   std::ranges::fill(m_terrain, 0.0f);
 }
 
 void Scene::update(const graphics_api::Resolution& resolution)
@@ -177,6 +179,16 @@ RayHit Scene::trace_ray(const geometry::Ray& ray) const
    if (hit.payload == nullptr)
       return {INFINITY, ~0u, nullptr};
    return {hit.distance, hit.payload->id, hit.payload->object};
+}
+
+std::vector<float>& Scene::terrain()
+{
+   return m_terrain;
+}
+
+void Scene::publish_terrain_changes()
+{
+   event_OnTerrainUpdated.publish(Vector2i{1024, 1024}, m_terrain);
 }
 
 void Scene::update_shadow_maps()

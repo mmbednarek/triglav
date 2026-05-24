@@ -34,6 +34,7 @@ class Surface final : public ISurface
    void dispatch_button_press(const XEvent& event) const;
    void dispatch_button_release(const XEvent& event) const;
    void dispatch_mouse_move(const XEvent& event) const;
+   void dispatch_double_click(const XEvent& event) const;
    void dispatch_mouse_relative_move(Vector2 diff) const;
    void dispatch_close() const;
    void dispatch_resize(Vector2i new_size);

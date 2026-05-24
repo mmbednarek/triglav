@@ -38,6 +38,7 @@ class Display final : public IDisplay
    std::map<Window, std::weak_ptr<ISurface>> m_surfaces;
    Mouse m_mouse;
    Atom m_wm_delete_atom;
+   Time m_last_click_time{};
 
    TG_SINK(Mouse, OnMouseMove);
 };

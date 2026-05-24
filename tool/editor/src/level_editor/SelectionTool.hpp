@@ -22,10 +22,3 @@ class SelectionTool final : public ILevelEditorTool
 };
 
 }// namespace triglav::editor
-// Created by ego on 6.11.2025.
-//
-
-#ifndef TRIGLAV_SELECTIONTOOL_HPP
-#define TRIGLAV_SELECTIONTOOL_HPP
-
-#endif// TRIGLAV_SELECTIONTOOL_HPP
