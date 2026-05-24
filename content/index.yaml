@@ -59,3 +59,4 @@ resources:
   - "engine/texture/ui_atlas.tex"
   # Graphics
   - "engine/texture/skybox.tex"
+  - "engine/texture/grass.tex"

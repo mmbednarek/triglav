@@ -63,5 +63,6 @@ VertexOut ds_main(float2 uv : SV_DomainLocation, const OutputPatch<VertexIn, 4> 
     // 3. Project to screen
     v.position = mul(cb_view.proj, mul(cb_view.view, float4(pos, 1.0)));
     v.normal = normal;
+    v.uv *= 10.0;
     return v;
 }

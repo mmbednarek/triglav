@@ -4,6 +4,7 @@
 #include "LevelEditorSidePanel.hpp"
 #include "LevelViewport.hpp"
 
+#include "triglav/Ranges.hpp"
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
@@ -504,7 +505,19 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
 
 StringView LevelEditor::name() const
 {
-   return ResourcePathMap::the().resolve(m_state.asset_name);
+   const StringView resolved_name = ResourcePathMap::the().resolve(m_state.asset_name);
+
+   // TODO: Implement reverse unicode iteration
+   auto it = resolved_name.begin();
+   auto last_slash = resolved_name.begin();
+   while (it != resolved_name.end()) {
+      if (*it == '/') {
+         last_slash = it;
+      }
+      ++it;
+   }
+
+   return StringView(last_slash);
 }
 
 const ui_core::TextureRegion& LevelEditor::icon() const

@@ -45,6 +45,9 @@ ResourceName name_from_path(const StringView name)
 ResourceName resource_sub_path(const ResourceName parent, const StringView child)
 {
    const auto resolved = ResourcePathMap::the().resolve(parent);
+   if (resolved.is_empty()) {
+      return name_from_path(child);
+   }
    const auto sub_path = format("{}/{}", resolved, child);
    return name_from_path(sub_path.view());
 }
