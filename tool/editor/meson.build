@@ -18,6 +18,8 @@ editor_sources = files([
                            'src/level_editor/SelectionTool.cpp',
                            'src/level_editor/SetTransformAction.cpp',
                            'src/level_editor/SetTransformAction.hpp',
+                           'src/level_editor/TerrainShiftTool.cpp',
+                           'src/level_editor/TerrainShiftTool.hpp',
                            'src/level_editor/ToolMeshes.hpp',
                            'src/level_editor/TranslationTool.cpp',
                            'src/level_editor/TranslationTool.hpp',

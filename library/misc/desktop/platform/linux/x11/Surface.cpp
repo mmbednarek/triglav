@@ -257,6 +257,14 @@ void Surface::dispatch_mouse_move(const XEvent& event) const
    event_OnMouseMove.publish(Vector2{static_cast<float>(event.xmotion.x), static_cast<float>(event.xmotion.y)});
 }
 
+void Surface::dispatch_double_click(const XEvent& event) const
+{
+   const auto button = map_button(event.xbutton.button);
+   if (button != MouseButton::Unknown) {
+      event_OnMouseDoubleClick.publish(button);
+   }
+}
+
 void Surface::dispatch_mouse_relative_move(const Vector2 diff) const
 {
    if (not m_is_cursor_locked)

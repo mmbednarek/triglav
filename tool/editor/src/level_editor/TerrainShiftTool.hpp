@@ -2,14 +2,17 @@
 
 #include "ILevelEditorTool.hpp"
 
+#include "triglav/Logging.hpp"
+
 namespace triglav::editor {
 
 class LevelEditor;
 
-class SelectionTool final : public ILevelEditorTool
+class TerrainShiftTool final : public ILevelEditorTool
 {
+   TG_DEFINE_LOG_CATEGORY(TerrainShiftTool)
  public:
-   explicit SelectionTool(LevelEditor& level_editor);
+   explicit TerrainShiftTool(LevelEditor& level_editor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;

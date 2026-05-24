@@ -10,8 +10,8 @@ struct Vertex
 uniform ConstantBuffer<triglav::ViewProperties> cb_view;
 
 static const float min_distance = 1.0;
-static const float max_distance = 20.0;
-static const float max_tess_level = 20.0;
+static const float max_distance = 160.0;
+static const float max_tess_level = 80.0;
 
 // struct TessParams
 // {
