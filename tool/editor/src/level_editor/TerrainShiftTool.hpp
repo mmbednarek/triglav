@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ILevelEditorTool.hpp"
+#include "TerrainCanvas.hpp"
 
 #include "triglav/Logging.hpp"
 
@@ -19,9 +20,16 @@ class TerrainShiftTool final : public ILevelEditorTool
    void on_view_updated() override;
    void on_use_end() override;
    void on_left_tool() override;
+   void on_tick(float delta_time) override;
+   void on_modifiers(desktop::ModifierFlags /*mods*/) override;
 
  private:
    LevelEditor& m_level_editor;
+   TerrainCanvas m_canvas;
+   bool m_is_being_used = false;
+   Vector2 m_ground_position{};
+   bool m_is_downwards = false;
+   i32 m_brush_size = 30;
 };
 
 }// namespace triglav::editor
