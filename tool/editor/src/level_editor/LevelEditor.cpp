@@ -299,6 +299,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_rotation_tool(*this),
     m_scaling_tool(*this),
     m_terrain_shift_tool(*this),
+    m_terrain_level_tool(*this),
     m_current_tool(&m_selection_tool)
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
@@ -390,6 +391,9 @@ void LevelEditor::tick(const float delta_time)
    m_bindless_scene.write_objects_to_buffer();
    if (m_viewport != nullptr) {
       m_viewport->tick(delta_time);
+   }
+   if (m_current_tool != nullptr) {
+      m_current_tool->on_tick(delta_time);
    }
 }
 
@@ -633,6 +637,10 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
       m_current_tool = &m_terrain_shift_tool;
       m_terrain_mode_panel->m_tool_radio_group.highlight(0);
       break;
+   case LevelEditorTool::TerrainLevel:
+      m_current_tool = &m_terrain_level_tool;
+      m_terrain_mode_panel->m_tool_radio_group.highlight(1);
+      break;
    default:
       break;
    }
@@ -683,6 +691,14 @@ void LevelEditor::on_mode_selected(const u32 id) const
    } else {
       m_terrain_mode_panel->on_mode_selected();
    }
+}
+
+geometry::Ray LevelEditor::viewport_ray(const Vector2 position)
+{
+   const auto normalized_pos = position / rect_size(this->viewport().dimensions());
+   auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
+   viewport_coord.y *= -1.0f;
+   return this->scene().camera().viewport_ray(viewport_coord);
 }
 
 }// namespace triglav::editor

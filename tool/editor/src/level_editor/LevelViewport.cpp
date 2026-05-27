@@ -123,6 +123,10 @@ void LevelViewport::tick(const float delta_time)
 
 void LevelViewport::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::Event::Keyboard& kb)
 {
+   if (kb.key == desktop::Key::Shift) {
+      m_level_editor.tool().on_modifiers(desktop::Modifier::Shift);
+   }
+
    if (!m_is_moving)
       return;
 
@@ -138,6 +142,8 @@ void LevelViewport::on_key_released(const ui_core::Event& /*event*/, const ui_co
    if (movement == m_cam_movement) {
       m_cam_movement = CamMovement::None;
    }
+
+   m_level_editor.tool().on_modifiers(desktop::Modifier::Empty);
 }
 
 void LevelViewport::update_view() const

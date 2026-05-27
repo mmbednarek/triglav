@@ -9,11 +9,11 @@ namespace triglav::editor {
 
 class LevelEditor;
 
-class TerrainShiftTool final : public ILevelEditorTool
+class TerrainLevelTool final : public ILevelEditorTool
 {
-   TG_DEFINE_LOG_CATEGORY(TerrainShiftTool)
+   TG_DEFINE_LOG_CATEGORY(TerrainLevelTool)
  public:
-   explicit TerrainShiftTool(LevelEditor& level_editor);
+   explicit TerrainLevelTool(LevelEditor& level_editor);
 
    bool on_use_start(const geometry::Ray& ray) override;
    void on_mouse_moved(Vector2 position) override;
@@ -21,14 +21,12 @@ class TerrainShiftTool final : public ILevelEditorTool
    void on_use_end() override;
    void on_left_tool() override;
    void on_tick(float delta_time) override;
-   void on_modifiers(desktop::ModifierFlags /*mods*/) override;
 
  private:
    LevelEditor& m_level_editor;
    TerrainCanvas m_canvas;
    bool m_is_being_used = false;
    Vector2 m_ground_position{};
-   bool m_is_downwards = false;
    i32 m_brush_size = 30;
 };
 

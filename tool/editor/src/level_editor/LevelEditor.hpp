@@ -7,6 +7,7 @@
 #include "RotationTool.hpp"
 #include "ScalingTool.hpp"
 #include "SelectionTool.hpp"
+#include "TerrainLevelTool.hpp"
 #include "TerrainShiftTool.hpp"
 #include "TranslationTool.hpp"
 
@@ -93,6 +94,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    [[nodiscard]] ui_core::IWidget& widget() override;
    [[nodiscard]] ResourceName asset_name() const override;
    void on_mode_selected(u32 id) const;
+   geometry::Ray viewport_ray(Vector2 position);
 
  private:
    State m_state;
@@ -110,6 +112,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    RotationTool m_rotation_tool;
    ScalingTool m_scaling_tool;
    TerrainShiftTool m_terrain_shift_tool;
+   TerrainLevelTool m_terrain_level_tool;
    LevelEditorSidePanel* m_side_panel{};
    HistoryManager m_history_manager;
    ui_core::AlternativeView* m_panel_view{};

@@ -89,7 +89,7 @@ RootWidget::RootWidget(ui_core::Context& context, State state, ui_core::IWidget*
 
    m_command_manager.register_command({Modifier::Empty, Key::G}, Command::TranslateTool);
    m_command_manager.register_command({Modifier::Empty, Key::R}, Command::RotationTool);
-   m_command_manager.register_command({Modifier::Empty, Key::S}, Command::ScaleTool);
+   m_command_manager.register_command({Modifier::Empty, Key::F}, Command::ScaleTool);
    m_command_manager.register_command({Modifier::Empty, Key::E}, Command::SelectionTool);
 
    m_menu_bar = &global_layout.create_child<desktop_ui::MenuBar>({
