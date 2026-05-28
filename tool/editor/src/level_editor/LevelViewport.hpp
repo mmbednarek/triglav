@@ -24,7 +24,7 @@ class LevelViewport final : public ui_core::BaseWidget
    };
 
    using Self = LevelViewport;
-   LevelViewport(IWidget* parent, RootWindow& root_window, LevelEditor& level_editor);
+   LevelViewport(ui_core::Context& context, IWidget* parent, RootWindow& root_window, LevelEditor& level_editor);
 
    [[nodiscard]] Vector2 desired_size(Vector2 available_size) const override;
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
@@ -37,6 +37,7 @@ class LevelViewport final : public ui_core::BaseWidget
    void update_view() const;
    void on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
    void on_mouse_released(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
+   void on_mouse_double_click(const ui_core::Event& event, const ui_core::Event::Mouse& mouse);
    void on_mouse_moved(const ui_core::Event& event) const;
    void on_mouse_relative_move(Vector2 difference);
 
@@ -45,9 +46,10 @@ class LevelViewport final : public ui_core::BaseWidget
    [[nodiscard]] bool is_moving() const;
 
  private:
-   Vector4 m_dimensions{};
+   ui_core::Context& m_context;
    RootWindow& m_root_window;
    LevelEditor& m_level_editor;
+   Vector4 m_dimensions{};
    std::unique_ptr<RenderViewport> m_render_viewport;
    CamMovement m_cam_movement{CamMovement::None};
    bool m_is_moving{false};

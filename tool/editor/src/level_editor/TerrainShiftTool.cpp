@@ -14,6 +14,7 @@ TerrainShiftTool::TerrainShiftTool(LevelEditor& level_editor) :
 bool TerrainShiftTool::on_use_start(const geometry::Ray& ray)
 {
    if (ray.direction.z >= 0.0f || ray.origin.z <= 0.0f) {
+      m_is_being_used = false;
       return true;
    }
 
@@ -26,7 +27,15 @@ bool TerrainShiftTool::on_use_start(const geometry::Ray& ray)
 
 void TerrainShiftTool::on_mouse_moved(const Vector2 position)
 {
+   if (!m_is_being_used)
+      return;
+
    const auto ray = m_level_editor.viewport_ray(position);
+   if (ray.direction.z >= 0.0f || ray.origin.z <= 0.0f) {
+      m_is_being_used = false;
+      return;
+   }
+
    const float ray_length = -ray.origin.z / ray.direction.z;
    m_ground_position = Vector2{ray.origin + ray.direction * ray_length} / 120.0f;
 }
@@ -49,7 +58,7 @@ void TerrainShiftTool::on_tick(const float delta_time)
       return;
 
    const auto coord = Vector2i{1024.0f * 0.5f * (m_ground_position + Vector2{1.0f, 1.0f})};
-   m_canvas.paint((m_is_downwards ? -0.5f : 0.5f) * delta_time, coord);
+   m_canvas.paint((m_is_downwards ? -0.2f : 0.2f) * delta_time, coord);
 }
 
 void TerrainShiftTool::on_modifiers(const desktop::ModifierFlags modifier_flags)

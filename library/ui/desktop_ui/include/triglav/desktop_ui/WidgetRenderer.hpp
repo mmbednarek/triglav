@@ -24,6 +24,7 @@ class PopupManager;
 
 class WidgetRenderer
 {
+   TG_DEFINE_LOG_CATEGORY(WidgetRenderer)
  public:
    using Self = WidgetRenderer;
 

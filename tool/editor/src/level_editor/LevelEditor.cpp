@@ -366,7 +366,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       .level_editor = this,
    });
 
-   m_viewport = &left_layout.emplace_child<LevelViewport>(&left_layout, *m_state.root_window, *this);
+   m_viewport = &left_layout.emplace_child<LevelViewport>(context, &left_layout, *m_state.root_window, *this);
 
    m_scene.load_level(m_state.asset_name);
    m_bindless_scene.write_objects_to_buffer();

@@ -28,6 +28,7 @@ class TerrainLevelTool final : public ILevelEditorTool
    bool m_is_being_used = false;
    Vector2 m_ground_position{};
    i32 m_brush_size = 30;
+   float m_level = 0.0f;
 };
 
 }// namespace triglav::editor

@@ -32,8 +32,9 @@ LevelViewport::CamMovement to_cam_movement(const desktop::Key key)
 
 }// namespace
 
-LevelViewport::LevelViewport(IWidget* parent, RootWindow& root_window, LevelEditor& level_editor) :
+LevelViewport::LevelViewport(ui_core::Context& context, IWidget* parent, RootWindow& root_window, LevelEditor& level_editor) :
     ui_core::BaseWidget(parent),
+    m_context(context),
     m_root_window(root_window),
     m_level_editor(level_editor),
     TG_CONNECT(root_window.surface(), OnMouseRelativeMove, on_mouse_relative_move)
@@ -159,6 +160,9 @@ void LevelViewport::update_view() const
 
 void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core::Event::Mouse& mouse)
 {
+   using ET = ui_core::Event::Type;
+   m_context.set_active_widget(this, m_dimensions, {ET::MouseMoved, ET::MouseReleased});
+
    if (mouse.button == desktop::MouseButton::Right) {
       m_is_moving = true;
       m_root_window.surface().lock_cursor();
@@ -182,6 +186,11 @@ void LevelViewport::on_mouse_released(const ui_core::Event& /*event*/, const ui_
    m_root_window.surface().unlock_cursor();
    m_level_editor.tool().on_use_end();
    m_level_editor.finish_using_tool();
+}
+
+void LevelViewport::on_mouse_double_click(const ui_core::Event& event, const ui_core::Event::Mouse& mouse)
+{
+   this->on_mouse_released(event, mouse);
 }
 
 void LevelViewport::on_mouse_moved(const ui_core::Event& event) const
