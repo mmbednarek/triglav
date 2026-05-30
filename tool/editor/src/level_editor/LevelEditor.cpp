@@ -265,6 +265,17 @@ class TerrainModePanel : public desktop_ui::DesktopProxyWidget
          .region = Vector4{1 * 22, 3 * 22, 22, 22},
       });
       m_tool_radio_group.add_check_box(&level_button);
+
+      auto& smooth_button = toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      smooth_button.create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{2 * 22, 3 * 22, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(&smooth_button);
    }
 
    void on_selected_tool(const u32 id) const
@@ -300,6 +311,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_scaling_tool(*this),
     m_terrain_shift_tool(*this),
     m_terrain_level_tool(*this),
+    m_terrain_smooth_tool(*this),
     m_current_tool(&m_selection_tool)
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
@@ -467,6 +479,9 @@ void LevelEditor::on_selected_tool(const u32 id)
       break;
    case 5:
       this->set_active_tool(LevelEditorTool::TerrainLevel);
+      break;
+   case 6:
+      this->set_active_tool(LevelEditorTool::TerrainSmooth);
       break;
    default:
       break;
@@ -640,6 +655,10 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
    case LevelEditorTool::TerrainLevel:
       m_current_tool = &m_terrain_level_tool;
       m_terrain_mode_panel->m_tool_radio_group.highlight(1);
+      break;
+   case LevelEditorTool::TerrainSmooth:
+      m_current_tool = &m_terrain_smooth_tool;
+      m_terrain_mode_panel->m_tool_radio_group.highlight(2);
       break;
    default:
       break;
