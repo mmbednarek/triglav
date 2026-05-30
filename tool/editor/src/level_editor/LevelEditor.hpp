@@ -9,6 +9,7 @@
 #include "SelectionTool.hpp"
 #include "TerrainLevelTool.hpp"
 #include "TerrainShiftTool.hpp"
+#include "TerrainSmoothTool.hpp"
 #include "TranslationTool.hpp"
 
 #include "triglav/desktop_ui/CheckBox.hpp"
@@ -45,6 +46,7 @@ enum class LevelEditorTool
    Scaling,
    TerrainShift,
    TerrainLevel,
+   TerrainSmooth,
 };
 
 class ObjectModePanel;
@@ -113,6 +115,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    ScalingTool m_scaling_tool;
    TerrainShiftTool m_terrain_shift_tool;
    TerrainLevelTool m_terrain_level_tool;
+   TerrainSmoothTool m_terrain_smooth_tool;
    LevelEditorSidePanel* m_side_panel{};
    HistoryManager m_history_manager;
    ui_core::AlternativeView* m_panel_view{};
