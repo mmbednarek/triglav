@@ -152,7 +152,14 @@ class IWidget
    virtual void on_child_state_changed([[maybe_unused]] IWidget& widget) {};
 
    virtual void on_event([[maybe_unused]] const Event& event) {}
+
+   [[nodiscard]] virtual u16 depth() const { return 0; }
 };
+
+inline u16 depth_from_parent(const IWidget* widget)
+{
+   return widget == nullptr ? 0 : (widget->depth() + 1);
+}
 
 using IWidgetPtr = std::unique_ptr<IWidget>;
 
@@ -163,8 +170,11 @@ class BaseWidget : public IWidget
 
    void on_child_state_changed(IWidget& widget) override;
 
+   [[nodiscard]] u16 depth() const override;
+
  protected:
    IWidget* m_parent;
+   u16 m_depth;
 };
 
 class ContainerWidget : public BaseWidget

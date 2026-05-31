@@ -23,3 +23,4 @@ void cs_main(uint tid: SV_DispatchThreadID)
     const RectCopyInfo copyInfo = g_rectRemovalIDs[tid];
     g_drawCallBuffer[copyInfo.dstID] = g_drawCallBuffer[copyInfo.srcID];
 }
+

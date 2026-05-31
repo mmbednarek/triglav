@@ -25,6 +25,7 @@ TreeView::TreeView(ui_core::Context& ctx, State state, ui_core::IWidget* parent)
        .border_radius = {0, 0, 0, 0},
        .border_color = palette::NO_COLOR,
        .border_width = 0.0f,
+       .z_index = ui_core::depth_from_parent(parent),
     }
 {
 }

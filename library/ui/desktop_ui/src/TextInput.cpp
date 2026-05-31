@@ -15,7 +15,7 @@ using namespace string_literals;
 constexpr Vector2 g_text_margin{8, 10};
 constexpr float g_carret_margin{6};
 
-TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_core::IWidget* /*parent*/) :
+TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_core::IWidget* parent) :
     m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(state),
     m_background_rect{
@@ -23,12 +23,14 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
        .border_radius = {8, 8, 8, 8},
        .border_color = m_state.border_color,
        .border_width = 1.0f,
+       .z_index = ui_core::depth_from_parent(parent),
     },
     m_selection_rect{
        .color = {0.5, 0.5, 0.5, 1.0},
        .border_radius = {0, 0, 0, 0},
        .border_color = palette::NO_COLOR,
        .border_width = 0.0f,
+       .z_index = ui_core::depth_from_parent(parent),
     },
     m_text_prim{
        .content = m_state.text,
@@ -41,6 +43,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
        .border_radius = {},
        .border_color = {},
        .border_width = 0.0f,
+       .z_index = static_cast<u16>(ui_core::depth_from_parent(parent) + 1),
     },
     m_caret_position(static_cast<u32>(m_state.text.rune_count()))
 {

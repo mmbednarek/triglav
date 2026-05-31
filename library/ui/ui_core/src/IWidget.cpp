@@ -3,7 +3,8 @@
 namespace triglav::ui_core {
 
 BaseWidget::BaseWidget(IWidget* parent) :
-    m_parent(parent)
+    m_parent(parent),
+    m_depth(depth_from_parent(parent))
 {
 }
 
@@ -12,6 +13,11 @@ void BaseWidget::on_child_state_changed(IWidget& widget)
    if (m_parent != nullptr) {
       m_parent->on_child_state_changed(widget);
    }
+}
+
+u16 BaseWidget::depth() const
+{
+   return m_depth;
 }
 
 ContainerWidget::ContainerWidget(Context& context, IWidget* parent) :

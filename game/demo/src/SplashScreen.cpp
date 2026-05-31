@@ -115,7 +115,9 @@ void SplashScreen::on_close()
 void SplashScreen::build_rendering_job(triglav::render_core::BuildContext& ctx)
 {
    ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
+   // ctx.declare_depth_target("ui.depth"_name, GAPI_FORMAT(D, UNorm16));
 
+   // ctx.begin_render_pass("splash_screen"_name, "core.color_out"_name, "ui.depth"_name);
    ctx.begin_render_pass("splash_screen"_name, "core.color_out"_name);
 
    m_update_ui_job.render_ui(ctx);

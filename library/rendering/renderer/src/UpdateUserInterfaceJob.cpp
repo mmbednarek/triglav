@@ -11,7 +11,7 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
                                                render_core::IRenderer& renderer) :
     m_device(device),
     m_viewport(viewport),
-    m_rectangle_renderer(viewport),
+    m_rectangle_renderer(device, viewport),
     m_sprite_renderer(viewport, resource_manager),
     m_text_renderer(m_device, glyph_cache, viewport, renderer)
 {

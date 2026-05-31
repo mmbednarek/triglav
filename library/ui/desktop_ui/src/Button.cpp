@@ -18,6 +18,7 @@ Button::Button(ui_core::Context& ctx, const Button::State state, ui_core::IWidge
        .border_radius = {5.0f, 5.0f, 5.0f, 5.0f},
        .border_color = TG_THEME_VAL(active_color),
        .border_width = 1.0f,
+       .z_index = ui_core::depth_from_parent(parent),
     }
 {
 }
