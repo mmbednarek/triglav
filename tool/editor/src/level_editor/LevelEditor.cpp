@@ -277,6 +277,70 @@ class TerrainModePanel : public desktop_ui::DesktopProxyWidget
          .region = Vector4{2 * 22, 3 * 22, 22, 22},
       });
       m_tool_radio_group.add_check_box(&smooth_button);
+
+      auto& paint_button = toolbar_layout.create_child<desktop_ui::CheckBox>({
+         .radio_group = &m_tool_radio_group,
+         .is_enabled = false,
+      });
+      paint_button.create_content<ui_core::Image>({
+         .texture = "editor/texture/ui_icons.tex"_rc,
+         .max_size = ICON_SIZE,
+         .region = Vector4{3 * 22, 3 * 22, 22, 22},
+      });
+      m_tool_radio_group.add_check_box(&paint_button);
+
+      // Separation
+      toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+      toolbar_layout
+         .create_child<ui_core::RectBox>({
+            .color = {0.2f, 0.2f, 0.2f, 1.0f},
+         })
+         .create_content<ui_core::EmptySpace>({
+            .size = {2.0f, ICON_SIZE.y},
+         });
+
+      toolbar_layout.create_child<ui_core::EmptySpace>({{5.0f, 0.0f}});
+
+      toolbar_layout
+         .create_child<ui_core::SizeLimit>({
+            .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+         })
+         .create_content<ui_core::AlignmentBox>({
+            .horizontal_alignment = std::nullopt,
+            .vertical_alignment = ui_core::VerticalAlignment::Center,
+         })
+         .create_content<ui_core::Image>({
+            .texture = "editor/texture/ui_icons.tex"_rc,
+            .max_size = ICON_SIZE,
+            .region = Vector4{0 * 22, 4 * 22, 22, 22},
+         });
+
+      m_size_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+         .items = {"10", "20", "40", "80", "120"},
+         .selected_item = 2,
+      });
+      TG_CONNECT_NAMED_OPT(*m_size_selector, OnSelected, OnSelectedSize, on_selected_size);
+
+      toolbar_layout
+         .create_child<ui_core::SizeLimit>({
+            .max_size = {ICON_SIZE.x, ICON_SIZE.y + 4},
+         })
+         .create_content<ui_core::AlignmentBox>({
+            .horizontal_alignment = std::nullopt,
+            .vertical_alignment = ui_core::VerticalAlignment::Center,
+         })
+         .create_content<ui_core::Image>({
+            .texture = "editor/texture/ui_icons.tex"_rc,
+            .max_size = ICON_SIZE,
+            .region = Vector4{1 * 22, 4 * 22, 22, 22},
+         });
+
+      m_strength_selector = &toolbar_layout.create_child<desktop_ui::DropDownMenu>({
+         .items = {"0.5", "1", "2", "4", "8"},
+         .selected_item = 1,
+      });
+      TG_CONNECT_NAMED_OPT(*m_strength_selector, OnSelected, OnSelectedStrength, on_selected_strength);
    }
 
    void on_selected_tool(const u32 id) const
@@ -290,11 +354,27 @@ class TerrainModePanel : public desktop_ui::DesktopProxyWidget
       m_tool_radio_group.set_active(m_grow_button);
    }
 
+   void on_selected_size(const u32 id) const
+   {
+      constexpr static std::array<float, 5> sizes{10, 20, 40, 80, 120};
+      m_state.level_editor->set_brush_size(sizes[id]);
+   }
+
+   void on_selected_strength(const u32 id) const
+   {
+      constexpr static std::array<float, 5> strengths{0.5, 1, 2, 4, 8};
+      m_state.level_editor->set_brush_strength(strengths[id]);
+   }
+
  private:
    State m_state;
    desktop_ui::RadioGroup m_tool_radio_group;
    desktop_ui::CheckBox* m_grow_button;
+   desktop_ui::DropDownMenu* m_size_selector;
+   desktop_ui::DropDownMenu* m_strength_selector;
    TG_SINK(desktop_ui::RadioGroup, OnSelection);
+   TG_OPT_NAMED_SINK(desktop_ui::DropDownMenu, OnSelected, OnSelectedSize);
+   TG_OPT_NAMED_SINK(desktop_ui::DropDownMenu, OnSelected, OnSelectedStrength);
 };
 
 LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
@@ -313,6 +393,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_terrain_shift_tool(*this),
     m_terrain_level_tool(*this),
     m_terrain_smooth_tool(*this),
+    m_terrain_paint_tool(*this),
     m_current_tool(&m_selection_tool)
 {
    auto& splitter = this->create_content<desktop_ui::Splitter>({
@@ -484,6 +565,9 @@ void LevelEditor::on_selected_tool(const u32 id)
       break;
    case 6:
       this->set_active_tool(LevelEditorTool::TerrainSmooth);
+      break;
+   case 7:
+      this->set_active_tool(LevelEditorTool::TerrainPaint);
       break;
    default:
       break;
@@ -662,6 +746,10 @@ void LevelEditor::set_active_tool(const LevelEditorTool tool)
       m_current_tool = &m_terrain_smooth_tool;
       m_terrain_mode_panel->m_tool_radio_group.highlight(2);
       break;
+   case LevelEditorTool::TerrainPaint:
+      m_current_tool = &m_terrain_paint_tool;
+      m_terrain_mode_panel->m_tool_radio_group.highlight(3);
+      break;
    default:
       break;
    }
@@ -725,6 +813,22 @@ geometry::Ray LevelEditor::viewport_ray(const Vector2 position)
 DecalRenderingStage& LevelEditor::decal_rendering_stage() const
 {
    return *m_decal_rendering_stage;
+}
+
+void LevelEditor::set_brush_size(const float size)
+{
+   m_terrain_shift_tool.set_brush_size(size);
+   m_terrain_level_tool.set_brush_size(size);
+   m_terrain_smooth_tool.set_brush_size(size);
+   m_terrain_paint_tool.set_brush_size(size);
+}
+
+void LevelEditor::set_brush_strength(const float strength)
+{
+   m_terrain_shift_tool.set_strength(strength);
+   m_terrain_level_tool.set_strength(strength);
+   m_terrain_smooth_tool.set_strength(strength);
+   m_terrain_paint_tool.set_strength(strength);
 }
 
 }// namespace triglav::editor

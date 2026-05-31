@@ -31,7 +31,7 @@ class GBufferStage final : public IStage
    void build_geometry(render_core::BuildContext& ctx) const;
    void build_terrain(render_core::BuildContext& ctx) const;
 
-   void on_terrain_updated(Vector2i size, const std::vector<float>& data) const;
+   void on_terrain_updated(Vector2i size, const std::vector<float>& height, const std::vector<u8>& blending) const;
 
  private:
    void draw_objects_with_render_info(render_core::BuildContext& ctx, const render_objects::MaterialGeometryRenderInfo& info) const;
@@ -39,6 +39,7 @@ class GBufferStage final : public IStage
    graphics_api::Device& m_device;
    geometry::DeviceMesh m_mesh;
    graphics_api::Texture m_terrain_texture;
+   graphics_api::Texture m_terrain_blend_texture;
    graphics_api::Buffer m_terrain_vertices;
    BindlessScene& m_bindless_scene;
 

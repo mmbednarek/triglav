@@ -21,7 +21,7 @@ void TerrainLevelTool::on_tick(const float delta_time)
    if (!m_is_being_used)
       return;
 
-   m_canvas.level(m_level, 2.0f * delta_time, m_pointer_position);
+   m_canvas.level(m_level, m_strength * delta_time, m_pointer_position);
 }
 
 }// namespace triglav::editor
