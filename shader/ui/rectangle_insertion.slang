@@ -25,3 +25,4 @@ void cs_main(uint tid: SV_DispatchThreadID)
     drawCall.primitive = rect.primitive;
     g_drawCallBuffer[rect.dstIndex] = drawCall;
 }
+

@@ -66,6 +66,12 @@ TextRenderer::TextRenderer(graphics_api::Device& device, render_core::GlyphCache
     m_device(device),
     m_glyph_cache(glyph_cache),
     m_renderer(renderer),
+    m_draw_calls(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::Indirect | graphics_api::BufferUsage::StorageBuffer |
+                                                    graphics_api::BufferUsage::TransferDst,
+                                                 sizeof(TextDrawCall) * g_max_text_draw_calls))),
+    m_vertex_buffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::VertexBuffer | graphics_api::BufferUsage::StorageBuffer |
+                                                       graphics_api::BufferUsage::TransferDst,
+                                                    sizeof(TextVertex) * g_max_text_vertices))),
     m_combined_glyph_buffer(GAPI_CHECK(device.create_buffer(
        graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst, g_max_combined_glyph_buffer_size))),
     m_vertex_allocator{memory::HeapAllocator{g_max_text_vertices}},
@@ -82,19 +88,15 @@ void TextRenderer::on_added_text(const TextId text_id, const ui_core::Text& text
    const auto& typeface_info = this->get_typeface_info({text.typeface_name, text.font_size});
    const auto vertex_section = this->allocate_vertex_section(text_id, static_cast<u32>(g_vertex_count_per_char * text.content.size()));
 
-   for (auto& updates : m_frame_updates) {
-      updates.add_or_update(text_id,
-                            TextInfo{text, typeface_info.glyph_buffer_offset, text.color, text.crop, text.position, typeface_info.atlas_id,
-                                     static_cast<u32>(vertex_section.offset), static_cast<u32>(vertex_section.size)});
-   }
+   m_frame_updates.add_or_update(text_id, TextInfo{text, typeface_info.glyph_buffer_offset, text.color, text.crop, text.position,
+                                                   typeface_info.atlas_id, static_cast<u32>(vertex_section.offset),
+                                                   static_cast<u32>(vertex_section.size)});
 }
 
 void TextRenderer::on_removed_text(const TextId text_id)
 {
    std::unique_lock lk{m_update_mtx};
-   for (auto& updates : m_frame_updates) {
-      updates.remove(text_id);
-   }
+   m_frame_updates.remove(text_id);
    this->free_vertex_section(text_id);
 }
 
@@ -136,9 +138,9 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frame_i
    m_char_offset = 0;
    m_current_frame_index = frame_index;
 
-   m_frame_updates[frame_index].write_to_buffers(*this);
+   m_frame_updates.write_to_buffers(*this);
 
-   text_draw_call_count = m_frame_updates[frame_index].top_index();
+   text_draw_call_count = m_frame_updates.top_index();
    text_removal_count = m_top_move_index;
    text_dispatch = {m_top_update_info, 1, 1};
 }
@@ -156,9 +158,6 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
    ctx.declare_staging_buffer("user_interface.text_removal_buffer"_name, sizeof(std::pair<u32, u32>) * g_max_text_update_count);
    ctx.declare_staging_buffer("user_interface.text_removal_count"_name, sizeof(u32));
 
-   ctx.declare_buffer("user_interface.text_draw_call_buffer"_name, sizeof(TextDrawCall) * g_max_text_draw_calls);
-   ctx.declare_buffer("user_interface.text_vertex_buffer"_name, sizeof(TextVertex) * g_max_text_vertices);
-
    // Copy buffers
    ctx.copy_buffer("user_interface.text_update_buffer.staging"_name, "user_interface.text_update_buffer"_name);
    ctx.copy_buffer("user_interface.character_buffer.staging"_name, "user_interface.character_buffer"_name);
@@ -172,8 +171,8 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
    ctx.bind_storage_buffer(2, &this->m_combined_glyph_buffer);
 
    // output
-   ctx.bind_storage_buffer(3, "user_interface.text_draw_call_buffer"_name);
-   ctx.bind_storage_buffer(4, "user_interface.text_vertex_buffer"_name);
+   ctx.bind_storage_buffer(3, &m_draw_calls);
+   ctx.bind_storage_buffer(4, &m_vertex_buffer);
 
    ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
 
@@ -182,15 +181,10 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
 
    ctx.bind_uniform_buffer(0, "user_interface.text_removal_count"_name);
    ctx.bind_storage_buffer(1, "user_interface.text_removal_buffer"_name);
-   ctx.bind_storage_buffer(2, "user_interface.text_draw_call_buffer"_name);
+   ctx.bind_storage_buffer(2, &m_draw_calls);
 
    ctx.dispatch({1, 1, 1});
 
-   ctx.export_buffer("user_interface.text_draw_call_buffer"_name, graphics_api::PipelineStage::DrawIndirect,
-                     graphics_api::BufferAccess::IndirectCmdRead,
-                     graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::Indirect);
-   ctx.export_buffer("user_interface.text_vertex_buffer"_name, graphics_api::PipelineStage::VertexInput,
-                     graphics_api::BufferAccess::VertexRead, graphics_api::BufferUsage::VertexBuffer);
    ctx.export_buffer("user_interface.text_draw_call_count"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
 }
@@ -201,7 +195,7 @@ void TextRenderer::build_render_ui(render_core::BuildContext& ctx)
 
    ctx.push_constant(ctx.screen_size());
 
-   ctx.bind_storage_buffer(0, "user_interface.text_draw_call_buffer"_external);
+   ctx.bind_storage_buffer(0, &m_draw_calls);
 
    ctx.bind_fragment_shader("shader/ui/text_render.fshader"_rc);
 
@@ -212,15 +206,16 @@ void TextRenderer::build_render_ui(render_core::BuildContext& ctx)
    layout.add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(TextVertex, uv));
    ctx.bind_vertex_layout(layout);
 
-   ctx.bind_vertex_buffer("user_interface.text_vertex_buffer"_external);
+   ctx.bind_vertex_buffer(&m_vertex_buffer);
 
-   ctx.draw_indirect_with_count("user_interface.text_draw_call_buffer"_external, "user_interface.text_draw_call_count"_external,
-                                g_max_text_draw_calls, sizeof(TextDrawCall));
+   ctx.draw_indirect_with_count(&m_draw_calls, "user_interface.text_draw_call_count"_external, g_max_text_draw_calls, sizeof(TextDrawCall));
 }
 
 void TextRenderer::set_object(const u32 index, const TextInfo& info)
 {
    const auto char_count = font::Charset::European.encode_string_to(info.text.content.view(), m_char_buffer + m_char_offset);
+   assert(m_top_update_info < g_max_text_update_count);
+   assert(index < g_max_text_draw_calls);
    m_update_infos[m_top_update_info++] = TextUpdateInfo{
       .color = info.color,
       .crop = info.crop,
@@ -239,7 +234,9 @@ void TextRenderer::set_object(const u32 index, const TextInfo& info)
 
 void TextRenderer::move_object(const u32 src, const u32 dst)
 {
-   assert(m_top_update_info <= g_max_text_update_count);
+   assert(m_top_move_index <= g_max_text_update_count);
+   assert(src < g_max_text_draw_calls);
+   assert(dst < g_max_text_draw_calls);
    m_move_buffer[m_top_move_index++] = {src, dst};
 }
 

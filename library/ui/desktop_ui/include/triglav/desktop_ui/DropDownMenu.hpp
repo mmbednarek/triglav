@@ -77,7 +77,7 @@ class DropDownSelector final : public ui_core::IWidget
    ui_core::VerticalLayout m_vertical_layout;
 };
 
-class DropDownMenu final : public ui_core::IWidget
+class DropDownMenu final : public ui_core::BaseWidget
 {
    friend class DropDownSelectorButton;
    friend class DropDownSelector;

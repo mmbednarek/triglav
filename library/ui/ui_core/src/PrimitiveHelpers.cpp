@@ -49,6 +49,7 @@ void RectInstance::add(Context& ctx, Vector4 dimensions, Vector4 crop)
          .border_color = this->border_color,
          .crop = crop,
          .border_width = this->border_width,
+         .z_index = this->z_index,
       });
 
       return;

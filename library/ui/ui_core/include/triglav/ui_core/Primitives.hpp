@@ -30,6 +30,7 @@ struct Rectangle
    Vector4 border_color;
    Vector4 crop;
    float border_width;
+   u16 z_index = 0;
 };
 
 struct Sprite

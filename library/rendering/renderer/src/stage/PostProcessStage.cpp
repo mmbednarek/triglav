@@ -25,7 +25,9 @@ PostProcessStage::PostProcessStage(UpdateUserInterfaceJob* update_user_interface
 void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
    ctx.declare_render_target(m_output_render_target, GAPI_FORMAT(BGRA, sRGB));
+   // ctx.declare_depth_target("ui.depth"_name, GAPI_FORMAT(D, UNorm16));
 
+   // ctx.begin_render_pass("post_processing"_name, m_output_render_target, "ui.depth"_name);
    ctx.begin_render_pass("post_processing"_name, m_output_render_target);
 
    ctx.bind_fragment_shader("shader/pass/post_processing.fshader"_rc);

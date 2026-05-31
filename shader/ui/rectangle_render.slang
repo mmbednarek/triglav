@@ -50,6 +50,11 @@ static float2 g_vertexIndex[] = {
     float2(0, 1),
 };
 
+float u16_to_float(uint val)
+{
+    return 1.0 - float(val) / 65536.0;
+}
+
 VSOutput vs_main(uint vid: SV_VertexID)
 {
     const triglav::ui::RectPrimitive prim = g_drawCallBuffer[triglav::get_draw_index()].primitive;
@@ -59,7 +64,7 @@ VSOutput vs_main(uint vid: SV_VertexID)
     const float2 ssPosition = round(prim.dimensions.xy) + posOnRect;
 
     VSOutput out;
-    out.position = float4(2 * (ssPosition / g_viewportSize) - float2(1, 1), 0, 1);
+    out.position = float4(2 * (ssPosition / g_viewportSize) - float2(1, 1), u16_to_float(prim.z_index), 1);
     out.screenPos = posOnRect;
     out.screenOffset = prim.dimensions.xy;
     out.rectSize = prim.dimensions.zw;

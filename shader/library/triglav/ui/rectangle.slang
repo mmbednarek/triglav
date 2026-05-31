@@ -10,7 +10,8 @@ public struct RectPrimitive
     public float4 backgroundColor;
     public float4 croppingMask;
     public float borderWidth;
-    public uint padding[3];
+    public uint z_index;
+    public uint padding[2];
 };
 
 public struct RectWriteData

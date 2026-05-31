@@ -145,6 +145,7 @@ void DropDownSelector::on_child_state_changed(IWidget& widget)
 // -- DropDownMenu --
 
 DropDownMenu::DropDownMenu(ui_core::Context& ctx, State state, ui_core::IWidget* parent) :
+    ui_core::BaseWidget(parent),
     m_context(dynamic_cast<DesktopContext&>(ctx)),
     m_state(std::move(state)),
     m_parent(parent),

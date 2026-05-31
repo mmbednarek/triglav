@@ -74,7 +74,9 @@ class TextRenderer
    render_core::GlyphCache& m_glyph_cache;
    render_core::IRenderer& m_renderer;
 
-   std::array<UpdateList<ui_core::RectId, TextInfo>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frame_updates;
+   UpdateList<ui_core::RectId, TextInfo> m_frame_updates;
+   graphics_api::Buffer m_draw_calls;
+   graphics_api::Buffer m_vertex_buffer;
    std::vector<render_core::TextureRef> m_atlases;
    graphics_api::Buffer m_combined_glyph_buffer;
    u32 m_glyph_offset{};

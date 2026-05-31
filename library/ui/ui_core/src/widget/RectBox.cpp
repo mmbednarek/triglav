@@ -41,6 +41,7 @@ void RectBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_m
          .border_color = m_state.border_color,
          .crop = cropping_mask,
          .border_width = m_state.border_width,
+         .z_index = this->depth(),
       });
    }
 

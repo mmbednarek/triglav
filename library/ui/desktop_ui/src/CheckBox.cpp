@@ -39,6 +39,7 @@ CheckBox::CheckBox(ui_core::Context& ctx, State state, IWidget* parent) :
        .border_radius = {4.0f, 4.0f, 4.0f, 4.0f},
        .border_color = palette::NO_COLOR,
        .border_width = 0.0f,
+       .z_index = ui_core::depth_from_parent(parent),
     }
 {
 }

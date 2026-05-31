@@ -25,7 +25,8 @@ struct RectPrimitive
    Vector4 background_color;
    Vector4 cropping_mask;
    float border_width;
-   u32 padding[3];
+   u32 z_index;
+   u32 padding[2];
 };
 
 static_assert(sizeof(RectPrimitive) % 16 == 0);
@@ -47,10 +48,11 @@ struct RectCopyInfo
 
 class RectangleRenderer
 {
+   TG_DEFINE_LOG_CATEGORY(RectangleRenderer)
  public:
    using Self = RectangleRenderer;
 
-   RectangleRenderer(ui_core::Viewport& viewport);
+   RectangleRenderer(graphics_api::Device& device, ui_core::Viewport& viewport);
 
    void on_added_rectangle(ui_core::RectId rect_id, const ui_core::Rectangle& rect);
    void on_updated_rectangle(ui_core::RectId rect_id, const ui_core::Rectangle& rect);
@@ -64,7 +66,8 @@ class RectangleRenderer
    void build_render_ui(render_core::BuildContext& ctx);
 
  private:
-   std::array<UpdateList<ui_core::RectId, RectPrimitive>, render_core::FRAMES_IN_FLIGHT_COUNT> m_frame_updates;
+   UpdateList<ui_core::RectId, RectPrimitive> m_frame_updates;
+   graphics_api::Buffer m_draw_calls;
 
    RectWriteData* m_staging_insertions;
    u32 m_staging_insertions_top{};

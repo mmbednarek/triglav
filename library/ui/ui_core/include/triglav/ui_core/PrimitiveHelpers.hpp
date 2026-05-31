@@ -26,6 +26,7 @@ struct RectInstance
    Vector4 border_radius{};
    Vector4 border_color{};
    float border_width{};
+   u16 z_index{};
 
    RectId rect_id = 0;
 
