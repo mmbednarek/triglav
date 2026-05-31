@@ -5,6 +5,13 @@
 
 namespace triglav::render_core::detail {
 
+struct PassRenderTarget
+{
+   Name texture_name;
+   graphics_api::ClearValue clear_value{};
+   graphics_api::AttachmentAttributeFlags flags;
+};
+
 namespace cmd {
 
 struct BindGraphicsPipeline
@@ -183,7 +190,7 @@ struct FillBuffer
 struct BeginRenderPass
 {
    Name pass_name;
-   std::vector<Name> render_targets;
+   std::vector<PassRenderTarget> render_targets;
 };
 
 struct EndRenderPass

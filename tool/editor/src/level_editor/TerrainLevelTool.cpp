@@ -5,7 +5,7 @@
 namespace triglav::editor {
 
 TerrainLevelTool::TerrainLevelTool(LevelEditor& level_editor) :
-   TerrainTool(level_editor)
+    TerrainTool(level_editor)
 {
 }
 

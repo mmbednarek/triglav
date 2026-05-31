@@ -1,4 +1,6 @@
 editor_sources = files([
+                           'src/level_editor/DecalRenderingStage.cpp',
+                           'src/level_editor/DecalRenderingStage.hpp',
                            'src/level_editor/ILevelEditorTool.hpp',
                            'src/level_editor/LevelEditor.cpp',
                            'src/level_editor/LevelEditor.hpp',

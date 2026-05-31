@@ -2,3 +2,5 @@ resources:
   - "editor/texture/ui_icons.tex"
   - "editor/shader/object_selection.fshader"
   - "editor/shader/object_selection.vshader"
+  - "editor/shader/decal.fshader"
+  - "editor/shader/decal.vshader"

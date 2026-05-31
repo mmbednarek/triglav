@@ -321,20 +321,26 @@ void BuildContext::begin_render_pass_raw(const Name pass_name, const std::span<N
 {
    m_work_types |= gapi::WorkType::Graphics;
 
+   std::vector<detail::PassRenderTarget> pass_render_targets;
+
    for (const auto rt_name : render_targets) {
       const auto& rt_texture = this->declaration<detail::decl::Texture>(rt_name);
       const auto& render_target = m_render_targets.at(rt_name);
 
+      pass_render_targets.emplace_back(rt_name, render_target.clear_value, render_target.flags);
+
       if (render_target.flags & gapi::AttachmentAttribute::Depth) {
+         this->prepare_texture(rt_name, graphics_api::TextureState::RenderTarget, graphics_api::TextureUsage::DepthStencilAttachment);
          m_graphic_pipeline_state.depth_target_format = rt_texture.tex_format;
       } else {
+         this->prepare_texture(rt_name, graphics_api::TextureState::RenderTarget, graphics_api::TextureUsage::ColorAttachment);
          m_graphic_pipeline_state.render_target_formats.emplace_back(rt_texture.tex_format);
       }
    }
 
    std::vector<Name> render_target_names(render_targets.size());
    std::ranges::copy(render_targets, render_target_names.begin());
-   this->add_command<detail::cmd::BeginRenderPass>(pass_name, std::move(render_target_names));
+   this->add_command<detail::cmd::BeginRenderPass>(pass_name, std::move(pass_render_targets));
 }
 
 void BuildContext::end_render_pass()
@@ -519,11 +525,9 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
    gapi::RenderingInfo info{};
    gapi::Resolution resolution{};
 
-   for (const auto rt_name : begin_render_pass.render_targets) {
-      const auto& render_target = m_render_targets.at(rt_name);
-
+   for (const auto& render_target : begin_render_pass.render_targets) {
       gapi::RenderAttachment attachment{};
-      attachment.texture = &storage.texture(rt_name, frame_index);
+      attachment.texture = &storage.texture(render_target.texture_name, frame_index);
       attachment.state = gapi::TextureState::RenderTarget;
       attachment.clear_value = render_target.clear_value;
       attachment.flags = render_target.flags;

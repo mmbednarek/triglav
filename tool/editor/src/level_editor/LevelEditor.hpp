@@ -31,6 +31,7 @@ namespace triglav::editor {
 class LevelViewport;
 class RootWindow;
 class LevelEditorSidePanel;
+class DecalRenderingStage;
 
 enum class LevelEditorMode
 {
@@ -97,6 +98,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    [[nodiscard]] ResourceName asset_name() const override;
    void on_mode_selected(u32 id) const;
    geometry::Ray viewport_ray(Vector2 position);
+   [[nodiscard]] DecalRenderingStage& decal_rendering_stage() const;
 
  private:
    State m_state;
@@ -123,6 +125,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    TerrainModePanel* m_terrain_mode_panel{};
    desktop_ui::DropDownMenu* m_mode_selector;
    LevelEditorMode m_active_mode{LevelEditorMode::Object};
+   DecalRenderingStage* m_decal_rendering_stage{};
 
    ILevelEditorTool* m_current_tool = nullptr;
 

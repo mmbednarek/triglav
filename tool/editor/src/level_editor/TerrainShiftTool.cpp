@@ -1,5 +1,6 @@
 #include "TerrainShiftTool.hpp"
 
+#include "DecalRenderingStage.hpp"
 #include "LevelEditor.hpp"
 #include "LevelViewport.hpp"
 
