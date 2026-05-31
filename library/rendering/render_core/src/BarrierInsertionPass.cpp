@@ -143,9 +143,7 @@ void BarrierInsertionPass::visit(const detail::cmd::FillBuffer& cmd)
 
 void BarrierInsertionPass::visit(const detail::cmd::BeginRenderPass& cmd)
 {
-   for (const Name target : cmd.render_targets) {
-      const auto& render_target = m_context.m_render_targets.at(target);
-
+   for (const auto& render_target : cmd.render_targets) {
       const auto is_depth_target = render_target.flags & gapi::AttachmentAttribute::Depth;
       const auto is_image_loaded = render_target.flags & gapi::AttachmentAttribute::LoadImage;
       const auto is_image_stored = render_target.flags & gapi::AttachmentAttribute::StoreImage;
@@ -154,7 +152,7 @@ void BarrierInsertionPass::visit(const detail::cmd::BeginRenderPass& cmd)
       const auto texture_state =
          (is_image_loaded && !is_image_stored) ? gapi::TextureState::ReadOnlyRenderTarget : gapi::TextureState::RenderTarget;
 
-      this->setup_texture_barrier(target, texture_state, target_stage, last_used_stage);
+      this->setup_texture_barrier(render_target.texture_name, texture_state, target_stage, last_used_stage);
    }
 
    m_is_within_render_pass = true;

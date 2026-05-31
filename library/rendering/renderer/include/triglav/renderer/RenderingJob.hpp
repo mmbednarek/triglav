@@ -24,9 +24,10 @@ class RenderingJob
    void set_config(Config config);
 
    template<typename TStage, typename... TArgs>
-   void emplace_stage(TArgs&&... args)
+   TStage& emplace_stage(TArgs&&... args)
    {
       m_stages.emplace_back(std::make_unique<TStage>(std::forward<TArgs>(args)...));
+      return *dynamic_cast<TStage*>(m_stages.back().get());
    }
 
  private:

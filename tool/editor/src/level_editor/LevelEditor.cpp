@@ -1,6 +1,7 @@
 #include "LevelEditor.hpp"
 
 #include "../RootWindow.hpp"
+#include "DecalRenderingStage.hpp"
 #include "LevelEditorSidePanel.hpp"
 #include "LevelViewport.hpp"
 
@@ -385,6 +386,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_scene.update_shadow_maps();
 
    m_rendering_job.emplace_stage<renderer::stage::GBufferStage>(m_state.root_window->device(), m_bindless_scene);
+   m_decal_rendering_stage = &m_rendering_job.emplace_stage<DecalRenderingStage>(m_state.root_window->device());
    m_rendering_job.emplace_stage<renderer::stage::AmbientOcclusionStage>(m_state.root_window->device());
    m_rendering_job.emplace_stage<renderer::stage::ShadowMapStage>(m_scene, m_bindless_scene, m_update_view_params_job);
    m_rendering_job.emplace_stage<renderer::stage::ShadingStage>();
@@ -718,6 +720,11 @@ geometry::Ray LevelEditor::viewport_ray(const Vector2 position)
    auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
    viewport_coord.y *= -1.0f;
    return this->scene().camera().viewport_ray(viewport_coord);
+}
+
+DecalRenderingStage& LevelEditor::decal_rendering_stage() const
+{
+   return *m_decal_rendering_stage;
 }
 
 }// namespace triglav::editor
