@@ -34,7 +34,7 @@ void TerrainTool::on_mouse_moved(const Vector2 position)
 
    world_position->z = m_canvas.height_to_world(level);
 
-   const auto brush_world_size = m_canvas.distance_to_world(static_cast<float>(m_brush_size));
+   const auto brush_world_size = m_canvas.distance_to_world(m_canvas.brush_size());
 
    const Matrix4x4 mat =
       glm::scale(glm::translate(Matrix4x4{1}, *world_position), Vector3{brush_world_size, brush_world_size, brush_world_size});
@@ -57,6 +57,16 @@ void TerrainTool::on_use_end()
 void TerrainTool::on_left_tool()
 {
    m_is_being_used = false;
+}
+
+void TerrainTool::set_brush_size(const float size)
+{
+   m_canvas.set_brush_size(size);
+}
+
+void TerrainTool::set_strength(const float strength)
+{
+   m_strength = strength;
 }
 
 }// namespace triglav::editor

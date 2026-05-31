@@ -64,7 +64,7 @@ class Scene
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
    TG_EVENT(OnViewUpdated, const Camera&)
-   TG_EVENT(OnTerrainUpdated, Vector2i, const std::vector<float>&)
+   TG_EVENT(OnTerrainUpdated, Vector2i, const std::vector<float>&, const std::vector<u8>&)
 
    explicit Scene(resource::ResourceManager& resource_manager);
 
@@ -94,6 +94,7 @@ class Scene
    [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
    RayHit trace_ray(const geometry::Ray& ray) const;
    std::vector<float>& terrain();
+   std::vector<u8>& terrain_blending();
    void publish_terrain_changes();
 
    [[nodiscard]] std::map<ObjectID, SceneObjectUPtr>::const_iterator begin() const
@@ -116,6 +117,7 @@ class Scene
    std::map<ObjectID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;
    std::vector<float> m_terrain;
+   std::vector<u8> m_terrain_blending;
    ObjectID m_top_object_id = 0;
 };
 

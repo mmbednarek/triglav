@@ -60,3 +60,4 @@ resources:
   # Graphics
   - "engine/texture/skybox.tex"
   - "engine/texture/grass.tex"
+  - "engine/texture/dirt.tex"

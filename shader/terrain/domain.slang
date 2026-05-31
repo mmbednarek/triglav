@@ -6,6 +6,9 @@ uniform ConstantBuffer<triglav::ViewProperties> cb_view;
 [[vk::binding(2)]]
 Sampler2D<float> s_height_map;
 
+[[vk::binding(3)]]
+Sampler2D<float> s_blending;
+
 struct VertexIn
 {
     float3 position : POSITION;
@@ -17,6 +20,7 @@ struct VertexOut
     float4 position : SV_POSITION;
     float2 uv : TEXCOORD0;
     float3 normal : NORMAL;
+    float blending : TEXCOORD1;
 };
 
 
@@ -58,11 +62,14 @@ VertexOut ds_main(float2 uv : SV_DomainLocation, const OutputPatch<VertexIn, 4> 
     float height = s_height_map.SampleLevel(v.uv, 0);
     pos.z += height * 30.0f; // Scale height by your terrain max height
 
+    float blending = s_blending.SampleLevel(v.uv, 0);
+
     const float3 normal = calculate_normal(v.uv, float2(200.0, 200.0));
 
     // 3. Project to screen
     v.position = mul(cb_view.proj, mul(cb_view.view, float4(pos, 1.0)));
     v.normal = normal;
     v.uv *= 10.0;
+    v.blending = blending;
     return v;
 }

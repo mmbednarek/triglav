@@ -23,6 +23,9 @@ Scene::Scene(resource::ResourceManager& resource_manager) :
 {
    m_terrain.resize(1024 * 1024);
    std::ranges::fill(m_terrain, 0.0f);
+
+   m_terrain_blending.resize(1024 * 1024);
+   std::ranges::fill(m_terrain_blending, 0);
 }
 
 void Scene::update(const graphics_api::Resolution& resolution)
@@ -186,16 +189,18 @@ std::vector<float>& Scene::terrain()
    return m_terrain;
 }
 
+std::vector<u8>& Scene::terrain_blending()
+{
+   return m_terrain_blending;
+}
+
 void Scene::publish_terrain_changes()
 {
-   event_OnTerrainUpdated.publish(Vector2i{1024, 1024}, m_terrain);
+   event_OnTerrainUpdated.publish(Vector2i{1024, 1024}, m_terrain, m_terrain_blending);
 }
 
 void Scene::update_shadow_maps()
 {
-   // auto forward = m_directional_light_orientation * Vector3{0, 1, 0};
-   // log_info("Light forward vector: {}", forward);
-
    auto sm_props1 = this->camera().calculate_shadow_map(m_directional_light_orientation, 32.0f, 120.0f);
    m_directional_shadow_map_cameras[0] = OrthoCamera::from_properties(sm_props1);
    event_OnShadowMapChanged.publish(0, m_directional_shadow_map_cameras[0]);

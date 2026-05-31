@@ -24,6 +24,8 @@ editor_sources = files([
                            'src/level_editor/TerrainCanvas.hpp',
                            'src/level_editor/TerrainLevelTool.cpp',
                            'src/level_editor/TerrainLevelTool.hpp',
+                           'src/level_editor/TerrainPaintTool.cpp',
+                           'src/level_editor/TerrainPaintTool.hpp',
                            'src/level_editor/TerrainShiftTool.cpp',
                            'src/level_editor/TerrainShiftTool.hpp',
                            'src/level_editor/TerrainSmoothTool.cpp',

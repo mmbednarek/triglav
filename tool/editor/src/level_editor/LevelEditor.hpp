@@ -8,6 +8,7 @@
 #include "ScalingTool.hpp"
 #include "SelectionTool.hpp"
 #include "TerrainLevelTool.hpp"
+#include "TerrainPaintTool.hpp"
 #include "TerrainShiftTool.hpp"
 #include "TerrainSmoothTool.hpp"
 #include "TranslationTool.hpp"
@@ -48,6 +49,7 @@ enum class LevelEditorTool
    TerrainShift,
    TerrainLevel,
    TerrainSmooth,
+   TerrainPaint,
 };
 
 class ObjectModePanel;
@@ -99,6 +101,8 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    void on_mode_selected(u32 id) const;
    geometry::Ray viewport_ray(Vector2 position);
    [[nodiscard]] DecalRenderingStage& decal_rendering_stage() const;
+   void set_brush_size(float size);
+   void set_brush_strength(float strength);
 
  private:
    State m_state;
@@ -118,6 +122,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    TerrainShiftTool m_terrain_shift_tool;
    TerrainLevelTool m_terrain_level_tool;
    TerrainSmoothTool m_terrain_smooth_tool;
+   TerrainPaintTool m_terrain_paint_tool;
    LevelEditorSidePanel* m_side_panel{};
    HistoryManager m_history_manager;
    ui_core::AlternativeView* m_panel_view{};

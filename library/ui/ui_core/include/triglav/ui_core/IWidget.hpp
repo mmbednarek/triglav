@@ -153,7 +153,10 @@ class IWidget
 
    virtual void on_event([[maybe_unused]] const Event& event) {}
 
-   [[nodiscard]] virtual u16 depth() const { return 0; }
+   [[nodiscard]] virtual u16 depth() const
+   {
+      return 0;
+   }
 };
 
 inline u16 depth_from_parent(const IWidget* widget)

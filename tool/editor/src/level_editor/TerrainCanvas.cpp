@@ -14,7 +14,7 @@ void TerrainCanvas::set_brush_size(const float size)
    m_brush_size = size;
 }
 
-void TerrainCanvas::paint(const float amount, const Vector2i coord) const
+void TerrainCanvas::shift(const float amount, const Vector2i coord) const
 {
    if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
       return;
@@ -32,9 +32,10 @@ void TerrainCanvas::paint(const float amount, const Vector2i coord) const
 
          const float dx = static_cast<float>(x) / m_brush_size;
          const float dy = static_cast<float>(y) / m_brush_size;
-         const float dist = std::sqrt(dx * dx + dy * dy);
+         float dist = std::sqrt(dx * dx + dy * dy);
          if (dist > 1.0f)
             continue;
+         dist = std::pow(dist, 2.0f);
 
          const float shape = std::sin(dist * MATH_PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
@@ -106,6 +107,48 @@ void TerrainCanvas::smooth(const float strength, const Vector2i coord) const
    m_scene.publish_terrain_changes();
 }
 
+static float u8_to_float(const u8 v)
+{
+   return static_cast<float>(v) / 255.0f;
+}
+
+static float float_to_u8(const float v)
+{
+   return static_cast<u8>(std::clamp(v, 0.0f, 1.0f) * 255.0f);
+}
+
+void TerrainCanvas::paint(const float strength, const Vector2i coord) const
+{
+   if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
+      return;
+
+   auto& terr = m_scene.terrain_blending();
+
+   const i32 brush_size_int = static_cast<i32>(m_brush_size);
+   for (i32 y = -brush_size_int; y <= brush_size_int; y++) {
+      if (y + coord.y < 0)
+         continue;
+
+      for (i32 x = -brush_size_int; x <= brush_size_int; x++) {
+         if (x + coord.x < 0)
+            continue;
+
+         const float dx = static_cast<float>(x) / m_brush_size;
+         const float dy = static_cast<float>(y) / m_brush_size;
+         const float dist = std::sqrt(dx * dx + dy * dy);
+         if (dist > 1.0f)
+            continue;
+
+         const float shape = std::sin(dist * MATH_PI * 0.5f);
+         const auto index = (x + coord.x) + 1024 * (coord.y + y);
+         terr[index] = float_to_u8(u8_to_float(terr[index]) + strength * (1.0f - shape));
+         // terr[index] = 255;
+      }
+   }
+
+   m_scene.publish_terrain_changes();
+}
+
 float TerrainCanvas::sample(const Vector2i coord) const
 {
    if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
@@ -141,6 +184,11 @@ float TerrainCanvas::height_to_world(const float height) const
 float TerrainCanvas::distance_to_world(const float distance) const
 {
    return distance / m_height_map_resolution * m_world_size;
+}
+
+float TerrainCanvas::brush_size() const
+{
+   return m_brush_size;
 }
 
 float TerrainCanvas::sample_average(const Vector2i coord) const

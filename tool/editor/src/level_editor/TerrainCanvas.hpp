@@ -17,14 +17,17 @@ class TerrainCanvas
    explicit TerrainCanvas(renderer::Scene& scene);
 
    void set_brush_size(float size);
-   void paint(float amount, Vector2i coord) const;
+   void shift(float amount, Vector2i coord) const;
    void level(float level, float strength, Vector2i coord) const;
    void smooth(float strength, Vector2i coord) const;
-   float sample(Vector2i coord) const;
-   std::optional<Vector3> trace_ray(const geometry::Ray& ray) const;
-   Vector2i world_pos_to_coord(Vector3 pos) const;
-   float height_to_world(float height) const;
-   float distance_to_world(float distance) const;
+   void paint(float strength, Vector2i coord) const;
+
+   [[nodiscard]] float sample(Vector2i coord) const;
+   [[nodiscard]] std::optional<Vector3> trace_ray(const geometry::Ray& ray) const;
+   [[nodiscard]] Vector2i world_pos_to_coord(Vector3 pos) const;
+   [[nodiscard]] float height_to_world(float height) const;
+   [[nodiscard]] float distance_to_world(float distance) const;
+   [[nodiscard]] float brush_size() const;
 
  private:
    float sample_average(Vector2i coord) const;
