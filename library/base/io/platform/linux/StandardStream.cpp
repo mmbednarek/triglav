@@ -4,6 +4,7 @@ extern "C"
 {
 #include <unistd.h>
 }
+#include <cassert>
 
 namespace triglav::io {
 
@@ -69,7 +70,7 @@ MemorySize copy(IReader& input, IWriter& output)
          return total_copied;
       }
 
-      output.write({copy_buffer.data(), *read_size});
+      assert(output.write({copy_buffer.data(), *read_size}).has_value());
       total_copied += *read_size;
       if (*read_size < copy_buffer_size) {
          return total_copied;

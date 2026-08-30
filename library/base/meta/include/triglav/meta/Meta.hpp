@@ -369,6 +369,7 @@ class MapRef : public Ref
       return *static_cast<const TKey*>(m_prop_map.next_key(this->raw_handle(), &key));
    }
 
+   [[nodiscard]] mem_size count() const;
    [[nodiscard]] Name key_type() const;
    [[nodiscard]] Ref get_ref(const Ref& key) const;
    [[nodiscard]] Ref first_key_ref() const;
@@ -472,6 +473,13 @@ class Box : public ClassRef
 };
 
 int enum_string_to_value(Name enum_type, std::string_view str_value);
+Box make_object(Name obj_type);
+
+template<typename T>
+concept HasMetaName = requires()
+{
+   { T::meta_name() } -> std::same_as<Name>;
+};
 
 }// namespace triglav::meta
 
@@ -533,6 +541,10 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
    {                                                                                                  \
       return {this, ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS))),                     \
               TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN))};                               \
+   }                                                                                                  \
+   ::triglav::Name TG_TYPE(TG_META_JOIN_NS)::meta_name()                                             \
+   {                                                                                                  \
+      return ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS)));                            \
    }
 
 #define TG_META_FUNC_ARGS_CB(index, type_name) type_name TG_CONCAT(arg, index)
@@ -764,12 +776,14 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
  public:                                    \
    using Self = class_name;                 \
    ::triglav::meta::ClassRef to_meta_ref(); \
+   static ::triglav::Name meta_name();     \
                                             \
  private:
 
-#define TG_META_STRUCT_BODY(class_name) \
-   using Self = class_name;             \
-   ::triglav::meta::ClassRef to_meta_ref();
+#define TG_META_STRUCT_BODY(class_name)     \
+   using Self = class_name;                 \
+   ::triglav::meta::ClassRef to_meta_ref(); \
+   static ::triglav::Name meta_name();
 
 #define TG_META_PRIMITIVE_LIST                               \
    TG_META_PRIMITIVE(char, char)                             \
@@ -790,4 +804,5 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
    TG_META_PRIMITIVE(triglav__Vector3, triglav::Vector3)     \
    TG_META_PRIMITIVE(triglav__Vector4, triglav::Vector4)     \
    TG_META_PRIMITIVE(triglav__Matrix4x4, triglav::Matrix4x4) \
-   TG_META_PRIMITIVE(triglav__Quaternion, triglav::Quaternion)
+   TG_META_PRIMITIVE(triglav__Quaternion, triglav::Quaternion) \
+   TG_META_PRIMITIVE(triglav__Name, triglav::Name)

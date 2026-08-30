@@ -16,6 +16,7 @@ enum class Status
    InvalidFile,
    BufferTooSmall,
    InvalidDirectory,
+   SerializationError,
 };
 
 template<typename T>

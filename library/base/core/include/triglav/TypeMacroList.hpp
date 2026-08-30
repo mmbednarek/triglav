@@ -34,7 +34,7 @@ class Level;
 TG_RESOURCE_TYPE(name, extension, cpp_type, loading_stage)
 */
 
-#define TG_RESOURCE_TYPE_LIST                                                               \
+#define TG_RESOURCE_TYPE_LIST_LOADABLE                                                      \
    TG_RESOURCE_TYPE(Texture, "tex", ::triglav::graphics_api::Texture, 0)                    \
    TG_RESOURCE_TYPE(FragmentShader, "fshader", ::triglav::graphics_api::Shader, 0)          \
    TG_RESOURCE_TYPE(VertexShader, "vshader", ::triglav::graphics_api::Shader, 0)            \
@@ -46,7 +46,10 @@ TG_RESOURCE_TYPE(name, extension, cpp_type, loading_stage)
    TG_RESOURCE_TYPE(Animation, "anim", ::triglav::asset::Animation, 0)                      \
    TG_RESOURCE_TYPE(Mesh, "mesh", ::triglav::render_objects::Mesh, 0)                       \
    TG_RESOURCE_TYPE(Typeface, "typeface", ::triglav::font::Typeface, 0)                     \
-   TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level, 0)                             \
    TG_RESOURCE_TYPE(Armature, "arm", ::triglav::render_objects::Armature, 0)                \
    TG_RESOURCE_TYPE(HullShader, "hshader", ::triglav::graphics_api::Shader, 0)              \
    TG_RESOURCE_TYPE(DomainShader, "dshader", ::triglav::graphics_api::Shader, 0)
+
+#define TG_RESOURCE_TYPE_LIST     \
+   TG_RESOURCE_TYPE_LIST_LOADABLE \
+   TG_RESOURCE_TYPE(Level, "level", ::triglav::world::Level, 0)

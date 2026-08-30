@@ -13,6 +13,9 @@ TreeItemId TreeController::add_item(const TreeItemId parent, const TreeItem& ite
 
 void TreeController::children(const TreeItemId parent, std::function<void(TreeItemId)> callback)
 {
+   if (m_hierarchy.empty())
+      return;
+
    for (const auto child : m_hierarchy.at(parent)) {
       callback(child);
    }

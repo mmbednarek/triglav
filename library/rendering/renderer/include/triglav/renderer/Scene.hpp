@@ -52,7 +52,7 @@ struct RayHit
    const SceneObject* object;
 };
 
-class Scene
+class Scene : public world::ISystem
 {
    TG_DEFINE_LOG_CATEGORY(Scene)
  public:
@@ -71,13 +71,15 @@ class Scene
    void update(const graphics_api::Resolution& resolution);
    ObjectID add_object(SceneObject object);
    void set_transform(ObjectID object_id, const Transform3D& transform);
-   void load_level(LevelName name);
-   world::Level to_level() const;
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
    void send_view_changed();
    void remove_object(ObjectID object_id);
    void set_object_name(ObjectID id, StringView name) const;
+
+   void on_removed_entities(std::span<const world::EntityID> ids) override;
+   void on_added_component(Name component_name, world::ComponentID component_id, std::span<const world::EntityID> entities) override;
+   void on_modified_component(Name component_name, world::ComponentID component_id, std::span<const world::EntityID> entities) override;
 
    [[nodiscard]] const Camera& camera() const;
    [[nodiscard]] Camera& camera();

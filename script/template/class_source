@@ -1,0 +1,4 @@
+#include "%CLASS_NAME%.hpp"
+
+namespace triglav::%MODULE_NAME% {
+}

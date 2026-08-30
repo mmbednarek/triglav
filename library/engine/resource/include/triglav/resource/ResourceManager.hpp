@@ -39,6 +39,7 @@ class ResourceManager
 
    void load_asset_list(const io::Path& path);
    void load_asset(ResourceName resource_name);
+   void load_assets(std::span<ResourceName> resource_name);
 
    [[nodiscard]] bool is_name_registered(ResourceName asset_name) const;
 

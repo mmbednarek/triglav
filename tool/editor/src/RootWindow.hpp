@@ -6,6 +6,7 @@
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/desktop_ui/WidgetRenderer.hpp"
+#include "triglav/engine/Engine.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/IRenderer.hpp"
@@ -36,6 +37,7 @@ class RootWindow final : public render_core::IRenderer
    void on_close();
    void on_resize(Vector2i size);
    void on_loaded_assets();
+   void on_level_loaded();
 
    void set_render_overlay(IRenderOverlay* overlay);
    [[nodiscard]] IRenderOverlay& render_overlay() const;
@@ -78,6 +80,7 @@ class RootWindow final : public render_core::IRenderer
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);
    TG_SINK(resource::ResourceManager, OnLoadedAssets);
+   TG_SINK(engine::Engine, OnLevelLoaded);
 };
 
 }// namespace triglav::editor

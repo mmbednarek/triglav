@@ -70,6 +70,7 @@ editor_deps = [
     desktop_ui,
     project,
     editor_shaders,
+    engine,
 ]
 
 editor = executable('editor',

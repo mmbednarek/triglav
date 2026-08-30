@@ -1,6 +1,7 @@
 meta_test_sources = files(
     'Main.cpp',
     'MetaTest.cpp',
+    'SerializationTest.cpp',
 )
 
 meta_test_deps = [core, testing_core, meta]

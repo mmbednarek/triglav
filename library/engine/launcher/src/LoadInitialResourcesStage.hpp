@@ -2,6 +2,7 @@
 
 #include "Launcher.hpp"
 
+#include "triglav/engine/Engine.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
@@ -15,11 +16,12 @@ class LoadInitialResourcesStage : public IStage
    explicit LoadInitialResourcesStage(Application& app);
 
    void tick() override;
-   void on_loaded_assets();
+   void on_engine_ready();
 
  private:
    std::atomic_bool m_completed{};
-   TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
+   TG_OPT_SINK(engine::Engine, OnEngineReady);
+   // TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
 };
 
 }// namespace triglav::launcher

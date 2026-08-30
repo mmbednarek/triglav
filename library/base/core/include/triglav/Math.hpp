@@ -8,6 +8,7 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "Int.hpp"
+#include "Name.hpp"
 
 namespace triglav {
 
@@ -145,6 +146,11 @@ struct Transform3D
    [[nodiscard]] Matrix4x4 to_matrix() const;
    [[nodiscard]] Matrix4x4 to_normal_matrix() const;
    [[nodiscard]] Transform3D combine(const Transform3D& child) const;
+
+   static Name meta_name()
+   {
+      return make_name_id("triglav::Transform3D");
+   }
 };
 
 static_assert(sizeof(Transform3D) % 16 == 0);

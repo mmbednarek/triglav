@@ -83,6 +83,7 @@ Quaternion read_quaternion(const rapidjson::Value& src)
 #define TG_JSON_GETTER_triglav__Vector4 read_vector4(val)
 #define TG_JSON_GETTER_triglav__Matrix4x4 read_matrix4x4(val)
 #define TG_JSON_GETTER_triglav__Quaternion read_quaternion(val)
+#define TG_JSON_GETTER_triglav__Name val.GetUint64()
 #define TG_JSON_GETTER(x) TG_CONCAT(TG_JSON_GETTER_, x)
 
 void deserialize_class(const meta::ClassRef& dst, const rapidjson::Value& src);

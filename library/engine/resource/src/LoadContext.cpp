@@ -91,6 +91,14 @@ std::unique_ptr<LoadContext> LoadContext::from_target_asset(const ResourceName r
    return build_load_context(resources);
 }
 
+std::unique_ptr<LoadContext> LoadContext::from_assets(std::span<ResourceName> resources)
+{
+   std::set<ResourceName> resource_set;
+   std::ranges::copy(resources, std::inserter(resource_set, resource_set.begin()));
+   resolve_dependencies(resource_set);
+   return build_load_context(resource_set);
+}
+
 std::unique_ptr<LoadContext> LoadContext::build_load_context(const std::set<ResourceName>& resources)
 {
    std::vector<ResourceStage> result{};

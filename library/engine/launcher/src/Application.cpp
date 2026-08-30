@@ -30,6 +30,7 @@ Application::Application(const desktop::InputArgs& args, desktop::IDisplay& disp
 
 Application::~Application()
 {
+   engine::Engine::the().destroy();
    threading::ThreadPool::the().quit();
 }
 
@@ -101,7 +102,7 @@ graphics_api::Device& Application::gfx_device() const
 
 resource::ResourceManager& Application::resource_manager() const
 {
-   return *m_resource_manager;
+   return engine::Engine::the().resource_manager();
 }
 
 render_core::GlyphCache& Application::glyph_cache() const

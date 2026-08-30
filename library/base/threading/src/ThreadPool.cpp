@@ -41,6 +41,11 @@ void ThreadPool::thread_entrypoint(const ThreadID thread_id)
 {
    set_thread_id(thread_id);
 
+#if 1
+   while (m_state.load() != State::Quitting) {
+      this->thread_routine();
+   }
+#elif
    try {
       while (m_state.load() != State::Quitting) {
          this->thread_routine();
@@ -54,6 +59,7 @@ void ThreadPool::thread_entrypoint(const ThreadID thread_id)
       flush_logs();
       std::exit(EXIT_FAILURE);
    }
+#endif
 }
 
 bool ThreadPool::has_jobs_or_is_quitting()

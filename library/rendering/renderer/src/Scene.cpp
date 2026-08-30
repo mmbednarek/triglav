@@ -2,6 +2,7 @@
 
 #include "Renderer.hpp"
 
+#include "triglav/engine/Engine.hpp"
 #include "triglav/world/Level.hpp"
 
 #include <cmath>
@@ -56,38 +57,6 @@ void Scene::set_transform(const ObjectID object_id, const Transform3D& transform
    this->update_bvh();
 
    event_OnObjectChangedTransform.publish(object_id, transform);
-}
-
-void Scene::load_level(const LevelName name)
-{
-   auto& level = m_resource_manager.get<ResourceType::Level>(name);
-   auto& root = level.root();
-
-   for (const auto& mesh : root.static_meshes()) {
-      this->add_object(SceneObject{
-         .model = mesh.mesh_name,
-         .name = mesh.name.c_str(),
-         .transform = mesh.transform,
-         .armature = mesh.armature_name,
-      });
-   }
-}
-
-world::Level Scene::to_level() const
-{
-   world::LevelNode root_node("root");
-   for (const auto& object : m_objects | std::views::values) {
-      root_node.add_static_mesh(world::StaticMesh{
-         .mesh_name = object->model,
-         .name = object->name.to_std(),
-         .transform = object->transform,
-         .armature_name = object->armature,
-      });
-   }
-
-   world::Level result;
-   result.add_node("root"_name, std::move(root_node));
-   return result;
 }
 
 void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
@@ -231,6 +200,38 @@ void Scene::set_object_name(const ObjectID id, const StringView name) const
    const auto& obj = m_objects.at(id);
    obj->name = name;
    event_OnObjectChangedName.publish(id, name);
+}
+
+void Scene::on_removed_entities(std::span<const world::EntityID> /*ids*/) {}
+
+void Scene::on_added_component(Name component_name, world::ComponentID /*component_id*/, std::span<const world::EntityID> entities)
+{
+   if (component_name != "triglav::world::Mesh"_name)
+      return;
+
+   auto* level = engine::Engine::the().current_level();
+   assert(level != nullptr);
+
+   for (const auto entity_id : entities) {
+      const auto [label, transform, mesh] = level->components<world::EntityLabel, Transform3D, world::Mesh>(entity_id);
+
+      SceneObject obj{
+         .model = mesh.name,
+         .name = label.label.c_str(),
+         .transform = transform,
+         .armature = std::nullopt,
+      };
+
+      if (const auto* arm = level->component_opt<world::Armature>(entity_id); arm != nullptr) {
+         obj.armature = arm->name;
+      }
+      this->add_object(obj);
+   }
+}
+
+void Scene::on_modified_component(const Name /*component_name*/, world::ComponentID /*component_id*/,
+                                  std::span<const world::EntityID> /*entities*/)
+{
 }
 
 }// namespace triglav::renderer

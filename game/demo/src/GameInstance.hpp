@@ -5,11 +5,11 @@
 
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/desktop/ISurface.hpp"
-#include "triglav/font/FontManager.hpp"
 #include "triglav/graphics_api/Device.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/renderer/Renderer.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+#include "triglav/engine/Engine.hpp"
 
 #include <atomic>
 #include <condition_variable>
@@ -64,6 +64,7 @@ class GameInstance
       LoadingBaseResources,
       LoadingResources,
       LoadingRayTracingResources,
+      LoadingLevel,
       Ready
    };
 
@@ -71,7 +72,9 @@ class GameInstance
 
    GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution);
 
+   void on_engine_ready();
    void on_loaded_assets();
+   void on_level_loaded();
    void loop(triglav::desktop::IDisplay& display);
 
  private:
@@ -84,8 +87,6 @@ class GameInstance
    std::optional<triglav::graphics_api::Surface> m_graphics_splash_screen_surface;
    std::optional<triglav::graphics_api::Surface> m_graphics_demo_surface;
    triglav::graphics_api::DeviceUPtr m_device;
-   triglav::font::FontManger m_font_manager;
-   triglav::resource::ResourceManager m_resource_manager;
    std::unique_ptr<SplashScreen> m_splash_screen;
    std::unique_ptr<triglav::renderer::Renderer> m_renderer;
    std::optional<EventListener> m_event_listener;
@@ -95,7 +96,9 @@ class GameInstance
    std::unique_ptr<CharacterController> m_character_controller;
    std::chrono::steady_clock::time_point m_last_frame_tp;
 
-   TG_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
+   TG_OPT_SINK(triglav::engine::Engine, OnEngineReady);
+   TG_OPT_SINK(triglav::engine::Engine, OnLevelLoaded);
+   TG_OPT_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
 };
 
 }// namespace demo

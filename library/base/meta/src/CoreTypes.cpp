@@ -39,8 +39,14 @@ namespace triglav::meta {
       },                                                                             \
    };
 
+#define TG_RESOURCE_TYPE(name, ext, cpp_type, loading_stage) \
+   TG_META_PRIMITIVE(TG_CONCAT(triglav__, TG_CONCAT(name, Name)), triglav::TG_CONCAT(name, Name))
+
 TG_META_PRIMITIVE_LIST
 
+TG_RESOURCE_TYPE_LIST
+
+#undef TG_RESOURCE_TYPE
 #undef TG_META_PRIMITIVE
 
 

@@ -7,7 +7,6 @@
 #include "triglav/world/Level.hpp"
 
 #include <set>
-#include <string_view>
 
 namespace triglav::resource {
 

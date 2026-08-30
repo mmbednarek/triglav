@@ -18,12 +18,22 @@ T Deserializer::read_value_internal()
    return result;
 }
 
-#define TG_IO_TYPE(TYPE, FUNC)                  \
+std::string Deserializer::read_string()
+{
+   const u32 count = this->read_u32();
+   std::string out(count, ' ');
+   const auto result = m_reader.read({reinterpret_cast<u8*>(out.data()), out.size()});
+   if (!result.has_value())
+      return {};
+   return out;
+}
+
+#define TG_IO_TYPE(TYPE, FUNC, WFUNC)           \
    TYPE Deserializer::FUNC()                    \
    {                                            \
       return this->read_value_internal<TYPE>(); \
    }
-TG_IO_DESERIALIZER_TYPES
+TG_IO_SERIALIZATION_TYPES
 #undef TG_IO_TYPE
 
 }// namespace triglav::io

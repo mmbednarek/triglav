@@ -164,6 +164,9 @@ bool RootWidget::on_key_pressed(const ui_core::Event& /*event*/, const ui_core::
 void RootWidget::on_changed_active_tab(u32 /*tab_id*/, ui_core::IWidget* widget)
 {
    m_active_asset_editor = dynamic_cast<IAssetEditor*>(widget);
+   if (const LevelEditor* level_editor = dynamic_cast<LevelEditor*>(m_active_asset_editor); level_editor != nullptr) {
+      engine::Engine::the().set_active_level(level_editor->asset_name());
+   }
 }
 
 Vector4 RootWidget::asset_editor_area() const

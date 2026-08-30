@@ -3,6 +3,7 @@
 #include "DefaultRenderOverlay.hpp"
 #include "RootWidget.hpp"
 #include "level_editor/RenderViewport.hpp"
+#include "triglav/engine/Engine.hpp"
 
 #include "triglav/render_core/BuildContext.hpp"
 
@@ -28,7 +29,8 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
     m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, DEFAULT_DIMENSIONS),
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnResize, on_resize),
-    TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets)
+    TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets),
+    TG_CONNECT(engine::Engine::the(), OnLevelLoaded, on_level_loaded)
 {
 }
 
@@ -166,7 +168,21 @@ void RootWindow::on_loaded_assets()
 {
    if (!m_loaded_asset.has_value())
       return;
+   if (m_loaded_asset->type() == ResourceType::Level)
+      return;
+
    log_info("Finished loading asset {}", ResourcePathMap::the().resolve(*m_loaded_asset));
+   m_is_asset_ready = true;
+}
+
+void RootWindow::on_level_loaded()
+{
+   if (!m_loaded_asset.has_value())
+      return;
+   if (m_loaded_asset->type() != ResourceType::Level)
+      return;
+
+   log_info("Finished loading level: {}", ResourcePathMap::the().resolve(*m_loaded_asset));
    m_is_asset_ready = true;
 }
 
@@ -219,7 +235,7 @@ void RootWindow::open_asset(const ResourceName asset_name)
    if (asset_name.type() == ResourceType::Level) {
       log_info("Opening asset {}", ResourcePathMap::the().resolve(asset_name));
       m_loaded_asset.emplace(asset_name);
-      m_resource_manager.load_asset(asset_name);
+      engine::Engine::the().load_level(asset_name);
    } else {
       log_error("No level editor to open asset: {}", ResourcePathMap::the().resolve(asset_name));
    }
