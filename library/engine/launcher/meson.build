@@ -12,7 +12,7 @@ launcher_sources = files([
 
 launcher_lib = static_library('launcher',
                               sources : launcher_sources,
-                              dependencies : [core, io, resource, desktop, render_core],
+                              dependencies : [core, io, resource, desktop, render_core, engine],
                               include_directories : ['include/triglav/launcher'],
 )
 

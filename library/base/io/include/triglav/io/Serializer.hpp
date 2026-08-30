@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Stream.hpp"
-
-#include <glm/mat4x4.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
+#include "Deserializer.hpp"
 
 namespace triglav::io {
 
@@ -13,16 +10,28 @@ class Serializer
  public:
    explicit Serializer(IWriter& writer);
 
-   Result<void> write_float32(float value);
-   Result<void> write_vec3(glm::vec3 value);
-   Result<void> write_vec4(glm::vec4 value);
-   Result<void> write_mat4(glm::mat4 value);
+#define TG_IO_TYPE(TYPE, RFUNC, FUNC) Result<mem_size> FUNC(const TYPE& value);
+   TG_IO_SERIALIZATION_TYPES
+#undef TG_IO_TYPE
+
+   Result<mem_size> write_string(std::string_view value);
+
+   template<typename T>
+   [[nodiscard]] Result<mem_size> write_value(const T& value)
+   {
+      if (std::is_same_v<T, std::string>)
+         return this->write_string(value);
+#define TG_IO_TYPE(TYPE, RFUNC, FUNC) else if constexpr (std::is_same_v<T, TYPE>) return this->FUNC(value);
+      TG_IO_SERIALIZATION_TYPES
+#undef TG_IO_TYPE
+      else return std::unexpected(Status::SerializationError);
+   }
 
  private:
-   Result<void> add_padding(u32 alignment);
+   template<typename T>
+   Result<mem_size> write_value_internal(const T& value);
 
    IWriter& m_writer;
-   u32 m_bytes_written{};
 };
 
 }// namespace triglav::io

@@ -1,13 +1,18 @@
 meta_sources = files([
+# !GENERATED
                           'include/triglav/meta/Display.hpp',
+                          'include/triglav/meta/Binary.hpp',
                           'include/triglav/meta/Meta.hpp',
                           'include/triglav/meta/TypeRegistry.hpp',
+                          'src/BinarySerialize.cpp',
+                          'src/BinaryDeserialize.cpp',
                           'src/Box.cpp',
                           'src/CoreTypes.cpp',
                           'src/Display.cpp',
                           'src/ObjectRef.cpp',
                           'src/TypeRegisterer.cpp',
                           'src/TypeRegistry.cpp',
+# !END
                       ])
 
 meta_deps = [core, io]

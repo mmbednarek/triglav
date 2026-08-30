@@ -15,6 +15,7 @@ demo_deps = [
   threading,
   shaders,
   project,
+  engine,
 ]
 
 demo = executable('demo',

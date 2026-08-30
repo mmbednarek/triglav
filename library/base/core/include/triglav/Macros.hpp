@@ -14,6 +14,11 @@
    class_name(class_name&&) noexcept = delete; \
    class_name& operator=(class_name&&) noexcept = delete;
 
+
+#define TG_DEFAULT_MOVE(class_name)             \
+   class_name(class_name&&) noexcept = default; \
+   class_name& operator=(class_name&&) noexcept = default;
+
 #define TG_DELETE_ALL(class_name) \
    TG_DELETE_COPY(class_name)     \
    TG_DELETE_MOVE(class_name)

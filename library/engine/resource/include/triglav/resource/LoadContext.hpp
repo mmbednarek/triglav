@@ -38,6 +38,7 @@ class LoadContext
 
    static std::unique_ptr<LoadContext> from_asset_list(const io::Path& path);
    static std::unique_ptr<LoadContext> from_target_asset(ResourceName res_name);
+   static std::unique_ptr<LoadContext> from_assets(std::span<ResourceName> resources);
 
  private:
    static std::unique_ptr<LoadContext> build_load_context(const std::set<ResourceName>& resources);

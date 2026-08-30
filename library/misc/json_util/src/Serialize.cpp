@@ -20,7 +20,7 @@ class OutputBuffer
 
    void Put(const char c) const
    {
-      m_writer.write({reinterpret_cast<const u8*>(&c), 1});
+      assert(m_writer.write({reinterpret_cast<const u8*>(&c), 1}).has_value());
    }
 
    void PutUnsafe(const char c) const
@@ -116,6 +116,7 @@ void write_quaternion(TWriter& writer, Quaternion vec)
 #define TG_JSON_SETTER_triglav__Vector4(value) write_vector4(writer, value)
 #define TG_JSON_SETTER_triglav__Matrix4x4(value) write_matrix4x4(writer, value)
 #define TG_JSON_SETTER_triglav__Quaternion(value) write_quaternion(writer, value)
+#define TG_JSON_SETTER_triglav__Name(value) writer.Uint64(value)
 #define TG_JSON_SETTER(x) TG_CONCAT(TG_JSON_SETTER_, x)
 
 using namespace name_literals;

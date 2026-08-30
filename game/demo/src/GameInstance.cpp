@@ -1,7 +1,7 @@
 #include "GameInstance.hpp"
 
-#include "../../../library/engine/project/include/triglav/project/PathManager.hpp"
 #include "triglav/io/CommandLine.hpp"
+#include "triglav/project/PathManager.hpp"
 
 namespace demo {
 
@@ -139,35 +139,42 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
     m_instance(GAPI_CHECK(gapi::Instance::create_instance(&display))),
     m_graphics_splash_screen_surface(GAPI_CHECK(m_instance.create_surface(*m_splash_screen_surface))),
     m_device(
-       GAPI_CHECK(m_instance.create_device(&*m_graphics_splash_screen_surface, device_pick_strategy(), requested_features(m_instance)))),
-    m_resource_manager(*m_device, m_font_manager),
-    TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets)
+       GAPI_CHECK(m_instance.create_device(&*m_graphics_splash_screen_surface, device_pick_strategy(), requested_features(m_instance))))
 {
    m_state = State::LoadingBaseResources;
-   m_resource_manager.load_asset_list(PathManager::the().translate_path("engine/index.yaml"_rc));
    m_last_frame_tp = std::chrono::steady_clock::now();
+   triglav::engine::Engine::the().initialize(*m_device);
+   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnEngineReady, on_engine_ready);
+   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnLevelLoaded, on_level_loaded);
+   TG_CONNECT_OPT(triglav::engine::Engine::the().resource_manager(), OnLoadedAssets, on_loaded_assets);
+}
+
+void GameInstance::on_engine_ready()
+{
+   m_state.store(State::LoadingResources);
+   m_base_resources_ready_cv.notify_one();
+   triglav::engine::Engine::the().resource_manager().load_asset_list(PathManager::the().translate_path("index.yaml"_rc));
 }
 
 void GameInstance::on_loaded_assets()
 {
-   if (m_state.load() == State::LoadingBaseResources) {
-      {
-         std::unique_lock lk{m_state_mtx};
-         m_state.store(State::LoadingResources);
-      }
-      m_base_resources_ready_cv.notify_one();
-      m_resource_manager.load_asset_list(PathManager::the().translate_path("index.yaml"_rc));
-   } else if (m_state.load() == State::LoadingResources &&
-              m_device->enabled_features() & triglav::graphics_api::DeviceFeature::RayTracing) {
-      {
-         std::unique_lock lk{m_state_mtx};
-         m_state.store(State::LoadingRayTracingResources);
-      }
-      m_base_resources_ready_cv.notify_one();
-      m_resource_manager.load_asset_list(PathManager::the().translate_path("engine/index_rt.yaml"_rc));
-   } else {
-      m_state.store(State::Ready);
-   }
+   if (m_state.load() != State::LoadingResources)
+      return;
+
+   triglav::engine::Engine::the().load_level("level/demo.level"_rc);
+   m_state.store(State::LoadingLevel);
+
+   // if (m_device->enabled_features() & triglav::graphics_api::DeviceFeature::RayTracing) {
+   //    m_state.store(State::LoadingRayTracingResources);
+   //    m_base_resources_ready_cv.notify_one();
+   //    triglav::engine::Engine::the().resource_manager().load_asset_list(PathManager::the().translate_path("engine/index_rt.yaml"_rc));
+   //    return;
+   // }
+}
+
+void GameInstance::on_level_loaded()
+{
+   m_state.store(State::Ready);
 }
 
 void GameInstance::loop(triglav::desktop::IDisplay& display)
@@ -178,8 +185,8 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
    m_base_resources_ready_cv.wait(lk, [this] { return m_state == State::LoadingResources; });
    lk.unlock();
 
-   m_splash_screen =
-      std::make_unique<SplashScreen>(*m_splash_screen_surface, *m_graphics_splash_screen_surface, *m_device, m_resource_manager);
+   m_splash_screen = std::make_unique<SplashScreen>(*m_splash_screen_surface, *m_graphics_splash_screen_surface, *m_device,
+                                                    triglav::engine::Engine::the().resource_manager());
 
    while (m_state.load() != State::Ready) {
       m_splash_screen->update();
@@ -198,8 +205,8 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
    m_demo_surface = display.create_surface("Triglav Engine Demo"_strv, {m_resolution.width, m_resolution.height}, WindowAttribute::Default);
    m_graphics_demo_surface.emplace(GAPI_CHECK(m_instance.create_surface(*m_demo_surface)));
 
-   m_renderer =
-      std::make_unique<triglav::renderer::Renderer>(*m_demo_surface, *m_graphics_demo_surface, *m_device, m_resource_manager, m_resolution);
+   m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_demo_surface, *m_graphics_demo_surface, *m_device,
+                                                              triglav::engine::Engine::the().resource_manager(), m_resolution);
 
    m_character_controller = std::make_unique<CharacterController>(m_renderer->scene(), m_renderer->animation_manager());
 

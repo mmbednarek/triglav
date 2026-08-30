@@ -4,6 +4,7 @@
 
 #include "triglav/Logging.hpp"
 #include "triglav/String.hpp"
+#include "triglav/engine/Engine.hpp"
 #include "triglav/io/Logging.hpp"
 
 #include <chrono>
@@ -46,6 +47,9 @@ int Editor::run()
    float delta_time = 0.017f;
    while (!m_root_window->should_close() && !m_should_close) {
       auto frame_start = std::chrono::steady_clock::now();
+
+      engine::Engine::the().on_begin_frame(delta_time);
+
       m_dialog_manager->tick();
       m_root_window->update();
       m_app.tick();

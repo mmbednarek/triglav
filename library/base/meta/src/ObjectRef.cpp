@@ -222,6 +222,11 @@ MapRef::MapRef(void* handle, const Name value_type, const Member::PropertyMap& p
 {
 }
 
+mem_size MapRef::count() const
+{
+   return m_prop_map.count(this->raw_handle());
+}
+
 Name MapRef::key_type() const
 {
    return m_prop_map.key_type;
@@ -348,6 +353,11 @@ int enum_string_to_value(const Name enum_type, const std::string_view str_value)
    }
 
    return -1;
+}
+
+Box make_object(const Name obj_type)
+{
+   return TypeRegistry::the().create_box(obj_type);
 }
 
 }// namespace triglav::meta

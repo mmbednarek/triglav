@@ -1,6 +1,7 @@
 io_sources = files([
   'include/triglav/io/BufferedReader.hpp',
   'include/triglav/io/BufferWriter.hpp',
+  'include/triglav/io/BufferReader.hpp',
   'include/triglav/io/CommandLine.hpp',
   'include/triglav/io/Deserializer.hpp',
   'include/triglav/io/DisplacedStream.hpp',
@@ -16,6 +17,7 @@ io_sources = files([
   'include/triglav/io/Stream.hpp',
   'include/triglav/io/StringReader.hpp',
   'src/BufferWriter.cpp',
+  'src/BufferReader.cpp',
   'src/BufferedReader.cpp',
   'src/CommandLine.cpp',
   'src/Deserializer.cpp',

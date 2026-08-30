@@ -51,7 +51,7 @@ class Application
    font::FontManger m_font_manager;
    std::unique_ptr<graphics_api::Instance> m_gfx_instance;
    std::unique_ptr<graphics_api::Device> m_gfx_device;
-   std::unique_ptr<resource::ResourceManager> m_resource_manager;
+   // std::unique_ptr<resource::ResourceManager> m_resource_manager;
    std::unique_ptr<render_core::GlyphCache> m_glyph_cache;
 };
 

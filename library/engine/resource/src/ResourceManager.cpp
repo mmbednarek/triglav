@@ -65,6 +65,22 @@ void ResourceManager::load_asset(const ResourceName resource_name)
    this->load_next_stage();
 }
 
+void ResourceManager::load_assets(const std::span<ResourceName> resource_name)
+{
+   if (m_load_context != nullptr) {
+      log_error("Loading assets already in progress");
+      return;
+   }
+   m_load_context = LoadContext::from_assets(resource_name);
+   if (m_load_context == nullptr) {
+      log_error("Failed to create load context from asset");
+      return;
+   }
+
+   log_info("Loading {} assets", m_load_context->total_assets());
+   this->load_next_stage();
+}
+
 void ResourceManager::load_next_stage()
 {
    if (m_load_context == nullptr) {
@@ -107,9 +123,10 @@ void ResourceManager::load_asset_internal(const ResourceName asset_name, const i
    case ResourceType::name:                                      \
       this->load_resource<ResourceType::name>(asset_name, path); \
       break;
-      TG_RESOURCE_TYPE_LIST
+      TG_RESOURCE_TYPE_LIST_LOADABLE
 #undef TG_RESOURCE_TYPE
    case ResourceType::Unknown:
+   default:
       break;
    }
 

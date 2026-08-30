@@ -2,7 +2,6 @@
 
 #include "Application.hpp"
 
-#include "triglav/project/PathManager.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 
 namespace triglav::launcher {
@@ -12,12 +11,10 @@ using namespace name_literals;
 LoadInitialResourcesStage::LoadInitialResourcesStage(Application& app) :
     IStage(app)
 {
-   app.m_resource_manager = std::make_unique<resource::ResourceManager>(*app.m_gfx_device, app.m_font_manager);
-   app.m_glyph_cache = std::make_unique<render_core::GlyphCache>(*app.m_gfx_device, *app.m_resource_manager);
+   engine::Engine::the().initialize(app.gfx_device());
+   TG_CONNECT_OPT(engine::Engine::the(), OnEngineReady, on_engine_ready);
 
-   TG_CONNECT_OPT(*app.m_resource_manager, OnLoadedAssets, on_loaded_assets);
-   const auto proj_path = project::PathManager::the().translate_path("engine/index.yaml"_rc);
-   app.m_resource_manager->load_asset_list(proj_path);
+   app.m_glyph_cache = std::make_unique<render_core::GlyphCache>(*app.m_gfx_device, engine::Engine::the().resource_manager());
 }
 
 void LoadInitialResourcesStage::tick()
@@ -27,7 +24,7 @@ void LoadInitialResourcesStage::tick()
    }
 }
 
-void LoadInitialResourcesStage::on_loaded_assets()
+void LoadInitialResourcesStage::on_engine_ready()
 {
    m_completed.store(true);
 }

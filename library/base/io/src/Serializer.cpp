@@ -1,90 +1,34 @@
 #include "Serializer.hpp"
 
-#include <array>
-#include <bit>
-
 namespace triglav::io {
-
-std::array<u8, 32> g_padding;
 
 Serializer::Serializer(IWriter& writer) :
     m_writer(writer)
 {
 }
 
-Result<void> Serializer::write_float32(const float value)
+template<typename T>
+Result<mem_size> Serializer::write_value_internal(const T& value)
 {
-   if (const auto res = this->add_padding(sizeof(value)); not res.has_value()) {
+   return m_writer.write({reinterpret_cast<const u8*>(&value), sizeof(T)});
+}
+
+Result<mem_size> Serializer::write_string(const std::string_view value)
+{
+   const auto res = this->write_u32(value.size());
+   if (!res.has_value()) {
       return res;
    }
 
-   auto bytes = std::bit_cast<std::array<u8, 4>>(value);
-   const auto res = m_writer.write(bytes);
-   if (not res.has_value()) {
-      return std::unexpected{res.error()};
-   }
-
-   return {};
+   return m_writer.write({reinterpret_cast<const u8*>(value.data()), value.size()});
 }
 
-Result<void> Serializer::add_padding(const u32 alignment)
-{
-   const auto mod = m_bytes_written % alignment;
-   if (mod != 0) {
-      const auto padding = alignment - mod;
-
-      const auto res = m_writer.write(std::span{g_padding.data(), padding});
-      if (not res.has_value()) {
-         return std::unexpected{res.error()};
-      }
+#define TG_IO_TYPE(TYPE, RFUNC, FUNC)                   \
+   Result<mem_size> Serializer::FUNC(const TYPE& value) \
+   {                                                    \
+      return this->write_value_internal<TYPE>(value);   \
    }
-
-   return {};
-}
-
-Result<void> Serializer::write_vec3(const glm::vec3 value)
-{
-   if (const auto res = this->add_padding(4 * sizeof(float)); not res.has_value()) {
-      return res;
-   }
-
-   auto bytes = std::bit_cast<std::array<u8, 12>>(value);
-   const auto res = m_writer.write(bytes);
-   if (not res.has_value()) {
-      return std::unexpected{res.error()};
-   }
-
-   return {};
-}
-
-Result<void> Serializer::write_vec4(const glm::vec4 value)
-{
-   if (const auto res = this->add_padding(4 * sizeof(float)); not res.has_value()) {
-      return res;
-   }
-
-   auto bytes = std::bit_cast<std::array<u8, 16>>(value);
-   const auto res = m_writer.write(bytes);
-   if (not res.has_value()) {
-      return std::unexpected{res.error()};
-   }
-
-   return {};
-}
-
-Result<void> Serializer::write_mat4(const glm::mat4 value)
-{
-   if (const auto res = this->add_padding(4 * sizeof(float)); not res.has_value()) {
-      return res;
-   }
-
-   auto bytes = std::bit_cast<std::array<u8, 64>>(value);
-   const auto res = m_writer.write(bytes);
-   if (not res.has_value()) {
-      return std::unexpected{res.error()};
-   }
-
-   return {};
-}
+TG_IO_SERIALIZATION_TYPES
+#undef TG_IO_TYPE
 
 }// namespace triglav::io

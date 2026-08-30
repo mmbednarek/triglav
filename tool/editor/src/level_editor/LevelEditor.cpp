@@ -9,6 +9,7 @@
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
+#include "triglav/engine/Engine.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
 #include "triglav/renderer/stage/GBufferStage.hpp"
@@ -462,7 +463,13 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 
    m_viewport = &left_layout.emplace_child<LevelViewport>(context, &left_layout, *m_state.root_window, *this);
 
-   m_scene.load_level(m_state.asset_name);
+   std::vector<world::EntityID> entities;
+   for (const auto& [entity_id, com] : engine::Engine::the().current_level()->all<world::Mesh>()) {
+      entities.emplace_back(entity_id);
+   }
+   m_scene.on_added_component("triglav::world::Mesh"_name, 0, entities);
+   // m_scene.load_level(m_state.asset_name);
+
    m_bindless_scene.write_objects_to_buffer();
    m_scene.update_shadow_maps();
 
@@ -655,9 +662,9 @@ void LevelEditor::on_event(const ui_core::Event& event)
 
 void LevelEditor::save_level() const
 {
-   const auto level = m_scene.to_level();
-   const auto level_path = project::PathManager::the().translate_path(m_state.asset_name);
-   assert(level.save_to_file(level_path));
+   //const auto& level = m_scene.to_level();
+   // const auto level_path = project::PathManager::the().translate_path(m_state.asset_name);
+   // assert(level.save_to_file(level_path));
 }
 
 void LevelEditor::remove_selected_item()

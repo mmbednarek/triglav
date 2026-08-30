@@ -13,6 +13,7 @@
 #include "triglav/Name.hpp"
 #include "triglav/Ranges.hpp"
 #include "triglav/desktop/ISurface.hpp"
+#include "triglav/engine/Engine.hpp"
 #include "triglav/io/CommandLine.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/ResourceStorage.hpp"
@@ -84,8 +85,10 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
-   m_scene.load_level("level/demo.level"_rc);
-   // m_scene.load_level("level/simple_animated_human.level"_rc);
+
+   std::array scene_components{"triglav::world::Mesh"_name};
+   engine::Engine::the().current_level()->register_system(m_scene, scene_components);
+   engine::Engine::the().current_level()->flush();
 
    m_bindless_scene.write_objects_to_buffer();
 
@@ -158,6 +161,8 @@ void Renderer::update_debug_info(const bool is_first_frame)
 void Renderer::on_render(const float delta_time)
 {
    static bool is_first_frame = true;
+
+   engine::Engine::the().on_begin_frame(delta_time);
 
    m_bindless_scene.write_objects_to_buffer();
 

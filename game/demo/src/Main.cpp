@@ -16,6 +16,7 @@ using triglav::desktop::InputArgs;
 using triglav::io::CommandLine;
 using triglav::project::PathManager;
 using triglav::threading::ThreadPool;
+using triglav::engine::Engine;
 
 using namespace triglav::name_literals;
 
@@ -54,6 +55,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    demo::GameInstance instance(display, {initial_width, initial_height});
    instance.loop(display);
 
+   Engine::the().destroy();
    ThreadPool::the().quit();
 
    return EXIT_SUCCESS;

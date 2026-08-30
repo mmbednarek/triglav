@@ -1,0 +1,11 @@
+#pragma once
+
+namespace triglav::%MODULE_NAME% {
+
+class %CLASS_NAME%
+{
+ public:
+ private:
+};
+
+}
