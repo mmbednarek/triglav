@@ -476,8 +476,7 @@ int enum_string_to_value(Name enum_type, std::string_view str_value);
 Box make_object(Name obj_type);
 
 template<typename T>
-concept HasMetaName = requires()
-{
+concept HasMetaName = requires() {
    { T::meta_name() } -> std::same_as<Name>;
 };
 
@@ -542,7 +541,7 @@ concept HasMetaName = requires()
       return {this, ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS))),                     \
               TG_CONCAT(TG_META_MEMBERS_, TG_TYPE(TG_META_JOIN_IDEN))};                               \
    }                                                                                                  \
-   ::triglav::Name TG_TYPE(TG_META_JOIN_NS)::meta_name()                                             \
+   ::triglav::Name TG_TYPE(TG_META_JOIN_NS)::meta_name()                                              \
    {                                                                                                  \
       return ::triglav::make_name_id(TG_STRING(TG_TYPE(TG_META_JOIN_NS)));                            \
    }
@@ -776,7 +775,7 @@ concept HasMetaName = requires()
  public:                                    \
    using Self = class_name;                 \
    ::triglav::meta::ClassRef to_meta_ref(); \
-   static ::triglav::Name meta_name();     \
+   static ::triglav::Name meta_name();      \
                                             \
  private:
 
@@ -785,24 +784,24 @@ concept HasMetaName = requires()
    ::triglav::meta::ClassRef to_meta_ref(); \
    static ::triglav::Name meta_name();
 
-#define TG_META_PRIMITIVE_LIST                               \
-   TG_META_PRIMITIVE(char, char)                             \
-   TG_META_PRIMITIVE(int, int)                               \
-   TG_META_PRIMITIVE(triglav__i8, triglav::i8)               \
-   TG_META_PRIMITIVE(triglav__u8, triglav::u8)               \
-   TG_META_PRIMITIVE(triglav__i16, triglav::i16)             \
-   TG_META_PRIMITIVE(triglav__u16, triglav::u16)             \
-   TG_META_PRIMITIVE(triglav__i32, triglav::i32)             \
-   TG_META_PRIMITIVE(triglav__u32, triglav::u32)             \
-   TG_META_PRIMITIVE(triglav__i64, triglav::i64)             \
-   TG_META_PRIMITIVE(triglav__u64, triglav::u64)             \
-   TG_META_PRIMITIVE(float, float)                           \
-   TG_META_PRIMITIVE(double, double)                         \
-   TG_META_PRIMITIVE(std__string, std::string)               \
-   TG_META_PRIMITIVE(std__string_view, std::string_view)     \
-   TG_META_PRIMITIVE(triglav__Vector2, triglav::Vector2)     \
-   TG_META_PRIMITIVE(triglav__Vector3, triglav::Vector3)     \
-   TG_META_PRIMITIVE(triglav__Vector4, triglav::Vector4)     \
-   TG_META_PRIMITIVE(triglav__Matrix4x4, triglav::Matrix4x4) \
+#define TG_META_PRIMITIVE_LIST                                 \
+   TG_META_PRIMITIVE(char, char)                               \
+   TG_META_PRIMITIVE(int, int)                                 \
+   TG_META_PRIMITIVE(triglav__i8, triglav::i8)                 \
+   TG_META_PRIMITIVE(triglav__u8, triglav::u8)                 \
+   TG_META_PRIMITIVE(triglav__i16, triglav::i16)               \
+   TG_META_PRIMITIVE(triglav__u16, triglav::u16)               \
+   TG_META_PRIMITIVE(triglav__i32, triglav::i32)               \
+   TG_META_PRIMITIVE(triglav__u32, triglav::u32)               \
+   TG_META_PRIMITIVE(triglav__i64, triglav::i64)               \
+   TG_META_PRIMITIVE(triglav__u64, triglav::u64)               \
+   TG_META_PRIMITIVE(float, float)                             \
+   TG_META_PRIMITIVE(double, double)                           \
+   TG_META_PRIMITIVE(std__string, std::string)                 \
+   TG_META_PRIMITIVE(std__string_view, std::string_view)       \
+   TG_META_PRIMITIVE(triglav__Vector2, triglav::Vector2)       \
+   TG_META_PRIMITIVE(triglav__Vector3, triglav::Vector3)       \
+   TG_META_PRIMITIVE(triglav__Vector4, triglav::Vector4)       \
+   TG_META_PRIMITIVE(triglav__Matrix4x4, triglav::Matrix4x4)   \
    TG_META_PRIMITIVE(triglav__Quaternion, triglav::Quaternion) \
    TG_META_PRIMITIVE(triglav__Name, triglav::Name)

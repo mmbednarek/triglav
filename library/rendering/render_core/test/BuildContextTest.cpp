@@ -454,8 +454,7 @@ TEST(BuildContext, DepthTargetSample)
    build_context.declare_sized_depth_target("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
    build_context.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
    build_context.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, buffer_size);
-   build_context.declare_buffer("test.depth_target_sample.vertex_buffer"_name,
-                                box_mesh_data.vertex_buffer.size());
+   build_context.declare_buffer("test.depth_target_sample.vertex_buffer"_name, box_mesh_data.vertex_buffer.size());
    build_context.declare_buffer("test.depth_target_sample.index_buffer"_name, box_mesh_data.index_buffer.size() * sizeof(triglav::u32));
    build_context.declare_buffer("test.depth_target_sample.uniform_buffer"_name, sizeof(triglav::Matrix4x4));
 
@@ -688,9 +687,8 @@ TEST(BuildContext, BasicRayTracing)
    const auto layout = triglav::render_core::vertex_layout_from_components_for_depth_only(box_mesh_data.ranges.front().components);
    const auto vertex_count = box_mesh_data.vertex_buffer.size() / layout.stride;
 
-   bottom_level_ctx.add_triangle_buffer(box_mesh_data.vertex_buffer, box_mesh_data.index_buffer.buffer(),
-                                        GAPI_FORMAT(RGB, Float32), box_mesh_data.ranges.front().vertex_size,
-                                        static_cast<u32>(vertex_count),
+   bottom_level_ctx.add_triangle_buffer(box_mesh_data.vertex_buffer, box_mesh_data.index_buffer.buffer(), GAPI_FORMAT(RGB, Float32),
+                                        box_mesh_data.ranges.front().vertex_size, static_cast<u32>(vertex_count),
                                         static_cast<u32>(box_mesh_data.index_buffer.count() / 3));
 
    auto* box_as = bottom_level_ctx.commit_triangles();

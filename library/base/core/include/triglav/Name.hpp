@@ -187,3 +187,7 @@ constexpr Name operator""_name(const char* value, const std::size_t count)
 }// namespace name_literals
 
 }// namespace triglav
+
+#define TG_TAG_CLASS(NAME) \
+   using Self = NAME;      \
+   static constexpr ::triglav::Name TAG = make_name_id(TG_STRING(NAME));

@@ -144,8 +144,8 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
    m_state = State::LoadingBaseResources;
    m_last_frame_tp = std::chrono::steady_clock::now();
    triglav::engine::Engine::the().initialize(*m_device);
-   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnEngineReady, on_engine_ready);
-   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnLevelLoaded, on_level_loaded);
+   TG_CONNECT_OPT_NEW(triglav::engine::Engine::the(), OnEngineReady, on_engine_ready);
+   TG_CONNECT_OPT_NEW(triglav::engine::Engine::the(), OnLevelLoaded, on_level_loaded);
    TG_CONNECT_OPT(triglav::engine::Engine::the().resource_manager(), OnLoadedAssets, on_loaded_assets);
 }
 

@@ -30,7 +30,7 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnResize, on_resize),
     TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets),
-    TG_CONNECT(engine::Engine::the(), OnLevelLoaded, on_level_loaded)
+    TG_CONNECT_NEW(engine::Engine::the(), OnLevelLoaded, on_level_loaded)
 {
 }
 

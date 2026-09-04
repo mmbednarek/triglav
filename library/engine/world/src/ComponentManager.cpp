@@ -28,7 +28,7 @@ const ComponentInfo* ComponentManager::info_by_class_name(const Name name) const
 std::optional<ComponentID> ComponentManager::component_id_by_class_name(const Name name) const
 {
    const auto it = m_name_to_id.find(name);
-   if(it == m_name_to_id.end())
+   if (it == m_name_to_id.end())
       return std::nullopt;
    return it->second;
 }
@@ -40,7 +40,7 @@ bool ComponentManager::class_names_to_ids(const std::span<const Name> names, std
    auto out_it = out_ids.begin();
    for (const Name name : names) {
       const auto it = m_name_to_id.find(name);
-      if(it == m_name_to_id.end())
+      if (it == m_name_to_id.end())
          return false;
       *out_it = it->second;
       ++out_it;

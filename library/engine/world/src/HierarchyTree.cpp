@@ -1,7 +1,7 @@
 #include "HierarchyTree.hpp"
 
-#include <ranges>
 #include <queue>
+#include <ranges>
 
 namespace triglav::world {
 
