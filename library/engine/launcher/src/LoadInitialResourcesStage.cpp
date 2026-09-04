@@ -12,7 +12,7 @@ LoadInitialResourcesStage::LoadInitialResourcesStage(Application& app) :
     IStage(app)
 {
    engine::Engine::the().initialize(app.gfx_device());
-   TG_CONNECT_OPT(engine::Engine::the(), OnEngineReady, on_engine_ready);
+   TG_CONNECT_OPT_NEW(engine::Engine::the(), OnEngineReady, on_engine_ready);
 
    app.m_glyph_cache = std::make_unique<render_core::GlyphCache>(*app.m_gfx_device, engine::Engine::the().resource_manager());
 }

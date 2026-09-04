@@ -3,11 +3,11 @@
 #include "World.hpp"
 
 #include "triglav/Macros.hpp"
-#include "triglav/memory/HeapAllocator.hpp"
 #include "triglav/io/Stream.hpp"
+#include "triglav/memory/HeapAllocator.hpp"
 
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace triglav::world {
 
@@ -33,7 +33,7 @@ class ComponentIterator
    [[nodiscard]] value_type operator*() const;
    [[nodiscard]] bool operator!=(const ComponentIterator& other) const;
 
-private:
+ private:
    u32 m_index;
    const ComponentStorage* m_storage;
 };
@@ -41,6 +41,7 @@ private:
 class ComponentStorage
 {
    friend class ComponentIterator;
+
  public:
    explicit ComponentStorage(ComponentID component_id);
    ComponentStorage();
@@ -72,4 +73,4 @@ class ComponentStorage
    mem_size m_entity_id_offset = 0;
 };
 
-}
+}// namespace triglav::world

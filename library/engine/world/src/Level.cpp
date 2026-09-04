@@ -61,7 +61,6 @@ void Level::add_node(const Name id, LevelNode&& node)
       for (const auto component_id : comp_id_span) {
          m_addition_lists[component_id].emplace_back(entity_id);
       }
-
    }
 
    m_nodes.emplace(id, std::move(node));
@@ -126,7 +125,7 @@ void Level::register_system(ISystem& system, std::span<Name> component_class_nam
 
 void Level::flush()
 {
-   for (const auto &[component_id, entities] : m_addition_lists) {
+   for (const auto& [component_id, entities] : m_addition_lists) {
       for (const auto& system : m_systems) {
          if (!system.component_ids.contains(component_id))
             continue;
@@ -136,7 +135,7 @@ void Level::flush()
    }
    m_addition_lists.clear();
 
-   for (const auto &[component_id, entities] : m_change_lists) {
+   for (const auto& [component_id, entities] : m_change_lists) {
       for (const auto& system : m_systems) {
          if (!system.component_ids.contains(component_id))
             continue;

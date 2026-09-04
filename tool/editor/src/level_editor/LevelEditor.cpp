@@ -662,9 +662,9 @@ void LevelEditor::on_event(const ui_core::Event& event)
 
 void LevelEditor::save_level() const
 {
-   //const auto& level = m_scene.to_level();
-   // const auto level_path = project::PathManager::the().translate_path(m_state.asset_name);
-   // assert(level.save_to_file(level_path));
+   // const auto& level = m_scene.to_level();
+   //  const auto level_path = project::PathManager::the().translate_path(m_state.asset_name);
+   //  assert(level.save_to_file(level_path));
 }
 
 void LevelEditor::remove_selected_item()

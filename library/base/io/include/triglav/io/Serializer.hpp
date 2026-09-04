@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Stream.hpp"
 #include "Deserializer.hpp"
+#include "Stream.hpp"
 
 namespace triglav::io {
 

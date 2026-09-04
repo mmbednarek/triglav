@@ -80,7 +80,7 @@ class RootWindow final : public render_core::IRenderer
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);
    TG_SINK(resource::ResourceManager, OnLoadedAssets);
-   TG_SINK(engine::Engine, OnLevelLoaded);
+   TG_SINK_NEW(engine::Engine, OnLevelLoaded);
 };
 
 }// namespace triglav::editor

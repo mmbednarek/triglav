@@ -13,10 +13,10 @@
 
 using triglav::desktop::IDisplay;
 using triglav::desktop::InputArgs;
+using triglav::engine::Engine;
 using triglav::io::CommandLine;
 using triglav::project::PathManager;
 using triglav::threading::ThreadPool;
-using triglav::engine::Engine;
 
 using namespace triglav::name_literals;
 

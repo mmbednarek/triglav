@@ -1,8 +1,9 @@
 #pragma once
 
-#include "triglav/resource/ResourceManager.hpp"
-#include "triglav/font/FontManager.hpp"
+#include "triglav/Event.hpp"
 #include "triglav/Logging.hpp"
+#include "triglav/font/FontManager.hpp"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <atomic>
 
@@ -28,11 +29,14 @@ enum class EngineStatus
 class Engine
 {
    TG_DEFINE_LOG_CATEGORY(Engine)
-public:
-   TG_EVENT(OnEngineReady)
-   TG_EVENT(OnLevelLoaded)
+ public:
+   TG_TAG_CLASS(triglav::engine::Engine)
 
-   using Self = Engine;
+   TG_EVENT_NEW(OnEngineReady);
+   TG_EVENT_NEW(OnLevelLoaded);
+
+   // Event<> event_OnEngineReady{TAG, make_name_id("OnEngineReady")};
+   // Event<> event_OnLevelLoaded{TAG, make_name_id("OnLevelLoaded")};
 
    void initialize(graphics_api::Device& device);
    void destroy();
@@ -46,7 +50,8 @@ public:
    [[nodiscard]] world::Level* current_level() const;
 
    static Engine& the();
-private:
+
+ private:
    font::FontManger m_font_manger;
    std::unique_ptr<resource::ResourceManager> m_resource_manager;
    LevelName m_current_level_name;
@@ -59,4 +64,4 @@ private:
    TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
 };
 
-}
+}// namespace triglav::engine
