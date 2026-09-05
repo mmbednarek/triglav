@@ -1,8 +1,8 @@
 #pragma once
 
+#include "triglav/Event.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/UpdateList.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/graphics_api/Buffer.hpp"
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/ui_core/Viewport.hpp"

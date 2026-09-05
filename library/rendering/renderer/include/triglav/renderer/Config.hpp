@@ -1,7 +1,7 @@
 #pragma once
 
+#include "triglav/Event.hpp"
 #include "triglav/String.hpp"
-#include "triglav/event/Delegate.hpp"
 
 #include <string_view>
 

@@ -2,9 +2,9 @@
 
 #include "DesktopUI.hpp"
 
+#include "triglav/Event.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/String.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
 

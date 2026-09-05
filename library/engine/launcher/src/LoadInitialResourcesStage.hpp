@@ -2,8 +2,8 @@
 
 #include "Launcher.hpp"
 
+#include "triglav/Event.hpp"
 #include "triglav/engine/Engine.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
 namespace triglav::launcher {

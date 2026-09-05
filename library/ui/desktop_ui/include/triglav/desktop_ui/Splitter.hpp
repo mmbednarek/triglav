@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/event/Delegate.hpp"
+#include "triglav/Event.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
 #include "triglav/ui_core/UICore.hpp"

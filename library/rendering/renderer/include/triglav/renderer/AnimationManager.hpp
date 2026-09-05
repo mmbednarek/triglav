@@ -2,8 +2,8 @@
 
 #include "Scene.hpp"
 
+#include "triglav/Event.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/event/Delegate.hpp"
 
 #include <map>
 

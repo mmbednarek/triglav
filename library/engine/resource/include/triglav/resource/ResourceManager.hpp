@@ -8,9 +8,9 @@
 #include "NameRegistry.hpp"
 
 #include "LoadContext.hpp"
+#include "triglav/Event.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/Path.hpp"
 

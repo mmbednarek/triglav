@@ -4,10 +4,10 @@
 #include "ISurface.hpp"
 
 #include "triglav/EnumFlags.hpp"
+#include "triglav/Event.hpp"
 #include "triglav/Int.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/Utf8.hpp"
-#include "triglav/event/Delegate.hpp"
 
 #include <memory>
 

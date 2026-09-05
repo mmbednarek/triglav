@@ -1,10 +1,9 @@
 #pragma once
 
+#include "triglav/Event.hpp"
 #include "triglav/desktop_ui/DesktopContainerWidget.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TreeController.hpp"
-#include "triglav/desktop_ui/TreeView.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/io/Path.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
@@ -21,7 +20,7 @@ class ProjectTreeController final : public desktop_ui::ITreeController
    const desktop_ui::TreeItem& item(desktop_ui::TreeItemId id) override;
    void set_label(desktop_ui::TreeItemId id, StringView label) override;
    void remove(desktop_ui::TreeItemId /*id*/) override;
-   ResourceName path(desktop_ui::TreeItemId id) const;
+   [[nodiscard]] ResourceName path(desktop_ui::TreeItemId id) const;
    [[nodiscard]] bool has_children(desktop_ui::TreeItemId id) const;
 
  private:

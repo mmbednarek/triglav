@@ -1,6 +1,6 @@
 #pragma once
 
-#include "triglav/event/Delegate.hpp"
+#include "triglav/Event.hpp"
 
 namespace triglav::desktop::x11 {
 

@@ -2,6 +2,7 @@ core_sources = files([
                     'include/triglav/detail/Crc.hpp',
                     'include/triglav/Array.hpp',
                     'include/triglav/ArrayMap.hpp',
+                    'include/triglav/Awaiter.hpp',
                     'include/triglav/BuildInfo.hpp',
                     'include/triglav/CompTimeString.hpp',
                     'include/triglav/Debug.hpp',
@@ -35,7 +36,7 @@ core_sources = files([
                     'src/String.cpp'
 ])
 
-core_deps = [glm, entt]
+core_deps = [glm]
 core_incl = include_directories(['include', 'include/triglav'])
 
 core_lib = static_library('triglav_core',

@@ -3,8 +3,7 @@
 #include "../Scene.hpp"
 #include "IStage.hpp"
 
-#include "triglav/event/Delegate.hpp"
-#include "triglav/render_core/RenderCore.hpp"
+#include "triglav/Event.hpp"
 #include "triglav/render_objects/Mesh.hpp"
 
 namespace triglav::graphics_api {

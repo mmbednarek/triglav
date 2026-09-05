@@ -1,10 +1,12 @@
-#include "../../../misc/testing_render_util/include/triglav/testing_render_util/RenderSupport.hpp"
+#include "triglav/testing_render_util/RenderSupport.hpp"
 
+#include "triglav/Awaiter.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
 #include "triglav/graphics_api/Instance.hpp"
 #include "triglav/io/Logging.hpp"
 #include "triglav/project/Name.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/testing_core/GTest.hpp"
 #include "triglav/threading/ThreadPool.hpp"
@@ -21,7 +23,7 @@ using triglav::resource::ResourceManager;
 using namespace triglav::string_literals;
 using namespace triglav::name_literals;
 
-TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets)
+TG_DEFINE_AWAITER(LoadAssetsAwaiter, ResourceManager, OnLoadedAssets, triglav::resource::LoadIndex)
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {

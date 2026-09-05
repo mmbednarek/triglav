@@ -2,9 +2,9 @@
 
 #include "Primitives.hpp"
 
+#include "triglav/Event.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
-#include "triglav/event/Delegate.hpp"
 
 #include <map>
 
