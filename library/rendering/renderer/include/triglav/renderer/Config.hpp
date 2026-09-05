@@ -104,7 +104,7 @@ struct Config
 class ConfigManager
 {
  public:
-   using Self = ConfigManager;
+   TG_TAG_CLASS(triglav::renderer::ConfigManager)
 
    TG_EVENT(OnPropertyChanged, ConfigProperty, const Config&)
 

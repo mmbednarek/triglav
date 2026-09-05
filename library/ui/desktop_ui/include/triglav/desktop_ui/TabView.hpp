@@ -46,6 +46,8 @@ class BasicTabWidget final : public ITabWidget
 class TabView final : public ui_core::BaseWidget
 {
  public:
+   TG_TAG_CLASS(triglav::desktop_ui::TabView)
+
    TG_EVENT(OnChangedActiveTab, u32 /*index*/, IWidget* /*widget*/)
 
    struct State

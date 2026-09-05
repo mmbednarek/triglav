@@ -6,13 +6,10 @@
 #include "MaterialLoader.hpp"
 #include "MeshLoader.hpp"
 #include "NameRegistry.hpp"
-#include "Resource.hpp"
 
-#include "../../../../project/include/triglav/project/PathManager.hpp"
 #include "LoadContext.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/ResourcePathMap.hpp"
 #include "triglav/event/Delegate.hpp"
 #include "triglav/font/FontManager.hpp"
 #include "triglav/io/Path.hpp"
@@ -27,19 +24,23 @@ class Device;
 
 namespace triglav::resource {
 
+constexpr LoadIndex ERROR_LOADING_ASSET = ~0u;
+
 class ResourceManager
 {
    TG_DEFINE_LOG_CATEGORY(ResourceManager)
  public:
+   TG_TAG_CLASS(triglav::resource::ResourceManager)
+
    TG_EVENT(OnStartedLoadingAsset, ResourceName)
    TG_EVENT(OnFinishedLoadingAsset, ResourceName, u32, u32)
-   TG_EVENT(OnLoadedAssets)
+   TG_EVENT(OnLoadedAssets, LoadIndex)
 
    explicit ResourceManager(graphics_api::Device& device, font::FontManger& font_manager);
 
-   void load_asset_list(const io::Path& path);
-   void load_asset(ResourceName resource_name);
-   void load_assets(std::span<ResourceName> resource_name);
+   u32 load_asset_list(const io::Path& path);
+   u32 load_asset(ResourceName resource_name);
+   u32 load_assets(std::span<ResourceName> resource_name);
 
    [[nodiscard]] bool is_name_registered(ResourceName asset_name) const;
 
@@ -98,6 +99,7 @@ class ResourceManager
    NameRegistry m_name_registry;
    graphics_api::Device& m_device;
    font::FontManger& m_font_manager;
+   std::atomic<LoadIndex> m_load_id;
 };
 
 void resolve_dependencies(std::set<ResourceName>& resource_list);

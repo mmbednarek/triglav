@@ -7,7 +7,8 @@
 #include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
-#include "triglav/ui_core/Primitives.hpp"
+
+#include <functional>
 
 namespace triglav::ui_core {
 class TextBox;
@@ -19,7 +20,7 @@ class TextInput final : public ui_core::IWidget
 {
    TG_DEFINE_LOG_CATEGORY(TextInput)
  public:
-   using Self = TextInput;
+   TG_TAG_CLASS(triglav::desktop_ui::TextInput)
 
    TG_EVENT(OnTextChanged, StringView)
    TG_EVENT(OnTyping, StringView)

@@ -92,11 +92,13 @@ void Engine::initialize(graphics_api::Device& device)
    TG_CONNECT_OPT(*m_resource_manager, OnLoadedAssets, on_loaded_assets);
    log_info("Initialising engine");
 
-   m_resource_manager->load_asset_list(project::PathManager::the().translate_path("engine/index.yaml"_rc));
+   m_load_index = m_resource_manager->load_asset_list(project::PathManager::the().translate_path("engine/index.yaml"_rc));
+   assert(m_load_index != resource::ERROR_LOADING_ASSET);
 }
 
 void Engine::destroy()
 {
+   sink_OnLoadedAssets.release();
    m_levels.clear();
    m_pending_level.reset();
    m_resource_manager.reset();
@@ -149,11 +151,16 @@ void Engine::load_level(const LevelName level_name)
    }
 
    m_status.store(EngineStatus::LoadingLevel);
-   m_resource_manager->load_assets(resource_list);
+   m_load_index = m_resource_manager->load_assets(resource_list);
+   assert(m_load_index != resource::ERROR_LOADING_ASSET);
 }
 
-void Engine::on_loaded_assets()
+void Engine::on_loaded_assets(const resource::LoadIndex load_index)
 {
+   if (m_load_index != load_index)
+      return;
+   m_load_index = resource::ERROR_LOADING_ASSET;
+
    const auto status = m_status.load();
    switch (status) {
    case EngineStatus::Initializing: {
@@ -172,6 +179,7 @@ void Engine::on_loaded_assets()
       return;
    }
    default:
+      assert(false);
       break;
    }
 }

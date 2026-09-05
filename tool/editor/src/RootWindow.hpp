@@ -36,7 +36,7 @@ class RootWindow final : public render_core::IRenderer
    void update();
    void on_close();
    void on_resize(Vector2i size);
-   void on_loaded_assets();
+   void on_loaded_assets(resource::LoadIndex load_index);
    void on_level_loaded();
 
    void set_render_overlay(IRenderOverlay* overlay);
@@ -76,11 +76,12 @@ class RootWindow final : public render_core::IRenderer
    bool m_should_update_viewport{false};
    std::optional<ResourceName> m_loaded_asset;
    std::atomic_bool m_is_asset_ready{false};
+   resource::LoadIndex m_load_index = resource::ERROR_LOADING_ASSET;
 
    TG_SINK(desktop::ISurface, OnClose);
    TG_SINK(desktop::ISurface, OnResize);
    TG_SINK(resource::ResourceManager, OnLoadedAssets);
-   TG_SINK_NEW(engine::Engine, OnLevelLoaded);
+   TG_SINK(engine::Engine, OnLevelLoaded);
 };
 
 }// namespace triglav::editor

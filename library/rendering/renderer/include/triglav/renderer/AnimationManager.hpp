@@ -35,6 +35,8 @@ struct AnimationState
 class AnimationManager
 {
  public:
+   TG_TAG_CLASS(triglav::renderer::AnimationManager)
+
    TG_EVENT(OnAnimationBegan, AnimationID, const AnimationState&)
    TG_EVENT(OnAnimationFinish, AnimationID)
 

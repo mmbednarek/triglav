@@ -4,6 +4,7 @@
 
 #include "triglav/ResourcePathMap.hpp"
 #include "triglav/io/File.hpp"
+#include "triglav/project/PathManager.hpp"
 
 #include <ryml.hpp>
 
@@ -12,7 +13,8 @@
 
 namespace triglav::resource {
 
-LoadContext::LoadContext(std::vector<ResourceStage>&& loading_stages) :
+LoadContext::LoadContext(std::vector<ResourceStage>&& loading_stages, const LoadIndex load_id) :
+    m_load_id(load_id),
     m_loading_stages(std::move(loading_stages))
 {
    for (const auto& stage : m_loading_stages) {
@@ -62,7 +64,12 @@ u32 LoadContext::current_stage_id() const
    return m_current_stage_id;
 }
 
-std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
+LoadIndex LoadContext::load_index() const
+{
+   return m_load_id;
+}
+
+std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path, const LoadIndex load_id)
 {
    auto file = io::read_whole_file(path);
    if (file.empty()) {
@@ -80,26 +87,26 @@ std::unique_ptr<LoadContext> LoadContext::from_asset_list(const io::Path& path)
    }
    resolve_dependencies(resources);
 
-   return build_load_context(resources);
+   return build_load_context(resources, load_id);
 }
 
-std::unique_ptr<LoadContext> LoadContext::from_target_asset(const ResourceName res_name)
+std::unique_ptr<LoadContext> LoadContext::from_target_asset(const ResourceName res_name, const LoadIndex load_id)
 {
    std::set<ResourceName> resources;
    resources.insert(res_name);
    resolve_dependencies(resources);
-   return build_load_context(resources);
+   return build_load_context(resources, load_id);
 }
 
-std::unique_ptr<LoadContext> LoadContext::from_assets(std::span<ResourceName> resources)
+std::unique_ptr<LoadContext> LoadContext::from_assets(std::span<ResourceName> resources, const LoadIndex load_id)
 {
    std::set<ResourceName> resource_set;
    std::ranges::copy(resources, std::inserter(resource_set, resource_set.begin()));
    resolve_dependencies(resource_set);
-   return build_load_context(resource_set);
+   return build_load_context(resource_set, load_id);
 }
 
-std::unique_ptr<LoadContext> LoadContext::build_load_context(const std::set<ResourceName>& resources)
+std::unique_ptr<LoadContext> LoadContext::build_load_context(const std::set<ResourceName>& resources, const LoadIndex load_id)
 {
    std::vector<ResourceStage> result{};
    result.resize(loading_stage_count());
@@ -111,7 +118,7 @@ std::unique_ptr<LoadContext> LoadContext::build_load_context(const std::set<Reso
    result.erase(std::ranges::remove_if(result, [](const ResourceStage& stage) { return stage.resource_list.empty(); }).begin(),
                 result.end());
 
-   return std::make_unique<LoadContext>(std::move(result));
+   return std::make_unique<LoadContext>(std::move(result), load_id);
 }
 
 }// namespace triglav::resource

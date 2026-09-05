@@ -59,7 +59,7 @@ class RayTracingScene
 
    void build_acceleration_structures();
 
-   void on_object_added_to_scene(const SceneObject& object);
+   void on_object_added_to_scene(ObjectID id, const SceneObject& object);
 
  private:
    graphics_api::Device& m_device;

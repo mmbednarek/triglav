@@ -33,58 +33,76 @@ ResourceManager::ResourceManager(graphics_api::Device& device, font::FontManger&
 #undef TG_RESOURCE_TYPE
 }
 
-void ResourceManager::load_asset_list(const io::Path& path)
+LoadIndex ResourceManager::load_asset_list(const io::Path& path)
 {
    if (m_load_context != nullptr) {
       log_error("Loading assets already in progress");
-      return;
+      assert(false && "ALREADY LOADING ASSETS!");
+      return ERROR_LOADING_ASSET;
    }
-   m_load_context = LoadContext::from_asset_list(path);
+
+   const LoadIndex load_index = m_load_id++;
+   m_load_context = LoadContext::from_asset_list(path, load_index);
    if (m_load_context == nullptr) {
       log_error("Failed to open asset file list");
-      return;
+      assert(false);
+      return ERROR_LOADING_ASSET;
    }
 
    log_info("Loading {} assets", m_load_context->total_assets());
    this->load_next_stage();
+   return load_index;
 }
 
-void ResourceManager::load_asset(const ResourceName resource_name)
+LoadIndex ResourceManager::load_asset(const ResourceName resource_name)
 {
    if (m_load_context != nullptr) {
       log_error("Loading assets already in progress");
-      return;
+      assert(false && "ALREADY LOADING ASSETS!");
+      return ERROR_LOADING_ASSET;
    }
-   m_load_context = LoadContext::from_target_asset(resource_name);
+
+   const LoadIndex load_index = m_load_id++;
+   m_load_context = LoadContext::from_target_asset(resource_name, load_index);
    if (m_load_context == nullptr) {
       log_error("Failed to create load context from asset");
-      return;
+      assert(false);
+      return ERROR_LOADING_ASSET;
    }
 
    log_info("Loading {} assets", m_load_context->total_assets());
    this->load_next_stage();
+
+   return load_index;
 }
 
-void ResourceManager::load_assets(const std::span<ResourceName> resource_name)
+LoadIndex ResourceManager::load_assets(const std::span<ResourceName> resource_name)
 {
    if (m_load_context != nullptr) {
       log_error("Loading assets already in progress");
-      return;
+      assert(false && "ALREADY LOADING ASSETS!");
+      return ERROR_LOADING_ASSET;
    }
-   m_load_context = LoadContext::from_assets(resource_name);
+
+   const LoadIndex load_index = m_load_id++;
+   m_load_context = LoadContext::from_assets(resource_name, load_index);
    if (m_load_context == nullptr) {
       log_error("Failed to create load context from asset");
-      return;
+      assert(false);
+      return ERROR_LOADING_ASSET;
    }
 
    log_info("Loading {} assets", m_load_context->total_assets());
    this->load_next_stage();
+
+   return load_index;
 }
 
 void ResourceManager::load_next_stage()
 {
    if (m_load_context == nullptr) {
       log_error("Cannot load stage: no asset loading in progress");
+      assert(false);
       return;
    }
 
@@ -96,7 +114,7 @@ void ResourceManager::load_next_stage()
       if (not rc_path.exists()) {
          log_error("failed to load resource: {}, file not found", rc_path.string());
          flush_logs();
-         assert(0);
+         assert(false);
       }
 
       m_name_registry.register_resource(rc_name, rc_path.string());
@@ -164,11 +182,13 @@ void ResourceManager::on_finished_loading_resource(ResourceName resource_name, c
       log_info("Loading stage {} DONE", m_load_context->current_stage_id());
       this->load_next_stage();
       break;
-   case FinishLoadingAssetResult::FinishedLoadingAssets:
+   case FinishLoadingAssetResult::FinishedLoadingAssets: {
       log_info("Loading assets DONE");
+      const auto load_index = m_load_context->load_index();
       m_load_context.reset();
-      this->event_OnLoadedAssets.publish();
+      this->event_OnLoadedAssets.publish(load_index);
       break;
+   }
    case FinishLoadingAssetResult::None:
       break;
    }

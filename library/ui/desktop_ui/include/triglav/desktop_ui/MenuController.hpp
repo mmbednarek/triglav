@@ -19,7 +19,7 @@ struct MenuItem
 class MenuController
 {
  public:
-   using Self = MenuController;
+   TG_TAG_CLASS(triglav::desktop_ui::MenuController)
 
    TG_EVENT(OnClicked, Name, const MenuItem&)
 

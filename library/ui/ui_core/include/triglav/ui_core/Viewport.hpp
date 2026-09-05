@@ -14,6 +14,8 @@ class Viewport
 {
    TG_DEFINE_LOG_CATEGORY(UI_Viewport)
  public:
+   TG_TAG_CLASS(triglav::ui_core::Viewport)
+
    TG_EVENT(OnAddedText, TextId, const Text&)
    TG_EVENT(OnUpdatedText, TextId, const Text&)
    TG_EVENT(OnRemovedText, TextId)

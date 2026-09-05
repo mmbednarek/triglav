@@ -11,7 +11,8 @@ class Context;
 class Button final : public ContainerWidget
 {
  public:
-   using Self = Button;
+   TG_TAG_CLASS(triglav::ui_core::Button)
+
    TG_EVENT(OnClick, desktop::MouseButton)
    TG_EVENT(OnEnter)
    TG_EVENT(OnLeave)

@@ -29,10 +29,10 @@ class Receiver
 
 TEST(EventTest, SingleValue)
 {
-   triglav::Event<float> example("my_event"_name);
+   triglav::Event<float> example;
 
    Receiver receiver;
-   triglav::EventManager::the().register_callback("my_event"_name, &receiver, reinterpret_cast<void*>(+[](void* handle, float value) {
+   triglav::EventManager::the().register_callback(example.event_id(), &receiver, reinterpret_cast<void*>(+[](void* handle, float value) {
                                                      static_cast<Receiver*>(handle)->on_example(value);
                                                   }));
 
@@ -43,16 +43,16 @@ TEST(EventTest, SingleValue)
 
 TEST(EventTest, MultiValue)
 {
-   triglav::Event<float> example("my_event"_name);
+   triglav::Event<float> example;
 
    Receiver receiver1;
    receiver1.m_base_value = 2.0f;
    Receiver receiver2;
    receiver2.m_base_value = 3.0f;
-   triglav::EventManager::the().register_callback("my_event"_name, &receiver1, reinterpret_cast<void*>(+[](void* handle, float value) {
+   triglav::EventManager::the().register_callback(example.event_id(), &receiver1, reinterpret_cast<void*>(+[](void* handle, float value) {
                                                      static_cast<Receiver*>(handle)->on_example(value);
                                                   }));
-   triglav::EventManager::the().register_callback("my_event"_name, &receiver2, reinterpret_cast<void*>(+[](void* handle, float value) {
+   triglav::EventManager::the().register_callback(example.event_id(), &receiver2, reinterpret_cast<void*>(+[](void* handle, float value) {
                                                      static_cast<Receiver*>(handle)->on_example(value);
                                                   }));
 
@@ -65,7 +65,7 @@ TEST(EventTest, MultiValue)
 
 TEST(EventTest, Sink)
 {
-   triglav::Event<int, int> example("values"_name);
+   triglav::Event<int, int> example;
 
    Receiver receiver;
 
@@ -94,7 +94,7 @@ TEST(EventTest, Sink)
 
 TEST(EventTest, ManyReceivers)
 {
-   triglav::Event<float> example("example"_name);
+   triglav::Event<float> example;
 
    std::array<Receiver, 10> receivers{};
    std::array<triglav::Sink, 10> sinks{};
@@ -113,7 +113,7 @@ TEST(EventTest, ManyReceivers)
 
 TEST(EventTest, Reference)
 {
-   triglav::Event<float&> example("example"_name);
+   triglav::Event<float&> example;
 
    Receiver receiver;
    auto sink = example.connect<&Receiver::get_value>(receiver);

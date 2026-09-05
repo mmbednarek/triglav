@@ -73,7 +73,7 @@ class GameInstance
    GameInstance(triglav::desktop::IDisplay& display, triglav::graphics_api::Resolution&& resolution);
 
    void on_engine_ready();
-   void on_loaded_assets();
+   void on_loaded_assets(triglav::resource::LoadIndex load_index);
    void on_level_loaded();
    void loop(triglav::desktop::IDisplay& display);
 
@@ -95,9 +95,10 @@ class GameInstance
    std::condition_variable m_base_resources_ready_cv;
    std::unique_ptr<CharacterController> m_character_controller;
    std::chrono::steady_clock::time_point m_last_frame_tp;
+   triglav::resource::LoadIndex m_load_index = triglav::resource::ERROR_LOADING_ASSET;
 
-   TG_SINK_NEW(X, OnEngineReady);
-   TG_SINK_NEW(X, OnLevelLoaded);
+   TG_SINK(X, OnEngineReady);
+   TG_SINK(X, OnLevelLoaded);
    TG_OPT_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
 };
 

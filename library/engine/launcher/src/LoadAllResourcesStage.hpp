@@ -17,10 +17,11 @@ class LoadAllResourcesStage : public IStage
 
    void tick() override;
 
-   void on_loaded_assets();
+   void on_loaded_assets(resource::LoadIndex load_index);
 
  private:
    std::atomic_bool m_completed{};
+   resource::LoadIndex m_load_index = resource::ERROR_LOADING_ASSET;
    TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
 };
 

@@ -37,7 +37,7 @@ class ResourceSelector : public desktop_ui::DesktopProxyWidget
 class ResourceSelectTrigger final : public desktop_ui::DesktopProxyWidget
 {
  public:
-   using Self = ResourceSelector;
+   TG_TAG_CLASS(triglav::editor::ResourceSelectTrigger)
 
    TG_EVENT(OnSelected, String)
 

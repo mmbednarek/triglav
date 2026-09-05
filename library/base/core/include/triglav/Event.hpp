@@ -32,19 +32,14 @@ template<typename... TArgs>
 class Event
 {
  public:
-   explicit Event(const Name object_name, const Name event_name) :
-       m_event_name(EVENT_OBJECT_MULT * object_name + EVENT_NAME_MULT * event_name)
+   Event() :
+       m_event_id(EventManager::the().allocate_event_id())
    {
    }
 
-   explicit Event(const Name event_name) :
-       m_event_name(event_name)
+   void publish(TArgs... args) const
    {
-   }
-
-   void publish(TArgs... args)
-   {
-      EventManager::the().iterate_event_callbacks(m_event_name, [&](void* object, void* callback) {
+      EventManager::the().iterate_event_callbacks(m_event_id, [&](void* object, void* callback) {
          const auto fn_callback = reinterpret_cast<void (*)(void*, TArgs...)>(callback);
          fn_callback(object, std::forward<TArgs>(args)...);
       });
@@ -53,28 +48,29 @@ class Event
    template<auto CFunc, typename T>
    [[nodiscard]] Sink connect(T& object) const
    {
-      return Sink(EventManager::the().register_callback(m_event_name, &object, reinterpret_cast<void*>(+[](void* handle, TArgs... args) {
+      return Sink(EventManager::the().register_callback(m_event_id, &object, reinterpret_cast<void*>(+[](void* handle, TArgs... args) {
                                                            (static_cast<T*>(handle)->*CFunc)(std::forward<TArgs>(args)...);
                                                         })));
    }
 
+   [[nodiscard]] EventID event_id() const
+   {
+      return m_event_id;
+   }
+
  private:
-   Name m_event_name;
+   EventID m_event_id;
 };
 
 }// namespace triglav
 
-#define TG_EVENT_NEW(event_name, ...)                          \
-   ::triglav::Event<__VA_ARGS__> TG_CONCAT(event_, event_name) \
-   {                                                           \
-      TAG, ::triglav::make_name_id(TG_STRING(event_name))      \
-   }
+#define TG_EVENT(event_name, ...) ::triglav::Event<__VA_ARGS__> TG_CONCAT(event_, event_name){};
 
-#define TG_SINK_NEW(sender, name) ::triglav::Sink TG_CONCAT(sink_, name)
-#define TG_OPT_SINK_NEW(sender, name) TG_SINK_NEW(sender, name)
-#define TG_OPT_NAMED_SINK_NEW(sender, name, sink_name) ::triglav::Sink TG_CONCAT(sink_, sink_name)
+#define TG_SINK(sender, name) ::triglav::Sink TG_CONCAT(sink_, name)
+#define TG_OPT_SINK(sender, name) TG_SINK(sender, name)
+#define TG_OPT_NAMED_SINK(sender, name, sink_name) ::triglav::Sink TG_CONCAT(sink_, sink_name)
 
-#define TG_CONNECT_NAMED_OPT_NEW(obj, name, sink_name, func) \
+#define TG_CONNECT_NAMED_OPT(obj, name, sink_name, func) \
    TG_CONCAT(sink_, sink_name) = ((obj).TG_CONCAT(event_, name).connect<&Self::func>(*this))
-#define TG_CONNECT_NEW(obj, name, func) TG_CONCAT(sink_, name)((obj).TG_CONCAT(event_, name).connect<&Self::func>(*this))
-#define TG_CONNECT_OPT_NEW(obj, name, func) TG_CONNECT_NAMED_OPT_NEW(obj, name, name, func)
+#define TG_CONNECT(obj, name, func) TG_CONCAT(sink_, name)((obj).TG_CONCAT(event_, name).connect<&Self::func>(*this))
+#define TG_CONNECT_OPT(obj, name, func) TG_CONNECT_NAMED_OPT(obj, name, name, func)

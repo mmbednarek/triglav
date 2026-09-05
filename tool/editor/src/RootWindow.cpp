@@ -30,7 +30,7 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnResize, on_resize),
     TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets),
-    TG_CONNECT_NEW(engine::Engine::the(), OnLevelLoaded, on_level_loaded)
+    TG_CONNECT(engine::Engine::the(), OnLevelLoaded, on_level_loaded)
 {
 }
 
@@ -164,10 +164,14 @@ void RootWindow::on_resize(const Vector2i size)
    m_render_surface.recreate_swapchain(size);
 }
 
-void RootWindow::on_loaded_assets()
+void RootWindow::on_loaded_assets(const resource::LoadIndex load_index)
 {
-   if (!m_loaded_asset.has_value())
+   if (m_load_index != load_index)
       return;
+   m_load_index = resource::ERROR_LOADING_ASSET;
+
+   assert(m_loaded_asset.has_value());
+
    if (m_loaded_asset->type() == ResourceType::Level)
       return;
 

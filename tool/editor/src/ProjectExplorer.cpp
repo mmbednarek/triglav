@@ -3,6 +3,7 @@
 #include "RootWindow.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/io/File.hpp"
+#include "triglav/project/PathManager.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 #include "triglav/ui_core/Context.hpp"
 #include "triglav/ui_core/widget/Padding.hpp"
