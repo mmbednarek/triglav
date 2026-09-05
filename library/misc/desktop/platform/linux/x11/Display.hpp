@@ -40,7 +40,7 @@ class Display final : public IDisplay
    Atom m_wm_delete_atom;
    Time m_last_click_time{};
 
-   TG_SINK(Mouse, OnMouseMove);
+   TG_SINK(OnMouseMove);
 };
 
 }// namespace triglav::desktop::x11

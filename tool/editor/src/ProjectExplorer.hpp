@@ -48,7 +48,7 @@ class ProjectExplorer final : public desktop_ui::DesktopProxyWidget
    ProjectTreeController m_controller;
    std::map<std::string_view, u32> m_path_to_id;
 
-   TG_OPT_SINK(desktop_ui::TreeView, OnActivated);
+   TG_SINK(OnActivated);
 };
 
 }// namespace triglav::editor

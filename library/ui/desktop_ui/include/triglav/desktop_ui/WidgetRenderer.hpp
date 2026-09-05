@@ -75,15 +75,15 @@ class WidgetRenderer
    ui_core::IWidgetPtr m_root_widget{};
    Vector2 m_mouse_position{};
 
-   TG_SINK(desktop::ISurface, OnMouseEnter);
-   TG_SINK(desktop::ISurface, OnMouseMove);
-   TG_SINK(desktop::ISurface, OnMouseWheelTurn);
-   TG_SINK(desktop::ISurface, OnMouseButtonIsPressed);
-   TG_SINK(desktop::ISurface, OnMouseButtonIsReleased);
-   TG_SINK(desktop::ISurface, OnMouseDoubleClick);
-   TG_SINK(desktop::ISurface, OnKeyIsPressed);
-   TG_SINK(desktop::ISurface, OnKeyIsReleased);
-   TG_SINK(desktop::ISurface, OnTextInput);
+   TG_SINK(OnMouseEnter);
+   TG_SINK(OnMouseMove);
+   TG_SINK(OnMouseWheelTurn);
+   TG_SINK(OnMouseButtonIsPressed);
+   TG_SINK(OnMouseButtonIsReleased);
+   TG_SINK(OnMouseDoubleClick);
+   TG_SINK(OnKeyIsPressed);
+   TG_SINK(OnKeyIsReleased);
+   TG_SINK(OnTextInput);
 };
 
 }// namespace triglav::desktop_ui

@@ -189,9 +189,9 @@ class BindlessScene
    MemorySize m_written_material_property_AllTex{0};
 
    // Sinks
-   TG_SINK(Scene, OnObjectAddedToScene);
-   TG_SINK(Scene, OnObjectChangedTransform);
-   TG_SINK(Scene, OnObjectRemoved);
+   TG_SINK(OnObjectAddedToScene);
+   TG_SINK(OnObjectChangedTransform);
+   TG_SINK(OnObjectRemoved);
 };
 
 }// namespace triglav::renderer

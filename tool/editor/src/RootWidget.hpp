@@ -47,8 +47,8 @@ class RootWidget final : public ui_core::ProxyWidget
    IAssetEditor* m_active_asset_editor{};
    desktop_ui::TabView* m_tab_view;
 
-   TG_SINK(desktop_ui::MenuController, OnClicked);
-   TG_OPT_SINK(desktop_ui::TabView, OnChangedActiveTab);
+   TG_SINK(OnClicked);
+   TG_SINK(OnChangedActiveTab);
 };
 
 }// namespace triglav::editor

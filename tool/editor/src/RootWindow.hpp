@@ -78,10 +78,10 @@ class RootWindow final : public render_core::IRenderer
    std::atomic_bool m_is_asset_ready{false};
    resource::LoadIndex m_load_index = resource::ERROR_LOADING_ASSET;
 
-   TG_SINK(desktop::ISurface, OnClose);
-   TG_SINK(desktop::ISurface, OnResize);
-   TG_SINK(resource::ResourceManager, OnLoadedAssets);
-   TG_SINK(engine::Engine, OnLevelLoaded);
+   TG_SINK(OnClose);
+   TG_SINK(OnResize);
+   TG_SINK(OnLoadedAssets);
+   TG_SINK(OnLevelLoaded);
 };
 
 }// namespace triglav::editor

@@ -34,10 +34,10 @@ class OcclusionCulling
 
    BindlessScene& m_bindless_scene;
 
-   TG_SINK(UpdateViewParamsJob, OnResourceDefinition);
-   TG_SINK(UpdateViewParamsJob, OnViewPropertiesChanged);
-   TG_SINK(UpdateViewParamsJob, OnViewPropertiesNotChanged);
-   TG_SINK(UpdateViewParamsJob, OnFinalize);
+   TG_SINK(OnResourceDefinition);
+   TG_SINK(OnViewPropertiesChanged);
+   TG_SINK(OnViewPropertiesNotChanged);
+   TG_SINK(OnFinalize);
 };
 
 }// namespace triglav::renderer

@@ -163,7 +163,7 @@ class TransformInput final : public ui_core::ProxyWidget
    State m_state;
    desktop_ui::TextInput* m_text_input{};
 
-   TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
+   TG_SINK(OnTextChanged);
 };
 
 TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget* parent) :

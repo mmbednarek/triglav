@@ -77,9 +77,9 @@ class RectangleRenderer
    // std::map<Name, RectangleData> m_rectangles;
    std::mutex m_rect_update_mtx;
 
-   TG_SINK(ui_core::Viewport, OnAddedRectangle);
-   TG_SINK(ui_core::Viewport, OnUpdatedRectangle);
-   TG_SINK(ui_core::Viewport, OnRemovedRectangle);
+   TG_SINK(OnAddedRectangle);
+   TG_SINK(OnUpdatedRectangle);
+   TG_SINK(OnRemovedRectangle);
 };
 
 }// namespace triglav::renderer::ui

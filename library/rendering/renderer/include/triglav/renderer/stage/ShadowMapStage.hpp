@@ -34,11 +34,11 @@ class ShadowMapStage final : public IStage
    Scene& m_scene;
    BindlessScene& m_bindless_scene;
 
-   TG_SINK(UpdateViewParamsJob, OnResourceDefinition);
-   TG_SINK(UpdateViewParamsJob, OnViewPropertiesChanged);
-   TG_SINK(UpdateViewParamsJob, OnViewPropertiesNotChanged);
-   TG_SINK(UpdateViewParamsJob, OnFinalize);
-   TG_SINK(UpdateViewParamsJob, OnPrepareFrame);
+   TG_SINK(OnResourceDefinition);
+   TG_SINK(OnViewPropertiesChanged);
+   TG_SINK(OnViewPropertiesNotChanged);
+   TG_SINK(OnFinalize);
+   TG_SINK(OnPrepareFrame);
 };
 
 }// namespace triglav::renderer::stage

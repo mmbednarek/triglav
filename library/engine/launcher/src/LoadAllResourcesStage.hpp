@@ -22,7 +22,7 @@ class LoadAllResourcesStage : public IStage
  private:
    std::atomic_bool m_completed{};
    resource::LoadIndex m_load_index = resource::ERROR_LOADING_ASSET;
-   TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
+   TG_SINK(OnLoadedAssets);
 };
 
 }// namespace triglav::launcher

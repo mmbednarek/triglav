@@ -94,9 +94,9 @@ class TextRenderer
 
    std::mutex m_update_mtx;
 
-   TG_SINK(ui_core::Viewport, OnAddedText);
-   TG_SINK(ui_core::Viewport, OnUpdatedText);
-   TG_SINK(ui_core::Viewport, OnRemovedText);
+   TG_SINK(OnAddedText);
+   TG_SINK(OnUpdatedText);
+   TG_SINK(OnRemovedText);
 };
 
 }// namespace triglav::renderer::ui

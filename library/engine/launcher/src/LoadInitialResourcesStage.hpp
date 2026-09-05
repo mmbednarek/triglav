@@ -20,7 +20,7 @@ class LoadInitialResourcesStage : public IStage
 
  private:
    std::atomic_bool m_completed{};
-   TG_OPT_SINK(engine::Engine, OnEngineReady);
+   TG_SINK(OnEngineReady);
 };
 
 }// namespace triglav::launcher

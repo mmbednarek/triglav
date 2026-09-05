@@ -62,7 +62,7 @@ class Engine
    std::atomic<EngineStatus> m_status = EngineStatus::Uninitialized;
    resource::LoadIndex m_load_index = resource::ERROR_LOADING_ASSET;
 
-   TG_OPT_SINK(resource::ResourceManager, OnLoadedAssets);
+   TG_SINK(OnLoadedAssets);
 };
 
 }// namespace triglav::engine

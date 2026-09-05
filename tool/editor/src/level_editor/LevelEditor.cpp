@@ -219,8 +219,8 @@ class ObjectModePanel final : public desktop_ui::DesktopProxyWidget
    desktop_ui::DropDownMenu* m_snap_selector;
    desktop_ui::DropDownMenu* m_speed_selector;
 
-   TG_SINK(desktop_ui::RadioGroup, OnSelection);
-   TG_OPT_SINK(desktop_ui::DropDownMenu, OnSelected);
+   TG_SINK(OnSelection);
+   TG_SINK(OnSelected);
 };
 
 class TerrainModePanel : public desktop_ui::DesktopProxyWidget
@@ -373,13 +373,13 @@ class TerrainModePanel : public desktop_ui::DesktopProxyWidget
    desktop_ui::CheckBox* m_grow_button;
    desktop_ui::DropDownMenu* m_size_selector;
    desktop_ui::DropDownMenu* m_strength_selector;
-   TG_SINK(desktop_ui::RadioGroup, OnSelection);
-   TG_OPT_NAMED_SINK(desktop_ui::DropDownMenu, OnSelected, OnSelectedSize);
-   TG_OPT_NAMED_SINK(desktop_ui::DropDownMenu, OnSelected, OnSelectedStrength);
+   TG_SINK(OnSelection);
+   TG_SINK(OnSelectedSize);
+   TG_SINK(OnSelectedStrength);
 };
 
 LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
-    desktop_ui::DesktopProxyWidget(context, parent),
+    DesktopProxyWidget(context, parent),
     m_state(state),
     m_scene(context.resource_manager()),
     m_bindless_scene(m_state.root_window->device(), context.resource_manager(), m_scene, *m_state.root_window),

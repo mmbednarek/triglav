@@ -58,8 +58,8 @@ class SplashScreen final : public triglav::render_core::IRenderer
    triglav::ui_core::TextId m_title_id{};
    triglav::ui_core::TextId m_desc_id{};
 
-   TG_OPT_SINK(triglav::resource::ResourceManager, OnStartedLoadingAsset);
-   TG_OPT_SINK(triglav::resource::ResourceManager, OnFinishedLoadingAsset);
+   TG_SINK(OnStartedLoadingAsset);
+   TG_SINK(OnFinishedLoadingAsset);
 };
 
 }// namespace demo

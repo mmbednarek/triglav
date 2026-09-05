@@ -46,9 +46,9 @@ class DropDownSelectorButton final : public ui_core::IWidget
    ui_core::Button m_button;
    ui_core::RectBox* m_rect;
 
-   TG_SINK(ui_core::Button, OnClick);
-   TG_SINK(ui_core::Button, OnEnter);
-   TG_SINK(ui_core::Button, OnLeave);
+   TG_SINK(OnClick);
+   TG_SINK(OnEnter);
+   TG_SINK(OnLeave);
 };
 
 class DropDownSelector final : public ui_core::IWidget

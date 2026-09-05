@@ -66,9 +66,7 @@ class Event
 
 #define TG_EVENT(event_name, ...) ::triglav::Event<__VA_ARGS__> TG_CONCAT(event_, event_name){};
 
-#define TG_SINK(sender, name) ::triglav::Sink TG_CONCAT(sink_, name)
-#define TG_OPT_SINK(sender, name) TG_SINK(sender, name)
-#define TG_OPT_NAMED_SINK(sender, name, sink_name) ::triglav::Sink TG_CONCAT(sink_, sink_name)
+#define TG_SINK(name) ::triglav::Sink TG_CONCAT(sink_, name)
 
 #define TG_CONNECT_NAMED_OPT(obj, name, sink_name, func) \
    TG_CONCAT(sink_, sink_name) = ((obj).TG_CONCAT(event_, name).connect<&Self::func>(*this))

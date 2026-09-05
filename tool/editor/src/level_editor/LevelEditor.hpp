@@ -134,7 +134,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
 
    ILevelEditorTool* m_current_tool = nullptr;
 
-   TG_OPT_SINK(desktop_ui::DropDownMenu, OnSelected);
+   TG_SINK(OnSelected);
 };
 
 }// namespace triglav::editor
