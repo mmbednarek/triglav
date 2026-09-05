@@ -55,7 +55,6 @@ cgal = dependency('cgal', method:'pkg-config')
 freetype = dependency('freetype2', method:'pkg-config')
 gtest = dependency('gtest', method:'pkg-config')
 rapidyaml = dependency('rapidyaml', method:'pkg-config')
-entt = dependency('entt', method:'pkg-config')
 rapidjson = dependency('rapidjson', method:'pkg-config')
 ktx = dependency('ktx', method:'pkg-config')
 

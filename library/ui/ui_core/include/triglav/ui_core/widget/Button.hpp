@@ -2,7 +2,7 @@
 
 #include "../IWidget.hpp"
 
-#include "triglav/event/Delegate.hpp"
+#include "triglav/Event.hpp"
 
 namespace triglav::ui_core {
 

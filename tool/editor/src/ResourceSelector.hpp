@@ -1,10 +1,10 @@
 #pragma once
 
+#include "triglav/Event.hpp"
 #include "triglav/desktop_ui/DesktopContainerWidget.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
 namespace triglav::editor {

@@ -2,7 +2,6 @@
 
 #include <array>
 #include <fcntl.h>
-#include <iostream>
 #include <unistd.h>
 
 namespace triglav::desktop::x11 {

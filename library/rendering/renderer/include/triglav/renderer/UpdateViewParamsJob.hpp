@@ -3,10 +3,10 @@
 #include "Camera.hpp"
 #include "Scene.hpp"
 
+#include "triglav/Event.hpp"
 #include "triglav/Int.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/event/Delegate.hpp"
 
 namespace triglav::render_core {
 class BuildContext;

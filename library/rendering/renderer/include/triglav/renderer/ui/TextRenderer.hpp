@@ -1,9 +1,9 @@
 #pragma once
 
 
+#include "triglav/Event.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/UpdateList.hpp"
-#include "triglav/event/Delegate.hpp"
 #include "triglav/memory/HeapAllocator.hpp"
 #include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/RenderCore.hpp"

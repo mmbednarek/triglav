@@ -1,12 +1,11 @@
 #pragma once
 
 #include "TreeController.hpp"
-#include "triglav/Logging.hpp"
-#include "triglav/event/Delegate.hpp"
 
+#include "triglav/Event.hpp"
+#include "triglav/Logging.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 #include "triglav/ui_core/PrimitiveHelpers.hpp"
-#include "triglav/ui_core/Primitives.hpp"
 
 #include <optional>
 #include <set>

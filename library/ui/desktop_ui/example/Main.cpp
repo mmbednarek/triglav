@@ -1,3 +1,4 @@
+#include "triglav/Awaiter.hpp"
 #include "triglav/Format.hpp"
 #include "triglav/desktop/Entrypoint.hpp"
 #include "triglav/desktop/IDisplay.hpp"
@@ -52,7 +53,7 @@ using namespace std::chrono_literals;
 constexpr auto g_default_width = 800;
 constexpr auto g_default_height = 600;
 
-TG_DEFINE_AWAITER(ResourceLoadedAwaiter, ResourceManager, OnLoadedAssets)
+TG_DEFINE_AWAITER(ResourceLoadedAwaiter, ResourceManager, OnLoadedAssets, triglav::resource::LoadIndex)
 
 class ColorChanger
 {
