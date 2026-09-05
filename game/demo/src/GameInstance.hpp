@@ -44,15 +44,15 @@ class EventListener final
    bool m_is_running{true};
    triglav::Vector2 m_mouse_position;
 
-   TG_SINK(triglav::desktop::ISurface, OnMouseMove);
-   TG_SINK(triglav::desktop::ISurface, OnMouseRelativeMove);
-   TG_SINK(triglav::desktop::ISurface, OnMouseLeave);
-   TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsPressed);
-   TG_SINK(triglav::desktop::ISurface, OnMouseButtonIsReleased);
-   TG_SINK(triglav::desktop::ISurface, OnResize);
-   TG_SINK(triglav::desktop::ISurface, OnClose);
-   TG_SINK(triglav::desktop::ISurface, OnKeyIsPressed);
-   TG_SINK(triglav::desktop::ISurface, OnKeyIsReleased);
+   TG_SINK(OnMouseMove);
+   TG_SINK(OnMouseRelativeMove);
+   TG_SINK(OnMouseLeave);
+   TG_SINK(OnMouseButtonIsPressed);
+   TG_SINK(OnMouseButtonIsReleased);
+   TG_SINK(OnResize);
+   TG_SINK(OnClose);
+   TG_SINK(OnKeyIsPressed);
+   TG_SINK(OnKeyIsReleased);
 };
 
 class GameInstance
@@ -97,9 +97,9 @@ class GameInstance
    std::chrono::steady_clock::time_point m_last_frame_tp;
    triglav::resource::LoadIndex m_load_index = triglav::resource::ERROR_LOADING_ASSET;
 
-   TG_SINK(X, OnEngineReady);
-   TG_SINK(X, OnLevelLoaded);
-   TG_OPT_SINK(triglav::resource::ResourceManager, OnLoadedAssets);
+   TG_SINK(OnEngineReady);
+   TG_SINK(OnLevelLoaded);
+   TG_SINK(OnLoadedAssets);
 };
 
 }// namespace demo

@@ -62,10 +62,10 @@ class InfoDialog final : public ui_core::IWidget
    std::optional<Vector2> m_drag_offset;
    ui_core::TextBox* m_title;
 
-   TG_SINK(ConfigManager, OnPropertyChanged);
-   TG_OPT_SINK(ui_core::Button, OnClick);
-   TG_OPT_SINK(ui_core::Button, OnEnter);
-   TG_OPT_SINK(ui_core::Button, OnLeave);
+   TG_SINK(OnPropertyChanged);
+   TG_SINK(OnClick);
+   TG_SINK(OnEnter);
+   TG_SINK(OnLeave);
 };
 
 }// namespace triglav::renderer

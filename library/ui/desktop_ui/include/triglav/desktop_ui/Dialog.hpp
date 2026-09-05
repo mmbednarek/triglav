@@ -78,8 +78,8 @@ class Dialog : public render_core::IRenderer
    bool m_is_initialized{false};
    bool m_should_rebuild{false};
 
-   TG_SINK(desktop::ISurface, OnClose);
-   TG_SINK(desktop::ISurface, OnResize);
+   TG_SINK(OnClose);
+   TG_SINK(OnResize);
 };
 
 }// namespace triglav::desktop_ui

@@ -55,7 +55,7 @@ class LevelViewport final : public ui_core::BaseWidget
    bool m_is_moving{false};
    Vector2 m_mouse_motion{};
 
-   TG_SINK(desktop::ISurface, OnMouseRelativeMove);
+   TG_SINK(OnMouseRelativeMove);
 };
 
 }// namespace triglav::editor

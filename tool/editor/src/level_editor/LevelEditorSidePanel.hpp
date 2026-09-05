@@ -46,8 +46,8 @@ class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
    desktop_ui::TextInput* m_name_input;
    desktop_ui::TextInput* m_mesh_input;
 
-   TG_OPT_NAMED_SINK(desktop_ui::TextInput, OnTextChanged, NameChange);
-   TG_OPT_NAMED_SINK(desktop_ui::TextInput, OnTextChanged, MeshChange);
+   TG_SINK(NameChange);
+   TG_SINK(MeshChange);
 };
 
 }// namespace triglav::editor

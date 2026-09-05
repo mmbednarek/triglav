@@ -55,7 +55,7 @@ class UpdateViewParamsJob
    bool m_updated_view_properties = true;
    ViewProperties m_view_properties{};
 
-   TG_SINK(Scene, OnViewUpdated);
+   TG_SINK(OnViewUpdated);
 };
 
 }// namespace triglav::renderer

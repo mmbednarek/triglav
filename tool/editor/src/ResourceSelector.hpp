@@ -30,8 +30,8 @@ class ResourceSelector : public desktop_ui::DesktopProxyWidget
  private:
    State m_state;
    ResourceList* m_resource_list;
-   TG_OPT_SINK(desktop_ui::TextInput, OnTyping);
-   TG_OPT_SINK(desktop_ui::TextInput, OnTextChanged);
+   TG_SINK(OnTyping);
+   TG_SINK(OnTextChanged);
 };
 
 class ResourceSelectTrigger final : public desktop_ui::DesktopProxyWidget

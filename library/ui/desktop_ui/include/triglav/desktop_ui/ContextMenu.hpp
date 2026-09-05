@@ -31,7 +31,7 @@ class ContextMenu final : public DesktopContainerWidget
    std::unique_ptr<MenuList> m_menu;
    Dialog* m_menu_dialog = nullptr;
 
-   TG_SINK(MenuController, OnClicked);
+   TG_SINK(OnClicked);
 };
 
 }// namespace triglav::desktop_ui

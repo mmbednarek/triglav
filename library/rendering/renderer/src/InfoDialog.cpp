@@ -164,9 +164,9 @@ class HideablePanel final : public ui_core::IWidget
    ui_core::TextBox& m_label_text;
    ui_core::HideableWidget& m_content;
 
-   TG_SINK(ui_core::Button, OnClick);
-   TG_SINK(ui_core::Button, OnEnter);
-   TG_SINK(ui_core::Button, OnLeave);
+   TG_SINK(OnClick);
+   TG_SINK(OnEnter);
+   TG_SINK(OnLeave);
 };
 
 InfoDialog::InfoDialog(ui_core::Context& context, ConfigManager& config_manager, desktop::ISurface& surface) :

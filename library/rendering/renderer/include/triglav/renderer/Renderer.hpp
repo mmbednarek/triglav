@@ -114,7 +114,7 @@ class Renderer final : public render_core::IRenderer
 
    DebugWidget m_debug_widget;
 
-   TG_SINK(ConfigManager, OnPropertyChanged);
+   TG_SINK(OnPropertyChanged);
 };
 
 }// namespace triglav::renderer

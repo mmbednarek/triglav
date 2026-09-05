@@ -50,13 +50,13 @@ class SceneView final : public desktop_ui::DesktopProxyWidget
    std::map<desktop_ui::TreeItemId, renderer::ObjectID> m_item_id_to_object_id;
    std::map<renderer::ObjectID, desktop_ui::TreeItemId> m_object_id_to_item_id;
 
-   TG_SINK(renderer::Scene, OnObjectAddedToScene);
-   TG_SINK(renderer::Scene, OnObjectChangedName);
-   TG_OPT_SINK(desktop_ui::TreeView, OnSelected);
-   TG_OPT_NAMED_SINK(ResourceSelectTrigger, OnSelected, OnResourceSelected);
-   TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, Add);
-   TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, AddDirectory);
-   TG_OPT_NAMED_SINK(desktop_ui::Button, OnClick, Delete);
+   TG_SINK(OnObjectAddedToScene);
+   TG_SINK(OnObjectChangedName);
+   TG_SINK(OnSelected);
+   TG_SINK(OnResourceSelected);
+   TG_SINK(Add);
+   TG_SINK(AddDirectory);
+   TG_SINK(Delete);
 };
 
 }// namespace triglav::editor

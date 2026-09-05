@@ -90,7 +90,7 @@ class ColorChanger
    }
 
    triglav::ui_core::RectBox& m_rect_box;
-   TG_SINK(triglav::desktop_ui::MenuController, OnClicked);
+   TG_SINK(OnClicked);
 };
 
 int triglav_main(InputArgs& args, IDisplay& display)

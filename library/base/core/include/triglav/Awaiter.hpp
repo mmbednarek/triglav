@@ -27,5 +27,5 @@
       std::mutex m_mutex;                                     \
       std::condition_variable m_cond;                         \
       bool m_ready = false;                                   \
-      TG_SINK(producer, event);                               \
+      TG_SINK(event);                                         \
    };

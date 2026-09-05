@@ -42,7 +42,7 @@ class GBufferStage final : public IStage
    graphics_api::Buffer m_terrain_vertices;
    BindlessScene& m_bindless_scene;
 
-   TG_SINK(Scene, OnTerrainUpdated);
+   TG_SINK(OnTerrainUpdated);
 };
 
 }// namespace triglav::renderer::stage

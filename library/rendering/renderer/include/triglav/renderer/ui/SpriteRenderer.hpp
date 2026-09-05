@@ -76,9 +76,9 @@ class SpriteRenderer
    SpriteCopyInfo* m_staging_removals;
    u32 m_staging_removals_top{};
 
-   TG_SINK(ui_core::Viewport, OnAddedSprite);
-   TG_SINK(ui_core::Viewport, OnUpdatedSprite);
-   TG_SINK(ui_core::Viewport, OnRemovedSprite);
+   TG_SINK(OnAddedSprite);
+   TG_SINK(OnUpdatedSprite);
+   TG_SINK(OnRemovedSprite);
 };
 
 }// namespace triglav::renderer::ui
