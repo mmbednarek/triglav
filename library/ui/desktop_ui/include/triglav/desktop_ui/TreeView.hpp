@@ -19,7 +19,7 @@ class TreeView final : public ui_core::BaseWidget
 {
    TG_DEFINE_LOG_CATEGORY(TreeView)
  public:
-   using Self = TreeView;
+   TG_TAG_CLASS(triglav::desktop_ui::TreeView)
 
    TG_EVENT(OnSelected, TreeItemId)
    TG_EVENT(OnActivated, TreeItemId)

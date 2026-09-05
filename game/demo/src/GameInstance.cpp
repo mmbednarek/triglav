@@ -144,8 +144,8 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
    m_state = State::LoadingBaseResources;
    m_last_frame_tp = std::chrono::steady_clock::now();
    triglav::engine::Engine::the().initialize(*m_device);
-   TG_CONNECT_OPT_NEW(triglav::engine::Engine::the(), OnEngineReady, on_engine_ready);
-   TG_CONNECT_OPT_NEW(triglav::engine::Engine::the(), OnLevelLoaded, on_level_loaded);
+   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnEngineReady, on_engine_ready);
+   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnLevelLoaded, on_level_loaded);
    TG_CONNECT_OPT(triglav::engine::Engine::the().resource_manager(), OnLoadedAssets, on_loaded_assets);
 }
 
@@ -153,13 +153,16 @@ void GameInstance::on_engine_ready()
 {
    m_state.store(State::LoadingResources);
    m_base_resources_ready_cv.notify_one();
-   triglav::engine::Engine::the().resource_manager().load_asset_list(PathManager::the().translate_path("index.yaml"_rc));
+   m_load_index = triglav::engine::Engine::the().resource_manager().load_asset_list(PathManager::the().translate_path("index.yaml"_rc));
+   assert(m_load_index != triglav::resource::ERROR_LOADING_ASSET);
 }
 
-void GameInstance::on_loaded_assets()
+void GameInstance::on_loaded_assets(triglav::resource::LoadIndex load_index)
 {
-   if (m_state.load() != State::LoadingResources)
+   if (load_index != m_load_index)
       return;
+
+   assert(m_state.load() == State::LoadingResources);
 
    triglav::engine::Engine::the().load_level("level/demo.level"_rc);
    m_state.store(State::LoadingLevel);

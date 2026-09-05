@@ -15,7 +15,7 @@ class CheckBox;
 class RadioGroup
 {
  public:
-   using Self = RadioGroup;
+   TG_TAG_CLASS(triglav::desktop_ui::RadioGroup)
 
    TG_EVENT(OnSelection, u32)
 
@@ -35,7 +35,7 @@ class CheckBox : public DesktopContainerWidget
       RadioGroup* radio_group;
       bool is_enabled;
    };
-   using Self = CheckBox;
+   TG_TAG_CLASS(triglav::desktop_ui::CheckBox)
 
    TG_EVENT(OnStateIsChanged, bool)
 

@@ -1,26 +1,34 @@
 #include "EventManager.hpp"
 
+#include <cassert>
+
 namespace triglav {
 
-u32 EventManager::register_callback(const Name event, void* object, void* func)
+CallbackID EventManager::register_callback(const EventID event, void* object, void* func)
 {
    std::lock_guard lk{m_mutex};
 
-   const u32 result = m_top_callback++;
+   const CallbackID result = m_top_callback++;
+   assert(!m_callbacks.contains(result));
    m_callbacks[result] = {event, object, func};
    m_event_to_callback.insert({event, result});
    return result;
 }
 
-void EventManager::remove_callback(const u32 callback_id)
+void EventManager::remove_callback(const CallbackID callback_id)
 {
    std::lock_guard lk{m_mutex};
 
-   const Name event_name = m_callbacks.at(callback_id).event;
-   const auto [a, b] = m_event_to_callback.equal_range(event_name);
-   const auto it = std::find_if(a, b, [callback_id](const std::pair<Name, u32>& p) { return p.second == callback_id; });
+   const EventID event_id = m_callbacks.at(callback_id).event_id;
+   const auto [a, b] = m_event_to_callback.equal_range(event_id);
+   const auto it = std::find_if(a, b, [callback_id](const std::pair<EventID, CallbackID>& p) { return p.second == callback_id; });
    m_event_to_callback.erase(it);
    m_callbacks.erase(callback_id);
+}
+
+EventID EventManager::allocate_event_id()
+{
+   return m_top_event_id++;
 }
 
 EventManager& EventManager::the()

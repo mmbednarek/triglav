@@ -56,6 +56,8 @@ class Scene : public world::ISystem
 {
    TG_DEFINE_LOG_CATEGORY(Scene)
  public:
+   TG_TAG_CLASS(triglav::renderer::Scene)
+
    TG_EVENT(OnObjectAddedToScene, ObjectID, const SceneObject&)
    TG_EVENT(OnObjectChangedTransform, ObjectID, const Transform3D&)
    TG_EVENT(OnObjectChangedName, ObjectID, const StringView)

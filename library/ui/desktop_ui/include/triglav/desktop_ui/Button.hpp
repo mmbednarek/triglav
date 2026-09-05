@@ -15,7 +15,7 @@ namespace triglav::desktop_ui {
 class Button final : public DesktopContainerWidget
 {
  public:
-   using Self = Button;
+   TG_TAG_CLASS(triglav::desktop_ui::Button)
 
    TG_EVENT(OnClick)
 

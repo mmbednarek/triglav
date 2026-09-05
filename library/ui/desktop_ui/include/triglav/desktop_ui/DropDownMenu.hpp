@@ -83,7 +83,7 @@ class DropDownMenu final : public ui_core::BaseWidget
    friend class DropDownSelector;
 
  public:
-   using Self = DropDownMenu;
+   TG_TAG_CLASS(triglav::desktop_ui::DropDownMenu)
 
    TG_EVENT(OnSelected, u32)
 

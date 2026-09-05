@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Desktop.hpp"
+#include "ISurface.hpp"
 
 #include "triglav/EnumFlags.hpp"
 #include "triglav/Int.hpp"
@@ -45,6 +46,8 @@ using Dimension = Vector2i;
 class ISurface : public std::enable_shared_from_this<ISurface>
 {
  public:
+   TG_TAG_CLASS(triglav::desktop::ISurface)
+
    TG_EVENT(OnMouseEnter, Vector2)
    TG_EVENT(OnMouseMove, Vector2)
    TG_EVENT(OnMouseRelativeMove, Vector2)

@@ -35,7 +35,7 @@ struct ViewProperties
 class UpdateViewParamsJob
 {
  public:
-   using Self = UpdateViewParamsJob;
+   TG_TAG_CLASS(triglav::renderer::UpdateViewParamsJob)
 
    TG_EVENT(OnResourceDefinition, render_core::BuildContext&)
    TG_EVENT(OnViewPropertiesChanged, render_core::BuildContext&)

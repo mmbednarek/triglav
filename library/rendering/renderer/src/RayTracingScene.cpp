@@ -67,7 +67,7 @@ void RayTracingScene::build_acceleration_structures()
    GAPI_CHECK_STATUS(m_object_buffer.write_indirect(m_objects.data(), m_objects.size() * sizeof(ObjectDesc)));
 }
 
-void RayTracingScene::on_object_added_to_scene(const SceneObject& object)
+void RayTracingScene::on_object_added_to_scene(const ObjectID /*id*/, const SceneObject& object)
 {
    // TODO: Fix!!!
    m_must_update_acceleration_structures = true;

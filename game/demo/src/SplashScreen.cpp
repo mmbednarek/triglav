@@ -105,7 +105,7 @@ void SplashScreen::update()
 
 void SplashScreen::on_close()
 {
-   sink_OnStartedLoadingAsset->disconnect();
+   sink_OnStartedLoadingAsset.release();
 
    m_render_surface.await_for_frame(m_frame_index);
 
