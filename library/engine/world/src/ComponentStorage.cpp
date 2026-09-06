@@ -149,6 +149,11 @@ bool ComponentStorage::contains_entity(const EntityID entity_id) const
    return m_sparse_mapping.contains(entity_id);
 }
 
+ComponentID ComponentStorage::component_id() const
+{
+   return m_component_id;
+}
+
 bool ComponentStorage::serialize(io::IWriter& writer) const
 {
    const auto& info = ComponentManager::the().info_by_id(m_component_id);
@@ -174,6 +179,12 @@ bool ComponentStorage::serialize(io::IWriter& writer) const
       return false;
 
    for (u32 i = 0; i < m_count; ++i) {
+      const auto* ptr = this->get_component(i);
+      const EntityID entity_id = *reinterpret_cast<const EntityID*>(static_cast<const u8*>(ptr) + m_entity_id_offset);
+
+      if (!serializer.write_u32(entity_id))
+         return false;
+
       const meta::Ref comp{this->get_component(i), info.component_class};
       if (!meta::serialize_binary(writer, comp))
          return false;
@@ -206,11 +217,17 @@ bool ComponentStorage::deserialize(io::IReader& reader)
    m_count = deserializer.read_u32();
    const mem_size max_bucket_id = m_count >> COMPONENT_BUCKET_SIZE_LOG2;
    while (max_bucket_id >= m_buckets.size()) {
-      m_buckets.push_back(new u8[COMPONENT_BUCKET_SIZE * m_component_stride]);
+      auto* bucket = new u8[COMPONENT_BUCKET_SIZE * m_component_stride];
+      std::memset(bucket, 0, COMPONENT_BUCKET_SIZE * m_component_stride);
+      m_buckets.push_back(bucket);
    }
 
    for (u32 i = 0; i < m_count; ++i) {
-      meta::Ref comp{this->get_component(i), info.component_class};
+      const auto ptr = this->get_component(i);
+
+      *reinterpret_cast<EntityID*>(static_cast<u8*>(ptr) + m_entity_id_offset) = deserializer.read_u32();
+
+      meta::Ref comp{ptr, info.component_class};
       meta::deserialize_binary(reader, comp);
    }
 

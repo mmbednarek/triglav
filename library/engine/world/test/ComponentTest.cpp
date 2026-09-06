@@ -191,6 +191,37 @@ TEST(ComponentTest, ComponentStorageSerialization)
    ASSERT_EQ(r2.rotation, t2.rotation);
 }
 
+TEST(ComponentTest, LabelSerialization)
+{
+   using triglav::world::EntityLabel;
+   const auto tid = ComponentManager::the().component_id_by_class_name("triglav::world::EntityLabel"_name);
+   ASSERT_TRUE(tid.has_value());
+
+   ComponentStorage storage(*tid);
+   const auto id0 = storage.allocate_component(0);
+   const auto id1 = storage.allocate_component(1);
+
+   EntityLabel& t1 = *static_cast<EntityLabel*>(storage.get_component(id0));
+   t1.label = "foo";
+
+   EntityLabel& t2 = *static_cast<EntityLabel*>(storage.get_component(id1));
+   t2.label = "bar";
+
+   triglav::io::DynamicWriter writer;
+   ASSERT_TRUE(storage.serialize(writer));
+
+   triglav::io::BufferReader reader(writer.span());
+
+   ComponentStorage read_storage;
+   ASSERT_TRUE(read_storage.deserialize(reader));
+
+   EntityLabel& r1 = *static_cast<EntityLabel*>(read_storage.get_component_by_entity_id(0));
+   ASSERT_EQ(r1.label, "foo");
+
+   EntityLabel& r2 = *static_cast<EntityLabel*>(read_storage.get_component_by_entity_id(1));
+   ASSERT_EQ(r2.label, "bar");
+}
+
 TEST(ComponentTest, HierarchyTest)
 {
    HierarchyTree tree;

@@ -48,6 +48,7 @@ class Engine
    void set_active_level(LevelName name);
 
    [[nodiscard]] world::Level* current_level() const;
+   [[nodiscard]] world::Level* level_by_name(LevelName name) const;
 
    static Engine& the();
 

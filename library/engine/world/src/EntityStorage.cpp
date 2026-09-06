@@ -77,7 +77,14 @@ const HierarchyTree& EntityStorage::hierarchy_tree() const
 bool EntityStorage::serialize(io::IWriter& writer) const
 {
    io::Serializer serializer(writer);
-   if (!serializer.write_u32(static_cast<u32>(m_storage.size())))
+
+   u32 storage_count = 0;
+   for (const auto& storage : m_storage) {
+      if (!storage.is_empty())
+         ++storage_count;
+   }
+
+   if (!serializer.write_u32(static_cast<u32>(storage_count)))
       return false;
 
    for (const auto& storage : m_storage) {
@@ -94,13 +101,17 @@ bool EntityStorage::deserialize(io::IReader& reader)
 {
    assert(m_storage.empty() && "Can deserialize only on empty storage");
 
+   m_storage.resize(ComponentManager::the().count());
+
    io::Deserializer deserializer(reader);
    const u32 count = deserializer.read_u32();
 
    for (u32 i = 0; i < count; i++) {
-      auto& storage = m_storage.emplace_back();
-      if (!storage.deserialize(reader))
+      ComponentStorage component_storage;
+      if (!component_storage.deserialize(reader))
          return false;
+
+      m_storage[component_storage.component_id()] = std::move(component_storage);
    }
 
    return true;
