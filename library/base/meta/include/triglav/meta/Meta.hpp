@@ -201,7 +201,7 @@ class PropertyRef
    void set(T&& value) const
    {
       if (!(m_member->role_flags & MemberRole::Indirect)) {
-         *reinterpret_cast<T*>(static_cast<char*>(m_handle) + m_member->property.offset.offset) = std::forward<T>(value);
+         ::new (static_cast<char*>(m_handle) + m_member->property.offset.offset) T(std::forward<T>(value));
          return;
       }
 
@@ -217,7 +217,7 @@ class PropertyRef
    void set(const T& value) const
    {
       if (!(m_member->role_flags & MemberRole::Indirect)) {
-         *reinterpret_cast<T*>(static_cast<char*>(m_handle) + m_member->property.offset.offset) = value;
+         ::new (static_cast<char*>(m_handle) + m_member->property.offset.offset) T(value);
          return;
       }
 

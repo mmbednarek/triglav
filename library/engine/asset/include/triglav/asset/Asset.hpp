@@ -157,6 +157,8 @@ struct Animation
    std::vector<AnimationChannel> channels;
 };
 
+bool write_header(io::IWriter& writer, ResourceType resource_type);
+
 EncodedSamplerProperties encode_sampler_properties(const SamplerProperties& properties);
 SamplerProperties decode_sampler_properties(EncodedSamplerProperties encoded_properties);
 

@@ -226,3 +226,31 @@ TEST(MetaSerialization, StructMap)
    ASSERT_EQ(read.values[1002].small, 5u);
    ASSERT_EQ(read.values[1002].big, 6u);
 }
+
+struct StringOnly
+{
+   TG_META_STRUCT_BODY(StringOnly)
+
+   std::string value;
+};
+
+#define TG_TYPE(NS) StringOnly
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(value, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+TEST(MetaSerialization, StringOnly)
+{
+   StringOnly foo;
+   foo.value = "foo";
+
+   triglav::io::DynamicWriter writer;
+   triglav::meta::serialize_binary(writer, foo.to_meta_ref());
+
+   Foo read;
+   triglav::io::BufferReader reader(writer.span());
+   triglav::meta::deserialize_binary(reader, read.to_meta_ref());
+
+   ASSERT_EQ(foo.value, "foo");
+}

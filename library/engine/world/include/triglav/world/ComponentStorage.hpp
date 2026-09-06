@@ -58,6 +58,7 @@ class ComponentStorage
    [[nodiscard]] mem_size count() const;
    [[nodiscard]] bool is_empty() const;
    [[nodiscard]] bool contains_entity(EntityID entity_id) const;
+   [[nodiscard]] ComponentID component_id() const;
    bool serialize(io::IWriter& writer) const;
    bool deserialize(io::IReader& reader);
 

@@ -3,6 +3,7 @@
 #include "World.hpp"
 
 #include "triglav/Ranges.hpp"
+#include "triglav/asset/Asset.hpp"
 #include "triglav/io/File.hpp"
 
 #include <c4/substr.hpp>
@@ -63,7 +64,7 @@ void Level::add_node(const Name id, LevelNode&& node)
       }
    }
 
-   m_nodes.emplace(id, std::move(node));
+   // m_nodes.emplace(id, std::move(node));
 }
 
 void Level::init_entities()
@@ -71,9 +72,11 @@ void Level::init_entities()
    m_entity_storage.init();
 }
 
-LevelNode& Level::at(const Name id)
+LevelNode& Level::at(const Name /*id*/)
 {
-   return m_nodes.at(id);
+   assert(false);
+   static LevelNode node{""};
+   return node;
 }
 
 LevelNode& Level::root()
@@ -90,6 +93,15 @@ meta::Ref Level::component_ref(const EntityID entity_id, const Name component_na
 
    void* ptr = m_entity_storage.get_component(entity_id, *comp_id);
    return {ptr, component_name};
+}
+
+bool Level::deserialize(io::IReader& reader)
+{
+   const auto header = asset::decode_header(reader);
+   if (!header.has_value())
+      return false;
+
+   return m_entity_storage.deserialize(reader);
 }
 
 EntityID Level::new_entity(const EntityID parent)
@@ -151,17 +163,6 @@ void Level::insert_component_change(const ComponentID id, const EntityID entity)
    m_change_lists[id].emplace_back(entity);
 }
 
-void Level::serialize_yaml(c4::yml::NodeRef& node) const
-{
-   auto nodes_yaml = node["nodes"];
-   nodes_yaml |= ryml::SEQ;
-   for (const auto& level_node : Values(m_nodes)) {
-      auto child = nodes_yaml.append_child();
-      child |= ryml::MAP;
-      level_node.serialize_yaml(child);
-   }
-}
-
 bool Level::save_to_file(const io::Path& path) const
 {
    const auto file = io::open_file(path, io::FileMode::Write | io::FileMode::Create);
@@ -169,13 +170,9 @@ bool Level::save_to_file(const io::Path& path) const
       return false;
    }
 
-   ryml::Tree tree;
-   ryml::NodeRef tree_ref{tree};
-   tree_ref |= ryml::MAP;
-   this->serialize_yaml(tree_ref);
+   asset::write_header(**file, ResourceType::Level);
 
-   const auto str = ryml::emitrs_yaml<std::string>(tree);
-   return (*file)->write({reinterpret_cast<const u8*>(str.data()), str.size()}).has_value();
+   return m_entity_storage.serialize(**file);
 }
 
 }// namespace triglav::world

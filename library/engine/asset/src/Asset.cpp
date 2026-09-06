@@ -52,8 +52,6 @@ struct MeshHeader
    Vector3 bounding_box_max;
 };
 
-namespace {
-
 bool write_header(io::IWriter& writer, const ResourceType resource_type)
 {
    AssetHeader header{};
@@ -62,8 +60,6 @@ bool write_header(io::IWriter& writer, const ResourceType resource_type)
    header.type = resource_type;
    return writer.write({reinterpret_cast<const u8*>(&header), sizeof(AssetHeader)}).has_value();
 }
-
-}// namespace
 
 EncodedSamplerProperties encode_sampler_properties(const SamplerProperties& properties)
 {

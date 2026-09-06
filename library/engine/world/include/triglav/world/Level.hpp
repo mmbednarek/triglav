@@ -83,7 +83,7 @@ class Level
 
    [[nodiscard]] meta::Ref component_ref(EntityID entity_id, Name component_name) const;
 
-   void serialize_yaml(c4::yml::NodeRef& node) const;
+   [[nodiscard]] bool deserialize(io::IReader& reader);
    [[nodiscard]] bool save_to_file(const io::Path& path) const;
 
    [[nodiscard]] EntityID new_entity(EntityID parent = ROOT_ENTITY);
@@ -174,7 +174,7 @@ class Level
       EntityID entity_id;
    };
 
-   std::map<Name, LevelNode> m_nodes;
+   // std::map<Name, LevelNode> m_nodes;
    EntityStorage m_entity_storage;
    std::vector<SystemRegistration> m_systems;
    std::map<ComponentID, std::vector<EntityID>> m_change_lists;

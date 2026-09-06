@@ -12,5 +12,5 @@ asset_lib = static_library('asset',
 asset = declare_dependency(
     include_directories : include_directories(['include']),
     link_with : asset_lib,
-    dependencies: [io, meta]
+    dependencies: [io, meta, geometry]
 )

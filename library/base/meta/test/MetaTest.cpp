@@ -215,3 +215,29 @@ TEST(MetaTest, BasicType)
    }
    ASSERT_EQ(example_namespace::ExampleClass::instance_count, 0);
 }
+
+struct ExampleStringStruct
+{
+   TG_META_STRUCT_BODY(ExampleStringStruct)
+   std::string value;
+};
+
+#define TG_TYPE(NS) ExampleStringStruct
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(value, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+TEST(MetaTest, SetString)
+{
+   ExampleStringStruct foo;
+   auto ref = foo.to_meta_ref();
+   ref.property<std::string>("value"_name) = "foo";
+   ASSERT_EQ(foo.value, "foo");
+
+   auto str_ref = ref.property_ref("value"_name);
+   ASSERT_EQ(str_ref.get<std::string>(), "foo");
+   str_ref.set<std::string>(std::string{"bar"});
+
+   ASSERT_EQ(foo.value, "bar");
+}

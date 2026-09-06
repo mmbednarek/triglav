@@ -17,7 +17,7 @@ world_sources = files([
 # !END
                       ])
 
-world_deps_priv = [core, rapidyaml, io, meta, memory]
+world_deps_priv = [core, rapidyaml, io, meta, memory, asset]
 world_deps_pub = [core, meta, memory]
 world_incl = include_directories(['include', 'include/triglav/world'])
 

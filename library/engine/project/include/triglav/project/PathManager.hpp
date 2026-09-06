@@ -21,6 +21,7 @@ class PathManager
 
    [[nodiscard]] io::Path translate_path(ResourceName rc_name) const;
    [[nodiscard]] std::pair<io::Path, ResourceName> import_path(ResourceType rc_type, std::string_view path) const;
+   void discover_resources() const;
 
    [[nodiscard]] static PathManager& the();
 
