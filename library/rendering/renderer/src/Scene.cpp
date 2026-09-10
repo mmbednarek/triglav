@@ -38,25 +38,20 @@ void Scene::update(const graphics_api::Resolution& resolution)
    this->send_view_changed();
 }
 
-ObjectID Scene::add_object(SceneObject object)
+void Scene::add_object(SceneObject object, world::EntityID entity_id)
 {
-   const auto object_id = m_top_object_id;
-   ++m_top_object_id;
-
-   const auto& [it, ok] = m_objects.emplace(object_id, std::make_unique<SceneObject>(std::move(object)));
+   const auto& [it, ok] = m_objects.emplace(entity_id, std::make_unique<SceneObject>(std::move(object)));
    assert(ok);
    event_OnObjectAddedToScene.publish(it->first, *it->second);
    this->update_bvh();
-
-   return object_id;
 }
 
-void Scene::set_transform(const ObjectID object_id, const Transform3D& transform)
+void Scene::set_transform(const world::EntityID entity_id, const Transform3D& transform)
 {
-   m_objects[object_id]->transform = transform;
+   m_objects[entity_id]->transform = transform;
    this->update_bvh();
 
-   event_OnObjectChangedTransform.publish(object_id, transform);
+   event_OnObjectChangedTransform.publish(entity_id, transform);
 }
 
 void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
@@ -86,7 +81,7 @@ u32 Scene::directional_shadow_map_count() const
    return static_cast<u32>(m_directional_shadow_map_cameras.size());
 }
 
-const SceneObject& Scene::object(const ObjectID id) const
+const SceneObject& Scene::object(const world::EntityID id) const
 {
    return *m_objects.at(id);
 }
@@ -188,21 +183,29 @@ void Scene::send_view_changed()
    event_OnViewUpdated.publish(m_camera);
 }
 
-void Scene::remove_object(const ObjectID object_id)
+void Scene::remove_object(const world::EntityID entity_id)
 {
-   event_OnObjectRemoved.publish(object_id);
-   m_objects.erase(object_id);
+   event_OnObjectRemoved.publish(entity_id);
+   m_objects.erase(entity_id);
    this->update_bvh();
 }
 
-void Scene::set_object_name(const ObjectID id, const StringView name) const
+void Scene::set_object_name(const world::EntityID id, const StringView name) const
 {
    const auto& obj = m_objects.at(id);
    obj->name = name;
    event_OnObjectChangedName.publish(id, name);
 }
 
-void Scene::on_removed_entities(std::span<const world::EntityID> /*ids*/) {}
+void Scene::on_removed_entities(const std::span<const world::EntityID> ids)
+{
+   for (const auto entity_id : ids) {
+      event_OnObjectRemoved.publish(entity_id);
+      m_objects.erase(entity_id);
+   }
+
+   this->update_bvh();
+}
 
 void Scene::on_added_component(Name component_name, world::ComponentID /*component_id*/, std::span<const world::EntityID> entities)
 {
@@ -225,13 +228,31 @@ void Scene::on_added_component(Name component_name, world::ComponentID /*compone
       if (const auto* arm = level->component_opt<world::Armature>(entity_id); arm != nullptr) {
          obj.armature = arm->name;
       }
-      this->add_object(obj);
+      this->add_object(obj, entity_id);
    }
 }
 
-void Scene::on_modified_component(const Name /*component_name*/, world::ComponentID /*component_id*/,
-                                  std::span<const world::EntityID> /*entities*/)
+void Scene::on_modified_component(const Name component_name, world::ComponentID /*component_id*/, std::span<const world::EntityID> entities)
 {
+   const auto* level = engine::Engine::the().current_level();
+   assert(level != nullptr);
+
+   if (component_name == "triglav::Transform3D"_name) {
+      for (const auto entity_id : entities) {
+         const auto& transform = level->component<Transform3D>(entity_id);
+         m_objects[entity_id]->transform = transform;
+         event_OnObjectChangedTransform.publish(entity_id, transform);
+      }
+      this->update_bvh();
+   } else if (component_name == "triglav::world::EntityLabel"_name) {
+      for (const auto entity_id : entities) {
+         const auto& label = level->component<world::EntityLabel>(entity_id);
+
+         const auto& obj = m_objects.at(entity_id);
+         obj->name = {label.label.data(), label.label.size()};
+         event_OnObjectChangedName.publish(entity_id, obj->name.view());
+      }
+   }
 }
 
 }// namespace triglav::renderer

@@ -86,7 +86,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
 
-   std::array scene_components{"triglav::world::Mesh"_name};
+   std::array scene_components{"triglav::world::Mesh"_name, "triglav::Transform3D"_name};
    engine::Engine::the().current_level()->register_system(m_scene, scene_components);
    engine::Engine::the().current_level()->flush();
 

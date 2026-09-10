@@ -44,7 +44,7 @@ class AnimationManager
 
    using StateContainer = std::map<AnimationID, AnimationState>;
 
-   AnimationID start_animation(AnimationName animation_name, ObjectID target_object_id, bool is_repeating);
+   AnimationID start_animation(AnimationName animation_name, world::EntityID target_object_id, bool is_repeating);
    void stop_animation(AnimationID id);
    float current_time() const;
    u32 channel_count() const;

@@ -28,7 +28,8 @@ AnimationManager::AnimationManager(graphics_api::Device& device, resource::Resou
    m_base_time = std::chrono::system_clock::now();
 }
 
-AnimationID AnimationManager::start_animation(const AnimationName animation_name, const ObjectID target_object_id, const bool is_repeating)
+AnimationID AnimationManager::start_animation(const AnimationName animation_name, const world::EntityID target_object_id,
+                                              const bool is_repeating)
 {
    const auto& animation = m_resource_manager.get(animation_name);
    float total_duration = 0.0f;

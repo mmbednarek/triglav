@@ -13,7 +13,7 @@ class SetTransformAction final : public IHistoryAction
 {
    TG_DEFINE_LOG_CATEGORY(SetTransformAction)
  public:
-   SetTransformAction(LevelEditor& level_editor, renderer::ObjectID object_id, const Transform3D& previous_transform,
+   SetTransformAction(LevelEditor& level_editor, world::EntityID object_id, const Transform3D& previous_transform,
                       const Transform3D& transform);
 
    void redo() override;
@@ -21,7 +21,7 @@ class SetTransformAction final : public IHistoryAction
 
  private:
    LevelEditor& m_level_editor;
-   renderer::ObjectID m_object_id;
+   world::EntityID m_object_id;
    Transform3D m_previous_transform;
    Transform3D m_transform;
 };
