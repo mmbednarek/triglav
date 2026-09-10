@@ -15,8 +15,7 @@
 
 namespace triglav::renderer {
 
-using ObjectID = u32;
-constexpr ObjectID UNSELECTED_OBJECT = ~0u;
+constexpr world::EntityID UNSELECTED_OBJECT = ~0u;
 
 class ModelRenderer;
 class Renderer;
@@ -37,7 +36,7 @@ struct SceneObjectRef
 {
    SceneObject* object;
    geometry::BoundingBox bbox;
-   ObjectID id;
+   world::EntityID id;
 
    [[nodiscard]] const geometry::BoundingBox& bounding_box() const
    {
@@ -48,7 +47,7 @@ struct SceneObjectRef
 struct RayHit
 {
    float distance;
-   ObjectID id;
+   world::EntityID id;
    const SceneObject* object;
 };
 
@@ -58,10 +57,10 @@ class Scene : public world::ISystem
  public:
    TG_TAG_CLASS(triglav::renderer::Scene)
 
-   TG_EVENT(OnObjectAddedToScene, ObjectID, const SceneObject&)
-   TG_EVENT(OnObjectChangedTransform, ObjectID, const Transform3D&)
-   TG_EVENT(OnObjectChangedName, ObjectID, const StringView)
-   TG_EVENT(OnObjectRemoved, ObjectID)
+   TG_EVENT(OnObjectAddedToScene, world::EntityID, const SceneObject&)
+   TG_EVENT(OnObjectChangedTransform, world::EntityID, const Transform3D&)
+   TG_EVENT(OnObjectChangedName, world::EntityID, const StringView)
+   TG_EVENT(OnObjectRemoved, world::EntityID)
    TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
@@ -71,13 +70,13 @@ class Scene : public world::ISystem
    explicit Scene(resource::ResourceManager& resource_manager);
 
    void update(const graphics_api::Resolution& resolution);
-   ObjectID add_object(SceneObject object);
-   void set_transform(ObjectID object_id, const Transform3D& transform);
+   void add_object(SceneObject object, world::EntityID entity_id);
+   void set_transform(world::EntityID entity_id, const Transform3D& transform);
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
    void send_view_changed();
-   void remove_object(ObjectID object_id);
-   void set_object_name(ObjectID id, StringView name) const;
+   void remove_object(world::EntityID entity_id);
+   void set_object_name(world::EntityID id, StringView name) const;
 
    void on_removed_entities(std::span<const world::EntityID> ids) override;
    void on_added_component(Name component_name, world::ComponentID component_id, std::span<const world::EntityID> entities) override;
@@ -87,7 +86,7 @@ class Scene : public world::ISystem
    [[nodiscard]] Camera& camera();
    [[nodiscard]] const OrthoCamera& shadow_map_camera(u32 index) const;
    [[nodiscard]] u32 directional_shadow_map_count() const;
-   const SceneObject& object(ObjectID id) const;
+   const SceneObject& object(world::EntityID id) const;
 
    [[nodiscard]] float yaw() const;
    [[nodiscard]] float pitch() const;
@@ -101,12 +100,12 @@ class Scene : public world::ISystem
    std::vector<u8>& terrain_blending();
    void publish_terrain_changes();
 
-   [[nodiscard]] std::map<ObjectID, SceneObjectUPtr>::const_iterator begin() const
+   [[nodiscard]] std::map<world::EntityID, SceneObjectUPtr>::const_iterator begin() const
    {
       return m_objects.cbegin();
    }
 
-   [[nodiscard]] std::map<ObjectID, SceneObjectUPtr>::const_iterator end() const
+   [[nodiscard]] std::map<world::EntityID, SceneObjectUPtr>::const_iterator end() const
    {
       return m_objects.cend();
    }
@@ -118,11 +117,10 @@ class Scene : public world::ISystem
    Camera m_camera{};
    glm::quat m_directional_light_orientation{glm::vec3{-0.3f, 0.0f, 1.62f}};
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
-   std::map<ObjectID, SceneObjectUPtr> m_objects{};
+   std::map<world::EntityID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;
    std::vector<float> m_terrain;
    std::vector<u8> m_terrain_blending;
-   ObjectID m_top_object_id = 0;
 };
 
 }// namespace triglav::renderer

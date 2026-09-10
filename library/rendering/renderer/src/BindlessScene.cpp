@@ -38,7 +38,7 @@ class DrawCallUpdateWriter
  public:
    DrawCallUpdateWriter(BindlessScene& bindless_scene, const gapi::CommandList& cmd_list, gapi::Buffer& staging_buffer,
                         gapi::Buffer& dst_buffer, BindlessSceneObject* staging_ptr, Transform3D* transform_stage_ptr,
-                        const std::map<ObjectID, MemorySize>& matrix_offsets) :
+                        const std::map<world::EntityID, MemorySize>& matrix_offsets) :
        m_bindless_scene(bindless_scene),
        m_cmd_list(cmd_list),
        m_staging_buffer(staging_buffer),
@@ -88,7 +88,7 @@ class DrawCallUpdateWriter
    BindlessSceneObject* m_staging_ptr;
    Transform3D* m_transform_stage_ptr;
    u32 m_top_staging_index = 0;
-   const std::map<ObjectID, MemorySize>& m_matrix_offsets;
+   const std::map<world::EntityID, MemorySize>& m_matrix_offsets;
 };
 
 BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene,
@@ -135,7 +135,7 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
    TG_SET_DEBUG_NAME(m_combined_vertex_buffer, "bindless_scene.combined_vertex_buffer");
 }
 
-void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const SceneObject& object)
+void BindlessScene::on_object_added_to_scene(const world::EntityID object_id, const SceneObject& object)
 {
    const auto& model = m_resource_manager.get(object.model);
    for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
@@ -147,13 +147,13 @@ void BindlessScene::on_object_added_to_scene(const ObjectID object_id, const Sce
    m_should_write_objects = true;
 }
 
-void BindlessScene::on_object_changed_transform(const ObjectID object_id, const Transform3D& transform)
+void BindlessScene::on_object_changed_transform(const world::EntityID object_id, const Transform3D& transform)
 {
    m_pending_transform.emplace_back(object_id, transform);
    m_should_write_objects = true;
 }
 
-void BindlessScene::on_object_removed(const ObjectID object_id)
+void BindlessScene::on_object_removed(const world::EntityID object_id)
 {
    auto& obj = m_scene.object(object_id);
    const auto& model = m_resource_manager.get(obj.model);
@@ -174,7 +174,7 @@ void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
    const auto matrix_mapping{GAPI_CHECK(m_matrix_stage.buffer().map_memory())};
    const auto hierarchy_mapping{GAPI_CHECK(m_hierarchy_stage.map_memory())};
 
-   std::map<ObjectID, MemorySize> matrix_offsets;
+   std::map<world::EntityID, MemorySize> matrix_offsets;
 
    for (const auto& [object_ids, armature_name] : m_pending_armatures) {
       const auto& armature = m_resource_manager.get(armature_name);
@@ -285,7 +285,7 @@ void BindlessScene::write_objects_to_buffer()
    fence.await();
 }
 
-u32 BindlessScene::transform_id(const ObjectID id, const u32 transform_index) const
+u32 BindlessScene::transform_id(const world::EntityID id, const u32 transform_index) const
 {
    if (transform_index == 0) {
       return m_object_id_to_transform_id.at(id);
@@ -380,7 +380,7 @@ u32 BindlessScene::matrix_hierarchy_count() const
    return m_written_hierarchy_count;
 }
 
-u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, const ObjectID object_id, Transform3D* stage_ptr,
+u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, const world::EntityID object_id, Transform3D* stage_ptr,
                                     const Transform3D& transform)
 {
    if (const auto it = m_object_id_to_transform_id.find(object_id); it != m_object_id_to_transform_id.end()) {

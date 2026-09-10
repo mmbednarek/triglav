@@ -33,7 +33,7 @@ class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
 
    void on_unselected() const;
    void on_changed_selected_object(const renderer::SceneObject& object) const;
-   void on_object_is_removed(renderer::ObjectID object_id) const;
+   void on_object_is_removed(world::EntityID object_id) const;
    void on_changed_name(StringView name) const;
    void on_changed_mesh(StringView mesh);
 

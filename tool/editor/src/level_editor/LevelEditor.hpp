@@ -72,7 +72,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    [[nodiscard]] renderer::Scene& scene();
    void tick(float delta_time) override;
    const renderer::SceneObject* selected_object() const;
-   renderer::ObjectID selected_object_id() const;
+   world::EntityID selected_object_id() const;
    [[nodiscard]] Vector3 selected_object_position(std::optional<Vector3> position = std::nullopt) const;
    LevelViewport& viewport() const;
    ILevelEditorTool& tool() const;
@@ -84,9 +84,9 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    Vector3 snap_offset(Vector3 offset) const;
    float speed() const;
    void finish_using_tool() const;
-   void set_selected_transform(const Transform3D& transform);
+   void set_selected_transform(const Transform3D& transform) const;
    void set_selected_name(StringView name);
-   void set_selected_object(renderer::ObjectID id);
+   void set_selected_object(world::EntityID id);
    HistoryManager& history_manager();
    void on_event(const ui_core::Event& event) override;
    void save_level() const;
@@ -113,7 +113,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    renderer::OcclusionCulling m_occlusion_culling;
    renderer::RenderingJob m_rendering_job;
    const renderer::SceneObject* m_selected_object{};
-   renderer::ObjectID m_selected_object_id{renderer::UNSELECTED_OBJECT};
+   world::EntityID m_selected_object_id{renderer::UNSELECTED_OBJECT};
    LevelViewport* m_viewport{};
    SelectionTool m_selection_tool;
    TranslationTool m_translation_tool;

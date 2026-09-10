@@ -6,6 +6,7 @@
 
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/PopupManager.hpp"
+#include "triglav/engine/Engine.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
@@ -102,7 +103,7 @@ void SceneView::on_clicked_delete() const
    m_state.editor->remove_selected_item();
 }
 
-void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, const renderer::SceneObject& object)
+void SceneView::on_object_added_to_scene(const world::EntityID object_id, const renderer::SceneObject& object)
 {
    const auto id = m_tree_controller.add_item(0, {
                                                     .icon_name = "editor/texture/ui_icons.tex"_rc,
@@ -114,12 +115,12 @@ void SceneView::on_object_added_to_scene(const renderer::ObjectID object_id, con
    m_object_id_to_item_id[object_id] = id;
 }
 
-void SceneView::on_object_is_removed(const renderer::ObjectID object_id) const
+void SceneView::on_object_is_removed(const world::EntityID object_id) const
 {
    m_tree_view->remove_item(m_object_id_to_item_id.at(object_id));
 }
 
-void SceneView::on_object_changed_name(const renderer::ObjectID object_id, const StringView name) const
+void SceneView::on_object_changed_name(const world::EntityID object_id, const StringView name) const
 {
    m_tree_view->set_label(m_object_id_to_item_id.at(object_id), name);
 }
@@ -129,24 +130,25 @@ void SceneView::update_selected_item() const
    m_tree_view->set_selected_item(m_object_id_to_item_id.at(m_state.editor->selected_object_id()));
 }
 
-void SceneView::on_resource_selected(const String resource) const
+void SceneView::on_resource_selected(const String /*resource*/) const
 {
-   log_info("Selected resource: {}", resource.to_std());
-
-   const auto& camera = m_state.editor->scene().camera();
-
-   Transform3D transform{};
-   transform.translation = camera.position() + 10.0f * camera.forward_vector();
-   transform.rotation = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
-   transform.scale = {1, 1, 1};
-
-   const auto object_id = m_state.editor->scene().add_object(renderer::SceneObject{
-      .model = make_rc_name(resource.view().to_std()),
-      .name = "New Object"_str,
-      .transform = transform,
-   });
-
-   m_state.editor->set_selected_object(object_id);
+   // log_info("Selected resource: {}", resource.to_std());
+   //
+   // const auto& camera = m_state.editor->scene().camera();
+   //
+   // Transform3D transform{};
+   // transform.translation = camera.position() + 10.0f * camera.forward_vector();
+   // transform.rotation = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+   // transform.scale = {1, 1, 1};
+   //
+   // engine::Engine::the().current_level()->add_node("Object"_name, world::LevelNode
+   // {
+   //    .mesh_name = make_rc_name(resource.view().to_std()),
+   //    .name = "New Object"_str,
+   //    .transform = transform,
+   // });
+   //
+   // m_state.editor->set_selected_object(object_id);
 }
 
 }// namespace triglav::editor

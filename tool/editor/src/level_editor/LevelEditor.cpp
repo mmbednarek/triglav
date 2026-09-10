@@ -468,6 +468,9 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
       entities.emplace_back(entity_id);
    }
    m_scene.on_added_component("triglav::world::Mesh"_name, 0, entities);
+
+   std::array scene_components{"triglav::world::Mesh"_name, "triglav::Transform3D"_name};
+   engine::Engine::the().current_level()->register_system(m_scene, scene_components);
    // m_scene.load_level(m_state.asset_name);
 
    m_bindless_scene.write_objects_to_buffer();
@@ -504,7 +507,7 @@ const renderer::SceneObject* LevelEditor::selected_object() const
    return m_selected_object;
 }
 
-renderer::ObjectID LevelEditor::selected_object_id() const
+world::EntityID LevelEditor::selected_object_id() const
 {
    return m_selected_object_id;
 }
@@ -620,12 +623,17 @@ void LevelEditor::finish_using_tool() const
       m_side_panel->on_changed_selected_object(*m_selected_object);
    }
 }
-void LevelEditor::set_selected_transform(const Transform3D& transform)
+void LevelEditor::set_selected_transform(const Transform3D& transform) const
 {
    if (m_selected_object_id == renderer::UNSELECTED_OBJECT)
       return;
 
-   m_scene.set_transform(m_selected_object_id, transform);
+   world::Level* level = engine::Engine::the().current_level();
+   if (level == nullptr)
+      return;
+
+   level->mut_component<Transform3D>(m_selected_object_id) = transform;
+
    m_side_panel->on_changed_selected_object(*m_selected_object);
    m_viewport->update_view();
 }
@@ -635,7 +643,7 @@ void LevelEditor::set_selected_name(const StringView name)
    scene().set_object_name(m_selected_object_id, name);
 }
 
-void LevelEditor::set_selected_object(const renderer::ObjectID id)
+void LevelEditor::set_selected_object(const world::EntityID id)
 {
    m_selected_object_id = id;
 

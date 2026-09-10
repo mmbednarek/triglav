@@ -421,7 +421,7 @@ void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObjec
    m_scene_view->update_selected_item();
 }
 
-void LevelEditorSidePanel::on_object_is_removed(const renderer::ObjectID object_id) const
+void LevelEditorSidePanel::on_object_is_removed(const world::EntityID object_id) const
 {
    m_scene_view->on_object_is_removed(object_id);
 }

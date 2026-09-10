@@ -86,7 +86,7 @@ struct Properties_MT2
 struct PendingObject
 {
    const SceneObject* object{};
-   ObjectID object_id{};
+   world::EntityID object_id{};
    u32 material_index{};
 };
 
@@ -107,14 +107,14 @@ class BindlessScene
 
    BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, Scene& scene, render_core::IRenderer& renderer);
 
-   void on_object_added_to_scene(ObjectID object_id, const SceneObject& object);
-   void on_object_changed_transform(ObjectID object_id, const Transform3D& transform);
-   void on_object_removed(ObjectID object_id);
+   void on_object_added_to_scene(world::EntityID object_id, const SceneObject& object);
+   void on_object_changed_transform(world::EntityID object_id, const Transform3D& transform);
+   void on_object_removed(world::EntityID object_id);
    void on_update_scene(const graphics_api::CommandList& cmd_list);
 
    void write_objects_to_buffer();
 
-   [[nodiscard]] u32 transform_id(ObjectID id, u32 transform_index = 0) const;
+   [[nodiscard]] u32 transform_id(world::EntityID id, u32 transform_index = 0) const;
 
    [[nodiscard]] graphics_api::Buffer& combined_vertex_buffer();
    [[nodiscard]] graphics_api::Buffer& combined_index_buffer();
@@ -134,7 +134,7 @@ class BindlessScene
    [[nodiscard]] u32 matrix_hierarchy_count() const;
 
  private:
-   u32 get_transform_id(const graphics_api::CommandList& cmd_list, ObjectID object_id, Transform3D* stage_ptr,
+   u32 get_transform_id(const graphics_api::CommandList& cmd_list, world::EntityID object_id, Transform3D* stage_ptr,
                         const Transform3D& transform);
    const std::vector<BindlessMeshInfo>& get_mesh_infos(const graphics_api::CommandList& cmd_list, MeshName name, bool is_skeletal_mesh);
    u32 get_material_id(const graphics_api::CommandList& cmd_list, const render_objects::Material& material);
@@ -147,8 +147,8 @@ class BindlessScene
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers
-   std::vector<std::pair<ObjectID, Transform3D>> m_pending_transform;
-   std::vector<std::pair<ObjectID, ArmatureName>> m_pending_armatures;
+   std::vector<std::pair<world::EntityID, Transform3D>> m_pending_transform;
+   std::vector<std::pair<world::EntityID, ArmatureName>> m_pending_armatures;
    std::map<MeshName, std::vector<BindlessMeshInfo>> m_models;
    std::map<TextureName, u32> m_texture_ids;
    std::vector<const graphics_api::Texture*> m_scene_textures;
@@ -158,9 +158,9 @@ class BindlessScene
    memory::HeapAllocator m_vertex_buffer_heap;
    memory::HeapAllocator m_index_buffer_heap;
    memory::HeapAllocator m_transform_buffer_heap;
-   UpdateList<std::pair<ObjectID, u32>, PendingObject> m_draw_call_update_list;
-   std::map<ObjectID, u32> m_object_id_to_transform_id;
-   std::map<ObjectID, MemorySize> m_transform_offsets;
+   UpdateList<std::pair<world::EntityID, u32>, PendingObject> m_draw_call_update_list;
+   std::map<world::EntityID, u32> m_object_id_to_transform_id;
+   std::map<world::EntityID, MemorySize> m_transform_offsets;
    u32 m_transform_stage_index{0};
    u32 m_hierarchy_stage_index{0};
    u32 m_written_hierarchy_count{0};

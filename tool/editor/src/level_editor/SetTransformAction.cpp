@@ -5,7 +5,7 @@
 
 namespace triglav::editor {
 
-SetTransformAction::SetTransformAction(LevelEditor& level_editor, renderer::ObjectID object_id, const Transform3D& previous_transform,
+SetTransformAction::SetTransformAction(LevelEditor& level_editor, world::EntityID object_id, const Transform3D& previous_transform,
                                        const Transform3D& transform) :
     m_level_editor(level_editor),
     m_object_id(object_id),
