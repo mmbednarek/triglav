@@ -11,7 +11,6 @@
 #include "stage/ShadowMapStage.hpp"
 
 #include "triglav/Name.hpp"
-#include "triglav/Ranges.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/io/CommandLine.hpp"
@@ -59,7 +58,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_device(device),
     m_resource_manager(resource_manager),
     m_config_manager(m_device),
-    m_scene(m_resource_manager),
+    m_scene(engine::system<Scene>()),
     m_bindless_scene(m_device, m_resource_manager, m_scene, *this),
     m_glyph_cache(m_device, m_resource_manager),
     m_ui_viewport({resolution.width, resolution.height}),
@@ -86,9 +85,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
 
-   std::array scene_components{"triglav::world::Mesh"_name, "triglav::Transform3D"_name};
-   engine::Engine::the().current_level()->register_system(m_scene, scene_components);
-   engine::Engine::the().current_level()->flush();
+   engine::level()->flush();
 
    m_bindless_scene.write_objects_to_buffer();
 

@@ -381,7 +381,7 @@ class TerrainModePanel : public desktop_ui::DesktopProxyWidget
 LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
     DesktopProxyWidget(context, parent),
     m_state(state),
-    m_scene(context.resource_manager()),
+    m_scene(engine::system<renderer::Scene>()),
     m_bindless_scene(m_state.root_window->device(), context.resource_manager(), m_scene, *m_state.root_window),
     m_config(get_default_config()),
     m_update_view_params_job(m_scene),
@@ -463,14 +463,16 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
 
    m_viewport = &left_layout.emplace_child<LevelViewport>(context, &left_layout, *m_state.root_window, *this);
 
-   std::vector<world::EntityID> entities;
-   for (const auto& [entity_id, com] : engine::Engine::the().current_level()->all<world::Mesh>()) {
-      entities.emplace_back(entity_id);
-   }
-   m_scene.on_added_component("triglav::world::Mesh"_name, 0, entities);
+   // std::vector<world::EntityID> entities;
+   // for (const auto& [entity_id, com] : engine::Engine::the().current_level()->all<world::Mesh>()) {
+   //    entities.emplace_back(entity_id);
+   // }
 
-   std::array scene_components{"triglav::world::Mesh"_name, "triglav::Transform3D"_name};
-   engine::Engine::the().current_level()->register_system(m_scene, scene_components);
+   // engine::level()->flush();
+   // m_scene.on_added_component("triglav::world::Mesh"_name, 0, entities);
+
+   // std::array scene_components{"triglav::world::Mesh"_name, "triglav::Transform3D"_name};
+   // engine::Engine::the().current_level()->register_system(m_scene, scene_components);
    // m_scene.load_level(m_state.asset_name);
 
    m_bindless_scene.write_objects_to_buffer();

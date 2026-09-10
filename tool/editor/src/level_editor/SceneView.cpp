@@ -85,6 +85,10 @@ SceneView::SceneView(ui_core::Context& context, const State state, ui_core::IWid
                         .extended_items = {},
                      });
    TG_CONNECT_OPT(*m_tree_view, OnSelected, on_selected_object);
+
+   for (const auto& [entity_id, mesh] : engine::level()->all<world::Mesh>()) {
+      this->on_object_added_to_scene(entity_id, m_state.editor->scene().object(entity_id));
+   }
 }
 
 void SceneView::on_selected_object(const desktop_ui::TreeItemId item_id)

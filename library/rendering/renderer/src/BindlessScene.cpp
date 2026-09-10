@@ -1,5 +1,6 @@
 #include "BindlessScene.hpp"
 
+#include "triglav/engine/Engine.hpp"
 #include "triglav/graphics_api/PipelineBuilder.hpp"
 #include "triglav/render_objects/Armature.hpp"
 
@@ -133,6 +134,11 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
    TG_SET_DEBUG_NAME(m_count_buffer.buffer(), "bindless_scene.count_buffer");
    TG_SET_DEBUG_NAME(m_combined_index_buffer.buffer(), "bindless_scene.combined_index_buffer");
    TG_SET_DEBUG_NAME(m_combined_vertex_buffer, "bindless_scene.combined_vertex_buffer");
+
+   // Process already added entities
+   for (const auto& [entity_id, mesh] : engine::level()->all<world::Mesh>()) {
+      this->on_object_added_to_scene(entity_id, m_scene.object(entity_id));
+   }
 }
 
 void BindlessScene::on_object_added_to_scene(const world::EntityID object_id, const SceneObject& object)

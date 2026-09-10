@@ -1,5 +1,7 @@
 #include "CharacterController.hpp"
 
+#include "triglav/engine/Engine.hpp"
+
 using triglav::renderer::SceneObject;
 using namespace triglav::name_literals;
 using triglav::Quaternion;
@@ -24,12 +26,17 @@ void CharacterController::setup_character()
    transform.translation = m_character_position;
    transform.scale = {5.0f, 5.0f, 5.0f};
 
-   m_character_id = m_scene.add_object(SceneObject{
-      .model = "mesh/simple_human.mesh"_rc,
+   triglav::world::LevelNode node("character");
+   node.add_static_mesh(triglav::world::StaticMesh{
+      .mesh_name = "mesh/simple_human.mesh"_rc,
       .name = "Character",
       .transform = transform,
-      .armature = "armature/simple_human_rig.arm"_rc,
+      .armature_name = "armature/simple_human_rig.arm"_rc,
    });
+
+   m_character_id = triglav::engine::level()->add_node("character"_name, std::move(node));
+
+   triglav::engine::level()->flush();
 
    this->forward_state();
 }

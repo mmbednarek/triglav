@@ -91,7 +91,7 @@ class Renderer final : public render_core::IRenderer
    resource::ResourceManager& m_resource_manager;
 
    ConfigManager m_config_manager;
-   Scene m_scene;
+   Scene& m_scene;
    BindlessScene m_bindless_scene;
    render_core::GlyphCache m_glyph_cache;
    ui_core::Viewport m_ui_viewport;
