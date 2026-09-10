@@ -74,9 +74,10 @@ struct LevelComponentRange
 class Level
 {
  public:
-   void add_node(Name id, LevelNode&& node);
+   EntityID add_node(Name id, LevelNode&& node);
 
    void init_entities();
+   void on_loaded_resources();
 
    LevelNode& at(Name id);
    LevelNode& root();
@@ -156,15 +157,21 @@ class Level
 
    [[nodiscard]] HierarchyTree::Range children_of(EntityID entity) const;
    [[nodiscard]] EntityID parent_of(EntityID entity) const;
-   void register_system(ISystem& system, std::span<Name> component_class_names);
+   void register_system(std::unique_ptr<ISystem> system, std::span<const Name> component_class_names);
    void flush();
+
+   template<TaggedClass TSystem>
+   TSystem& system()
+   {
+      return dynamic_cast<TSystem&>(*m_systems.at(TSystem::TAG).system);
+   }
 
  private:
    void insert_component_change(ComponentID id, EntityID entity);
 
    struct SystemRegistration
    {
-      ISystem* system;
+      std::unique_ptr<ISystem> system;
       std::set<ComponentID> component_ids;
    };
 
@@ -176,7 +183,7 @@ class Level
 
    // std::map<Name, LevelNode> m_nodes;
    EntityStorage m_entity_storage;
-   std::vector<SystemRegistration> m_systems;
+   std::map<Name, SystemRegistration> m_systems;
    std::map<ComponentID, std::vector<EntityID>> m_change_lists;
    std::map<ComponentID, std::vector<EntityID>> m_addition_lists;
 };

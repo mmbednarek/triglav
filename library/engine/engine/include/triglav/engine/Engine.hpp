@@ -46,6 +46,7 @@ class Engine
    void on_begin_frame(float delta_time) const;
    void unload_level(LevelName name);
    void set_active_level(LevelName name);
+   void register_system(world::SystemFactory factory);
 
    [[nodiscard]] world::Level* current_level() const;
    [[nodiscard]] world::Level* level_by_name(LevelName name) const;
@@ -60,10 +61,25 @@ class Engine
    LevelName m_pending_level_name;
    std::unique_ptr<world::Level> m_pending_level;
    std::map<LevelName, std::unique_ptr<world::Level>> m_levels;
+   std::vector<world::SystemFactory> m_system_factories;
    std::atomic<EngineStatus> m_status = EngineStatus::Uninitialized;
    resource::LoadIndex m_load_index = resource::ERROR_LOADING_ASSET;
 
    TG_SINK(OnLoadedAssets);
 };
+
+struct SystemRegisterer
+{
+   SystemRegisterer(world::SystemFactory factory);
+};
+
+[[nodiscard]] Engine& the();
+[[nodiscard]] world::Level* level();
+
+template<TaggedClass TSystem>
+[[nodiscard]] TSystem& system()
+{
+   return Engine::the().current_level()->system<TSystem>();
+}
 
 }// namespace triglav::engine

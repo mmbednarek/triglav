@@ -14,6 +14,15 @@ namespace triglav::renderer {
 
 using namespace name_literals;
 
+engine::SystemRegisterer SCENE_REGISTERER{{
+   .constructor = []() -> std::unique_ptr<world::ISystem> { return std::make_unique<Scene>(engine::the().resource_manager()); },
+   .components =
+      std::vector<Name>{
+         "triglav::Transform3D"_name,
+         "triglav::world::Mesh"_name,
+      },
+}};
+
 Matrix4x4 SceneObject::model_matrix() const
 {
    return this->transform.to_matrix();
@@ -178,7 +187,7 @@ void Scene::update_shadow_maps()
    event_OnShadowMapChanged.publish(2, m_directional_shadow_map_cameras[2]);
 }
 
-void Scene::send_view_changed()
+void Scene::send_view_changed() const
 {
    event_OnViewUpdated.publish(m_camera);
 }
@@ -197,7 +206,17 @@ void Scene::set_object_name(const world::EntityID id, const StringView name) con
    event_OnObjectChangedName.publish(id, name);
 }
 
-void Scene::on_removed_entities(const std::span<const world::EntityID> ids)
+void Scene::on_level_loaded(world::Level& level)
+{
+   std::vector<world::EntityID> entities;
+   for (const auto& [entity_id, com] : level.all<world::Mesh>()) {
+      entities.emplace_back(entity_id);
+   }
+
+   this->on_added_component(level, "triglav::world::Mesh"_name, 0, entities);
+}
+
+void Scene::on_removed_entities(world::Level& /*level*/, const std::span<const world::EntityID> ids)
 {
    for (const auto entity_id : ids) {
       event_OnObjectRemoved.publish(entity_id);
@@ -207,16 +226,14 @@ void Scene::on_removed_entities(const std::span<const world::EntityID> ids)
    this->update_bvh();
 }
 
-void Scene::on_added_component(Name component_name, world::ComponentID /*component_id*/, std::span<const world::EntityID> entities)
+void Scene::on_added_component(world::Level& level, Name component_name, world::ComponentID /*component_id*/,
+                               std::span<const world::EntityID> entities)
 {
    if (component_name != "triglav::world::Mesh"_name)
       return;
 
-   auto* level = engine::Engine::the().current_level();
-   assert(level != nullptr);
-
    for (const auto entity_id : entities) {
-      const auto [label, transform, mesh] = level->components<world::EntityLabel, Transform3D, world::Mesh>(entity_id);
+      const auto [label, transform, mesh] = level.components<world::EntityLabel, Transform3D, world::Mesh>(entity_id);
 
       SceneObject obj{
          .model = mesh.name,
@@ -225,34 +242,37 @@ void Scene::on_added_component(Name component_name, world::ComponentID /*compone
          .armature = std::nullopt,
       };
 
-      if (const auto* arm = level->component_opt<world::Armature>(entity_id); arm != nullptr) {
+      if (const auto* arm = level.component_opt<world::Armature>(entity_id); arm != nullptr) {
          obj.armature = arm->name;
       }
       this->add_object(obj, entity_id);
    }
 }
 
-void Scene::on_modified_component(const Name component_name, world::ComponentID /*component_id*/, std::span<const world::EntityID> entities)
+void Scene::on_modified_component(world::Level& level, const Name component_name, world::ComponentID /*component_id*/,
+                                  std::span<const world::EntityID> entities)
 {
-   const auto* level = engine::Engine::the().current_level();
-   assert(level != nullptr);
-
    if (component_name == "triglav::Transform3D"_name) {
       for (const auto entity_id : entities) {
-         const auto& transform = level->component<Transform3D>(entity_id);
+         const auto& transform = level.component<Transform3D>(entity_id);
          m_objects[entity_id]->transform = transform;
          event_OnObjectChangedTransform.publish(entity_id, transform);
       }
       this->update_bvh();
    } else if (component_name == "triglav::world::EntityLabel"_name) {
       for (const auto entity_id : entities) {
-         const auto& label = level->component<world::EntityLabel>(entity_id);
+         const auto& label = level.component<world::EntityLabel>(entity_id);
 
          const auto& obj = m_objects.at(entity_id);
          obj->name = {label.label.data(), label.label.size()};
          event_OnObjectChangedName.publish(entity_id, obj->name.view());
       }
    }
+}
+
+Name Scene::system_name()
+{
+   return TAG;
 }
 
 }// namespace triglav::renderer

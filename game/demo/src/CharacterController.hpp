@@ -44,7 +44,7 @@ class CharacterController
 
    // State
    CharacterState m_character_state = CharacterState::Idle;
-   triglav::renderer::ObjectID m_character_id = triglav::renderer::UNSELECTED_OBJECT;
+   triglav::world::EntityID m_character_id = triglav::renderer::UNSELECTED_OBJECT;
    triglav::renderer::AnimationID m_character_animation_id = triglav::renderer::NO_ANIMATION;
    triglav::Vector3 m_character_position = {0.0f, 0.0f, 3.5f};
    triglav::Vector3 m_character_forward;

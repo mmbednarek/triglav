@@ -48,6 +48,11 @@ void Engine::load_level(const LevelName level_name)
    }
    m_pending_level_name = level_name;
    m_pending_level = std::make_unique<world::Level>();
+   for (const auto& system : m_system_factories) {
+      m_pending_level->register_system(system.constructor(), system.components);
+   }
+
+
    assert(m_pending_level->deserialize(**file));
 
    std::vector<ResourceName> resource_list;
@@ -80,6 +85,7 @@ void Engine::on_loaded_assets(const resource::LoadIndex load_index)
    case EngineStatus::LoadingLevel: {
       log_info("Level ready");
       m_status.store(EngineStatus::LevelLoaded);
+      m_pending_level->on_loaded_resources();
       m_levels.emplace(m_pending_level_name, std::move(m_pending_level));
       m_current_level_name = m_pending_level_name;
       m_current_level = m_levels.at(m_current_level_name).get();
@@ -121,6 +127,11 @@ void Engine::set_active_level(const LevelName name)
    m_current_level = m_levels.at(name).get();
 }
 
+void Engine::register_system(world::SystemFactory factory)
+{
+   m_system_factories.emplace_back(factory);
+}
+
 world::Level* Engine::current_level() const
 {
    assert(m_current_level == nullptr || m_current_level == m_levels.at(m_current_level_name).get());
@@ -140,6 +151,21 @@ Engine& Engine::the()
 {
    static Engine engine;
    return engine;
+}
+
+SystemRegisterer::SystemRegisterer(world::SystemFactory factory)
+{
+   Engine::the().register_system(std::move(factory));
+}
+
+Engine& the()
+{
+   return Engine::the();
+}
+
+world::Level* level()
+{
+   return Engine::the().current_level();
 }
 
 }// namespace triglav::engine

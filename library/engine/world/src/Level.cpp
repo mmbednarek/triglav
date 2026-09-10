@@ -25,7 +25,7 @@ namespace triglav::world {
 
 using namespace name_literals;
 
-void Level::add_node(const Name id, LevelNode&& node)
+EntityID Level::add_node(const Name id, LevelNode&& node)
 {
    std::array comp_names{
       "triglav::Transform3D"_name,        "triglav::world::Mesh"_name,     "triglav::world::Tag"_name,
@@ -38,6 +38,8 @@ void Level::add_node(const Name id, LevelNode&& node)
 
    assert(ComponentManager::the().class_names_to_ids(comp_names, component_ids));
 
+   EntityID entity_id = 0;
+
    for (const auto& static_mesh : node.static_meshes()) {
       std::span<ComponentID> comp_id_span = component_ids;
       std::span<void*> ptr_span = component_ptrs;
@@ -46,7 +48,7 @@ void Level::add_node(const Name id, LevelNode&& node)
          ptr_span = ptr_span.subspan(0, 4);
       }
 
-      const EntityID entity_id = m_entity_storage.allocate_entity(0);
+      entity_id = m_entity_storage.allocate_entity(0);
       m_entity_storage.allocate_components(entity_id, comp_id_span);
 
       assert(m_entity_storage.get_components(entity_id, comp_id_span, ptr_span));
@@ -64,12 +66,19 @@ void Level::add_node(const Name id, LevelNode&& node)
       }
    }
 
-   // m_nodes.emplace(id, std::move(node));
+   return entity_id;
 }
 
 void Level::init_entities()
 {
    m_entity_storage.init();
+}
+
+void Level::on_loaded_resources()
+{
+   for (const auto& [sys_name, system] : m_systems) {
+      system.system->on_level_loaded(*this);
+   }
 }
 
 LevelNode& Level::at(const Name /*id*/)
@@ -119,7 +128,7 @@ EntityID Level::parent_of(const EntityID entity) const
    return m_entity_storage.hierarchy_tree().parent_of(entity);
 }
 
-void Level::register_system(ISystem& system, std::span<Name> component_class_names)
+void Level::register_system(std::unique_ptr<ISystem> system, const std::span<const Name> component_class_names)
 {
    std::set<ComponentID> component_ids;
    for (const auto name : component_class_names) {
@@ -129,30 +138,32 @@ void Level::register_system(ISystem& system, std::span<Name> component_class_nam
       component_ids.insert(*comp_id);
    }
 
-   m_systems.push_back(SystemRegistration{
-      .system = &system,
-      .component_ids = std::move(component_ids),
-   });
+   const auto tag = system->system_name();
+   m_systems.emplace(tag, SystemRegistration{
+                             .system = std::move(system),
+                             .component_ids = std::move(component_ids),
+                          });
 }
 
 void Level::flush()
 {
    for (const auto& [component_id, entities] : m_addition_lists) {
-      for (const auto& system : m_systems) {
+      for (const auto& [sys_name, system] : m_systems) {
          if (!system.component_ids.contains(component_id))
             continue;
 
-         system.system->on_added_component(ComponentManager::the().info_by_id(component_id).component_class, component_id, entities);
+         system.system->on_added_component(*this, ComponentManager::the().info_by_id(component_id).component_class, component_id, entities);
       }
    }
    m_addition_lists.clear();
 
    for (const auto& [component_id, entities] : m_change_lists) {
-      for (const auto& system : m_systems) {
+      for (const auto& [sys_name, system] : m_systems) {
          if (!system.component_ids.contains(component_id))
             continue;
 
-         system.system->on_modified_component(ComponentManager::the().info_by_id(component_id).component_class, component_id, entities);
+         system.system->on_modified_component(*this, ComponentManager::the().info_by_id(component_id).component_class, component_id,
+                                              entities);
       }
    }
    m_change_lists.clear();

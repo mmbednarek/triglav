@@ -2,8 +2,10 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
-#include "triglav/String.hpp"
 #include "triglav/meta/Meta.hpp"
+
+#include <memory>
+#include <vector>
 
 namespace triglav::world {
 
@@ -43,9 +45,17 @@ class ISystem
 {
  public:
    virtual ~ISystem() = default;
-   virtual void on_removed_entities(std::span<const EntityID> ids) = 0;
-   virtual void on_added_component(Name component_name, ComponentID component_id, std::span<const EntityID> entities) = 0;
-   virtual void on_modified_component(Name component_name, ComponentID component_id, std::span<const EntityID> entities) = 0;
+   virtual Name system_name() = 0;
+   virtual void on_level_loaded(Level& level) = 0;
+   virtual void on_removed_entities(Level& level, std::span<const EntityID> ids) = 0;
+   virtual void on_added_component(Level& level, Name component_name, ComponentID component_id, std::span<const EntityID> entities) = 0;
+   virtual void on_modified_component(Level& level, Name component_name, ComponentID component_id, std::span<const EntityID> entities) = 0;
+};
+
+struct SystemFactory
+{
+   std::unique_ptr<ISystem> (*constructor)();
+   std::vector<Name> components;
 };
 
 [[maybe_unused]] void ensure_component_registration();

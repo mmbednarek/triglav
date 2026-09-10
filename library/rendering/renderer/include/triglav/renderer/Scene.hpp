@@ -74,13 +74,17 @@ class Scene : public world::ISystem
    void set_transform(world::EntityID entity_id, const Transform3D& transform);
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
-   void send_view_changed();
+   void send_view_changed() const;
    void remove_object(world::EntityID entity_id);
    void set_object_name(world::EntityID id, StringView name) const;
 
-   void on_removed_entities(std::span<const world::EntityID> ids) override;
-   void on_added_component(Name component_name, world::ComponentID component_id, std::span<const world::EntityID> entities) override;
-   void on_modified_component(Name component_name, world::ComponentID component_id, std::span<const world::EntityID> entities) override;
+   void on_level_loaded(world::Level& level) override;
+   void on_removed_entities(world::Level& level, std::span<const world::EntityID> ids) override;
+   void on_added_component(world::Level& level, Name component_name, world::ComponentID component_id,
+                           std::span<const world::EntityID> entities) override;
+   void on_modified_component(world::Level& level, Name component_name, world::ComponentID component_id,
+                              std::span<const world::EntityID> entities) override;
+   Name system_name() override;
 
    [[nodiscard]] const Camera& camera() const;
    [[nodiscard]] Camera& camera();

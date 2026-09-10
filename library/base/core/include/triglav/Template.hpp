@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Name.hpp"
+
 #include <optional>
 #include <span>
 #include <utility>
@@ -148,5 +150,10 @@ TIt find_binary(TIt begin, TIt end, TValue value, TTrans trans)
    }
    return saved_end;
 }
+
+template<typename T>
+concept TaggedClass = requires {
+   { T::TAG } -> std::convertible_to<Name>;
+};
 
 }// namespace triglav

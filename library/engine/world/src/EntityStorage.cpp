@@ -87,6 +87,9 @@ bool EntityStorage::serialize(io::IWriter& writer) const
    if (!serializer.write_u32(static_cast<u32>(storage_count)))
       return false;
 
+   if (!serializer.write_u32(static_cast<u32>(m_top_entity_id)))
+      return false;
+
    for (const auto& storage : m_storage) {
       if (storage.is_empty())
          continue;
@@ -105,6 +108,8 @@ bool EntityStorage::deserialize(io::IReader& reader)
 
    io::Deserializer deserializer(reader);
    const u32 count = deserializer.read_u32();
+
+   m_top_entity_id = deserializer.read_u32();
 
    for (u32 i = 0; i < count; i++) {
       ComponentStorage component_storage;

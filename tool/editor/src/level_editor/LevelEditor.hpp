@@ -106,7 +106,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
 
  private:
    State m_state;
-   renderer::Scene m_scene;
+   renderer::Scene& m_scene;
    renderer::BindlessScene m_bindless_scene;
    renderer::Config m_config;
    renderer::UpdateViewParamsJob m_update_view_params_job;
