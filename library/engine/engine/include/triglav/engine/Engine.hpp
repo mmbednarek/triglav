@@ -48,6 +48,7 @@ class Engine
    void set_active_level(LevelName name);
    void register_system(world::SystemFactory factory);
 
+   [[nodiscard]] graphics_api::Device* gfx_device() const;
    [[nodiscard]] world::Level* current_level() const;
    [[nodiscard]] world::Level* level_by_name(LevelName name) const;
 
@@ -58,6 +59,7 @@ class Engine
    std::unique_ptr<resource::ResourceManager> m_resource_manager;
    LevelName m_current_level_name;
    world::Level* m_current_level = nullptr;
+   graphics_api::Device* m_graphics_device = nullptr;
    LevelName m_pending_level_name;
    std::unique_ptr<world::Level> m_pending_level;
    std::map<LevelName, std::unique_ptr<world::Level>> m_levels;
