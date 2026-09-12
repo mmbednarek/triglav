@@ -77,6 +77,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_debug_widget(m_ui_context),
     TG_CONNECT(m_config_manager, OnPropertyChanged, on_config_property_changed)
 {
+   m_bindless_scene.set_renderer(this);
    m_scene.camera().set_position({-7.42f, 2.32f, 5.0f});
 
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
