@@ -54,7 +54,7 @@ class ISystem
 
 struct SystemFactory
 {
-   std::unique_ptr<ISystem> (*constructor)();
+   std::unique_ptr<ISystem> (*constructor)(Level& level);
    std::vector<Name> components;
 };
 

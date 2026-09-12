@@ -382,7 +382,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     DesktopProxyWidget(context, parent),
     m_state(state),
     m_scene(engine::system<renderer::Scene>()),
-    m_bindless_scene(m_state.root_window->device(), context.resource_manager(), m_scene, *m_state.root_window),
+    m_bindless_scene(engine::system<renderer::BindlessScene>()),
     m_config(get_default_config()),
     m_update_view_params_job(m_scene),
     m_occlusion_culling(m_update_view_params_job, m_bindless_scene),

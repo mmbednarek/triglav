@@ -13,6 +13,7 @@ using namespace name_literals;
 void Engine::initialize(graphics_api::Device& device)
 {
    m_status.store(EngineStatus::Initializing);
+   m_graphics_device = &device;
    m_resource_manager = std::make_unique<resource::ResourceManager>(device, m_font_manger);
    TG_CONNECT_OPT(*m_resource_manager, OnLoadedAssets, on_loaded_assets);
    log_info("Initialising engine");
@@ -49,7 +50,7 @@ void Engine::load_level(const LevelName level_name)
    m_pending_level_name = level_name;
    m_pending_level = std::make_unique<world::Level>();
    for (const auto& system : m_system_factories) {
-      m_pending_level->register_system(system.constructor(), system.components);
+      m_pending_level->register_system(system.constructor(*m_pending_level), system.components);
    }
 
 
@@ -130,6 +131,11 @@ void Engine::set_active_level(const LevelName name)
 void Engine::register_system(world::SystemFactory factory)
 {
    m_system_factories.emplace_back(factory);
+}
+
+graphics_api::Device* Engine::gfx_device() const
+{
+   return m_graphics_device;
 }
 
 world::Level* Engine::current_level() const

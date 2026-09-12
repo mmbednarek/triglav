@@ -15,7 +15,9 @@ namespace triglav::renderer {
 using namespace name_literals;
 
 engine::SystemRegisterer SCENE_REGISTERER{{
-   .constructor = []() -> std::unique_ptr<world::ISystem> { return std::make_unique<Scene>(engine::the().resource_manager()); },
+   .constructor = [](world::Level& /*level*/) -> std::unique_ptr<world::ISystem> {
+      return std::make_unique<Scene>(engine::the().resource_manager());
+   },
    .components =
       std::vector<Name>{
          "triglav::Transform3D"_name,

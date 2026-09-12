@@ -85,7 +85,9 @@ struct Properties_MT2
 
 struct PendingObject
 {
-   const SceneObject* object{};
+   MeshName model;
+   Transform3D transform;
+   std::optional<ArmatureName> armature;
    world::EntityID object_id{};
    u32 material_index{};
 };
@@ -96,23 +98,29 @@ struct OffsetCount
    u32 count;
 };
 
-class BindlessScene
+class BindlessScene : public world::ISystem
 {
    TG_DEFINE_LOG_CATEGORY(BindlessScene)
 
    friend class DrawCallUpdateWriter;
 
  public:
-   using Self = BindlessScene;
+   TG_TAG_CLASS(triglav::renderer::BindlessScene)
 
-   BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, Scene& scene, render_core::IRenderer& renderer);
+   BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, world::Level& level);
 
-   void on_object_added_to_scene(world::EntityID object_id, const SceneObject& object);
-   void on_object_changed_transform(world::EntityID object_id, const Transform3D& transform);
-   void on_object_removed(world::EntityID object_id);
+   Name system_name() override;
+   void on_level_loaded(world::Level& level) override;
+   void on_removed_entities(world::Level& level, std::span<const world::EntityID> ids) override;
+   void on_added_component(world::Level& level, Name component_name, world::ComponentID component_id,
+                           std::span<const world::EntityID> entities) override;
+   void on_modified_component(world::Level& level, Name component_name, world::ComponentID component_id,
+                              std::span<const world::EntityID> entities) override;
    void on_update_scene(const graphics_api::CommandList& cmd_list);
 
    void write_objects_to_buffer();
+
+   void set_renderer(render_core::IRenderer* renderer);
 
    [[nodiscard]] u32 transform_id(world::EntityID id, u32 transform_index = 0) const;
 
@@ -134,6 +142,8 @@ class BindlessScene
    [[nodiscard]] u32 matrix_hierarchy_count() const;
 
  private:
+   void add_entity(const world::Level& level, const world::Mesh& mesh, world::EntityID id);
+
    u32 get_transform_id(const graphics_api::CommandList& cmd_list, world::EntityID object_id, Transform3D* stage_ptr,
                         const Transform3D& transform);
    const std::vector<BindlessMeshInfo>& get_mesh_infos(const graphics_api::CommandList& cmd_list, MeshName name, bool is_skeletal_mesh);
@@ -142,8 +152,8 @@ class BindlessScene
 
    // References
    resource::ResourceManager& m_resource_manager;
-   Scene& m_scene;
-   render_core::IRenderer& m_renderer;
+   world::Level& m_level;
+   render_core::IRenderer* m_renderer;
    graphics_api::Device& m_device;
 
    // Caches and temporary buffers
@@ -187,11 +197,6 @@ class BindlessScene
    MemorySize m_written_material_property_AlbedoTex{0};
    MemorySize m_written_material_property_AlbedoNormalTex{0};
    MemorySize m_written_material_property_AllTex{0};
-
-   // Sinks
-   TG_SINK(OnObjectAddedToScene);
-   TG_SINK(OnObjectChangedTransform);
-   TG_SINK(OnObjectRemoved);
 };
 
 }// namespace triglav::renderer

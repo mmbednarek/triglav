@@ -34,6 +34,17 @@ constexpr auto encode_material_id(const u32 template_id, const u32 instance_id)
 
 }// namespace
 
+engine::SystemRegisterer BINDLESS_SCENE_REGISTERER{{
+   .constructor = [](world::Level& level) -> std::unique_ptr<world::ISystem> {
+      return std::make_unique<BindlessScene>(*engine::the().gfx_device(), engine::the().resource_manager(), level);
+   },
+   .components =
+      std::vector<Name>{
+         "triglav::Transform3D"_name,
+         "triglav::world::Mesh"_name,
+      },
+}};
+
 class DrawCallUpdateWriter
 {
  public:
@@ -57,7 +68,7 @@ class DrawCallUpdateWriter
          matrix_offset = it->second;
       }
       const auto& mesh_info =
-         m_bindless_scene.get_mesh_infos(m_cmd_list, pending_object.object->model, matrix_offset != ~0u)[pending_object.material_index];
+         m_bindless_scene.get_mesh_infos(m_cmd_list, pending_object.model, matrix_offset != ~0u)[pending_object.material_index];
 
       BindlessSceneObject bso;
       bso.vertex_offset = mesh_info.vertex_offset;
@@ -66,7 +77,7 @@ class DrawCallUpdateWriter
       bso.bounding_box = mesh_info.bounding_box;
       bso.material_id = mesh_info.material_id;
       bso.transform_id =
-         m_bindless_scene.get_transform_id(m_cmd_list, pending_object.object_id, m_transform_stage_ptr, pending_object.object->transform);
+         m_bindless_scene.get_transform_id(m_cmd_list, pending_object.object_id, m_transform_stage_ptr, pending_object.transform);
       bso.matrix_offset = matrix_offset;
 
       m_staging_ptr[m_top_staging_index] = bso;
@@ -92,11 +103,9 @@ class DrawCallUpdateWriter
    const std::map<world::EntityID, MemorySize>& m_matrix_offsets;
 };
 
-BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, Scene& scene,
-                             render_core::IRenderer& renderer) :
+BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& resource_manager, world::Level& level) :
     m_resource_manager(resource_manager),
-    m_scene(scene),
-    m_renderer(renderer),
+    m_level(level),
     m_device(device),
     m_vertex_buffer_heap(VERTEX_BUFFER_SIZE),
     m_index_buffer_heap(INDEX_BUFFER_SIZE),
@@ -123,10 +132,7 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
        GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::UniformBuffer | graphics_api::BufferUsage::TransferDst, sizeof(u32)))),
     m_material_props_albedo_tex(device, 100),
     m_material_props_albedo_normal_tex(device, 100),
-    m_material_props_all_tex(device, 100),
-    TG_CONNECT(scene, OnObjectAddedToScene, on_object_added_to_scene),
-    TG_CONNECT(scene, OnObjectChangedTransform, on_object_changed_transform),
-    TG_CONNECT(scene, OnObjectRemoved, on_object_removed)
+    m_material_props_all_tex(device, 100)
 {
    TG_SET_DEBUG_NAME(m_scene_objects.buffer(), "bindless_scene.scene_objects");
    TG_SET_DEBUG_NAME(m_scene_object_stage.buffer(), "bindless_scene.scene_objects.staging");
@@ -134,40 +140,59 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
    TG_SET_DEBUG_NAME(m_count_buffer.buffer(), "bindless_scene.count_buffer");
    TG_SET_DEBUG_NAME(m_combined_index_buffer.buffer(), "bindless_scene.combined_index_buffer");
    TG_SET_DEBUG_NAME(m_combined_vertex_buffer, "bindless_scene.combined_vertex_buffer");
+}
 
-   // Process already added entities
-   for (const auto& [entity_id, mesh] : engine::level()->all<world::Mesh>()) {
-      this->on_object_added_to_scene(entity_id, m_scene.object(entity_id));
+Name BindlessScene::system_name()
+{
+   return TAG;
+}
+
+void BindlessScene::on_level_loaded(world::Level& level)
+{
+   for (const auto& [entity_id, mesh] : level.all<world::Mesh>()) {
+      this->add_entity(level, mesh, entity_id);
    }
 }
 
-void BindlessScene::on_object_added_to_scene(const world::EntityID object_id, const SceneObject& object)
+void BindlessScene::on_removed_entities(world::Level& level, const std::span<const world::EntityID> ids)
 {
-   const auto& model = m_resource_manager.get(object.model);
-   for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
-      m_draw_call_update_list.add_or_update(std::make_pair(object_id, i), PendingObject{&object, object_id, i});
+   for (const auto id : ids) {
+      const auto* mesh_comp = level.component_opt<world::Mesh>(id);
+      if (mesh_comp == nullptr)
+         continue;
+
+      const auto& model = m_resource_manager.get(mesh_comp->name);
+
+      for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
+         m_draw_call_update_list.remove(std::make_pair(id, i));
+      }
+      m_should_write_objects = true;
    }
-   if (object.armature.has_value()) {
-      m_pending_armatures.emplace_back(std::make_pair(object_id, object.armature.value()));
-   }
-   m_should_write_objects = true;
 }
 
-void BindlessScene::on_object_changed_transform(const world::EntityID object_id, const Transform3D& transform)
+void BindlessScene::on_added_component(world::Level& level, Name component_name, world::ComponentID /*component_id*/,
+                                       std::span<const world::EntityID> entities)
 {
-   m_pending_transform.emplace_back(object_id, transform);
-   m_should_write_objects = true;
+   if (component_name != "triglav::world::Mesh"_name)
+      return;
+
+   for (const auto entity_id : entities) {
+      this->add_entity(level, level.component<world::Mesh>(entity_id), entity_id);
+   }
 }
 
-void BindlessScene::on_object_removed(const world::EntityID object_id)
+void BindlessScene::on_modified_component(world::Level& level, Name component_name, world::ComponentID /*component_id*/,
+                                          std::span<const world::EntityID> entities)
 {
-   auto& obj = m_scene.object(object_id);
-   const auto& model = m_resource_manager.get(obj.model);
+   if (component_name != "triglav::Transform3D"_name)
+      return;
 
-   for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
-      m_draw_call_update_list.remove(std::make_pair(object_id, i));
+   for (const auto entity_id : entities) {
+      const auto& transform = level.component<Transform3D>(entity_id);
+
+      m_pending_transform.emplace_back(entity_id, transform);
+      m_should_write_objects = true;
    }
-   m_should_write_objects = true;
 }
 
 void BindlessScene::on_update_scene(const gapi::CommandList& cmd_list)
@@ -291,6 +316,11 @@ void BindlessScene::write_objects_to_buffer()
    fence.await();
 }
 
+void BindlessScene::set_renderer(render_core::IRenderer* renderer)
+{
+   m_renderer = renderer;
+}
+
 u32 BindlessScene::transform_id(const world::EntityID id, const u32 transform_index) const
 {
    if (transform_index == 0) {
@@ -368,7 +398,7 @@ u32 BindlessScene::scene_object_count() const
 
 Scene& BindlessScene::scene() const
 {
-   return m_scene;
+   return m_level.system<Scene>();
 }
 
 std::vector<const graphics_api::Texture*>& BindlessScene::scene_textures()
@@ -384,6 +414,28 @@ std::vector<render_core::TextureRef>& BindlessScene::scene_texture_refs()
 u32 BindlessScene::matrix_hierarchy_count() const
 {
    return m_written_hierarchy_count;
+}
+
+void BindlessScene::add_entity(const world::Level& level, const world::Mesh& mesh, const world::EntityID id)
+{
+   auto* transform = level.component_opt<Transform3D>(id);
+   auto* armature = level.component_opt<world::Armature>(id);
+
+   const auto& model = m_resource_manager.get(mesh.name);
+   for (u32 i = 0; i < model.device_mesh.ranges.size(); ++i) {
+      m_draw_call_update_list.add_or_update(std::make_pair(id, i),
+                                            PendingObject{
+                                               .model = mesh.name,
+                                               .transform = transform == nullptr ? Transform3D::identity() : *transform,
+                                               .armature = armature == nullptr ? std::nullopt : std::make_optional(armature->name),
+                                               .object_id = id,
+                                               .material_index = i,
+                                            });
+   }
+   if (armature != nullptr) {
+      m_pending_armatures.emplace_back(std::make_pair(id, armature->name));
+   }
+   m_should_write_objects = true;
 }
 
 u32 BindlessScene::get_transform_id(const graphics_api::CommandList& cmd_list, const world::EntityID object_id, Transform3D* stage_ptr,
@@ -528,7 +580,9 @@ u32 BindlessScene::get_texture_id(const TextureName texture_name)
       return it->second;
    }
 
-   m_renderer.recreate_render_jobs();
+   if (m_renderer != nullptr) {
+      m_renderer->recreate_render_jobs();
+   }
 
    auto& texture = m_resource_manager.get(texture_name);
    const auto texture_id = static_cast<u32>(m_scene_textures.size());
