@@ -397,6 +397,8 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_terrain_paint_tool(*this),
     m_current_tool(&m_selection_tool)
 {
+   m_bindless_scene.set_renderer(state.root_window);
+
    auto& splitter = this->create_content<desktop_ui::Splitter>({
       .offset = 300,
       .axis = ui_core::Axis::Horizontal,

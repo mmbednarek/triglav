@@ -26,15 +26,13 @@ void CharacterController::setup_character()
    transform.translation = m_character_position;
    transform.scale = {5.0f, 5.0f, 5.0f};
 
-   triglav::world::LevelNode node("character");
-   node.add_static_mesh(triglav::world::StaticMesh{
-      .mesh_name = "mesh/simple_human.mesh"_rc,
-      .name = "Character",
-      .transform = transform,
-      .armature_name = "armature/simple_human_rig.arm"_rc,
-   });
-
-   m_character_id = triglav::engine::level()->add_node("character"_name, std::move(node));
+   auto* level = triglav::engine::level();
+   m_character_id = level->new_entity();
+   level->insert_component<triglav::world::Mesh>(m_character_id)->name = "mesh/simple_human.mesh"_rc;
+   *level->insert_component<Transform3D>(m_character_id) = transform;
+   level->insert_component<triglav::world::Armature>(m_character_id)->name = "armature/simple_human_rig.arm"_rc;
+   level->insert_component<triglav::world::EntityLabel>(m_character_id)->label = "Character";
+   level->insert_component<triglav::world::Tag>(m_character_id)->tag = "Character"_name;
 
    triglav::engine::level()->flush();
 
@@ -119,7 +117,7 @@ void CharacterController::forward_state() const
    transform.rotation = rot;
    transform.scale = Vector3{2.5f, 2.5f, 2.5f};
 
-   m_scene.set_transform(m_character_id, transform);
+   triglav::engine::level()->mut_component<Transform3D>(m_character_id) = transform;
 
    const auto camera_forward = m_camera_orientation * Vector3{0.0f, 1.0f, 0.0f};
    const auto camera_position = m_character_position - CAMERA_DISTANCE * camera_forward;
