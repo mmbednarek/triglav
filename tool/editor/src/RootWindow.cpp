@@ -179,11 +179,11 @@ void RootWindow::on_loaded_assets(const resource::LoadIndex load_index)
    m_is_asset_ready = true;
 }
 
-void RootWindow::on_level_loaded()
+void RootWindow::on_level_loaded(const LevelName level_name)
 {
    if (!m_loaded_asset.has_value())
       return;
-   if (m_loaded_asset->type() != ResourceType::Level)
+   if (m_loaded_asset != level_name)
       return;
 
    log_info("Finished loading level: {}", ResourcePathMap::the().resolve(*m_loaded_asset));

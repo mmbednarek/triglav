@@ -23,7 +23,7 @@ class SceneView final : public desktop_ui::DesktopProxyWidget
 {
    TG_DEFINE_LOG_CATEGORY(SceneView)
  public:
-   using Self = SceneView;
+   TG_TAG_CLASS(triglav::editor::SceneView)
 
    struct State
    {
@@ -43,6 +43,8 @@ class SceneView final : public desktop_ui::DesktopProxyWidget
    void on_resource_selected(String resource) const;
 
  private:
+   void add_entity(world::EntityID entity_id);
+
    State m_state;
    desktop_ui::TreeController m_tree_controller;
    desktop_ui::TreeView* m_tree_view;

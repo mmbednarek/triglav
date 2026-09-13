@@ -37,7 +37,7 @@ class RootWindow final : public render_core::IRenderer
    void on_close();
    void on_resize(Vector2i size);
    void on_loaded_assets(resource::LoadIndex load_index);
-   void on_level_loaded();
+   void on_level_loaded(LevelName level_name);
 
    void set_render_overlay(IRenderOverlay* overlay);
    [[nodiscard]] IRenderOverlay& render_overlay() const;

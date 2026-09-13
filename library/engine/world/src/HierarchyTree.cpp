@@ -1,5 +1,7 @@
 #include "HierarchyTree.hpp"
 
+#include "triglav/io/Serializer.hpp"
+
 #include <queue>
 #include <ranges>
 
@@ -133,6 +135,43 @@ EntityID HierarchyTree::parent_of(const EntityID entity) const
       return NO_ENTITY;
    }
    return parent->entity_id;
+}
+
+bool HierarchyTree::serialize(io::IWriter& writer) const
+{
+   io::Serializer serializer(writer);
+
+   if (!serializer.write_u32(m_nodes.size() - 1))
+      return false;
+
+   for (const auto& [entity_id, node] : m_nodes) {
+      if (node->parent == nullptr)
+         continue;
+
+      if (!serializer.write_u32(node->parent->entity_id))
+         return false;
+      if (!serializer.write_u32(entity_id))
+         return false;
+   }
+
+   return true;
+}
+
+bool HierarchyTree::deserialize(io::IReader& reader)
+{
+   io::Deserializer deserializer(reader);
+
+   const auto node_count = deserializer.read_u32();
+
+   for (u32 i = 0; i < node_count; i++) {
+      const auto parent_id = deserializer.read_u32();
+      const auto entity_id = deserializer.read_u32();
+      if (parent_id != NO_ENTITY) {
+         this->add_child(parent_id, entity_id);
+      }
+   }
+
+   return true;
 }
 
 }// namespace triglav::world

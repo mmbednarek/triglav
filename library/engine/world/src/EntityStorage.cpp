@@ -97,6 +97,9 @@ bool EntityStorage::serialize(io::IWriter& writer) const
       if (!storage.serialize(writer))
          return false;
    }
+
+   m_hierarchy_tree.serialize(writer);
+
    return true;
 }
 
@@ -118,6 +121,8 @@ bool EntityStorage::deserialize(io::IReader& reader)
 
       m_storage[component_storage.component_id()] = std::move(component_storage);
    }
+
+   m_hierarchy_tree.deserialize(reader);
 
    return true;
 }

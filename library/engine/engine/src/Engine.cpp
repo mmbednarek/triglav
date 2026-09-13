@@ -91,7 +91,7 @@ void Engine::on_loaded_assets(const resource::LoadIndex load_index)
       m_current_level_name = m_pending_level_name;
       m_current_level = m_levels.at(m_current_level_name).get();
       m_pending_level_name = {};
-      event_OnLevelLoaded.publish();
+      event_OnLevelLoaded.publish(m_current_level_name);
       return;
    }
    default:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "World.hpp"
+#include "triglav/io/Stream.hpp"
 
 #include <map>
 
@@ -52,6 +53,9 @@ class HierarchyTree
    void remove_tree(EntityID entity);
    [[nodiscard]] Range children_of(EntityID entity) const;
    [[nodiscard]] EntityID parent_of(EntityID entity) const;
+
+   bool serialize(io::IWriter& writer) const;
+   bool deserialize(io::IReader& reader);
 
  private:
    std::map<EntityID, Node*> m_nodes;
