@@ -32,18 +32,19 @@ class SceneView final : public desktop_ui::DesktopProxyWidget
 
    SceneView(ui_core::Context& context, State state, IWidget* parent);
 
+   void on_added_entity(world::EntityID parent, world::EntityID child, StringView label);
+   void on_removed_entity(world::EntityID entity_id) const;
+   void on_modified_label(world::EntityID entity_id, StringView label) const;
+
    void on_selected_object(desktop_ui::TreeItemId item_id);
    void on_clicked_add_directory();
    void on_clicked_delete() const;
-   void on_object_added_to_scene(world::EntityID object_id, const renderer::SceneObject& object);
-   void on_object_is_removed(world::EntityID object_id) const;
-   void on_object_changed_name(world::EntityID object_id, StringView name) const;
 
    void update_selected_item() const;
    void on_resource_selected(String resource) const;
 
  private:
-   void add_entity(world::EntityID entity_id);
+   void add_entity(world::EntityID parent, world::EntityID child, StringView label);
 
    State m_state;
    desktop_ui::TreeController m_tree_controller;
@@ -52,8 +53,11 @@ class SceneView final : public desktop_ui::DesktopProxyWidget
    std::map<desktop_ui::TreeItemId, world::EntityID> m_item_id_to_object_id;
    std::map<world::EntityID, desktop_ui::TreeItemId> m_object_id_to_item_id;
 
-   TG_SINK(OnObjectAddedToScene);
-   TG_SINK(OnObjectChangedName);
+
+   TG_SINK(OnAddedEntity);
+   TG_SINK(OnRemovedEntity);
+   TG_SINK(OnModifiedLabel);
+
    TG_SINK(OnSelected);
    TG_SINK(OnResourceSelected);
    TG_SINK(Add);

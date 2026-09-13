@@ -8,6 +8,9 @@ TreeItemId TreeController::add_item(const TreeItemId parent, const TreeItem& ite
    m_items[item_id] = item;
    m_hierarchy[parent].push_back(item_id);
    m_parent[item_id] = parent;
+   if (parent != 0) {
+      m_items[parent].has_children = true;
+   }
    return item_id;
 }
 

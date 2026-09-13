@@ -56,6 +56,8 @@ editor_sources = files([
                            'src/RootWindow.hpp',
                            'src/UIContext.cpp',
                            'src/UIContext.hpp',
+                           'src/UIWorldSystem.cpp',
+                           'src/UIWorldSystem.hpp',
                        ])
 
 subdir('shader')

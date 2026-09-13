@@ -2,10 +2,9 @@
 
 #include "../ResourceSelector.hpp"
 #include "LevelEditor.hpp"
-#include "LevelViewport.hpp"
+#include "src/UIWorldSystem.hpp"
 
 #include "triglav/desktop_ui/DesktopUI.hpp"
-#include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/ui_core/widget/AlignmentBox.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
@@ -20,8 +19,9 @@ using namespace string_literals;
 SceneView::SceneView(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
     desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state),
-    TG_CONNECT(m_state.editor->scene(), OnObjectAddedToScene, on_object_added_to_scene),
-    TG_CONNECT(m_state.editor->scene(), OnObjectChangedName, on_object_changed_name)
+    TG_CONNECT(state.editor->level().system<UIWorldSystem>(), OnAddedEntity, on_added_entity),
+    TG_CONNECT(state.editor->level().system<UIWorldSystem>(), OnRemovedEntity, on_removed_entity),
+    TG_CONNECT(state.editor->level().system<UIWorldSystem>(), OnModifiedLabel, on_modified_label)
 {
    auto& vert_layout = this
                           ->create_content<ui_core::RectBox>({
@@ -86,10 +86,25 @@ SceneView::SceneView(ui_core::Context& context, const State state, ui_core::IWid
                      });
    TG_CONNECT_OPT(*m_tree_view, OnSelected, on_selected_object);
 
-   auto& level = m_state.editor->level();
-   for (const auto entity_id : level.children_of(world::ROOT_ENTITY)) {
-      this->add_entity(entity_id);
-   }
+   state.editor->level().system<UIWorldSystem>().discover_entities(
+      this, [](void* user, const world::EntityID parent, const world::EntityID child, const StringView label) {
+         static_cast<SceneView*>(user)->on_added_entity(parent, child, label);
+      });
+}
+
+void SceneView::on_added_entity(const world::EntityID parent, const world::EntityID child, const StringView label)
+{
+   this->add_entity(parent, child, label);
+}
+
+void SceneView::on_removed_entity(const world::EntityID entity_id) const
+{
+   m_tree_view->remove_item(m_object_id_to_item_id.at(entity_id));
+}
+
+void SceneView::on_modified_label(const world::EntityID entity_id, const StringView label) const
+{
+   m_tree_view->set_label(m_object_id_to_item_id.at(entity_id), label);
 }
 
 void SceneView::on_selected_object(const desktop_ui::TreeItemId item_id)
@@ -106,28 +121,6 @@ void SceneView::on_clicked_add_directory()
 void SceneView::on_clicked_delete() const
 {
    m_state.editor->remove_selected_item();
-}
-
-void SceneView::on_object_added_to_scene(const world::EntityID object_id, const renderer::SceneObject& object)
-{
-   const auto id = m_tree_controller.add_item(0, {
-                                                    .icon_name = "editor/texture/ui_icons.tex"_rc,
-                                                    .icon_region = {5 * 18, 18, 18, 18},
-                                                    .label = object.name,
-                                                    .has_children = false,
-                                                 });
-   m_item_id_to_object_id[id] = object_id;
-   m_object_id_to_item_id[object_id] = id;
-}
-
-void SceneView::on_object_is_removed(const world::EntityID object_id) const
-{
-   m_tree_view->remove_item(m_object_id_to_item_id.at(object_id));
-}
-
-void SceneView::on_object_changed_name(const world::EntityID object_id, const StringView name) const
-{
-   m_tree_view->set_label(m_object_id_to_item_id.at(object_id), name);
 }
 
 void SceneView::update_selected_item() const
@@ -156,22 +149,21 @@ void SceneView::on_resource_selected(const String /*resource*/) const
    // m_state.editor->set_selected_object(object_id);
 }
 
-void SceneView::add_entity(const world::EntityID entity_id)
+void SceneView::add_entity(const world::EntityID parent, const world::EntityID child, const StringView label)
 {
-   const auto& level = m_state.editor->level();
-   auto* label = level.component_opt<world::EntityLabel>(entity_id);
+   desktop_ui::TreeItemId tree_parent = 0;
+   if (parent != world::NO_ENTITY) {
+      tree_parent = m_object_id_to_item_id.at(parent);
+   }
 
-   String entity_label = (label == nullptr) ? String{"[NO-LABEL]"} : String{label->label};
-
-
-   const auto id = m_tree_controller.add_item(0, {
-                                                    .icon_name = "editor/texture/ui_icons.tex"_rc,
-                                                    .icon_region = {5 * 18, 18, 18, 18},
-                                                    .label = std::move(entity_label),
-                                                    .has_children = false,
-                                                 });
-   m_item_id_to_object_id[id] = entity_id;
-   m_object_id_to_item_id[entity_id] = id;
+   const auto tree_item_id = m_tree_controller.add_item(tree_parent, {
+                                                                        .icon_name = "editor/texture/ui_icons.tex"_rc,
+                                                                        .icon_region = {5 * 18, 18, 18, 18},
+                                                                        .label = label,
+                                                                        .has_children = false,
+                                                                     });
+   m_item_id_to_object_id[tree_item_id] = child;
+   m_object_id_to_item_id[child] = tree_item_id;
 }
 
 }// namespace triglav::editor
