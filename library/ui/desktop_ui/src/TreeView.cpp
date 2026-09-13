@@ -125,6 +125,7 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
    m_item_highlight.add(m_context, highlight_dims, m_cropping_mask);
 
    if (item.has_children) {
+      m_cached_measure.reset();
       if (m_state.extended_items.contains(item_id)) {
          m_state.extended_items.erase(item_id);
          this->remove_level(item_id);
@@ -133,13 +134,12 @@ void TreeView::on_mouse_pressed(const ui_core::Event& event, const ui_core::Even
       }
    }
 
-   this->add_to_viewport(m_dimensions, m_cropping_mask);
+   m_parent->on_child_state_changed(*this);
 }
 
 void TreeView::on_mouse_double_click(const ui_core::Event& event, const ui_core::Event::Mouse& /*mouse*/) const
 {
    const auto [base_offset, item_id] = this->index_from_mouse_position(event.mouse_position);
-   // log_info("Double click event: {}", item_id);
    event_OnActivated.publish(item_id);
 }
 

@@ -655,6 +655,8 @@ void LevelEditor::set_selected_name(const StringView name)
 
 void LevelEditor::set_selected_object(const world::EntityID id)
 {
+   if (id == world::ROOT_ENTITY)
+      return;
    m_selected_object_id = id;
 
    if (id == renderer::UNSELECTED_OBJECT) {

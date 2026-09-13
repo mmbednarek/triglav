@@ -1,5 +1,7 @@
 #include "widget/ScrollBox.hpp"
 
+#include "triglav/Logging.hpp"
+
 namespace triglav::ui_core {
 
 constexpr auto g_scroll_factor = 6.0f;
@@ -26,6 +28,11 @@ void ScrollBox::add_to_viewport(const Vector4 dimensions, const Vector4 cropping
    m_stored_dims = dimensions;
    m_cropping_mask = min_area(cropping_mask, dimensions);
    this->m_content->add_to_viewport({dimensions.x, dimensions.y + m_state.offset, dimensions.z, dimensions.w}, m_cropping_mask);
+}
+
+void ScrollBox::on_child_state_changed(IWidget& /*widget*/)
+{
+   this->add_to_viewport(m_stored_dims, m_cropping_mask);
 }
 
 void ScrollBox::remove_from_viewport()
