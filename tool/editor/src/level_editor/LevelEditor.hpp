@@ -69,7 +69,9 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
 
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] renderer::Scene& scene();
+   [[nodiscard]] renderer::Scene& scene() const;
+   [[nodiscard]] world::Level& level() const;
+
    void tick(float delta_time) override;
    const renderer::SceneObject* selected_object() const;
    world::EntityID selected_object_id() const;
@@ -106,6 +108,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
 
  private:
    State m_state;
+   world::Level& m_level;
    renderer::Scene& m_scene;
    renderer::BindlessScene& m_bindless_scene;
    renderer::Config m_config;

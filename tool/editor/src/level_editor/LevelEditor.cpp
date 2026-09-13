@@ -381,8 +381,9 @@ class TerrainModePanel : public desktop_ui::DesktopProxyWidget
 LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
     DesktopProxyWidget(context, parent),
     m_state(state),
-    m_scene(engine::system<renderer::Scene>()),
-    m_bindless_scene(engine::system<renderer::BindlessScene>()),
+    m_level(*engine::the().level_by_name(state.asset_name)),
+    m_scene(m_level.system<renderer::Scene>()),
+    m_bindless_scene(m_level.system<renderer::BindlessScene>()),
     m_config(get_default_config()),
     m_update_view_params_job(m_scene),
     m_occlusion_culling(m_update_view_params_job, m_bindless_scene),
@@ -490,9 +491,14 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_scene.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
 }
 
-[[nodiscard]] renderer::Scene& LevelEditor::scene()
+renderer::Scene& LevelEditor::scene() const
 {
    return m_scene;
+}
+
+world::Level& LevelEditor::level() const
+{
+   return m_level;
 }
 
 void LevelEditor::tick(const float delta_time)

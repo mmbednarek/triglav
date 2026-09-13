@@ -86,8 +86,9 @@ SceneView::SceneView(ui_core::Context& context, const State state, ui_core::IWid
                      });
    TG_CONNECT_OPT(*m_tree_view, OnSelected, on_selected_object);
 
-   for (const auto& [entity_id, mesh] : engine::level()->all<world::Mesh>()) {
-      this->on_object_added_to_scene(entity_id, m_state.editor->scene().object(entity_id));
+   auto& level = m_state.editor->level();
+   for (const auto entity_id : level.children_of(world::ROOT_ENTITY)) {
+      this->add_entity(entity_id);
    }
 }
 
@@ -153,6 +154,24 @@ void SceneView::on_resource_selected(const String /*resource*/) const
    // });
    //
    // m_state.editor->set_selected_object(object_id);
+}
+
+void SceneView::add_entity(const world::EntityID entity_id)
+{
+   const auto& level = m_state.editor->level();
+   auto* label = level.component_opt<world::EntityLabel>(entity_id);
+
+   String entity_label = (label == nullptr) ? String{"[NO-LABEL]"} : String{label->label};
+
+
+   const auto id = m_tree_controller.add_item(0, {
+                                                    .icon_name = "editor/texture/ui_icons.tex"_rc,
+                                                    .icon_region = {5 * 18, 18, 18, 18},
+                                                    .label = std::move(entity_label),
+                                                    .has_children = false,
+                                                 });
+   m_item_id_to_object_id[id] = entity_id;
+   m_object_id_to_item_id[entity_id] = id;
 }
 
 }// namespace triglav::editor

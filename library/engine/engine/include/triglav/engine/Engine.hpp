@@ -33,7 +33,7 @@ class Engine
    TG_TAG_CLASS(triglav::engine::Engine)
 
    TG_EVENT(OnEngineReady)
-   TG_EVENT(OnLevelLoaded)
+   TG_EVENT(OnLevelLoaded, LevelName)
 
    // Event<> event_OnEngineReady{TAG, make_name_id("OnEngineReady")};
    // Event<> event_OnLevelLoaded{TAG, make_name_id("OnLevelLoaded")};
