@@ -8,13 +8,16 @@
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/DropDownMenu.hpp"
 #include "triglav/desktop_ui/MenuBar.hpp"
+#include "triglav/desktop_ui/MetaWidget.hpp"
 #include "triglav/desktop_ui/PopupManager.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TabView.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
 #include "triglav/font/FontManager.hpp"
+#include "triglav/io/BufferWriter.hpp"
 #include "triglav/io/CommandLine.hpp"
+#include "triglav/json_util/Serialize.hpp"
 #include "triglav/project/Name.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
@@ -28,6 +31,8 @@
 #include "triglav/ui_core/widget/Image.hpp"
 #include "triglav/ui_core/widget/ScrollBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
+
+#include <iostream>
 
 TG_PROJECT_NAME(triglav_desktop_ui_example)
 
@@ -92,6 +97,45 @@ class ColorChanger
    triglav::ui_core::RectBox& m_rect_box;
    TG_SINK(OnClicked);
 };
+
+enum class ExampleEnum
+{
+   Foo,
+   Bar,
+   Goo,
+};
+
+#define TG_TYPE(NS) ExampleEnum
+TG_META_ENUM_BEGIN
+TG_META_ENUM_VALUE(Foo)
+TG_META_ENUM_VALUE(Bar)
+TG_META_ENUM_VALUE(Goo)
+TG_META_ENUM_END
+#undef TG_TYPE
+
+struct ExampleMetaStruct
+{
+   TG_META_STRUCT_BODY(ExampleMetaStruct)
+   std::string foo;
+   int numer_of_things;
+   float amount;
+   ExampleEnum enum_value;
+   triglav::Vector3 vector_value;
+   triglav::Quaternion quat_value;
+   triglav::TextureName tex_name;
+};
+
+#define TG_TYPE(NS) ExampleMetaStruct
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(foo, std::string)
+TG_META_PROPERTY(numer_of_things, int)
+TG_META_PROPERTY(amount, float)
+TG_META_PROPERTY(enum_value, ExampleEnum)
+TG_META_PROPERTY(vector_value, triglav::Vector3)
+TG_META_PROPERTY(quat_value, triglav::Quaternion)
+TG_META_PROPERTY(tex_name, triglav::TextureName)
+TG_META_CLASS_END
+#undef TG_TYPE
 
 int triglav_main(InputArgs& args, IDisplay& display)
 {
@@ -222,13 +266,25 @@ int triglav_main(InputArgs& args, IDisplay& display)
 
    auto& scroll = global_layout.create_child<triglav::ui_core::ScrollBox>({.max_height = 300.0f});
 
+   ExampleMetaStruct meta_struct{
+      .foo = "Foo Value",
+      .numer_of_things = 2137,
+      .amount = 2.5f,
+      .enum_value = ExampleEnum::Foo,
+      .vector_value = {1, 2, 3},
+      .tex_name = triglav::name_from_path("my/texture/name.tex"),
+   };
+
    auto& rect2 = global_layout.create_child<triglav::ui_core::RectBox>({
-      .color = {1, 0, 1, 1},
+      .color = {0.1, 0.1, 0.1, 1},
       .border_radius = {0, 0, 0, 0},
       .border_color = {0, 0, 0, 0},
       .border_width = 0,
    });
-   rect2.create_content<triglav::ui_core::EmptySpace>({.size = {200, 200}});
+   rect2.create_content<triglav::desktop_ui::MetaWidget>({
+      .meta_type = ExampleMetaStruct::meta_name(),
+      .provider = std::make_unique<triglav::desktop_ui::BasicMetaProvider>(meta_struct.to_meta_ref()),
+   });
 
 
    auto& tab_view = scroll.create_content<triglav::desktop_ui::TabView>({});
@@ -281,6 +337,14 @@ int triglav_main(InputArgs& args, IDisplay& display)
       .color = triglav::palette::WHITE,
       .horizontal_alignment = HorizontalAlignment::Center,
       .vertical_alignment = VerticalAlignment::Center,
+   });
+
+   triglav::Sink on_click = btn.event_OnClick.connect_raw(&meta_struct, [](void* handle) {
+      auto* example = static_cast<ExampleMetaStruct*>(handle);
+      triglav::io::DynamicWriter writer;
+      triglav::json_util::serialize(example->to_meta_ref(), writer);
+      const std::string json_string{reinterpret_cast<const char*>(writer.data()), writer.size()};
+      std::cout << json_string << '\n';
    });
 
    layout.create_child<triglav::ui_core::Image>({

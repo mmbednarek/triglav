@@ -53,6 +53,11 @@ class Event
                                                         })));
    }
 
+   [[nodiscard]] Sink connect_raw(void* handle, void (*callback)(void*, TArgs...)) const
+   {
+      return Sink(EventManager::the().register_callback(m_event_id, handle, reinterpret_cast<void*>(callback)));
+   }
+
    [[nodiscard]] EventID event_id() const
    {
       return m_event_id;

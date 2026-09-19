@@ -101,6 +101,9 @@ class Level
       return *static_cast<T*>(m_entity_storage.get_component(id, *ComponentManager::the().component_id_by_class_name(T::meta_name())));
    }
 
+   void* component_raw(EntityID entity_id, ComponentID component_id) const;
+   void* component_mut_raw(EntityID entity_id, ComponentID component_id);
+
    template<meta::HasMetaName T>
    T& mut_component(const EntityID id)
    {
@@ -153,6 +156,18 @@ class Level
       auto from = LevelComponentIterator<T>(storage.begin());
       auto to = LevelComponentIterator<T>(storage.end());
       return LevelComponentRange<T>{from, to};
+   }
+
+   template<typename F>
+   void iterate_components(const EntityID entity_id, F callback)
+   {
+      const auto component_count = ComponentManager::the().count();
+      for (ComponentID id = 0; id < component_count; ++id) {
+         if (!m_entity_storage.has_component(entity_id, id))
+            continue;
+
+         callback(id);
+      }
    }
 
    [[nodiscard]] HierarchyTree::Range children_of(EntityID entity) const;

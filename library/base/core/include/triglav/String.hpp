@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CompTimeString.hpp"
+#include "Template.hpp"
 #include "Utf8.hpp"
 
 #include <array>
@@ -212,6 +213,22 @@ class CharInserterIterator
 };
 
 CharInserterIterator char_inserter(String& string_instance);
+
+template<Numeric TInt>
+String to_string(TInt value)
+{
+   std::array<char, 256> buffer{};
+   const auto count = std::to_chars(buffer.begin(), buffer.end(), value);
+   return String{buffer.data(), static_cast<mem_size>(count.ptr - buffer.data())};
+}
+
+template<Numeric TInt>
+TInt from_string(const StringView value)
+{
+   TInt result;
+   std::from_chars(value.data(), value.data() + value.size(), result);
+   return result;
+}
 
 namespace string_literals {
 

@@ -7,6 +7,7 @@
 #include "SetTransformAction.hpp"
 
 #include "triglav/Format.hpp"
+#include "triglav/desktop_ui/MetaWidget.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
 #include "triglav/ui_core/widget/EmptySpace.hpp"
@@ -303,6 +304,105 @@ void TransformWidget::apply_transform()
    m_state.editor->viewport().update_view();
 }
 
+namespace {
+
+Vector4 component_class_to_icon(const Name meta_type)
+{
+   switch (meta_type) {
+   case "triglav::Transform3D"_name:
+      return {5 * 18, 2 * 18, 18, 18};
+   case "triglav::world::Mesh"_name:
+      return {7 * 18, 0 * 18, 18, 18};
+   case "triglav::world::Tag"_name:
+      return {8 * 18, 2 * 18, 18, 18};
+   case "triglav::world::EntityLabel"_name:
+      return {9 * 18, 2 * 18, 18, 18};
+   default:
+      return {5 * 18, 1 * 18, 18, 18};
+   }
+}
+
+}// namespace
+
+class ComponentProvider : public desktop_ui::IMetaProvider
+{
+ public:
+   ComponentProvider(world::Level* level, const world::EntityID entity_id, const world::ComponentID component_id,
+                     const Name meta_type_name) :
+       m_level(level),
+       m_entity_id(entity_id),
+       m_component_id(component_id),
+       m_meta_type_name(meta_type_name)
+   {
+   }
+
+   [[nodiscard]] meta::ClassRef get_reference() const override
+   {
+      void* component = m_level->component_raw(m_entity_id, m_component_id);
+      return meta::ClassRef{component, m_meta_type_name};
+   }
+
+   void mutate() override
+   {
+      m_level->component_mut_raw(m_entity_id, m_component_id);
+   }
+
+ private:
+   world::Level* m_level;
+   world::EntityID m_entity_id;
+   world::ComponentID m_component_id;
+   Name m_meta_type_name;
+};
+
+class ComponentView : public desktop_ui::DesktopProxyWidget
+{
+ public:
+   struct State
+   {
+      world::EntityID entity_id;
+      world::Level* level;
+   };
+
+   ComponentView(ui_core::Context& context, State state, IWidget* parent) :
+       DesktopProxyWidget(context, parent),
+       m_state(state)
+   {
+      auto& vert_layout = this->create_content<ui_core::VerticalLayout>({
+         .padding = {6, 6, 6, 6},
+         .separation = 8.0f,
+      });
+
+      if (m_state.level == nullptr)
+         return;
+
+      m_state.level->iterate_components(m_state.entity_id, [&](const world::ComponentID component_id) {
+         auto& rect_box = vert_layout.create_child<ui_core::RectBox>({
+            .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
+            .border_radius = {8, 8, 8, 8},
+            .border_color = palette::NO_COLOR,
+            .border_width = 0.0f,
+         });
+
+         auto& component_layout = rect_box.create_content<ui_core::VerticalLayout>({
+            .padding = {8.0f, 8.0f, 8.0f, 8.0f},
+            .separation = 5.0f,
+         });
+
+         const auto& info = world::ComponentManager::the().info_by_id(component_id);
+
+         component_layout.create_child<PanelHeader>({.label = info.name, .icon_region = component_class_to_icon(info.component_class)});
+
+         component_layout.create_child<desktop_ui::MetaWidget>({
+            .meta_type = info.component_class,
+            .provider = std::make_unique<ComponentProvider>(m_state.level, m_state.entity_id, component_id, info.component_class),
+         });
+      });
+   }
+
+ private:
+   State m_state;
+};
+
 LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent) :
     desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state)
@@ -408,15 +508,25 @@ void LevelEditorSidePanel::on_unselected() const
    }
 }
 
-void LevelEditorSidePanel::on_changed_selected_object(const renderer::SceneObject& object) const
+void LevelEditorSidePanel::on_changed_selected_object(const world::EntityID entity_id, const renderer::SceneObject& /*object*/) const
 {
+   m_state.editor->level().iterate_components(entity_id, [&](const world::ComponentID component_id) {
+      const auto& info = world::ComponentManager::the().info_by_id(component_id);
+      log_info("Entity: {}, Component: {}", entity_id, info.name);
+   });
+
+   m_object_info->remove_from_viewport();
+   m_object_info->create_content<ComponentView>({
+      .entity_id = entity_id,
+      .level = &m_state.editor->level(),
+   });
    m_object_info->set_is_hidden(false);
-   m_transform_widget->on_changed_selected_object(object);
+   // m_transform_widget->on_changed_selected_object(object);
 
-   m_name_input->set_content(object.name.view());
+   // m_name_input->set_content(object.name.view());
 
-   const std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
-   m_mesh_input->set_content(StringView{mesh_path});
+   // const std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
+   // m_mesh_input->set_content(StringView{mesh_path});
 
    m_scene_view->update_selected_item();
 }
