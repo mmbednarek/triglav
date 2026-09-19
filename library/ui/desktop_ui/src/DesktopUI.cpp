@@ -10,7 +10,7 @@ ThemeProperties ThemeProperties::get_default()
 {
    return {
       .base_typeface = "engine/fonts/inter/light.typeface"_rc,
-      .base_font_size = 15,
+      .base_font_size = 14,
       .background_color_darker = {0.094f, 0.094f, 0.094f, 1.0f},
       .background_color_brighter = {0.12f, 0.12f, 0.12f, 1.0f},
       .active_color = {0.16f, 0.16f, 0.16f, 1.0f},
@@ -30,6 +30,7 @@ ThemeProperties ThemeProperties::get_default()
             .bg_inactive = {0.12f, 0.12f, 0.12f, 1.0f},
             .bg_active = {0.15f, 0.15f, 0.15f, 1.0f},
             .bg_hover = {0.16f, 0.16f, 0.16f, 1.0f},
+            .font_size = 13,
          },
 
       .dropdown =

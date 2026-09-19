@@ -38,6 +38,7 @@ struct ThemeProperties
       Color bg_inactive;
       Color bg_active;
       Color bg_hover;
+      i32 font_size;
    } text_input;
 
    // Dropdown menu

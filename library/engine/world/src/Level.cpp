@@ -118,6 +118,17 @@ EntityID Level::new_entity(const EntityID parent)
    return m_entity_storage.allocate_entity(parent);
 }
 
+void* Level::component_raw(const EntityID entity_id, const ComponentID component_id) const
+{
+   return m_entity_storage.get_component(entity_id, component_id);
+}
+
+void* Level::component_mut_raw(const EntityID entity_id, const ComponentID component_id)
+{
+   this->insert_component_change(component_id, entity_id);
+   return m_entity_storage.get_component(entity_id, component_id);
+}
+
 HierarchyTree::Range Level::children_of(const EntityID entity) const
 {
    return m_entity_storage.hierarchy_tree().children_of(entity);

@@ -35,7 +35,7 @@ TextInput::TextInput(ui_core::Context& ctx, const TextInput::State state, ui_cor
     m_text_prim{
        .content = m_state.text,
        .typeface_name = TG_THEME_VAL(base_typeface),
-       .font_size = TG_THEME_VAL(button.font_size) - 1,
+       .font_size = TG_THEME_VAL(text_input.font_size),
        .color = TG_THEME_VAL(foreground_color),
     },
     m_caret_box{

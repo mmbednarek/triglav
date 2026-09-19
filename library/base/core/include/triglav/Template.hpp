@@ -156,4 +156,7 @@ concept TaggedClass = requires {
    { T::TAG } -> std::convertible_to<Name>;
 };
 
+template<typename T>
+concept Numeric = std::integral<T> || std::floating_point<T>;
+
 }// namespace triglav

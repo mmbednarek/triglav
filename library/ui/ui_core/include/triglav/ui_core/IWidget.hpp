@@ -32,7 +32,7 @@ class IWidget;
 
 template<typename TWidget>
 concept ConstructableWidget = requires(Context& ctx, typename TWidget::State&& state, IWidget* parent) {
-   { TWidget{ctx, state, parent} } -> std::same_as<TWidget>;
+   { TWidget{ctx, std::move(state), parent} } -> std::same_as<TWidget>;
 };
 
 struct Event

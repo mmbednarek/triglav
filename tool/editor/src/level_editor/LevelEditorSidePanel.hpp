@@ -21,6 +21,7 @@ class SceneView;
 
 class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
 {
+   TG_DEFINE_LOG_CATEGORY(LevelEditorSidePanel)
  public:
    using Self = LevelEditorSidePanel;
 
@@ -32,7 +33,7 @@ class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
    LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent);
 
    void on_unselected() const;
-   void on_changed_selected_object(const renderer::SceneObject& object) const;
+   void on_changed_selected_object(world::EntityID entity_id, const renderer::SceneObject& object) const;
    void on_object_is_removed(world::EntityID object_id) const;
    void on_changed_name(StringView name) const;
    void on_changed_mesh(StringView mesh);
