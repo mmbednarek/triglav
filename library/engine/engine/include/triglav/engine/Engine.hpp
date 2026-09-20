@@ -77,6 +77,7 @@ struct SystemRegisterer
 
 [[nodiscard]] Engine& the();
 [[nodiscard]] world::Level* level();
+[[nodiscard]] resource::ResourceManager& resource_manager();
 
 template<TaggedClass TSystem>
 [[nodiscard]] TSystem& system()

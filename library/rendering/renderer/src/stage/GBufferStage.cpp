@@ -1,6 +1,7 @@
 #include "stage/GBufferStage.hpp"
 
 #include "BindlessScene.hpp"
+#include "TerrainRenderer.hpp"
 
 #include "triglav/geometry/DebugMesh.hpp"
 #include "triglav/geometry/Geometry.hpp"
@@ -97,7 +98,7 @@ GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless
     m_device(device),
     m_mesh(create_skybox_mesh(device)),
     m_terrain_texture(generate_terrain_bitmap(device, 1024, 1024)),
-    m_terrain_blend_texture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(R, UNorm8), graphics_api::Resolution{1024, 1024}))),
+    m_terrain_blend_texture(GAPI_CHECK(device.create_texture(GAPI_FORMAT(RGBA, UNorm8), graphics_api::Resolution{1024, 1024}))),
     m_terrain_vertices(generate_terrain_vertices(device)),
     m_bindless_scene(bindless_scene),
     TG_CONNECT(m_bindless_scene.scene(), OnTerrainUpdated, on_terrain_updated)
@@ -167,6 +168,10 @@ void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 
 void GBufferStage::build_terrain(render_core::BuildContext& ctx) const
 {
+   auto& terrain_renderer = m_bindless_scene.level().system<TerrainRenderer>();
+   terrain_renderer.build_commands(ctx);
+
+   /*
    ctx.bind_vertex_shader("shader/terrain/vertex.vshader"_rc);
 
    ctx.bind_hull_shader("shader/terrain/hull.hshader"_rc);
@@ -191,12 +196,14 @@ void GBufferStage::build_terrain(render_core::BuildContext& ctx) const
    ctx.set_tesselation_control_points(4);
 
    ctx.draw_primitives(8 * 8 * 4, 0, 1, 0);
+   */
 }
 
-void GBufferStage::on_terrain_updated(const Vector2i /*size*/, const std::vector<float>& height, const std::vector<u8>& blending) const
+void GBufferStage::on_terrain_updated(const Vector2i /*size*/, const std::vector<float>& height,
+                                      const std::vector<Vector4b>& blending) const
 {
    GAPI_CHECK_STATUS(m_terrain_texture.write(m_device, reinterpret_cast<const uint8_t*>(height.data())));
-   GAPI_CHECK_STATUS(m_terrain_blend_texture.write(m_device, blending.data()));
+   GAPI_CHECK_STATUS(m_terrain_blend_texture.write(m_device, reinterpret_cast<const uint8_t*>(blending.data())));
 }
 
 void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,

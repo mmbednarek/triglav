@@ -141,7 +141,7 @@ void TerrainCanvas::paint(const float strength, const Vector2i coord) const
 
          const float shape = std::sin(dist * MATH_PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
-         terr[index] = float_to_u8(u8_to_float(terr[index]) + strength * (1.0f - shape));
+         terr[index] = Vector4b{float_to_u8(u8_to_float(terr[index].x) + strength * (1.0f - shape)), 0, 0, 0};
          // terr[index] = 255;
       }
    }

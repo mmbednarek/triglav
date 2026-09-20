@@ -12,6 +12,9 @@
 
 namespace triglav {
 
+using Vector2b = glm::bvec2;
+using Vector3b = glm::bvec3;
+using Vector4b = glm::bvec4;
 using Vector2i = glm::ivec2;
 using Vector3i = glm::ivec3;
 using Vector4i = glm::ivec4;

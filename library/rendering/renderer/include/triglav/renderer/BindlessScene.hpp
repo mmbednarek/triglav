@@ -109,7 +109,7 @@ class BindlessScene : public world::ISystem
 
    BindlessScene(graphics_api::Device& device, resource::ResourceManager& resource_manager, world::Level& level);
 
-   Name system_name() override;
+   [[nodiscard]] Name system_name() override;
    void on_level_loaded(world::Level& level) override;
    void on_removed_entities(world::Level& level, std::span<const world::EntityID> ids) override;
    void on_added_component(world::Level& level, Name component_name, world::ComponentID component_id,
@@ -137,6 +137,7 @@ class BindlessScene : public world::ISystem
    [[nodiscard]] memory::Area transform_allocated_area() const;
    [[nodiscard]] u32 scene_object_count() const;
    [[nodiscard]] Scene& scene() const;
+   [[nodiscard]] world::Level& level() const;
    [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();
    [[nodiscard]] u32 matrix_hierarchy_count() const;

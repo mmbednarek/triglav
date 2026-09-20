@@ -30,7 +30,7 @@ class GBufferStage final : public IStage
    void build_geometry(render_core::BuildContext& ctx) const;
    void build_terrain(render_core::BuildContext& ctx) const;
 
-   void on_terrain_updated(Vector2i size, const std::vector<float>& height, const std::vector<u8>& blending) const;
+   void on_terrain_updated(Vector2i size, const std::vector<float>& height, const std::vector<Vector4b>& blending) const;
 
  private:
    void draw_objects_with_render_info(render_core::BuildContext& ctx, const render_objects::MaterialGeometryRenderInfo& info) const;

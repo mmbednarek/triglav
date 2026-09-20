@@ -107,6 +107,8 @@ Vector4 component_class_to_icon(const Name meta_type)
       return {8 * 18, 2 * 18, 18, 18};
    case "triglav::world::EntityLabel"_name:
       return {9 * 18, 2 * 18, 18, 18};
+   case "triglav::world::TerrainComponent"_name:
+      return {5 * 18, 3 * 18, 18, 18};
    default:
       return {5 * 18, 1 * 18, 18, 18};
    }
