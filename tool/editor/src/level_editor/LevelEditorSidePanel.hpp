@@ -33,10 +33,13 @@ class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
    LevelEditorSidePanel(ui_core::Context& context, State state, IWidget* parent);
 
    void on_unselected() const;
-   void on_changed_selected_object(world::EntityID entity_id, const renderer::SceneObject& object) const;
+   void on_changed_selected_object(world::EntityID entity_id) const;
    void on_object_is_removed(world::EntityID object_id) const;
    void on_changed_name(StringView name) const;
    void on_changed_mesh(StringView mesh);
+
+   void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
+   void on_child_state_changed(IWidget& widget) override;
 
  private:
    State m_state;
@@ -46,6 +49,8 @@ class LevelEditorSidePanel final : public desktop_ui::DesktopProxyWidget
    TransformWidget* m_transform_widget;
    desktop_ui::TextInput* m_name_input;
    desktop_ui::TextInput* m_mesh_input;
+   Vector4 m_dimensions{};
+   Vector4 m_cropping_mask{};
 
    TG_SINK(NameChange);
    TG_SINK(MeshChange);

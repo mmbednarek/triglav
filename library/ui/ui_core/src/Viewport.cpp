@@ -110,9 +110,18 @@ void Viewport::set_rectangle_color(RectId rect_id, const Vector4 color)
    if (rect.color == color)
       return;
 
-   // log_debug("rect: {} = (color: {}, {}, {}, {})", rect_id, color.x, color.y, color.z, color.w);
-
    rect.color = color;
+   this->event_OnUpdatedRectangle.publish(rect_id, rect);
+   m_needs_redraw = true;
+}
+
+void Viewport::set_rectangle_border_radius(const RectId rect_id, const Vector4 radius)
+{
+   auto& rect = m_rectangles.at(rect_id);
+   if (rect.border_radius == radius)
+      return;
+
+   rect.border_radius = radius;
    this->event_OnUpdatedRectangle.publish(rect_id, rect);
    m_needs_redraw = true;
 }

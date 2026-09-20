@@ -51,9 +51,9 @@ void HideableWidget::set_is_hidden(const bool value)
 {
    m_state.is_hidden = value;
    if (m_state.is_hidden) {
-      this->remove_from_viewport();
+      m_content->remove_from_viewport();
    } else {
-      this->add_to_viewport(m_parent_dimensions, m_cropping_mask);
+      m_content->add_to_viewport(m_parent_dimensions, m_cropping_mask);
    }
 
    if (m_parent != nullptr) {

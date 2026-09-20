@@ -630,7 +630,7 @@ float LevelEditor::speed() const
 void LevelEditor::finish_using_tool() const
 {
    if (m_selected_object != nullptr) {
-      m_side_panel->on_changed_selected_object(m_selected_object_id, *m_selected_object);
+      m_side_panel->on_changed_selected_object(m_selected_object_id);
    }
 }
 void LevelEditor::set_selected_transform(const Transform3D& transform) const
@@ -644,7 +644,7 @@ void LevelEditor::set_selected_transform(const Transform3D& transform) const
 
    level->mut_component<Transform3D>(m_selected_object_id) = transform;
 
-   m_side_panel->on_changed_selected_object(m_selected_object_id, *m_selected_object);
+   m_side_panel->on_changed_selected_object(m_selected_object_id);
    m_viewport->update_view();
 }
 
@@ -664,7 +664,7 @@ void LevelEditor::set_selected_object(const world::EntityID id)
       m_side_panel->on_unselected();
    } else {
       m_selected_object = &scene().object(id);
-      m_side_panel->on_changed_selected_object(m_selected_object_id, *m_selected_object);
+      m_side_panel->on_changed_selected_object(m_selected_object_id);
    }
 
    m_viewport->update_view();
