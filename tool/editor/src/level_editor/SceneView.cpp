@@ -18,11 +18,16 @@ using namespace string_literals;
 
 namespace {
 
-Vector4 get_icon(const world::EntityID entity_id)
+Vector4 get_icon(world::Level& level, const world::EntityID entity_id)
 {
    if (entity_id == world::ROOT_ENTITY) {
       return {7 * 18, 18, 18, 18};
    }
+
+   if (level.has_component<world::TerrainComponent>(entity_id)) {
+      return {5 * 18, 3 * 18, 18, 18};
+   }
+
    return {5 * 18, 18, 18, 18};
 }
 
@@ -154,7 +159,7 @@ void SceneView::add_entity(const world::EntityID parent, const world::EntityID c
 
    const auto tree_item_id = m_tree_controller.add_item(tree_parent, {
                                                                         .icon_name = "editor/texture/ui_icons.tex"_rc,
-                                                                        .icon_region = get_icon(child),
+                                                                        .icon_region = get_icon(m_state.editor->level(), child),
                                                                         .label = label,
                                                                         .has_children = false,
                                                                      });

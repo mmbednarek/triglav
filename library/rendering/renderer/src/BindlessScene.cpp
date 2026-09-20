@@ -401,6 +401,11 @@ Scene& BindlessScene::scene() const
    return m_level.system<Scene>();
 }
 
+world::Level& BindlessScene::level() const
+{
+   return m_level;
+}
+
 std::vector<const graphics_api::Texture*>& BindlessScene::scene_textures()
 {
    return m_scene_textures;

@@ -39,6 +39,12 @@ struct EntityLabel
    std::string label;
 };
 
+struct TerrainComponent
+{
+   TG_META_STRUCT_BODY(Tag)
+   TerrainName name;
+};
+
 class Level;
 
 class ISystem

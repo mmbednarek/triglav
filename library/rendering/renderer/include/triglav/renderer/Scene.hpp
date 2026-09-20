@@ -65,7 +65,7 @@ class Scene : public world::ISystem
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
    TG_EVENT(OnViewUpdated, const Camera&)
-   TG_EVENT(OnTerrainUpdated, Vector2i, const std::vector<float>&, const std::vector<u8>&)
+   TG_EVENT(OnTerrainUpdated, Vector2i, const std::vector<float>&, const std::vector<Vector4b>&)
 
    explicit Scene(resource::ResourceManager& resource_manager);
 
@@ -101,7 +101,7 @@ class Scene : public world::ISystem
    [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
    RayHit trace_ray(const geometry::Ray& ray) const;
    std::vector<float>& terrain();
-   std::vector<u8>& terrain_blending();
+   std::vector<Vector4b>& terrain_blending();
    void publish_terrain_changes();
 
    [[nodiscard]] std::map<world::EntityID, SceneObjectUPtr>::const_iterator begin() const
@@ -124,7 +124,7 @@ class Scene : public world::ISystem
    std::map<world::EntityID, SceneObjectUPtr> m_objects{};
    geometry::BVHTree<SceneObjectRef> m_tree;
    std::vector<float> m_terrain;
-   std::vector<u8> m_terrain_blending;
+   std::vector<Vector4b> m_terrain_blending;
 };
 
 }// namespace triglav::renderer

@@ -10,7 +10,7 @@ ThemeProperties ThemeProperties::get_default()
 {
    return {
       .base_typeface = "engine/fonts/inter/light.typeface"_rc,
-      .base_font_size = 12,
+      .base_font_size = 13,
       .background_color_darker = {0.094f, 0.094f, 0.094f, 1.0f},
       .background_color_brighter = {0.12f, 0.12f, 0.12f, 1.0f},
       .active_color = {0.16f, 0.16f, 0.16f, 1.0f},

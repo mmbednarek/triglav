@@ -31,6 +31,12 @@ TG_META_PROPERTY(label, std::string)
 TG_META_CLASS_END
 #undef TG_TYPE
 
+#define TG_TYPE(NS) NS(triglav, NS(world, TerrainComponent))
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(name, triglav::TerrainName)
+TG_META_CLASS_END
+#undef TG_TYPE
+
 ComponentRegisterer transform_registerer{{
    .component_class = "triglav::Transform3D"_name,
    .data_size = sizeof(Transform3D),
@@ -66,6 +72,13 @@ ComponentRegisterer entity_label_registerer{{
    .name = "Entity Label",
 }};
 
+ComponentRegisterer terrain_component_registerer{{
+   .component_class = "triglav::world::TerrainComponent"_name,
+   .data_size = sizeof(TerrainComponent),
+   .data_alignment = alignof(TerrainComponent),
+   .name = "Terrain",
+}};
+
 void ensure_component_registration()
 {
    (void)transform_registerer;
@@ -73,6 +86,7 @@ void ensure_component_registration()
    (void)armature_registerer;
    (void)tag_registerer;
    (void)entity_label_registerer;
+   (void)terrain_component_registerer;
 }
 
 }// namespace triglav::world

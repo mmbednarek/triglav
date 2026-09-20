@@ -522,18 +522,25 @@ world::EntityID LevelEditor::selected_object_id() const
    return m_selected_object_id;
 }
 
-Vector3 LevelEditor::selected_object_position(const std::optional<Vector3> position) const
+Vector3 LevelEditor::selected_object_position(const std::optional<Vector3> /*position*/) const
 {
-   const auto* object = this->selected_object();
-   const auto translation = position.value_or(object->transform.translation);
+   auto* transform = m_level.component_opt<Transform3D>(m_selected_object_id);
+   if (transform == nullptr) {
+      return Vector3{0, 0, 0};
+   }
 
    switch (m_object_mode_panel->m_origin_selector->selected_item()) {
    case 0:
-      return translation;
+      return transform->translation;
    case 1: {
-      const auto& mesh = this->root_window().resource_manager().get(object->model);
+      auto* mesh_comp = m_level.component_opt<world::Mesh>(m_selected_object_id);
+      if (mesh_comp == nullptr) {
+         return transform->translation;
+      }
+
+      const auto& mesh = this->root_window().resource_manager().get(mesh_comp->name);
       const auto centroid = mesh.bounding_box.centroid();
-      return translation + centroid * object->transform.scale;
+      return transform->translation + centroid * transform->scale;
    }
    default:
       break;
@@ -629,7 +636,7 @@ float LevelEditor::speed() const
 
 void LevelEditor::finish_using_tool() const
 {
-   if (m_selected_object != nullptr) {
+   if (m_selected_object_id != world::NO_ENTITY) {
       m_side_panel->on_changed_selected_object(m_selected_object_id);
    }
 }
@@ -660,10 +667,8 @@ void LevelEditor::set_selected_object(const world::EntityID id)
    m_selected_object_id = id;
 
    if (id == renderer::UNSELECTED_OBJECT) {
-      m_selected_object = nullptr;
       m_side_panel->on_unselected();
    } else {
-      m_selected_object = &scene().object(id);
       m_side_panel->on_changed_selected_object(m_selected_object_id);
    }
 

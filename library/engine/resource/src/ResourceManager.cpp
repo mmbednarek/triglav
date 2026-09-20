@@ -6,6 +6,7 @@
 #include "MaterialLoader.hpp"
 #include "MeshLoader.hpp"
 #include "ShaderLoader.hpp"
+#include "TerrainLoader.hpp"
 #include "TextureLoader.hpp"
 #include "TypefaceLoader.hpp"
 

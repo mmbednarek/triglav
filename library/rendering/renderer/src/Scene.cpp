@@ -37,7 +37,7 @@ Scene::Scene(resource::ResourceManager& resource_manager) :
    std::ranges::fill(m_terrain, 0.0f);
 
    m_terrain_blending.resize(1024 * 1024);
-   std::ranges::fill(m_terrain_blending, 0);
+   std::ranges::fill(m_terrain_blending, Vector4b{1, 0, 0, 0});
 }
 
 void Scene::update(const graphics_api::Resolution& resolution)
@@ -164,7 +164,7 @@ std::vector<float>& Scene::terrain()
    return m_terrain;
 }
 
-std::vector<u8>& Scene::terrain_blending()
+std::vector<Vector4b>& Scene::terrain_blending()
 {
    return m_terrain_blending;
 }
