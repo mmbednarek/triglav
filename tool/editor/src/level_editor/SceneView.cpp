@@ -16,6 +16,18 @@ namespace triglav::editor {
 
 using namespace string_literals;
 
+namespace {
+
+Vector4 get_icon(const world::EntityID entity_id)
+{
+   if (entity_id == world::ROOT_ENTITY) {
+      return {7 * 18, 18, 18, 18};
+   }
+   return {5 * 18, 18, 18, 18};
+}
+
+}// namespace
+
 SceneView::SceneView(ui_core::Context& context, const State state, ui_core::IWidget* parent) :
     desktop_ui::DesktopProxyWidget(context, parent),
     m_state(state),
@@ -130,23 +142,7 @@ void SceneView::update_selected_item() const
 
 void SceneView::on_resource_selected(const String /*resource*/) const
 {
-   // log_info("Selected resource: {}", resource.to_std());
-   //
-   // const auto& camera = m_state.editor->scene().camera();
-   //
-   // Transform3D transform{};
-   // transform.translation = camera.position() + 10.0f * camera.forward_vector();
-   // transform.rotation = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
-   // transform.scale = {1, 1, 1};
-   //
-   // engine::Engine::the().current_level()->add_node("Object"_name, world::LevelNode
-   // {
-   //    .mesh_name = make_rc_name(resource.view().to_std()),
-   //    .name = "New Object"_str,
-   //    .transform = transform,
-   // });
-   //
-   // m_state.editor->set_selected_object(object_id);
+   log_error("UNIMPLEMENTED");
 }
 
 void SceneView::add_entity(const world::EntityID parent, const world::EntityID child, const StringView label)
@@ -158,7 +154,7 @@ void SceneView::add_entity(const world::EntityID parent, const world::EntityID c
 
    const auto tree_item_id = m_tree_controller.add_item(tree_parent, {
                                                                         .icon_name = "editor/texture/ui_icons.tex"_rc,
-                                                                        .icon_region = {5 * 18, 18, 18, 18},
+                                                                        .icon_region = get_icon(child),
                                                                         .label = label,
                                                                         .has_children = false,
                                                                      });

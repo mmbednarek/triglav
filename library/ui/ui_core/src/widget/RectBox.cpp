@@ -65,6 +65,17 @@ void RectBox::set_color(Vector4 color)
    m_context.viewport().set_rectangle_color(m_rect_name, color);
 }
 
+void RectBox::set_border_radius(const Vector4 border_radius)
+{
+   if (m_state.border_radius == border_radius)
+      return;
+   if (m_rect_name == 0)
+      return;
+
+   m_state.color = border_radius;
+   m_context.viewport().set_rectangle_border_radius(m_rect_name, border_radius);
+}
+
 void RectBox::on_child_state_changed(IWidget& widget)
 {
    m_cached_available_size_size.reset();

@@ -2,19 +2,16 @@
 
 #include "../RootWindow.hpp"
 #include "LevelEditor.hpp"
-#include "LevelViewport.hpp"
 #include "SceneView.hpp"
 #include "SetTransformAction.hpp"
 
 #include "triglav/Format.hpp"
 #include "triglav/desktop_ui/MetaWidget.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
-#include "triglav/desktop_ui/TextInput.hpp"
-#include "triglav/ui_core/widget/EmptySpace.hpp"
-#include "triglav/ui_core/widget/GridLayout.hpp"
 #include "triglav/ui_core/widget/HideableWidget.hpp"
 #include "triglav/ui_core/widget/HorizontalLayout.hpp"
 #include "triglav/ui_core/widget/Image.hpp"
+#include "triglav/ui_core/widget/Padding.hpp"
 #include "triglav/ui_core/widget/RectBox.hpp"
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
@@ -24,10 +21,6 @@
 namespace triglav::editor {
 
 using namespace name_literals;
-
-constexpr Color RED_OUTLINE{0.62f, 0.34f, 0.33f, 1.0f};
-constexpr Color GREEN_OUTLINE{0.33f, 0.63f, 0.33f, 1.0f};
-constexpr Color BLUE_OUTLINE{0.32f, 0.43f, 0.62f, 1.0f};
 
 class PanelHeader final : public desktop_ui::DesktopProxyWidget
 {
@@ -42,14 +35,25 @@ class PanelHeader final : public desktop_ui::DesktopProxyWidget
        desktop_ui::DesktopProxyWidget(context, parent),
        m_state(std::move(state))
    {
-      auto& layout = this->create_content<ui_core::VerticalLayout>({
-         .padding = {},
+      m_rect_box = &this->create_content<ui_core::RectBox>({
+         .color = Vector4{0.16f, 0.16f, 0.16f, 1.0f},
+         .border_radius = {8.0f, 8.0f, 0.0f, 0.0f},
+         .border_color = palette::NO_COLOR,
+         .border_width = 0.0f,
+      });
+
+      auto& hor_layout = m_rect_box->create_content<ui_core::HorizontalLayout>({
+         .padding = {8.0f, 8.0f, 8.0f, 8.0f},
          .separation = 8.0f,
       });
 
-      auto& hor_layout = layout.create_child<ui_core::HorizontalLayout>({
-         .padding = {},
-         .separation = 8.0f,
+      auto& hide_button = hor_layout.create_child<ui_core::Button>({});
+      m_hide_sink = hide_button.event_OnClick.connect<&PanelHeader::on_clicked_hide>(*this);
+
+      m_hide_icon = &hide_button.create_content<ui_core::Image>({
+         .texture = desktop_ui::ICON_ATLAS,
+         .max_size = Vector2{18, 18},
+         .region = desktop_ui::icon_region(desktop_ui::AtlasIcon::ArrowDown),
       });
 
       hor_layout.create_child<ui_core::Image>({
@@ -62,247 +66,33 @@ class PanelHeader final : public desktop_ui::DesktopProxyWidget
          .font_size = 13,
          .typeface = "engine/fonts/inter/regular.typeface"_rc,
          .content = m_state.label,
-         .color = {0.3, 0.3, 0.3, 1.0},
+         .color = {0.6, 0.6, 0.6, 1.0},
          .horizontal_alignment = ui_core::HorizontalAlignment::Left,
          .vertical_alignment = ui_core::VerticalAlignment::Center,
       });
-
-      layout
-         .create_child<ui_core::RectBox>({
-            .color = TG_THEME_VAL(active_color),
-            .border_radius = {0, 0, 0, 0},
-            .border_color = palette::NO_COLOR,
-            .border_width = 0.0f,
-         })
-         .create_content<ui_core::EmptySpace>({
-            .size = {10.0f, 2.0f},
-         });
-      layout.create_child<ui_core::EmptySpace>({
-         .size = {10.0f, 5.0f},
-      });
    }
+
+   void on_clicked_hide(const desktop::MouseButton /*mouse_button*/)
+   {
+      if (m_hideable_widget->state().is_hidden) {
+         m_hideable_widget->set_is_hidden(false);
+         m_hide_icon->set_region(desktop_ui::icon_region(desktop_ui::AtlasIcon::ArrowDown));
+         m_rect_box->set_border_radius({8.0f, 8.0f, 0.0f, 0.0f});
+      } else {
+         m_hideable_widget->set_is_hidden(true);
+         m_hide_icon->set_region(desktop_ui::icon_region(desktop_ui::AtlasIcon::ArrowRight));
+         m_rect_box->set_border_radius({8.0f, 8.0f, 8.0f, 8.0f});
+      }
+   }
+
+   ui_core::HideableWidget* m_hideable_widget = nullptr;
 
  private:
    State m_state;
+   Sink m_hide_sink;
+   ui_core::Image* m_hide_icon;
+   ui_core::RectBox* m_rect_box;
 };
-
-class TransformInput;
-
-class TransformWidget final : public desktop_ui::DesktopProxyWidget
-{
- public:
-   struct State
-   {
-      LevelEditor* editor{};
-   };
-
-   TransformWidget(ui_core::Context& context, State state, IWidget* parent);
-
-   void on_changed_selected_object(const renderer::SceneObject& object);
-   void apply_transform();
-
- private:
-   State m_state;
-
-   TransformInput* m_translate_x;
-   TransformInput* m_translate_y;
-   TransformInput* m_translate_z;
-
-   TransformInput* m_rotate_x;
-   TransformInput* m_rotate_y;
-   TransformInput* m_rotate_z;
-
-   TransformInput* m_scale_x;
-   TransformInput* m_scale_y;
-   TransformInput* m_scale_z;
-
-   Vector3 m_pending_translate{};
-   Vector3 m_pending_rotation{};
-   Vector3 m_pending_scale{};
-};
-
-class TransformInput final : public ui_core::ProxyWidget
-{
- public:
-   using Self = TransformInput;
-
-   struct State
-   {
-      desktop_ui::DesktopContext* manager{};
-      TransformWidget* widget;
-      Color border_color{};
-      float* destination;
-   };
-
-   TransformInput(ui_core::Context& context, State state, IWidget* parent) :
-       ui_core::ProxyWidget(context, parent),
-       m_state(state)
-   {
-      static constexpr auto num_only = [](const Rune r) -> bool { return std::isdigit(r) || r == '.' || r == '-'; };
-
-      m_text_input = &this->create_content<desktop_ui::TextInput>({
-         .text = "0",
-         .filter_func = num_only,
-         .border_color = m_state.border_color,
-      });
-
-      TG_CONNECT_OPT(*m_text_input, OnTextChanged, on_text_changed);
-   }
-
-   void on_text_changed(const StringView text) const
-   {
-      *m_state.destination = std::stof(String(text).to_std());
-      m_state.widget->apply_transform();
-   }
-
-   void set_content(const StringView text) const
-   {
-      m_text_input->set_content(text);
-   }
-
- private:
-   State m_state;
-   desktop_ui::TextInput* m_text_input{};
-
-   TG_SINK(OnTextChanged);
-};
-
-TransformWidget::TransformWidget(ui_core::Context& context, State state, IWidget* parent) :
-    desktop_ui::DesktopProxyWidget(context, parent),
-    m_state(state)
-{
-   auto& transform_layout = this->create_content<ui_core::GridLayout>({
-      .column_ratios = {0.3f, 0.233f, 0.233f, 0.233f},
-      .row_ratios = {0.333f, 0.333f, 0.333f},
-      .horizontal_spacing = 5.0f,
-      .vertical_spacing = 5.0f,
-   });
-
-   transform_layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size) - 1,
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Translate",
-      .color = TG_THEME_VAL(foreground_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Center,
-   });
-
-   m_translate_x = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = RED_OUTLINE,
-      .destination = &m_pending_translate.x,
-   });
-   m_translate_y = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = GREEN_OUTLINE,
-      .destination = &m_pending_translate.y,
-   });
-   m_translate_z = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = BLUE_OUTLINE,
-      .destination = &m_pending_translate.z,
-   });
-
-   transform_layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size) - 1,
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Rotate",
-      .color = TG_THEME_VAL(foreground_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Center,
-   });
-
-   m_rotate_x = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = RED_OUTLINE,
-      .destination = &m_pending_rotation.x,
-   });
-   m_rotate_y = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = GREEN_OUTLINE,
-      .destination = &m_pending_rotation.y,
-   });
-   m_rotate_z = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = BLUE_OUTLINE,
-      .destination = &m_pending_rotation.z,
-   });
-
-   transform_layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size) - 1,
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Scale",
-      .color = TG_THEME_VAL(foreground_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Center,
-   });
-
-   m_scale_x = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = RED_OUTLINE,
-      .destination = &m_pending_scale.x,
-   });
-   m_scale_y = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = GREEN_OUTLINE,
-      .destination = &m_pending_scale.y,
-   });
-   m_scale_z = &transform_layout.create_child<TransformInput>({
-      .widget = this,
-      .border_color = BLUE_OUTLINE,
-      .destination = &m_pending_scale.z,
-   });
-}
-
-void TransformWidget::on_changed_selected_object(const renderer::SceneObject& object)
-{
-   m_pending_translate = object.transform.translation;
-   m_pending_rotation = glm::degrees(glm::eulerAngles(object.transform.rotation));
-   m_pending_scale = object.transform.scale;
-
-   const auto x = format("{}", object.transform.translation.x);
-   const auto y = format("{}", object.transform.translation.y);
-   const auto z = format("{}", object.transform.translation.z);
-
-   m_translate_x->set_content(x.view());
-   m_translate_y->set_content(y.view());
-   m_translate_z->set_content(z.view());
-
-   const auto yaw = format("{}", m_pending_rotation.x);
-   const auto pitch = format("{}", m_pending_rotation.y);
-   const auto roll = format("{}", m_pending_rotation.z);
-
-   m_rotate_x->set_content(yaw.view());
-   m_rotate_y->set_content(pitch.view());
-   m_rotate_z->set_content(roll.view());
-
-   const auto scale_x = format("{}", object.transform.scale.x);
-   const auto scale_y = format("{}", object.transform.scale.y);
-   const auto scale_z = format("{}", object.transform.scale.z);
-
-   m_scale_x->set_content(scale_x.view());
-   m_scale_y->set_content(scale_y.view());
-   m_scale_z->set_content(scale_z.view());
-}
-
-void TransformWidget::apply_transform()
-{
-   assert(m_state.editor);
-
-   if (m_state.editor->selected_object() == nullptr)
-      return;
-
-   Transform3D transform{};
-   transform.translation = m_pending_translate;
-   transform.rotation = Quaternion{glm::radians(m_pending_rotation)};
-   transform.scale = m_pending_scale;
-
-   m_state.editor->history_manager().emplace_action<SetTransformAction>(*m_state.editor, m_state.editor->selected_object_id(),
-                                                                        m_state.editor->selected_object()->transform, transform);
-
-   m_state.editor->scene().set_transform(m_state.editor->selected_object_id(), transform);
-   m_state.editor->viewport().update_view();
-}
 
 namespace {
 
@@ -376,26 +166,34 @@ class ComponentView : public desktop_ui::DesktopProxyWidget
          return;
 
       m_state.level->iterate_components(m_state.entity_id, [&](const world::ComponentID component_id) {
-         auto& rect_box = vert_layout.create_child<ui_core::RectBox>({
-            .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
-            .border_radius = {8, 8, 8, 8},
-            .border_color = palette::NO_COLOR,
-            .border_width = 0.0f,
-         });
-
-         auto& component_layout = rect_box.create_content<ui_core::VerticalLayout>({
-            .padding = {8.0f, 8.0f, 8.0f, 8.0f},
-            .separation = 5.0f,
+         auto& comp_layout = vert_layout.create_child<ui_core::VerticalLayout>({
+            .padding = {},
+            .separation = 0.0f,
          });
 
          const auto& info = world::ComponentManager::the().info_by_id(component_id);
 
-         component_layout.create_child<PanelHeader>({.label = info.name, .icon_region = component_class_to_icon(info.component_class)});
+         auto& panel =
+            comp_layout.create_child<PanelHeader>({.label = info.name, .icon_region = component_class_to_icon(info.component_class)});
 
-         component_layout.create_child<desktop_ui::MetaWidget>({
-            .meta_type = info.component_class,
-            .provider = std::make_unique<ComponentProvider>(m_state.level, m_state.entity_id, component_id, info.component_class),
+         auto& hideable = comp_layout.create_child<ui_core::HideableWidget>({
+            .is_hidden = false,
          });
+
+         panel.m_hideable_widget = &hideable;
+
+         auto& rect_box = hideable.create_content<ui_core::RectBox>({
+            .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
+            .border_radius = {0, 0, 8, 8},
+            .border_color = palette::NO_COLOR,
+            .border_width = 0.0f,
+         });
+
+         rect_box.create_content<ui_core::Padding>({6.0f, 6.0f, 6.0f, 6.0f})
+            .create_content<desktop_ui::MetaWidget>({
+               .meta_type = info.component_class,
+               .provider = std::make_unique<ComponentProvider>(m_state.level, m_state.entity_id, component_id, info.component_class),
+            });
       });
    }
 
@@ -427,78 +225,6 @@ LevelEditorSidePanel::LevelEditorSidePanel(ui_core::Context& context, State stat
                        .create_content<ui_core::HideableWidget>({
                           .is_hidden = true,
                        });
-
-   auto& layout = m_object_info->create_content<ui_core::VerticalLayout>({
-      .padding = {6, 6, 6, 6},
-      .separation = 8.0f,
-   });
-
-   auto& transform_box = layout.create_child<ui_core::RectBox>({
-      .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
-      .border_radius = {8, 8, 8, 8},
-      .border_color = palette::NO_COLOR,
-      .border_width = 0.0f,
-   });
-
-   auto& transform_layout = transform_box.create_content<ui_core::VerticalLayout>({
-      .padding = {8, 8, 8, 8},
-      .separation = 7.0f,
-   });
-
-   transform_layout.create_child<PanelHeader>({.label = "TRANSFORM", .icon_region = {5 * 18, 2 * 18, 18, 18}});
-
-   m_transform_widget = &transform_layout.create_child<TransformWidget>({
-      .editor = m_state.editor,
-   });
-
-   auto& mesh_box = layout.create_child<ui_core::RectBox>({
-      .color = Vector4{0.14f, 0.14f, 0.14f, 1.0f},
-      .border_radius = {8, 8, 8, 8},
-      .border_color = palette::NO_COLOR,
-      .border_width = 0.0f,
-   });
-
-   auto& mesh_layout = mesh_box.create_content<ui_core::VerticalLayout>({
-      .padding = {8, 8, 8, 8},
-      .separation = 7.0f,
-   });
-
-   mesh_layout.create_child<PanelHeader>({.label = "MESH", .icon_region = {7 * 18, 0 * 18, 18, 18}});
-
-   auto& prop_layout = mesh_layout.create_child<ui_core::GridLayout>({
-      .column_ratios = {0.3f, 0.7f},
-      .row_ratios = {0.5f, 0.5f},
-      .horizontal_spacing = 5.0f,
-      .vertical_spacing = 5.0f,
-   });
-
-   prop_layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size),
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Name",
-      .color = TG_THEME_VAL(foreground_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Center,
-   });
-   m_name_input = &prop_layout.create_child<desktop_ui::TextInput>({
-      .text = "",
-      .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
-   });
-   TG_CONNECT_NAMED_OPT(*m_name_input, OnTextChanged, NameChange, on_changed_name);
-
-   prop_layout.create_child<ui_core::TextBox>({
-      .font_size = TG_THEME_VAL(base_font_size),
-      .typeface = TG_THEME_VAL(base_typeface),
-      .content = "Mesh",
-      .color = TG_THEME_VAL(foreground_color),
-      .horizontal_alignment = ui_core::HorizontalAlignment::Left,
-      .vertical_alignment = ui_core::VerticalAlignment::Center,
-   });
-   m_mesh_input = &prop_layout.create_child<desktop_ui::TextInput>({
-      .text = "",
-      .border_color = {0.3f, 0.3f, 0.3f, 1.0f},
-   });
-   TG_CONNECT_NAMED_OPT(*m_mesh_input, OnTextChanged, MeshChange, on_changed_mesh);
 }
 
 void LevelEditorSidePanel::on_unselected() const
@@ -508,25 +234,14 @@ void LevelEditorSidePanel::on_unselected() const
    }
 }
 
-void LevelEditorSidePanel::on_changed_selected_object(const world::EntityID entity_id, const renderer::SceneObject& /*object*/) const
+void LevelEditorSidePanel::on_changed_selected_object(const world::EntityID entity_id) const
 {
-   m_state.editor->level().iterate_components(entity_id, [&](const world::ComponentID component_id) {
-      const auto& info = world::ComponentManager::the().info_by_id(component_id);
-      log_info("Entity: {}, Component: {}", entity_id, info.name);
-   });
-
    m_object_info->remove_from_viewport();
    m_object_info->create_content<ComponentView>({
       .entity_id = entity_id,
       .level = &m_state.editor->level(),
    });
    m_object_info->set_is_hidden(false);
-   // m_transform_widget->on_changed_selected_object(object);
-
-   // m_name_input->set_content(object.name.view());
-
-   // const std::string mesh_path = m_state.editor->root_window().resource_manager().lookup_name(object.model).value_or("");
-   // m_mesh_input->set_content(StringView{mesh_path});
 
    m_scene_view->update_selected_item();
 }
@@ -539,6 +254,18 @@ void LevelEditorSidePanel::on_object_is_removed(const world::EntityID object_id)
 void LevelEditorSidePanel::on_changed_name(const StringView name) const
 {
    m_state.editor->set_selected_name(name);
+}
+
+void LevelEditorSidePanel::add_to_viewport(const Vector4 dimensions, const Vector4 cropping_mask)
+{
+   m_dimensions = dimensions;
+   m_cropping_mask = cropping_mask;
+   DesktopProxyWidget::add_to_viewport(dimensions, cropping_mask);
+}
+
+void LevelEditorSidePanel::on_child_state_changed(IWidget& /*widget*/)
+{
+   m_content->add_to_viewport(m_dimensions, m_cropping_mask);
 }
 
 void LevelEditorSidePanel::on_changed_mesh(StringView /*mesh*/)

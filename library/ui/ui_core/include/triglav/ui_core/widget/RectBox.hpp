@@ -26,6 +26,7 @@ class RectBox final : public ContainerWidget
    void add_to_viewport(Vector4 dimensions, Vector4 cropping_mask) override;
    void remove_from_viewport() override;
    void set_color(Vector4 color);
+   void set_border_radius(Vector4 border_radius);
 
    void on_child_state_changed(IWidget& widget) override;
    void on_event(const Event& event) override;

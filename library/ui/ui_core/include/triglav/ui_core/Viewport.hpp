@@ -39,6 +39,7 @@ class Viewport
    RectId add_rectangle(Rectangle&& rect);
    void set_rectangle_dims(RectId rect_id, Rect dims, Rect crop);
    void set_rectangle_color(RectId rect_id, Color color);
+   void set_rectangle_border_radius(RectId rect_id, Vector4 radius);
    void remove_rectangle(RectId rect_id);
    void remove_rectangle_safe(RectId& rect_id);
 

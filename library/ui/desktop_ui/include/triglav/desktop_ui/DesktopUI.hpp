@@ -73,6 +73,39 @@ struct ThemeProperties
 
 #define TG_THEME_VAL(name) this->desktop_context().properties().name
 
+constexpr TextureName ICON_ATLAS = make_rc_name("engine/texture/ui_atlas.tex");
+
+enum class AtlasIcon
+{
+   ArrowDown,
+   ArrowUp,
+   ArrowLeft,
+   ArrowRight,
+   GrayCross,
+   Cross,
+   MaxValue,
+};
+
+constexpr std::array ATLAS_ICONS = {
+   // ArrowDown
+   Vector4{0 * 64, 0 * 64, 64, 64},
+   // ArrowUp
+   Vector4{1 * 64, 0 * 64, 64, 64},
+   // ArrowLeft
+   Vector4{2 * 64, 0 * 64, 64, 64},
+   // ArrowRight
+   Vector4{3 * 64, 0 * 64, 64, 64},
+   // GrayCross
+   Vector4{0 * 64, 1 * 64, 64, 64},
+   // Cross
+   Vector4{1 * 64, 1 * 64, 64, 64},
+};
+
+constexpr Vector4 icon_region(const AtlasIcon icon)
+{
+   return ATLAS_ICONS[static_cast<u32>(icon)];
+}
+
 class DesktopContext : public ui_core::Context
 {
  public:
