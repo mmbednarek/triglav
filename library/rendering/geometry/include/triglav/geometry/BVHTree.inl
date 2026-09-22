@@ -152,6 +152,9 @@ void BVHTree<TPayload>::clear()
 template<PayloadWithAABB TPayload>
 BVHHit<TPayload> BVHTree<TPayload>::traverse(const Ray& ray) const
 {
+   if (m_root == nullptr) {
+      return {INFINITY, nullptr};
+   }
    return detail::traverse_node(m_root, ray);
 }
 

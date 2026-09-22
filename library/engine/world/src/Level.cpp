@@ -129,6 +129,11 @@ void* Level::component_mut_raw(const EntityID entity_id, const ComponentID compo
    return m_entity_storage.get_component(entity_id, component_id);
 }
 
+void Level::remove_entity(const EntityID entity)
+{
+   m_removal_list.emplace_back(entity);
+}
+
 HierarchyTree::Range Level::children_of(const EntityID entity) const
 {
    return m_entity_storage.hierarchy_tree().children_of(entity);

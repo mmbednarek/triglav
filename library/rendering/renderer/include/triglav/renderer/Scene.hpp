@@ -32,35 +32,12 @@ struct SceneObject
 
 using SceneObjectUPtr = std::unique_ptr<SceneObject>;
 
-struct SceneObjectRef
-{
-   SceneObject* object;
-   geometry::BoundingBox bbox;
-   world::EntityID id;
-
-   [[nodiscard]] const geometry::BoundingBox& bounding_box() const
-   {
-      return bbox;
-   }
-};
-
-struct RayHit
-{
-   float distance;
-   world::EntityID id;
-   const SceneObject* object;
-};
-
 class Scene : public world::ISystem
 {
    TG_DEFINE_LOG_CATEGORY(Scene)
  public:
    TG_TAG_CLASS(triglav::renderer::Scene)
 
-   TG_EVENT(OnObjectAddedToScene, world::EntityID, const SceneObject&)
-   TG_EVENT(OnObjectChangedTransform, world::EntityID, const Transform3D&)
-   TG_EVENT(OnObjectChangedName, world::EntityID, const StringView)
-   TG_EVENT(OnObjectRemoved, world::EntityID)
    TG_EVENT(OnViewportChange, const graphics_api::Resolution&)
    TG_EVENT(OnAddedBoundingBox, const geometry::BoundingBox&)
    TG_EVENT(OnShadowMapChanged, u32, const OrthoCamera&)
@@ -70,18 +47,14 @@ class Scene : public world::ISystem
    explicit Scene(resource::ResourceManager& resource_manager);
 
    void update(const graphics_api::Resolution& resolution);
-   void add_object(SceneObject object, world::EntityID entity_id);
-   void set_transform(world::EntityID entity_id, const Transform3D& transform);
    void set_camera(glm::vec3 position, glm::quat orientation);
    void update_shadow_maps();
    void send_view_changed() const;
-   void remove_object(world::EntityID entity_id);
-   void set_object_name(world::EntityID id, StringView name) const;
 
    void on_level_loaded(world::Level& level) override;
-   void on_removed_entities(world::Level& level, std::span<const world::EntityID> ids) override;
    void on_added_component(world::Level& level, Name component_name, world::ComponentID component_id,
                            std::span<const world::EntityID> entities) override;
+   void on_removed_entities(world::Level& level, std::span<const world::EntityID> ids) override;
    void on_modified_component(world::Level& level, Name component_name, world::ComponentID component_id,
                               std::span<const world::EntityID> entities) override;
    Name system_name() override;
@@ -90,29 +63,15 @@ class Scene : public world::ISystem
    [[nodiscard]] Camera& camera();
    [[nodiscard]] const OrthoCamera& shadow_map_camera(u32 index) const;
    [[nodiscard]] u32 directional_shadow_map_count() const;
-   const SceneObject& object(world::EntityID id) const;
 
    [[nodiscard]] float yaw() const;
    [[nodiscard]] float pitch() const;
 
-   void update_bvh();
    void update_orientation(float delta_yaw, float delta_pitch);
    void add_bounding_box(const geometry::BoundingBox& box) const;
-   [[nodiscard]] const geometry::BVHTree<SceneObjectRef>& bvh() const;
-   RayHit trace_ray(const geometry::Ray& ray) const;
    std::vector<float>& terrain();
    std::vector<Vector4b>& terrain_blending();
    void publish_terrain_changes();
-
-   [[nodiscard]] std::map<world::EntityID, SceneObjectUPtr>::const_iterator begin() const
-   {
-      return m_objects.cbegin();
-   }
-
-   [[nodiscard]] std::map<world::EntityID, SceneObjectUPtr>::const_iterator end() const
-   {
-      return m_objects.cend();
-   }
 
  private:
    resource::ResourceManager& m_resource_manager;
@@ -121,8 +80,6 @@ class Scene : public world::ISystem
    Camera m_camera{};
    glm::quat m_directional_light_orientation{glm::vec3{-0.3f, 0.0f, 1.62f}};
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
-   std::map<world::EntityID, SceneObjectUPtr> m_objects{};
-   geometry::BVHTree<SceneObjectRef> m_tree;
    std::vector<float> m_terrain;
    std::vector<Vector4b> m_terrain_blending;
 };

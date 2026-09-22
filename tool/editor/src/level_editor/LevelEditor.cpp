@@ -512,14 +512,22 @@ void LevelEditor::tick(const float delta_time)
    }
 }
 
-const renderer::SceneObject* LevelEditor::selected_object() const
-{
-   return m_selected_object;
-}
+// const renderer::SceneObject* LevelEditor::selected_object() const
+// {
+//    return m_selected_object;
+// }
 
 world::EntityID LevelEditor::selected_object_id() const
 {
    return m_selected_object_id;
+}
+
+const Transform3D* LevelEditor::selected_object_transform() const
+{
+   if (this->m_selected_object_id == world::NO_ENTITY)
+      return nullptr;
+
+   return this->level().component_opt<Transform3D>(this->m_selected_object_id);
 }
 
 Vector3 LevelEditor::selected_object_position(const std::optional<Vector3> /*position*/) const
@@ -642,7 +650,7 @@ void LevelEditor::finish_using_tool() const
 }
 void LevelEditor::set_selected_transform(const Transform3D& transform) const
 {
-   if (m_selected_object_id == renderer::UNSELECTED_OBJECT)
+   if (m_selected_object_id == world::NO_ENTITY)
       return;
 
    world::Level* level = engine::Engine::the().current_level();
@@ -655,9 +663,16 @@ void LevelEditor::set_selected_transform(const Transform3D& transform) const
    m_viewport->update_view();
 }
 
-void LevelEditor::set_selected_name(const StringView name)
+void LevelEditor::set_selected_name(const StringView name) const
 {
-   scene().set_object_name(m_selected_object_id, name);
+   if (m_selected_object_id == world::NO_ENTITY)
+      return;
+
+   auto* label = this->level().mut_component_opt<world::EntityLabel>(m_selected_object_id);
+   if (label == nullptr)
+      return;
+
+   label->label = name.to_std();
 }
 
 void LevelEditor::set_selected_object(const world::EntityID id)
@@ -666,7 +681,7 @@ void LevelEditor::set_selected_object(const world::EntityID id)
       return;
    m_selected_object_id = id;
 
-   if (id == renderer::UNSELECTED_OBJECT) {
+   if (id == world::NO_ENTITY) {
       m_side_panel->on_unselected();
    } else {
       m_side_panel->on_changed_selected_object(m_selected_object_id);
@@ -693,11 +708,12 @@ void LevelEditor::save_level() const
 
 void LevelEditor::remove_selected_item()
 {
-   if (m_selected_object_id == renderer::UNSELECTED_OBJECT)
+   if (m_selected_object_id == world::NO_ENTITY)
       return;
    m_side_panel->on_object_is_removed(m_selected_object_id);
-   m_scene.remove_object(m_selected_object_id);
-   set_selected_object(renderer::UNSELECTED_OBJECT);
+
+   m_level.remove_entity(m_selected_object_id);
+   set_selected_object(world::NO_ENTITY);
 }
 
 void LevelEditor::on_command(const Command command)

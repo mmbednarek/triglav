@@ -73,8 +73,9 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    [[nodiscard]] world::Level& level() const;
 
    void tick(float delta_time) override;
-   const renderer::SceneObject* selected_object() const;
+   // const renderer::SceneObject* selected_object() const;
    world::EntityID selected_object_id() const;
+   const Transform3D* selected_object_transform() const;
    [[nodiscard]] Vector3 selected_object_position(std::optional<Vector3> position = std::nullopt) const;
    LevelViewport& viewport() const;
    ILevelEditorTool& tool() const;
@@ -87,7 +88,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    float speed() const;
    void finish_using_tool() const;
    void set_selected_transform(const Transform3D& transform) const;
-   void set_selected_name(StringView name);
+   void set_selected_name(StringView name) const;
    void set_selected_object(world::EntityID id);
    HistoryManager& history_manager();
    void on_event(const ui_core::Event& event) override;

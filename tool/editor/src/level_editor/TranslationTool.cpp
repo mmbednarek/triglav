@@ -23,7 +23,12 @@ bool TranslationTool::on_use_start(const geometry::Ray& ray)
       return false;
    }
 
-   m_starting_transform = m_level_editor.selected_object()->transform;
+   const Transform3D* transform = m_level_editor.selected_object_transform();
+   if (transform == nullptr) {
+      return false;
+   }
+
+   m_starting_transform = *transform;
    m_starting_hit = find_closest_point_between_lines(m_level_editor.selected_object_position(), axis_forward_vec3(*m_transform_axis),
                                                      ray.origin, ray.direction);
    return true;
@@ -34,8 +39,12 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
    const auto ray = m_level_editor.viewport_ray(position);
 
    if (m_transform_axis.has_value()) {
-      const auto* object = m_level_editor.selected_object();
-      auto transform = object->transform;
+      const auto* transform_ptr = m_level_editor.selected_object_transform();
+      if (transform_ptr == nullptr) {
+         return;
+      }
+      Transform3D transform = *transform_ptr;
+
       transform.translation =
          m_starting_transform.translation +
          m_level_editor.snap_offset(find_closest_point_between_lines(m_level_editor.selected_object_position(),
@@ -102,8 +111,12 @@ void TranslationTool::on_view_updated()
 void TranslationTool::on_use_end()
 {
    if (m_transform_axis.has_value()) {
-      m_level_editor.history_manager().emplace_action<SetTransformAction>(
-         m_level_editor, m_level_editor.selected_object_id(), m_starting_transform, m_level_editor.selected_object()->transform);
+      const auto* transform_ptr = m_level_editor.selected_object_transform();
+      if (transform_ptr == nullptr)
+         return;
+
+      m_level_editor.history_manager().emplace_action<SetTransformAction>(m_level_editor, m_level_editor.selected_object_id(),
+                                                                          m_starting_transform, *transform_ptr);
       m_transform_axis.reset();
    }
 }

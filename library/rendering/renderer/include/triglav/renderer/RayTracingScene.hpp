@@ -79,7 +79,7 @@ class RayTracingScene
 
    graphics_api::ray_tracing::AccelerationStructure* m_tl_acceleration_structure{};
 
-   TG_SINK(OnObjectAddedToScene);
+   // TG_SINK(OnObjectAddedToScene);
 };
 
 }// namespace triglav::renderer

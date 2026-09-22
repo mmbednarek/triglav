@@ -39,13 +39,16 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
    if (!m_rotation_axis.has_value())
       return false;
 
-   const auto* object = m_level_editor.selected_object();
+   const auto* transform_ptr = m_level_editor.selected_object_transform();
+   if (transform_ptr == nullptr)
+      return false;
+
    auto position = m_level_editor.selected_object_position();
 
    const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, vector3_component(position, *m_rotation_axis));
    const auto difference = normalize(point - position);
 
-   m_starting_transform = object->transform;
+   m_starting_transform = *transform_ptr;
    m_base_angle = angle_from_vector(difference, *m_rotation_axis);
    m_is_being_used = true;
 
@@ -61,7 +64,11 @@ void RotationTool::on_mouse_moved(Vector2 position)
 
    if (m_is_being_used) {
       assert(m_rotation_axis.has_value());
-      const auto* object = m_level_editor.selected_object();
+
+      const auto* transform_ptr = m_level_editor.selected_object_transform();
+      if (transform_ptr == nullptr)
+         return;
+
       const auto obj_position = m_level_editor.selected_object_position(m_starting_transform.translation);
 
       auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, vector3_component(obj_position, *m_rotation_axis));
@@ -71,7 +78,7 @@ void RotationTool::on_mouse_moved(Vector2 position)
 
       auto quat_rot = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotation_axis));
 
-      auto transform = object->transform;
+      auto transform = *transform_ptr;
       transform.translation = obj_position + quat_rot * (m_starting_transform.translation - obj_position);
       transform.rotation = quat_rot * m_starting_transform.rotation;
       m_level_editor.set_selected_transform(transform);
@@ -175,8 +182,12 @@ void RotationTool::on_use_end()
       m_is_being_used = false;
       m_rotation_axis.reset();
 
-      m_level_editor.history_manager().emplace_action<SetTransformAction>(
-         m_level_editor, m_level_editor.selected_object_id(), m_starting_transform, m_level_editor.selected_object()->transform);
+      const auto* transform_ptr = m_level_editor.selected_object_transform();
+      if (transform_ptr == nullptr)
+         return;
+
+      m_level_editor.history_manager().emplace_action<SetTransformAction>(m_level_editor, m_level_editor.selected_object_id(),
+                                                                          m_starting_transform, *transform_ptr);
    }
 }
 

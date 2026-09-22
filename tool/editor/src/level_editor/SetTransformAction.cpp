@@ -13,20 +13,33 @@ SetTransformAction::SetTransformAction(LevelEditor& level_editor, world::EntityI
     m_transform(transform)
 {
    assert(m_object_id != renderer::UNSELECTED_OBJECT);
-   log_info("Inserting action, object_id: {}", m_object_id);
+   log_debug("Inserting action, object_id: {}", m_object_id);
 }
 
 void SetTransformAction::redo()
 {
-   log_info("Redo: object_id: {}", m_object_id);
-   m_level_editor.scene().set_transform(m_object_id, m_transform);
+   log_debug("Redo: object_id: {}", m_object_id);
+   auto* transform_ptr = m_level_editor.level().mut_component_opt<Transform3D>(m_object_id);
+   if (transform_ptr == nullptr) {
+      log_error("Failed to retrieve transform for entity {}", m_object_id);
+      return;
+   }
+
+   *transform_ptr = m_transform;
+
    m_level_editor.viewport().update_view();
 }
 
 void SetTransformAction::undo()
 {
-   log_info("Undo: object_id: {}", m_object_id);
-   m_level_editor.scene().set_transform(m_object_id, m_previous_transform);
+   log_debug("Undo: object_id: {}", m_object_id);
+   auto* transform_ptr = m_level_editor.level().mut_component_opt<Transform3D>(m_object_id);
+   if (transform_ptr == nullptr) {
+      log_error("Failed to retrieve transform for entity {}", m_object_id);
+      return;
+   }
+
+   *transform_ptr = m_transform;
    m_level_editor.viewport().update_view();
 }
 
