@@ -149,7 +149,7 @@ void LevelViewport::on_key_released(const ui_core::Event& /*event*/, const ui_co
 
 void LevelViewport::update_view() const
 {
-   if (m_level_editor.selected_object() == nullptr) {
+   if (m_level_editor.selected_object_id() == world::NO_ENTITY) {
       m_render_viewport->reset_matrices();
       return;
    }

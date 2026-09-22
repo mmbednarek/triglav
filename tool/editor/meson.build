@@ -70,6 +70,7 @@ editor_deps = [
     threading,
     shaders,
     desktop_ui,
+    physics,
     project,
     editor_shaders,
     engine,

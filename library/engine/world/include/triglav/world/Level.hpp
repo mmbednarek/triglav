@@ -113,6 +113,21 @@ class Level
    }
 
    template<meta::HasMetaName T>
+   T* mut_component_opt(const EntityID id)
+   {
+      const auto component_id = ComponentManager::the().component_id_by_class_name(T::meta_name());
+      if (!component_id.has_value())
+         return nullptr;
+
+      auto* result = static_cast<T*>(m_entity_storage.get_component(id, *component_id));
+      if (result == nullptr)
+         return nullptr;
+
+      this->insert_component_change(*component_id, id);
+      return result;
+   }
+
+   template<meta::HasMetaName T>
    const T* component_opt(const EntityID id) const
    {
       const auto comp_id = ComponentManager::the().component_id_by_class_name(T::meta_name());
@@ -169,6 +184,7 @@ class Level
          callback(id);
       }
    }
+   void remove_entity(EntityID entity);
 
    [[nodiscard]] HierarchyTree::Range children_of(EntityID entity) const;
    [[nodiscard]] EntityID parent_of(EntityID entity) const;
@@ -201,6 +217,7 @@ class Level
    std::map<Name, SystemRegistration> m_systems;
    std::map<ComponentID, std::vector<EntityID>> m_change_lists;
    std::map<ComponentID, std::vector<EntityID>> m_addition_lists;
+   std::vector<EntityID> m_removal_list;
 };
 
 }// namespace triglav::world

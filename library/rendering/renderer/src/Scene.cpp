@@ -49,22 +49,6 @@ void Scene::update(const graphics_api::Resolution& resolution)
    this->send_view_changed();
 }
 
-void Scene::add_object(SceneObject object, world::EntityID entity_id)
-{
-   const auto& [it, ok] = m_objects.emplace(entity_id, std::make_unique<SceneObject>(std::move(object)));
-   assert(ok);
-   event_OnObjectAddedToScene.publish(it->first, *it->second);
-   this->update_bvh();
-}
-
-void Scene::set_transform(const world::EntityID entity_id, const Transform3D& transform)
-{
-   m_objects[entity_id]->transform = transform;
-   this->update_bvh();
-
-   event_OnObjectChangedTransform.publish(entity_id, transform);
-}
-
 void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
 {
    m_camera.set_position(position);
@@ -92,11 +76,6 @@ u32 Scene::directional_shadow_map_count() const
    return static_cast<u32>(m_directional_shadow_map_cameras.size());
 }
 
-const SceneObject& Scene::object(const world::EntityID id) const
-{
-   return *m_objects.at(id);
-}
-
 float Scene::yaw() const
 {
    return m_yaw;
@@ -105,23 +84,6 @@ float Scene::yaw() const
 float Scene::pitch() const
 {
    return m_pitch;
-}
-
-void Scene::update_bvh()
-{
-   std::vector<SceneObjectRef> objects{m_objects.size()};
-
-   auto obj_it = objects.begin();
-   for (const auto& [id, scene_object] : m_objects) {
-      const auto& mesh = m_resource_manager.get(scene_object->model);
-      *(obj_it++) = SceneObjectRef{
-         .object = scene_object.get(),
-         .bbox = mesh.bounding_box.transform(scene_object->transform.to_matrix()),
-         .id = id,
-      };
-   }
-
-   m_tree.build(objects);
 }
 
 void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
@@ -144,19 +106,6 @@ void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
 void Scene::add_bounding_box(const geometry::BoundingBox& box) const
 {
    event_OnAddedBoundingBox.publish(box);
-}
-
-const geometry::BVHTree<SceneObjectRef>& Scene::bvh() const
-{
-   return m_tree;
-}
-
-RayHit Scene::trace_ray(const geometry::Ray& ray) const
-{
-   const auto hit = this->bvh().traverse(ray);
-   if (hit.payload == nullptr)
-      return {INFINITY, ~0u, nullptr};
-   return {hit.distance, hit.payload->id, hit.payload->object};
 }
 
 std::vector<float>& Scene::terrain()
@@ -194,87 +143,23 @@ void Scene::send_view_changed() const
    event_OnViewUpdated.publish(m_camera);
 }
 
-void Scene::remove_object(const world::EntityID entity_id)
-{
-   event_OnObjectRemoved.publish(entity_id);
-   m_objects.erase(entity_id);
-   this->update_bvh();
-}
-
-void Scene::set_object_name(const world::EntityID id, const StringView name) const
-{
-   const auto& obj = m_objects.at(id);
-   obj->name = name;
-   event_OnObjectChangedName.publish(id, name);
-}
-
-void Scene::on_level_loaded(world::Level& level)
-{
-   std::vector<world::EntityID> entities;
-   for (const auto& [entity_id, com] : level.all<world::Mesh>()) {
-      entities.emplace_back(entity_id);
-   }
-
-   this->on_added_component(level, "triglav::world::Mesh"_name, 0, entities);
-}
-
-void Scene::on_removed_entities(world::Level& /*level*/, const std::span<const world::EntityID> ids)
-{
-   for (const auto entity_id : ids) {
-      event_OnObjectRemoved.publish(entity_id);
-      m_objects.erase(entity_id);
-   }
-
-   this->update_bvh();
-}
-
-void Scene::on_added_component(world::Level& level, Name component_name, world::ComponentID /*component_id*/,
-                               std::span<const world::EntityID> entities)
-{
-   if (component_name != "triglav::world::Mesh"_name)
-      return;
-
-   for (const auto entity_id : entities) {
-      const auto [label, transform, mesh] = level.components<world::EntityLabel, Transform3D, world::Mesh>(entity_id);
-
-      SceneObject obj{
-         .model = mesh.name,
-         .name = label.label.c_str(),
-         .transform = transform,
-         .armature = std::nullopt,
-      };
-
-      if (const auto* arm = level.component_opt<world::Armature>(entity_id); arm != nullptr) {
-         obj.armature = arm->name;
-      }
-      this->add_object(obj, entity_id);
-   }
-}
-
-void Scene::on_modified_component(world::Level& level, const Name component_name, world::ComponentID /*component_id*/,
-                                  std::span<const world::EntityID> entities)
-{
-   if (component_name == "triglav::Transform3D"_name) {
-      for (const auto entity_id : entities) {
-         const auto& transform = level.component<Transform3D>(entity_id);
-         m_objects[entity_id]->transform = transform;
-         event_OnObjectChangedTransform.publish(entity_id, transform);
-      }
-      this->update_bvh();
-   } else if (component_name == "triglav::world::EntityLabel"_name) {
-      for (const auto entity_id : entities) {
-         const auto& label = level.component<world::EntityLabel>(entity_id);
-
-         const auto& obj = m_objects.at(entity_id);
-         obj->name = {label.label.data(), label.label.size()};
-         event_OnObjectChangedName.publish(entity_id, obj->name.view());
-      }
-   }
-}
-
 Name Scene::system_name()
 {
    return TAG;
+}
+
+void Scene::on_level_loaded(world::Level& /*level*/) {}
+
+void Scene::on_added_component(world::Level& /*level*/, Name /*component_name*/, world::ComponentID /*component_id*/,
+                               std::span<const world::EntityID> /*entities*/)
+{
+}
+
+void Scene::on_removed_entities(world::Level& /*level*/, const std::span<const world::EntityID> /*ids*/) {}
+
+void Scene::on_modified_component(world::Level& /*level*/, const Name /*component_name*/, world::ComponentID /*component_id*/,
+                                  std::span<const world::EntityID> /*entities*/)
+{
 }
 
 }// namespace triglav::renderer

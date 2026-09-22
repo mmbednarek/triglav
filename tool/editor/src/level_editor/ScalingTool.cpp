@@ -20,10 +20,13 @@ bool ScalingTool::on_use_start(const geometry::Ray& ray)
 
    m_is_being_used = true;
 
-   const auto* object = m_level_editor.selected_object();
+   const auto* transform_ptr = m_level_editor.selected_object_transform();
+   if (transform_ptr == nullptr)
+      return false;
+
    const auto translation = m_level_editor.selected_object_position();
    const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transform_axis), ray.origin, ray.direction);
-   m_starting_transform = object->transform;
+   m_starting_transform = *transform_ptr;
    m_starting_position = translation;
    m_starting_point = find_closest_point_on_line(ray.origin, ray.direction, translation);
    m_starting_closest = closest;
@@ -40,10 +43,17 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
    if (m_is_being_used) {
       const auto axis = m_transform_axis.value();
 
-      const auto* object = m_level_editor.selected_object();
-      const auto& mesh = m_level_editor.root_window().resource_manager().get(object->model);
+      const auto* transform_ptr = m_level_editor.selected_object_transform();
+      if (transform_ptr == nullptr)
+         return;
+
+      const auto* mesh_component_ptr = m_level_editor.level().component_opt<world::Mesh>(m_level_editor.selected_object_id());
+      if (mesh_component_ptr == nullptr)
+         return;
+
+      const auto& mesh = m_level_editor.root_window().resource_manager().get(mesh_component_ptr->name);
       const auto translation = m_level_editor.selected_object_position();
-      auto transform = object->transform;
+      Transform3D transform = *transform_ptr;
       const auto scale = 0.5f * mesh.bounding_box.scale() * m_starting_transform.scale;
 
       Vector3 scale_direction = {1, 0, 0};
@@ -161,8 +171,12 @@ void ScalingTool::on_use_end()
       m_is_being_used = false;
       m_transform_axis.reset();
 
-      m_level_editor.history_manager().emplace_action<SetTransformAction>(
-         m_level_editor, m_level_editor.selected_object_id(), m_starting_transform, m_level_editor.selected_object()->transform);
+      const auto* transform_ptr = m_level_editor.selected_object_transform();
+      if (transform_ptr == nullptr)
+         return;
+
+      m_level_editor.history_manager().emplace_action<SetTransformAction>(m_level_editor, m_level_editor.selected_object_id(),
+                                                                          m_starting_transform, *transform_ptr);
    }
 }
 

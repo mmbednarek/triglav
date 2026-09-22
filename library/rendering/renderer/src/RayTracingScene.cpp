@@ -31,8 +31,8 @@ RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager
     m_scratch_heap(device, gapi::BufferUsage::AccelerationStructure | gapi::BufferUsage::StorageBuffer),
     m_as_pool{device},
     m_build_blcontext{device, m_as_pool, m_scratch_heap},
-    m_build_tlcontext{device, m_as_pool, m_scratch_heap},
-    TG_CONNECT(m_scene, OnObjectAddedToScene, on_object_added_to_scene)
+    m_build_tlcontext{device, m_as_pool, m_scratch_heap}
+// TG_CONNECT(m_scene, OnObjectAddedToScene, on_object_added_to_scene)
 {
 }
 
