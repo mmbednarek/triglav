@@ -15,8 +15,9 @@ using namespace render_core::literals;
 
 namespace gapi = graphics_api;
 
-RayTracingStage::RayTracingStage(RayTracingScene& rt_scene) :
-    m_rt_scene(rt_scene)
+RayTracingStage::RayTracingStage(RayTracingScene& rt_scene, ShadowMapManager& shadow_map_manager) :
+    m_rt_scene(rt_scene),
+    m_shadow_map_manager(shadow_map_manager)
 {
 }
 
@@ -45,7 +46,7 @@ void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& 
    ctx.bind_rt_closest_hit_shader("shader/ray_tracing/general.rchitshader"_rc);
 
    ctx.bind_storage_buffer(4, &m_rt_scene.m_object_buffer);
-   auto light_dir{m_rt_scene.m_scene.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)};
+   auto light_dir{m_shadow_map_manager.shadow_map_camera(0).orientation() * glm::vec3(0.0f, 1.0f, 0.0f)};
    ctx.push_constant(light_dir);
 
    ctx.bind_rt_closest_hit_shader("shader/ray_tracing/shadow.rchitshader"_rc);

@@ -59,6 +59,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_resource_manager(resource_manager),
     m_config_manager(m_device),
     m_scene(engine::system<Scene>()),
+    m_shadow_map_manager(m_view_context),
     m_bindless_scene(engine::system<BindlessScene>()),
     m_glyph_cache(m_device, m_resource_manager),
     m_ui_viewport({resolution.width, resolution.height}),
@@ -94,13 +95,11 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
       m_ray_tracing_scene->build_acceleration_structures();
    }
 
-   m_scene.update_shadow_maps();
-
    m_rendering_job.emplace_stage<stage::GBufferStage>(m_device, m_bindless_scene);
    m_rendering_job.emplace_stage<stage::AmbientOcclusionStage>(m_device);
-   m_rendering_job.emplace_stage<stage::ShadowMapStage>(m_scene, m_bindless_scene, m_update_view_params_job);
+   m_rendering_job.emplace_stage<stage::ShadowMapStage>(m_shadow_map_manager, m_bindless_scene, m_update_view_params_job);
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-      m_rendering_job.emplace_stage<stage::RayTracingStage>(*m_ray_tracing_scene);
+      m_rendering_job.emplace_stage<stage::RayTracingStage>(*m_ray_tracing_scene, m_shadow_map_manager);
    }
    m_rendering_job.emplace_stage<stage::ShadingStage>();
    m_rendering_job.emplace_stage<stage::PostProcessStage>(&m_update_user_interface_job, "core.color_out"_name);
@@ -132,8 +131,6 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    // stage::ShadingStage::initialize_particles(m_job_graph);
 
    StatisticManager::the().initialize();
-
-   m_scene.update_shadow_maps();
 
    m_info_dialog.init_config_labels();
 
@@ -457,7 +454,6 @@ void Renderer::update_uniform_data(const float delta_time)
    m_view_context.update_resolution(res);
 
    if (updated) {
-      m_scene.update_shadow_maps();
       m_view_context.send_view_changed();
    }
 }

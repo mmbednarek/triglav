@@ -119,7 +119,6 @@ void LevelViewport::tick(const float delta_time)
    }
 
    if (should_update_sm) {
-      m_level_editor.scene().update_shadow_maps();
       this->update_view();
    }
 }
