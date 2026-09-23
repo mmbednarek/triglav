@@ -40,32 +40,6 @@ Scene::Scene(resource::ResourceManager& resource_manager) :
    std::ranges::fill(m_terrain_blending, Vector4b{1, 0, 0, 0});
 }
 
-void Scene::update(const graphics_api::Resolution& resolution)
-{
-   const auto [width, height] = resolution;
-   m_camera.set_viewport_size(static_cast<float>(width), static_cast<float>(height));
-
-   event_OnViewportChange.publish(resolution);
-   this->send_view_changed();
-}
-
-void Scene::set_camera(const glm::vec3 position, const glm::quat orientation)
-{
-   m_camera.set_position(position);
-   m_camera.set_orientation(orientation);
-   event_OnViewUpdated.publish(m_camera);
-}
-
-const Camera& Scene::camera() const
-{
-   return m_camera;
-}
-
-Camera& Scene::camera()
-{
-   return m_camera;
-}
-
 const OrthoCamera& Scene::shadow_map_camera(const u32 index) const
 {
    return m_directional_shadow_map_cameras[index];
@@ -74,33 +48,6 @@ const OrthoCamera& Scene::shadow_map_camera(const u32 index) const
 u32 Scene::directional_shadow_map_count() const
 {
    return static_cast<u32>(m_directional_shadow_map_cameras.size());
-}
-
-float Scene::yaw() const
-{
-   return m_yaw;
-}
-
-float Scene::pitch() const
-{
-   return m_pitch;
-}
-
-void Scene::update_orientation(const float delta_yaw, const float delta_pitch)
-{
-   m_yaw += delta_yaw;
-   while (m_yaw < 0) {
-      m_yaw += static_cast<float>(2 * g_pi);
-   }
-   while (m_yaw >= static_cast<float>(2 * g_pi)) {
-      m_yaw -= static_cast<float>(2 * g_pi);
-   }
-
-   m_pitch += delta_pitch;
-   m_pitch = std::clamp(m_pitch, -static_cast<float>(g_pi) / 2.0f + 0.01f, static_cast<float>(g_pi) / 2.0f - 0.01f);
-
-   this->camera().set_orientation(glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}});
-   this->send_view_changed();
 }
 
 void Scene::add_bounding_box(const geometry::BoundingBox& box) const
@@ -125,22 +72,18 @@ void Scene::publish_terrain_changes()
 
 void Scene::update_shadow_maps()
 {
-   auto sm_props1 = this->camera().calculate_shadow_map(m_directional_light_orientation, 32.0f, 120.0f);
+   Camera cam;// TODO: Get from ViewContext
+   auto sm_props1 = cam.calculate_shadow_map(m_directional_light_orientation, 32.0f, 120.0f);
    m_directional_shadow_map_cameras[0] = OrthoCamera::from_properties(sm_props1);
    event_OnShadowMapChanged.publish(0, m_directional_shadow_map_cameras[0]);
 
-   auto sm_props2 = this->camera().calculate_shadow_map(m_directional_light_orientation, 72.0f, 192.0f);
+   auto sm_props2 = cam.calculate_shadow_map(m_directional_light_orientation, 72.0f, 192.0f);
    m_directional_shadow_map_cameras[1] = OrthoCamera::from_properties(sm_props2);
    event_OnShadowMapChanged.publish(1, m_directional_shadow_map_cameras[1]);
 
-   auto sm_props3 = this->camera().calculate_shadow_map(m_directional_light_orientation, 180.0f, 256.0f);
+   auto sm_props3 = cam.calculate_shadow_map(m_directional_light_orientation, 180.0f, 256.0f);
    m_directional_shadow_map_cameras[2] = OrthoCamera::from_properties(sm_props3);
    event_OnShadowMapChanged.publish(2, m_directional_shadow_map_cameras[2]);
-}
-
-void Scene::send_view_changed() const
-{
-   event_OnViewUpdated.publish(m_camera);
 }
 
 Name Scene::system_name()

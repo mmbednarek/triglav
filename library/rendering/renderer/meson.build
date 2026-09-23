@@ -15,6 +15,7 @@ renderer_sources = files([
         'include/triglav/renderer/RenderingJob.hpp',
         'include/triglav/renderer/RenderSurface.hpp',
         'include/triglav/renderer/Scene.hpp',
+        'include/triglav/renderer/ShadowMapManager.hpp',
         'include/triglav/renderer/stage/AmbientOcclusionStage.hpp',
         'include/triglav/renderer/stage/GBufferStage.hpp',
         'include/triglav/renderer/stage/IStage.hpp',
@@ -30,6 +31,7 @@ renderer_sources = files([
         'include/triglav/renderer/UpdateUserInterfaceJob.hpp',
         'include/triglav/renderer/UpdateViewParamsJob.hpp',
         'include/triglav/renderer/Util.hpp',
+        'include/triglav/renderer/ViewContext.hpp',
         'src/AnimationJob.cpp',
         'src/AnimationManager.cpp',
         'src/BindlessScene.cpp',
@@ -45,6 +47,7 @@ renderer_sources = files([
         'src/RenderingJob.cpp',
         'src/RenderSurface.cpp',
         'src/Scene.cpp',
+        'src/ShadowMapManager.cpp',
         'src/stage/AmbientOcclusionStage.cpp',
         'src/stage/GBufferStage.cpp',
         'src/stage/PostProcessStage.cpp',
@@ -59,6 +62,7 @@ renderer_sources = files([
         'src/UpdateUserInterfaceJob.cpp',
         'src/UpdateViewParamsJob.cpp',
         'src/Util.cpp',
+        'src/ViewContext.cpp',
 # !END
 ])
 

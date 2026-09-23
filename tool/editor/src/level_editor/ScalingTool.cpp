@@ -38,7 +38,7 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
    const auto normalized_pos = position / rect_size(m_level_editor.viewport().dimensions());
    auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
    viewport_coord.y *= -1.0f;
-   const auto ray = m_level_editor.scene().camera().viewport_ray(viewport_coord);
+   const auto ray = m_level_editor.view_context().camera().viewport_ray(viewport_coord);
 
    if (m_is_being_used) {
       const auto axis = m_transform_axis.value();
@@ -130,7 +130,7 @@ void ScalingTool::on_view_updated()
    };
 
    const auto translation = m_level_editor.selected_object_position();
-   const auto obj_distance = glm::length(translation - m_level_editor.scene().camera().position());
+   const auto obj_distance = glm::length(translation - m_level_editor.view_context().camera().position());
 
    const Transform3D transform_x_axis{
       .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},

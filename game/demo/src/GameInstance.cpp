@@ -144,9 +144,9 @@ GameInstance::GameInstance(triglav::desktop::IDisplay& display, triglav::graphic
    m_state = State::LoadingBaseResources;
    m_last_frame_tp = std::chrono::steady_clock::now();
    triglav::engine::Engine::the().initialize(*m_device);
-   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnEngineReady, on_engine_ready);
-   TG_CONNECT_OPT(triglav::engine::Engine::the(), OnLevelLoaded, on_level_loaded);
-   TG_CONNECT_OPT(triglav::engine::Engine::the().resource_manager(), OnLoadedAssets, on_loaded_assets);
+   TG_CONNECT_OPT(triglav::engine::the(), OnEngineReady, on_engine_ready);
+   TG_CONNECT_OPT(triglav::engine::the(), OnLevelLoaded, on_level_loaded);
+   TG_CONNECT_OPT(triglav::engine::the().resource_manager(), OnLoadedAssets, on_loaded_assets);
 }
 
 void GameInstance::on_engine_ready()
@@ -175,7 +175,7 @@ void GameInstance::on_loaded_assets(triglav::resource::LoadIndex load_index)
    // }
 }
 
-void GameInstance::on_level_loaded()
+void GameInstance::on_level_loaded(const triglav::LevelName /*level_name*/)
 {
    m_state.store(State::Ready);
 }
@@ -211,7 +211,8 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
    m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_demo_surface, *m_graphics_demo_surface, *m_device,
                                                               triglav::engine::Engine::the().resource_manager(), m_resolution);
 
-   m_character_controller = std::make_unique<CharacterController>(m_renderer->scene(), m_renderer->animation_manager());
+   m_character_controller =
+      std::make_unique<CharacterController>(m_renderer->scene(), m_renderer->view_context(), m_renderer->animation_manager());
 
    m_event_listener.emplace(*m_demo_surface, *m_renderer, *m_character_controller);
 

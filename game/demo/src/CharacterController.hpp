@@ -4,6 +4,7 @@
 #include "triglav/Math.hpp"
 #include "triglav/renderer/AnimationManager.hpp"
 #include "triglav/renderer/Scene.hpp"
+#include "triglav/renderer/ViewContext.hpp"
 
 namespace demo {
 
@@ -23,7 +24,8 @@ class CharacterController
 {
    TG_DEFINE_LOG_CATEGORY(CharacterController)
  public:
-   CharacterController(triglav::renderer::Scene& scene, triglav::renderer::AnimationManager& animation_manager);
+   CharacterController(triglav::renderer::Scene& scene, triglav::renderer::ViewContext& view_context,
+                       triglav::renderer::AnimationManager& animation_manager);
 
    void setup_character();
 
@@ -40,6 +42,7 @@ class CharacterController
 
    // Refs
    triglav::renderer::Scene& m_scene;
+   triglav::renderer::ViewContext& m_view_context;
    triglav::renderer::AnimationManager& m_animation_manager;
 
    // State

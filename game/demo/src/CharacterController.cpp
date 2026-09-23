@@ -14,8 +14,10 @@ namespace demo {
 constexpr float CAMERA_DISTANCE = 16.0f;
 constexpr float PLAYER_SPEED = 20.0f;
 
-CharacterController::CharacterController(triglav::renderer::Scene& scene, triglav::renderer::AnimationManager& animation_manager) :
+CharacterController::CharacterController(triglav::renderer::Scene& scene, triglav::renderer::ViewContext& view_context,
+                                         triglav::renderer::AnimationManager& animation_manager) :
     m_scene(scene),
+    m_view_context(view_context),
     m_animation_manager(animation_manager)
 {
 }
@@ -122,10 +124,10 @@ void CharacterController::forward_state() const
    const auto camera_forward = m_camera_orientation * Vector3{0.0f, 1.0f, 0.0f};
    const auto camera_position = m_character_position - CAMERA_DISTANCE * camera_forward;
 
-   m_scene.set_camera(camera_position, m_camera_orientation);
+   m_view_context.set_camera(camera_position, m_camera_orientation);
 
    m_scene.update_shadow_maps();
-   m_scene.send_view_changed();
+   m_view_context.send_view_changed();
 }
 
 void CharacterController::recalculate_forward_vector()

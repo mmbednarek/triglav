@@ -13,11 +13,11 @@
 #include "Scene.hpp"
 #include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
+#include "ViewContext.hpp"
 
 #include "triglav/Logging.hpp"
 #include "triglav/desktop/Desktop.hpp"
 #include "triglav/graphics_api/Device.hpp"
-#include "triglav/render_core/GlyphAtlas.hpp"
 #include "triglav/render_core/GlyphCache.hpp"
 #include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/JobGraph.hpp"
@@ -71,6 +71,7 @@ class Renderer final : public render_core::IRenderer
    void recreate_render_jobs() override;
 
    Scene& scene();
+   ViewContext& view_context();
    AnimationManager& animation_manager();
 
  private:
@@ -92,6 +93,7 @@ class Renderer final : public render_core::IRenderer
 
    ConfigManager m_config_manager;
    Scene& m_scene;
+   ViewContext m_view_context;
    BindlessScene& m_bindless_scene;
    render_core::GlyphCache m_glyph_cache;
    ui_core::Viewport m_ui_viewport;

@@ -81,7 +81,7 @@ void TranslationTool::on_view_updated()
    };
 
    const auto translation = m_level_editor.selected_object_position();
-   const auto obj_distance = glm::length(translation - m_level_editor.scene().camera().position());
+   const auto obj_distance = glm::length(translation - m_level_editor.view_context().camera().position());
 
    const Transform3D transform_x_axis{
       .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
