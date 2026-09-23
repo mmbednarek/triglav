@@ -396,11 +396,6 @@ u32 BindlessScene::scene_object_count() const
    return m_draw_call_update_list.top_index();
 }
 
-Scene& BindlessScene::scene() const
-{
-   return m_level.system<Scene>();
-}
-
 world::Level& BindlessScene::level() const
 {
    return m_level;

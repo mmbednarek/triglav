@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Scene.hpp"
-
 #include "triglav/Event.hpp"
 #include "triglav/Name.hpp"
+#include "triglav/graphics_api/Device.hpp"
+#include "triglav/resource/ResourceManager.hpp"
 
 #include <map>
 

@@ -19,7 +19,6 @@
 #include "triglav/renderer/BindlessScene.hpp"
 #include "triglav/renderer/OcclusionCulling.hpp"
 #include "triglav/renderer/RenderingJob.hpp"
-#include "triglav/renderer/Scene.hpp"
 #include "triglav/renderer/ShadowMapManager.hpp"
 #include "triglav/renderer/UpdateViewParamsJob.hpp"
 #include "triglav/renderer/ViewContext.hpp"
@@ -71,7 +70,6 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
 
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
-   [[nodiscard]] renderer::Scene& scene() const;
    [[nodiscard]] renderer::ViewContext& view_context();
    [[nodiscard]] world::Level& level() const;
 
@@ -113,7 +111,6 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
  private:
    State m_state;
    world::Level& m_level;
-   renderer::Scene& m_scene;
    renderer::ViewContext m_view_context;
    renderer::ShadowMapManager m_shadow_map_manager;
    renderer::BindlessScene& m_bindless_scene;
@@ -121,8 +118,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    renderer::UpdateViewParamsJob m_update_view_params_job;
    renderer::OcclusionCulling m_occlusion_culling;
    renderer::RenderingJob m_rendering_job;
-   const renderer::SceneObject* m_selected_object{};
-   world::EntityID m_selected_object_id{renderer::UNSELECTED_OBJECT};
+   world::EntityID m_selected_object_id{world::NO_ENTITY};
    LevelViewport* m_viewport{};
    SelectionTool m_selection_tool;
    TranslationTool m_translation_tool;

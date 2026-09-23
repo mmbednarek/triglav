@@ -6,7 +6,6 @@
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/Dialog.hpp"
 #include "triglav/desktop_ui/TreeView.hpp"
-#include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
 namespace triglav::desktop_ui {

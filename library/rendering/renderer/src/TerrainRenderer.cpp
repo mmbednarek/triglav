@@ -119,10 +119,21 @@ void TerrainRenderer::on_added_component(world::Level& level, Name /*component_n
    }
 }
 
-void TerrainRenderer::on_modified_component(world::Level& /*level*/, Name /*component_name*/, world::ComponentID /*component_id*/,
-                                            std::span<const world::EntityID> /*entities*/)
+void TerrainRenderer::on_modified_component(world::Level& level, Name /*component_name*/, world::ComponentID /*component_id*/,
+                                            std::span<const world::EntityID> entities)
 {
-   assert(false && "UNIMPLEMENTED");
+   auto* device = engine::the().gfx_device();
+   assert(device != nullptr);
+
+   for (const auto entity_id : entities) {
+      auto& resources = m_terrain_resources.at(entity_id);
+
+      auto& terrain = engine::resource_manager().get(level.component<world::TerrainComponent>(entity_id).name);
+
+      GAPI_CHECK_STATUS(resources.height_texture.write(*device, reinterpret_cast<const uint8_t*>(terrain.heightmap().data())));
+      GAPI_CHECK_STATUS(resources.blending_texture.write(*device, reinterpret_cast<const uint8_t*>(terrain.blending().data())));
+      GAPI_CHECK_STATUS(resources.materials_texture.write(*device, reinterpret_cast<const uint8_t*>(terrain.material_indices().data())));
+   }
 }
 
 void TerrainRenderer::build_commands(render_core::BuildContext& ctx)

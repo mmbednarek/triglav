@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "Scene.hpp"
 #include "ViewContext.hpp"
 
 #include "triglav/Event.hpp"

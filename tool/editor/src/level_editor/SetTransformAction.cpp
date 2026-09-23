@@ -12,7 +12,7 @@ SetTransformAction::SetTransformAction(LevelEditor& level_editor, world::EntityI
     m_previous_transform(previous_transform),
     m_transform(transform)
 {
-   assert(m_object_id != renderer::UNSELECTED_OBJECT);
+   assert(m_object_id != world::NO_ENTITY);
    log_debug("Inserting action, object_id: {}", m_object_id);
 }
 

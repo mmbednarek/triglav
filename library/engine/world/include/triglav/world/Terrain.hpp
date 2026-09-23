@@ -16,6 +16,9 @@ class Terrain
    [[nodiscard]] const std::vector<Vector4b>& material_indices() const;
    [[nodiscard]] const std::vector<Vector4b>& blending() const;
 
+   [[nodiscard]] std::vector<float>& mut_heightmap();
+   [[nodiscard]] std::vector<Vector4b>& mut_blending();
+
  private:
    Vector2u m_dimensions;
    std::vector<TextureName> m_pallette;

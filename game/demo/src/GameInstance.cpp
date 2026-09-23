@@ -211,8 +211,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
    m_renderer = std::make_unique<triglav::renderer::Renderer>(*m_demo_surface, *m_graphics_demo_surface, *m_device,
                                                               triglav::engine::Engine::the().resource_manager(), m_resolution);
 
-   m_character_controller =
-      std::make_unique<CharacterController>(m_renderer->scene(), m_renderer->view_context(), m_renderer->animation_manager());
+   m_character_controller = std::make_unique<CharacterController>(m_renderer->view_context(), m_renderer->animation_manager());
 
    m_event_listener.emplace(*m_demo_surface, *m_renderer, *m_character_controller);
 

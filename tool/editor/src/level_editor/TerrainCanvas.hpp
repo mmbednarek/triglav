@@ -2,19 +2,21 @@
 
 #include "triglav/Math.hpp"
 #include "triglav/geometry/DebugMesh.hpp"
+#include "triglav/world/World.hpp"
 
 #include <optional>
 
-namespace triglav::renderer {
-class Scene;
-}
+namespace triglav::world {
+class Level;
+class Terrain;
+}// namespace triglav::world
 
 namespace triglav::editor {
 
 class TerrainCanvas
 {
  public:
-   explicit TerrainCanvas(renderer::Scene& scene);
+   TerrainCanvas(world::Level& level, world::EntityID entity_id);
 
    void set_brush_size(float size);
    void shift(float amount, Vector2i coord) const;
@@ -32,7 +34,9 @@ class TerrainCanvas
  private:
    float sample_average(Vector2i coord) const;
 
-   renderer::Scene& m_scene;
+   world::Level& m_level;
+   world::EntityID m_entity_id;
+   world::Terrain& m_terrain;
    float m_brush_size = 40.0f;
    i32 m_height_map_resolution = 1024;
    float m_world_size = 240.0f;

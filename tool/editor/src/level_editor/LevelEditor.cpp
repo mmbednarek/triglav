@@ -382,7 +382,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     DesktopProxyWidget(context, parent),
     m_state(state),
     m_level(*engine::the().level_by_name(state.asset_name)),
-    m_scene(m_level.system<renderer::Scene>()),
     m_shadow_map_manager(m_view_context),
     m_bindless_scene(m_level.system<renderer::BindlessScene>()),
     m_config(get_default_config()),
@@ -489,11 +488,6 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_rendering_job.emplace_stage<renderer::stage::PostProcessStage>(nullptr, "post_process.out"_name);
 
    m_view_context.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
-}
-
-renderer::Scene& LevelEditor::scene() const
-{
-   return m_scene;
 }
 
 renderer::ViewContext& LevelEditor::view_context()

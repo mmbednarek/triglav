@@ -1,7 +1,6 @@
 #include "stage/ShadowMapStage.hpp"
 
 #include "BindlessScene.hpp"
-#include "Scene.hpp"
 #include "ShadowMapManager.hpp"
 
 #include "triglav/render_core/BuildContext.hpp"

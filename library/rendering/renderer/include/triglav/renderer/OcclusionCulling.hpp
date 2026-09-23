@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_objects/Material.hpp"
 
 #include "UpdateViewParamsJob.hpp"
 

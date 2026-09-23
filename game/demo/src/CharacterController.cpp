@@ -2,7 +2,6 @@
 
 #include "triglav/engine/Engine.hpp"
 
-using triglav::renderer::SceneObject;
 using namespace triglav::name_literals;
 using triglav::Quaternion;
 using triglav::Transform3D;
@@ -14,9 +13,8 @@ namespace demo {
 constexpr float CAMERA_DISTANCE = 16.0f;
 constexpr float PLAYER_SPEED = 20.0f;
 
-CharacterController::CharacterController(triglav::renderer::Scene& scene, triglav::renderer::ViewContext& view_context,
+CharacterController::CharacterController(triglav::renderer::ViewContext& view_context,
                                          triglav::renderer::AnimationManager& animation_manager) :
-    m_scene(scene),
     m_view_context(view_context),
     m_animation_manager(animation_manager)
 {
