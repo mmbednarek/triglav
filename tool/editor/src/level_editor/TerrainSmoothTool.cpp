@@ -14,7 +14,8 @@ void TerrainSmoothTool::on_tick(const float delta_time)
    if (!m_is_being_used)
       return;
 
-   m_canvas.smooth(delta_time * m_strength, m_pointer_position);
+   assert(m_canvas != nullptr);
+   m_canvas->smooth(delta_time * m_strength, m_pointer_position);
 }
 
 }// namespace triglav::editor

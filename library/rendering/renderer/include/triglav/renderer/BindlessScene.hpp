@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Scene.hpp"
-
 #include "triglav/Int.hpp"
 #include "triglav/UpdateList.hpp"
 #include "triglav/geometry/Geometry.hpp"
@@ -10,6 +8,8 @@
 #include "triglav/memory/HeapAllocator.hpp"
 #include "triglav/render_core/IRenderer.hpp"
 #include "triglav/render_core/RenderCore.hpp"
+#include "triglav/resource/ResourceManager.hpp"
+#include "triglav/world/World.hpp"
 
 #include <vector>
 
@@ -136,7 +136,6 @@ class BindlessScene : public world::ISystem
    [[nodiscard]] const graphics_api::Buffer& matrix_hierarchy_count_buffer() const;
    [[nodiscard]] memory::Area transform_allocated_area() const;
    [[nodiscard]] u32 scene_object_count() const;
-   [[nodiscard]] Scene& scene() const;
    [[nodiscard]] world::Level& level() const;
    [[nodiscard]] std::vector<const graphics_api::Texture*>& scene_textures();
    [[nodiscard]] std::vector<render_core::TextureRef>& scene_texture_refs();

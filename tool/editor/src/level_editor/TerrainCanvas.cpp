@@ -1,11 +1,15 @@
 #include "TerrainCanvas.hpp"
 
-#include "triglav/renderer/Scene.hpp"
+#include "triglav/engine/Engine.hpp"
+#include "triglav/world/Level.hpp"
+#include "triglav/world/Terrain.hpp"
 
 namespace triglav::editor {
 
-TerrainCanvas::TerrainCanvas(renderer::Scene& scene) :
-    m_scene(scene)
+TerrainCanvas::TerrainCanvas(world::Level& level, const world::EntityID entity_id) :
+    m_level(level),
+    m_entity_id(entity_id),
+    m_terrain(engine::resource_manager().get(level.component<world::TerrainComponent>(entity_id).name))
 {
 }
 
@@ -19,7 +23,7 @@ void TerrainCanvas::shift(const float amount, const Vector2i coord) const
    if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
       return;
 
-   auto& terr = m_scene.terrain();
+   auto& heightmap = m_terrain.mut_heightmap();
 
    const i32 brush_size_int = static_cast<i32>(m_brush_size);
    for (i32 y = -brush_size_int; y <= brush_size_int; y++) {
@@ -39,11 +43,11 @@ void TerrainCanvas::shift(const float amount, const Vector2i coord) const
 
          const float shape = std::sin(dist * MATH_PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
-         terr[index] += amount * (1.0f - shape);
+         heightmap[index] += amount * (1.0f - shape);
       }
    }
 
-   m_scene.publish_terrain_changes();
+   m_level.mut_component<world::TerrainComponent>(m_entity_id);
 }
 
 void TerrainCanvas::level(const float level, const float strength, const Vector2i coord) const
@@ -51,7 +55,7 @@ void TerrainCanvas::level(const float level, const float strength, const Vector2
    if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
       return;
 
-   auto& terr = m_scene.terrain();
+   auto& heightmap = m_terrain.mut_heightmap();
 
    const i32 brush_size_int = static_cast<i32>(m_brush_size);
    for (i32 y = -brush_size_int; y <= brush_size_int; y++) {
@@ -69,11 +73,11 @@ void TerrainCanvas::level(const float level, const float strength, const Vector2
             continue;
          const float shape = std::cos(dist * MATH_PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
-         terr[index] = std::lerp(terr[index], level, shape * strength);
+         heightmap[index] = std::lerp(heightmap[index], level, shape * strength);
       }
    }
 
-   m_scene.publish_terrain_changes();
+   m_level.mut_component<world::TerrainComponent>(m_entity_id);
 }
 
 void TerrainCanvas::smooth(const float strength, const Vector2i coord) const
@@ -82,7 +86,7 @@ void TerrainCanvas::smooth(const float strength, const Vector2i coord) const
       return;
 
    const auto average = this->sample_average(coord);
-   auto& terr = m_scene.terrain();
+   auto& heightmap = m_terrain.mut_heightmap();
 
    const i32 brush_size_int = static_cast<i32>(m_brush_size);
    for (i32 y = -brush_size_int; y <= brush_size_int; y++) {
@@ -100,11 +104,11 @@ void TerrainCanvas::smooth(const float strength, const Vector2i coord) const
 
          const float shape = std::cos(dist * MATH_PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
-         terr[index] = std::lerp(terr[index], average, shape * strength);
+         heightmap[index] = std::lerp(heightmap[index], average, shape * strength);
       }
    }
 
-   m_scene.publish_terrain_changes();
+   m_level.mut_component<world::TerrainComponent>(m_entity_id);
 }
 
 static float u8_to_float(const u8 v)
@@ -122,7 +126,7 @@ void TerrainCanvas::paint(const float strength, const Vector2i coord) const
    if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
       return;
 
-   auto& terr = m_scene.terrain_blending();
+   auto& blending = m_terrain.mut_blending();
 
    const i32 brush_size_int = static_cast<i32>(m_brush_size);
    for (i32 y = -brush_size_int; y <= brush_size_int; y++) {
@@ -141,12 +145,12 @@ void TerrainCanvas::paint(const float strength, const Vector2i coord) const
 
          const float shape = std::sin(dist * MATH_PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
-         terr[index] = Vector4b{float_to_u8(u8_to_float(terr[index].x) + strength * (1.0f - shape)), 0, 0, 0};
+         blending[index] = Vector4b{float_to_u8(u8_to_float(blending[index].x) + strength * (1.0f - shape)), 0, 0, 0};
          // terr[index] = 255;
       }
    }
 
-   m_scene.publish_terrain_changes();
+   m_level.mut_component<world::TerrainComponent>(m_entity_id);
 }
 
 float TerrainCanvas::sample(const Vector2i coord) const
@@ -154,8 +158,8 @@ float TerrainCanvas::sample(const Vector2i coord) const
    if (coord.x < 0 || coord.x > 1024 || coord.y < 0 || coord.y > 1024)
       return 0.0f;
 
-   auto& terr = m_scene.terrain();
-   return terr[coord.x + 1024 * coord.y];
+   const auto& heightmap = m_terrain.heightmap();
+   return heightmap[coord.x + 1024 * coord.y];
 }
 
 std::optional<Vector3> TerrainCanvas::trace_ray(const geometry::Ray& ray) const
@@ -193,7 +197,7 @@ float TerrainCanvas::brush_size() const
 
 float TerrainCanvas::sample_average(const Vector2i coord) const
 {
-   auto& terr = m_scene.terrain();
+   const auto& heightmap = m_terrain.heightmap();
 
    const i32 brush_size_int = static_cast<i32>(m_brush_size);
 
@@ -210,7 +214,7 @@ float TerrainCanvas::sample_average(const Vector2i coord) const
 
          const Vector2i pos = coord + Vector2i{x, y};
          const auto index = pos.x + 1024 * pos.y;
-         sum += terr[index];
+         sum += heightmap[index];
          ++count;
       }
    }

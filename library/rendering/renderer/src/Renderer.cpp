@@ -58,7 +58,6 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_device(device),
     m_resource_manager(resource_manager),
     m_config_manager(m_device),
-    m_scene(engine::system<Scene>()),
     m_shadow_map_manager(m_view_context),
     m_bindless_scene(engine::system<BindlessScene>()),
     m_glyph_cache(m_device, m_resource_manager),
@@ -82,7 +81,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
    m_view_context.camera().set_position({-7.42f, 2.32f, 5.0f});
 
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
-      m_ray_tracing_scene.emplace(m_device, m_resource_manager, m_scene);
+      m_ray_tracing_scene.emplace(m_device, m_resource_manager);
    }
 
    m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
@@ -395,11 +394,6 @@ void Renderer::on_config_property_changed(const ConfigProperty /*property*/, con
 void Renderer::recreate_render_jobs()
 {
    m_must_recreate_jobs = true;
-}
-
-Scene& Renderer::scene()
-{
-   return m_scene;
 }
 
 ViewContext& Renderer::view_context()

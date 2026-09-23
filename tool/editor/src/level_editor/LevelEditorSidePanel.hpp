@@ -3,8 +3,8 @@
 #include "triglav/desktop_ui/Button.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/TextInput.hpp"
-#include "triglav/renderer/Scene.hpp"
 #include "triglav/ui_core/IWidget.hpp"
+#include "triglav/world/World.hpp"
 
 namespace triglav::ui_core {
 class HideableWidget;

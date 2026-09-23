@@ -10,7 +10,6 @@
 #include "RayTracingScene.hpp"
 #include "RenderSurface.hpp"
 #include "RenderingJob.hpp"
-#include "Scene.hpp"
 #include "ShadowMapManager.hpp"
 #include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
@@ -71,7 +70,6 @@ class Renderer final : public render_core::IRenderer
    void on_config_property_changed(ConfigProperty property, const Config& config);
    void recreate_render_jobs() override;
 
-   Scene& scene();
    ViewContext& view_context();
    AnimationManager& animation_manager();
 
@@ -93,7 +91,6 @@ class Renderer final : public render_core::IRenderer
    resource::ResourceManager& m_resource_manager;
 
    ConfigManager m_config_manager;
-   Scene& m_scene;
    ViewContext m_view_context;
    ShadowMapManager m_shadow_map_manager;
    BindlessScene& m_bindless_scene;

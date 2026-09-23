@@ -19,11 +19,10 @@ struct RayTracingConstants
    alignas(16) glm::vec3 light_dir;
 };
 
-RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager& resources, Scene& scene) :
+RayTracingScene::RayTracingScene(gapi::Device& device, resource::ResourceManager& resources) :
     m_device{device},
     m_resource_manager{resources},
     m_teapot(resources.get("mesh/teapot.mesh"_rc)),
-    m_scene(scene),
     m_object_buffer{GAPI_CHECK(
        device.create_buffer(gapi::BufferUsage::StorageBuffer | gapi::BufferUsage::TransferDst, MAX_OBJECT_COUNT * sizeof(ObjectDesc)))},
     m_instance_builder(m_device),

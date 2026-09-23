@@ -19,12 +19,12 @@ class TerrainTool : public ILevelEditorTool
    void on_view_updated() override;
    void on_use_end() override;
    void on_left_tool() override;
-   void set_brush_size(float size);
+   void set_brush_size(float size) const;
    void set_strength(float size);
 
  protected:
    LevelEditor& m_level_editor;
-   TerrainCanvas m_canvas;
+   std::unique_ptr<TerrainCanvas> m_canvas;
    bool m_is_being_used = false;
    Vector2i m_pointer_position{};
    float m_strength{1.0f};

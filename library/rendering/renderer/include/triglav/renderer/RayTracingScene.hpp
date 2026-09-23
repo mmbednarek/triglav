@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Camera.hpp"
-#include "Scene.hpp"
 #include "ViewContext.hpp"
 
 #include "triglav/Logging.hpp"
@@ -12,6 +11,7 @@
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
 #include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
+#include "triglav/world/World.hpp"
 
 #include <glm/mat4x4.hpp>
 #include <utility>
@@ -54,7 +54,7 @@ class RayTracingScene
       glm::vec4 points[AO_POINT_COUNT];
    };
 
-   explicit RayTracingScene(graphics_api::Device& device, resource::ResourceManager& resources, Scene& scene);
+   explicit RayTracingScene(graphics_api::Device& device, resource::ResourceManager& resources);
 
    void render(graphics_api::CommandList& cmd_list, const graphics_api::Texture& texture, const graphics_api::Texture& shadows_texture);
 
@@ -66,7 +66,6 @@ class RayTracingScene
    graphics_api::Device& m_device;
    resource::ResourceManager& m_resource_manager;
    render_objects::Mesh& m_teapot;
-   Scene& m_scene;
    std::optional<graphics_api::Buffer> m_instance_list_buffer;
    graphics_api::Buffer m_object_buffer;
    graphics_api::ray_tracing::InstanceBuilder m_instance_builder;

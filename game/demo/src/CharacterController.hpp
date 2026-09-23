@@ -3,7 +3,6 @@
 #include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
 #include "triglav/renderer/AnimationManager.hpp"
-#include "triglav/renderer/Scene.hpp"
 #include "triglav/renderer/ViewContext.hpp"
 
 namespace demo {
@@ -24,8 +23,7 @@ class CharacterController
 {
    TG_DEFINE_LOG_CATEGORY(CharacterController)
  public:
-   CharacterController(triglav::renderer::Scene& scene, triglav::renderer::ViewContext& view_context,
-                       triglav::renderer::AnimationManager& animation_manager);
+   CharacterController(triglav::renderer::ViewContext& view_context, triglav::renderer::AnimationManager& animation_manager);
 
    void setup_character();
 
@@ -41,13 +39,12 @@ class CharacterController
    void recalculate_forward_vector();
 
    // Refs
-   triglav::renderer::Scene& m_scene;
    triglav::renderer::ViewContext& m_view_context;
    triglav::renderer::AnimationManager& m_animation_manager;
 
    // State
    CharacterState m_character_state = CharacterState::Idle;
-   triglav::world::EntityID m_character_id = triglav::renderer::UNSELECTED_OBJECT;
+   triglav::world::EntityID m_character_id = triglav::world::NO_ENTITY;
    triglav::renderer::AnimationID m_character_animation_id = triglav::renderer::NO_ANIMATION;
    triglav::Vector3 m_character_position = {0.0f, 0.0f, 3.5f};
    triglav::Vector3 m_character_forward;

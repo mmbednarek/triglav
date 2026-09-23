@@ -33,4 +33,14 @@ const std::vector<Vector4b>& Terrain::blending() const
    return m_blending;
 }
 
+std::vector<float>& Terrain::mut_heightmap()
+{
+   return m_heightmap;
+}
+
+std::vector<Vector4b>& Terrain::mut_blending()
+{
+   return m_blending;
+}
+
 }// namespace triglav::world

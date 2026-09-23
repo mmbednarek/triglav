@@ -4,6 +4,7 @@
 #include "IStage.hpp"
 
 #include "triglav/render_core/RenderCore.hpp"
+#include "triglav/render_objects/Material.hpp"
 
 namespace triglav::renderer {
 class ShadowMapManager;

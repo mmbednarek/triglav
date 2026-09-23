@@ -3,7 +3,7 @@
 #include "../HistoryManager.hpp"
 #include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
-#include "triglav/renderer/Scene.hpp"
+#include "triglav/world/World.hpp"
 
 namespace triglav::editor {
 
