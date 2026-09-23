@@ -2,7 +2,6 @@
 
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
-#include "triglav/graphics_api/ray_tracing/RayTracingPipeline.hpp"
 #include "triglav/render_objects/Mesh.hpp"
 #include "triglav/resource/ResourceManager.hpp"
 
@@ -67,12 +66,12 @@ void RayTracingScene::build_acceleration_structures()
    GAPI_CHECK_STATUS(m_object_buffer.write_indirect(m_objects.data(), m_objects.size() * sizeof(ObjectDesc)));
 }
 
-void RayTracingScene::on_object_added_to_scene(const world::EntityID /*id*/, const SceneObject& object)
+void RayTracingScene::on_object_added_to_scene(world::EntityID /*id*/, const MeshName mesh_name, const Transform3D& transform)
 {
    // TODO: Fix!!!
    m_must_update_acceleration_structures = true;
 
-   const auto& model = m_resource_manager.get(object.model);
+   const auto& model = m_resource_manager.get(mesh_name);
    const auto vertex_size = geometry::get_vertex_size(model.device_mesh.ranges[0].components);
    const auto vertex_count = static_cast<u32>(model.device_mesh.vertex_buffer.size() / vertex_size);
    const auto triangle_count = static_cast<u32>(model.device_mesh.index_buffer.count() / 3);
@@ -81,7 +80,7 @@ void RayTracingScene::on_object_added_to_scene(const world::EntityID /*id*/, con
 
    auto* acc_struct = m_build_blcontext.commit_triangles();
 
-   m_instance_builder.add_instance(*acc_struct, object.model_matrix(), m_objects.size());
+   m_instance_builder.add_instance(*acc_struct, transform.to_matrix(), m_objects.size());
 
    m_objects.emplace_back(ObjectDesc{.index_buffer = model.device_mesh.index_buffer.buffer().buffer_address(),
                                      .vertex_buffer = model.device_mesh.vertex_buffer.buffer_address()});

@@ -11,6 +11,7 @@
 #include "RenderSurface.hpp"
 #include "RenderingJob.hpp"
 #include "Scene.hpp"
+#include "ShadowMapManager.hpp"
 #include "UpdateUserInterfaceJob.hpp"
 #include "UpdateViewParamsJob.hpp"
 #include "ViewContext.hpp"
@@ -94,6 +95,7 @@ class Renderer final : public render_core::IRenderer
    ConfigManager m_config_manager;
    Scene& m_scene;
    ViewContext m_view_context;
+   ShadowMapManager m_shadow_map_manager;
    BindlessScene& m_bindless_scene;
    render_core::GlyphCache m_glyph_cache;
    ui_core::Viewport m_ui_viewport;

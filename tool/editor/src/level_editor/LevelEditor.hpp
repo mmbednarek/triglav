@@ -20,6 +20,7 @@
 #include "triglav/renderer/OcclusionCulling.hpp"
 #include "triglav/renderer/RenderingJob.hpp"
 #include "triglav/renderer/Scene.hpp"
+#include "triglav/renderer/ShadowMapManager.hpp"
 #include "triglav/renderer/UpdateViewParamsJob.hpp"
 #include "triglav/renderer/ViewContext.hpp"
 #include "triglav/ui_core/IWidget.hpp"
@@ -114,6 +115,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    world::Level& m_level;
    renderer::Scene& m_scene;
    renderer::ViewContext m_view_context;
+   renderer::ShadowMapManager m_shadow_map_manager;
    renderer::BindlessScene& m_bindless_scene;
    renderer::Config m_config;
    renderer::UpdateViewParamsJob m_update_view_params_job;

@@ -6,7 +6,7 @@
 #include "triglav/render_core/RenderCore.hpp"
 
 namespace triglav::renderer {
-class Scene;
+class ShadowMapManager;
 class BindlessScene;
 }// namespace triglav::renderer
 
@@ -17,7 +17,7 @@ class ShadowMapStage final : public IStage
  public:
    using Self = ShadowMapStage;
 
-   ShadowMapStage(Scene& scene, BindlessScene& bindless_scene, UpdateViewParamsJob& update_view_params_job);
+   ShadowMapStage(ShadowMapManager& shadow_map_manager, BindlessScene& bindless_scene, UpdateViewParamsJob& update_view_params_job);
 
    void build_stage(render_core::BuildContext& ctx, const Config& config) const override;
    void render_cascade(render_core::BuildContext& ctx, Name pass_name, Name target_name, render_core::BufferRef view_props) const;
@@ -31,7 +31,7 @@ class ShadowMapStage final : public IStage
    void on_prepare_frame(render_core::JobGraph& graph, u32 frame_index) const;
 
  private:
-   Scene& m_scene;
+   ShadowMapManager& m_shadow_map_manager;
    BindlessScene& m_bindless_scene;
 
    TG_SINK(OnResourceDefinition);

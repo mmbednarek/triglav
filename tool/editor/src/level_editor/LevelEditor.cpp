@@ -383,6 +383,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_state(state),
     m_level(*engine::the().level_by_name(state.asset_name)),
     m_scene(m_level.system<renderer::Scene>()),
+    m_shadow_map_manager(m_view_context),
     m_bindless_scene(m_level.system<renderer::BindlessScene>()),
     m_config(get_default_config()),
     m_update_view_params_job(m_view_context),
@@ -479,12 +480,11 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    // m_scene.load_level(m_state.asset_name);
 
    m_bindless_scene.write_objects_to_buffer();
-   m_scene.update_shadow_maps();
 
    m_rendering_job.emplace_stage<renderer::stage::GBufferStage>(m_state.root_window->device(), m_bindless_scene);
    m_decal_rendering_stage = &m_rendering_job.emplace_stage<DecalRenderingStage>(m_state.root_window->device());
    m_rendering_job.emplace_stage<renderer::stage::AmbientOcclusionStage>(m_state.root_window->device());
-   m_rendering_job.emplace_stage<renderer::stage::ShadowMapStage>(m_scene, m_bindless_scene, m_update_view_params_job);
+   m_rendering_job.emplace_stage<renderer::stage::ShadowMapStage>(m_shadow_map_manager, m_bindless_scene, m_update_view_params_job);
    m_rendering_job.emplace_stage<renderer::stage::ShadingStage>();
    m_rendering_job.emplace_stage<renderer::stage::PostProcessStage>(nullptr, "post_process.out"_name);
 

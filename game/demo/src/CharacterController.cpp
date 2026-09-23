@@ -125,9 +125,6 @@ void CharacterController::forward_state() const
    const auto camera_position = m_character_position - CAMERA_DISTANCE * camera_forward;
 
    m_view_context.set_camera(camera_position, m_camera_orientation);
-
-   m_scene.update_shadow_maps();
-   m_view_context.send_view_changed();
 }
 
 void CharacterController::recalculate_forward_vector()

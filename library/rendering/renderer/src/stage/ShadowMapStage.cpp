@@ -2,6 +2,7 @@
 
 #include "BindlessScene.hpp"
 #include "Scene.hpp"
+#include "ShadowMapManager.hpp"
 
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
@@ -25,8 +26,9 @@ constexpr graphics_api::SamplerProperties g_shadow_map_props{
 
 constexpr Vector2i g_shadow_map_size{4096, 4096};
 
-ShadowMapStage::ShadowMapStage(Scene& scene, BindlessScene& bindless_scene, UpdateViewParamsJob& update_view_params_job) :
-    m_scene(scene),
+ShadowMapStage::ShadowMapStage(ShadowMapManager& shadow_map_manager, BindlessScene& bindless_scene,
+                               UpdateViewParamsJob& update_view_params_job) :
+    m_shadow_map_manager(shadow_map_manager),
     m_bindless_scene(bindless_scene),
     TG_CONNECT(update_view_params_job, OnResourceDefinition, on_resource_definition),
     TG_CONNECT(update_view_params_job, OnViewPropertiesChanged, on_view_properties_changed),
@@ -130,19 +132,19 @@ void ShadowMapStage::on_prepare_frame(render_core::JobGraph& graph, const u32 fr
 {
    const auto mapped_mem = GAPI_CHECK(graph.resources().buffer("shadow_map.matrices.staging"_name, frame_index).map_memory());
    auto& matrices = mapped_mem.cast<std::array<Matrix4x4, 3>>();
-   matrices[0] = m_scene.shadow_map_camera(0).view_projection_matrix();
-   matrices[1] = m_scene.shadow_map_camera(1).view_projection_matrix();
-   matrices[2] = m_scene.shadow_map_camera(2).view_projection_matrix();
+   matrices[0] = m_shadow_map_manager.shadow_map_camera(0).view_projection_matrix();
+   matrices[1] = m_shadow_map_manager.shadow_map_camera(1).view_projection_matrix();
+   matrices[2] = m_shadow_map_manager.shadow_map_camera(2).view_projection_matrix();
 
    const auto mapped_mem_view_props0 =
       GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade0.staging"_name, frame_index).map_memory());
-   mapped_mem_view_props0.cast<Matrix4x4>() = m_scene.shadow_map_camera(0).view_projection_matrix();
+   mapped_mem_view_props0.cast<Matrix4x4>() = m_shadow_map_manager.shadow_map_camera(0).view_projection_matrix();
    const auto mapped_mem_view_props1 =
       GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade1.staging"_name, frame_index).map_memory());
-   mapped_mem_view_props1.cast<Matrix4x4>() = m_scene.shadow_map_camera(1).view_projection_matrix();
+   mapped_mem_view_props1.cast<Matrix4x4>() = m_shadow_map_manager.shadow_map_camera(1).view_projection_matrix();
    const auto mapped_mem_view_props2 =
       GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade2.staging"_name, frame_index).map_memory());
-   mapped_mem_view_props2.cast<Matrix4x4>() = m_scene.shadow_map_camera(2).view_projection_matrix();
+   mapped_mem_view_props2.cast<Matrix4x4>() = m_shadow_map_manager.shadow_map_camera(2).view_projection_matrix();
 }
 
 }// namespace triglav::renderer::stage

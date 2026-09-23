@@ -2,6 +2,7 @@
 
 #include "Camera.hpp"
 #include "Scene.hpp"
+#include "ViewContext.hpp"
 
 #include "triglav/Logging.hpp"
 #include "triglav/geometry/Mesh.hpp"
@@ -59,7 +60,7 @@ class RayTracingScene
 
    void build_acceleration_structures();
 
-   void on_object_added_to_scene(world::EntityID id, const SceneObject& object);
+   void on_object_added_to_scene(world::EntityID id, MeshName mesh_name, const Transform3D& transform);
 
  private:
    graphics_api::Device& m_device;
