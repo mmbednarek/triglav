@@ -2,6 +2,7 @@
 
 #include "Camera.hpp"
 #include "Scene.hpp"
+#include "ViewContext.hpp"
 
 #include "triglav/Event.hpp"
 #include "triglav/Int.hpp"
@@ -45,7 +46,7 @@ class UpdateViewParamsJob
 
    static constexpr auto JobName = make_name_id("job.update_view_properties");
 
-   explicit UpdateViewParamsJob(Scene& scene);
+   explicit UpdateViewParamsJob(const ViewContext& view_context);
 
    void build_job(render_core::BuildContext& ctx) const;
    void prepare_frame(render_core::JobGraph& graph, u32 frame_index, float delta_time);

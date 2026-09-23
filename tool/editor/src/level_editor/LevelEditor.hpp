@@ -21,6 +21,7 @@
 #include "triglav/renderer/RenderingJob.hpp"
 #include "triglav/renderer/Scene.hpp"
 #include "triglav/renderer/UpdateViewParamsJob.hpp"
+#include "triglav/renderer/ViewContext.hpp"
 #include "triglav/ui_core/IWidget.hpp"
 
 namespace triglav::ui_core {
@@ -70,6 +71,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    LevelEditor(ui_core::Context& context, State state, ui_core::IWidget* parent);
 
    [[nodiscard]] renderer::Scene& scene() const;
+   [[nodiscard]] renderer::ViewContext& view_context();
    [[nodiscard]] world::Level& level() const;
 
    void tick(float delta_time) override;
@@ -111,6 +113,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    State m_state;
    world::Level& m_level;
    renderer::Scene& m_scene;
+   renderer::ViewContext m_view_context;
    renderer::BindlessScene& m_bindless_scene;
    renderer::Config m_config;
    renderer::UpdateViewParamsJob m_update_view_params_job;

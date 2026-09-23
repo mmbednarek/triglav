@@ -15,8 +15,8 @@ struct FrameParameters
    u32 random_seed;
 };
 
-UpdateViewParamsJob::UpdateViewParamsJob(Scene& scene) :
-    TG_CONNECT(scene, OnViewUpdated, on_updated)
+UpdateViewParamsJob::UpdateViewParamsJob(const ViewContext& view_context) :
+    TG_CONNECT(view_context, OnViewUpdated, on_updated)
 {
 }
 

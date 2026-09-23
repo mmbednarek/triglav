@@ -385,7 +385,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
     m_scene(m_level.system<renderer::Scene>()),
     m_bindless_scene(m_level.system<renderer::BindlessScene>()),
     m_config(get_default_config()),
-    m_update_view_params_job(m_scene),
+    m_update_view_params_job(m_view_context),
     m_occlusion_culling(m_update_view_params_job, m_bindless_scene),
     m_rendering_job(m_config),
     m_selection_tool(*this),
@@ -488,12 +488,17 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_rendering_job.emplace_stage<renderer::stage::ShadingStage>();
    m_rendering_job.emplace_stage<renderer::stage::PostProcessStage>(nullptr, "post_process.out"_name);
 
-   m_scene.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
+   m_view_context.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
 }
 
 renderer::Scene& LevelEditor::scene() const
 {
    return m_scene;
+}
+
+renderer::ViewContext& LevelEditor::view_context()
+{
+   return m_view_context;
 }
 
 world::Level& LevelEditor::level() const
@@ -854,7 +859,7 @@ geometry::Ray LevelEditor::viewport_ray(const Vector2 position)
    const auto normalized_pos = position / rect_size(this->viewport().dimensions());
    auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
    viewport_coord.y *= -1.0f;
-   return this->scene().camera().viewport_ray(viewport_coord);
+   return this->view_context().camera().viewport_ray(viewport_coord);
 }
 
 DecalRenderingStage& LevelEditor::decal_rendering_stage() const

@@ -74,7 +74,7 @@ class GameInstance
 
    void on_engine_ready();
    void on_loaded_assets(triglav::resource::LoadIndex load_index);
-   void on_level_loaded();
+   void on_level_loaded(triglav::LevelName level_name);
    void loop(triglav::desktop::IDisplay& display);
 
  private:

@@ -49,7 +49,8 @@ Vector2 LevelViewport::desired_size(const Vector2 available_size) const
 void LevelViewport::add_to_viewport(const Vector4 dimensions, Vector4 /*cropping_mask*/)
 {
    m_dimensions = dimensions;
-   m_level_editor.scene().update(graphics_api::Resolution{static_cast<u32>(dimensions.z), static_cast<u32>(dimensions.w)});
+   m_level_editor.view_context().update_resolution(
+      graphics_api::Resolution{static_cast<u32>(dimensions.z), static_cast<u32>(dimensions.w)});
    m_render_viewport = std::make_unique<RenderViewport>(m_level_editor, dimensions);
    m_root_window.set_render_overlay(m_render_viewport.get());
 }
@@ -69,7 +70,7 @@ void LevelViewport::on_event(const ui_core::Event& event)
 void LevelViewport::tick(const float delta_time)
 {
    bool should_update_sm = false;
-   const auto cam_orientation = m_level_editor.scene().camera().orientation();
+   const auto cam_orientation = m_level_editor.view_context().camera().orientation();
    if (m_cam_movement != CamMovement::None) {
       Vector3 direction{};
 
@@ -102,13 +103,14 @@ void LevelViewport::tick(const float delta_time)
          break;
       }
 
-      m_level_editor.scene().set_camera(
-         m_level_editor.scene().camera().position() + m_level_editor.speed() * delta_time * (cam_orientation * direction), cam_orientation);
+      m_level_editor.view_context().set_camera(m_level_editor.view_context().camera().position() +
+                                                  m_level_editor.speed() * delta_time * (cam_orientation * direction),
+                                               cam_orientation);
       should_update_sm = true;
    }
 
    const auto diff = delta_time * m_mouse_motion;
-   m_level_editor.scene().update_orientation(diff.x, diff.y);
+   m_level_editor.view_context().update_orientation(diff.x, diff.y);
    m_mouse_motion += m_mouse_motion * (std::pow(0.5f, 50.0f * delta_time) - 1.0f);
    if (m_mouse_motion.x < 0.001f && m_mouse_motion.y < 0.001f) {
       m_mouse_motion = {};
@@ -171,7 +173,7 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
       viewport_coord.y *= -1.0f;
 
-      const auto ray = m_level_editor.scene().camera().viewport_ray(viewport_coord);
+      const auto ray = m_level_editor.view_context().camera().viewport_ray(viewport_coord);
       if (!m_level_editor.tool().on_use_start(ray)) {
          m_level_editor.selection_tool().on_use_start(ray);
       }

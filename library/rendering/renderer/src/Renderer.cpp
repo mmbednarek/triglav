@@ -70,7 +70,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage, {resolution.width, resolution.height}),
     m_animation_manager(m_device, m_resource_manager, m_bindless_scene),
     m_animation_job(m_animation_manager, m_bindless_scene),
-    m_update_view_params_job(m_scene),
+    m_update_view_params_job(m_view_context),
     m_update_user_interface_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager, *this),
     m_occlusion_culling(m_update_view_params_job, m_bindless_scene),
     m_rendering_job(m_config_manager.config()),
@@ -78,7 +78,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     TG_CONNECT(m_config_manager, OnPropertyChanged, on_config_property_changed)
 {
    m_bindless_scene.set_renderer(this);
-   m_scene.camera().set_position({-7.42f, 2.32f, 5.0f});
+   m_view_context.camera().set_position({-7.42f, 2.32f, 5.0f});
 
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
       m_ray_tracing_scene.emplace(m_device, m_resource_manager, m_scene);
@@ -152,8 +152,8 @@ void Renderer::update_debug_info(const bool is_first_frame)
       m_info_dialog.set_triangle_count(m_resource_storage.pipeline_stats().get_int(0));
    }
 
-   m_info_dialog.set_camera_pos(m_scene.camera().position());
-   m_info_dialog.set_orientation({m_scene.pitch(), m_scene.yaw()});
+   m_info_dialog.set_camera_pos(m_view_context.camera().position());
+   m_info_dialog.set_orientation({m_view_context.pitch(), m_view_context.yaw()});
 }
 
 void Renderer::on_render(const float delta_time)
@@ -339,13 +339,13 @@ glm::vec3 Renderer::moving_direction()
    case Moving::None:
       break;
    case Moving::Forward:
-      return m_scene.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
+      return m_view_context.camera().orientation() * glm::vec3{0.0f, 1.0f, 0.0f};
    case Moving::Backwards:
-      return m_scene.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};
+      return m_view_context.camera().orientation() * glm::vec3{0.0f, -1.0f, 0.0f};
    case Moving::Left:
-      return m_scene.camera().orientation() * glm::vec3{-1.0f, 0.0f, 0.0f};
+      return m_view_context.camera().orientation() * glm::vec3{-1.0f, 0.0f, 0.0f};
    case Moving::Right:
-      return m_scene.camera().orientation() * glm::vec3{1.0f, 0.0f, 0.0f};
+      return m_view_context.camera().orientation() * glm::vec3{1.0f, 0.0f, 0.0f};
    case Moving::Up:
       return glm::vec3{0.0f, 0.0f, -1.0f};
    case Moving::Down:
@@ -405,6 +405,11 @@ Scene& Renderer::scene()
    return m_scene;
 }
 
+ViewContext& Renderer::view_context()
+{
+   return m_view_context;
+}
+
 AnimationManager& Renderer::animation_manager()
 {
    return m_animation_manager;
@@ -416,21 +421,21 @@ void Renderer::update_uniform_data(const float delta_time)
 {
    bool updated = m_motion != glm::vec3{0, 0, 0} || m_mouse_offset != glm::vec2{0, 0};
 
-   m_scene.camera().set_position(m_scene.camera().position() + m_motion * delta_time);
+   m_view_context.camera().set_position(m_view_context.camera().position() + m_motion * delta_time);
 
    if (m_move_direction != Moving::None) {
       glm::vec3 moving_dir{this->moving_direction()};
       moving_dir.z = 0.0f;
       moving_dir = glm::normalize(moving_dir);
-      m_scene.camera().set_position(m_scene.camera().position() + moving_dir * (g_moving_speed * delta_time));
+      m_view_context.camera().set_position(m_view_context.camera().position() + moving_dir * (g_moving_speed * delta_time));
       updated = true;
    }
 
-   if (m_scene.camera().position().z < 5.0f) {
+   if (m_view_context.camera().position().z < 5.0f) {
       m_motion = glm::vec3{0.0f};
-      glm::vec3 cam_pos{m_scene.camera().position()};
+      glm::vec3 cam_pos{m_view_context.camera().position()};
       cam_pos.z = 5.0f;
-      m_scene.camera().set_position(cam_pos);
+      m_view_context.camera().set_position(cam_pos);
       m_on_ground = true;
       updated = true;
    } else if (!m_on_ground) {
@@ -439,7 +444,7 @@ void Renderer::update_uniform_data(const float delta_time)
 
    if (m_config_manager.config().is_smooth_camera_enabled) {
       // m_scene.update_orientation(m_mouse_offset.x * delta_time, m_mouse_offset.y * delta_time);
-      m_mouse_offset += m_mouse_offset * (static_cast<float>(pow(0.5f, 50.0f * delta_time)) - 1.0f);
+      m_mouse_offset += m_mouse_offset * std::pow(0.5f, 50.0f * delta_time - 1.0f);
       if (m_mouse_offset.x < 0.0001f && m_mouse_offset.y < 0.0001f) {
          m_mouse_offset = glm::vec2{0.0f};
       }
@@ -449,11 +454,11 @@ void Renderer::update_uniform_data(const float delta_time)
    }
 
    graphics_api::Resolution res{m_render_surface.resolution().x, m_render_surface.resolution().y};
-   m_scene.update(res);
+   m_view_context.update_resolution(res);
 
    if (updated) {
       m_scene.update_shadow_maps();
-      m_scene.send_view_changed();
+      m_view_context.send_view_changed();
    }
 }
 
