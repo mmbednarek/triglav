@@ -44,11 +44,13 @@ class ComponentStorage
 
  public:
    explicit ComponentStorage(ComponentID component_id);
-   ComponentStorage();
+
+   ComponentStorage(ComponentStorage&& other) noexcept;
+   ComponentStorage& operator=(ComponentStorage&& other) noexcept;
+
    ~ComponentStorage();
 
    TG_DELETE_COPY(ComponentStorage)
-   TG_DEFAULT_MOVE(ComponentStorage)
 
    u32 allocate_component(EntityID entity_id);
    void allocate_components(std::span<EntityID> entity_ids);
@@ -60,7 +62,7 @@ class ComponentStorage
    [[nodiscard]] bool contains_entity(EntityID entity_id) const;
    [[nodiscard]] ComponentID component_id() const;
    bool serialize(io::IWriter& writer) const;
-   bool deserialize(io::IReader& reader);
+   static std::optional<ComponentStorage> deserialize(io::IReader& reader);
 
    ComponentIterator begin() const;
    ComponentIterator end() const;

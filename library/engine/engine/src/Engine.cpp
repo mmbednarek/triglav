@@ -56,14 +56,6 @@ void Engine::load_level(const LevelName level_name)
 
    assert(m_pending_level->deserialize(**file));
 
-   const auto terrain = m_pending_level->new_entity();
-   auto* terrain_component = m_pending_level->insert_component<world::TerrainComponent>(terrain);
-   terrain_component->name = "level/demo/base.ter"_rc;
-   auto* entity_label = m_pending_level->insert_component<world::EntityLabel>(terrain);
-   entity_label->label = "Ground";
-   auto* entity_tag = m_pending_level->insert_component<world::Tag>(terrain);
-   entity_tag->tag = "ground"_name;
-
    std::vector<ResourceName> resource_list;
 
    for (const auto [entity_id, mesh] : m_pending_level->all<world::Mesh>()) {

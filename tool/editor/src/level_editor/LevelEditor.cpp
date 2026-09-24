@@ -6,10 +6,12 @@
 #include "LevelViewport.hpp"
 
 #include "triglav/Ranges.hpp"
+#include "triglav/asset/Asset.hpp"
 #include "triglav/desktop_ui/CheckBox.hpp"
 #include "triglav/desktop_ui/DesktopUI.hpp"
 #include "triglav/desktop_ui/Splitter.hpp"
 #include "triglav/engine/Engine.hpp"
+#include "triglav/io/File.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
 #include "triglav/renderer/stage/GBufferStage.hpp"
@@ -26,6 +28,7 @@
 #include "triglav/ui_core/widget/SizeLimit.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 #include "triglav/world/Level.hpp"
+#include "triglav/world/Terrain.hpp"
 
 namespace triglav::editor {
 
@@ -702,7 +705,14 @@ void LevelEditor::on_event(const ui_core::Event& event)
 void LevelEditor::save_level() const
 {
    const auto level_path = project::PathManager::the().translate_path(m_state.asset_name);
-   assert(engine::Engine::the().level_by_name(this->asset_name())->save_to_file(level_path));
+   assert(m_level.save_to_file(level_path));
+
+   // Need to save terrain manually
+   for (const auto& [entity_id, component] : m_level.all<world::TerrainComponent>()) {
+      auto& terrain = engine::resource_manager().get(component.name);
+      const auto path = project::PathManager::the().translate_path(component.name);
+      terrain.save_to_file(path);
+   }
 }
 
 void LevelEditor::remove_selected_item()

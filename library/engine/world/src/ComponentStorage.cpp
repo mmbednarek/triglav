@@ -59,9 +59,35 @@ ComponentStorage::ComponentStorage(const ComponentID component_id) :
    std::tie(m_component_stride, m_entity_id_offset) = calc_component_stride_and_offset(info.data_size, info.data_alignment);
 }
 
-ComponentStorage::ComponentStorage() :
-    m_component_id(~0u)
+ComponentStorage::ComponentStorage(ComponentStorage&& other) noexcept :
+    m_buckets(std::move(other.m_buckets)),
+    m_sparse_mapping(std::move(other.m_sparse_mapping)),
+    m_component_id(std::exchange(other.m_component_id, ~0u)),
+    m_count(std::exchange(other.m_count, 0)),
+    m_component_stride(std::exchange(other.m_component_stride, 0)),
+    m_entity_id_offset(std::exchange(other.m_entity_id_offset, 0))
 {
+}
+
+ComponentStorage& ComponentStorage::operator=(ComponentStorage&& other) noexcept
+{
+   if (this == &other)
+      return *this;
+
+   if (!m_buckets.empty()) {
+      for (const auto& bucket : m_buckets) {
+         delete bucket;
+      }
+   }
+   m_buckets.clear();
+
+   m_buckets = std::move(other.m_buckets);
+   m_sparse_mapping = std::move(other.m_sparse_mapping);
+   m_component_id = std::exchange(other.m_component_id, ~0u);
+   m_count = std::exchange(other.m_count, 0);
+   m_component_stride = std::exchange(other.m_component_stride, 0);
+   m_entity_id_offset = std::exchange(other.m_entity_id_offset, 0);
+   return *this;
 }
 
 ComponentStorage::~ComponentStorage()
@@ -193,45 +219,44 @@ bool ComponentStorage::serialize(io::IWriter& writer) const
    return true;
 }
 
-bool ComponentStorage::deserialize(io::IReader& reader)
+std::optional<ComponentStorage> ComponentStorage::deserialize(io::IReader& reader)
 {
    io::Deserializer deserializer(reader);
 
    const Name component_name = deserializer.read_name();
    const auto cid = ComponentManager::the().component_id_by_class_name(component_name);
    if (!cid.has_value())
-      return false;
-   m_component_id = *cid;
+      return std::nullopt;
 
-
-   const auto& info = ComponentManager::the().info_by_id(m_component_id);
-   std::tie(m_component_stride, m_entity_id_offset) = calc_component_stride_and_offset(info.data_size, info.data_alignment);
+   ComponentStorage result(*cid);
 
    const auto sparse_set_count = deserializer.read_u32();
    for (u32 i = 0; i < sparse_set_count; ++i) {
       const auto key = deserializer.read_u32();
       const auto value = deserializer.read_u32();
-      m_sparse_mapping.emplace(key, value);
+      result.m_sparse_mapping.emplace(key, value);
    }
 
-   m_count = deserializer.read_u32();
-   const mem_size max_bucket_id = m_count >> COMPONENT_BUCKET_SIZE_LOG2;
-   while (max_bucket_id >= m_buckets.size()) {
-      auto* bucket = new u8[COMPONENT_BUCKET_SIZE * m_component_stride];
-      std::memset(bucket, 0, COMPONENT_BUCKET_SIZE * m_component_stride);
-      m_buckets.push_back(bucket);
+   result.m_count = deserializer.read_u32();
+   const mem_size max_bucket_id = result.m_count >> COMPONENT_BUCKET_SIZE_LOG2;
+   while (max_bucket_id >= result.m_buckets.size()) {
+      auto* bucket = new u8[COMPONENT_BUCKET_SIZE * result.m_component_stride];
+      std::memset(bucket, 0, COMPONENT_BUCKET_SIZE * result.m_component_stride);
+      result.m_buckets.push_back(bucket);
    }
 
-   for (u32 i = 0; i < m_count; ++i) {
-      const auto ptr = this->get_component(i);
+   const auto& info = ComponentManager::the().info_by_id(result.m_component_id);
 
-      *reinterpret_cast<EntityID*>(static_cast<u8*>(ptr) + m_entity_id_offset) = deserializer.read_u32();
+   for (u32 i = 0; i < result.m_count; ++i) {
+      const auto ptr = result.get_component(i);
+
+      *reinterpret_cast<EntityID*>(static_cast<u8*>(ptr) + result.m_entity_id_offset) = deserializer.read_u32();
 
       meta::Ref comp{ptr, info.component_class};
       meta::deserialize_binary(reader, comp);
    }
 
-   return true;
+   return result;
 }
 
 ComponentIterator ComponentStorage::begin() const
