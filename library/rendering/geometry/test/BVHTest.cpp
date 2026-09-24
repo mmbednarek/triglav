@@ -22,11 +22,16 @@ struct Object
    {
       return bbox;
    }
+
+   [[nodiscard]] std::string index() const
+   {
+      return std::string{label};
+   }
 };
 
 TEST(BVHTest, BasicTree)
 {
-   BVHTree<Object> tree;
+   BVHTree<std::string, Object> tree;
 
    std::array<Object, 4> objects{
       Object{"A", {-1, -1, -1}, {1, 1, 1}},
@@ -39,8 +44,25 @@ TEST(BVHTest, BasicTree)
    const auto hit = tree.traverse({.origin = {-5, -3, -3}, .direction = {1, 0, 0}, .distance = 10.0f});
    EXPECT_NE(hit.payload, nullptr);
    EXPECT_EQ(hit.payload->label, "B");
+   EXPECT_EQ(&tree.get("B"), hit.payload);
 
    const auto miss = tree.traverse({.origin = {-5, 0, 0}, .direction = {-1, 0, 0}, .distance = 10.0f});
    EXPECT_EQ(miss.distance, INFINITY);
    EXPECT_EQ(miss.payload, nullptr);
+
+   tree.add(Object{
+      "E",
+      {-0.5, -0.5, 0.25},
+      {0.5, 0.25, 0.5},
+   });
+
+   const auto added_hit = tree.traverse({.origin = {0.0, 0, 0.2}, .direction = {0, 0, 1}, .distance = 10.0f});
+   EXPECT_NE(added_hit.payload, nullptr);
+   EXPECT_EQ(added_hit.payload->label, "E");
+   EXPECT_EQ(&tree.get("E"), added_hit.payload);
+
+   tree.remove("B");
+
+   const auto removed_hit = tree.traverse({.origin = {-5, -3, -3}, .direction = {1, 0, 0}, .distance = 10.0f});
+   EXPECT_EQ(removed_hit.payload, nullptr);
 }
