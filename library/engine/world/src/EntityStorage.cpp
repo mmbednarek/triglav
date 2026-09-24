@@ -1,6 +1,7 @@
 #include "EntityStorage.hpp"
 
 #include "ComponentManager.hpp"
+#include "triglav/Ranges.hpp"
 #include "triglav/io/Serializer.hpp"
 
 namespace triglav::world {
@@ -107,7 +108,9 @@ bool EntityStorage::deserialize(io::IReader& reader)
 {
    assert(m_storage.empty() && "Can deserialize only on empty storage");
 
-   m_storage.resize(ComponentManager::the().count());
+   m_storage.reserve(ComponentManager::the().count());
+   std::generate_n(std::back_inserter(m_storage), ComponentManager::the().count(),
+                   [index = 0]() mutable { return ComponentStorage(index++); });
 
    io::Deserializer deserializer(reader);
    const u32 count = deserializer.read_u32();
@@ -115,11 +118,10 @@ bool EntityStorage::deserialize(io::IReader& reader)
    m_top_entity_id = deserializer.read_u32();
 
    for (u32 i = 0; i < count; i++) {
-      ComponentStorage component_storage;
-      if (!component_storage.deserialize(reader))
+      auto storage = ComponentStorage::deserialize(reader);
+      if (!storage.has_value())
          return false;
-
-      m_storage[component_storage.component_id()] = std::move(component_storage);
+      m_storage[storage->component_id()] = std::move(*storage);
    }
 
    m_hierarchy_tree.deserialize(reader);

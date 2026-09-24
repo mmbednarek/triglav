@@ -14,6 +14,14 @@ asset::Animation Loader<ResourceType::Animation>::load(const io::Path& path)
 
    auto animation = asset::decode_animation(**file);
    assert(animation.has_value());
+
+   // HACK TO SPEED UP THE ANIMATION
+   for (auto& channel : animation->channels) {
+      for (auto& timestamp : channel.timestamps) {
+         timestamp *= 0.25f;
+      }
+   }
+
    return std::move(*animation);
 }
 
