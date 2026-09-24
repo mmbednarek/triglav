@@ -12,6 +12,7 @@ struct BVHNode
    geometry::BoundingBox bbox;
 
    [[nodiscard]] const geometry::BoundingBox& bounding_box() const;
+   [[nodiscard]] world::EntityID index() const;
 };
 
 struct RayHit
@@ -39,7 +40,7 @@ class PhysicsSystem : public world::ISystem
    RayHit trace_ray(const geometry::Ray& ray) const;
 
  private:
-   geometry::BVHTree<BVHNode> m_tree;
+   geometry::BVHTree<world::EntityID, BVHNode> m_tree;
 };
 
 }// namespace triglav::physics
