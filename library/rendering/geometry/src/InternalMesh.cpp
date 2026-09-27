@@ -506,15 +506,15 @@ VertexData InternalMesh::to_vertex_data()
       auto buff_group = out_vertex_buffer.group(buff_group_id);
       u32 dst_index = 0;
       for (const auto& vert : group_vertices) {
-         buff_group.get<VertexComponentCore>(dst_index) = {vert.position, vert.normal};
-         buff_group.get<VertexComponentTexture>(dst_index).uv = vert.uv;
+         *buff_group.get<VertexComponentCore>(dst_index) = {vert.position, vert.normal};
+         buff_group.get<VertexComponentTexture>(dst_index)->uv = vert.uv;
          if (components & VertexComponent::NormalMap) {
-            buff_group.get<VertexComponentNormalMap>(dst_index).tangent = vert.tangent;
+            buff_group.get<VertexComponentNormalMap>(dst_index)->tangent = vert.tangent;
          }
          if (components & VertexComponent::Skeleton) {
-            auto& vertex_skel = buff_group.get<VertexComponentSkeleton>(dst_index);
-            vertex_skel.indices = vert.indices;
-            vertex_skel.weights = vert.weights;
+            auto* vertex_skel = buff_group.get<VertexComponentSkeleton>(dst_index);
+            vertex_skel->indices = vert.indices;
+            vertex_skel->weights = vert.weights;
          }
          ++dst_index;
       }

@@ -165,6 +165,12 @@ class Level
    }
 
    template<meta::HasMetaName T>
+   mem_size component_count()
+   {
+      return m_entity_storage.component_storage(*ComponentManager::the().component_id_by_class_name(T::meta_name())).count();
+   }
+
+   template<meta::HasMetaName T>
    LevelComponentRange<T> all()
    {
       auto& storage = m_entity_storage.component_storage(*ComponentManager::the().component_id_by_class_name(T::meta_name()));

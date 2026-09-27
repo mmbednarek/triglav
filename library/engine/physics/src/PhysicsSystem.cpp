@@ -8,13 +8,34 @@ namespace triglav::physics {
 using namespace name_literals;
 
 engine::SystemRegisterer PHYSICS_SYSTEM_REGISTERER{{
-   .constructor = [](world::Level& /*level*/) -> std::unique_ptr<world::ISystem> { return std::make_unique<PhysicsSystem>(); },
+   .constructor = [](world::Level& level) -> std::unique_ptr<world::ISystem> { return std::make_unique<PhysicsSystem>(level); },
    .components =
       std::vector<Name>{
          "triglav::Transform3D"_name,
          "triglav::world::Mesh"_name,
       },
 }};
+
+namespace {
+
+BVHNode bvh_node_from_entity_id(const world::Level& level, const world::EntityID entity_id, const world::Mesh* mesh_comp = nullptr)
+{
+   if (mesh_comp == nullptr) {
+      mesh_comp = level.component_opt<world::Mesh>(entity_id);
+      assert(mesh_comp != nullptr);
+   }
+   const auto& mesh = engine::resource_manager().get(mesh_comp->name);
+   const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
+   Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
+
+   return BVHNode{
+      .entity_id = entity_id,
+      .bbox = mesh.bounding_box.transform(transform.to_matrix()),
+      .inv_transform = glm::inverse(transform.to_matrix()),
+   };
+}
+
+}// namespace
 
 const geometry::BoundingBox& BVHNode::bounding_box() const
 {
@@ -26,7 +47,16 @@ world::EntityID BVHNode::index() const
    return entity_id;
 }
 
-PhysicsSystem::PhysicsSystem() = default;
+Matrix4x4 BVHNode::inv_transform_matrix() const
+{
+   return inv_transform;
+}
+
+PhysicsSystem::PhysicsSystem(world::Level& level) :
+    m_provider(level),
+    m_tree(m_provider)
+{
+}
 
 Name PhysicsSystem::system_name()
 {
@@ -36,15 +66,10 @@ Name PhysicsSystem::system_name()
 void PhysicsSystem::on_level_loaded(world::Level& level)
 {
    std::vector<BVHNode> nodes;
-   for (const auto& [entity_id, mesh_comp] : level.all<world::Mesh>()) {
-      const auto& mesh = engine::resource_manager().get(mesh_comp.name);
-      const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
-      Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
+   nodes.reserve(level.component_count<world::Mesh>());
 
-      nodes.emplace_back(BVHNode{
-         .entity_id = entity_id,
-         .bbox = mesh.bounding_box.transform(transform.to_matrix()),
-      });
+   for (const auto& [entity_id, mesh_comp] : level.all<world::Mesh>()) {
+      nodes.emplace_back(bvh_node_from_entity_id(level, entity_id, &mesh_comp));
    }
 
    m_tree.build(nodes);
@@ -64,15 +89,7 @@ void PhysicsSystem::on_added_component(world::Level& level, Name component_name,
       return;
 
    for (const auto entity_id : entities) {
-      const auto& mesh_comp = level.component<world::Mesh>(entity_id);
-      const auto& mesh = engine::resource_manager().get(mesh_comp.name);
-      const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
-      Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
-
-      m_tree.add(BVHNode{
-         .entity_id = entity_id,
-         .bbox = mesh.bounding_box.transform(transform.to_matrix()),
-      });
+      m_tree.add(bvh_node_from_entity_id(level, entity_id));
    }
 }
 
@@ -80,18 +97,10 @@ void PhysicsSystem::on_modified_component(world::Level& level, Name /*component_
                                           std::span<const world::EntityID> entities)
 {
    for (const auto entity_id : entities) {
-      const auto* mesh_comp = level.component_opt<world::Mesh>(entity_id);
-      if (mesh_comp == nullptr)
+      if (!level.has_component<world::Mesh>(entity_id))
          continue;
 
-      const auto& mesh = engine::resource_manager().get(mesh_comp->name);
-      const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
-      Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
-
-      m_tree.update(BVHNode{
-         .entity_id = entity_id,
-         .bbox = mesh.bounding_box.transform(transform.to_matrix()),
-      });
+      m_tree.update(bvh_node_from_entity_id(level, entity_id));
    }
 }
 

@@ -10,6 +10,7 @@ geometry_sources = files([
   'src/InternalMesh.cpp',
   'src/InternalMesh.hpp',
   'src/Mesh.cpp',
+  'src/MeshData.cpp',
   'src/Parser.cpp',
   'src/VertexBuffer.cpp',
 ])

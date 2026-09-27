@@ -129,6 +129,15 @@ struct Ray
    Vector3 origin;
    Vector3 direction;
    float distance;
+
+   [[nodiscard]] constexpr Ray to_local_space(const Matrix4x4& inv_matrix) const
+   {
+      return Ray{
+         .origin = inv_matrix * Vector4{this->origin, 1},
+         .direction = inv_matrix * Vector4{this->direction, 0},
+         .distance = this->distance,
+      };
+   }
 };
 
 struct BoundingBox

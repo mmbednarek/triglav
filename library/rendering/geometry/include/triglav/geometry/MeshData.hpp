@@ -22,6 +22,9 @@ struct MeshData
 {
    VertexData vertex_data;
    BoundingBox bounding_box;
+
+   Vector3 vertex_position_at(u32 index);
+   u32 primitive_count() const;
 };
 
 }// namespace triglav::geometry

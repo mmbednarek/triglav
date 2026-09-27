@@ -254,10 +254,10 @@ std::optional<geometry::MeshData> decode_mesh(io::IReader& reader, const u32 ver
          auto group = mesh_data.vertex_data.vertex_buffer.group(group_id);
          for (const auto [global_index, group_index] : unique_vertices) {
             const auto& vertex = vertices[global_index];
-            group.get<geometry::VertexComponentCore>(group_index) = {vertex.location, vertex.normal};
-            group.get<geometry::VertexComponentTexture>(group_index) = {vertex.uv};
+            *group.get<geometry::VertexComponentCore>(group_index) = {vertex.location, vertex.normal};
+            *group.get<geometry::VertexComponentTexture>(group_index) = {vertex.uv};
             if (vertex_components & geometry::VertexComponent::NormalMap) {
-               group.get<geometry::VertexComponentNormalMap>(group_index) = {vertex.tangent};
+               *group.get<geometry::VertexComponentNormalMap>(group_index) = {vertex.tangent};
             }
          }
       }
@@ -345,6 +345,21 @@ std::optional<Animation> decode_animation(io::IReader& reader)
       return std::nullopt;
    }
    return animation;
+}
+
+geometry::MeshData load_mesh_data(const io::Path& path)
+{
+   const auto mesh_file_handle = io::open_file(path, io::FileMode::Read);
+   assert(mesh_file_handle.has_value());
+
+   [[maybe_unused]]
+   const auto asset_header = decode_header(**mesh_file_handle);
+   assert(asset_header.has_value());
+   assert(asset_header->type == ResourceType::Mesh);
+
+   const auto mesh = decode_mesh(**mesh_file_handle, asset_header->version);
+   assert(mesh.has_value());
+   return *mesh;
 }
 
 }// namespace triglav::asset
