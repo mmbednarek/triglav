@@ -4,32 +4,11 @@
 #include "triglav/geometry/Mesh.hpp"
 #include "triglav/io/File.hpp"
 
-#include <format>
-
 namespace triglav::resource {
-
-namespace {
-
-geometry::MeshData load_mesh_data(const io::Path& path)
-{
-   const auto mesh_file_handle = io::open_file(path, io::FileMode::Read);
-   assert(mesh_file_handle.has_value());
-
-   [[maybe_unused]]
-   const auto asset_header = asset::decode_header(**mesh_file_handle);
-   assert(asset_header.has_value());
-   assert(asset_header->type == ResourceType::Mesh);
-
-   const auto mesh = asset::decode_mesh(**mesh_file_handle, asset_header->version);
-   assert(mesh.has_value());
-   return *mesh;
-}
-
-}// namespace
 
 render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& device, MeshName /*name*/, const io::Path& path)
 {
-   const auto mesh = load_mesh_data(path);
+   const auto mesh = asset::load_mesh_data(path);
 
    graphics_api::BufferUsageFlags additional_usage_flags{graphics_api::BufferUsage::TransferSrc};
    if (device.enabled_features() & graphics_api::DeviceFeature::RayTracing) {
@@ -49,7 +28,7 @@ render_objects::Mesh Loader<ResourceType::Mesh>::load_gpu(graphics_api::Device& 
 
 void Loader<ResourceType::Mesh>::collect_dependencies(std::set<ResourceName>& out_dependencies, const io::Path& path)
 {
-   const auto mesh_data = load_mesh_data(path);
+   const auto mesh_data = asset::load_mesh_data(path);
    for (const auto& range : mesh_data.vertex_data.vertex_buffer.vertex_groups()) {
       out_dependencies.insert(range.material_name);
    }

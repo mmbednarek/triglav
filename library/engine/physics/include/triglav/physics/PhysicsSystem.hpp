@@ -4,15 +4,19 @@
 #include "triglav/geometry/BVHTree.hpp"
 #include "triglav/world/World.hpp"
 
+#include "MeshBVHStorage.hpp"
+
 namespace triglav::physics {
 
 struct BVHNode
 {
    world::EntityID entity_id;
    geometry::BoundingBox bbox;
+   Matrix4x4 inv_transform;
 
    [[nodiscard]] const geometry::BoundingBox& bounding_box() const;
    [[nodiscard]] world::EntityID index() const;
+   [[nodiscard]] Matrix4x4 inv_transform_matrix() const;
 };
 
 struct RayHit
@@ -27,7 +31,7 @@ class PhysicsSystem : public world::ISystem
  public:
    TG_TAG_CLASS(triglav::physics::PhysicsSystem)
 
-   PhysicsSystem();
+   explicit PhysicsSystem(world::Level& level);
 
    Name system_name() override;
    void on_level_loaded(world::Level& level) override;
@@ -40,7 +44,8 @@ class PhysicsSystem : public world::ISystem
    RayHit trace_ray(const geometry::Ray& ray) const;
 
  private:
-   geometry::BVHTree<world::EntityID, BVHNode> m_tree;
+   BVHProvider m_provider;
+   geometry::TopLevelBVH<world::EntityID, BVHNode, geometry::BottomLevelBVH<MeshReference>, BVHProvider> m_tree;
 };
 
 }// namespace triglav::physics

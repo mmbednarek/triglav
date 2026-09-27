@@ -174,4 +174,7 @@ std::optional<DecodedTexture> decode_texture(io::IFile& stream);
 bool encode_animation(io::IWriter& writer, Animation& animation);
 std::optional<Animation> decode_animation(io::IReader& reader);
 
+
+geometry::MeshData load_mesh_data(const io::Path& path);
+
 }// namespace triglav::asset

@@ -53,7 +53,8 @@ MemorySize VertexView::stride() const
 
 u8* VertexView::vertex_start(const MemorySize index)
 {
-   assert(this->stride() * (index + 1) <= m_data.size());
+   if (this->stride() * (index + 1) > m_data.size())
+      return nullptr;
    return m_data.data() + this->stride() * index;
 }
 
@@ -64,7 +65,10 @@ MemorySize VertexView::component_offset(const VertexComponent component) const
 
 u8* VertexView::vertex_component(const VertexComponent component, const MemorySize index)
 {
-   return this->vertex_start(index) + this->component_offset(component);
+   auto* v_start = this->vertex_start(index);
+   if (v_start == nullptr)
+      return nullptr;
+   return v_start + this->component_offset(component);
 }
 
 u8* VertexView::data()
@@ -118,6 +122,25 @@ MemorySize VertexBuffer::size() const
 const std::vector<VertexGroup>& VertexBuffer::vertex_groups() const
 {
    return m_vertex_groups;
+}
+
+Vector3 VertexBuffer::get_location(const u32 primitive_index, const u32 vertex_index)
+{
+   u32 group_id = 0;
+   for (const auto& group : m_vertex_groups) {
+      if (primitive_index >= group.index_offset && primitive_index < (group.index_offset + group.index_size)) {
+         break;
+      }
+      ++group_id;
+   }
+
+   if (group_id == m_vertex_groups.size())
+      return {};
+
+   const auto* component = this->group(group_id).get<VertexComponentCore>(vertex_index);
+   assert(component != nullptr);
+
+   return component->location;
 }
 
 }// namespace triglav::geometry

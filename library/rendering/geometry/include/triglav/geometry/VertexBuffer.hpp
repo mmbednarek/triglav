@@ -22,10 +22,10 @@ class VertexView
    u8* vertex_component(VertexComponent component, MemorySize index);
 
    template<VertexComponentStruct T>
-   T& get(const MemorySize index)
+   T* get(const MemorySize index)
    {
       assert(m_components & T::Component);
-      return *reinterpret_cast<T*>(this->vertex_component(T::Component, index));
+      return reinterpret_cast<T*>(this->vertex_component(T::Component, index));
    }
 
    u8* data();
@@ -50,6 +50,7 @@ class VertexBuffer
    [[nodiscard]] u8* data();
    [[nodiscard]] MemorySize size() const;
    [[nodiscard]] const std::vector<VertexGroup>& vertex_groups() const;
+   [[nodiscard]] Vector3 get_location(u32 primitive_index, u32 vertex_index);
 
  private:
    MemorySize m_allocated_size{};
