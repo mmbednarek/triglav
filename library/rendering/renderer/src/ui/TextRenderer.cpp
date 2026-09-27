@@ -284,7 +284,7 @@ memory::Area TextRenderer::allocate_vertex_section(const TextId text_id, const u
    const auto section = m_vertex_allocator.allocate(vertex_count);
    assert(section.has_value());
 
-   log_debug("allocated {} bytes at {}", vertex_count, section.value());
+   // log_debug("allocated {} bytes at {}", vertex_count, section.value());
 
    const memory::Area result{vertex_count, *section};
    m_allocated_vertex_sections[text_id] = result;
@@ -295,7 +295,7 @@ memory::Area TextRenderer::allocate_vertex_section(const TextId text_id, const u
 void TextRenderer::free_vertex_section(const TextId text_id)
 {
    const auto section = m_allocated_vertex_sections.at(text_id);
-   log_debug("freed {} bytes at {}", section.size, section.size);
+   // log_debug("freed {} bytes at {}", section.size, section.size);
    m_vertex_allocator.free(section);
    m_allocated_vertex_sections.erase(text_id);
 }

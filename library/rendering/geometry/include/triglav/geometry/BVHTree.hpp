@@ -65,6 +65,7 @@ template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 struct TopLevelNode
 {
    std::variant<TPayload, BoundingBox> payload;
+   float max_surface_area;
    TopLevelNode* parent;
    TopLevelNode* left;
    TopLevelNode* right;

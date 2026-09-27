@@ -124,18 +124,18 @@ void RectangleRenderer::prepare_frame(render_core::JobGraph& graph, const u32 fr
    const auto insertion_count =
       GAPI_CHECK(graph.resources().buffer("user_interface.rectangle.insertion.count"_name, frame_index).map_memory());
    insertion_count.cast<u32>() = m_staging_insertions_top;
-   if (m_staging_insertions_top != 0) {
-      log_debug("Insertions: {}", m_staging_insertions_top);
-   }
+   // if (m_staging_insertions_top != 0) {
+   // log_debug("Insertions: {}", m_staging_insertions_top);
+   // }
 
    const auto removal_dims =
       GAPI_CHECK(graph.resources().buffer("user_interface.rectangle.removal.indirect_buffer"_name, frame_index).map_memory());
    removal_dims.cast<Vector3u>() = {divide_rounded_up(m_staging_removals_top, g_cs_group_size), 1, 1};
    const auto removal_count = GAPI_CHECK(graph.resources().buffer("user_interface.rectangle.removal.count"_name, frame_index).map_memory());
    removal_count.cast<u32>() = m_staging_removals_top;
-   if (m_staging_removals_top != 0) {
-      log_debug("Removals: {}", m_staging_removals_top);
-   }
+   // if (m_staging_removals_top != 0) {
+   // log_debug("Removals: {}", m_staging_removals_top);
+   // }
 
    // Fill count
    const auto count = GAPI_CHECK(graph.resources().buffer("user_interface.rectangle.count"_name, frame_index).map_memory());
