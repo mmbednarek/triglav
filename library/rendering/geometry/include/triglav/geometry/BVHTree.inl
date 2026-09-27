@@ -2,11 +2,11 @@
 
 #include "triglav/Math.hpp"
 
-#include <numeric>
-
 namespace triglav::geometry {
 
 namespace detail {
+
+constexpr float EXTENSION_MULTIPLIER = 1.2f;
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 using Map = std::map<TIndex, TopLevelNode<TIndex, TPayload>*>;
@@ -102,10 +102,16 @@ inline void delete_bottom_level_node(const BottomLevelNode* node)
    delete node;
 }
 
-[[nodiscard]] constexpr float bounding_box_volume(const BoundingBox& bb)
+// NOTE: It's actually half of the surface area
+[[nodiscard]] constexpr float bounding_box_surface_area(const BoundingBox& bb)
 {
    const auto scale = bb.scale();
-   return scale.x * scale.y * scale.z;
+   return scale.x * scale.y + scale.x * scale.z + scale.y * scale.z;
+}
+
+[[nodiscard]] constexpr float calculate_extension_cost(const BoundingBox& current, const BoundingBox& extension)
+{
+   return bounding_box_surface_area(merge_bounding_boxes(current, extension)) - bounding_box_surface_area(current);
 }
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
@@ -134,7 +140,9 @@ TopLevelNode<TIndex, TPayload>* insert_node(TopLevelNode<TIndex, TPayload>* node
          .right = nullptr,
       };
 
-      node->payload = merge_bounding_boxes(std::get<TPayload>(old_leaf->payload).bounding_box(), payload.bounding_box());
+      const auto new_bb = merge_bounding_boxes(std::get<TPayload>(old_leaf->payload).bounding_box(), payload.bounding_box());
+      node->payload = new_bb;
+      node->max_surface_area = EXTENSION_MULTIPLIER * bounding_box_surface_area(new_bb);
       node->left = old_leaf;
       node->right = new_leaf;
       return new_leaf;
@@ -144,8 +152,8 @@ TopLevelNode<TIndex, TPayload>* insert_node(TopLevelNode<TIndex, TPayload>* node
    const auto left_bb = node_bounding_box(node->left);
    const auto right_bb = node_bounding_box(node->right);
 
-   const auto left_cost = bounding_box_volume(merge_bounding_boxes(left_bb, payload_bb)) - bounding_box_volume(left_bb);
-   const auto right_cost = bounding_box_volume(merge_bounding_boxes(right_bb, payload_bb)) - bounding_box_volume(right_bb);
+   const auto left_cost = calculate_extension_cost(left_bb, payload_bb);
+   const auto right_cost = calculate_extension_cost(right_bb, payload_bb);
 
    TopLevelNode<TIndex, TPayload>* result{};
    if (left_cost < right_cost) {
@@ -187,10 +195,8 @@ BottomLevelNode* insert_bottom_level_node(BottomLevelNode* node, TMesh& mesh, co
       return new_leaf;
    }
 
-   const auto left_cost =
-      bounding_box_volume(merge_bounding_boxes(node->left->bounding_box, primitive_bb)) - bounding_box_volume(node->left->bounding_box);
-   const auto right_cost =
-      bounding_box_volume(merge_bounding_boxes(node->right->bounding_box, primitive_bb)) - bounding_box_volume(node->right->bounding_box);
+   const auto left_cost = calculate_extension_cost(node->left->bounding_box, primitive_bb);
+   const auto right_cost = calculate_extension_cost(node->right->bounding_box, primitive_bb);
 
    BottomLevelNode* result{};
    if (left_cost < right_cost) {
@@ -321,6 +327,7 @@ TopLevelNode<TIndex, TPayload>* build_node(Map<TIndex, TPayload>& leave_mapping,
 
    auto* node = new TopLevelNode<TIndex, TPayload>{
       .payload = bb,
+      .max_surface_area = EXTENSION_MULTIPLIER * bounding_box_surface_area(bb),
       .parent = parent,
    };
    node->left = build_node(leave_mapping, data.subspan(0, mid), node);
@@ -546,6 +553,17 @@ TOP_LEVEL(void)::update(const TPayload& payload)
    const auto leaf_it = m_leave_mapping.find(payload.index());
    if (leaf_it == m_leave_mapping.end()) {
       return;
+   }
+
+   auto* parent = leaf_it->second->parent;
+   if (parent != nullptr) {
+      const auto new_bb = detail::merge_bounding_boxes(std::get<BoundingBox>(parent->payload), payload.bounding_box());
+      const auto new_parent_surface_area = detail::bounding_box_surface_area(new_bb);
+      if (new_parent_surface_area > parent->max_surface_area) {
+         this->remove(payload.index());
+         this->add(payload);
+         return;
+      }
    }
 
    auto* leaf = leaf_it->second;
