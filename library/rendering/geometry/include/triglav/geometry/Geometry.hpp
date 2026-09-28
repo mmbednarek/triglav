@@ -170,6 +170,31 @@ struct BoundingBox
       return std::nullopt;
    }
 
+   [[nodiscard]] Vector3 minimum_translation_vector(const BoundingBox& dynamic_bb) const
+   {
+      if (!this->does_intersect_aabb(dynamic_bb))
+         return {};
+
+      const Vector3 push{
+         (dynamic_bb.min.x < this->min.x) ? (this->min.x - dynamic_bb.max.x) : (this->max.x - dynamic_bb.min.x),
+         (dynamic_bb.min.y < this->min.y) ? (this->min.y - dynamic_bb.max.y) : (this->max.y - dynamic_bb.min.y),
+         (dynamic_bb.min.z < this->min.z) ? (this->min.z - dynamic_bb.max.z) : (this->max.z - dynamic_bb.min.z),
+      };
+      const Vector3 abs = glm::abs(push);
+
+      const Axis min_axis = vector3_min_axis(abs);
+
+      Vector3 result{};
+      vector3_component(result, min_axis) = vector3_component(push, min_axis);
+      return result;
+   }
+
+   [[nodiscard]] constexpr bool does_intersect_aabb(const BoundingBox& bb) const
+   {
+      return this->max.x >= bb.min.x && this->max.y >= bb.min.y && this->max.z >= bb.min.z && this->min.x <= bb.max.x &&
+             this->min.y <= bb.max.y && this->min.z <= bb.max.z;
+   }
+
    [[nodiscard]] constexpr bool does_intersect(const Ray& ray) const
    {
       return this->intersect(ray).has_value();
@@ -207,6 +232,11 @@ struct BoundingBox
    [[nodiscard]] Vector3 scale() const
    {
       return max - min;
+   }
+
+   [[nodiscard]] bool operator!=(const BoundingBox& rhs) const noexcept
+   {
+      return this->min != rhs.min || this->max != rhs.max;
    }
 };
 

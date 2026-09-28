@@ -299,6 +299,25 @@ inline BottomLevelHit traverse_bottom_level_node(const BottomLevelNode* node, Ra
    return traverse_bottom_level_node(child, ray);
 }
 
+template<typename TCallback>
+bool traverse_bottom_level_node_aabb(BottomLevelNode* node, const BoundingBox& bounding_box, TCallback callback)
+{
+   if (node->primitive_id != ~0u) {
+      return callback(node->bounding_box, node->primitive_id);
+   }
+
+   if (node->left->bounding_box.does_intersect_aabb(bounding_box)) {
+      if (traverse_bottom_level_node_aabb(node->left, bounding_box, callback))
+         return true;
+   }
+   if (node->right->bounding_box.does_intersect_aabb(bounding_box)) {
+      if (traverse_bottom_level_node_aabb(node->right, bounding_box, callback))
+         return true;
+   }
+
+   return false;
+}
+
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 TopLevelNode<TIndex, TPayload>* build_node(Map<TIndex, TPayload>& leave_mapping, std::span<TPayload> data,
                                            TopLevelNode<TIndex, TPayload>* parent)
@@ -395,6 +414,34 @@ TopLevelHit<TIndex, TPayload> traverse_node(const TBottomLevelProvider& bl_provi
    return traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(bl_provider, child, ray);
 }
 
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TCallback, typename TBottomLevel,
+         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
+void traverse_node_aabb(TBottomLevelProvider& provider, TopLevelNode<TIndex, TPayload>* node, const BoundingBox& bounding_box,
+                        TCallback callback)
+{
+   if (std::holds_alternative<TPayload>(node->payload)) {
+      auto& payload = std::get<TPayload>(node->payload);
+      // auto& bottom_level = provider.get_bottom_level(payload.index());
+      // bool intersects = false;
+      // auto local_space_bb = bounding_box.transform(payload.inv_transform_matrix());
+      // bottom_level.traverse_aabb(local_space_bb, [&]([[maybe_unused]] const BoundingBox& bounding_box, u32 /*primitive_id*/) {
+      //    intersects = true;
+      //    return true;
+      // });
+      // if (intersects) {
+      callback(payload);
+      // }
+      return;
+   }
+
+   if (node_bounding_box(node->left).does_intersect_aabb(bounding_box)) {
+      traverse_node_aabb<TIndex, TPayload, TCallback, TBottomLevel, TBottomLevelProvider>(provider, node->left, bounding_box, callback);
+   }
+   if (node_bounding_box(node->right).does_intersect_aabb(bounding_box)) {
+      traverse_node_aabb<TIndex, TPayload, TCallback, TBottomLevel, TBottomLevelProvider>(provider, node->right, bounding_box, callback);
+   }
+}
+
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 void update_parent_bounds(TopLevelNode<TIndex, TPayload>* node)
 {
@@ -466,6 +513,13 @@ BottomLevelHit BottomLevelBVH<TMesh>::traverse(const Ray& ray) const
 }
 
 template<TriangleMesh TMesh>
+template<typename TCallback>
+void BottomLevelBVH<TMesh>::traverse_aabb(const BoundingBox& bb, TCallback callback) const
+{
+   detail::traverse_bottom_level_node_aabb(m_root, bb, callback);
+}
+
+template<TriangleMesh TMesh>
 void BottomLevelBVH<TMesh>::clear()
 {
    if (m_root != nullptr) {
@@ -481,8 +535,8 @@ void BottomLevelBVH<TMesh>::clear()
             BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>             \
    __VA_ARGS__ TopLevelBVH<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>
 
-TOP_LEVEL()::TopLevelBVH(TBottomLevelProvider provider) :
-    m_bl_provider(std::move(provider))
+TOP_LEVEL()::TopLevelBVH(TBottomLevelProvider& provider) :
+    m_bl_provider(provider)
 {
 }
 
@@ -555,21 +609,30 @@ TOP_LEVEL(void)::update(const TPayload& payload)
       return;
    }
 
+   bool needs_to_update_parents = false;
+
    auto* parent = leaf_it->second->parent;
    if (parent != nullptr) {
-      const auto new_bb = detail::merge_bounding_boxes(std::get<BoundingBox>(parent->payload), payload.bounding_box());
-      const auto new_parent_surface_area = detail::bounding_box_surface_area(new_bb);
-      if (new_parent_surface_area > parent->max_surface_area) {
-         this->remove(payload.index());
-         this->add(payload);
-         return;
+      const auto current_bb = std::get<BoundingBox>(parent->payload);
+      const auto new_bb = detail::merge_bounding_boxes(current_bb, payload.bounding_box());
+      if (new_bb != current_bb) {
+         needs_to_update_parents = true;
+
+         const auto new_parent_surface_area = detail::bounding_box_surface_area(new_bb);
+         if (new_parent_surface_area > parent->max_surface_area) {
+            this->remove(payload.index());
+            this->add(payload);
+            return;
+         }
       }
    }
 
    auto* leaf = leaf_it->second;
    leaf->payload = payload;
 
-   detail::update_parent_bounds(leaf->parent);
+   if (needs_to_update_parents) {
+      detail::update_parent_bounds(leaf->parent);
+   }
 }
 
 TOP_LEVEL(void)::build(std::span<TPayload> data)
@@ -592,6 +655,11 @@ TOP_LEVEL(TopLevelHit<TIndex, TPayload>)::traverse(const Ray& ray) const
    }
    Ray mut_ray = ray;
    return detail::traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, mut_ray);
+}
+
+TOP_LEVEL(template<typename TCallback> void)::traverse_aabb(const BoundingBox& bb, TCallback callback) const
+{
+   detail::traverse_node_aabb<TIndex, TPayload, TCallback, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, bb, callback);
 }
 
 TOP_LEVEL(const TPayload&)::get(TIndex index)

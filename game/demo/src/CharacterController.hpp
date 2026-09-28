@@ -13,12 +13,6 @@ enum class AnalogAction
    Movement,
 };
 
-enum class CharacterState
-{
-   Idle,
-   Moving,
-};
-
 class CharacterController
 {
    TG_DEFINE_LOG_CATEGORY(CharacterController)
@@ -43,7 +37,10 @@ class CharacterController
    triglav::renderer::AnimationManager& m_animation_manager;
 
    // State
-   CharacterState m_character_state = CharacterState::Idle;
+   bool m_is_moving = false;
+   bool m_is_on_ground = false;
+   triglav::Vector3 m_motion{};
+   triglav::geometry::BoundingBox m_bounding_box{};
    triglav::world::EntityID m_character_id = triglav::world::NO_ENTITY;
    triglav::renderer::AnimationID m_character_animation_id = triglav::renderer::NO_ANIMATION;
    triglav::Vector3 m_character_position = {0.0f, 0.0f, 3.5f};

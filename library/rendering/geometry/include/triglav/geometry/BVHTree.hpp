@@ -43,6 +43,8 @@ class BottomLevelBVH
 
    void build(TMesh& mesh);
    BottomLevelHit traverse(const Ray& ray) const;
+   template<typename TCallback>
+   void traverse_aabb(const BoundingBox& bb, TCallback callback) const;
    void clear();
 
  private:
@@ -83,7 +85,7 @@ template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLe
 class TopLevelBVH
 {
  public:
-   explicit TopLevelBVH(TBottomLevelProvider provider);
+   explicit TopLevelBVH(TBottomLevelProvider& provider);
    ~TopLevelBVH();
 
    TopLevelBVH(const TopLevelBVH& other) = delete;
@@ -99,12 +101,15 @@ class TopLevelBVH
    void clear();
    TopLevelHit<TIndex, TPayload> traverse(const Ray& ray) const;
 
+   template<typename TCallback>
+   void traverse_aabb(const BoundingBox& bb, TCallback callback) const;
+
    const TPayload& get(TIndex index);
 
  private:
    TopLevelNode<TIndex, TPayload>* m_root{};
    std::map<TIndex, TopLevelNode<TIndex, TPayload>*> m_leave_mapping;
-   TBottomLevelProvider m_bl_provider;
+   TBottomLevelProvider& m_bl_provider;
 };
 
 }// namespace triglav::geometry
