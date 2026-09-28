@@ -72,6 +72,21 @@ enum class Axis : u32
    return std::bit_cast<std::array<float, 3>>(vec)[static_cast<u32>(axis)];
 }
 
+[[nodiscard]] constexpr Axis vector3_min_axis(const Vector3& vec)
+{
+   if (vec.x < vec.y) {
+      if (vec.x < vec.z) {
+         return Axis::X;
+      }
+      if (vec.z < vec.y) {
+         return Axis::Z;
+      }
+   } else if (vec.z < vec.y) {
+      return Axis::Z;
+   }
+   return Axis::Y;
+}
+
 
 [[nodiscard]] constexpr Vector2 rect_position(const Rect& r)
 {

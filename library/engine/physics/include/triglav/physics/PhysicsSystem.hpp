@@ -41,7 +41,13 @@ class PhysicsSystem : public world::ISystem
    void on_modified_component(world::Level& level, Name component_name, world::ComponentID component_id,
                               std::span<const world::EntityID> entities) override;
 
-   RayHit trace_ray(const geometry::Ray& ray) const;
+   [[nodiscard]] RayHit trace_ray(const geometry::Ray& ray) const;
+
+   template<typename TCallback>
+   void trace_aabb(const geometry::BoundingBox& bb, TCallback callback) const
+   {
+      m_tree.traverse_aabb(bb, callback);
+   }
 
  private:
    BVHProvider m_provider;
