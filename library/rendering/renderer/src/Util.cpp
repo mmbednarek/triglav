@@ -20,7 +20,7 @@ void blur_texture(render_core::BuildContext& ctx, const Name src_texture, const 
    ctx.bind_samplable_texture(0, src_texture);
    ctx.bind_rw_texture(1, dst_texture);
 
-   ctx.dispatch({divide_rounded_up(ctx.screen_size().x, 16), divide_rounded_up(ctx.screen_size().y, 16), 1});
+   ctx.dispatch(Vector3u{divide_rounded_up(ctx.screen_size().x, 16), divide_rounded_up(ctx.screen_size().y, 16), 1}.cast<Vector3i>());
 }
 
 }// namespace triglav::renderer

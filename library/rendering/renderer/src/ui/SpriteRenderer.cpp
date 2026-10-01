@@ -68,7 +68,7 @@ void SpriteRenderer::on_added_sprite(const SpriteId id, const ui_core::Sprite& s
 void SpriteRenderer::on_updated_sprite(const SpriteId id, const ui_core::Sprite& sprite)
 {
    const auto tex_size_res = m_resource_manager.get(sprite.texture).resolution();
-   const Vector2 tex_size{tex_size_res.width, tex_size_res.height};
+   const auto tex_size = Vector2u{tex_size_res.width, tex_size_res.height}.cast<Vector2>();
 
    for (auto& updates : m_frame_updates) {
       updates.add_or_update(id, to_primitive(sprite, this->get_texture_id(sprite.texture), tex_size));

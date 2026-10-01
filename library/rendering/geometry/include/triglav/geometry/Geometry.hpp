@@ -133,8 +133,8 @@ struct Ray
    [[nodiscard]] constexpr Ray to_local_space(const Matrix4x4& inv_matrix) const
    {
       return Ray{
-         .origin = inv_matrix * Vector4{this->origin, 1},
-         .direction = inv_matrix * Vector4{this->direction, 0},
+         .origin = (inv_matrix * Vector4{this->origin, 1.0f}).xyz(),
+         .direction = (inv_matrix * Vector4{this->direction, 0.0f}).xyz(),
          .distance = this->distance,
       };
    }
@@ -180,7 +180,7 @@ struct BoundingBox
          (dynamic_bb.min.y < this->min.y) ? (this->min.y - dynamic_bb.max.y) : (this->max.y - dynamic_bb.min.y),
          (dynamic_bb.min.z < this->min.z) ? (this->min.z - dynamic_bb.max.z) : (this->max.z - dynamic_bb.min.z),
       };
-      const Vector3 abs = glm::abs(push);
+      const Vector3 abs = push.abs();
 
       const Axis min_axis = vector3_min_axis(abs);
 
@@ -251,7 +251,7 @@ namespace std {
 template<>
 struct hash<triglav::Vector3>
 {
-   size_t operator()(const glm::vec3 value) const noexcept
+   size_t operator()(const triglav::Vector3 value) const noexcept
    {
       return static_cast<size_t>(3033917.0f * value.x + 5347961.0f * value.y + 5685221.0f * value.z);
    }
@@ -260,7 +260,7 @@ struct hash<triglav::Vector3>
 template<>
 struct hash<triglav::Vector2>
 {
-   size_t operator()(const glm::vec2 value) const noexcept
+   size_t operator()(const triglav::Vector2 value) const noexcept
    {
       return static_cast<size_t>(6878071.0f * value.x + 8562683.0f * value.y);
    }

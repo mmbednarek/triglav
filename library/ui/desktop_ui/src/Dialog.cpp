@@ -21,7 +21,7 @@ Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& dev
                render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, PopupManager& popup_manager,
                const Vector2u dimensions, const Vector2i offset) :
     Dialog(instance, device, glyph_cache, resource_manager, popup_manager, dimensions,
-           parent_surface.create_popup(dimensions, offset, desktop::WindowAttribute::None))
+           parent_surface.create_popup(dimensions, offset.cast<Vector2>(), desktop::WindowAttribute::None))
 {
 }
 

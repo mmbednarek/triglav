@@ -450,7 +450,7 @@ class QuaternionProperty : public DesktopProxyWidget
    {
       vector3_component(m_euler_degrees, axis) = value;
       const auto reference = m_state.provider->get_reference();
-      reference.property<Quaternion>(m_state.property_name) = Quaternion{glm::radians(m_euler_degrees)};
+      reference.property<Quaternion>(m_state.property_name) = Quaternion::from_euler_angles(m_euler_degrees.radians());
       m_state.provider->mutate();
    }
 

@@ -177,7 +177,7 @@ TEST(ComponentTest, ComponentStorageSerialization)
 
    triglav::io::BufferReader reader(writer.span());
 
-   ComponentStorage read_storage;
+   ComponentStorage read_storage(0);
    ASSERT_TRUE(read_storage.deserialize(reader));
 
    Transform3D& r1 = *static_cast<Transform3D*>(read_storage.get_component_by_entity_id(0));
@@ -212,7 +212,7 @@ TEST(ComponentTest, LabelSerialization)
 
    triglav::io::BufferReader reader(writer.span());
 
-   ComponentStorage read_storage;
+   ComponentStorage read_storage(0);
    ASSERT_TRUE(read_storage.deserialize(reader));
 
    EntityLabel& r1 = *static_cast<EntityLabel*>(read_storage.get_component_by_entity_id(0));

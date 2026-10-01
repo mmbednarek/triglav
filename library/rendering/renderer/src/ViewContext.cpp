@@ -27,16 +27,16 @@ void ViewContext::update_orientation(const float delta_yaw, const float delta_pi
 {
    m_yaw += delta_yaw;
    while (m_yaw < 0) {
-      m_yaw += 2 * MATH_PI;
+      m_yaw += 2 * PI;
    }
-   while (m_yaw >= 2 * MATH_PI) {
-      m_yaw -= 2 * MATH_PI;
+   while (m_yaw >= 2 * PI) {
+      m_yaw -= 2 * PI;
    }
 
    m_pitch += delta_pitch;
-   m_pitch = std::clamp(m_pitch, -static_cast<float>(MATH_PI) / 2.0f + 0.01f, static_cast<float>(MATH_PI) / 2.0f - 0.01f);
+   m_pitch = std::clamp(m_pitch, -static_cast<float>(PI) / 2.0f + 0.01f, static_cast<float>(PI) / 2.0f - 0.01f);
 
-   this->camera().set_orientation(glm::quat{glm::vec3{m_pitch, 0.0f, m_yaw}});
+   this->camera().set_orientation(Quaternion::from_euler_angles({m_pitch, 0.0f, m_yaw}));
    this->send_view_changed();
 }
 

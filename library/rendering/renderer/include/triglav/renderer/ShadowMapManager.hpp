@@ -24,7 +24,7 @@ class ShadowMapManager
    [[nodiscard]] u32 directional_shadow_map_count() const;
 
  private:
-   Quaternion m_directional_light_orientation{Vector3{-0.3f, 0.0f, 1.62f}};
+   Quaternion m_directional_light_orientation = Quaternion::from_euler_angles({-0.3f, 0.0f, 1.62f});
    std::array<OrthoCamera, 3> m_directional_shadow_map_cameras{};
 
    TG_SINK(OnViewUpdated);

@@ -20,7 +20,7 @@ UpdateUserInterfaceJob::UpdateUserInterfaceJob(graphics_api::Device& device, ren
 void UpdateUserInterfaceJob::build_job(render_core::BuildContext& ctx) const
 {
    // Init viewport info
-   ctx.init_buffer("ui.viewport_info"_name, Vector2{m_viewport.dimensions()});
+   ctx.init_buffer("ui.viewport_info"_name, m_viewport.dimensions().cast<Vector2>());
 
    m_rectangle_renderer.build_data_update(ctx);
    m_sprite_renderer.build_data_update(ctx);

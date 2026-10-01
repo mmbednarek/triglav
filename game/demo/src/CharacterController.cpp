@@ -124,18 +124,18 @@ void CharacterController::on_movement(const triglav::Vector2 value)
 
 void CharacterController::on_view(const Vector2 value)
 {
-   static constexpr float MIN_PITCH = -0.5f * triglav::MATH_PI;
-   static constexpr float MAX_PITCH = 0.5f * triglav::MATH_PI;
+   static constexpr float MIN_PITCH = -0.5f * triglav::PI;
+   static constexpr float MAX_PITCH = 0.5f * triglav::PI;
 
    m_camera_yaw += value.x * 0.01f;
    m_camera_pitch += value.y * 0.01f;
    m_camera_pitch = std::clamp(m_camera_pitch, MIN_PITCH, MAX_PITCH);
 
-   m_camera_yaw = std::fmod(m_camera_yaw, 2.0f * triglav::MATH_PI);
+   m_camera_yaw = std::fmod(m_camera_yaw, 2.0f * triglav::PI);
 
    // log_debug("pitch: {}, yaw: {}", m_camera_pitch, m_camera_yaw);
 
-   m_camera_orientation = Quaternion{Vector3{m_camera_pitch, 0.0f, m_camera_yaw}};
+   m_camera_orientation = Quaternion::from_euler_angles({m_camera_pitch, 0.0f, m_camera_yaw});
 
    if (m_is_moving) {
       this->recalculate_forward_vector();
@@ -148,7 +148,7 @@ void CharacterController::forward_state() const
 {
    // The character is looking at
 
-   const auto rot = glm::rotation(Vector3{0.0f, -1.0f, 0.0f}, glm::normalize(m_character_forward));
+   const auto rot = Quaternion::from_oriented_vector(Vector3{0.0f, -1.0f, 0.0f}, m_character_forward);
 
    auto transform = Transform3D::identity();
    transform.translation = m_character_position;
@@ -166,7 +166,7 @@ void CharacterController::forward_state() const
 void CharacterController::recalculate_forward_vector()
 {
    const auto camera_forward = m_camera_orientation * Vector3{m_analog_forward.y, m_analog_forward.x, 0.0f};
-   m_character_forward = glm::normalize(Vector3{camera_forward.x, camera_forward.y, 0.0f});
+   m_character_forward = Vector3{camera_forward.x, camera_forward.y, 0.0f}.normalize();
 }
 
 }// namespace demo

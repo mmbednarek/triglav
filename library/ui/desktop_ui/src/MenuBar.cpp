@@ -145,7 +145,7 @@ void MenuBar::on_mouse_pressed(const ui_core::Event& /*event*/, const ui_core::E
    const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
    const auto size = temporary_menu->desired_size({});
 
-   auto& popup = this->desktop_context().popup_manager().create_popup_dialog(offset, size);
+   auto& popup = this->desktop_context().popup_manager().create_popup_dialog(offset.cast<Vector2i>(), size.cast<Vector2u>());
    popup.create_root_widget<MenuList>(MenuList::State{child_state});
    popup.initialize();
    m_sub_menu = &popup;

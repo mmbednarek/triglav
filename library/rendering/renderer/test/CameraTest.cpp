@@ -86,12 +86,12 @@ TEST_P(CameraTest, DepthTests)
    auto world_pos = ray.origin + ray.direction * DISTANCE;
 
    const auto view = camera.view_matrix();
-   const auto view_inv = glm::inverse(view);
+   const auto view_inv = view.inverse();
 
    const auto view_pos = view * Vector4{world_pos, 1.0f};
 
    const auto dir_view = camera.view_space_dir(params.screen_pos);
-   ASSERT_TRUE(compare(dir_view, Matrix3x3{view} * ray.direction));
+   ASSERT_TRUE(compare(dir_view, view.shrink() * ray.direction));
 
    const auto view_proj = camera.view_projection_matrix();
 
@@ -109,5 +109,5 @@ TEST_P(CameraTest, DepthTests)
                               -linear_distance, 1.0f};
    EXPECT_TRUE(compare(reconstructed_view, view_pos));
    Vector4 reconstructed_world_pos = view_inv * reconstructed_view;
-   EXPECT_TRUE(compare(Vector3{reconstructed_world_pos}, world_pos));
+   EXPECT_TRUE(compare(reconstructed_world_pos.xyz(), world_pos));
 }

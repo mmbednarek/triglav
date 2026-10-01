@@ -23,6 +23,7 @@ if meson.get_compiler('cpp').get_id() == 'msvc'
   endif
 else
   add_project_arguments('-Wno-missing-field-initializers', language : 'cpp')
+  add_project_arguments('-Wno-missing-braces', language : 'cpp')
 endif
 
 if host_machine.system() == 'windows' and meson.get_compiler('cpp').get_id() == 'gcc'

@@ -176,7 +176,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
    PopupManager dialog_manager(instance, *device, glyph_cache, resource_manager);
 
    auto root_dialog = std::make_unique<Dialog>(instance, *device, display, glyph_cache, resource_manager, dialog_manager,
-                                               triglav::Vector2i{initial_width, initial_height}, "Desktop UI Example"_strv);
+                                               triglav::Vector2u{initial_width, initial_height}, "Desktop UI Example"_strv);
    dialog_manager.set_root_surface(root_dialog->surface());
 
    auto& global_ver_layout = root_dialog->create_root_widget<triglav::ui_core::VerticalLayout>({
@@ -324,7 +324,7 @@ int triglav_main(InputArgs& args, IDisplay& display)
       check_box.create_content<triglav::ui_core::Image>({
          .texture = "engine/texture/ui_atlas.tex"_rc,
          .max_size = triglav::Vector2{16, 16},
-         .region = triglav::Vector4{i * 64, 0, 64, 64},
+         .region = triglav::Vector4{static_cast<float>(i * 64), 0, 64, 64},
       });
       radio_group.add_check_box(&check_box);
    }

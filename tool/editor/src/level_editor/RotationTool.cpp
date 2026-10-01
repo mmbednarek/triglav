@@ -46,7 +46,7 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
    auto position = m_level_editor.selected_object_position();
 
    const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, vector3_component(position, *m_rotation_axis));
-   const auto difference = normalize(point - position);
+   const auto difference = (point - position).normalize();
 
    m_starting_transform = *transform_ptr;
    m_base_angle = angle_from_vector(difference, *m_rotation_axis);
@@ -76,7 +76,7 @@ void RotationTool::on_mouse_moved(Vector2 position)
       const float angle = angle_from_vector(difference, *m_rotation_axis);
       const float angle_diff = m_level_editor.snap_offset((angle - m_base_angle) / (0.25f * g_pi)) * (0.25f * g_pi);
 
-      auto quat_rot = glm::rotate(glm::quat{1, 0, 0, 0}, angle_diff, axis_forward_vec3(*m_rotation_axis));
+      auto quat_rot = Quaternion::angle_axis(angle_diff, axis_forward_vec3(*m_rotation_axis));
 
       auto transform = *transform_ptr;
       transform.translation = obj_position + quat_rot * (m_starting_transform.translation - obj_position);
@@ -152,7 +152,7 @@ void RotationTool::on_view_updated()
    const auto obj_distance = glm::length(obj_position - m_level_editor.view_context().camera().position());
 
    const Transform3D transform_x_axis{
-      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0.5 * g_pi, 0, 0.5 * g_pi}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = obj_position,
    };
@@ -160,7 +160,7 @@ void RotationTool::on_view_updated()
    m_rotator_x_bb = rotator_bb.transform(transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0.5 * g_pi, 0, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = obj_position,
    };
@@ -168,7 +168,7 @@ void RotationTool::on_view_updated()
    m_rotator_y_bb = rotator_bb.transform(transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = Quaternion{Vector3{0, 0, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0, 0, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = obj_position,
    };

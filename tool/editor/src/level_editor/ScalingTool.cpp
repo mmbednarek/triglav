@@ -79,9 +79,9 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
          const auto diff = std::max(x2 - x1, MIN_SCALE - scale_comp);
          final_scale = m_level_editor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;
 
-         auto rot_inv = glm::inverse(transform.rotation);
+         auto rot_inv = transform.rotation.inverse();
          scale_direction = rot_inv * scale_direction;
-         scale_direction = glm::abs(scale_direction);
+         scale_direction = scale_direction.abs();
       }
 
       Vector3 scale_vec = scale_direction * final_scale + Vector3{1, 1, 1};
@@ -133,7 +133,7 @@ void ScalingTool::on_view_updated()
    const auto obj_distance = glm::length(translation - m_level_editor.view_context().camera().position());
 
    const Transform3D transform_x_axis{
-      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0.5 * g_pi, 0, 0.5 * g_pi}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -141,7 +141,7 @@ void ScalingTool::on_view_updated()
    m_scaler_x_bb = scaler_bb.transform(transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0.5 * g_pi, 0, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -149,7 +149,7 @@ void ScalingTool::on_view_updated()
    m_scaler_y_bb = scaler_bb.transform(transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = Quaternion{Vector3{g_pi, g_pi, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{g_pi, g_pi, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -157,7 +157,7 @@ void ScalingTool::on_view_updated()
    m_scaler_z_bb = scaler_bb.transform(transform_z_axis.to_matrix());
 
    const Transform3D transform_xyz_axis{
-      .rotation = Quaternion{Vector3{0, 0, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0, 0, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };

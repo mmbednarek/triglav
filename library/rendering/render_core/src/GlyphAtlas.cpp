@@ -55,9 +55,9 @@ GlyphAtlas::GlyphAtlas(gapi::Device& device, const font::Typeface& typeface, con
       m_glyph_infos.emplace(
          rune, glyph_info_vec.emplace_back(GlyphInfo{{static_cast<float>(left) / width_fp, static_cast<float>(top) / height_fp},
                                                      {static_cast<float>(right) / width_fp, static_cast<float>(bottom) / height_fp},
-                                                     {glyph->width, glyph->height},
-                                                     {glyph->advance_x, glyph->advance_y},
-                                                     {glyph->bitmap_left, glyph->bitmap_top}}));
+                                                     {Vector2u{glyph->width, glyph->height}.cast<Vector2>()},
+                                                     {Vector2i{glyph->advance_x, glyph->advance_y}.cast<Vector2>()},
+                                                     {Vector2i{glyph->bitmap_left, glyph->bitmap_top}.cast<Vector2>()}}));
 
       for (u32 y = 0; y < glyph->height; ++y) {
          std::memcpy(&atlas_data[left + (top + y) * width], &glyph->data[y * glyph->width], glyph->width);

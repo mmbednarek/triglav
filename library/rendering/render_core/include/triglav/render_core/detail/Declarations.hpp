@@ -33,7 +33,8 @@ struct Texture
    {
       auto size = this->tex_dims.value_or(screen_dim);
       if (this->scaling.has_value()) {
-         size = Vector2i(Vector2(size) * this->scaling.value());
+         const auto vf = Vector2{static_cast<float>(size.x), static_cast<float>(size.y)} * this->scaling.value();
+         size = Vector2i{static_cast<i32>(vf.x), static_cast<i32>(vf.y)};
       }
       return size;
    }

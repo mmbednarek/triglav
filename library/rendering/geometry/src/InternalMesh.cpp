@@ -547,7 +547,7 @@ VertexData InternalMesh::to_vertex_data()
          const auto weights = m_weights[halfedge_index].value_or(glm::vec4{0.0f, 0.0f, 0.0f, 0.0f});
 
          CompleteVertex vertex{
-            this->location(vertex_index), normal_vector, m_uvs[halfedge_index].value_or(glm::vec2(0.0f, 0.0f)), tangent, joints, weights,
+            this->location(vertex_index), normal_vector, m_uvs[halfedge_index].value_or(glm::vec2{0.0f, 0.0f}), tangent, joints, weights,
          };
 
          if (vertex_map.contains(vertex)) {
@@ -572,7 +572,7 @@ void InternalMesh::reverse_orientation()
    CGAL::Polygon_mesh_processing::reverse_face_orientations(m_mesh);
    for (auto& normal : m_normals) {
       if (normal.has_value()) {
-         normal = -*normal;
+         normal = triglav::Vector3{} - *normal;
       }
    }
 }

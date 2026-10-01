@@ -232,12 +232,12 @@ void Texture::generate_mip_maps_internal(const CommandList& cmd_list) const
 
       TextureRegion src_region{
          .offset_min = {0, 0},
-         .offset_max = {mip_width, mip_height},
+         .offset_max = {static_cast<float>(mip_width), static_cast<float>(mip_height)},
          .mip_level = i - 1,
       };
       TextureRegion dst_region{
          .offset_min = {0, 0},
-         .offset_max = {mip_width > 1 ? mip_width / 2 : 1, mip_height > 1 ? mip_height / 2 : 1},
+         .offset_max = {static_cast<float>(mip_width > 1 ? mip_width / 2 : 1), static_cast<float>(mip_height > 1 ? mip_height / 2 : 1)},
          .mip_level = i,
       };
       cmd_list.blit_texture(*this, src_region, *this, dst_region);

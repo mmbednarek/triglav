@@ -37,7 +37,7 @@ Image::Image(Context& ctx, const State state, IWidget* /*parent*/) :
 Vector2 Image::desired_size(const Vector2 available_size) const
 {
    const auto& tex = m_context.resource_manager().get(m_state.texture);
-   Vector2 tex_size{tex.width(), tex.height()};
+   auto tex_size = Vector2u{tex.width(), tex.height()}.cast<Vector2>();
 
    if (m_state.region.has_value()) {
       tex_size = {m_state.region->z, m_state.region->w};

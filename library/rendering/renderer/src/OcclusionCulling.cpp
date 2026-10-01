@@ -81,7 +81,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
          ctx.bind_texture(0, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index});
          ctx.bind_rw_texture(1, render_core::TextureMip{"occlusion_culling.hierarchical_depth_buffer"_name, mip_index + 1});
 
-         ctx.dispatch({divide_rounded_up(depth_width, 32), divide_rounded_up(depth_height, 32), 1});
+         ctx.dispatch(Vector3u{divide_rounded_up(depth_width, 32), divide_rounded_up(depth_height, 32), 1});
 
          depth_width = std::max(depth_width / 2, 1);
          depth_height = std::max(depth_height / 2, 1);
@@ -96,7 +96,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       ctx.bind_storage_buffer(1, &m_bindless_scene.transform_matrix_buffer());
       ctx.bind_uniform_buffer(2, &m_bindless_scene.transform_offset_count_buffer());
 
-      ctx.dispatch({divide_rounded_up(m_bindless_scene.transform_allocated_area().size, 256), 1, 1});
+      ctx.dispatch(Vector3u{divide_rounded_up(m_bindless_scene.transform_allocated_area().size, 256), 1, 1});
    }
 
    {
@@ -107,7 +107,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
       ctx.bind_uniform_buffer(1, &m_bindless_scene.matrix_hierarchy_count_buffer());
       ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
 
-      ctx.dispatch({std::max(divide_rounded_up(m_bindless_scene.matrix_hierarchy_count(), 256), 1u), 1, 1});
+      ctx.dispatch(Vector3u{std::max(divide_rounded_up(m_bindless_scene.matrix_hierarchy_count(), 256), 1u), 1, 1});
    }
 
    // Reset the count and cull the objects
@@ -130,7 +130,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
          ++descriptor_index;
       }
 
-      ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 1024), 1, 1});
+      ctx.dispatch(Vector3u{divide_rounded_up(m_bindless_scene.scene_object_count(), 1024), 1, 1});
    }
 
    {
@@ -148,7 +148,7 @@ void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx
          ++descriptor_index;
       }
 
-      ctx.dispatch({divide_rounded_up(m_bindless_scene.scene_object_count(), 256), 1, 1});
+      ctx.dispatch(Vector3u{divide_rounded_up(m_bindless_scene.scene_object_count(), 256), 1, 1});
    }
 }
 

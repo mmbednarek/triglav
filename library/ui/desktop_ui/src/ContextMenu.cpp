@@ -44,7 +44,8 @@ void ContextMenu::on_event(const ui_core::Event& event)
          const auto temporary_menu = std::make_unique<MenuList>(m_context, child_state, nullptr);
          const auto size = temporary_menu->desired_size({});
 
-         auto& popup = this->desktop_context().popup_manager().create_popup_dialog(event.global_mouse_position, size);
+         auto& popup = this->desktop_context().popup_manager().create_popup_dialog(event.global_mouse_position.cast<Vector2i>(),
+                                                                                   size.cast<Vector2u>());
          popup.create_root_widget<MenuList>(MenuList::State{child_state});
          popup.initialize();
          m_menu_dialog = &popup;

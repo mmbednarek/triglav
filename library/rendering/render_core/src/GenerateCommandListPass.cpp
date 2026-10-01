@@ -147,13 +147,13 @@ void GenerateCommandListPass::visit(const detail::cmd::BlitTexture& cmd) const
    m_command_list.blit_texture(src_tex,
                                graphics_api::TextureRegion{
                                   .offset_min = {0, 0},
-                                  .offset_max = {src_tex.resolution().width, src_tex.resolution().height},
+                                  .offset_max = Vector2u{src_tex.resolution().width, src_tex.resolution().height}.cast<Vector2>(),
                                   .mip_level = 0,
                                },
                                dst_tex,
                                graphics_api::TextureRegion{
                                   .offset_min = {0, 0},
-                                  .offset_max = {dst_tex.resolution().width, dst_tex.resolution().height},
+                                  .offset_max = Vector2u{dst_tex.resolution().width, dst_tex.resolution().height}.cast<Vector2>(),
                                   .mip_level = 0,
                                });
 }
