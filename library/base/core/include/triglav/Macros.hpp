@@ -2,6 +2,7 @@
 
 #define TG_CONCAT_INTERNAL(x, y) x##y
 #define TG_CONCAT(x, y) TG_CONCAT_INTERNAL(x, y)
+#define TG_CONCAT3(x, y, z) TG_CONCAT(TG_CONCAT(x, y), z)
 
 #define TG_STRING_INTERNAL(x) #x
 #define TG_STRING(x) TG_STRING_INTERNAL(x)
