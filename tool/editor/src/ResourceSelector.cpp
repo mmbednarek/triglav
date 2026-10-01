@@ -213,8 +213,8 @@ void ResourceSelectTrigger::add_to_viewport(const Vector4 dimensions, const Vect
 void ResourceSelectTrigger::on_event(const ui_core::Event& event)
 {
    if (event.event_type == ui_core::Event::Type::MousePressed) {
-      auto& popup =
-         desktop_context().popup_manager().create_popup_dialog(rect_position(m_dimensions) + Vector2{0, m_dimensions.w}, {240, 400});
+      auto& popup = desktop_context().popup_manager().create_popup_dialog(
+         (rect_position(m_dimensions) + Vector2{0, m_dimensions.w}).cast<Vector2i>(), {240, 400});
       auto& root_widget =
          popup.emplace_root_widget<desktop_ui::SecondaryEventGenerator>(popup.widget_renderer().context(), nullptr, popup.surface());
 

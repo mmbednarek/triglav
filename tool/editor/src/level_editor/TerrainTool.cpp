@@ -46,7 +46,7 @@ void TerrainTool::on_mouse_moved(const Vector2 position)
    const auto brush_world_size = m_canvas->distance_to_world(m_canvas->brush_size());
 
    const Matrix4x4 mat =
-      glm::scale(glm::translate(Matrix4x4{1}, *world_position), Vector3{brush_world_size, brush_world_size, brush_world_size});
+      Matrix4x4::translation(*world_position) * Matrix3x3::scale(Vector3{brush_world_size, brush_world_size, brush_world_size}).extend();
    m_level_editor.decal_rendering_stage().set_matrix(mat);
    m_level_editor.decal_rendering_stage().set_info(*world_position, brush_world_size);
 

@@ -84,7 +84,7 @@ void TranslationTool::on_view_updated()
    const auto obj_distance = glm::length(translation - m_level_editor.view_context().camera().position());
 
    const Transform3D transform_x_axis{
-      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0.5 * g_pi}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0.5 * g_pi, 0, 0.5 * g_pi}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -92,7 +92,7 @@ void TranslationTool::on_view_updated()
    m_arrow_x_bb = arrow_bb.transform(transform_x_axis.to_matrix());
 
    const Transform3D transform_y_axis{
-      .rotation = Quaternion{Vector3{0.5 * g_pi, 0, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{0.5 * g_pi, 0, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };
@@ -100,7 +100,7 @@ void TranslationTool::on_view_updated()
    m_arrow_y_bb = arrow_bb.transform(transform_y_axis.to_matrix());
 
    const Transform3D transform_z_axis{
-      .rotation = Quaternion{Vector3{g_pi, g_pi, 0}},
+      .rotation = Quaternion::from_euler_angles(Vector3{g_pi, g_pi, 0}),
       .scale = Vector3{0.025f} * obj_distance,
       .translation = translation,
    };

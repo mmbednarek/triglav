@@ -543,7 +543,7 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
 
    info.layer_count = 1;
    info.render_area_offset = {0, 0};
-   info.render_area_extent = {resolution.width, resolution.height};
+   info.render_area_extent = Vector2u{resolution.width, resolution.height}.cast<Vector2i>();
 
    return info;
 }
@@ -1046,7 +1046,7 @@ void BuildContext::create_resources(ResourceStorage& storage)
                if constexpr (std::is_same_v<TDecl, detail::decl::Texture>) {
                   auto size = decl.tex_dims.value_or(m_screen_size);
                   if (decl.scaling.has_value()) {
-                     size = Vector2i(Vector2(size) * decl.scaling.value());
+                     size = (size.template cast<Vector2>() * decl.scaling.value()).template cast<Vector2i>();
                   }
                   auto texture = GAPI_CHECK(m_device.create_texture(decl.tex_format, {static_cast<u32>(size.x), static_cast<u32>(size.y)},
                                                                     decl.tex_usage_flags, gapi::TextureState::Undefined,

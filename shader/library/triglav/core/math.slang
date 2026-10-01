@@ -9,7 +9,7 @@ public float3x3 invert_f3x3(const in float3x3 m) {
                  m._m01 * (m._m10 * m._m22 - m._m12 * m._m20) +
                  m._m02 * (m._m10 * m._m21 - m._m11 * m._m20);
 
-    float invdet = 1 / det;
+    float invdet = rcp(det);
 
     float3x3 result;
     result._m00 = (m._m11 * m._m22 - m._m21 * m._m12) * invdet;

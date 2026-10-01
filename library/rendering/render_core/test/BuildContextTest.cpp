@@ -21,7 +21,11 @@
 #include <renderdoc_app.h>
 #endif
 
+using triglav::Matrix3x3;
+using triglav::Matrix4x4;
 using triglav::u32;
+using triglav::Vector3;
+using triglav::Vector4;
 using triglav::render_core::BufferRef;
 using triglav::render_core::BuildContext;
 using triglav::render_core::DescriptorStorage;
@@ -192,7 +196,7 @@ TEST(BuildContext, BasicGraphics)
    BuildContext build_context(RenderSupport::device(), RenderSupport::resource_manager(), DefaultSize);
 
    static constexpr triglav::Vector2i dims{64, 64};
-   static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
+   static constexpr triglav::MemorySize buffer_size = sizeof(int) * dims.x * dims.y;
 
    // Declare resources
    build_context.declare_sized_render_target("test.basic_graphics.render_target"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
@@ -262,10 +266,10 @@ TEST(BuildContext, BasicDepth)
    box_mesh.triangulate();
    const auto box_mesh_data = box_mesh.to_vertex_data();
 
-   const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
-   const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});
+   const auto perspective = Matrix4x4::perspective_projection(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
    const auto transform = perspective * view;
-   const auto offset = glm::translate(transform, triglav::Vector3{-2.0f, -2.0f, 1.3f});
+   const auto offset = Matrix4x4::translation(Vector3{-2.0f, -2.0f, 1.3f}) * transform;
 
    // Declare resources
    build_context.declare_sized_render_target("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
@@ -443,8 +447,8 @@ TEST(BuildContext, DepthTargetSample)
    box_mesh.triangulate();
    const auto box_mesh_data = box_mesh.to_vertex_data();
 
-   const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
-   const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});
+   const auto perspective = Matrix4x4::perspective_projection(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
    const auto transform = perspective * view;
 
    static constexpr triglav::Vector2i dims{256, 256};
@@ -722,17 +726,17 @@ TEST(BuildContext, BasicRayTracing)
    build_context.declare_screen_size_texture("test.basic_ray_tracing.target"_name, GAPI_FORMAT(RGBA, UNorm8));
    build_context.declare_staging_buffer("test.basic_ray_tracing.output"_name, buffer_size);
 
-   const auto view = glm::lookAt(triglav::Vector3{2.0f, 2.0f, 2.0f}, triglav::Vector3{0, 0, 0}, triglav::Vector3{0, 0, -1.0f});
-   const auto perspective = glm::perspective(0.5f * static_cast<float>(triglav::g_pi),
-                                             static_cast<float>(DefaultSize.x) / static_cast<float>(DefaultSize.y), 0.1f, 100.0f);
+   const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});
+   const auto perspective = Matrix4x4::perspective_projection(
+      0.5f * static_cast<float>(triglav::g_pi), static_cast<float>(DefaultSize.x) / static_cast<float>(DefaultSize.y), 0.1f, 100.0f);
 
    struct ViewProperties
    {
-      triglav::Matrix4x4 proj_inverse;
-      triglav::Matrix4x4 view_inverse;
+      Matrix4x4 proj_inverse;
+      Matrix4x4 view_inverse;
    };
 
-   build_context.init_buffer("test.basic_ray_tracing.view_props"_name, ViewProperties{inverse(perspective), inverse(view)});
+   build_context.init_buffer("test.basic_ray_tracing.view_props"_name, ViewProperties{perspective.inverse(), view.inverse()});
 
    build_context.bind_rt_generation_shader("testing/shader/ray_tracing/basic.rgenshader"_rc);
    build_context.bind_acceleration_structure(0, *top_level_as);

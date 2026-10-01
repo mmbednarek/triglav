@@ -191,8 +191,9 @@ void DropDownMenu::add_to_viewport(const Vector4 dimensions, const Vector4 cropp
    m_cropping_mask = cropping_mask;
    m_rect.add_to_viewport(dimensions, cropping_mask);
 
-   const Vector2 sprite_size{dimensions.w * 0.4, dimensions.w * 0.4};
-   const Vector2 sprite_pos{dimensions.x + dimensions.z - 2 * sprite_size.x, dimensions.y + dimensions.w * 0.5 - sprite_size.x * 0.5};
+   const Vector2 sprite_size{static_cast<float>(dimensions.w * 0.4), static_cast<float>(dimensions.w * 0.4)};
+   const Vector2 sprite_pos{dimensions.x + dimensions.z - 2 * sprite_size.x,
+                            static_cast<float>(dimensions.y + dimensions.w * 0.5 - sprite_size.x * 0.5)};
    if (m_down_arrow == 0) {
       m_down_arrow = m_context.viewport().add_sprite({
          .texture = "engine/texture/ui_atlas.tex"_rc,
@@ -263,7 +264,8 @@ void DropDownMenu::on_mouse_released(const ui_core::Event& /*event*/, const ui_c
 
    // TODO: Add ability to update context.
    auto& popup =
-      m_context.popup_manager().create_popup_dialog({m_dimensions.x, m_dimensions.y + m_dimensions.w}, {m_dimensions.z, desired_dims.y});
+      m_context.popup_manager().create_popup_dialog({static_cast<i32>(m_dimensions.x), static_cast<i32>(m_dimensions.y + m_dimensions.w)},
+                                                    {static_cast<u32>(m_dimensions.z), static_cast<u32>(desired_dims.y)});
    popup.create_root_widget<DropDownSelector>({this});
    popup.initialize();
    m_current_popup = &popup;

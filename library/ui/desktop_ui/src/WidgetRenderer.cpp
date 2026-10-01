@@ -47,7 +47,8 @@ void WidgetRenderer::prepare_resources(render_core::JobGraph& graph, const u32 f
 
 void WidgetRenderer::add_widget_to_viewport(const Vector2i resolution) const
 {
-   m_root_widget->add_to_viewport({0, 0, resolution.x, resolution.y}, {0, 0, resolution.x, resolution.y});
+   m_root_widget->add_to_viewport({0, 0, static_cast<float>(resolution.x), static_cast<float>(resolution.y)},
+                                  {0, 0, static_cast<float>(resolution.x), static_cast<float>(resolution.y)});
 }
 
 void WidgetRenderer::remove_widget_from_viewport() const
@@ -73,7 +74,7 @@ void WidgetRenderer::on_mouse_move(const Vector2 position)
    event.event_type = ui_core::Event::Type::MouseMoved;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    m_root_widget->on_event(event);
 }
 
@@ -86,7 +87,7 @@ void WidgetRenderer::on_mouse_wheel_turn(const float amount) const
    event.event_type = ui_core::Event::Type::MouseScrolled;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data = ui_core::Event::Scroll{amount};
    m_root_widget->on_event(event);
 }
@@ -100,7 +101,7 @@ void WidgetRenderer::on_mouse_button_is_pressed(desktop::MouseButton button) con
    event.event_type = ui_core::Event::Type::MousePressed;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_root_widget->on_event(event);
 }
@@ -114,7 +115,7 @@ void WidgetRenderer::on_mouse_button_is_released(desktop::MouseButton button) co
    event.event_type = ui_core::Event::Type::MouseReleased;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_root_widget->on_event(event);
 }
@@ -128,7 +129,7 @@ void WidgetRenderer::on_mouse_double_click(desktop::MouseButton button) const
    event.event_type = ui_core::Event::Type::MouseDoubleClick;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_root_widget->on_event(event);
 }
@@ -142,7 +143,7 @@ void WidgetRenderer::on_key_is_pressed(desktop::Key key) const
    event.event_type = ui_core::Event::Type::KeyPressed;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data.emplace<ui_core::Event::Keyboard>(key);
    m_root_widget->on_event(event);
 }
@@ -156,7 +157,7 @@ void WidgetRenderer::on_key_is_released(desktop::Key key) const
    event.event_type = ui_core::Event::Type::KeyReleased;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data.emplace<ui_core::Event::Keyboard>(key);
    m_root_widget->on_event(event);
 }
@@ -170,7 +171,7 @@ void WidgetRenderer::on_text_input(const Rune rune) const
    event.event_type = ui_core::Event::Type::TextInput;
    event.mouse_position = m_mouse_position;
    event.global_mouse_position = m_mouse_position;
-   event.widget_size = m_surface.dimension();
+   event.widget_size = m_surface.dimension().cast<Vector2>();
    event.data.emplace<ui_core::Event::TextInput>(rune);
    m_root_widget->on_event(event);
 }

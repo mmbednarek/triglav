@@ -85,8 +85,10 @@ void UpdateViewParamsJob::on_updated(const Camera& camera)
    m_view_properties.projection = camera.projection_matrix();
    m_view_properties.inverted_view = glm::inverse(camera.view_matrix());
    m_view_properties.inverted_projection = glm::inverse(camera.projection_matrix());
-   m_view_properties.orientation =
-      glm::inverse(glm::rotate(glm::mat4(camera.orientation()), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f)));
+   m_view_properties.orientation = (Matrix3x3::rotation(camera.orientation()) *
+                                    Matrix3x3::rotation(Quaternion::angle_axis(degrees_to_radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f))))
+                                      .inverse()
+                                      .extend();
    m_view_properties.view_position = Vector4(camera.position(), 1.0f);
    m_view_properties.forward = Vector4(camera.forward_vector(), 1.0f);
    m_view_properties.right = Vector4(camera.right_vector(), 1.0f);

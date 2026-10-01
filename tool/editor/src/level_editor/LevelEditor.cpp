@@ -490,7 +490,7 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_rendering_job.emplace_stage<renderer::stage::ShadingStage>();
    m_rendering_job.emplace_stage<renderer::stage::PostProcessStage>(nullptr, "post_process.out"_name);
 
-   m_view_context.set_camera({-20, -6, -5}, glm::quat(Vector3{0.13, 0.0, 5.29}));
+   m_view_context.set_camera({-20, -6, -5}, Quaternion::from_euler_angles(Vector3{0.13, 0.0, 5.29}));
 }
 
 renderer::ViewContext& LevelEditor::view_context()

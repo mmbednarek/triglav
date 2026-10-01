@@ -41,7 +41,7 @@ void TerrainCanvas::shift(const float amount, const Vector2i coord) const
             continue;
          dist = std::pow(dist, 2.0f);
 
-         const float shape = std::sin(dist * MATH_PI * 0.5f);
+         const float shape = std::sin(dist * PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
          heightmap[index] += amount * (1.0f - shape);
       }
@@ -71,7 +71,7 @@ void TerrainCanvas::level(const float level, const float strength, const Vector2
          const float dist = std::sqrt(dx * dx + dy * dy);
          if (dist > 1.0f)
             continue;
-         const float shape = std::cos(dist * MATH_PI * 0.5f);
+         const float shape = std::cos(dist * PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
          heightmap[index] = std::lerp(heightmap[index], level, shape * strength);
       }
@@ -97,12 +97,12 @@ void TerrainCanvas::smooth(const float strength, const Vector2i coord) const
          if (x + coord.x < 0)
             continue;
 
-         Vector2 off = Vector2{x, y} / m_brush_size;
+         Vector2 off = Vector2{static_cast<float>(x), static_cast<float>(y)} / m_brush_size;
          const float dist = glm::length(off);
          if (dist > 1.0f)
             continue;
 
-         const float shape = std::cos(dist * MATH_PI * 0.5f);
+         const float shape = std::cos(dist * PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
          heightmap[index] = std::lerp(heightmap[index], average, shape * strength);
       }
@@ -143,9 +143,10 @@ void TerrainCanvas::paint(const float strength, const Vector2i coord) const
          if (dist > 1.0f)
             continue;
 
-         const float shape = std::sin(dist * MATH_PI * 0.5f);
+         const float shape = std::sin(dist * PI * 0.5f);
          const auto index = (x + coord.x) + 1024 * (coord.y + y);
-         blending[index] = Vector4b{float_to_u8(u8_to_float(blending[index].x) + strength * (1.0f - shape)), 0, 0, 0};
+         const u8 v = float_to_u8(u8_to_float(blending[index].x) + strength * (1.0f - shape));
+         blending[index] = Vector4b{v, 0, 0, 0};
          // terr[index] = 255;
       }
    }
@@ -170,14 +171,14 @@ std::optional<Vector3> TerrainCanvas::trace_ray(const geometry::Ray& ray) const
 
    // TODO: Update to hi-z approach
    const float ray_length = -ray.origin.z / ray.direction.z;
-   const auto ground_position = Vector2{ray.origin + ray.direction * ray_length};
+   const auto ground_position = (ray.origin + ray.direction * ray_length).xy();
    return Vector3{ground_position, 0};
 }
 
 Vector2i TerrainCanvas::world_pos_to_coord(const Vector3 pos) const
 {
-   const auto ground_position = Vector2(pos / m_world_size * 2.0f);
-   return Vector2i{static_cast<float>(m_height_map_resolution) * 0.5f * (ground_position + Vector2{1.0f, 1.0f})};
+   const auto ground_position = (pos / m_world_size * 2.0f).xy();
+   return Vector2{static_cast<float>(m_height_map_resolution) * 0.5f * (ground_position + Vector2{1.0f, 1.0f})}.cast<Vector2i>();
 }
 
 float TerrainCanvas::height_to_world(const float height) const

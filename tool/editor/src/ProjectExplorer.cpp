@@ -72,7 +72,7 @@ void ProjectTreeController::children(const desktop_ui::TreeItemId parent, const 
       }
       m_id_to_item[m_top_item] = desktop_ui::TreeItem{
          .icon_name = "editor/texture/ui_icons.tex"_rc,
-         .icon_region = {region.x, region.y, 18, 18},
+         .icon_region = {static_cast<float>(region.x), static_cast<float>(region.y), 18, 18},
          .label = {name},
          .has_children = is_dir,
       };

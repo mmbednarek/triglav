@@ -20,13 +20,14 @@ RootWindow::RootWindow(const graphics_api::Instance& instance, graphics_api::Dev
                        desktop_ui::PopupManager& popup_manager) :
     m_device(device),
     m_resource_manager(resource_manager),
-    m_surface(display.create_surface("Triglav Editor"_strv, DEFAULT_DIMENSIONS, desktop::WindowAttribute::Default)),
+    m_surface(display.create_surface("Triglav Editor"_strv, DEFAULT_DIMENSIONS.cast<Vector2u>(), desktop::WindowAttribute::Default)),
     m_graphics_surface(GAPI_CHECK(instance.create_surface(*m_surface))),
     m_resource_storage(device),
-    m_render_surface(device, *m_surface, m_graphics_surface, m_resource_storage, DEFAULT_DIMENSIONS, graphics_api::PresentMode::Fifo),
+    m_render_surface(device, *m_surface, m_graphics_surface, m_resource_storage, DEFAULT_DIMENSIONS.cast<Vector2u>(),
+                     graphics_api::PresentMode::Fifo),
     m_widget_renderer(popup_manager, *m_surface, glyph_cache, resource_manager, device, *this),
     m_pipeline_cache(device, resource_manager),
-    m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, DEFAULT_DIMENSIONS),
+    m_job_graph(device, resource_manager, m_pipeline_cache, m_resource_storage, DEFAULT_DIMENSIONS.cast<Vector2u>()),
     TG_CONNECT(*m_surface, OnClose, on_close),
     TG_CONNECT(*m_surface, OnResize, on_resize),
     TG_CONNECT(m_resource_manager, OnLoadedAssets, on_loaded_assets),
@@ -47,7 +48,7 @@ void RootWindow::initialize()
    this->render_overlay().build_update_job(update_viewport_ctx);
    m_job_graph.add_dependency_to_previous_frame(renderer::UpdateViewParamsJob::JobName);
 
-   auto& render_viewport_ctx = m_job_graph.add_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
+   auto& render_viewport_ctx = m_job_graph.add_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()).cast<Vector2i>());
    this->render_overlay().build_render_job(render_viewport_ctx);
    m_job_graph.add_dependency("render_viewport"_name, renderer::UpdateViewParamsJob::JobName);
 
@@ -80,7 +81,8 @@ void RootWindow::build_rendering_job(render_core::BuildContext& ctx)
    m_widget_renderer.create_render_job(ctx, "core.color_out"_name);
 
    ctx.copy_texture_region("render_viewport.out"_external, {0, 0}, "core.color_out"_name,
-                           rect_position(this->render_overlay().dimensions()), rect_size(this->render_overlay().dimensions()));
+                           rect_position(this->render_overlay().dimensions()).cast<Vector2u>(),
+                           rect_size(this->render_overlay().dimensions()).cast<Vector2u>());
 
    ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
                       graphics_api::TextureUsage::TransferSrc);
@@ -106,7 +108,8 @@ void RootWindow::update()
       this->render_overlay().build_update_job(update_viewport_ctx);
       m_job_graph.rebuild_job(renderer::UpdateViewParamsJob::JobName);
 
-      auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
+      auto& render_viewport_ctx =
+         m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()).cast<Vector2i>());
       this->render_overlay().build_render_job(render_viewport_ctx);
       m_job_graph.rebuild_job("render_viewport"_name);
 
@@ -153,7 +156,8 @@ void RootWindow::on_resize(const Vector2i size)
    m_widget_renderer.create_update_job(update_ui_ctx);
    m_job_graph.rebuild_job("update_ui"_name);
 
-   auto& render_viewport_ctx = m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()));
+   auto& render_viewport_ctx =
+      m_job_graph.replace_job("render_viewport"_name, rect_size(this->render_overlay().dimensions()).cast<Vector2i>());
    this->render_overlay().build_render_job(render_viewport_ctx);
    m_job_graph.rebuild_job("render_viewport"_name);
 

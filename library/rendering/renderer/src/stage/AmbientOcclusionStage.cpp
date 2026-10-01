@@ -110,7 +110,7 @@ void AmbientOcclusionStage::fill_sample_buffer()
    for (auto& out_sample : result) {
       Vector3 sample;
       for (;;) {
-         sample = {dist(generator) * 2.0 - 1.0, dist(generator) * 2.0 - 1.0, dist(generator)};
+         sample = {dist(generator) * 2.0f - 1.0f, dist(generator) * 2.0f - 1.0f, dist(generator)};
          sample = glm::normalize(sample);
          sample *= dist(generator);
 

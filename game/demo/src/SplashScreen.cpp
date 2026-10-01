@@ -10,6 +10,8 @@ namespace demo {
 using namespace triglav::name_literals;
 
 using triglav::u32;
+using triglav::Vector2u;
+using triglav::Vector4;
 using triglav::graphics_api::AttachmentAttribute;
 using triglav::graphics_api::ClearValue;
 using triglav::graphics_api::Color;
@@ -34,7 +36,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
     m_ui_viewport({g_splash_screen_resolution.x, g_splash_screen_resolution.y}),
     m_update_ui_job(m_device, m_glyph_cache, m_ui_viewport, m_resource_manager, *this),
     m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage,
-                {g_splash_screen_resolution.x, g_splash_screen_resolution.y})
+                Vector2u{g_splash_screen_resolution.x, g_splash_screen_resolution.y})
 {
    triglav::ui_core::Rectangle status_bg{
       .rect = {40.0f, 225.0f, g_splash_screen_resolution.x - 40.0f, 275.0f},
@@ -54,7 +56,7 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .font_size = 36,
       .position = {64.0f, 80.0f},
       .color = {0.13f, 0.39f, 0.78f, 1.0f},
-      .crop = {0, 0, g_splash_screen_resolution.x, g_splash_screen_resolution.y},
+      .crop = {0, 0, static_cast<float>(g_splash_screen_resolution.x), static_cast<float>(g_splash_screen_resolution.y)},
    };
    m_title_id = m_ui_viewport.add_text(std::move(title_text));
 
@@ -63,8 +65,8 @@ SplashScreen::SplashScreen(triglav::desktop::ISurface& surface, triglav::graphic
       .typeface_name = "engine/fonts/cantarell/regular.typeface"_rc,
       .font_size = 24,
       .position = {64.0f, 160.0f},
-      .color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f),
-      .crop = {0, 0, g_splash_screen_resolution.x, g_splash_screen_resolution.y},
+      .color = Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+      .crop = {0, 0, static_cast<float>(g_splash_screen_resolution.x), static_cast<float>(g_splash_screen_resolution.y)},
    };
    m_desc_id = m_ui_viewport.add_text(std::move(desc_text));
 
@@ -156,8 +158,9 @@ void SplashScreen::recreate_render_jobs()
 
 void SplashScreen::update_process_bar(const float progress)
 {
-   const triglav::Vector4 dims{40.0f, 225.0f, triglav::lerp(50.0f, g_splash_screen_resolution.x - 40.0f, progress), 275.0f};
-   m_ui_viewport.set_rectangle_dims(m_status_fg_id, dims, {0, 0, g_splash_screen_resolution.x, g_splash_screen_resolution.y});
+   const Vector4 dims{40.0f, 225.0f, triglav::lerp(50.0f, static_cast<float>(g_splash_screen_resolution.x) - 40.0f, progress), 275.0f};
+   m_ui_viewport.set_rectangle_dims(
+      m_status_fg_id, dims, {0, 0, static_cast<float>(g_splash_screen_resolution.x), static_cast<float>(g_splash_screen_resolution.y)});
 }
 
 void SplashScreen::update_loaded_resource(const triglav::ResourceName name)

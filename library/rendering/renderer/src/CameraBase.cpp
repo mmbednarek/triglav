@@ -39,7 +39,7 @@ void CameraBase::rotate(const float pitch, const float yaw)
 {
    m_has_cached_view_matrix = false;
    m_has_cached_view_projection_matrix = false;
-   m_orientation = glm::quat{glm::vec3{pitch, 0.0f, yaw}};
+   m_orientation = Quaternion::from_euler_angles({pitch, 0.0f, yaw});
 }
 
 glm::vec3 CameraBase::position() const
@@ -150,7 +150,7 @@ const glm::mat4& CameraBase::view_matrix() const
    if (not m_has_cached_view_matrix) {
       const auto look_vector = m_orientation * glm::vec3(0.0f, 1.0f, 0.0f);
       const auto up_vector = m_orientation * glm::vec3(0.0f, 0.0f, 1.0f);
-      m_view_mat = glm::lookAt(m_position, m_position + look_vector, up_vector);
+      m_view_mat = Matrix4x4::look_at(m_position, m_position + look_vector, up_vector);
       m_has_cached_view_matrix = true;
    }
 

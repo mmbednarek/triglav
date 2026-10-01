@@ -91,7 +91,7 @@ std::optional<ImageData> load_image_data(io::ISeekableStream& stream)
    ImageData out_data{};
    out_data.image_data.resize(sizeof(u32) * tex_width * tex_height);
    std::memcpy(out_data.image_data.data(), pixels, sizeof(u32) * tex_width * tex_height);
-   out_data.size = {tex_width, tex_height};
+   out_data.size = Vector2i{tex_width, tex_height};
 
    stbi_image_free(pixels);
 

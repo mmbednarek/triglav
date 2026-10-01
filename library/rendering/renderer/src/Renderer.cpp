@@ -67,7 +67,7 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
     m_resource_storage(m_device),
     m_render_surface(m_device, desktop_surface, surface, m_resource_storage, {resolution.width, resolution.height}, get_present_mode()),
     m_pipeline_cache(m_device, m_resource_manager),
-    m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage, {resolution.width, resolution.height}),
+    m_job_graph(m_device, m_resource_manager, m_pipeline_cache, m_resource_storage, Vector2u{resolution.width, resolution.height}),
     m_animation_manager(m_device, m_resource_manager, m_bindless_scene),
     m_animation_job(m_animation_manager, m_bindless_scene),
     m_update_view_params_job(m_view_context),
@@ -84,7 +84,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
       m_ray_tracing_scene.emplace(m_device, m_resource_manager);
    }
 
-   m_info_dialog.add_to_viewport({0, 0, resolution.width, resolution.height}, {0, 0, resolution.width, resolution.height});
+   m_info_dialog.add_to_viewport({0, 0, static_cast<float>(resolution.width), static_cast<float>(resolution.height)},
+                                 {0, 0, static_cast<float>(resolution.width), static_cast<float>(resolution.height)});
 
    engine::level()->flush();
 
@@ -206,7 +207,7 @@ void Renderer::on_mouse_move(const Vector2 position)
    event.event_type = ui_core::Event::Type::MouseMoved;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.widget_size = m_render_surface.resolution();
+   event.widget_size = m_render_surface.resolution().cast<Vector2>();
    m_info_dialog.on_event(event);
 }
 
@@ -221,7 +222,7 @@ void Renderer::on_mouse_is_pressed(const desktop::MouseButton button, const Vect
    event.event_type = ui_core::Event::Type::MousePressed;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.widget_size = m_render_surface.resolution();
+   event.widget_size = m_render_surface.resolution().cast<Vector2>();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_info_dialog.on_event(event);
 }
@@ -232,7 +233,7 @@ void Renderer::on_mouse_is_released(const desktop::MouseButton button, const Vec
    event.event_type = ui_core::Event::Type::MouseReleased;
    event.mouse_position = position;
    event.global_mouse_position = position;
-   event.widget_size = m_render_surface.resolution();
+   event.widget_size = m_render_surface.resolution().cast<Vector2>();
    event.data.emplace<ui_core::Event::Mouse>(button);
    m_info_dialog.on_event(event);
 }
@@ -359,7 +360,7 @@ void Renderer::recreate_jobs(const Vector2u dimensions)
 
    m_job_graph.set_screen_size(dimensions);
    m_ui_viewport.set_dimensions(dimensions);
-   m_info_dialog.add_to_viewport({0, 0, dimensions}, {0, 0, dimensions});
+   m_info_dialog.add_to_viewport({0, 0, dimensions.cast<Vector2>()}, {0, 0, dimensions.cast<Vector2>()});
 
    auto& update_user_interface_ctx = m_job_graph.replace_job(UpdateUserInterfaceJob::JobName);
    m_update_user_interface_job.build_job(update_user_interface_ctx);

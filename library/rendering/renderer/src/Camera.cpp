@@ -18,7 +18,7 @@ void Camera::set_viewport_size(const float width, const float height)
 const glm::mat4& Camera::projection_matrix() const
 {
    if (not m_has_cached_projection_matrix) {
-      m_projection_mat = glm::perspective(m_angle, m_viewport_aspect, this->near_plane(), this->far_plane());
+      m_projection_mat = Matrix4x4::perspective_projection(m_angle, m_viewport_aspect, this->near_plane(), this->far_plane());
       m_projection_mat[1][1] *= -1.0f;
       m_has_cached_projection_matrix = true;
    }
@@ -109,7 +109,7 @@ geometry::Ray Camera::viewport_ray(const Vector2 coord, const float distance) co
 
    return {
       .origin = origin,
-      .direction = normalize(origin - this->position()),
+      .direction = glm::normalize(origin - this->position()),
       .distance = distance,
    };
 }

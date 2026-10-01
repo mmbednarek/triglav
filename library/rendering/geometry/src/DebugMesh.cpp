@@ -65,11 +65,11 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    Mesh mesh;
    mesh.add_group({"sphere", VERTEX_COMPONENTS_SIMPLE, "material/stone.mat"_rc});
 
-   std::vector<glm::vec2> uvs{};
-   std::vector<glm::vec3> normals{};
+   std::vector<Vector2> uvs{};
+   std::vector<Vector3> normals{};
 
    mesh.add_vertex(0, 0, -radius);
-   uvs.emplace_back(0.5f, 0);
+   uvs.emplace_back(Vector2{0.5f, 0.0f});
    normals.emplace_back(0.0f, 0.0f, -1.0f);
 
    size_t last_base_index = 0;
@@ -91,7 +91,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
          const auto y = radius * norm_y;
 
          mesh.add_vertex(x, y, z);
-         uvs.emplace_back(u, v);
+         uvs.emplace_back(Vector2{u, v});
          normals.emplace_back(norm_x, norm_y, norm_z);
       }
 
@@ -121,7 +121,7 @@ Mesh create_sphere(const int segment_count, const int ring_count, const float ra
    }
 
    mesh.add_vertex(0, 0, radius);
-   uvs.emplace_back(0.5, 1);
+   uvs.emplace_back(Vector2{0.5, 1});
    normals.emplace_back(0.0f, 0.0f, 1.0f);
    const auto last_index = mesh.vertex_count() - 1;
 
