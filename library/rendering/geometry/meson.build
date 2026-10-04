@@ -15,7 +15,7 @@ geometry_sources = files([
   'src/VertexBuffer.cpp',
 ])
 
-geometry_pub_deps = [glm, graphics_api, io, memory]
+geometry_pub_deps = [graphics_api, io, memory]
 
 geometry_priv_deps = geometry_pub_deps
 geometry_priv_deps += cgal

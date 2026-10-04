@@ -92,64 +92,6 @@ TVector::ComponentType distance(const TVector& a, const TVector& b)
 // (x, y, width, height)
 using Rect = Vector4;
 
-enum class Axis : u32
-{
-   X = 0,
-   Y = 1,
-   Z = 2,
-   W = 3
-};
-
-[[nodiscard]] constexpr Vector3 axis_forward_vec3(const Axis axis)
-{
-   switch (axis) {
-   case Axis::X:
-      return {1, 0, 0};
-   case Axis::Y:
-      return {0, 1, 0};
-   case Axis::Z:
-      return {0, 0, 1};
-   default:
-      return {0, 0, 0};
-   }
-}
-
-[[nodiscard]] constexpr float& vector3_component(Vector3& vec, const Axis axis)
-{
-   static float def_res = 0.0f;
-   switch (axis) {
-   case Axis::X:
-      return vec.x;
-   case Axis::Y:
-      return vec.y;
-   case Axis::Z:
-      return vec.z;
-   default:
-      return def_res;
-   }
-}
-
-[[nodiscard]] constexpr float vector3_component(const Vector3& vec, const Axis axis)
-{
-   return std::bit_cast<std::array<float, 3>>(vec)[static_cast<u32>(axis)];
-}
-
-[[nodiscard]] constexpr Axis vector3_min_axis(const Vector3& vec)
-{
-   if (vec.x < vec.y) {
-      if (vec.x < vec.z) {
-         return Axis::X;
-      }
-      if (vec.z < vec.y) {
-         return Axis::Z;
-      }
-   } else if (vec.z < vec.y) {
-      return Axis::Z;
-   }
-   return Axis::Y;
-}
-
-
 [[nodiscard]] constexpr Vector2 rect_position(const Rect& r)
 {
    return {r.x, r.y};

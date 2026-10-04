@@ -82,7 +82,7 @@ constexpr Vector3 Quaternion::euler_angles() const noexcept
 
 constexpr Quaternion Quaternion::normalize() const
 {
-   const auto length = std::sqrt(w * w * +x * x + y * y + z * z);
+   const auto length = std::sqrt(w * w + x * x + y * y + z * z);
    return Quaternion{w / length, x / length, y / length, z / length};
 }
 
@@ -126,48 +126,58 @@ constexpr Quaternion Quaternion::from_euler_angles(const Vector3& euler)
    };
 }
 
-constexpr Quaternion Quaternion::from_rotation_matrix(const Matrix3x3& r) noexcept
+constexpr Quaternion Quaternion::from_rotation_matrix(const Matrix3x3& rot_mat) noexcept
 {
-   Quaternion q{};
-   const float trace = r[0][0] + r[1][1] + r[2][2];
+   const float four_x_squared_minus1 = rot_mat[0][0] - rot_mat[1][1] - rot_mat[2][2];
+   const float four_y_squared_minus1 = rot_mat[1][1] - rot_mat[0][0] - rot_mat[2][2];
+   const float four_z_squared_minus1 = rot_mat[2][2] - rot_mat[0][0] - rot_mat[1][1];
+   const float four_w_squared_minus1 = rot_mat[0][0] + rot_mat[1][1] + rot_mat[2][2];
 
-   if (trace > 0.0f) {
-      // w is the largest component
-      const float s = std::sqrt(trace + 1.0f) * 2.0f;// s = 4 * w
-      q.w = 0.25f * s;
-      q.x = (r[2][1] - r[1][2]) / s;
-      q.y = (r[0][2] - r[2][0]) / s;
-      q.z = (r[1][0] - r[0][1]) / s;
-   } else if ((r[0][0] > r[1][1]) && (r[0][0] > r[2][2])) {
-      // x is the largest component
-      const float s = std::sqrt(1.0f + r[0][0] - r[1][1] - r[2][2]) * 2.0f;// s = 4 * x
-      q.w = (r[2][1] - r[1][2]) / s;
-      q.x = 0.25f * s;
-      q.y = (r[0][1] + r[1][0]) / s;
-      q.z = (r[0][2] + r[2][0]) / s;
-   } else if (r[1][1] > r[2][2]) {
-      // y is the largest component
-      const float s = std::sqrt(1.0f + r[1][1] - r[0][0] - r[2][2]) * 2.0f;// s = 4 * y
-      q.w = (r[0][2] - r[2][0]) / s;
-      q.x = (r[0][1] + r[1][0]) / s;
-      q.y = 0.25f * s;
-      q.z = (r[1][2] + r[2][1]) / s;
-   } else {
-      // z is the largest component
-      const float s = std::sqrt(1.0f + r[2][2] - r[0][0] - r[1][1]) * 2.0f;// s = 4 * z
-      q.w = (r[1][0] - r[0][1]) / s;
-      q.x = (r[0][2] + r[2][0]) / s;
-      q.y = (r[1][2] + r[2][1]) / s;
-      q.z = 0.25f * s;
+   int biggest_index = 0;
+   float four_biggest_squared_minus1 = four_w_squared_minus1;
+   if (four_x_squared_minus1 > four_biggest_squared_minus1) {
+      four_biggest_squared_minus1 = four_x_squared_minus1;
+      biggest_index = 1;
+   }
+   if (four_y_squared_minus1 > four_biggest_squared_minus1) {
+      four_biggest_squared_minus1 = four_y_squared_minus1;
+      biggest_index = 2;
+   }
+   if (four_z_squared_minus1 > four_biggest_squared_minus1) {
+      four_biggest_squared_minus1 = four_z_squared_minus1;
+      biggest_index = 3;
    }
 
-   return q;
+   const float biggest_val = std::sqrt(four_biggest_squared_minus1 + 1.0f) * 0.5f;
+   const float mult = 0.25f / biggest_val;
+
+   switch (biggest_index) {
+   case 0:
+      return {biggest_val, (rot_mat[1][2] - rot_mat[2][1]) * mult, (rot_mat[2][0] - rot_mat[0][2]) * mult,
+              (rot_mat[0][1] - rot_mat[1][0]) * mult};
+   case 1:
+      return {(rot_mat[1][2] - rot_mat[2][1]) * mult, biggest_val, (rot_mat[0][1] + rot_mat[1][0]) * mult,
+              (rot_mat[2][0] + rot_mat[0][2]) * mult};
+   case 2:
+      return {(rot_mat[2][0] - rot_mat[0][2]) * mult, (rot_mat[0][1] + rot_mat[1][0]) * mult, biggest_val,
+              (rot_mat[1][2] + rot_mat[2][1]) * mult};
+   case 3:
+      return {(rot_mat[0][1] - rot_mat[1][0]) * mult, (rot_mat[2][0] + rot_mat[0][2]) * mult, (rot_mat[1][2] + rot_mat[2][1]) * mult,
+              biggest_val};
+   default:
+      return identity();
+   }
 }
 
 constexpr Quaternion Quaternion::angle_axis(const float angle, const Vector3& v)
 {
    const Vector3 vs = v * std::sin(angle * 0.5f);
    return Quaternion{std::cos(angle * 0.5f), vs.x, vs.y, vs.z};
+}
+
+constexpr Quaternion Quaternion::angle_axis(const float angle, const Axis axis)
+{
+   return angle_axis(angle, Vector3::from_axis(axis));
 }
 
 constexpr Quaternion Quaternion::from_oriented_vector(const Vector3& source, const Vector3& target) noexcept

@@ -49,9 +49,34 @@ bool is_integer(const Name type_name)
    return false;
 }
 
+float prettify_angle(const float angle)
+{
+   static constexpr float TOLERANCE = 1e-4f;
+   float pretty_angles[] = {
+      -180.0f, -135.0f, -90.0f, -45.0f, 45.0f, 90.0f, 135.0f, 180.0f,
+   };
+
+   for (const float target : pretty_angles) {
+      if (std::abs(angle - target) < TOLERANCE) {
+         return target;
+      }
+   }
+
+   return angle;
+}
+
+Vector3 prettify_angles(const Vector3& angles)
+{
+   return {
+      prettify_angle(angles.x),
+      prettify_angle(angles.y),
+      prettify_angle(angles.z),
+   };
+}
+
 bool int_filter(const Rune r)
 {
-   return r == '.' || (r >= '0' && r <= '9');
+   return r == '-' || (r >= '0' && r <= '9');
 }
 
 bool float_filter(const Rune r)
@@ -362,7 +387,7 @@ class VectorProperty : public DesktopProxyWidget
 
       for (const auto& info : AXIS_INFOS) {
          const auto& input = grid.create_child<TextInput>({
-            .text = to_string<float>(vector3_component(m_values, info.axis)),
+            .text = to_string<float>(m_values[info.axis]),
             .filter_func = float_filter,
             .border_color = info.outline_color,
          });
@@ -383,7 +408,7 @@ class VectorProperty : public DesktopProxyWidget
    void update_value(const float value, const Axis axis)
    {
       const auto reference = m_state.provider->get_reference();
-      vector3_component(m_values, axis) = value;
+      m_values[axis] = value;
       reference.property<Vector3>(m_state.property_name) = Vector3{m_values};
       m_state.provider->mutate();
    }
@@ -417,7 +442,7 @@ class QuaternionProperty : public DesktopProxyWidget
       const auto reference = m_state.provider->get_reference();
 
       const auto& quat = *reference.property<Quaternion>(m_state.property_name);
-      m_euler_degrees = glm::degrees(glm::eulerAngles(quat));
+      m_euler_degrees = prettify_angles(quat.euler_angles().degrees());
 
       auto& grid = this->create_content<ui_core::GridLayout>({
          .column_ratios = {0.333f, 0.333f, 0.333f},
@@ -428,7 +453,7 @@ class QuaternionProperty : public DesktopProxyWidget
 
       for (const auto& info : AXIS_INFOS) {
          const auto& input = grid.create_child<TextInput>({
-            .text = to_string<float>(vector3_component(m_euler_degrees, info.axis)),
+            .text = to_string<float>(m_euler_degrees[info.axis]),
             .filter_func = float_filter,
             .border_color = info.outline_color,
          });
@@ -448,7 +473,7 @@ class QuaternionProperty : public DesktopProxyWidget
 
    void update_value(const float value, const Axis axis)
    {
-      vector3_component(m_euler_degrees, axis) = value;
+      m_euler_degrees[axis] = value;
       const auto reference = m_state.provider->get_reference();
       reference.property<Quaternion>(m_state.property_name) = Quaternion::from_euler_angles(m_euler_degrees.radians());
       m_state.provider->mutate();

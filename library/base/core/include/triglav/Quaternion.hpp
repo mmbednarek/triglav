@@ -23,8 +23,9 @@ struct Quaternion
 
    [[nodiscard]] constexpr static Quaternion identity();
    [[nodiscard]] constexpr static Quaternion from_euler_angles(const Vector3& euler);
-   [[nodiscard]] constexpr static Quaternion from_rotation_matrix(const Matrix3x3& r) noexcept;
+   [[nodiscard]] constexpr static Quaternion from_rotation_matrix(const Matrix3x3& rot_mat) noexcept;
    [[nodiscard]] constexpr static Quaternion angle_axis(float angle, const Vector3& v);
+   [[nodiscard]] constexpr static Quaternion angle_axis(float angle, Axis axis);
    [[nodiscard]] constexpr static Quaternion from_oriented_vector(const Vector3& source, const Vector3& target) noexcept;
 };
 

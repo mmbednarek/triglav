@@ -7,7 +7,6 @@
 #include <array>
 #include <cstdint>
 #include <expected>
-#include <glm/vec2.hpp>
 #include <optional>
 #include <string>
 #include <utility>

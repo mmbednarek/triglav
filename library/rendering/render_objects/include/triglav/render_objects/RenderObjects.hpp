@@ -2,29 +2,27 @@
 
 #include "triglav/geometry/Geometry.hpp"
 
-#include <glm/mat4x4.hpp>
-
 namespace triglav::render_objects {
 
 struct UniformBufferObject
 {
-   alignas(16) glm::mat4 model;
-   alignas(16) glm::mat4 view;
-   alignas(16) glm::mat4 proj;
-   alignas(16) glm::mat4 normal;
-   alignas(4) glm::vec3 view_pos;
+   alignas(16) Matrix4x4 model;
+   alignas(16) Matrix4x4 view;
+   alignas(16) Matrix4x4 proj;
+   alignas(16) Matrix4x4 normal;
+   alignas(4) Vector3 view_pos;
 };
 
 struct SpriteUBO
 {
    // 3x3 matrix needs to aligned by 4 floats
    // so we use 4x4 instead.
-   glm::mat4 transform;
+   Matrix4x4 transform;
 };
 
 struct ShadowMapUBO
 {
-   alignas(16) glm::mat4 mvp;
+   alignas(16) Matrix4x4 mvp;
 };
 
 }// namespace triglav::render_objects

@@ -15,8 +15,6 @@
 #include "triglav/testing_render_util/RenderSupport.hpp"
 
 #include <cstring>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
 #ifdef TG_ENABLE_RENDERDOC
 #include <renderdoc_app.h>
 #endif
@@ -267,7 +265,8 @@ TEST(BuildContext, BasicDepth)
    const auto box_mesh_data = box_mesh.to_vertex_data();
 
    const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});
-   const auto perspective = Matrix4x4::perspective_projection(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   auto perspective = Matrix4x4::perspective_projection(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   perspective.m11 *= -1.0f;
    const auto transform = perspective * view;
    const auto offset = Matrix4x4::translation(Vector3{-2.0f, -2.0f, 1.3f}) * transform;
 
@@ -448,7 +447,8 @@ TEST(BuildContext, DepthTargetSample)
    const auto box_mesh_data = box_mesh.to_vertex_data();
 
    const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});
-   const auto perspective = Matrix4x4::perspective_projection(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   auto perspective = Matrix4x4::perspective_projection(0.5f * static_cast<float>(triglav::geometry::g_pi), 1.0f, 0.1f, 100.0f);
+   perspective.m11 *= -1.0f;
    const auto transform = perspective * view;
 
    static constexpr triglav::Vector2i dims{256, 256};
@@ -727,8 +727,9 @@ TEST(BuildContext, BasicRayTracing)
    build_context.declare_staging_buffer("test.basic_ray_tracing.output"_name, buffer_size);
 
    const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});
-   const auto perspective = Matrix4x4::perspective_projection(
+   auto perspective = Matrix4x4::perspective_projection(
       0.5f * static_cast<float>(triglav::g_pi), static_cast<float>(DefaultSize.x) / static_cast<float>(DefaultSize.y), 0.1f, 100.0f);
+   perspective.m11 *= -1.0f;
 
    struct ViewProperties
    {

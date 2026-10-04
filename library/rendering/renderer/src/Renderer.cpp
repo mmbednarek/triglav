@@ -20,7 +20,6 @@
 
 #include <chrono>
 #include <cmath>
-#include <glm/glm.hpp>
 
 using triglav::ResourceType;
 using triglav::desktop::Key;

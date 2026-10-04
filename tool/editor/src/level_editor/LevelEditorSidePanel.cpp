@@ -16,8 +16,6 @@
 #include "triglav/ui_core/widget/TextBox.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 
-#include <glm/gtx/euler_angles.hpp>
-
 namespace triglav::editor {
 
 using namespace name_literals;

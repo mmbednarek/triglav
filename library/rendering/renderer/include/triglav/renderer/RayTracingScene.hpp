@@ -13,7 +13,6 @@
 #include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
 #include "triglav/world/World.hpp"
 
-#include <glm/mat4x4.hpp>
 #include <utility>
 
 namespace triglav::resource {

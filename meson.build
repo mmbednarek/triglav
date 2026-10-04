@@ -51,7 +51,6 @@ fs = import('fs')
 
 # Using system vulkan
 vulkan = dependency('vulkan')
-glm = dependency('glm', method:'pkg-config')
 cgal = dependency('cgal', method:'pkg-config')
 freetype = dependency('freetype2', method:'pkg-config')
 gtest = dependency('gtest', method:'pkg-config')

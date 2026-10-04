@@ -336,10 +336,10 @@ TopLevelNode<TIndex, TPayload>* build_node(Map<TIndex, TPayload>& leave_mapping,
    }
 
    auto bb = calculate_bounding_box<TIndex, TPayload>(data);
-   auto axis = get_major_axis(bb);
+   auto axis = bb.major_axis();
 
    std::sort(data.begin(), data.end(), [axis](const TPayload& left, const TPayload& right) {
-      return vector3_component(left.bounding_box().centroid(), axis) > vector3_component(right.bounding_box().centroid(), axis);
+      return left.bounding_box().centroid()[axis] > right.bounding_box().centroid()[axis];
    });
 
    const auto mid = data.size() / 2;
@@ -541,7 +541,8 @@ TOP_LEVEL()::TopLevelBVH(TBottomLevelProvider& provider) :
 }
 
 TOP_LEVEL()::TopLevelBVH(TopLevelBVH&& other) noexcept :
-    m_root(std::exchange(other.m_root, nullptr))
+    m_root(std::exchange(other.m_root, nullptr)),
+    m_bl_provider(other.m_bl_provider)
 {
 }
 

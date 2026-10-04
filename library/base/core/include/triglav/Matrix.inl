@@ -39,6 +39,15 @@ namespace triglav {
    {                                                                                                         \
       return this->columns[index];                                                                           \
    }                                                                                                         \
+   constexpr matrix_type& matrix_type::operator/=(const matrix_type::ComponentType divider)                  \
+   {                                                                                                         \
+      for (u32 c = 0; c < COLUMN_COUNT; ++c) {                                                               \
+         for (u32 r = 0; r < ROW_COUNT; ++r) {                                                               \
+            this->value(r, c) /= divider;                                                                    \
+         }                                                                                                   \
+      }                                                                                                      \
+      return *this;                                                                                          \
+   }                                                                                                         \
    [[nodiscard]] constexpr matrix_type::RowType matrix_type::row(const u32 index) const                      \
    {                                                                                                         \
       RowType result{};                                                                                      \
@@ -208,7 +217,7 @@ constexpr Matrix4x4 Matrix4x4::orthographic_projection(const float left, const f
 {
    Matrix4x4 result = identity();
    result[0][0] = 2.0f / (right - left);
-   result[1][1] = 2.0f / (top - bottom);
+   result[1][1] = -2.0f / (top - bottom);
    result[2][2] = -2.0f / (z_far - z_near);
    result[3][0] = -(right + left) / (right - left);
    result[3][1] = -(top + bottom) / (top - bottom);
@@ -227,7 +236,7 @@ constexpr Matrix4x4 Matrix4x4::perspective_projection(const float fov, const flo
 
    Matrix4x4 result{0.0f};
    result[0][0] = 1.0f / (aspect_ratio * tan_half_fov);
-   result[1][1] = 1.0f / (tan_half_fov);
+   result[1][1] = -1.0f / (tan_half_fov);
    result[2][2] = -(z_far + z_near) / (z_far - z_near);
    result[2][3] = -1.0f;
    result[3][2] = -(2.0f * z_far * z_near) / (z_far - z_near);

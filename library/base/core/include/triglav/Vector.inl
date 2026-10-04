@@ -33,21 +33,21 @@ struct Vector4;
       return *this;                                                     \
    }
 
-#define TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, assign_op, binary_op)               \
-   [[nodiscard]] constexpr vec_name vec_name::operator binary_op(const Self& other) const \
-   {                                                                                      \
-      Self result = *this;                                                                \
-      result assign_op other;                                                             \
-      return result;                                                                      \
+#define TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, assign_op, binary_op) \
+   constexpr vec_name vec_name::operator binary_op(const Self& other) const \
+   {                                                                        \
+      Self result = *this;                                                  \
+      result assign_op other;                                               \
+      return result;                                                        \
    }
 
 
-#define TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, assign_op, binary_op)             \
-   [[nodiscard]] constexpr vec_name vec_name::operator binary_op(const ComponentType value) const \
-   {                                                                                              \
-      Self result = *this;                                                                        \
-      result assign_op value;                                                                     \
-      return result;                                                                              \
+#define TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, assign_op, binary_op) \
+   constexpr vec_name vec_name::operator binary_op(const ComponentType value) const   \
+   {                                                                                  \
+      Self result = *this;                                                            \
+      result assign_op value;                                                         \
+      return result;                                                                  \
    }
 
 #define TG_IMPLEMENT_VECTOR_CONSTRUCTORS_2(vec_suffix)                                                                        \
@@ -159,91 +159,125 @@ struct Vector4;
 #define TG_IMPLEMENT_VECTOR_CONSTRUCTORS(vec_comp_count, vec_suffix) \
    TG_CONCAT(TG_IMPLEMENT_VECTOR_CONSTRUCTORS_, vec_comp_count)(vec_suffix)
 
-#define TG_IMPLEMENT_VECTOR_FUNCTIONS(vec_name, vec_comp_count, vec_suffix)                    \
-   TG_IMPLEMENT_VECTOR_CONSTRUCTORS(vec_comp_count, vec_suffix)                                \
-   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, +=)                                       \
-   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, -=)                                       \
-   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, *=)                                       \
-   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, /=)                                       \
-   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, +=)                             \
-   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, -=)                             \
-   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, *=)                             \
-   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, /=)                             \
-   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, +=, +)                                        \
-   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, -=, -)                                        \
-   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, *=, *)                                        \
-   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, /=, /)                                        \
-   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, +=, +)                              \
-   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, -=, -)                              \
-   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, *=, *)                              \
-   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, /=, /)                              \
-   TG_IMPLEMENT_VECTOR_NON_MEMBER_OVERLOADS(vec_name)                                          \
-                                                                                               \
-   [[nodiscard]] constexpr vec_name vec_name::operator-() const                                \
-   {                                                                                           \
-      Self result = *this;                                                                     \
-      for (ComponentType& comp : result.components) {                                          \
-         comp = -comp;                                                                         \
-      }                                                                                        \
-      return result;                                                                           \
-   }                                                                                           \
-   [[nodiscard]] constexpr bool vec_name::operator==(const Self& other) const                  \
-   {                                                                                           \
-      for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                                              \
-         if (this->components[i] != other.components[i])                                       \
-            return false;                                                                      \
-      }                                                                                        \
-      return true;                                                                             \
-   }                                                                                           \
-   [[nodiscard]] constexpr bool vec_name::operator==(const ComponentType value) const          \
-   {                                                                                           \
-      for (const ComponentType comp : this->components) {                                      \
-         if (comp != value)                                                                    \
-            return false;                                                                      \
-      }                                                                                        \
-      return true;                                                                             \
-   }                                                                                           \
-   [[nodiscard]] constexpr vec_name::ComponentType vec_name::operator[](const u32 index) const \
-   {                                                                                           \
-      return this->components[index];                                                          \
-   }                                                                                           \
-   [[nodiscard]] constexpr vec_name::ComponentType& vec_name::operator[](const u32 index)      \
-   {                                                                                           \
-      return this->components[index];                                                          \
-   }                                                                                           \
-   [[nodiscard]] constexpr vec_name::ComponentType vec_name::component_sum() const             \
-   {                                                                                           \
-      ComponentType result{};                                                                  \
-      for (const ComponentType component : this->components) {                                 \
-         result += component;                                                                  \
-      }                                                                                        \
-      return result;                                                                           \
-   }                                                                                           \
-   template<typename TDest>                                                                    \
-   [[nodiscard]] constexpr TDest vec_name::cast() const noexcept                               \
-   {                                                                                           \
-      TDest result{};                                                                          \
-      for (u32 i = 0; i < std::min(TDest::COMPONENT_COUNT, COMPONENT_COUNT); ++i) {            \
-         result.components[i] = static_cast<TDest::ComponentType>(this->components[i]);        \
-      }                                                                                        \
-      return result;                                                                           \
+#define TG_IMPLEMENT_VECTOR_FUNCTIONS(vec_name, vec_comp_count, vec_suffix)             \
+   TG_IMPLEMENT_VECTOR_CONSTRUCTORS(vec_comp_count, vec_suffix)                         \
+   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, +=)                                \
+   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, -=)                                \
+   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, *=)                                \
+   TG_IMPLEMENT_VECTOR_ASSIGNMENT_OVERLOAD(vec_name, /=)                                \
+   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, +=)                      \
+   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, -=)                      \
+   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, *=)                      \
+   TG_IMPLEMENT_VECTOR_COMPONENT_ASSIGNMENT_OVERLOAD(vec_name, /=)                      \
+   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, +=, +)                                 \
+   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, -=, -)                                 \
+   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, *=, *)                                 \
+   TG_IMPLEMENT_VECTOR_BINARY_OVERLOAD(vec_name, /=, /)                                 \
+   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, +=, +)                       \
+   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, -=, -)                       \
+   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, *=, *)                       \
+   TG_IMPLEMENT_VECTOR_COMPONENT_BINARY_OVERLOAD(vec_name, /=, /)                       \
+   TG_IMPLEMENT_VECTOR_NON_MEMBER_OVERLOADS(vec_name)                                   \
+                                                                                        \
+   constexpr vec_name vec_name::operator-() const                                       \
+   {                                                                                    \
+      Self result = *this;                                                              \
+      for (ComponentType& comp : result.components) {                                   \
+         comp = -comp;                                                                  \
+      }                                                                                 \
+      return result;                                                                    \
+   }                                                                                    \
+   constexpr bool vec_name::operator==(const Self& other) const                         \
+   {                                                                                    \
+      for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                                       \
+         if (this->components[i] != other.components[i])                                \
+            return false;                                                               \
+      }                                                                                 \
+      return true;                                                                      \
+   }                                                                                    \
+   constexpr bool vec_name::operator==(const ComponentType value) const                 \
+   {                                                                                    \
+      for (const ComponentType comp : this->components) {                               \
+         if (comp != value)                                                             \
+            return false;                                                               \
+      }                                                                                 \
+      return true;                                                                      \
+   }                                                                                    \
+   constexpr vec_name::ComponentType vec_name::operator[](const u32 index) const        \
+   {                                                                                    \
+      return this->components[index];                                                   \
+   }                                                                                    \
+   constexpr vec_name::ComponentType& vec_name::operator[](const u32 index)             \
+   {                                                                                    \
+      return this->components[index];                                                   \
+   }                                                                                    \
+   constexpr vec_name::ComponentType vec_name::operator[](const Axis axis) const        \
+   {                                                                                    \
+      return this->components[static_cast<u32>(axis)];                                  \
+   }                                                                                    \
+   constexpr vec_name::ComponentType& vec_name::operator[](const Axis axis)             \
+   {                                                                                    \
+      return this->components[static_cast<u32>(axis)];                                  \
+   }                                                                                    \
+   constexpr vec_name::ComponentType vec_name::component_sum() const                    \
+   {                                                                                    \
+      ComponentType result{};                                                           \
+      for (const ComponentType component : this->components) {                          \
+         result += component;                                                           \
+      }                                                                                 \
+      return result;                                                                    \
+   }                                                                                    \
+   constexpr Axis vec_name::minor_axis() const                                          \
+   {                                                                                    \
+      u32 result = 0;                                                                   \
+      for (u32 i = 1; i < COMPONENT_COUNT; ++i) {                                       \
+         if (this->components[i] < this->components[result]) {                          \
+            result = i;                                                                 \
+         }                                                                              \
+      }                                                                                 \
+      return static_cast<Axis>(result);                                                 \
+   }                                                                                    \
+   constexpr Axis vec_name::major_axis() const                                          \
+   {                                                                                    \
+      u32 result = 0;                                                                   \
+      for (u32 i = 1; i < COMPONENT_COUNT; ++i) {                                       \
+         if (this->components[i] > this->components[result]) {                          \
+            result = i;                                                                 \
+         }                                                                              \
+      }                                                                                 \
+      return static_cast<Axis>(result);                                                 \
+   }                                                                                    \
+   constexpr vec_name vec_name::from_axis(const Axis axis)                              \
+   {                                                                                    \
+      vec_name result{};                                                                \
+      result[axis] = static_cast<ComponentType>(1);                                     \
+      return result;                                                                    \
+   }                                                                                    \
+   template<typename TDest>                                                             \
+   constexpr TDest vec_name::cast() const noexcept                                      \
+   {                                                                                    \
+      TDest result{};                                                                   \
+      for (u32 i = 0; i < std::min(TDest::COMPONENT_COUNT, COMPONENT_COUNT); ++i) {     \
+         result.components[i] = static_cast<TDest::ComponentType>(this->components[i]); \
+      }                                                                                 \
+      return result;                                                                    \
    }
 
 #define TG_IMPLEMENT_VECTOR_FP_FUNCTIONS(vec_name, vec_comp_count, vec_suffix) \
    TG_IMPLEMENT_VECTOR_FUNCTIONS(vec_name, vec_comp_count, vec_suffix)         \
-   [[nodiscard]] constexpr vec_name::ComponentType vec_name::length() const    \
+   constexpr vec_name::ComponentType vec_name::length() const                  \
    {                                                                           \
       return std::sqrt(((*this) * (*this)).component_sum());                   \
    }                                                                           \
-   [[nodiscard]] constexpr vec_name vec_name::normalize() const                \
+   constexpr vec_name vec_name::normalize() const                              \
    {                                                                           \
       return (*this) / this->length();                                         \
    }                                                                           \
-   [[nodiscard]] constexpr float vec_name::dot(const Self& other) const        \
+   constexpr float vec_name::dot(const Self& other) const                      \
    {                                                                           \
       return ((*this) * other).component_sum();                                \
    }                                                                           \
-   [[nodiscard]] constexpr vec_name vec_name::degrees() const                  \
+   constexpr vec_name vec_name::degrees() const                                \
    {                                                                           \
       Self result{};                                                           \
       for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
@@ -251,7 +285,7 @@ struct Vector4;
       }                                                                        \
       return result;                                                           \
    }                                                                           \
-   [[nodiscard]] constexpr vec_name vec_name::radians() const                  \
+   constexpr vec_name vec_name::radians() const                                \
    {                                                                           \
       Self result{};                                                           \
       for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
@@ -259,7 +293,7 @@ struct Vector4;
       }                                                                        \
       return result;                                                           \
    }                                                                           \
-   [[nodiscard]] constexpr vec_name vec_name::abs() const                      \
+   constexpr vec_name vec_name::abs() const                                    \
    {                                                                           \
       Self result{};                                                           \
       for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
@@ -268,10 +302,10 @@ struct Vector4;
       return result;                                                           \
    }
 
-#define TG_IMPLEMENT_VECTOR_LHS_BINARY_OVERLOAD(vector_type, binary_op)                                                 \
-   [[nodiscard]] constexpr vector_type operator binary_op(const vector_type::ComponentType lhs, const vector_type& rhs) \
-   {                                                                                                                    \
-      return rhs binary_op lhs;                                                                                         \
+#define TG_IMPLEMENT_VECTOR_LHS_BINARY_OVERLOAD(vector_type, binary_op)                                   \
+   constexpr vector_type operator binary_op(const vector_type::ComponentType lhs, const vector_type& rhs) \
+   {                                                                                                      \
+      return rhs binary_op lhs;                                                                           \
    }
 
 #define TG_IMPLEMENT_VECTOR_NON_MEMBER_OVERLOADS(vector_type) \
@@ -279,7 +313,7 @@ struct Vector4;
    TG_IMPLEMENT_VECTOR_LHS_BINARY_OVERLOAD(vector_type, *)
 
 #define TG_IMPLEMENT_VECTOR_CONVERSION(source_ty, dest_ty)                                \
-   [[nodiscard]] constexpr source_ty::operator dest_ty() const                            \
+   constexpr source_ty::operator dest_ty() const                                          \
    {                                                                                      \
       dest_ty result{};                                                                   \
       for (u32 i = 0; i < dest_ty::COMPONENT_COUNT; ++i) {                                \
