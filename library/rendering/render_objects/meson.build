@@ -8,8 +8,8 @@ render_objects_sources = files([
                                    'src/RenderObjects.cpp'
                                ])
 
-render_objects_deps_priv = [glm, graphics_api, core, geometry, rapidyaml, meta]
-render_objects_deps_pub = [glm, graphics_api, core, geometry, meta]
+render_objects_deps_priv = [graphics_api, core, geometry, rapidyaml, meta]
+render_objects_deps_pub = [graphics_api, core, geometry, meta]
 render_objects_incl = include_directories(['include', 'include/triglav/render_objects'])
 
 render_objects_lib = static_library('render_objects',

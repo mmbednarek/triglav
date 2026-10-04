@@ -34,7 +34,6 @@
 #pragma warning(pop)
 #endif
 
-#include <glm/geometric.hpp>
 #include <mikktspace/mikktspace.h>
 #include <unordered_map>
 

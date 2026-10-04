@@ -30,7 +30,7 @@ resource_sources = files([
 # !END
                          ])
 
-resource_deps = [glm, graphics_api, core, geometry, font, rapidyaml, world, threading, render_objects, gltf, asset, tg_ktx, meta, project]
+resource_deps = [graphics_api, core, geometry, font, rapidyaml, world, threading, render_objects, gltf, asset, tg_ktx, meta, project]
 resource_incl = include_directories(['include', 'include/triglav/resource'])
 
 resource_lib = static_library('resource',

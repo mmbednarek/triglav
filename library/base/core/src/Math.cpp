@@ -1,8 +1,5 @@
 #include "Math.hpp"
 
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtx/euler_angles.hpp>
-
 namespace triglav {
 
 Transform3D Transform3D::identity()
@@ -21,10 +18,9 @@ Transform3D Transform3D::from_matrix(const Matrix4x4& matrix)
    Vector3 scale{vec1.length(), vec2.length(), vec3.length()};
 
    // Avoid division by zero
-   static constexpr float epsilon = 1e-8f;
-   Vector3 col0 = (scale.x > epsilon) ? (vec1 / scale.x) : Vector3{1.0f, 0.0f, 0.0f};
-   Vector3 col1 = (scale.y > epsilon) ? (vec2 / scale.y) : Vector3{0.0f, 1.0f, 0.0f};
-   Vector3 col2 = (scale.z > epsilon) ? (vec3 / scale.z) : Vector3{0.0f, 0.0f, 1.0f};
+   Vector3 col0 = (scale.x > EPSILON) ? (vec1 / scale.x) : Vector3{1.0f, 0.0f, 0.0f};
+   Vector3 col1 = (scale.y > EPSILON) ? (vec2 / scale.y) : Vector3{0.0f, 1.0f, 0.0f};
+   Vector3 col2 = (scale.z > EPSILON) ? (vec3 / scale.z) : Vector3{0.0f, 0.0f, 1.0f};
 
    // Handle reflection (negative scale)
    if (col0.cross(col1).dot(col2) < 0.0f) {
@@ -36,11 +32,7 @@ Transform3D Transform3D::from_matrix(const Matrix4x4& matrix)
    const Matrix3x3 rot_mat = Matrix3x3{col0, col1, col2};
 
    Quaternion rotation = Quaternion::from_rotation_matrix(rot_mat).normalize();
-
-   // Canonicalize quaternion representation (keep real part positive)
-   if (rotation.w < 0.0f) {
-      rotation *= -1.0f;
-   }
+   rotation *= sign(rotation.w);
 
    return Transform3D{
       .rotation = rotation,
@@ -56,7 +48,7 @@ Transform3D Transform3D::null()
 
 Matrix4x4 Transform3D::to_matrix() const
 {
-   return Matrix4x4::translation(this->translation) * (Matrix3x3::rotation(this->rotation) * Matrix3x3::scale(this->scale)).extend();
+   return Matrix4x4::translation(this->translation) * Matrix4x4::rotation(this->rotation) * Matrix4x4::scale(this->scale);
 }
 
 Matrix4x4 Transform3D::to_normal_matrix() const
@@ -100,9 +92,9 @@ Vector3 find_closest_point_on_line(Vector3 origin, Vector3 dir, Vector3 point)
    return origin + t * dir;
 }
 
-[[nodiscard]] Vector3 find_point_on_aa_surface(Vector3 origin, Vector3 dir, Axis axis_surface, float surface)
+[[nodiscard]] Vector3 find_point_on_aa_surface(const Vector3 origin, const Vector3 dir, const Axis axis_surface, const float surface)
 {
-   auto t = (surface - vector3_component(origin, axis_surface)) / vector3_component(dir, axis_surface);
+   const auto t = (surface - origin[axis_surface]) / dir[axis_surface];
    return origin + t * dir;
 }
 

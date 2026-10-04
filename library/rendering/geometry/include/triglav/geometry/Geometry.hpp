@@ -5,8 +5,6 @@
 #include "triglav/graphics_api/Array.hpp"
 
 #include <cmath>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
 #include <optional>
 
 namespace triglav::geometry {
@@ -182,10 +180,10 @@ struct BoundingBox
       };
       const Vector3 abs = push.abs();
 
-      const Axis min_axis = vector3_min_axis(abs);
+      const Axis min_axis = abs.minor_axis();
 
       Vector3 result{};
-      vector3_component(result, min_axis) = vector3_component(push, min_axis);
+      result[min_axis] = push[min_axis];
       return result;
    }
 
@@ -237,6 +235,11 @@ struct BoundingBox
    [[nodiscard]] bool operator!=(const BoundingBox& rhs) const noexcept
    {
       return this->min != rhs.min || this->max != rhs.max;
+   }
+
+   [[nodiscard]] constexpr Axis major_axis() const
+   {
+      return this->scale().major_axis();
    }
 };
 

@@ -25,7 +25,7 @@ bool ScalingTool::on_use_start(const geometry::Ray& ray)
       return false;
 
    const auto translation = m_level_editor.selected_object_position();
-   const auto closest = find_closest_point_between_lines(translation, axis_forward_vec3(*m_transform_axis), ray.origin, ray.direction);
+   const auto closest = find_closest_point_between_lines(translation, Vector3::from_axis(*m_transform_axis), ray.origin, ray.direction);
    m_starting_transform = *transform_ptr;
    m_starting_position = translation;
    m_starting_point = find_closest_point_on_line(ray.origin, ray.direction, translation);
@@ -69,12 +69,12 @@ void ScalingTool::on_mouse_moved(const Vector2 position)
          const auto diff = std::max(x2 - x1, MIN_SCALE - 1.0f);
          final_scale = m_level_editor.snap_offset(diff);
       } else {
-         scale_direction = axis_forward_vec3(axis);
+         scale_direction = Vector3::from_axis(axis);
 
-         auto x1 = std::abs(vector3_component(m_starting_closest - translation, axis));
+         auto x1 = std::abs((m_starting_closest - translation)[axis]);
          const auto closest = find_closest_point_between_lines(translation, scale_direction, ray.origin, ray.direction);
-         auto x2 = std::abs(vector3_component(closest - translation, axis));
-         const auto scale_comp = vector3_component(scale, axis);
+         auto x2 = std::abs((closest - translation)[axis]);
+         const auto scale_comp = scale[axis];
 
          const auto diff = std::max(x2 - x1, MIN_SCALE - scale_comp);
          final_scale = m_level_editor.snap_offset((scale_comp + diff) / scale_comp) - 1.0f;

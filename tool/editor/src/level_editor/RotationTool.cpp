@@ -45,7 +45,7 @@ bool RotationTool::on_use_start(const geometry::Ray& ray)
 
    auto position = m_level_editor.selected_object_position();
 
-   const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, vector3_component(position, *m_rotation_axis));
+   const auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, position[*m_rotation_axis]);
    const auto difference = (point - position).normalize();
 
    m_starting_transform = *transform_ptr;
@@ -71,12 +71,12 @@ void RotationTool::on_mouse_moved(Vector2 position)
 
       const auto obj_position = m_level_editor.selected_object_position(m_starting_transform.translation);
 
-      auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, vector3_component(obj_position, *m_rotation_axis));
+      auto point = find_point_on_aa_surface(ray.origin, ray.direction, *m_rotation_axis, obj_position[*m_rotation_axis]);
       const auto difference = glm::normalize(point - obj_position);
       const float angle = angle_from_vector(difference, *m_rotation_axis);
       const float angle_diff = m_level_editor.snap_offset((angle - m_base_angle) / (0.25f * g_pi)) * (0.25f * g_pi);
 
-      auto quat_rot = Quaternion::angle_axis(angle_diff, axis_forward_vec3(*m_rotation_axis));
+      auto quat_rot = Quaternion::angle_axis(angle_diff, *m_rotation_axis);
 
       auto transform = *transform_ptr;
       transform.translation = obj_position + quat_rot * (m_starting_transform.translation - obj_position);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Macros.hpp"
+#include "MathConstants.hpp"
 
 #define TG_VECTOR_COMPONENTS_4 x, y, z, w
 #define TG_VECTOR_COMPONENTS_3 x, y, z
@@ -82,10 +83,15 @@
    [[nodiscard]] constexpr bool operator==(const Self& other) const;                           \
    [[nodiscard]] constexpr bool operator==(const ComponentType value) const;                   \
                                                                                                \
-   [[nodiscard]] constexpr ComponentType operator[](const u32 index) const;                    \
-   [[nodiscard]] constexpr ComponentType& operator[](const u32 index);                         \
+   [[nodiscard]] constexpr ComponentType operator[](u32 index) const;                          \
+   [[nodiscard]] constexpr ComponentType& operator[](u32 index);                               \
+   [[nodiscard]] constexpr ComponentType operator[](Axis axis) const;                          \
+   [[nodiscard]] constexpr ComponentType& operator[](Axis Axis);                               \
                                                                                                \
    [[nodiscard]] constexpr ComponentType component_sum() const;                                \
+   [[nodiscard]] constexpr Axis minor_axis() const;                                            \
+   [[nodiscard]] constexpr Axis major_axis() const;                                            \
+   [[nodiscard]] constexpr static Self from_axis(Axis axis);                                   \
                                                                                                \
    template<typename TDest>                                                                    \
    [[nodiscard]] constexpr TDest cast() const noexcept;

@@ -53,6 +53,7 @@ struct Quaternion;
    [[nodiscard]] constexpr ColumnType operator*(const ColumnType& vector) const;    \
    [[nodiscard]] constexpr ColumnType operator[](const u32 index) const;            \
    [[nodiscard]] constexpr ColumnType& operator[](const u32 index);                 \
+   constexpr Self& operator/=(ComponentType divider);                               \
    [[nodiscard]] constexpr RowType row(const u32 index) const;                      \
    [[nodiscard]] constexpr Self operator*(const Self& other) const;
 

@@ -2,7 +2,6 @@
 
 #include <vulkan/vulkan.h>
 
-#include <glm/mat4x4.hpp>
 #include <vector>
 
 #include "../Buffer.hpp"

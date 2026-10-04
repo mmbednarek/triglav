@@ -2,9 +2,6 @@
 
 #include "triglav/geometry/Geometry.hpp"
 
-#include <glm/gtc/quaternion.hpp>
-#include <glm/vec3.hpp>
-
 namespace triglav::renderer {
 
 struct OrthoCameraProperties

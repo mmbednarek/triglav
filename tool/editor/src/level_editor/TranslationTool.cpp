@@ -29,7 +29,7 @@ bool TranslationTool::on_use_start(const geometry::Ray& ray)
    }
 
    m_starting_transform = *transform;
-   m_starting_hit = find_closest_point_between_lines(m_level_editor.selected_object_position(), axis_forward_vec3(*m_transform_axis),
+   m_starting_hit = find_closest_point_between_lines(m_level_editor.selected_object_position(), Vector3::from_axis(*m_transform_axis),
                                                      ray.origin, ray.direction);
    return true;
 }
@@ -48,7 +48,7 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
       transform.translation =
          m_starting_transform.translation +
          m_level_editor.snap_offset(find_closest_point_between_lines(m_level_editor.selected_object_position(),
-                                                                     axis_forward_vec3(*m_transform_axis), ray.origin, ray.direction) -
+                                                                     Vector3::from_axis(*m_transform_axis), ray.origin, ray.direction) -
                                     m_starting_hit);
       m_level_editor.set_selected_transform(transform);
       return;
