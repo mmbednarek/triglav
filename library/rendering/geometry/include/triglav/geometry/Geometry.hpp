@@ -138,6 +138,38 @@ struct Ray
    }
 };
 
+enum class SweepStatus
+{
+   Apart,
+   Colliding,
+   Inside,
+   Exiting,
+};
+
+inline std::string_view sweep_status_to_string(const SweepStatus s)
+{
+   switch (s) {
+   case SweepStatus::Apart:
+      return "apart";
+   case SweepStatus::Colliding:
+      return "colliding";
+   case SweepStatus::Inside:
+      return "inside";
+   case SweepStatus::Exiting:
+      return "exiting";
+   default:
+      return "";
+   }
+}
+
+struct SweepResult
+{
+   float entry_time{INF};
+   float exit_time{-INF};
+   SweepStatus status{SweepStatus::Apart};
+   Vector3 normal{};
+};
+
 struct BoundingBox
 {
    alignas(16) Vector3 min;
@@ -168,6 +200,67 @@ struct BoundingBox
       return std::nullopt;
    }
 
+   [[nodiscard]] constexpr BoundingBox extend_by_movement(const Vector3& movement) const
+   {
+      BoundingBox bb = *this;
+      for (const Axis axis : Vector3::AXES) {
+         if (movement[axis] > 0.0f) {
+            bb.max[axis] += movement[axis];
+         } else {
+            bb.min[axis] += movement[axis];
+         }
+      }
+      return bb;
+   }
+
+   [[nodiscard]] constexpr SweepResult intersect_swept(const BoundingBox& dynamic_box, const Vector3& movement) const
+   {
+      Vector3 inv_entry;
+      Vector3 inv_exit;
+      for (const Axis axis : Vector3::AXES) {
+         if (movement[axis] > 0.0f) {
+            inv_entry[axis] = this->min[axis] - dynamic_box.max[axis];
+            inv_exit[axis] = this->max[axis] - dynamic_box.min[axis];
+         } else {
+            inv_entry[axis] = this->max[axis] - dynamic_box.min[axis];
+            inv_exit[axis] = this->min[axis] - dynamic_box.max[axis];
+         }
+      }
+
+      Vector3 entry{-INF};
+      Vector3 exit{INF};
+      for (const Axis axis : Vector3::AXES) {
+         if (std::abs(movement[axis]) < EPSILON) {
+            if (dynamic_box.max[axis] < this->min[axis] || dynamic_box.min[axis] > this->max[axis]) {
+               return {INF, -INF, SweepStatus::Apart, {}};
+            }
+            continue;
+         }
+
+         entry[axis] = inv_entry[axis] / movement[axis];
+         exit[axis] = inv_exit[axis] / movement[axis];
+      }
+
+      const Axis entry_axis = entry.major_axis();
+      const float entry_time = entry[entry_axis];
+      const float exit_time = exit[exit.minor_axis()];
+
+      Vector3 normal;
+      normal[entry_axis] = inv_entry[entry_axis] > 0.0f ? -1.0f : 1.0f;
+
+      if (entry_time < 0.0f && exit_time > 1.0f) {
+         return {entry_time, exit_time, SweepStatus::Inside, normal};
+      }
+      if (entry_time < 0.0f && exit_time > 0.0f && exit_time < 1.0f) {
+         return {entry_time, exit_time, SweepStatus::Exiting, normal};
+      }
+      if (entry_time > exit_time || entry_time > 1.0f || exit_time < 0.0f) {
+         return {entry_time, exit_time, SweepStatus::Apart, normal};
+      }
+
+      return {entry_time, exit_time, SweepStatus::Colliding, normal};
+   }
+
    [[nodiscard]] Vector3 minimum_translation_vector(const BoundingBox& dynamic_bb) const
    {
       if (!this->does_intersect_aabb(dynamic_bb))
@@ -189,8 +282,7 @@ struct BoundingBox
 
    [[nodiscard]] constexpr bool does_intersect_aabb(const BoundingBox& bb) const
    {
-      return this->max.x >= bb.min.x && this->max.y >= bb.min.y && this->max.z >= bb.min.z && this->min.x <= bb.max.x &&
-             this->min.y <= bb.max.y && this->min.z <= bb.max.z;
+      return (this->max - bb.min).all(is_greater_or_equal<0.0f>) && (bb.max - this->min).all(is_greater_or_equal<0.0f>);
    }
 
    [[nodiscard]] constexpr bool does_intersect(const Ray& ray) const
@@ -240,6 +332,12 @@ struct BoundingBox
    [[nodiscard]] constexpr Axis major_axis() const
    {
       return this->scale().major_axis();
+   }
+
+   constexpr void translate(const Vector3& vector)
+   {
+      this->min += vector;
+      this->max += vector;
    }
 };
 

@@ -29,6 +29,13 @@ struct BottomLevelNode
    std::array<Vector3, 3> primitive;
 };
 
+struct BottomLevelSweepResult
+{
+   float time{INF};
+   Vector3 normal{};
+   u32 primitive_id{~0u};
+};
+
 template<TriangleMesh TMesh>
 class BottomLevelBVH
 {
@@ -43,8 +50,9 @@ class BottomLevelBVH
 
    void build(TMesh& mesh);
    BottomLevelHit traverse(const Ray& ray) const;
-   template<typename TCallback>
-   void traverse_aabb(const BoundingBox& bb, TCallback callback) const;
+
+   BottomLevelSweepResult traverse_swept(const BoundingBox& bb, const Vector3& movement) const;
+
    void clear();
 
  private:
@@ -80,6 +88,15 @@ struct TopLevelHit
    TPayload* payload;
 };
 
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
+struct TopLevelSweptHit
+{
+   float time{INF};
+   Vector3 normal{};
+   SweepStatus status{};
+   TPayload* payload{nullptr};
+};
+
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
          BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
 class TopLevelBVH
@@ -101,8 +118,7 @@ class TopLevelBVH
    void clear();
    TopLevelHit<TIndex, TPayload> traverse(const Ray& ray) const;
 
-   template<typename TCallback>
-   void traverse_aabb(const BoundingBox& bb, TCallback callback) const;
+   TopLevelSweptHit<TIndex, TPayload> traverse_swept(const BoundingBox& bb, const Vector3& movement) const;
 
    const TPayload& get(TIndex index);
 

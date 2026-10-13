@@ -1,5 +1,6 @@
 #include "PhysicsSystem.hpp"
 
+#include "Physics.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/world/Level.hpp"
 
@@ -69,6 +70,8 @@ void PhysicsSystem::on_level_loaded(world::Level& level)
    nodes.reserve(level.component_count<world::Mesh>());
 
    for (const auto& [entity_id, mesh_comp] : level.all<world::Mesh>()) {
+      if (level.has_component<Movement>(entity_id))
+         continue;
       nodes.emplace_back(bvh_node_from_entity_id(level, entity_id, &mesh_comp));
    }
 
@@ -89,6 +92,9 @@ void PhysicsSystem::on_added_component(world::Level& level, Name component_name,
       return;
 
    for (const auto entity_id : entities) {
+      if (level.has_component<Movement>(entity_id))
+         continue;
+
       m_tree.add(bvh_node_from_entity_id(level, entity_id));
    }
 }

@@ -92,6 +92,9 @@ void EventListener::on_key_is_pressed(const Key key) const
    case Key::D:
       m_character_controller.on_analog_action(AnalogAction::Movement, triglav::Vector2{0.0f, 1.0f});
       break;
+   case Key::Space:
+      m_character_controller.jump();
+      break;
    case Key::Alt:
       m_surface.unlock_cursor();
       break;

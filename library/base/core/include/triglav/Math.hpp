@@ -145,6 +145,18 @@ struct Vector3_Aligned16B
    return point.x >= area.x && point.y >= area.y && point.x < (area.x + area.z) && point.y < (area.y + area.w);
 }
 
+template<auto CRhs>
+constexpr auto is_greater = [](const decltype(CRhs) lhs) { return lhs > CRhs; };
+
+template<auto CRhs>
+constexpr auto is_greater_or_equal = [](const decltype(CRhs) lhs) { return lhs > CRhs; };
+
+template<auto CRhs>
+constexpr auto is_less = [](const decltype(CRhs) lhs) { return lhs <= CRhs; };
+
+template<auto CRhs>
+constexpr auto is_less_or_equal = [](const decltype(CRhs) lhs) { return lhs <= CRhs; };
+
 [[nodiscard]] inline Vector4 min_area(const Vector4 lhs, const Vector4 rhs)
 {
    return {std::max(lhs.x, rhs.x), std::max(lhs.y, rhs.y), std::min(lhs.z, rhs.z), std::min(lhs.w, rhs.w)};

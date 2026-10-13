@@ -7,6 +7,7 @@ namespace triglav {
 constexpr auto PI = std::bit_cast<float, u32>(0x40490fdb);
 constexpr auto g_pi = PI;
 constexpr auto EPSILON = std::numeric_limits<float>::epsilon();
+constexpr auto INF = std::numeric_limits<float>::infinity();
 
 enum class Axis : u32
 {

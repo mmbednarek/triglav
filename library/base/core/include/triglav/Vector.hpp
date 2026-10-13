@@ -94,7 +94,11 @@
    [[nodiscard]] constexpr static Self from_axis(Axis axis);                                   \
                                                                                                \
    template<typename TDest>                                                                    \
-   [[nodiscard]] constexpr TDest cast() const noexcept;
+   [[nodiscard]] constexpr TDest cast() const noexcept;                                        \
+   template<typename TCondition>                                                               \
+   [[nodiscard]] constexpr bool any(TCondition cond) const noexcept;                           \
+   template<typename TCondition>                                                               \
+   [[nodiscard]] constexpr bool all(TCondition cond) const noexcept;
 
 
 #define TG_DECLARE_VECTOR_FP(vec_comp_type, vec_comp_count)    \
@@ -181,6 +185,7 @@ struct Vector2
 struct Vector3
 {
    TG_DECLARE_VECTOR_FP(float, 3)
+   static constexpr std::array<Axis, 3> AXES = {Axis::X, Axis::Y, Axis::Z};
 
    [[nodiscard]] constexpr Vector3 cross(const Vector3& other) const;
    [[nodiscard]] constexpr Vector2 xy() const;

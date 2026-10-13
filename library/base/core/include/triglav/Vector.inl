@@ -261,6 +261,24 @@ struct Vector4;
          result.components[i] = static_cast<TDest::ComponentType>(this->components[i]); \
       }                                                                                 \
       return result;                                                                    \
+   }                                                                                    \
+   template<typename TCondition>                                                        \
+   constexpr bool vec_name::any(TCondition cond) const noexcept                         \
+   {                                                                                    \
+      for (const ComponentType component : this->components) {                          \
+         if (cond(component))                                                           \
+            return true;                                                                \
+      }                                                                                 \
+      return false;                                                                     \
+   }                                                                                    \
+   template<typename TCondition>                                                        \
+   constexpr bool vec_name::all(TCondition cond) const noexcept                         \
+   {                                                                                    \
+      for (const ComponentType component : this->components) {                          \
+         if (!cond(component))                                                          \
+            return false;                                                               \
+      }                                                                                 \
+      return true;                                                                      \
    }
 
 #define TG_IMPLEMENT_VECTOR_FP_FUNCTIONS(vec_name, vec_comp_count, vec_suffix) \

@@ -25,6 +25,14 @@ struct RayHit
    world::EntityID entity_id;
 };
 
+struct SweptHit
+{
+   float hit_time;
+   Vector3 normal;
+   bool is_inside;
+   world::EntityID entity_id;
+};
+
 class PhysicsSystem : public world::ISystem
 {
    TG_DEFINE_LOG_CATEGORY(PhysicsSystem)
@@ -43,10 +51,15 @@ class PhysicsSystem : public world::ISystem
 
    [[nodiscard]] RayHit trace_ray(const geometry::Ray& ray) const;
 
-   template<typename TCallback>
-   void trace_aabb(const geometry::BoundingBox& bb, TCallback callback) const
+   [[nodiscard]] SweptHit trace_swept(const geometry::BoundingBox& bb, const Vector3& movement) const
    {
-      m_tree.traverse_aabb(bb, callback);
+      const auto hit = m_tree.traverse_swept(bb, movement);
+      return {
+         .hit_time = hit.time,
+         .normal = hit.normal,
+         .is_inside = hit.status == geometry::SweepStatus::Inside,
+         .entity_id = hit.payload == nullptr ? world::NO_ENTITY : hit.payload->entity_id,
+      };
    }
 
  private:

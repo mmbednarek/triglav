@@ -1,8 +1,10 @@
 physics_sources = files([
 # !GENERATED
         'include/triglav/physics/MeshBVHStorage.hpp',
+        'include/triglav/physics/Physics.hpp',
         'include/triglav/physics/PhysicsSystem.hpp',
         'src/MeshBVHStorage.cpp',
+        'src/Physics.cpp',
         'src/PhysicsSystem.cpp',
 # !END
                         ])

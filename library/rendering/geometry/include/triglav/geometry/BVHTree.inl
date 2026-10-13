@@ -1,5 +1,6 @@
 #pragma once
 
+#include "triglav/Logging.hpp"
 #include "triglav/Math.hpp"
 
 namespace triglav::geometry {
@@ -10,24 +11,6 @@ constexpr float EXTENSION_MULTIPLIER = 1.2f;
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 using Map = std::map<TIndex, TopLevelNode<TIndex, TPayload>*>;
-
-constexpr Axis get_major_axis(const BoundingBox& bb)
-{
-   const Vector3 extend = bb.scale();
-
-   Axis result = Axis::X;
-   auto max = extend.x;
-
-   if (extend.y > max) {
-      result = Axis::Y;
-      max = extend.y;
-   }
-   if (extend.z > max) {
-      result = Axis::Z;
-   }
-
-   return result;
-}
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 void delete_node(const TopLevelNode<TIndex, TPayload>* node)
@@ -217,8 +200,8 @@ constexpr std::optional<float> ray_triangle_intersect(const std::array<Vector3, 
    const Vector3 edge1 = primitive[1] - primitive[0];
    const Vector3 edge2 = primitive[2] - primitive[0];
 
-   const Vector3 h = glm::cross(ray.direction, edge2);
-   const float a = glm::dot(edge1, h);
+   const Vector3 h = ray.direction.cross(edge2);
+   const float a = edge1.dot(h);
 
    if (a > -TOLERANCE && a < TOLERANCE)
       return std::nullopt;
@@ -226,16 +209,16 @@ constexpr std::optional<float> ray_triangle_intersect(const std::array<Vector3, 
    const float f = 1.0f / a;
    const Vector3 s = ray.origin - primitive[0];
 
-   const float u = f * glm::dot(s, h);
+   const float u = f * s.dot(h);
    if (u < 0.0f || u > 1.0f)
       return std::nullopt;
 
-   const Vector3 q = glm::cross(s, edge1);
-   const float v = f * glm::dot(ray.direction, q);
+   const Vector3 q = s.cross(edge1);
+   const float v = f * ray.direction.dot(q);
    if (v < 0.0f || (v + u) > 1.0f)
       return std::nullopt;
 
-   const auto t = f * glm::dot(edge2, q);
+   const auto t = f * edge2.dot(q);
    if (t < TOLERANCE)
       return std::nullopt;
 
@@ -299,23 +282,71 @@ inline BottomLevelHit traverse_bottom_level_node(const BottomLevelNode* node, Ra
    return traverse_bottom_level_node(child, ray);
 }
 
-template<typename TCallback>
-bool traverse_bottom_level_node_aabb(BottomLevelNode* node, const BoundingBox& bounding_box, TCallback callback)
+inline BottomLevelSweepResult traverse_bottom_level_node_aabb(const BottomLevelNode* node, const BoundingBox& bounding_box,
+                                                              const Vector3& movement, float& hit_time)
 {
    if (node->primitive_id != ~0u) {
-      return callback(node->bounding_box, node->primitive_id);
+      const auto [entry_time, exit_time, status, normal] = node->bounding_box.intersect_swept(bounding_box, movement);
+      if (status != SweepStatus::Colliding && status != SweepStatus::Inside) {
+         return {};
+      }
+
+      hit_time = entry_time;
+      return {
+         .time = hit_time,
+         .normal = normal,
+         .primitive_id = node->primitive_id,
+      };
    }
 
-   if (node->left->bounding_box.does_intersect_aabb(bounding_box)) {
-      if (traverse_bottom_level_node_aabb(node->left, bounding_box, callback))
-         return true;
+   const auto bb_left = node->left->bounding_box;
+   const bool intersects_left = bb_left.does_intersect_aabb(bounding_box.extend_by_movement(movement));
+
+   const auto bb_right = node->right->bounding_box;
+   const bool intersects_right = bb_right.does_intersect_aabb(bounding_box.extend_by_movement(movement));
+
+   if (!intersects_left && !intersects_right) {
+      return {};
    }
-   if (node->right->bounding_box.does_intersect_aabb(bounding_box)) {
-      if (traverse_bottom_level_node_aabb(node->right, bounding_box, callback))
-         return true;
+   if (intersects_left && intersects_right) {
+      const auto hit_left = bb_left.intersect_swept(bounding_box, movement);
+      const auto hit_right = bb_right.intersect_swept(bounding_box, movement);
+
+      BottomLevelNode* first_node;
+      float first_hit{};
+      BottomLevelNode* second_node;
+      float second_hit{};
+
+      if (hit_left.entry_time < hit_right.entry_time) {
+         first_node = node->left;
+         first_hit = hit_left.entry_time;
+         second_node = node->right;
+         second_hit = hit_right.entry_time;
+      } else {
+         first_node = node->right;
+         first_hit = hit_right.entry_time;
+         second_node = node->left;
+         second_hit = hit_left.entry_time;
+      }
+
+      BottomLevelSweepResult result{};
+      if (first_hit < hit_time) {
+         result = traverse_bottom_level_node_aabb(first_node, bounding_box, movement, hit_time);
+      }
+      if (second_hit < hit_time) {
+         return traverse_bottom_level_node_aabb(second_node, bounding_box, movement, hit_time);
+      }
+      return result;
    }
 
-   return false;
+   BottomLevelNode* child;
+   if (intersects_left) {
+      child = node->left;
+   } else {
+      child = node->right;
+   }
+
+   return traverse_bottom_level_node_aabb(child, bounding_box, movement, hit_time);
 }
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
@@ -414,32 +445,87 @@ TopLevelHit<TIndex, TPayload> traverse_node(const TBottomLevelProvider& bl_provi
    return traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(bl_provider, child, ray);
 }
 
-template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TCallback, typename TBottomLevel,
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
          BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
-void traverse_node_aabb(TBottomLevelProvider& provider, TopLevelNode<TIndex, TPayload>* node, const BoundingBox& bounding_box,
-                        TCallback callback)
+TopLevelSweptHit<TIndex, TPayload> traverse_node_aabb(TBottomLevelProvider& provider, TopLevelNode<TIndex, TPayload>* node,
+                                                      const BoundingBox& bounding_box, Vector3 movement, float& hit_time)
 {
    if (std::holds_alternative<TPayload>(node->payload)) {
       auto& payload = std::get<TPayload>(node->payload);
+
       // auto& bottom_level = provider.get_bottom_level(payload.index());
-      // bool intersects = false;
-      // auto local_space_bb = bounding_box.transform(payload.inv_transform_matrix());
-      // bottom_level.traverse_aabb(local_space_bb, [&]([[maybe_unused]] const BoundingBox& bounding_box, u32 /*primitive_id*/) {
-      //    intersects = true;
-      //    return true;
-      // });
-      // if (intersects) {
-      callback(payload);
+      // const auto ls_bb = bounding_box.transform(payload.inv_transform_matrix());
+      // const BottomLevelSweepResult result = bottom_level.traverse_swept(ls_bb, movement);
+      // if (result.primitive_id == ~0u) {
+      //    return {};
       // }
-      return;
+
+      const SweepResult sweep_result = payload.bounding_box().intersect_swept(bounding_box, movement);
+      if (sweep_result.status == SweepStatus::Apart || sweep_result.status == SweepStatus::Exiting) {
+         return {};
+      }
+
+      return {
+         .time = sweep_result.entry_time,
+         .normal = sweep_result.normal,
+         .status = sweep_result.status,
+         .payload = &payload,
+      };
    }
 
-   if (node_bounding_box(node->left).does_intersect_aabb(bounding_box)) {
-      traverse_node_aabb<TIndex, TPayload, TCallback, TBottomLevel, TBottomLevelProvider>(provider, node->left, bounding_box, callback);
+   const auto bb_left = node_bounding_box(node->left);
+   const bool intersects_left = bb_left.does_intersect_aabb(bounding_box.extend_by_movement(movement));
+
+   const auto bb_right = node_bounding_box(node->right);
+   const bool intersects_right = bb_right.does_intersect_aabb(bounding_box.extend_by_movement(movement));
+
+   if (!intersects_left && !intersects_right) {
+      return {};
    }
-   if (node_bounding_box(node->right).does_intersect_aabb(bounding_box)) {
-      traverse_node_aabb<TIndex, TPayload, TCallback, TBottomLevel, TBottomLevelProvider>(provider, node->right, bounding_box, callback);
+   if (intersects_left && intersects_right) {
+      auto hit_left = bb_left.intersect_swept(bounding_box, movement);
+      auto hit_right = bb_right.intersect_swept(bounding_box, movement);
+
+      TopLevelNode<TIndex, TPayload>* first_node;
+      float first_hit{};
+      TopLevelNode<TIndex, TPayload>* second_node;
+      float second_hit{};
+
+      if (hit_left.entry_time < hit_right.entry_time) {
+         first_node = node->left;
+         first_hit = hit_left.entry_time;
+         second_node = node->right;
+         second_hit = hit_right.entry_time;
+      } else {
+         first_node = node->right;
+         first_hit = hit_right.entry_time;
+         second_node = node->left;
+         second_hit = hit_left.entry_time;
+      }
+
+      TopLevelSweptHit<TIndex, TPayload> result_first{};
+      if (first_hit < hit_time) {
+         result_first = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, first_node, bounding_box, movement,
+                                                                                           hit_time);
+      }
+      if (second_hit < hit_time) {
+         auto result_second = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, second_node, bounding_box,
+                                                                                                       movement, hit_time);
+         if (result_second.time < result_first.time) {
+            return result_second;
+         }
+      }
+      return result_first;
    }
+
+   TopLevelNode<TIndex, TPayload>* child;
+   if (intersects_left) {
+      child = node->left;
+   } else {
+      child = node->right;
+   }
+
+   return traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, child, bounding_box, movement, hit_time);
 }
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
@@ -513,10 +599,10 @@ BottomLevelHit BottomLevelBVH<TMesh>::traverse(const Ray& ray) const
 }
 
 template<TriangleMesh TMesh>
-template<typename TCallback>
-void BottomLevelBVH<TMesh>::traverse_aabb(const BoundingBox& bb, TCallback callback) const
+BottomLevelSweepResult BottomLevelBVH<TMesh>::traverse_swept(const BoundingBox& bb, const Vector3& movement) const
 {
-   detail::traverse_bottom_level_node_aabb(m_root, bb, callback);
+   float hit_time = INF;
+   return detail::traverse_bottom_level_node_aabb(m_root, bb, movement, hit_time);
 }
 
 template<TriangleMesh TMesh>
@@ -658,9 +744,10 @@ TOP_LEVEL(TopLevelHit<TIndex, TPayload>)::traverse(const Ray& ray) const
    return detail::traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, mut_ray);
 }
 
-TOP_LEVEL(template<typename TCallback> void)::traverse_aabb(const BoundingBox& bb, TCallback callback) const
+TOP_LEVEL(TopLevelSweptHit<TIndex, TPayload>)::traverse_swept(const BoundingBox& bb, const Vector3& movement) const
 {
-   detail::traverse_node_aabb<TIndex, TPayload, TCallback, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, bb, callback);
+   float hit_time = INF;
+   return detail::traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, bb, movement, hit_time);
 }
 
 TOP_LEVEL(const TPayload&)::get(TIndex index)

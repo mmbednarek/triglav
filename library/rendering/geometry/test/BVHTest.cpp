@@ -136,3 +136,115 @@ TEST(BVHTest, MinimalVector)
    auto empty = static_bb.minimum_translation_vector(new_bb);
    ASSERT_EQ(empty, Vector3{});
 }
+
+TEST(BVHTest, SweepTest)
+{
+   const BoundingBox static_bb{
+      .min = {-1, -1, -1},
+      .max = {1, 1, 1},
+   };
+   const BoundingBox dynamic_bb{
+      .min = {-2.5f, -0.5f, -0.5f},
+      .max = {-1.5f, 0.5f, 0.5f},
+   };
+
+   /* COLLISION */
+   {
+      const auto result = static_bb.intersect_swept(dynamic_bb, Vector3{1, 0, 0});
+      ASSERT_EQ(result.entry_time, 0.5f);
+      ASSERT_EQ(result.exit_time, 3.5f);
+
+      static constexpr Vector3 expected_normal{-1, 0, 0};
+      ASSERT_EQ(result.normal, expected_normal);
+      ASSERT_EQ(result.status, triglav::geometry::SweepStatus::Colliding);
+   }
+
+   /* NOT REACHED */
+   {
+      const auto result = static_bb.intersect_swept(dynamic_bb, Vector3{0.25f, 0, 0});
+      ASSERT_EQ(result.entry_time, 2.0f);
+      ASSERT_EQ(result.exit_time, 14.0f);
+
+      static constexpr Vector3 expected_normal{-1, 0, 0};
+      ASSERT_EQ(result.normal, expected_normal);
+      ASSERT_EQ(result.status, triglav::geometry::SweepStatus::Apart);
+   }
+
+   /* TUNNELED */
+   {
+      const auto result = static_bb.intersect_swept(dynamic_bb, Vector3{10.0f, 0, 0});
+      ASSERT_EQ(result.entry_time, 0.05f);
+      ASSERT_EQ(result.exit_time, 0.35f);
+
+      static constexpr Vector3 expected_normal{-1, 0, 0};
+      ASSERT_EQ(result.normal, expected_normal);
+      ASSERT_EQ(result.status, triglav::geometry::SweepStatus::Colliding);
+   }
+
+   /* GOING AWAY */
+   {
+      const auto result = static_bb.intersect_swept(dynamic_bb, Vector3{-1.0f, 0, 0});
+      ASSERT_EQ(result.entry_time, -3.5f);
+      ASSERT_EQ(result.exit_time, -0.5f);
+
+      static constexpr Vector3 expected_normal{-1, 0, 0};
+      ASSERT_EQ(result.normal, expected_normal);
+      ASSERT_EQ(result.status, triglav::geometry::SweepStatus::Apart);
+   }
+
+   /* GOING SIDEWAYS */
+   {
+      const auto result = static_bb.intersect_swept(dynamic_bb, Vector3{0, 1.0f, 0});
+      ASSERT_EQ(result.entry_time, triglav::INF);
+      ASSERT_EQ(result.exit_time, -triglav::INF);
+
+      static constexpr Vector3 expected_normal{0, 0, 0};
+      ASSERT_EQ(result.normal, expected_normal);
+      ASSERT_EQ(result.status, triglav::geometry::SweepStatus::Apart);
+   }
+}
+
+TEST(BVHTest, SweepTestBVH_SingleObject)
+{
+   std::array<Object, 1> single_object{
+      Object{"A", {-1, -1, -1}, {1, 1, 1}},
+   };
+   DummyProvider provider{.m_objects = single_object};
+
+   TopLevelBVH<std::string, Object, DummyBottomLevel, DummyProvider> tree(provider);
+   tree.build(single_object);
+
+   const BoundingBox dynamic_bb{
+      .min = {-2.5f, -0.5f, -0.5f},
+      .max = {-1.5f, 0.5f, 0.5f},
+   };
+
+   const auto sweep_result = tree.traverse_swept(dynamic_bb, Vector3{1, 0, 0});
+   ASSERT_EQ(sweep_result.time, 0.5f);
+   static constexpr Vector3 expected_normal{-1, 0, 0};
+   ASSERT_EQ(sweep_result.normal, expected_normal);
+
+}
+
+TEST(BVHTest, SweepTestBVH_TwoObjects)
+{
+   std::array<Object, 2> two_objects{
+      Object{"A", {-1, -1, -1}, {1, -0.1, 1}},
+      Object{"B", {-1, 0.1, -1}, {1, 1.0, 1}},
+   };
+   DummyProvider provider{.m_objects = two_objects};
+
+   TopLevelBVH<std::string, Object, DummyBottomLevel, DummyProvider> tree(provider);
+   tree.build(two_objects);
+
+   const BoundingBox dynamic_bb{
+      .min = {-2.5f, -0.5f, -0.5f},
+      .max = {-1.5f, 0.5f, 0.5f},
+   };
+
+   const auto sweep_result = tree.traverse_swept(dynamic_bb, Vector3{1, 0, 0});
+   ASSERT_EQ(sweep_result.time, 0.5f);
+   static constexpr Vector3 expected_normal{-1, 0, 0};
+   ASSERT_EQ(sweep_result.normal, expected_normal);
+
+}

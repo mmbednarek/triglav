@@ -22,6 +22,7 @@ class CharacterController
    void setup_character();
 
    void on_analog_action(AnalogAction action, triglav::Vector2 value);
+   void jump();
    void stop_character();
 
    void tick(float delta_time);
@@ -43,7 +44,7 @@ class CharacterController
    triglav::geometry::BoundingBox m_bounding_box{};
    triglav::world::EntityID m_character_id = triglav::world::NO_ENTITY;
    triglav::renderer::AnimationID m_character_animation_id = triglav::renderer::NO_ANIMATION;
-   triglav::Vector3 m_character_position = {0.0f, 0.0f, 3.5f};
+   triglav::Vector3 m_character_position = {20.0f, 0.0f, 3.5f};
    triglav::Vector3 m_character_forward;
    triglav::Vector2 m_analog_forward;
    float m_camera_pitch = 0.0f, m_camera_yaw = 0.0f;
