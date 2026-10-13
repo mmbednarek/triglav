@@ -283,9 +283,13 @@ struct Vector4;
 
 #define TG_IMPLEMENT_VECTOR_FP_FUNCTIONS(vec_name, vec_comp_count, vec_suffix) \
    TG_IMPLEMENT_VECTOR_FUNCTIONS(vec_name, vec_comp_count, vec_suffix)         \
+   constexpr vec_name::ComponentType vec_name::length_sq() const               \
+   {                                                                           \
+      return ((*this) * (*this)).component_sum();                              \
+   }                                                                           \
    constexpr vec_name::ComponentType vec_name::length() const                  \
    {                                                                           \
-      return std::sqrt(((*this) * (*this)).component_sum());                   \
+      return std::sqrt(this->length_sq());                                     \
    }                                                                           \
    constexpr vec_name vec_name::normalize() const                              \
    {                                                                           \

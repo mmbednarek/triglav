@@ -180,6 +180,11 @@ struct BoundingBox
       return (max + min) * 0.5f;
    }
 
+   [[nodiscard]] constexpr Vector3 half_extent() const
+   {
+      return (max - min) * 0.5f;
+   }
+
    [[nodiscard]] constexpr std::optional<Vector2> intersect(const Ray& ray) const
    {
       const float tx1 = (min.x - ray.origin.x) / ray.direction.x;

@@ -103,6 +103,7 @@
 
 #define TG_DECLARE_VECTOR_FP(vec_comp_type, vec_comp_count)    \
    TG_DECLARE_VECTOR_BASE(vec_comp_type, vec_comp_count)       \
+   [[nodiscard]] constexpr ComponentType length_sq() const;    \
    [[nodiscard]] constexpr ComponentType length() const;       \
    [[nodiscard]] constexpr Self normalize() const;             \
    [[nodiscard]] constexpr float dot(const Self& other) const; \

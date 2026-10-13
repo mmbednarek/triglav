@@ -19,11 +19,12 @@ namespace {
 constexpr float CAMERA_DISTANCE = 16.0f;
 constexpr float PLAYER_SPEED = 20.0f;
 
-Vector3 calculate_movement_vector(const triglav::physics::PhysicsSystem& physics, BoundingBox player_box, const Vector3& movement, Vector3& out_normal)
+Vector3 calculate_movement_vector(const triglav::physics::PhysicsSystem& physics, BoundingBox player_box, const Vector3& movement,
+                                  Vector3& out_normal)
 {
-   static constexpr int MAX_ITER = 4;
+   static constexpr int MAX_ITER = 2;
    static constexpr float TOLERANCE = 1e-8f;
-   static constexpr float MARGIN = 1e-3f;
+   static constexpr float MARGIN = 1e-4f;
 
    Vector3 total{};
    Vector3 remaining = movement;
@@ -31,10 +32,10 @@ Vector3 calculate_movement_vector(const triglav::physics::PhysicsSystem& physics
    mem_size plane_count = 0;
 
    for (int iter = 0; iter < MAX_ITER; ++iter) {
-      if (remaining.length() < TOLERANCE)
+      if (remaining.length_sq() < TOLERANCE)
          break;
 
-      const auto hit = physics.trace_swept(player_box, movement);
+      const auto hit = physics.trace_swept(player_box, remaining);
       out_normal = hit.normal;
 
       if (hit.entity_id == triglav::world::NO_ENTITY || hit.hit_time >= 1.0f) {
@@ -53,7 +54,7 @@ Vector3 calculate_movement_vector(const triglav::physics::PhysicsSystem& physics
       for (mem_size plane_id = 0; plane_id < plane_count; ++plane_id) {
          if (slide.dot(planes[plane_id]) < 0.0f) {
             Vector3 crease = hit.normal.cross(planes[plane_id]);
-            if (crease.length() < TOLERANCE) {
+            if (crease.length_sq() < TOLERANCE) {
                slide = Vector3{};
                break;
             }

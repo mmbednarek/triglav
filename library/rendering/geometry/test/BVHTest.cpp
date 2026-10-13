@@ -223,7 +223,6 @@ TEST(BVHTest, SweepTestBVH_SingleObject)
    ASSERT_EQ(sweep_result.time, 0.5f);
    static constexpr Vector3 expected_normal{-1, 0, 0};
    ASSERT_EQ(sweep_result.normal, expected_normal);
-
 }
 
 TEST(BVHTest, SweepTestBVH_TwoObjects)
@@ -246,5 +245,4 @@ TEST(BVHTest, SweepTestBVH_TwoObjects)
    ASSERT_EQ(sweep_result.time, 0.5f);
    static constexpr Vector3 expected_normal{-1, 0, 0};
    ASSERT_EQ(sweep_result.normal, expected_normal);
-
 }

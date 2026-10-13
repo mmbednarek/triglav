@@ -97,6 +97,112 @@ inline void delete_bottom_level_node(const BottomLevelNode* node)
    return bounding_box_surface_area(merge_bounding_boxes(current, extension)) - bounding_box_surface_area(current);
 }
 
+struct TriangleSweepResult
+{
+   bool hit_found;
+   float time;
+   Vector3 normal;
+};
+
+[[nodiscard]] inline TriangleSweepResult sweep_aabb_triangle(const BoundingBox& bb, const Vector3& movement,
+                                                             const std::array<Vector3, 3>& triangle)
+{
+   constexpr static float TOLERANCE = 1e-8f;
+
+   // Work in box space: box centered at origin, triangle static.
+   const auto box_center = bb.centroid();
+   const Vector3 v[3] = {triangle[0] - box_center, triangle[1] - box_center, triangle[2] - box_center};
+   const Vector3 h = bb.half_extent();
+
+   const Vector3 e[3] = {v[1] - v[0], v[2] - v[1], v[0] - v[2]};
+   static constexpr std::array box_axes = {Vector3{1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, 1}};
+
+   // Build the 13 candidate axes.
+   Vector3 axes[13];
+   int n_axes = 0;
+   for (int i = 0; i < 3; ++i)
+      axes[n_axes++] = box_axes[i];
+   axes[n_axes++] = e[0].cross(e[1]);// triangle normal
+   for (int i = 0; i < 3; ++i)
+      for (int j = 0; j < 3; ++j)
+         axes[n_axes++] = box_axes[i].cross(e[j]);// edge x edge
+
+   float t_enter = -INF;// latest entry over all axes
+   float t_exit = INF;  // earliest exit over all axes
+   Vector3 enter_normal{};
+
+   // Fallback for initial overlap: axis with smallest penetration.
+   float best_depth = INF;
+   Vector3 mtv_normal{};
+
+   for (int i = 0; i < n_axes; ++i) {
+      if (axes[i].length_sq() < TOLERANCE)// degenerate (parallel edges, ...)
+         continue;
+      const Vector3 L = axes[i].normalize();
+
+      // Box radius on L, triangle interval on L, box velocity on L.
+      const float r = h.x * std::fabs(L.x) + h.y * std::fabs(L.y) + h.z * std::fabs(L.z);
+      const float d0 = v[0].dot(L), d1 = v[1].dot(L), d2 = v[2].dot(L);
+      const float tmin = std::min({d0, d1, d2});
+      const float tmax = std::max({d0, d1, d2});
+      const float s = movement.dot(L);
+
+      // Initial penetration depth on this axis (push box toward -L or +L).
+      const float push_neg = r - tmin;// box_max - tri_min
+      const float push_pos = tmax + r;// tri_max - box_min
+      if (push_neg < 0.0f || push_pos < 0.0f) {
+         // Separated at t = 0 on this axis.
+      } else {
+         const float depth = std::min(push_neg, push_pos);
+         if (depth < best_depth) {
+            best_depth = depth;
+            mtv_normal = (push_neg < push_pos) ? L * -1.0f : L;
+         }
+      }
+
+      if (std::fabs(s) < TOLERANCE) {
+         // No relative motion on this axis: permanently separated or overlapping.
+         if (tmin > r || tmax < -r)
+            return {false, INF, {}};
+         continue;
+      }
+
+      float enter, exit_;
+      Vector3 n;
+      if (s > 0.0f) {// box approaches from the -L side
+         enter = (tmin - r) / s;
+         exit_ = (tmax + r) / s;
+         n = L * -1.0f;
+      } else {// box approaches from the +L side
+         enter = (tmax + r) / s;
+         exit_ = (tmin - r) / s;
+         n = L;
+      }
+
+      if (enter > t_enter) {
+         t_enter = enter;
+         enter_normal = n;
+      }
+      t_exit = std::min(t_exit, exit_);
+
+      if (t_enter > t_exit || t_exit < 0.0f || t_enter >= 1.0f)
+         return {false, INF, {}};
+   }
+
+   if (t_enter < 0.0f) {
+      // Overlapping at t = 0 on every axis: report an immediate hit with the
+      // minimum-translation normal, but only if we're not already leaving.
+      if (best_depth == INF)
+         return {false, INF, {}};
+      if (movement.dot(mtv_normal) >= 0.0f)
+         return {false, INF, {}};
+
+      return {true, 0.0f, mtv_normal};
+   }
+
+   return {true, t_enter, enter_normal};
+}
+
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 [[nodiscard]] BoundingBox node_bounding_box(const TopLevelNode<TIndex, TPayload>* node)
 {
@@ -286,15 +392,16 @@ inline BottomLevelSweepResult traverse_bottom_level_node_aabb(const BottomLevelN
                                                               const Vector3& movement, float& hit_time)
 {
    if (node->primitive_id != ~0u) {
-      const auto [entry_time, exit_time, status, normal] = node->bounding_box.intersect_swept(bounding_box, movement);
-      if (status != SweepStatus::Colliding && status != SweepStatus::Inside) {
+      const auto sweep_result = sweep_aabb_triangle(bounding_box, movement, node->primitive);
+      if (!sweep_result.hit_found) {
          return {};
       }
 
-      hit_time = entry_time;
+      hit_time = sweep_result.time;
+
       return {
          .time = hit_time,
-         .normal = normal,
+         .normal = sweep_result.normal,
          .primitive_id = node->primitive_id,
       };
    }
@@ -329,14 +436,17 @@ inline BottomLevelSweepResult traverse_bottom_level_node_aabb(const BottomLevelN
          second_hit = hit_left.entry_time;
       }
 
-      BottomLevelSweepResult result{};
+      BottomLevelSweepResult result_first{};
       if (first_hit < hit_time) {
-         result = traverse_bottom_level_node_aabb(first_node, bounding_box, movement, hit_time);
+         result_first = traverse_bottom_level_node_aabb(first_node, bounding_box, movement, hit_time);
       }
       if (second_hit < hit_time) {
-         return traverse_bottom_level_node_aabb(second_node, bounding_box, movement, hit_time);
+         BottomLevelSweepResult result_second = traverse_bottom_level_node_aabb(second_node, bounding_box, movement, hit_time);
+         if (result_second.time < result_first.time) {
+            return result_second;
+         }
       }
-      return result;
+      return result_first;
    }
 
    BottomLevelNode* child;
@@ -453,21 +563,23 @@ TopLevelSweptHit<TIndex, TPayload> traverse_node_aabb(TBottomLevelProvider& prov
    if (std::holds_alternative<TPayload>(node->payload)) {
       auto& payload = std::get<TPayload>(node->payload);
 
-      // auto& bottom_level = provider.get_bottom_level(payload.index());
-      // const auto ls_bb = bounding_box.transform(payload.inv_transform_matrix());
-      // const BottomLevelSweepResult result = bottom_level.traverse_swept(ls_bb, movement);
-      // if (result.primitive_id == ~0u) {
-      //    return {};
-      // }
-
       const SweepResult sweep_result = payload.bounding_box().intersect_swept(bounding_box, movement);
       if (sweep_result.status == SweepStatus::Apart || sweep_result.status == SweepStatus::Exiting) {
          return {};
       }
 
+      auto& bottom_level = provider.get_bottom_level(payload.index());
+      const auto ls_bb = bounding_box.transform(payload.inv_transform_matrix());
+      const auto ls_movement = payload.inv_transform_matrix().shrink() * movement;
+      const BottomLevelSweepResult result = bottom_level.traverse_swept(ls_bb, ls_movement);
+      if (result.primitive_id == ~0u) {
+         return {};
+      }
+
+
       return {
-         .time = sweep_result.entry_time,
-         .normal = sweep_result.normal,
+         .time = result.time,
+         .normal = (payload.inv_transform_matrix().shrink().transpose() * result.normal).normalize(),
          .status = sweep_result.status,
          .payload = &payload,
       };
@@ -505,8 +617,8 @@ TopLevelSweptHit<TIndex, TPayload> traverse_node_aabb(TBottomLevelProvider& prov
 
       TopLevelSweptHit<TIndex, TPayload> result_first{};
       if (first_hit < hit_time) {
-         result_first = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, first_node, bounding_box, movement,
-                                                                                           hit_time);
+         result_first = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, first_node, bounding_box,
+                                                                                                 movement, hit_time);
       }
       if (second_hit < hit_time) {
          auto result_second = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, second_node, bounding_box,
@@ -538,6 +650,7 @@ void update_parent_bounds(TopLevelNode<TIndex, TPayload>* node)
       node = node->parent;
    }
 }
+
 
 }// namespace detail
 

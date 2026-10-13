@@ -12,4 +12,4 @@ struct Movement
    Vector3 motion;
 };
 
-}
+}// namespace triglav::physics
