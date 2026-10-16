@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BVHUtil.hpp"
 #include "Geometry.hpp"
 #include "triglav/Macros.hpp"
 
@@ -18,6 +19,19 @@ struct BottomLevelHit
 {
    float distance;
    u32 primitive_id;
+
+   static BottomLevelHit miss()
+   {
+      return BottomLevelHit{
+         .distance = INF,
+         .primitive_id = ~0u,
+      };
+   }
+
+   [[nodiscard]] float score() const
+   {
+      return distance;
+   }
 };
 
 struct BottomLevelNode
@@ -27,6 +41,11 @@ struct BottomLevelNode
    BottomLevelNode* left;
    BottomLevelNode* right;
    std::array<Vector3, 3> primitive;
+
+   [[nodiscard]] bool is_leaf() const
+   {
+      return primitive_id != ~0u;
+   }
 };
 
 struct BottomLevelSweepResult
@@ -34,6 +53,16 @@ struct BottomLevelSweepResult
    float time{INF};
    Vector3 normal{};
    u32 primitive_id{~0u};
+
+   static BottomLevelSweepResult miss()
+   {
+      return BottomLevelSweepResult{};
+   }
+
+   [[nodiscard]] float score() const
+   {
+      return time;
+   }
 };
 
 template<TriangleMesh TMesh>
@@ -79,13 +108,28 @@ struct TopLevelNode
    TopLevelNode* parent;
    TopLevelNode* left;
    TopLevelNode* right;
+
+   [[nodiscard]] bool is_leaf() const
+   {
+      return std::holds_alternative<TPayload>(payload);
+   }
 };
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 struct TopLevelHit
 {
    float distance;
-   TPayload* payload;
+   const TPayload* payload;
+
+   static TopLevelHit miss()
+   {
+      return {INF, nullptr};
+   }
+
+   [[nodiscard]] float score() const
+   {
+      return distance;
+   }
 };
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
@@ -94,13 +138,29 @@ struct TopLevelSweptHit
    float time{INF};
    Vector3 normal{};
    SweepStatus status{};
-   TPayload* payload{nullptr};
+   const TPayload* payload{nullptr};
+
+   static TopLevelSweptHit miss()
+   {
+      return {};
+   }
+
+   [[nodiscard]] float score() const
+   {
+      return time;
+   }
 };
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
+         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
+struct TopLevelBaseTraits;
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
          BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
 class TopLevelBVH
 {
+   friend struct TopLevelBaseTraits<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>;
+
  public:
    explicit TopLevelBVH(TBottomLevelProvider& provider);
    ~TopLevelBVH();

@@ -1,5 +1,6 @@
 geometry_sources = files([
   'include/triglav/geometry/BVHTree.hpp',
+  'include/triglav/geometry/BVHUtil.hpp',
   'include/triglav/geometry/DebugMesh.hpp',
   'include/triglav/geometry/Geometry.hpp',
   'include/triglav/geometry/Mesh.hpp',

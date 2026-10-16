@@ -13,18 +13,6 @@ template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 using Map = std::map<TIndex, TopLevelNode<TIndex, TPayload>*>;
 
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
-void delete_node(const TopLevelNode<TIndex, TPayload>* node)
-{
-   if (node->left != nullptr) {
-      delete_node(node->left);
-   }
-   if (node->right != nullptr) {
-      delete_node(node->right);
-   }
-   delete node;
-}
-
-template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 [[nodiscard]] BoundingBox calculate_bounding_box(std::span<TPayload> data)
 {
    BoundingBox result{
@@ -72,17 +60,6 @@ template<TriangleMesh TMesh>
       result = merge_bounding_boxes(bounding_box_from_triangle(primitive), result);
    }
    return result;
-}
-
-inline void delete_bottom_level_node(const BottomLevelNode* node)
-{
-   if (node->left != nullptr) {
-      delete_bottom_level_node(node->left);
-   }
-   if (node->right != nullptr) {
-      delete_bottom_level_node(node->right);
-   }
-   delete node;
 }
 
 // NOTE: It's actually half of the surface area
@@ -212,93 +189,6 @@ template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
    return std::get<BoundingBox>(node->payload);
 }
 
-template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
-TopLevelNode<TIndex, TPayload>* insert_node(TopLevelNode<TIndex, TPayload>* node, const TPayload& payload)
-{
-   if (std::holds_alternative<TPayload>(node->payload)) {
-      auto* old_leaf = new TopLevelNode<TIndex, TPayload>{
-         .payload = std::move(std::get<TPayload>(node->payload)),
-         .parent = node,
-         .left = nullptr,
-         .right = nullptr,
-      };
-      auto* new_leaf = new TopLevelNode<TIndex, TPayload>{
-         .payload = payload,
-         .parent = node,
-         .left = nullptr,
-         .right = nullptr,
-      };
-
-      const auto new_bb = merge_bounding_boxes(std::get<TPayload>(old_leaf->payload).bounding_box(), payload.bounding_box());
-      node->payload = new_bb;
-      node->max_surface_area = EXTENSION_MULTIPLIER * bounding_box_surface_area(new_bb);
-      node->left = old_leaf;
-      node->right = new_leaf;
-      return new_leaf;
-   }
-
-   const auto payload_bb = payload.bounding_box();
-   const auto left_bb = node_bounding_box(node->left);
-   const auto right_bb = node_bounding_box(node->right);
-
-   const auto left_cost = calculate_extension_cost(left_bb, payload_bb);
-   const auto right_cost = calculate_extension_cost(right_bb, payload_bb);
-
-   TopLevelNode<TIndex, TPayload>* result{};
-   if (left_cost < right_cost) {
-      result = insert_node(node->left, payload);
-   } else {
-      result = insert_node(node->right, payload);
-   }
-
-   std::get<BoundingBox>(node->payload) = merge_bounding_boxes(node_bounding_box(node->left), node_bounding_box(node->right));
-   return result;
-}
-
-template<TriangleMesh TMesh>
-BottomLevelNode* insert_bottom_level_node(BottomLevelNode* node, TMesh& mesh, const u32 primitive_index)
-{
-   auto primitive = mesh.get_primitive(primitive_index);
-   auto primitive_bb = bounding_box_from_triangle(primitive);
-   if (node->primitive_id < mesh.primitive_count()) {
-      auto* old_leaf = new BottomLevelNode{
-         .primitive_id = node->primitive_id,
-         .bounding_box = node->bounding_box,
-         .left = nullptr,
-         .right = nullptr,
-         .primitive = node->primitive,
-      };
-      auto* new_leaf = new BottomLevelNode{
-         .primitive_id = primitive_index,
-         .bounding_box = primitive_bb,
-         .left = nullptr,
-         .right = nullptr,
-         .primitive = primitive,
-      };
-
-      node->primitive_id = ~0u;
-      node->bounding_box = merge_bounding_boxes(old_leaf->bounding_box, new_leaf->bounding_box);
-      node->left = old_leaf;
-      node->right = new_leaf;
-      node->primitive = {};
-      return new_leaf;
-   }
-
-   const auto left_cost = calculate_extension_cost(node->left->bounding_box, primitive_bb);
-   const auto right_cost = calculate_extension_cost(node->right->bounding_box, primitive_bb);
-
-   BottomLevelNode* result{};
-   if (left_cost < right_cost) {
-      result = insert_bottom_level_node(node->left, mesh, primitive_index);
-   } else {
-      result = insert_bottom_level_node(node->right, mesh, primitive_index);
-   }
-
-   node->bounding_box = merge_bounding_boxes(node->left->bounding_box, node->right->bounding_box);
-
-   return result;
-}
-
 constexpr std::optional<float> ray_triangle_intersect(const std::array<Vector3, 3>& primitive, const Ray& ray)
 {
    static constexpr float TOLERANCE = 0.0001f;
@@ -329,63 +219,6 @@ constexpr std::optional<float> ray_triangle_intersect(const std::array<Vector3, 
       return std::nullopt;
 
    return t;
-}
-
-
-inline BottomLevelHit traverse_bottom_level_node(const BottomLevelNode* node, Ray& ray)
-{
-   if (node->primitive_id != ~0u) {
-      const auto primitive = node->primitive;
-      const auto distance = ray_triangle_intersect(primitive, ray);
-
-      if (!distance.has_value() || *distance > ray.distance)
-         return {INFINITY, ~0u};
-
-      ray.distance = *distance;
-      return {*distance, node->primitive_id};
-   }
-
-   const auto left_intersect = node->left->bounding_box.intersect(ray);
-   const auto right_intersect = node->right->bounding_box.intersect(ray);
-
-   if (!left_intersect.has_value() && !right_intersect.has_value())
-      return {INFINITY, ~0u};
-
-   if (left_intersect.has_value() && right_intersect.has_value()) {
-      BottomLevelNode* closest{};
-      BottomLevelNode* furthest{};
-
-      float furthest_distance{};
-
-      if (left_intersect->x < right_intersect->x) {
-         closest = node->left;
-         furthest = node->right;
-         furthest_distance = right_intersect->x;
-      } else {
-         closest = node->right;
-         furthest = node->left;
-         furthest_distance = left_intersect->x;
-      }
-
-      const auto closest_hit = traverse_bottom_level_node(closest, ray);
-
-      if (ray.distance > furthest_distance) {
-         const auto furthest_hit = traverse_bottom_level_node(furthest, ray);
-         if (furthest_hit.distance <= ray.distance) {
-            return furthest_hit;
-         }
-      }
-      return closest_hit;
-   }
-
-   BottomLevelNode* child{};
-   if (left_intersect.has_value()) {
-      child = node->left;
-   } else {
-      child = node->right;
-   }
-
-   return traverse_bottom_level_node(child, ray);
 }
 
 inline BottomLevelSweepResult traverse_bottom_level_node_aabb(const BottomLevelNode* node, const BoundingBox& bounding_box,
@@ -496,150 +329,6 @@ TopLevelNode<TIndex, TPayload>* build_node(Map<TIndex, TPayload>& leave_mapping,
    return node;
 }
 
-template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
-         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
-TopLevelHit<TIndex, TPayload> traverse_node(const TBottomLevelProvider& bl_provider, TopLevelNode<TIndex, TPayload>* node, Ray& ray)
-{
-   if (std::holds_alternative<TPayload>(node->payload)) {
-      auto& payload = std::get<TPayload>(node->payload);
-
-      auto& bottom_level = bl_provider.get_bottom_level(payload.index());
-      const auto bl_ray = ray.to_local_space(payload.inv_transform_matrix());
-      const auto bl_hit = bottom_level.traverse(bl_ray);
-      if (bl_hit.distance > ray.distance)
-         return {INFINITY, nullptr};
-
-      ray.distance = bl_hit.distance;
-      return {bl_hit.distance, &payload};
-   }
-
-   const auto left_intersect = node_bounding_box(node->left).intersect(ray);
-   const auto right_intersect = node_bounding_box(node->right).intersect(ray);
-
-   if (!left_intersect.has_value() && !right_intersect.has_value())
-      return {INFINITY, nullptr};
-
-   if (left_intersect.has_value() && right_intersect.has_value()) {
-      TopLevelNode<TIndex, TPayload>* closest{};
-      TopLevelNode<TIndex, TPayload>* furthest{};
-
-      float furthest_distance{};
-
-      if (left_intersect->x < right_intersect->x) {
-         closest = node->left;
-         furthest = node->right;
-         furthest_distance = right_intersect->x;
-      } else {
-         closest = node->right;
-         furthest = node->left;
-         furthest_distance = left_intersect->x;
-      }
-
-      const auto closest_hit = traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(bl_provider, closest, ray);
-
-      if (ray.distance > furthest_distance) {
-         const auto furthest_hit = traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(bl_provider, furthest, ray);
-         if (furthest_hit.distance <= ray.distance)
-            return furthest_hit;
-      }
-      return closest_hit;
-   }
-
-   TopLevelNode<TIndex, TPayload>* child{};
-   if (left_intersect.has_value()) {
-      child = node->left;
-   } else {
-      child = node->right;
-   }
-
-   return traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(bl_provider, child, ray);
-}
-
-template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
-         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
-TopLevelSweptHit<TIndex, TPayload> traverse_node_aabb(TBottomLevelProvider& provider, TopLevelNode<TIndex, TPayload>* node,
-                                                      const BoundingBox& bounding_box, Vector3 movement, float& hit_time)
-{
-   if (std::holds_alternative<TPayload>(node->payload)) {
-      auto& payload = std::get<TPayload>(node->payload);
-
-      const SweepResult sweep_result = payload.bounding_box().intersect_swept(bounding_box, movement);
-      if (sweep_result.status == SweepStatus::Apart || sweep_result.status == SweepStatus::Exiting) {
-         return {};
-      }
-
-      auto& bottom_level = provider.get_bottom_level(payload.index());
-      const auto ls_bb = bounding_box.transform(payload.inv_transform_matrix());
-      const auto ls_movement = payload.inv_transform_matrix().shrink() * movement;
-      const BottomLevelSweepResult result = bottom_level.traverse_swept(ls_bb, ls_movement);
-      if (result.primitive_id == ~0u) {
-         return {};
-      }
-
-
-      return {
-         .time = result.time,
-         .normal = (payload.inv_transform_matrix().shrink().transpose() * result.normal).normalize(),
-         .status = sweep_result.status,
-         .payload = &payload,
-      };
-   }
-
-   const auto bb_left = node_bounding_box(node->left);
-   const bool intersects_left = bb_left.does_intersect_aabb(bounding_box.extend_by_movement(movement));
-
-   const auto bb_right = node_bounding_box(node->right);
-   const bool intersects_right = bb_right.does_intersect_aabb(bounding_box.extend_by_movement(movement));
-
-   if (!intersects_left && !intersects_right) {
-      return {};
-   }
-   if (intersects_left && intersects_right) {
-      auto hit_left = bb_left.intersect_swept(bounding_box, movement);
-      auto hit_right = bb_right.intersect_swept(bounding_box, movement);
-
-      TopLevelNode<TIndex, TPayload>* first_node;
-      float first_hit{};
-      TopLevelNode<TIndex, TPayload>* second_node;
-      float second_hit{};
-
-      if (hit_left.entry_time < hit_right.entry_time) {
-         first_node = node->left;
-         first_hit = hit_left.entry_time;
-         second_node = node->right;
-         second_hit = hit_right.entry_time;
-      } else {
-         first_node = node->right;
-         first_hit = hit_right.entry_time;
-         second_node = node->left;
-         second_hit = hit_left.entry_time;
-      }
-
-      TopLevelSweptHit<TIndex, TPayload> result_first{};
-      if (first_hit < hit_time) {
-         result_first = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, first_node, bounding_box,
-                                                                                                 movement, hit_time);
-      }
-      if (second_hit < hit_time) {
-         auto result_second = traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, second_node, bounding_box,
-                                                                                                       movement, hit_time);
-         if (result_second.time < result_first.time) {
-            return result_second;
-         }
-      }
-      return result_first;
-   }
-
-   TopLevelNode<TIndex, TPayload>* child;
-   if (intersects_left) {
-      child = node->left;
-   } else {
-      child = node->right;
-   }
-
-   return traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(provider, child, bounding_box, movement, hit_time);
-}
-
 template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
 void update_parent_bounds(TopLevelNode<TIndex, TPayload>* node)
 {
@@ -651,6 +340,286 @@ void update_parent_bounds(TopLevelNode<TIndex, TPayload>* node)
    }
 }
 
+struct BottomLevelBaseTraits
+{
+   using Node = BottomLevelNode;
+   using UserData = std::monostate;
+
+   static Node* move_payload(const UserData* /*user_data*/, Node* leaf_node)
+   {
+      return new BottomLevelNode{
+         .primitive_id = std::exchange(leaf_node->primitive_id, ~0u),
+         .bounding_box = leaf_node->bounding_box,
+         .left = nullptr,
+         .right = nullptr,
+         .primitive = std::exchange(leaf_node->primitive, {}),
+      };
+   }
+
+   static float calculate_insert_cost(UserData* /*user_data*/, const Node* parent, const Node* new_child)
+   {
+      return calculate_extension_cost(parent->bounding_box, new_child->bounding_box);
+   }
+
+   static void recalculate_bounds(const UserData* /*user_data*/, Node* parent)
+   {
+      parent->bounding_box = merge_bounding_boxes(parent->left->bounding_box, parent->right->bounding_box);
+   }
+};
+
+using BottomLevelUtils = BVHUtil<BottomLevelBaseTraits>;
+
+struct BottomLevelRayTraversalTraits
+{
+   using BaseTraits = BottomLevelBaseTraits;
+   using Node = BaseTraits::Node;
+   using Result = BottomLevelHit;
+   using Traversary = Ray;
+
+   struct IntersectionResult
+   {
+      std::optional<Vector2> result;
+
+      [[nodiscard]] bool has_hit() const
+      {
+         return result.has_value();
+      }
+   };
+
+   static Result test_leaf(const Node* node, const Ray& ray, float& best_score)
+   {
+      const auto distance = ray_triangle_intersect(node->primitive, ray);
+
+      if (!distance.has_value() || *distance > best_score)
+         return Result::miss();
+
+      best_score = *distance;
+      return {*distance, node->primitive_id};
+   }
+
+   static IntersectionResult test_intersection(const Node* node, const Ray& ray)
+   {
+      return IntersectionResult{node->bounding_box.intersect(ray)};
+   }
+
+   static float test_hit_score(const IntersectionResult& inter_result, const Node* /*node*/, const Ray& /*traversary*/)
+   {
+      assert(inter_result.has_hit());
+      return inter_result.result->x;
+   }
+};
+
+using BottomLevelRayTraverser = BVHTraverser<BottomLevelRayTraversalTraits>;
+
+struct BottomLevelSweepTraversalTraits
+{
+   using BaseTraits = BottomLevelBaseTraits;
+   using Node = BaseTraits::Node;
+   using Result = BottomLevelSweepResult;
+   struct Traversary
+   {
+      BoundingBox bounding_box;
+      Vector3 movement;
+   };
+
+   struct IntersectionResult
+   {
+      bool does_intersect = false;
+
+      [[nodiscard]] bool has_hit() const
+      {
+         return does_intersect;
+      }
+   };
+
+   static Result test_leaf(const Node* node, const Traversary& traversary, float& best_score)
+   {
+      const auto sweep_result = sweep_aabb_triangle(traversary.bounding_box, traversary.movement, node->primitive);
+      if (!sweep_result.hit_found) {
+         return {};
+      }
+
+      best_score = sweep_result.time;
+
+      return {
+         .time = sweep_result.time,
+         .normal = sweep_result.normal,
+         .primitive_id = node->primitive_id,
+      };
+   }
+
+   static IntersectionResult test_intersection(const Node* node, const Traversary& traversary)
+   {
+      return IntersectionResult{node->bounding_box.does_intersect_aabb(traversary.bounding_box.extend_by_movement(traversary.movement))};
+   }
+
+   static float test_hit_score(const IntersectionResult& /*inter_result*/, const Node* node, const Traversary& traversary)
+   {
+      return node->bounding_box.intersect_swept(traversary.bounding_box, traversary.movement).entry_time;
+   }
+};
+
+using BottomLevelSweepTraverser = BVHTraverser<BottomLevelSweepTraversalTraits>;
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
+struct TopLevelBaseTraits
+{
+   using Node = TopLevelNode<TIndex, TPayload>;
+   using UserData = std::map<TIndex, TopLevelNode<TIndex, TPayload>*>;
+
+   static Node* move_payload(UserData* user_data, Node* old_leaf)
+   {
+      auto* new_leaf = new Node{
+         .payload = std::move(std::get<TPayload>(old_leaf->payload)),
+         .parent = old_leaf,
+         .left = nullptr,
+         .right = nullptr,
+      };
+      user_data->operator[](std::get<TPayload>(new_leaf->payload).index()) = new_leaf;
+      return new_leaf;
+   }
+
+   static float calculate_insert_cost(UserData* /*user_data*/, const Node* parent, const Node* new_child)
+   {
+      const auto parent_bb = node_bounding_box(parent);
+      const auto child_bb = node_bounding_box(new_child);
+      return calculate_extension_cost(parent_bb, child_bb);
+   }
+
+   static void recalculate_bounds(UserData* /*user_data*/, Node* parent)
+   {
+      const auto new_bb = merge_bounding_boxes(node_bounding_box(parent->left), node_bounding_box(parent->right));
+      parent->max_surface_area = EXTENSION_MULTIPLIER * bounding_box_surface_area(new_bb);
+      parent->payload = new_bb;
+      parent->left->parent = parent;
+      parent->right->parent = parent;
+   }
+};
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload>
+using TopLevelUtil = BVHUtil<TopLevelBaseTraits<TIndex, TPayload>>;
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
+         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
+struct TopLevelRayTraversalTraits
+{
+   using BaseTraits = TopLevelBaseTraits<TIndex, TPayload>;
+   using Node = BaseTraits::Node;
+   using Result = TopLevelHit<TIndex, TPayload>;
+   struct Traversary
+   {
+      const Ray& ray;
+      const TBottomLevelProvider& bl_provider;
+   };
+
+   struct IntersectionResult
+   {
+      std::optional<Vector2> result;
+
+      [[nodiscard]] bool has_hit() const
+      {
+         return result.has_value();
+      }
+   };
+
+   static Result test_leaf(const Node* node, const Traversary& traversary, float& best_score)
+   {
+      auto& payload = std::get<TPayload>(node->payload);
+
+      auto& bottom_level = traversary.bl_provider.get_bottom_level(payload.index());
+      const auto bl_ray = traversary.ray.to_local_space(payload.inv_transform_matrix());
+      const auto bl_hit = bottom_level.traverse(bl_ray);
+      if (bl_hit.distance > best_score)
+         return Result::miss();
+
+      best_score = bl_hit.distance;
+      return Result{bl_hit.distance, &payload};
+   }
+
+   static IntersectionResult test_intersection(const Node* node, const Traversary& traversary)
+   {
+      return IntersectionResult{node_bounding_box(node).intersect(traversary.ray)};
+   }
+
+   static float test_hit_score(const IntersectionResult& inter_result, const Node* /*node*/, const Traversary& /*traversary*/)
+   {
+      assert(inter_result.has_hit());
+      return inter_result.result->x;
+   }
+};
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
+         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
+using TopLevelRayTraverser = BVHTraverser<TopLevelRayTraversalTraits<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>>;
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
+         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
+struct TopLevelSweepTraversalTraits
+{
+   using BaseTraits = TopLevelBaseTraits<TIndex, TPayload>;
+   using Node = BaseTraits::Node;
+   using Result = TopLevelSweptHit<TIndex, TPayload>;
+   struct Traversary
+   {
+      const BoundingBox& bounding_box;
+      Vector3 movement;
+      const TBottomLevelProvider& bl_provider;
+   };
+
+   struct IntersectionResult
+   {
+      bool does_intersect;
+
+      [[nodiscard]] bool has_hit() const
+      {
+         return does_intersect;
+      }
+   };
+
+   static Result test_leaf(const Node* node, const Traversary& traversary, float& best_score)
+   {
+      auto& payload = std::get<TPayload>(node->payload);
+
+      const SweepResult sweep_result = payload.bounding_box().intersect_swept(traversary.bounding_box, traversary.movement);
+      if (sweep_result.status == SweepStatus::Apart || sweep_result.status == SweepStatus::Exiting) {
+         return Result::miss();
+      }
+
+      auto& bottom_level = traversary.bl_provider.get_bottom_level(payload.index());
+      const auto ls_bb = traversary.bounding_box.transform(payload.inv_transform_matrix());
+      const auto ls_movement = payload.inv_transform_matrix().shrink() * traversary.movement;
+      const BottomLevelSweepResult result = bottom_level.traverse_swept(ls_bb, ls_movement);
+      if (result.primitive_id == ~0u) {
+         return Result::miss();
+      }
+      if (result.time >= best_score) {
+         return Result::miss();
+      }
+      best_score = result.time;
+
+      return Result{
+         .time = result.time,
+         .normal = (payload.inv_transform_matrix().shrink().transpose() * result.normal).normalize(),
+         .status = sweep_result.status,
+         .payload = &payload,
+      };
+   }
+
+   static IntersectionResult test_intersection(const Node* node, const Traversary& traversary)
+   {
+      return IntersectionResult{
+         node_bounding_box(node).does_intersect_aabb(traversary.bounding_box.extend_by_movement(traversary.movement))};
+   }
+
+   static float test_hit_score(const IntersectionResult& /*inter_result*/, const Node* node, const Traversary& traversary)
+   {
+      return node_bounding_box(node).intersect_swept(traversary.bounding_box, traversary.movement).entry_time;
+   }
+};
+
+template<typename TIndex, TopLevelPrimitive<TIndex> TPayload, typename TBottomLevel,
+         BottomLevelProvider<TIndex, TBottomLevel> TBottomLevelProvider>
+using TopLevelSweepTraverser = BVHTraverser<TopLevelSweepTraversalTraits<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>>;
 
 }// namespace detail
 
@@ -686,14 +655,24 @@ void BottomLevelBVH<TMesh>::build(TMesh& mesh)
    if (primitive_count == 0)
       return;
 
+   auto base_primitive = mesh.get_primitive(0);
    m_root = new BottomLevelNode{
       .primitive_id = 0,
-      .bounding_box = detail::bounding_box_from_triangle(mesh.get_primitive(0)),
+      .bounding_box = detail::bounding_box_from_triangle(base_primitive),
       .left = nullptr,
       .right = nullptr,
+      .primitive = base_primitive,
    };
    for (u32 i = 1; i < primitive_count; ++i) {
-      detail::insert_bottom_level_node(m_root, mesh, i);
+      auto primitive = mesh.get_primitive(i);
+      detail::BottomLevelUtils::insert_node(nullptr, m_root,
+                                            new BottomLevelNode{
+                                               .primitive_id = i,
+                                               .bounding_box = detail::bounding_box_from_triangle(primitive),
+                                               .left = nullptr,
+                                               .right = nullptr,
+                                               .primitive = primitive,
+                                            });
    }
 }
 
@@ -708,21 +687,21 @@ BottomLevelHit BottomLevelBVH<TMesh>::traverse(const Ray& ray) const
       return {INFINITY, ~0u};
 
    Ray mut_ray = ray;
-   return detail::traverse_bottom_level_node(m_root, mut_ray);
+   return detail::BottomLevelRayTraverser::traverse(m_root, mut_ray, mut_ray.distance);
 }
 
 template<TriangleMesh TMesh>
 BottomLevelSweepResult BottomLevelBVH<TMesh>::traverse_swept(const BoundingBox& bb, const Vector3& movement) const
 {
    float hit_time = INF;
-   return detail::traverse_bottom_level_node_aabb(m_root, bb, movement, hit_time);
+   return detail::BottomLevelSweepTraverser::traverse(m_root, {bb, movement}, hit_time);
 }
 
 template<TriangleMesh TMesh>
 void BottomLevelBVH<TMesh>::clear()
 {
    if (m_root != nullptr) {
-      detail::delete_bottom_level_node(m_root);
+      detail::BottomLevelUtils::destroy(m_root);
    }
    m_root = nullptr;
 }
@@ -761,8 +740,21 @@ TOP_LEVEL(TopLevelBVH<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>&)::o
 
 TOP_LEVEL(void)::add(const TPayload& payload)
 {
-   auto* node = detail::insert_node(m_root, payload);
+   auto* node = new TopLevelNode<TIndex, TPayload>{
+      .payload = payload,
+      .left = nullptr,
+      .right = nullptr,
+   };
+
    m_leave_mapping[payload.index()] = node;
+
+   if (m_root == nullptr) {
+      m_root = node;
+   } else {
+      detail::TopLevelUtil<TIndex, TPayload>::insert_node(&this->m_leave_mapping, m_root, node);
+   }
+
+   assert(node->is_leaf());
 }
 
 TOP_LEVEL(void)::remove(TIndex index)
@@ -813,12 +805,16 @@ TOP_LEVEL(void)::update(const TPayload& payload)
 
    auto* parent = leaf_it->second->parent;
    if (parent != nullptr) {
-      const auto current_bb = std::get<BoundingBox>(parent->payload);
-      const auto new_bb = detail::merge_bounding_boxes(current_bb, payload.bounding_box());
-      if (new_bb != current_bb) {
+      assert(leaf_it->second->is_leaf());
+      const auto old_bb = std::get<TPayload>(leaf_it->second->payload).bounding_box();
+      const auto new_bb = payload.bounding_box();
+      if (old_bb != new_bb) {
+         const auto* sibling_node = parent->left == leaf_it->second ? parent->right : parent->left;
+
+         const auto new_parent_bb = detail::merge_bounding_boxes(new_bb, detail::node_bounding_box(sibling_node));
          needs_to_update_parents = true;
 
-         const auto new_parent_surface_area = detail::bounding_box_surface_area(new_bb);
+         const auto new_parent_surface_area = detail::bounding_box_surface_area(new_parent_bb);
          if (new_parent_surface_area > parent->max_surface_area) {
             this->remove(payload.index());
             this->add(payload);
@@ -844,7 +840,7 @@ TOP_LEVEL(void)::build(std::span<TPayload> data)
 TOP_LEVEL(void)::clear()
 {
    if (m_root != nullptr) {
-      detail::delete_node(m_root);
+      detail::TopLevelUtil<TIndex, TPayload>::destroy(m_root);
    }
 }
 
@@ -854,13 +850,15 @@ TOP_LEVEL(TopLevelHit<TIndex, TPayload>)::traverse(const Ray& ray) const
       return {INFINITY, nullptr};
    }
    Ray mut_ray = ray;
-   return detail::traverse_node<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, mut_ray);
+   return detail::TopLevelRayTraverser<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>::traverse(m_root, {mut_ray, m_bl_provider},
+                                                                                                       mut_ray.distance);
 }
 
 TOP_LEVEL(TopLevelSweptHit<TIndex, TPayload>)::traverse_swept(const BoundingBox& bb, const Vector3& movement) const
 {
    float hit_time = INF;
-   return detail::traverse_node_aabb<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>(m_bl_provider, m_root, bb, movement, hit_time);
+   return detail::TopLevelSweepTraverser<TIndex, TPayload, TBottomLevel, TBottomLevelProvider>::traverse(
+      m_root, {bb, movement, m_bl_provider}, hit_time);
 }
 
 TOP_LEVEL(const TPayload&)::get(TIndex index)
