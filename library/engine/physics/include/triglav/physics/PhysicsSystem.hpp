@@ -1,9 +1,9 @@
 #pragma once
 
 #include "triglav/Logging.hpp"
-#include "triglav/geometry/BVHTree.hpp"
 #include "triglav/world/World.hpp"
 
+#include "LevelBVH.hpp"
 #include "MeshBVHStorage.hpp"
 
 namespace triglav::physics {
@@ -53,18 +53,18 @@ class PhysicsSystem : public world::ISystem
 
    [[nodiscard]] SweptHit trace_swept(const geometry::BoundingBox& bb, const Vector3& movement) const
    {
-      const auto hit = m_tree.traverse_swept(bb, movement);
+      const auto hit = m_tree.sweep_cast(bb, movement);
       return {
          .hit_time = hit.time,
          .normal = hit.normal,
-         .is_inside = hit.status == geometry::SweepStatus::Inside,
-         .entity_id = hit.payload == nullptr ? world::NO_ENTITY : hit.payload->entity_id,
+         .is_inside = false,
+         .entity_id = hit.entity_id,
       };
    }
 
  private:
    BVHProvider m_provider;
-   geometry::TopLevelBVH<world::EntityID, BVHNode, geometry::MeshBVH, BVHProvider> m_tree;
+   LevelBVH m_tree;
 };
 
 }// namespace triglav::physics

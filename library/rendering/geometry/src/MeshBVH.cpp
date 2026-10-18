@@ -177,8 +177,9 @@ struct MeshBVHRayTraversalTraits
    using Result = MeshBVH::RayHit;
    using Traversary = Ray;
    using IntersectionResult = BoundingBox::RayHit;
+   using UserData = std::monostate;
 
-   static Result test_leaf(const Node* node, const Ray& ray, float& best_score)
+   static Result test_leaf(const UserData* /*user_data*/, const Node* node, const Ray& ray, float& best_score)
    {
       assert(node->is_leaf_node);
       const auto distance = ray.intersect_triangle(node->leaf.primitive);
@@ -189,12 +190,13 @@ struct MeshBVHRayTraversalTraits
       return {*distance, node->leaf.primitive_id};
    }
 
-   static IntersectionResult test_intersection(const Node* node, const Ray& ray)
+   static IntersectionResult test_intersection(const UserData* /*user_data*/, const Node* node, const Ray& ray)
    {
       return node->bounding_box.intersect(ray);
    }
 
-   static float test_hit_score(const IntersectionResult& inter_result, const Node* /*node*/, const Ray& /*traversary*/)
+   static float test_hit_score(const UserData* /*user_data*/, const IntersectionResult& inter_result, const Node* /*node*/,
+                               const Ray& /*traversary*/)
    {
       assert(inter_result.has_hit());
       return inter_result.min_distance;
@@ -208,6 +210,7 @@ struct MeshBVHSweepTraversalTraits
    using BaseTraits = MeshBVHBaseTraits;
    using Node = BaseTraits::Node;
    using Result = MeshBVH::SweepHit;
+   using UserData = std::monostate;
    struct Traversary
    {
       BoundingBox bounding_box;
@@ -222,7 +225,7 @@ struct MeshBVHSweepTraversalTraits
       }
    };
 
-   static Result test_leaf(const Node* node, const Traversary& traversary, float& best_score)
+   static Result test_leaf(const UserData* /*user_data*/, const Node* node, const Traversary& traversary, float& best_score)
    {
       const auto sweep_result = sweep_aabb_triangle(traversary.bounding_box, traversary.movement, node->leaf.primitive);
       if (!sweep_result.hit_found) {
@@ -238,12 +241,13 @@ struct MeshBVHSweepTraversalTraits
       };
    }
 
-   static IntersectionResult test_intersection(const Node* node, const Traversary& traversary)
+   static IntersectionResult test_intersection(const UserData* /*user_data*/, const Node* node, const Traversary& traversary)
    {
       return {node->bounding_box.does_intersect_aabb(traversary.bounding_box.extend_by_movement(traversary.movement))};
    }
 
-   static float test_hit_score(const IntersectionResult& /*inter_result*/, const Node* node, const Traversary& traversary)
+   static float test_hit_score(const UserData* /*user_data*/, const IntersectionResult& /*inter_result*/, const Node* node,
+                               const Traversary& traversary)
    {
       return node->bounding_box.intersect_swept(traversary.bounding_box, traversary.movement).entry_time;
    }
@@ -312,13 +316,13 @@ MeshBVH::RayHit MeshBVH::ray_cast(const Ray& ray) const
       return RayHit::miss();
 
    Ray mut_ray = ray;
-   return MeshBVHRayTraverser::traverse(m_root, mut_ray, mut_ray.distance);
+   return MeshBVHRayTraverser::traverse(nullptr, m_root, mut_ray, mut_ray.distance);
 }
 
 MeshBVH::SweepHit MeshBVH::sweep_cast(const BoundingBox& bb, const Vector3& movement) const
 {
    float best_score = INF;
-   return MeshBVHSweepTraverser::traverse(m_root, {bb, movement}, best_score);
+   return MeshBVHSweepTraverser::traverse(nullptr, m_root, {bb, movement}, best_score);
 }
 
 void MeshBVH::clear()

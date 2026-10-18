@@ -78,10 +78,11 @@ struct BVHUtil
 template<typename T>
 concept BVHTraverseTraits =
    BVHBaseTraits<typename T::BaseTraits> && BVHResult<typename T::Result> && BVHIntersectionResult<typename T::IntersectionResult> &&
-   requires(const T::Node* node, const T::Traversary& traversary, const T::IntersectionResult& inter_res, float& best_score) {
-      { T::test_leaf(node, traversary, best_score) } -> std::same_as<typename T::Result>;
-      { T::test_intersection(node, traversary) } -> std::same_as<typename T::IntersectionResult>;
-      { T::test_hit_score(inter_res, node, traversary) } -> std::same_as<float>;
+   requires(T::UserData* user_data, const T::Node* node, const T::Traversary& traversary, const T::IntersectionResult& inter_res,
+            float& best_score) {
+      { T::test_leaf(user_data, node, traversary, best_score) } -> std::same_as<typename T::Result>;
+      { T::test_intersection(user_data, node, traversary) } -> std::same_as<typename T::IntersectionResult>;
+      { T::test_hit_score(user_data, inter_res, node, traversary) } -> std::same_as<float>;
    };
 
 template<BVHTraverseTraits TTraits>
@@ -91,22 +92,23 @@ struct BVHTraverser
    using Node = TTraits::BaseTraits::Node;
    using Traversary = TTraits::Traversary;
    using IntersectionResult = TTraits::IntersectionResult;
+   using UserData = TTraits::UserData;
 
-   static Result traverse(const Node* node, const Traversary& traversary, float& best_score)
+   static Result traverse(const UserData* user_data, const Node* node, const Traversary& traversary, float& best_score)
    {
       if (node->is_leaf()) {
-         return TTraits::test_leaf(node, traversary, best_score);
+         return TTraits::test_leaf(user_data, node, traversary, best_score);
       }
 
-      const auto left_check = TTraits::test_intersection(node->internal.left, traversary);
-      const auto right_check = TTraits::test_intersection(node->internal.right, traversary);
+      const auto left_check = TTraits::test_intersection(user_data, node->internal.left, traversary);
+      const auto right_check = TTraits::test_intersection(user_data, node->internal.right, traversary);
 
       if (!left_check.has_hit() && !right_check.has_hit()) {
          return Result::miss();
       }
       if (left_check.has_hit() && right_check.has_hit()) {
-         const float left_score = TTraits::test_hit_score(left_check, node->internal.left, traversary);
-         const float right_score = TTraits::test_hit_score(right_check, node->internal.right, traversary);
+         const float left_score = TTraits::test_hit_score(user_data, left_check, node->internal.left, traversary);
+         const float right_score = TTraits::test_hit_score(user_data, right_check, node->internal.right, traversary);
 
          const Node* first_node;
          float first_score;
@@ -127,10 +129,10 @@ struct BVHTraverser
 
          Result first_result = Result::miss();
          if (first_score < best_score) {
-            first_result = traverse(first_node, traversary, best_score);
+            first_result = traverse(user_data, first_node, traversary, best_score);
          }
          if (second_score < best_score) {
-            Result second_result = traverse(second_node, traversary, best_score);
+            Result second_result = traverse(user_data, second_node, traversary, best_score);
             if (second_result.score() < first_result.score()) {
                return second_result;
             }
@@ -148,11 +150,11 @@ struct BVHTraverser
          check = &right_check;
       }
 
-      const float score = TTraits::test_hit_score(*check, child_node, traversary);
+      const float score = TTraits::test_hit_score(user_data, *check, child_node, traversary);
       if (score >= best_score)
          return Result::miss();
 
-      return traverse(child_node, traversary, best_score);
+      return traverse(user_data, child_node, traversary, best_score);
    }
 };
 
