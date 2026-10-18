@@ -13,11 +13,11 @@ TranslationTool::TranslationTool(LevelEditor& level_editor) :
 
 bool TranslationTool::on_use_start(const geometry::Ray& ray)
 {
-   if (m_arrow_x_bb.intersect(ray)) {
+   if (m_arrow_x_bb.intersect(ray).has_hit()) {
       m_transform_axis = Axis::X;
-   } else if (m_arrow_y_bb.intersect(ray)) {
+   } else if (m_arrow_y_bb.intersect(ray).has_hit()) {
       m_transform_axis = Axis::Y;
-   } else if (m_arrow_z_bb.intersect(ray)) {
+   } else if (m_arrow_z_bb.intersect(ray).has_hit()) {
       m_transform_axis = Axis::Z;
    } else {
       return false;
@@ -54,19 +54,19 @@ void TranslationTool::on_mouse_moved(const Vector2 position)
       return;
    }
 
-   if (m_arrow_x_bb.intersect(ray)) {
+   if (m_arrow_x_bb.intersect(ray).has_hit()) {
       m_level_editor.viewport().render_viewport().set_color(OVERLAY_ARROW_X, COLOR_X_AXIS_HOVER);
    } else {
       m_level_editor.viewport().render_viewport().set_color(OVERLAY_ARROW_X, COLOR_X_AXIS);
    }
 
-   if (m_arrow_y_bb.intersect(ray)) {
+   if (m_arrow_y_bb.intersect(ray).has_hit()) {
       m_level_editor.viewport().render_viewport().set_color(OVERLAY_ARROW_Y, COLOR_Y_AXIS_HOVER);
    } else {
       m_level_editor.viewport().render_viewport().set_color(OVERLAY_ARROW_Y, COLOR_Y_AXIS);
    }
 
-   if (m_arrow_z_bb.intersect(ray)) {
+   if (m_arrow_z_bb.intersect(ray).has_hit()) {
       m_level_editor.viewport().render_viewport().set_color(OVERLAY_ARROW_Z, COLOR_Z_AXIS_HOVER);
    } else {
       m_level_editor.viewport().render_viewport().set_color(OVERLAY_ARROW_Z, COLOR_Z_AXIS);

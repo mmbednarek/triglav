@@ -81,6 +81,47 @@ MemorySize VertexView::size() const
    return m_data.size();
 }
 
+VertexConstView::VertexConstView(const VertexComponentFlags components, const std::span<const u8> data) :
+    m_components(components),
+    m_data(data)
+{
+}
+
+MemorySize VertexConstView::stride() const
+{
+   return get_vertex_size(m_components);
+}
+
+const u8* VertexConstView::vertex_start(const MemorySize index) const
+{
+   if (this->stride() * (index + 1) > m_data.size())
+      return nullptr;
+   return m_data.data() + this->stride() * index;
+}
+
+MemorySize VertexConstView::component_offset(const VertexComponent component) const
+{
+   return get_component_offset(m_components, component);
+}
+
+const u8* VertexConstView::vertex_component(const VertexComponent component, const MemorySize index) const
+{
+   auto* v_start = this->vertex_start(index);
+   if (v_start == nullptr)
+      return nullptr;
+   return v_start + this->component_offset(component);
+}
+
+const u8* VertexConstView::data() const
+{
+   return m_data.data();
+}
+
+MemorySize VertexConstView::size() const
+{
+   return m_data.size();
+}
+
 VertexBuffer::VertexBuffer() = default;
 
 u32 VertexBuffer::allocate_group(const VertexComponentFlags components, const MaterialName material, const MemorySize vertex_count,
@@ -104,6 +145,12 @@ VertexView VertexBuffer::group(const u32 index)
    return VertexView(group.components, {m_data.data() + group.vertex_offset, group.vertex_size});
 }
 
+VertexConstView VertexBuffer::group(const u32 index) const
+{
+   const auto& group = m_vertex_groups.at(index);
+   return VertexConstView(group.components, {m_data.data() + group.vertex_offset, group.vertex_size});
+}
+
 const u8* VertexBuffer::data() const
 {
    return m_data.data();
@@ -124,7 +171,7 @@ const std::vector<VertexGroup>& VertexBuffer::vertex_groups() const
    return m_vertex_groups;
 }
 
-Vector3 VertexBuffer::get_location(const u32 primitive_index, const u32 vertex_index)
+Vector3 VertexBuffer::get_location(const u32 primitive_index, const u32 vertex_index) const
 {
    u32 group_id = 0;
    for (const auto& group : m_vertex_groups) {

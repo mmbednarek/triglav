@@ -93,22 +93,22 @@ void RotationTool::on_mouse_moved(Vector2 position)
    const auto iy = m_rotator_y_bb.intersect(ray);
    const auto iz = m_rotator_z_bb.intersect(ray);
 
-   if (ix.has_value()) {
+   if (ix.has_hit()) {
       intersects = true;
-      min_distance = ix->x;
+      min_distance = ix.min_distance;
       axis = Axis::X;
    }
-   if (iy.has_value()) {
+   if (iy.has_hit()) {
       intersects = true;
-      if (iy->x < min_distance) {
-         min_distance = iy->x;
+      if (iy.min_distance < min_distance) {
+         min_distance = iy.min_distance;
          axis = Axis::Y;
       }
    }
-   if (iz.has_value()) {
+   if (iz.has_hit()) {
       intersects = true;
-      if (iz->x < min_distance) {
-         min_distance = iz->x;
+      if (iz.min_distance < min_distance) {
+         min_distance = iz.min_distance;
          axis = Axis::Z;
       }
    }

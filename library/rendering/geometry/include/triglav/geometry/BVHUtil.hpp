@@ -7,8 +7,8 @@ namespace triglav::geometry {
 
 template<typename T>
 concept BVHNode = requires(T* node) {
-   { node->left } -> std::convertible_to<T*>;
-   { node->right } -> std::convertible_to<T*>;
+   { node->internal.left } -> std::convertible_to<T*>;
+   { node->internal.right } -> std::convertible_to<T*>;
    { node->is_leaf() } -> std::same_as<bool>;
 };
 
@@ -41,24 +41,24 @@ struct BVHUtil
       if (parent->is_leaf()) {
          Node* new_leaf = TTraits::move_payload(user_data, parent);
 
-         parent->left = new_leaf;
-         parent->right = node;
+         parent->internal.left = new_leaf;
+         parent->internal.right = node;
 
          TTraits::recalculate_bounds(user_data, parent);
 
-         assert(parent->left->is_leaf());
-         assert(parent->right->is_leaf());
+         assert(parent->internal.left->is_leaf());
+         assert(parent->internal.right->is_leaf());
          assert(!parent->is_leaf());
          return;
       }
 
-      const auto left_cost = TTraits::calculate_insert_cost(user_data, parent->left, node);
-      const auto right_cost = TTraits::calculate_insert_cost(user_data, parent->right, node);
+      const auto left_cost = TTraits::calculate_insert_cost(user_data, parent->internal.left, node);
+      const auto right_cost = TTraits::calculate_insert_cost(user_data, parent->internal.right, node);
 
       if (left_cost < right_cost) {
-         insert_node(user_data, parent->left, node);
+         insert_node(user_data, parent->internal.left, node);
       } else {
-         insert_node(user_data, parent->right, node);
+         insert_node(user_data, parent->internal.right, node);
       }
 
       TTraits::recalculate_bounds(user_data, parent);
@@ -66,11 +66,9 @@ struct BVHUtil
 
    static void destroy(Node* node)
    {
-      if (node->left != nullptr) {
-         destroy(node->left);
-      }
-      if (node->right != nullptr) {
-         destroy(node->right);
+      if (!node->is_leaf()) {
+         destroy(node->internal.left);
+         destroy(node->internal.right);
       }
 
       delete node;
@@ -100,15 +98,15 @@ struct BVHTraverser
          return TTraits::test_leaf(node, traversary, best_score);
       }
 
-      const auto left_check = TTraits::test_intersection(node->left, traversary);
-      const auto right_check = TTraits::test_intersection(node->right, traversary);
+      const auto left_check = TTraits::test_intersection(node->internal.left, traversary);
+      const auto right_check = TTraits::test_intersection(node->internal.right, traversary);
 
       if (!left_check.has_hit() && !right_check.has_hit()) {
          return Result::miss();
       }
       if (left_check.has_hit() && right_check.has_hit()) {
-         const float left_score = TTraits::test_hit_score(left_check, node->left, traversary);
-         const float right_score = TTraits::test_hit_score(right_check, node->right, traversary);
+         const float left_score = TTraits::test_hit_score(left_check, node->internal.left, traversary);
+         const float right_score = TTraits::test_hit_score(right_check, node->internal.right, traversary);
 
          const Node* first_node;
          float first_score;
@@ -116,14 +114,14 @@ struct BVHTraverser
          float second_score;
 
          if (left_score < right_score) {
-            first_node = node->left;
+            first_node = node->internal.left;
             first_score = left_score;
-            second_node = node->right;
+            second_node = node->internal.right;
             second_score = right_score;
          } else {
-            first_node = node->right;
+            first_node = node->internal.right;
             first_score = right_score;
-            second_node = node->left;
+            second_node = node->internal.left;
             second_score = left_score;
          }
 
@@ -143,10 +141,10 @@ struct BVHTraverser
       Node* child_node{};
       const IntersectionResult* check = {};
       if (left_check.has_hit()) {
-         child_node = node->left;
+         child_node = node->internal.left;
          check = &left_check;
       } else {
-         child_node = node->right;
+         child_node = node->internal.right;
          check = &right_check;
       }
 

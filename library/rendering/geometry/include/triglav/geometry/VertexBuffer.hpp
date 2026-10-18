@@ -36,6 +36,31 @@ class VertexView
    std::span<u8> m_data;
 };
 
+class VertexConstView
+{
+ public:
+   VertexConstView(VertexComponentFlags components, std::span<const u8> data);
+
+   [[nodiscard]] MemorySize stride() const;
+   const u8* vertex_start(MemorySize index) const;
+   [[nodiscard]] MemorySize component_offset(VertexComponent component) const;
+   const u8* vertex_component(VertexComponent component, MemorySize index) const;
+
+   template<VertexComponentStruct T>
+   const T* get(const MemorySize index)
+   {
+      assert(m_components & T::Component);
+      return reinterpret_cast<const T*>(this->vertex_component(T::Component, index));
+   }
+
+   const u8* data() const;
+   [[nodiscard]] MemorySize size() const;
+
+ private:
+   VertexComponentFlags m_components;
+   std::span<const u8> m_data;
+};
+
 // Multilayout vertex buffer
 class VertexBuffer
 {
@@ -45,12 +70,13 @@ class VertexBuffer
    u32 allocate_group(VertexComponentFlags components, MaterialName material, MemorySize vertex_count, MemorySize index_offset,
                       MemorySize index_size);
    [[nodiscard]] VertexView group(u32 index);
+   [[nodiscard]] VertexConstView group(u32 index) const;
 
    [[nodiscard]] const u8* data() const;
    [[nodiscard]] u8* data();
    [[nodiscard]] MemorySize size() const;
    [[nodiscard]] const std::vector<VertexGroup>& vertex_groups() const;
-   [[nodiscard]] Vector3 get_location(u32 primitive_index, u32 vertex_index);
+   [[nodiscard]] Vector3 get_location(u32 primitive_index, u32 vertex_index) const;
 
  private:
    MemorySize m_allocated_size{};

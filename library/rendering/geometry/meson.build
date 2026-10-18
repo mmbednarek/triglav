@@ -1,19 +1,23 @@
 geometry_sources = files([
-  'include/triglav/geometry/BVHTree.hpp',
-  'include/triglav/geometry/BVHUtil.hpp',
-  'include/triglav/geometry/DebugMesh.hpp',
-  'include/triglav/geometry/Geometry.hpp',
-  'include/triglav/geometry/Mesh.hpp',
-  'include/triglav/geometry/MeshData.hpp',
-  'include/triglav/geometry/Parser.hpp',
-  'include/triglav/geometry/VertexBuffer.hpp',
-  'src/DebugMesh.cpp',
-  'src/InternalMesh.cpp',
-  'src/InternalMesh.hpp',
-  'src/Mesh.cpp',
-  'src/MeshData.cpp',
-  'src/Parser.cpp',
-  'src/VertexBuffer.cpp',
+# !GENERATED
+        'include/triglav/geometry/BVHTree.hpp',
+        'include/triglav/geometry/BVHUtil.hpp',
+        'include/triglav/geometry/DebugMesh.hpp',
+        'include/triglav/geometry/Geometry.hpp',
+        'include/triglav/geometry/MeshBVH.hpp',
+        'include/triglav/geometry/MeshData.hpp',
+        'include/triglav/geometry/Mesh.hpp',
+        'include/triglav/geometry/Parser.hpp',
+        'include/triglav/geometry/VertexBuffer.hpp',
+        'src/DebugMesh.cpp',
+        'src/InternalMesh.cpp',
+        'src/InternalMesh.hpp',
+        'src/MeshBVH.cpp',
+        'src/Mesh.cpp',
+        'src/MeshData.cpp',
+        'src/Parser.cpp',
+        'src/VertexBuffer.cpp',
+# !END
 ])
 
 geometry_pub_deps = [graphics_api, io, memory]

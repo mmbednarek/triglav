@@ -64,7 +64,7 @@ class PhysicsSystem : public world::ISystem
 
  private:
    BVHProvider m_provider;
-   geometry::TopLevelBVH<world::EntityID, BVHNode, geometry::BottomLevelBVH<MeshReference>, BVHProvider> m_tree;
+   geometry::TopLevelBVH<world::EntityID, BVHNode, geometry::MeshBVH, BVHProvider> m_tree;
 };
 
 }// namespace triglav::physics

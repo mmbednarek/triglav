@@ -190,16 +190,16 @@ void ScalingTool::on_left_tool()
 
 std::optional<Axis> ScalingTool::get_transform_axis(const geometry::Ray& ray) const
 {
-   if (m_scaler_xyz_bb.intersect(ray)) {
+   if (m_scaler_xyz_bb.intersect(ray).has_hit()) {
       return Axis::W;
    }
-   if (m_scaler_x_bb.intersect(ray)) {
+   if (m_scaler_x_bb.intersect(ray).has_hit()) {
       return Axis::X;
    }
-   if (m_scaler_y_bb.intersect(ray)) {
+   if (m_scaler_y_bb.intersect(ray).has_hit()) {
       return Axis::Y;
    }
-   if (m_scaler_z_bb.intersect(ray)) {
+   if (m_scaler_z_bb.intersect(ray).has_hit()) {
       return Axis::Z;
    }
 

@@ -162,6 +162,15 @@ class ComponentView : public desktop_ui::DesktopProxyWidget
          .separation = 8.0f,
       });
 
+      vert_layout.create_child<ui_core::TextBox>({
+         .font_size = TG_THEME_VAL(base_font_size),
+         .typeface = TG_THEME_VAL(base_typeface),
+         .content = format("E{}", m_state.entity_id),
+         .color = {0.6f, 0.6f, 0.6f, 1.0f},
+         .horizontal_alignment = ui_core::HorizontalAlignment::Left,
+         .vertical_alignment = ui_core::VerticalAlignment::Center,
+      });
+
       if (m_state.level == nullptr)
          return;
 

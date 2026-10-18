@@ -136,6 +136,38 @@ struct Ray
          .distance = this->distance,
       };
    }
+
+   [[nodiscard]] constexpr std::optional<float> intersect_triangle(const std::array<Vector3, 3>& primitive) const
+   {
+      static constexpr float TOLERANCE = 0.0001f;
+
+      const Vector3 edge1 = primitive[1] - primitive[0];
+      const Vector3 edge2 = primitive[2] - primitive[0];
+
+      const Vector3 h = this->direction.cross(edge2);
+      const float a = edge1.dot(h);
+
+      if (a > -TOLERANCE && a < TOLERANCE)
+         return std::nullopt;
+
+      const float f = 1.0f / a;
+      const Vector3 s = this->origin - primitive[0];
+
+      const float u = f * s.dot(h);
+      if (u < 0.0f || u > 1.0f)
+         return std::nullopt;
+
+      const Vector3 q = s.cross(edge1);
+      const float v = f * this->direction.dot(q);
+      if (v < 0.0f || (v + u) > 1.0f)
+         return std::nullopt;
+
+      const auto t = f * edge2.dot(q);
+      if (t < TOLERANCE)
+         return std::nullopt;
+
+      return t;
+   }
 };
 
 enum class SweepStatus
@@ -175,6 +207,22 @@ struct BoundingBox
    alignas(16) Vector3 min;
    alignas(16) Vector3 max;
 
+   struct RayHit
+   {
+      float min_distance{INF};
+      float max_distance{-INF};
+
+      [[nodiscard]] static RayHit miss()
+      {
+         return {};
+      }
+
+      [[nodiscard]] bool has_hit() const
+      {
+         return min_distance != INF;
+      }
+   };
+
    [[nodiscard]] constexpr Vector3 centroid() const
    {
       return (max + min) * 0.5f;
@@ -185,7 +233,7 @@ struct BoundingBox
       return (max - min) * 0.5f;
    }
 
-   [[nodiscard]] constexpr std::optional<Vector2> intersect(const Ray& ray) const
+   [[nodiscard]] constexpr RayHit intersect(const Ray& ray) const
    {
       const float tx1 = (min.x - ray.origin.x) / ray.direction.x;
       const float tx2 = (max.x - ray.origin.x) / ray.direction.x;
@@ -200,9 +248,9 @@ struct BoundingBox
       t_min = std::max(t_min, std::min(tz1, tz2));
       t_max = std::min(t_max, std::max(tz1, tz2));
       if (t_max >= t_min && t_min < ray.distance && t_max > 0) {
-         return Vector2{t_min, t_max};
+         return RayHit{t_min, t_max};
       }
-      return std::nullopt;
+      return RayHit::miss();
    }
 
    [[nodiscard]] constexpr BoundingBox extend_by_movement(const Vector3& movement) const
@@ -292,7 +340,7 @@ struct BoundingBox
 
    [[nodiscard]] constexpr bool does_intersect(const Ray& ray) const
    {
-      return this->intersect(ray).has_value();
+      return this->intersect(ray).has_hit();
    }
 
    [[nodiscard]] BoundingBox transform(const Matrix4x4& mat) const
@@ -343,6 +391,25 @@ struct BoundingBox
    {
       this->min += vector;
       this->max += vector;
+   }
+
+   [[nodiscard]] BoundingBox merge(const BoundingBox& right) const
+   {
+      return {
+         .min = {std::min(this->min.x, right.min.x), std::min(this->min.y, right.min.y), std::min(this->min.z, right.min.z)},
+         .max = {std::max(this->max.x, right.max.x), std::max(this->max.y, right.max.y), std::max(this->max.z, right.max.z)},
+      };
+   }
+
+   [[nodiscard]] constexpr float half_surface_area() const
+   {
+      const auto scale = this->scale();
+      return scale.x * scale.y + scale.x * scale.z + scale.y * scale.z;
+   }
+
+   [[nodiscard]] constexpr float extension_cost(const BoundingBox& extension) const
+   {
+      return this->merge(extension).half_surface_area() - this->half_surface_area();
    }
 };
 
