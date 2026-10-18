@@ -272,9 +272,10 @@ LevelBVH::Node* build_bvh(std::span<LevelBVH::Node*> nodes, LevelBVH::Node* pare
    const auto bb = calculate_bounding_box(nodes);
    auto axis = bb.major_axis();
 
-   std::sort(nodes.begin(), nodes.end(), [axis](const LevelBVH::Node* left, const LevelBVH::Node* right) {
-      return left->bounding_box.centroid()[axis] > right->bounding_box.centroid()[axis];
-   });
+   std::nth_element(nodes.begin(), nodes.begin() + (nodes.size() / 2), nodes.end(),
+                    [axis](const LevelBVH::Node* left, const LevelBVH::Node* right) {
+                       return left->bounding_box.centroid()[axis] > right->bounding_box.centroid()[axis];
+                    });
 
    const auto mid = nodes.size() / 2;
 
