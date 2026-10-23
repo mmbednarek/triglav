@@ -6,6 +6,7 @@ resources:
   - "material/stone.mat"
   - "mesh/teapot.mesh"
   - "mesh/simple_human.mesh"
+  - "mesh/table.mesh"
   - "texture/board.tex"
   - "texture/particle.tex"
   - "texture/ui_images.tex"

@@ -3,6 +3,7 @@
 #include "../../../library/engine/physics/include/triglav/physics/PhysicsSystem.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/physics/Physics.hpp"
+#include "triglav/world/Archetypes.hpp"
 
 using namespace triglav::name_literals;
 using triglav::mem_size;
@@ -18,65 +19,7 @@ namespace {
 
 constexpr float CAMERA_DISTANCE = 16.0f;
 constexpr float PLAYER_SPEED = 20.0f;
-
-Vector3 calculate_movement_vector(const triglav::physics::PhysicsSystem& physics, BoundingBox player_box, const Vector3& movement,
-                                  Vector3& out_normal)
-{
-   static constexpr int MAX_ITER = 2;
-   static constexpr float TOLERANCE = 1e-8f;
-   static constexpr float MARGIN = 1e-4f;
-
-   Vector3 total{};
-   Vector3 remaining = movement;
-   std::array<Vector3, MAX_ITER> planes{};
-   mem_size plane_count = 0;
-
-   for (int iter = 0; iter < MAX_ITER; ++iter) {
-      if (remaining.length_sq() < TOLERANCE)
-         break;
-
-      const auto hit = physics.trace_swept(player_box, remaining);
-      out_normal = hit.normal;
-
-      if (hit.entity_id == triglav::world::NO_ENTITY || hit.hit_time >= 1.0f) {
-         player_box.translate(remaining);
-         total = total + remaining;
-         break;
-      }
-
-      const Vector3 advance = remaining * hit.hit_time + hit.normal * MARGIN;
-      player_box.translate(advance);
-      total = total + advance;
-
-      const Vector3 leftover = remaining * (1.0f - hit.hit_time);
-      Vector3 slide = leftover - hit.normal * leftover.dot(hit.normal);
-
-      for (mem_size plane_id = 0; plane_id < plane_count; ++plane_id) {
-         if (slide.dot(planes[plane_id]) < 0.0f) {
-            Vector3 crease = hit.normal.cross(planes[plane_id]);
-            if (crease.length_sq() < TOLERANCE) {
-               slide = Vector3{};
-               break;
-            }
-            crease = crease.normalize();
-            slide = crease * leftover.dot(crease);
-
-            for (mem_size j = 0; j < plane_count; ++j) {
-               if (j != plane_id && slide.dot(planes[j]) < 0.0f) {
-                  slide = {};
-                  break;
-               }
-            }
-            break;
-         }
-      }
-
-      planes[plane_count++] = hit.normal;
-      remaining = slide;
-   }
-
-   return total;
-}
+constexpr float CAMERA_OFFSET = 0.5f;
 
 }// namespace
 
@@ -89,29 +32,42 @@ CharacterController::CharacterController(triglav::renderer::ViewContext& view_co
 
 void CharacterController::setup_character()
 {
-   // const auto& simple_mesh = triglav::engine::resource_manager().get("mesh/simple_human.mesh"_rc);
-   // m_bounding_box = simple_mesh.bounding_box;
-   m_bounding_box = BoundingBox{
-      .min = {-1.0f, -1.0f, -1.0f},
-      .max = {2.0f, 2.0f, 2.0f},
-   };
+   const auto& mesh = triglav::engine::resource_manager().get("mesh/simple_human.mesh"_rc);
+   m_bounding_box = mesh.bounding_box;
+   // m_bounding_box = BoundingBox{
+   //    .min = {-1.0f, -1.0f, -3.25f},
+   //    .max = {2.0f, 2.0f, 2.0f},
+   // };
 
    auto transform = Transform3D::identity();
-   transform.translation = m_character_position;
-   transform.scale = {5.0f, 5.0f, 5.0f};
+   transform.translation = {20.0f, 0.0f, 3.5f};
+   transform.scale *= 5.0f;
 
    auto* level = triglav::engine::level();
-   m_character_id = level->new_entity();
-   level->insert_component<triglav::world::Mesh>(m_character_id)->name = "mesh/simple_human.mesh"_rc;
-   *level->insert_component<Transform3D>(m_character_id) = transform;
-   level->insert_component<triglav::world::Armature>(m_character_id)->name = "armature/simple_human_rig.arm"_rc;
-   level->insert_component<triglav::world::EntityLabel>(m_character_id)->label = "Character";
-   level->insert_component<triglav::world::Tag>(m_character_id)->tag = "Character"_name;
+   assert(level != nullptr);
+
+   m_character_id = level->create_archetype<triglav::world::SkeletalMesh>({
+      .label = "Character",
+      .mesh_name = "mesh/simple_human.mesh"_rc,
+      .transform = transform,
+      .armature_name = "armature/simple_human_rig.arm"_rc,
+   });
    level->insert_component<triglav::physics::Movement>(m_character_id)->motion = Vector3{};
+
+   auto ball_transform = Transform3D::identity();
+   ball_transform.translation = Vector3{10.0f, 0, 100.0f};
+   ball_transform.scale *= 3.0f;
+
+   m_table_id = level->create_archetype<triglav::world::StaticMesh>({
+      .label = "Ball",
+      .mesh_name = "mesh/ball.mesh"_rc,
+      .transform = ball_transform,
+   });
+   level->insert_component<triglav::physics::Movement>(m_table_id)->motion = Vector3{0.0f, 0.0f, 0.1f};
 
    triglav::engine::level()->flush();
 
-   this->forward_state();
+   this->forward_state(level->mut_component<Transform3D>(m_character_id));
 }
 
 void CharacterController::on_analog_action(const AnalogAction action, const triglav::Vector2 value)
@@ -128,7 +84,12 @@ void CharacterController::on_analog_action(const AnalogAction action, const trig
 
 void CharacterController::jump()
 {
-   m_motion += Vector3{0, 0, 10.0f};
+   auto* level = triglav::engine::level();
+   assert(level != nullptr);
+
+   auto& movement = level->mut_component<triglav::physics::Movement>(m_character_id);
+   movement.motion += Vector3{0, 0, 10.0f};
+   movement.is_on_ground = false;
 }
 
 void CharacterController::stop_character()
@@ -145,42 +106,22 @@ void CharacterController::stop_character()
 
 void CharacterController::tick(const float delta_time)
 {
-   Vector3 move_vector = {};
-   if (!m_is_on_ground) {
-      m_motion += delta_time * Vector3{0, 0, -40.0f};
-   }
-   move_vector += delta_time * m_motion;
+   triglav::engine::system<triglav::physics::PhysicsSystem>().tick(delta_time);
 
-   if (m_is_moving) {
-      move_vector += PLAYER_SPEED * delta_time * m_character_forward;
-      m_is_on_ground = false;
-   }
+   auto* level = triglav::engine::level();
+   assert(level != nullptr);
 
-   if ((m_character_position.z + move_vector.z) <= 3.5f) {
-      move_vector += {0.0f, 0.0f, 3.5f - m_character_position.z - move_vector.z};
-      m_motion.z = 0.0f;
-      m_is_on_ground = true;
-   }
-   if (move_vector.length() <= 1e-7f) {
-      return;
-   }
+   Transform3D& transform = level->mut_component<Transform3D>(m_character_id);
+   this->forward_state(transform);
 
-   auto character_box = m_bounding_box.transform(Transform3D{
-      .rotation = Quaternion{1, 0, 0, 0},
-      .scale = {1, 1, 1},
-      .translation = m_character_position,
+   triglav::physics::Movement& movement = level->mut_component<triglav::physics::Movement>(m_character_id);
+   if (!m_is_moving) {
+      movement.motion.x = 0.0f;
+      movement.motion.y = 0.0f;
+   } else {
+      movement.motion.x = PLAYER_SPEED * m_character_forward.x;
+      movement.motion.y = PLAYER_SPEED * m_character_forward.y;
    }
-                                                    .to_matrix());
-
-   const auto& physics_system = triglav::engine::system<triglav::physics::PhysicsSystem>();
-   Vector3 normal{};
-   m_character_position += calculate_movement_vector(physics_system, character_box, move_vector, normal);
-   if (normal.z > 0.0f) {
-      m_is_on_ground = true;
-      m_motion.z = 0.0f;
-   }
-
-   this->forward_state();
 }
 
 void CharacterController::on_movement(const triglav::Vector2 value)
@@ -214,24 +155,26 @@ void CharacterController::on_view(const Vector2 value)
       this->recalculate_forward_vector();
    }
 
-   this->forward_state();
+   this->forward_state(triglav::engine::level()->mut_component<Transform3D>(m_character_id));
 }
 
-void CharacterController::forward_state() const
+void CharacterController::forward_state(Transform3D& transform) const
 {
    // The character is looking at
-
    const auto rot = Quaternion::from_oriented_vector(Vector3{0.0f, -1.0f, 0.0f}, m_character_forward);
 
-   auto transform = Transform3D::identity();
-   transform.translation = m_character_position;
    transform.rotation = rot;
    transform.scale = Vector3{2.5f, 2.5f, 2.5f};
 
-   triglav::engine::level()->mut_component<Transform3D>(m_character_id) = transform;
-
    const auto camera_forward = m_camera_orientation * Vector3{0.0f, 1.0f, 0.0f};
-   const auto camera_position = m_character_position - CAMERA_DISTANCE * camera_forward;
+   triglav::geometry::Ray camera_ray{
+      .origin = transform.translation,
+      .direction = -camera_forward,
+      .distance = CAMERA_DISTANCE,
+   };
+   const auto hit = triglav::engine::system<triglav::physics::PhysicsSystem>().ray_cast(camera_ray);
+   const float cam_distance = (hit.entity_id != triglav::world::NO_ENTITY ? hit.distance : CAMERA_DISTANCE) - CAMERA_OFFSET;
+   const auto camera_position = transform.translation - cam_distance * camera_forward;
 
    m_view_context.set_camera(camera_position, m_camera_orientation);
 }

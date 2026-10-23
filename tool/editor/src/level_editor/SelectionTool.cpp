@@ -15,7 +15,7 @@ SelectionTool::SelectionTool(LevelEditor& level_editor) :
 
 bool SelectionTool::on_use_start(const geometry::Ray& ray)
 {
-   const auto hit = m_level_editor.level().system<physics::PhysicsSystem>().trace_ray(ray);
+   const auto hit = m_level_editor.level().system<physics::PhysicsSystem>().ray_cast(ray);
    if (hit.entity_id != world::NO_ENTITY) {
       m_level_editor.set_selected_object(hit.entity_id);
    }

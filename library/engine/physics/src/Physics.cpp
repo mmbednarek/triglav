@@ -9,6 +9,7 @@ using namespace name_literals;
 #define TG_TYPE(NS) NS(triglav, NS(physics, Movement))
 TG_META_CLASS_BEGIN
 TG_META_PROPERTY(motion, triglav::Vector3)
+TG_META_PROPERTY(is_on_ground, bool)
 TG_META_CLASS_END
 #undef TG_TYPE
 

@@ -134,7 +134,7 @@ concept HasPushBack = requires(T t, TElem elem) {
 };
 
 template<typename TIt, typename TValue, typename TTrans>
-TIt find_binary(TIt begin, TIt end, TValue value, TTrans trans)
+TIt find_binary(TIt begin, TIt end, TValue value, TTrans trans = [](typename TIt::value_type v) -> TValue { return v; })
 {
    const auto saved_end = end;
    while (begin != end) {

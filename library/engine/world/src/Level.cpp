@@ -25,50 +25,6 @@ namespace triglav::world {
 
 using namespace name_literals;
 
-EntityID Level::add_node(const Name id, LevelNode&& node)
-{
-   std::array comp_names{
-      "triglav::Transform3D"_name,        "triglav::world::Mesh"_name,     "triglav::world::Tag"_name,
-      "triglav::world::EntityLabel"_name, "triglav::world::Armature"_name,
-   };
-   std::array<void*, 5> component_ptrs{};
-   std::array<ComponentID, 5> component_ids{};
-
-   ensure_component_registration();
-
-   assert(ComponentManager::the().class_names_to_ids(comp_names, component_ids));
-
-   EntityID entity_id = 0;
-
-   for (const auto& static_mesh : node.static_meshes()) {
-      std::span<ComponentID> comp_id_span = component_ids;
-      std::span<void*> ptr_span = component_ptrs;
-      if (!static_mesh.armature_name.has_value()) {
-         comp_id_span = comp_id_span.subspan(0, 4);
-         ptr_span = ptr_span.subspan(0, 4);
-      }
-
-      entity_id = m_entity_storage.allocate_entity(0);
-      m_entity_storage.allocate_components(entity_id, comp_id_span);
-
-      assert(m_entity_storage.get_components(entity_id, comp_id_span, ptr_span));
-
-      *static_cast<Transform3D*>(component_ptrs[0]) = static_mesh.transform;
-      static_cast<Mesh*>(component_ptrs[1])->name = static_mesh.mesh_name;
-      static_cast<Tag*>(component_ptrs[2])->tag = id;
-      static_cast<EntityLabel*>(component_ptrs[3])->label = static_mesh.name;
-      if (static_mesh.armature_name.has_value()) {
-         static_cast<Armature*>(component_ptrs[4])->name = *static_mesh.armature_name;
-      }
-
-      for (const auto component_id : comp_id_span) {
-         m_addition_lists[component_id].emplace_back(entity_id);
-      }
-   }
-
-   return entity_id;
-}
-
 void Level::init_entities()
 {
    m_entity_storage.init();
@@ -79,19 +35,6 @@ void Level::on_loaded_resources()
    for (const auto& [sys_name, system] : m_systems) {
       system.system->on_level_loaded(*this);
    }
-}
-
-LevelNode& Level::at(const Name /*id*/)
-{
-   assert(false);
-   static LevelNode node{""};
-   return node;
-}
-
-LevelNode& Level::root()
-{
-   using namespace name_literals;
-   return this->at("root"_name);
 }
 
 meta::Ref Level::component_ref(const EntityID entity_id, const Name component_name) const
@@ -187,7 +130,11 @@ void Level::flush()
 
 void Level::insert_component_change(const ComponentID id, const EntityID entity)
 {
-   m_change_lists[id].emplace_back(entity);
+   auto& change_list = m_change_lists[id];
+   auto it = std::lower_bound(change_list.begin(), change_list.end(), entity);
+   if (it == change_list.end() || *it != entity) {
+      change_list.insert(it, entity);
+   }
 }
 
 bool Level::save_to_file(const io::Path& path) const

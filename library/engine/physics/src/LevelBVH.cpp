@@ -124,8 +124,8 @@ struct LevelBVHSweepTraversalTraits
    static Result test_leaf(const UserData* user_data, const Node* node, const Traversary& traversary, float& best_score)
    {
       assert(node != nullptr && node->is_leaf_node);
-      const geometry::SweepResult sweep_result = node->bounding_box.intersect_swept(traversary.bounding_box, traversary.movement);
-      if (sweep_result.status == geometry::SweepStatus::Apart || sweep_result.status == geometry::SweepStatus::Exiting) {
+      const auto sweep_result = node->bounding_box.intersect_swept(traversary.bounding_box, traversary.movement);
+      if (!sweep_result.has_hit()) {
          return Result::miss();
       }
 
@@ -218,20 +218,28 @@ LevelBVH& LevelBVH::operator=(LevelBVH&& other) noexcept
 
 namespace {
 
-LevelBVH::Node* leaf_from_entity_id(const world::Level& level, const world::EntityID entity_id, const world::Mesh* mesh_comp = nullptr)
+LevelBVH::Node* leaf_from_entity_id(const world::Level& level, const world::EntityID entity_id, const world::Mesh* mesh_comp = nullptr,
+                                    const Movement* movement_comp = nullptr)
 {
    if (mesh_comp == nullptr) {
       mesh_comp = level.component_opt<world::Mesh>(entity_id);
       assert(mesh_comp != nullptr);
    }
+   if (movement_comp == nullptr) {
+      movement_comp = level.component_opt<Movement>(entity_id);
+   }
    const auto& mesh = engine::resource_manager().get(mesh_comp->name);
    const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
    Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
    const auto transform_matrix = transform.to_matrix();
+   auto bb = mesh.bounding_box.transform(transform_matrix);
+   if (movement_comp != nullptr) {
+      bb = bb.extend_by_movement(movement_comp->motion);
+   }
 
    return new LevelBVH::Node{
       .parent = nullptr,
-      .bounding_box = mesh.bounding_box.transform(transform_matrix),
+      .bounding_box = bb,
       .is_leaf_node = true,
       .leaf =
          {
@@ -272,10 +280,9 @@ LevelBVH::Node* build_bvh(std::span<LevelBVH::Node*> nodes, LevelBVH::Node* pare
    const auto bb = calculate_bounding_box(nodes);
    auto axis = bb.major_axis();
 
-   std::nth_element(nodes.begin(), nodes.begin() + (nodes.size() / 2), nodes.end(),
-                    [axis](const LevelBVH::Node* left, const LevelBVH::Node* right) {
-                       return left->bounding_box.centroid()[axis] > right->bounding_box.centroid()[axis];
-                    });
+   std::ranges::nth_element(nodes, nodes.begin() + (nodes.size() / 2), [axis](const LevelBVH::Node* left, const LevelBVH::Node* right) {
+      return left->bounding_box.centroid()[axis] > right->bounding_box.centroid()[axis];
+   });
 
    const auto mid = nodes.size() / 2;
 
@@ -382,6 +389,7 @@ void LevelBVH::update(const world::EntityID entity_id)
    }
 
    auto* leaf = leaf_it->second;
+   leaf->bounding_box = data.bounding_box;
    leaf->leaf = {
       .entity_id = entity_id,
       .inv_transform = data.inv_transform,
@@ -392,7 +400,7 @@ void LevelBVH::update(const world::EntityID entity_id)
    }
 }
 
-void LevelBVH::build()
+void LevelBVH::build_static()
 {
    this->clear();
 
@@ -403,6 +411,25 @@ void LevelBVH::build()
       if (m_level.has_component<Movement>(entity_id))
          continue;
       auto* node = leaf_from_entity_id(m_level, entity_id, &mesh_comp);
+      m_leave_mapping[entity_id] = node;
+      nodes.emplace_back(node);
+   }
+
+   m_root = build_bvh(nodes, nullptr);
+}
+
+void LevelBVH::build_dynamic()
+{
+   this->clear();
+
+   std::vector<Node*> nodes;
+   nodes.reserve(m_level.component_count<Movement>());
+
+   for (const auto& [entity_id, movement_comp] : m_level.all<Movement>()) {
+      const auto* mesh_comp = m_level.component_opt<world::Mesh>(entity_id);
+      if (mesh_comp == nullptr)
+         continue;
+      auto* node = leaf_from_entity_id(m_level, entity_id, mesh_comp, &movement_comp);
       m_leave_mapping[entity_id] = node;
       nodes.emplace_back(node);
    }
@@ -439,6 +466,58 @@ LevelBVH::SweepHit LevelBVH::sweep_cast(const geometry::BoundingBox& bb, const V
       .mesh_provider = &m_mesh_provider,
    };
    return LevelBVHSweepTraverser::traverse(&user_data, m_root, {bb, movement}, hit_time);
+}
+
+bool LevelBVH::contains(const world::EntityID entity_id) const
+{
+   return m_leave_mapping.contains(entity_id);
+}
+
+geometry::BoundingBox LevelBVH::bounding_box(const world::EntityID entity_id) const
+{
+   const auto it = m_leave_mapping.find(entity_id);
+   if (it == m_leave_mapping.end()) {
+      return {};
+   }
+
+   return it->second->bounding_box;
+}
+
+namespace {
+
+void find_overlap_recursive(std::vector<std::pair<world::EntityID, world::EntityID>>& out_overlaps, LevelBVH::Node* left,
+                            LevelBVH::Node* right)
+{
+   if (!left->bounding_box.does_intersect_aabb(right->bounding_box))
+      return;
+
+   const auto ll = left->is_leaf();
+   const auto lr = right->is_leaf();
+
+   if (ll && lr) {
+      out_overlaps.emplace_back(left->leaf.entity_id, right->leaf.entity_id);
+      return;
+   }
+   if (!ll) {
+      find_overlap_recursive(out_overlaps, left->internal.left, right);
+      find_overlap_recursive(out_overlaps, left->internal.right, right);
+   }
+   if (!lr) {
+      find_overlap_recursive(out_overlaps, left, right->internal.left);
+      find_overlap_recursive(out_overlaps, left, right->internal.right);
+   }
+}
+
+}// namespace
+
+void LevelBVH::find_overlaps(std::vector<std::pair<world::EntityID, world::EntityID>>& out_overlaps) const
+{
+   if (m_root == nullptr)
+      return;
+   if (m_root->is_leaf())
+      return;
+
+   find_overlap_recursive(out_overlaps, m_root->internal.left, m_root->internal.right);
 }
 
 }// namespace triglav::physics

@@ -170,38 +170,6 @@ struct Ray
    }
 };
 
-enum class SweepStatus
-{
-   Apart,
-   Colliding,
-   Inside,
-   Exiting,
-};
-
-inline std::string_view sweep_status_to_string(const SweepStatus s)
-{
-   switch (s) {
-   case SweepStatus::Apart:
-      return "apart";
-   case SweepStatus::Colliding:
-      return "colliding";
-   case SweepStatus::Inside:
-      return "inside";
-   case SweepStatus::Exiting:
-      return "exiting";
-   default:
-      return "";
-   }
-}
-
-struct SweepResult
-{
-   float entry_time{INF};
-   float exit_time{-INF};
-   SweepStatus status{SweepStatus::Apart};
-   Vector3 normal{};
-};
-
 struct BoundingBox
 {
    alignas(16) Vector3 min;
@@ -220,6 +188,22 @@ struct BoundingBox
       [[nodiscard]] bool has_hit() const
       {
          return min_distance != INF;
+      }
+   };
+
+   struct SweepResult
+   {
+      float entry_time{INF};
+      Vector3 normal{};
+
+      [[nodiscard]] static SweepResult miss()
+      {
+         return {INF, {}};
+      }
+
+      [[nodiscard]] bool has_hit() const
+      {
+         return entry_time < 1.0f;
       }
    };
 
@@ -285,7 +269,7 @@ struct BoundingBox
       for (const Axis axis : Vector3::AXES) {
          if (std::abs(movement[axis]) < EPSILON) {
             if (dynamic_box.max[axis] < this->min[axis] || dynamic_box.min[axis] > this->max[axis]) {
-               return {INF, -INF, SweepStatus::Apart, {}};
+               return {INF, {}};
             }
             continue;
          }
@@ -301,17 +285,11 @@ struct BoundingBox
       Vector3 normal;
       normal[entry_axis] = inv_entry[entry_axis] > 0.0f ? -1.0f : 1.0f;
 
-      if (entry_time < 0.0f && exit_time > 1.0f) {
-         return {entry_time, exit_time, SweepStatus::Inside, normal};
-      }
-      if (entry_time < 0.0f && exit_time > 0.0f && exit_time < 1.0f) {
-         return {entry_time, exit_time, SweepStatus::Exiting, normal};
-      }
       if (entry_time > exit_time || entry_time > 1.0f || exit_time < 0.0f) {
-         return {entry_time, exit_time, SweepStatus::Apart, normal};
+         return {INF, {}};
       }
 
-      return {entry_time, exit_time, SweepStatus::Colliding, normal};
+      return {entry_time, normal};
    }
 
    [[nodiscard]] Vector3 minimum_translation_vector(const BoundingBox& dynamic_bb) const

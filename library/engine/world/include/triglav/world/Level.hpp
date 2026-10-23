@@ -2,7 +2,6 @@
 
 #include "ComponentManager.hpp"
 #include "EntityStorage.hpp"
-#include "LevelNode.hpp"
 #include "World.hpp"
 
 #include "triglav/meta/Meta.hpp"
@@ -71,16 +70,16 @@ struct LevelComponentRange
    }
 };
 
+template<typename T>
+concept Archetype = requires(const T& t, Level& level, EntityID entity_id) {
+   { t.create(level, entity_id) } -> std::same_as<void>;
+};
+
 class Level
 {
  public:
-   EntityID add_node(Name id, LevelNode&& node);
-
    void init_entities();
    void on_loaded_resources();
-
-   LevelNode& at(Name id);
-   LevelNode& root();
 
    [[nodiscard]] meta::Ref component_ref(EntityID entity_id, Name component_name) const;
 
@@ -203,6 +202,14 @@ class Level
       return dynamic_cast<TSystem&>(*m_systems.at(TSystem::TAG).system);
    }
 
+   template<Archetype TArch>
+   EntityID create_archetype(const TArch& arch)
+   {
+      const auto entity_id = this->new_entity();
+      arch.create(*this, entity_id);
+      return entity_id;
+   }
+
  private:
    void insert_component_change(ComponentID id, EntityID entity);
 
@@ -218,7 +225,6 @@ class Level
       EntityID entity_id;
    };
 
-   // std::map<Name, LevelNode> m_nodes;
    EntityStorage m_entity_storage;
    std::map<Name, SystemRegistration> m_systems;
    std::map<ComponentID, std::vector<EntityID>> m_change_lists;

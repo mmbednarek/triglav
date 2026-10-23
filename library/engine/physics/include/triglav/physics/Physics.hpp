@@ -9,7 +9,8 @@ struct Movement
 {
    TG_META_STRUCT_BODY(Movement)
 
-   Vector3 motion;
+   Vector3 motion{};
+   bool is_on_ground{false};
 };
 
 }// namespace triglav::physics

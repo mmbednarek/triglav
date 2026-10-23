@@ -30,7 +30,7 @@ class CharacterController
  private:
    void on_movement(triglav::Vector2 value);
    void on_view(triglav::Vector2 value);
-   void forward_state() const;
+   void forward_state(triglav::Transform3D& transform) const;
    void recalculate_forward_vector();
 
    // Refs
@@ -39,12 +39,11 @@ class CharacterController
 
    // State
    bool m_is_moving = false;
-   bool m_is_on_ground = false;
-   triglav::Vector3 m_motion{};
+   // bool m_is_on_ground = false;
    triglav::geometry::BoundingBox m_bounding_box{};
    triglav::world::EntityID m_character_id = triglav::world::NO_ENTITY;
+   triglav::world::EntityID m_table_id = triglav::world::NO_ENTITY;
    triglav::renderer::AnimationID m_character_animation_id = triglav::renderer::NO_ANIMATION;
-   triglav::Vector3 m_character_position = {20.0f, 0.0f, 3.5f};
    triglav::Vector3 m_character_forward;
    triglav::Vector2 m_analog_forward;
    float m_camera_pitch = 0.0f, m_camera_yaw = 0.0f;
