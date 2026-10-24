@@ -162,6 +162,7 @@ void Renderer::on_render(const float delta_time)
 
    if (m_must_recreate_jobs) {
       this->recreate_jobs(m_render_surface.resolution());
+      m_render_surface.recreate_present_jobs();
    }
 
    if (m_ray_tracing_scene.has_value()) {
@@ -288,11 +289,9 @@ void Renderer::on_key_pressed(const Key key)
    }
    if (key == Key::T) {
       log_info("Playing Animation...");
-      flush_logs();
    }
    if (key == Key::Y) {
       log_info("Stopping Animation...");
-      flush_logs();
    }
    if (key == Key::Space && m_motion.z == 0.0f) {
       m_motion.z += 16.0f;

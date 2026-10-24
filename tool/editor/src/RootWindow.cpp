@@ -166,6 +166,7 @@ void RootWindow::on_resize(const Vector2i size)
    m_job_graph.rebuild_job("render_dialog"_name);
 
    m_render_surface.recreate_swapchain(size);
+   m_render_surface.recreate_present_jobs();
 }
 
 void RootWindow::on_loaded_assets(const resource::LoadIndex load_index)

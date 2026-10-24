@@ -147,6 +147,8 @@ void TextRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frame_i
 
 void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
 {
+   TG_DEBUG_LABEL(ctx, "TextRender", {0.1, 0.1, 0.6, 1.0f})
+
    ctx.declare_buffer("user_interface.text_update_buffer"_name, sizeof(TextUpdateInfo) * g_max_text_update_count);
    ctx.declare_staging_buffer("user_interface.text_update_buffer.staging"_name, sizeof(TextUpdateInfo) * g_max_text_update_count);
 
@@ -158,32 +160,38 @@ void TextRenderer::build_data_preparation(render_core::BuildContext& ctx) const
    ctx.declare_staging_buffer("user_interface.text_removal_buffer"_name, sizeof(std::pair<u32, u32>) * g_max_text_update_count);
    ctx.declare_staging_buffer("user_interface.text_removal_count"_name, sizeof(u32));
 
-   // Copy buffers
-   ctx.copy_buffer("user_interface.text_update_buffer.staging"_name, "user_interface.text_update_buffer"_name);
-   ctx.copy_buffer("user_interface.character_buffer.staging"_name, "user_interface.character_buffer"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "CopyBuffers", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.copy_buffer("user_interface.text_update_buffer.staging"_name, "user_interface.text_update_buffer"_name);
+      ctx.copy_buffer("user_interface.character_buffer.staging"_name, "user_interface.character_buffer"_name);
+   }
 
-   // Dispatch buffer
-   ctx.bind_compute_shader("shader/ui/text_geometry_gen.cshader"_rc);
+   TG_DEBUG_LABEL_SCOPE(ctx, "GeometryGen", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.bind_compute_shader("shader/ui/text_geometry_gen.cshader"_rc);
 
-   // input
-   ctx.bind_storage_buffer(0, "user_interface.text_update_buffer"_name);
-   ctx.bind_storage_buffer(1, "user_interface.character_buffer"_name);
-   ctx.bind_storage_buffer(2, &this->m_combined_glyph_buffer);
+      // input
+      ctx.bind_storage_buffer(0, "user_interface.text_update_buffer"_name);
+      ctx.bind_storage_buffer(1, "user_interface.character_buffer"_name);
+      ctx.bind_storage_buffer(2, &this->m_combined_glyph_buffer);
 
-   // output
-   ctx.bind_storage_buffer(3, &m_draw_calls);
-   ctx.bind_storage_buffer(4, &m_vertex_buffer);
+      // output
+      ctx.bind_storage_buffer(3, &m_draw_calls);
+      ctx.bind_storage_buffer(4, &m_vertex_buffer);
 
-   ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
+      ctx.dispatch_indirect("user_interface.dispatch_buffer"_name);
+   }
 
-   // Remove pending texts
-   ctx.bind_compute_shader("shader/ui/text_removal.cshader"_rc);
+   TG_DEBUG_LABEL_SCOPE(ctx, "Removals", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.bind_compute_shader("shader/ui/text_removal.cshader"_rc);
 
-   ctx.bind_uniform_buffer(0, "user_interface.text_removal_count"_name);
-   ctx.bind_storage_buffer(1, "user_interface.text_removal_buffer"_name);
-   ctx.bind_storage_buffer(2, &m_draw_calls);
+      ctx.bind_uniform_buffer(0, "user_interface.text_removal_count"_name);
+      ctx.bind_storage_buffer(1, "user_interface.text_removal_buffer"_name);
+      ctx.bind_storage_buffer(2, &m_draw_calls);
 
-   ctx.dispatch({1, 1, 1});
+      ctx.dispatch({1, 1, 1});
+   }
 
    ctx.export_buffer("user_interface.text_draw_call_count"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);
@@ -254,6 +262,7 @@ const TypefaceInfo& TextRenderer::get_typeface_info(const render_core::GlyphProp
    m_atlases.emplace_back(&glyph_atlas.texture());
 
    const auto transfer_cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+   TG_SET_DEBUG_NAME(transfer_cmd_list, "TextRenderer::get_typeface_info");
 
    GAPI_CHECK_STATUS(transfer_cmd_list.begin(graphics_api::SubmitType::OneTime));
    transfer_cmd_list.copy_buffer(glyph_atlas.storage_buffer(), m_combined_glyph_buffer, 0, m_glyph_offset,

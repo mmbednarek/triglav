@@ -14,8 +14,12 @@ Key map_key(const KeyCode key_code)
    switch (key_code) {
    case 22:
       return Key::Backspace;
+   case 23:
+      return Key::Tab;
    case 25:
       return Key::W;
+   case 37:
+      return Key::Control;
    case 39:
       return Key::S;
    case 38:
@@ -26,6 +30,10 @@ Key map_key(const KeyCode key_code)
       return Key::Q;
    case 26:
       return Key::E;
+   case 50:
+      return Key::Shift;
+   case 64:
+      return Key::Alt;
    case 65:
       return Key::Space;
    case 67:
@@ -60,6 +68,8 @@ Key map_key(const KeyCode key_code)
       return Key::RightArrow;
    case 116:
       return Key::DownArrow;
+   case 133:
+      return Key::Super;
    }
 
    log_message(LogLevel::Warning, StringView{"X11Surface"}, "unknown keycode: {}", key_code);

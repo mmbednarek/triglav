@@ -17,8 +17,12 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R8_UNORM;
       case ColorFormatPart::UNorm16:
          return VK_FORMAT_R16_UNORM;
-      case ColorFormatPart::UInt:
+      case ColorFormatPart::UInt8:
          return VK_FORMAT_R8_UINT;
+      case ColorFormatPart::UInt32:
+         return VK_FORMAT_R32_UINT;
+      case ColorFormatPart::SInt32:
+         return VK_FORMAT_R32_SINT;
       case ColorFormatPart::Float16:
          return VK_FORMAT_R16_SFLOAT;
       case ColorFormatPart::Float32:
@@ -37,8 +41,12 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R8G8B8A8_UNORM;
       case ColorFormatPart::UNorm16:
          return VK_FORMAT_R16G16B16A16_UNORM;
-      case ColorFormatPart::UInt:
+      case ColorFormatPart::UInt8:
+         return VK_FORMAT_R8G8B8A8_UINT;
+      case ColorFormatPart::UInt32:
          return VK_FORMAT_R32G32B32A32_UINT;
+      case ColorFormatPart::SInt32:
+         return VK_FORMAT_R32G32B32A32_SINT;
       case ColorFormatPart::Float16:
          return VK_FORMAT_R16G16B16A16_SFLOAT;
       case ColorFormatPart::Float32:
@@ -53,14 +61,14 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
       switch (format.parts[0]) {
       case ColorFormatPart::sRGB:
          return VK_FORMAT_B8G8R8A8_SRGB;
-      case ColorFormatPart::UInt:
+      case ColorFormatPart::UInt8:
          return VK_FORMAT_B8G8R8A8_UINT;
       default:
          break;
       }
       return std::unexpected{Status::UnsupportedFormat};
    case ColorFormatOrder::DS:
-      if (format.parts[0] == ColorFormatPart::UNorm16 && format.parts[1] == ColorFormatPart::UInt) {
+      if (format.parts[0] == ColorFormatPart::UNorm16 && format.parts[1] == ColorFormatPart::UInt8) {
          return VK_FORMAT_D16_UNORM_S8_UINT;
       }
       return std::unexpected{Status::UnsupportedFormat};
@@ -82,8 +90,12 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R8G8_UNORM;
       case ColorFormatPart::UNorm16:
          return VK_FORMAT_R16G16_UNORM;
-      case ColorFormatPart::UInt:
+      case ColorFormatPart::UInt8:
          return VK_FORMAT_R8G8_UINT;
+      case ColorFormatPart::UInt32:
+         return VK_FORMAT_R32G32_UINT;
+      case ColorFormatPart::SInt32:
+         return VK_FORMAT_R32G32_SINT;
       case ColorFormatPart::Float16:
          return VK_FORMAT_R16G16_SFLOAT;
       case ColorFormatPart::Float32:
@@ -100,8 +112,12 @@ Result<VkFormat> to_vulkan_color_format(const ColorFormat& format)
          return VK_FORMAT_R8G8B8_UNORM;
       case ColorFormatPart::UNorm16:
          return VK_FORMAT_R16G16B16_UNORM;
-      case ColorFormatPart::UInt:
+      case ColorFormatPart::UInt8:
          return VK_FORMAT_R8G8B8_UINT;
+      case ColorFormatPart::UInt32:
+         return VK_FORMAT_R32G32B32_UINT;
+      case ColorFormatPart::SInt32:
+         return VK_FORMAT_R32G32B32_SINT;
       case ColorFormatPart::Float16:
          return VK_FORMAT_R16G16B16_SFLOAT;
       case ColorFormatPart::Float32:
@@ -128,7 +144,7 @@ Result<ColorFormat> to_color_format(const VkFormat format)
    case VK_FORMAT_R32G32B32A32_SFLOAT:
       return GAPI_FORMAT(RGBA, Float32);
    case VK_FORMAT_D16_UNORM_S8_UINT:
-      return GAPI_FORMAT(DS, UNorm16, UInt);
+      return GAPI_FORMAT(DS, UNorm16, UInt8);
    case VK_FORMAT_BC3_SRGB_BLOCK:
       return GAPI_FORMAT(RGBA, sRGB_BC3);
    case VK_FORMAT_BC1_RGB_SRGB_BLOCK:
@@ -458,14 +474,10 @@ VkImageLayout to_vulkan_image_layout(const ColorFormat format, const TextureStat
    case TextureState::GeneralWrite:
       return VK_IMAGE_LAYOUT_GENERAL;
    case TextureState::RenderTarget:
-      if (format.is_depth_format()) {
-         return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
-      } else {
-         return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-      }
+      [[fallthrough]];
    case TextureState::ReadOnlyRenderTarget:
       if (format.is_depth_format()) {
-         return VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
+         return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
       } else {
          return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
       }
@@ -488,7 +500,11 @@ VkAccessFlags to_vulkan_access_flags(const PipelineStageFlags stage, ColorFormat
    case TextureState::ShaderRead:
       [[fallthrough]];
    case TextureState::GeneralRead:
-      return VK_ACCESS_SHADER_READ_BIT;
+      if (stage & PipelineStage::End) {
+         return VK_ACCESS_NONE;
+      } else {
+         return VK_ACCESS_SHADER_READ_BIT;
+      }
    case TextureState::General:
       if (stage & PipelineStage::Transfer) {
          return VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;

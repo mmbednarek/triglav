@@ -44,6 +44,7 @@ float3 calculate_normal(float2 uv, float2 uv_to_world)
 }
 
 [shader("domain")]
+[partitioning("fractional_even")]
 [domain("quad")]
 VertexOut ds_main(float2 uv : SV_DomainLocation, const OutputPatch<VertexIn, 4> patch)
 {

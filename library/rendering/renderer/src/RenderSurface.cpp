@@ -57,6 +57,7 @@ void RenderSurface::present(render_core::JobGraph& job_graph, const u32 frame_in
 {
    if (m_must_recreate_swapchain) {
       recreate_swapchain(m_desktop_surface.dimension());
+      this->recreate_present_jobs();
    }
 
    const auto [framebuffer_index, must_recreate] = GAPI_CHECK(m_swapchain.get_available_framebuffer(
@@ -84,9 +85,12 @@ void RenderSurface::recreate_present_jobs()
    m_pre_present_commands.clear();
    m_pre_present_commands.reserve(m_swapchain.textures().size() * render_core::FRAMES_IN_FLIGHT_COUNT);
 
+   [[maybe_unused]] u32 swapchain_id = 0;
    for (const auto& swapchain_texture : m_swapchain.textures()) {
       for (const u32 frame_index : Range(0, render_core::FRAMES_IN_FLIGHT_COUNT)) {
          auto cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Graphics));
+         [[maybe_unused]] const auto cmd_list_name = std::format("BlitOutputImage:{}.{}", swapchain_id, frame_index);
+         TG_SET_DEBUG_NAME(cmd_list, cmd_list_name);
          GAPI_CHECK_STATUS(cmd_list.begin());
 
          graphics_api::TextureBarrierInfo in_barrier{};
@@ -97,8 +101,10 @@ void RenderSurface::recreate_present_jobs()
          in_barrier.mip_level_count = 1;
          cmd_list.texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer, in_barrier);
 
-         cmd_list.copy_texture(m_resource_storage.texture("core.color_out"_name, frame_index), graphics_api::TextureState::TransferSrc,
-                               swapchain_texture, graphics_api::TextureState::TransferDst);
+         auto& color_out = m_resource_storage.texture("core.color_out"_name, frame_index);
+         assert(color_out.resolution() == swapchain_texture.resolution());
+         cmd_list.copy_texture(color_out, graphics_api::TextureState::TransferSrc, swapchain_texture,
+                               graphics_api::TextureState::TransferDst);
 
          graphics_api::TextureBarrierInfo out_barrier{};
          out_barrier.texture = &swapchain_texture;
@@ -112,6 +118,7 @@ void RenderSurface::recreate_present_jobs()
 
          m_pre_present_commands.emplace_back(std::move(cmd_list));
       }
+      ++swapchain_id;
    }
 }
 
@@ -120,10 +127,7 @@ void RenderSurface::recreate_swapchain(const Vector2u new_resolution)
    m_device.await_all();
    m_swapchain = GAPI_CHECK(m_device.create_swapchain(m_surface, m_swapchain.color_format(), graphics_api::ColorSpace::sRGB,
                                                       {new_resolution.x, new_resolution.y}, m_present_mode, &m_swapchain));
-
    m_resolution = new_resolution;
-
-   RenderSurface::recreate_present_jobs();
    m_must_recreate_swapchain = false;
 }
 

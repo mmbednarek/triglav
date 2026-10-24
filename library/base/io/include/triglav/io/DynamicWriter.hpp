@@ -23,6 +23,7 @@ class DynamicWriter : public IWriter
    [[nodiscard]] Result<MemorySize> align(MemorySize alignment);
 
    [[nodiscard]] std::span<u8> span() const;
+   [[nodiscard]] std::string_view string_view() const;
    [[nodiscard]] u8* data() const;
    [[nodiscard]] MemorySize size() const;
    [[nodiscard]] MemorySize capacity() const;

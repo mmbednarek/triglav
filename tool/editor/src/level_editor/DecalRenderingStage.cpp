@@ -34,11 +34,16 @@ DecalRenderingStage::DecalRenderingStage(graphics_api::Device& device) :
 
 void DecalRenderingStage::build_stage(render_core::BuildContext& ctx, const renderer::Config& /*config*/) const
 {
-   ctx.begin_render_pass("decals"_name, "gbuffer.albedo"_name, "gbuffer.material"_name, "gbuffer.depth"_name);
+   ctx.declare_depth_target("decals.depth"_name, GAPI_FORMAT(D, Float32));
+   ctx.copy_texture("gbuffer.depth"_name, "decals.depth"_name);
+
+   ctx.begin_render_pass("decals"_name, "gbuffer.albedo"_name, "gbuffer.material"_name, "decals.depth"_name);
+
+   ctx.set_bind_stages(graphics_api::PipelineStage::VertexShader | graphics_api::PipelineStage::FragmentShader);
+   ctx.bind_uniform_buffer(0, "core.view_properties"_external);
 
    ctx.bind_vertex_shader("editor/shader/decal.vshader"_rc);
 
-   ctx.bind_uniform_buffer(0, "core.view_properties"_external);
    ctx.bind_uniform_buffer(1, &m_matrix_buffer);
 
    const auto vertex_layout = render_core::vertex_layout_from_components(m_cube.ranges[0].components);

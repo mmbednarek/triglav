@@ -76,6 +76,11 @@ std::span<u8> DynamicWriter::span() const
    return std::span{m_buffer, m_position};
 }
 
+std::string_view DynamicWriter::string_view() const
+{
+   return std::string_view{reinterpret_cast<const char*>(m_buffer), m_position};
+}
+
 u8* DynamicWriter::data() const
 {
    return m_buffer;

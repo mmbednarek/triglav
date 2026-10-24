@@ -616,6 +616,8 @@ Result<ktx::Texture> Device::export_ktx_texture(const Texture& texture)
       }
 
       auto cmd_list = this->create_command_list(WorkType::Compute);
+      TG_SET_DEBUG_NAME(*cmd_list, "Device::export_ktx_texture");
+
       if (!cmd_list.has_value()) {
          return std::unexpected{Status::UnsupportedFormat};
       }

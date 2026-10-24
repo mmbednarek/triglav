@@ -128,6 +128,7 @@ Status Buffer::write_indirect(const void* data, size_t size)
    }
 
    auto one_time_commands = m_device.create_command_list();
+   TG_SET_DEBUG_NAME(*one_time_commands, "Buffer::write_indirect");
    if (not one_time_commands.has_value())
       return one_time_commands.error();
 

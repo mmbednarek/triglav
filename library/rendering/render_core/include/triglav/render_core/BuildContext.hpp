@@ -360,6 +360,9 @@ void visit_command(TVisitor& visitor, const detail::Command& cmd_variant)
 #ifndef NDEBUG
 #define TG_DEBUG_LABEL(ctx, label, ...) \
    ::triglav::render_core::DebugLabelScope TG_CONCAT(tg_debug_scope_, __COUNTER__){ctx, label, __VA_ARGS__};
+#define TG_DEBUG_LABEL_SCOPE(ctx, label, ...) \
+   if (::triglav::render_core::DebugLabelScope TG_CONCAT(tg_debug_scope_, __COUNTER__){ctx, label, __VA_ARGS__}; true)
 #else
 #define TG_DEBUG_LABEL(ctx, label, ...)
+#define TG_DEBUG_LABEL_SCOPE(ctx, label, ...)
 #endif

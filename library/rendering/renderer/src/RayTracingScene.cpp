@@ -44,6 +44,7 @@ void RayTracingScene::build_acceleration_structures()
    m_must_update_acceleration_structures = false;
 
    auto as_update_cmd_list = GAPI_CHECK(m_device.create_command_list(gapi::WorkType::Compute));
+   TG_SET_DEBUG_NAME(as_update_cmd_list, "RayTracingScene::build_acceleration_structures");
 
    GAPI_CHECK_STATUS(as_update_cmd_list.begin(gapi::SubmitType::OneTime));
    m_build_blcontext.build_acceleration_structures(as_update_cmd_list);

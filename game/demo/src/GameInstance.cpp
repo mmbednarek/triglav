@@ -227,6 +227,7 @@ void GameInstance::loop(triglav::desktop::IDisplay& display)
       m_renderer->on_render(delta_time);
       m_character_controller->tick(delta_time);
       display.dispatch_messages();
+      triglav::flush_logs();
    }
 
    m_renderer->on_close();

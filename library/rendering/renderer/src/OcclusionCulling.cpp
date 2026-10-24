@@ -215,6 +215,7 @@ void OcclusionCulling::reset_buffers(graphics_api::Device& device, render_core::
    static constexpr std::array<u32, render_objects::GEOMETRY_RENDER_INFOS.size()> zero_counts{};
 
    const auto cmd_list = GAPI_CHECK(device.create_command_list(graphics_api::WorkType::Transfer));
+   TG_SET_DEBUG_NAME(cmd_list, "OcclusionCulling::reset_buffers");
 
    GAPI_CHECK_STATUS(cmd_list.begin(graphics_api::SubmitType::OneTime));
    cmd_list.update_buffer(graph.resources().buffer("occlusion_culling.count_buffer"_name, 0), 0,

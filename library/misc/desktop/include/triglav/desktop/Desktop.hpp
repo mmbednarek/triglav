@@ -80,6 +80,7 @@ enum class Key
    Alt,
    Enter,
    Delete,
+   Super,
 
    LeftBrace,
    RightBrace,

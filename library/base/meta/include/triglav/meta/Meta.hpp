@@ -779,10 +779,10 @@ concept HasMetaName = requires() {
                                             \
  private:
 
-#define TG_META_STRUCT_BODY(class_name)     \
-   using Self = class_name;                 \
-   ::triglav::meta::ClassRef to_meta_ref(); \
-   static ::triglav::Name meta_name();
+#define TG_META_STRUCT_BODY(class_name)                      \
+   using Self = class_name;                                  \
+   [[maybe_unused]] ::triglav::meta::ClassRef to_meta_ref(); \
+   [[maybe_unused]] static ::triglav::Name meta_name();
 
 #define TG_META_PRIMITIVE_LIST                                 \
    TG_META_PRIMITIVE(char, char)                               \

@@ -55,7 +55,7 @@ void GBufferStage::build_skybox(render_core::BuildContext& ctx) const
 
    ctx.bind_uniform_buffer(0, "core.view_properties"_external);
 
-   const auto vertex_layout = render_core::vertex_layout_from_components(m_mesh.ranges[0].components);
+   const auto vertex_layout = render_core::vertex_layout_from_components_for_depth_only(m_mesh.ranges[0].components);
    ctx.bind_vertex_layout(vertex_layout);
 
    ctx.bind_fragment_shader("shader/geometry/skybox.fshader"_rc);

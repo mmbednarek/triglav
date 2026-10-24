@@ -35,7 +35,8 @@ VSOutput vs_main(VSInput input)
 
 typealias FSInput = VSOutput;
 
-struct FSOutput {
+struct FSOutput
+{
     float4 albedo: SV_Target0;
     float4 material: SV_Target1;
 }

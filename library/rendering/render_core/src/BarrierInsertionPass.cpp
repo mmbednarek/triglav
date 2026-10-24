@@ -251,6 +251,8 @@ void BarrierInsertionPass::setup_texture_barrier(const TextureRef tex_ref, const
       if (target_mem_access == gapi::MemoryAccess::Write || tex.current_state_per_mip[mip_level] != target_state ||
           tex.last_texture_barrier == nullptr || tex.last_texture_barrier->base_mip_level != base_mip ||
           tex.last_texture_barrier->mip_level_count != mip_count) {
+         assert(m_context.work_types() & gapi::WorkType::Graphics || !(target_stages & gapi::PipelineStage::FragmentShader));
+         assert(m_context.work_types() & gapi::WorkType::Graphics || !(tex.last_stages[mip_level] & gapi::PipelineStage::FragmentShader));
          if (tex.last_stages[mip_level] != 0) {
             auto barrier =
                std::make_unique<TextureBarrier>(tex_name, tex.last_stages[mip_level], target_stages, tex.current_state_per_mip[mip_level],
@@ -289,6 +291,8 @@ void BarrierInsertionPass::setup_buffer_barrier(const BufferRef buff_ref, const 
    if (to_memory_access(target_access) == gapi::MemoryAccess::Write ||
        to_memory_access(buffer.current_access) == gapi::MemoryAccess::Write || buffer.last_buffer_barrier == nullptr) {
       if (buffer.last_stages != 0) {
+         assert(m_context.work_types() & gapi::WorkType::Graphics || !(target_stages & gapi::PipelineStage::FragmentShader));
+         assert(m_context.work_types() & gapi::WorkType::Graphics || !(buffer.last_stages & gapi::PipelineStage::FragmentShader));
          auto barrier = std::make_unique<BufferBarrier>(buff_ref, buffer.last_stages, target_stages, buffer.current_access, target_access);
          buffer.last_buffer_barrier =
             this->add_command_before_render_pass<detail::cmd::PlaceBufferBarrier>(std::move(barrier)).barrier.get();

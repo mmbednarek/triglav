@@ -121,8 +121,8 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
     m_transform_offset_count_buffer(device, gapi::BufferUsage::Indirect),
     m_transform_buffer(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst,
                                                        TRANSFORM_BUFF_COUNT * sizeof(Transform3D)))),
-    m_transform_matrix_buffer(
-       GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer, TRANSFORM_BUFF_COUNT * sizeof(Matrix4x4)))),
+    m_transform_matrix_buffer(GAPI_CHECK(device.create_buffer(
+       graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::TransferDst, TRANSFORM_BUFF_COUNT * sizeof(Matrix4x4)))),
     m_hierarchy_stage(GAPI_CHECK(device.create_buffer(graphics_api::BufferUsage::StorageBuffer | graphics_api::BufferUsage::HostVisible |
                                                          graphics_api::BufferUsage::TransferSrc,
                                                       STAGING_BUFFER_ELEM_COUNT * sizeof(Hierarchy)))),
@@ -140,6 +140,15 @@ BindlessScene::BindlessScene(gapi::Device& device, resource::ResourceManager& re
    TG_SET_DEBUG_NAME(m_count_buffer.buffer(), "bindless_scene.count_buffer");
    TG_SET_DEBUG_NAME(m_combined_index_buffer.buffer(), "bindless_scene.combined_index_buffer");
    TG_SET_DEBUG_NAME(m_combined_vertex_buffer, "bindless_scene.combined_vertex_buffer");
+   TG_SET_DEBUG_NAME(m_matrix_stage.buffer(), "bindless_scene.matrix_stage");
+   TG_SET_DEBUG_NAME(m_transform_offset_count_buffer.buffer(), "bindless_scene.transform_offset_count_buffer");
+   TG_SET_DEBUG_NAME(m_transform_buffer, "bindless_scene.transform_buffer");
+   TG_SET_DEBUG_NAME(m_transform_matrix_buffer, "bindless_scene.transform_matrix_buffer");
+   TG_SET_DEBUG_NAME(m_hierarchy_stage, "bindless_scene.hierarchy_stage");
+   TG_SET_DEBUG_NAME(m_hierarchy_count_buffer, "bindless_scene.hierarchy_count_buffer");
+   TG_SET_DEBUG_NAME(m_material_props_albedo_tex.buffer(), "bindless_scene.material_props_albedo_tex");
+   TG_SET_DEBUG_NAME(m_material_props_albedo_normal_tex.buffer(), "bindless_scene.material_props_albedo_normal_tex");
+   TG_SET_DEBUG_NAME(m_material_props_all_tex.buffer(), "bindless_scene.material_props_all_tex");
 }
 
 Name BindlessScene::system_name()
@@ -301,6 +310,7 @@ void BindlessScene::write_objects_to_buffer()
    m_should_write_objects = false;
 
    const auto copy_objects_cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+   TG_SET_DEBUG_NAME(copy_objects_cmd_list, "BindlessScene::write_objects_to_buffer");
    GAPI_CHECK_STATUS(copy_objects_cmd_list.begin());
 
    this->on_update_scene(copy_objects_cmd_list);

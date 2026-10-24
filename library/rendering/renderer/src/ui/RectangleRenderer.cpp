@@ -144,6 +144,8 @@ void RectangleRenderer::prepare_frame(render_core::JobGraph& graph, const u32 fr
 
 void RectangleRenderer::build_data_update(render_core::BuildContext& ctx) const
 {
+   TG_DEBUG_LABEL(ctx, "RectangleRender", {0.1, 0.1, 0.6, 1.0f})
+
    ctx.declare_buffer("user_interface.rectangle.insertion"_name, sizeof(RectWriteData) * g_insertion_buffer_size);
    ctx.declare_staging_buffer("user_interface.rectangle.insertion.staging"_name, sizeof(RectWriteData) * g_insertion_buffer_size);
    ctx.declare_staging_buffer("user_interface.rectangle.insertion.count"_name, sizeof(u32));
@@ -157,23 +159,29 @@ void RectangleRenderer::build_data_update(render_core::BuildContext& ctx) const
 
    ctx.declare_staging_buffer("user_interface.rectangle.count"_name, sizeof(u32));
 
-   // Copy buffers
-   ctx.copy_buffer("user_interface.rectangle.insertion.staging"_name, "user_interface.rectangle.insertion"_name);
-   ctx.copy_buffer("user_interface.rectangle.removal.staging"_name, "user_interface.rectangle.removal"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "CopyBuffers", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.copy_buffer("user_interface.rectangle.insertion.staging"_name, "user_interface.rectangle.insertion"_name);
+      ctx.copy_buffer("user_interface.rectangle.removal.staging"_name, "user_interface.rectangle.removal"_name);
+   }
 
-   // Execute insertion
-   ctx.bind_compute_shader("shader/ui/rectangle_insertion.cshader"_rc);
-   ctx.bind_uniform_buffer(0, "user_interface.rectangle.insertion.count"_name);
-   ctx.bind_storage_buffer(1, "user_interface.rectangle.insertion"_name);
-   ctx.bind_storage_buffer(2, &m_draw_calls);
-   ctx.dispatch_indirect("user_interface.rectangle.insertion.indirect_buffer"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "Insertion", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.bind_compute_shader("shader/ui/rectangle_insertion.cshader"_rc);
+      ctx.bind_uniform_buffer(0, "user_interface.rectangle.insertion.count"_name);
+      ctx.bind_storage_buffer(1, "user_interface.rectangle.insertion"_name);
+      ctx.bind_storage_buffer(2, &m_draw_calls);
+      ctx.dispatch_indirect("user_interface.rectangle.insertion.indirect_buffer"_name);
+   }
 
-   // Execute removal
-   ctx.bind_compute_shader("shader/ui/rectangle_removal.cshader"_rc);
-   ctx.bind_uniform_buffer(0, "user_interface.rectangle.removal.count"_name);
-   ctx.bind_storage_buffer(1, "user_interface.rectangle.removal"_name);
-   ctx.bind_storage_buffer(2, &m_draw_calls);
-   ctx.dispatch_indirect("user_interface.rectangle.removal.indirect_buffer"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "Removal", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.bind_compute_shader("shader/ui/rectangle_removal.cshader"_rc);
+      ctx.bind_uniform_buffer(0, "user_interface.rectangle.removal.count"_name);
+      ctx.bind_storage_buffer(1, "user_interface.rectangle.removal"_name);
+      ctx.bind_storage_buffer(2, &m_draw_calls);
+      ctx.dispatch_indirect("user_interface.rectangle.removal.indirect_buffer"_name);
+   }
 
    ctx.export_buffer("user_interface.rectangle.count"_name, graphics_api::PipelineStage::DrawIndirect,
                      graphics_api::BufferAccess::IndirectCmdRead, graphics_api::BufferUsage::Indirect);

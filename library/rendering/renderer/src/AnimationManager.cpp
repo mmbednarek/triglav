@@ -85,6 +85,7 @@ AnimationID AnimationManager::start_animation(const AnimationName animation_name
    assert(stage_timestamp_offset + STAGING_TIMESTAMP_OFFSET <= STAGING_BUFFER_SIZE);
 
    auto cmd_list = m_device.create_command_list();
+   TG_SET_DEBUG_NAME(*cmd_list, "AnimationManager::start_animation");
    assert(cmd_list.has_value());
    GAPI_CHECK_STATUS(cmd_list->begin(graphics_api::SubmitType::OneTime));
    cmd_list->copy_buffer(m_stage_buffer, m_keyframe_buffer, 0, m_keyframe_offset, stage_keyframe_offset);

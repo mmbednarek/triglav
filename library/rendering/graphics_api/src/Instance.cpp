@@ -1,9 +1,13 @@
 #include "Instance.hpp"
 
-#include "vulkan/Util.hpp"
-
 #include "triglav/String.hpp"
 #include "triglav/io/CommandLine.hpp"
+#include "triglav/io/DynamicWriter.hpp"
+#include "triglav/json_util/JsonUtil.hpp"
+#include "triglav/json_util/Serialize.hpp"
+#include "triglav/meta/Meta.hpp"
+
+#include "vulkan/Util.hpp"
 
 #define TG_ENABLE_SYNC_VALIDATION 0
 
@@ -63,6 +67,176 @@ auto create_physical_device_pick_predicate(const DevicePickStrategy strategy, co
    };
 }
 
+std::string_view vulkan_object_type_to_string(const VkObjectType type)
+{
+   switch (type) {
+   case VK_OBJECT_TYPE_UNKNOWN:
+      return "unknown";
+   case VK_OBJECT_TYPE_INSTANCE:
+      return "instance";
+   case VK_OBJECT_TYPE_PHYSICAL_DEVICE:
+      return "physical_device";
+   case VK_OBJECT_TYPE_DEVICE:
+      return "device";
+   case VK_OBJECT_TYPE_QUEUE:
+      return "queue";
+   case VK_OBJECT_TYPE_SEMAPHORE:
+      return "semaphore";
+   case VK_OBJECT_TYPE_COMMAND_BUFFER:
+      return "command_buffer";
+   case VK_OBJECT_TYPE_FENCE:
+      return "fence";
+   case VK_OBJECT_TYPE_DEVICE_MEMORY:
+      return "device_memory";
+   case VK_OBJECT_TYPE_BUFFER:
+      return "buffer";
+   case VK_OBJECT_TYPE_IMAGE:
+      return "image";
+   case VK_OBJECT_TYPE_EVENT:
+      return "event";
+   case VK_OBJECT_TYPE_QUERY_POOL:
+      return "query_pool";
+   case VK_OBJECT_TYPE_BUFFER_VIEW:
+      return "buffer_view";
+   case VK_OBJECT_TYPE_IMAGE_VIEW:
+      return "image_view";
+   case VK_OBJECT_TYPE_SHADER_MODULE:
+      return "shader_module";
+   case VK_OBJECT_TYPE_PIPELINE_CACHE:
+      return "pipeline_cache";
+   case VK_OBJECT_TYPE_PIPELINE_LAYOUT:
+      return "pipeline_layout";
+   case VK_OBJECT_TYPE_RENDER_PASS:
+      return "render_pass";
+   case VK_OBJECT_TYPE_PIPELINE:
+      return "pipeline";
+   case VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT:
+      return "descriptor_set_layout";
+   case VK_OBJECT_TYPE_SAMPLER:
+      return "sampler";
+   case VK_OBJECT_TYPE_DESCRIPTOR_POOL:
+      return "descriptor_pool";
+   case VK_OBJECT_TYPE_DESCRIPTOR_SET:
+      return "descriptor_set";
+   case VK_OBJECT_TYPE_FRAMEBUFFER:
+      return "framebuffer";
+   case VK_OBJECT_TYPE_COMMAND_POOL:
+      return "command_pool";
+   case VK_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE:
+      return "descriptor_update_template";
+   case VK_OBJECT_TYPE_SAMPLER_YCBCR_CONVERSION:
+      return "sampler_ycbcr_conversion";
+   case VK_OBJECT_TYPE_PRIVATE_DATA_SLOT:
+      return "private_data_slot";
+   case VK_OBJECT_TYPE_SURFACE_KHR:
+      return "surface_khr";
+   case VK_OBJECT_TYPE_SWAPCHAIN_KHR:
+      return "swapchain_khr";
+   case VK_OBJECT_TYPE_DISPLAY_KHR:
+      return "display_khr";
+   case VK_OBJECT_TYPE_DISPLAY_MODE_KHR:
+      return "display_mode_khr";
+   case VK_OBJECT_TYPE_DEBUG_REPORT_CALLBACK_EXT:
+      return "debug_report_callback_ext";
+   case VK_OBJECT_TYPE_VIDEO_SESSION_KHR:
+      return "video_session_khr";
+   case VK_OBJECT_TYPE_VIDEO_SESSION_PARAMETERS_KHR:
+      return "video_session_parameters_khr";
+   case VK_OBJECT_TYPE_CU_MODULE_NVX:
+      return "cu_module_nvx";
+   case VK_OBJECT_TYPE_CU_FUNCTION_NVX:
+      return "cu_function_nvx";
+   case VK_OBJECT_TYPE_DEBUG_UTILS_MESSENGER_EXT:
+      return "debug_utils_messenger_ext";
+   case VK_OBJECT_TYPE_GPA_SESSION_AMD:
+      return "gpa_session_amd";
+   case VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR:
+      return "acceleration_structure_khr";
+   case VK_OBJECT_TYPE_VALIDATION_CACHE_EXT:
+      return "validation_cache_ext";
+   case VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_NV:
+      return "acceleration_structure_nv";
+   case VK_OBJECT_TYPE_PERFORMANCE_CONFIGURATION_INTEL:
+      return "performance_configuration_intel";
+   case VK_OBJECT_TYPE_DEFERRED_OPERATION_KHR:
+      return "deferred_operation_khr";
+   case VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_NV:
+      return "indirect_commands_layout_nv";
+   case VK_OBJECT_TYPE_BUFFER_COLLECTION_FUCHSIA:
+      return "buffer_collection_fuchsia";
+   case VK_OBJECT_TYPE_MICROMAP_EXT:
+      return "micromap_ext";
+   case VK_OBJECT_TYPE_TENSOR_ARM:
+      return "tensor_arm";
+   case VK_OBJECT_TYPE_TENSOR_VIEW_ARM:
+      return "tensor_view_arm";
+   case VK_OBJECT_TYPE_OPTICAL_FLOW_SESSION_NV:
+      return "optical_flow_session_nv";
+   case VK_OBJECT_TYPE_SHADER_EXT:
+      return "shader_ext";
+   case VK_OBJECT_TYPE_PIPELINE_BINARY_KHR:
+      return "pipeline_binary_khr";
+   case VK_OBJECT_TYPE_DATA_GRAPH_PIPELINE_SESSION_ARM:
+      return "data_graph_pipeline_session_arm";
+   case VK_OBJECT_TYPE_EXTERNAL_COMPUTE_QUEUE_NV:
+      return "external_compute_queue_nv";
+   case VK_OBJECT_TYPE_INDIRECT_COMMANDS_LAYOUT_EXT:
+      return "indirect_commands_layout_ext";
+   case VK_OBJECT_TYPE_INDIRECT_EXECUTION_SET_EXT:
+      return "indirect_execution_set_ext";
+   case VK_OBJECT_TYPE_SHADER_INSTRUMENTATION_ARM:
+      return "shader_instrumentation_arm";
+   default:
+      return "";
+   }
+
+   std::unreachable();
+}
+
+struct ValidationMessage
+{
+   TG_META_STRUCT_BODY(ValidationMessage)
+
+   struct Object
+   {
+      TG_META_STRUCT_BODY(Object)
+      std::string object_name;
+      std::string label;
+   };
+   struct CommandBufLabel
+   {
+      TG_META_STRUCT_BODY(CommandBufLabel)
+      std::string label;
+      Vector4 color;
+   };
+
+   std::string message;
+   std::vector<Object> objects;
+   std::vector<CommandBufLabel> cmd_buffer_labels;
+};
+
+#define TG_TYPE(ns) ns(triglav, ns(graphics_api, ns(ValidationMessage, Object)))
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(object_name, std::string)
+TG_META_PROPERTY(label, std::string)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(ns) ns(triglav, ns(graphics_api, ns(ValidationMessage, CommandBufLabel)))
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(label, std::string)
+TG_META_PROPERTY(color, triglav::Vector4)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+#define TG_TYPE(ns) ns(triglav, ns(graphics_api, ValidationMessage))
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(message, std::string)
+TG_META_ARRAY_PROPERTY(objects, triglav::graphics_api::ValidationMessage::Object)
+TG_META_ARRAY_PROPERTY(cmd_buffer_labels, triglav::graphics_api::ValidationMessage::CommandBufLabel)
+TG_META_CLASS_END
+#undef TG_TYPE
+
 [[maybe_unused]]
 VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(const VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
                                                           VkDebugUtilsMessageTypeFlagsEXT /*message_type*/,
@@ -90,7 +264,33 @@ VKAPI_ATTR VkBool32 VKAPI_CALL validation_layers_callback(const VkDebugUtilsMess
       break;
    }
 
-   log_message(log_level, "VulkanValidation"_strv, "{}", p_callback_data->pMessage);
+   ValidationMessage validation_message{};
+   validation_message.message = p_callback_data->pMessage;
+
+   for (u32 i = 0; i < p_callback_data->cmdBufLabelCount; ++i) {
+      ValidationMessage::CommandBufLabel label{};
+      label.label = p_callback_data->pCmdBufLabels[i].pLabelName;
+      label.color = {
+         p_callback_data->pCmdBufLabels[i].color[0],
+         p_callback_data->pCmdBufLabels[i].color[1],
+         p_callback_data->pCmdBufLabels[i].color[2],
+         p_callback_data->pCmdBufLabels[i].color[3],
+      };
+      validation_message.cmd_buffer_labels.push_back(label);
+   }
+   for (u32 i = 0; i < p_callback_data->objectCount; ++i) {
+      ValidationMessage::Object object{};
+      object.object_name = vulkan_object_type_to_string(p_callback_data->pObjects[i].objectType);
+      if (p_callback_data->pObjects[i].pObjectName != nullptr) {
+         object.label = p_callback_data->pObjects[i].pObjectName;
+      }
+      validation_message.objects.push_back(object);
+   }
+
+   io::DynamicWriter writer;
+   json_util::serialize(validation_message.to_meta_ref(), writer, true);
+
+   log_message(log_level, "VulkanValidation"_strv, "{}", writer.string_view());
    return VK_FALSE;
 }
 

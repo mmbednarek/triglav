@@ -298,6 +298,7 @@ void CommandList::texture_barrier(const PipelineStageFlags source_stage, const P
    }
 
    const auto dst_stage_mask = vulkan::to_vulkan_pipeline_stage_flags(target_stage);
+   assert((m_work_types & WorkType::Graphics) || !(dst_stage_mask & VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT));
    assert(dst_stage_mask != 0);
    vkCmdPipelineBarrier(m_command_buffer, vulkan::to_vulkan_pipeline_stage_flags(source_stage), dst_stage_mask, 0, 0, nullptr, 0, nullptr,
                         static_cast<u32>(barriers.size()), barriers.data());

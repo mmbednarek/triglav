@@ -116,6 +116,7 @@ Status Texture::write(Device& device, const uint8_t* pixels) const
    }
 
    auto one_time_commands = device.create_command_list(WorkType::Graphics);
+   TG_SET_DEBUG_NAME(*one_time_commands, "Texture::write");
    if (not one_time_commands.has_value())
       return one_time_commands.error();
 
@@ -158,6 +159,7 @@ Status Texture::write(Device& device, const uint8_t* pixels) const
 Status Texture::generate_mip_maps(Device& device) const
 {
    auto one_time_commands = device.create_command_list();
+   TG_SET_DEBUG_NAME(*one_time_commands, "Texture::generate_mip_maps");
 
    if (const auto res = one_time_commands->begin(SubmitType::OneTime); res != Status::Success)
       return res;

@@ -67,7 +67,9 @@ enum class ColorFormatPart
    sRGB,
    UNorm8,
    UNorm16,
-   UInt,
+   UInt8,
+   SInt32,
+   UInt32,
    Float32,
    Float16,
    sRGB_BC3,
@@ -95,8 +97,12 @@ constexpr size_t color_format_part_size(const ColorFormatPart part)
       return 1;
    case ColorFormatPart::UNorm16:
       return 2;
-   case ColorFormatPart::UInt:
+   case ColorFormatPart::UInt8:
       return 1;
+   case ColorFormatPart::UInt32:
+      return 4;
+   case ColorFormatPart::SInt32:
+      return 4;
    case ColorFormatPart::Float16:
       return 2;
    case ColorFormatPart::Float32:
@@ -219,6 +225,11 @@ struct Resolution
    Resolution operator*(const float scale) const
    {
       return {static_cast<u32>(static_cast<float>(width) * scale), static_cast<u32>(static_cast<float>(height) * scale)};
+   }
+
+   bool operator==(const Resolution& other) const
+   {
+      return width == other.width && height == other.height;
    }
 };
 
@@ -628,7 +639,7 @@ inline void check_status(const Status status, const std::string_view message)
 #if defined(NDEBUG) || defined(TG_DISABLE_DEBUG_UTILS)
 #define TG_SET_DEBUG_NAME(object, name)
 #else
-#define TG_SET_DEBUG_NAME(object, name) object.set_debug_name(name)
+#define TG_SET_DEBUG_NAME(object, name) (object).set_debug_name(name)
 #endif
 
 #ifdef _WIN32

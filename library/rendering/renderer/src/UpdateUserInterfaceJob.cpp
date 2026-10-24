@@ -39,7 +39,6 @@ void UpdateUserInterfaceJob::prepare_frame(render_core::JobGraph& graph, const u
 
 void UpdateUserInterfaceJob::render_ui(render_core::BuildContext& ctx)
 {
-
    m_rectangle_renderer.build_render_ui(ctx);
    m_sprite_renderer.build_render_ui(ctx);
    m_text_renderer.build_render_ui(ctx);

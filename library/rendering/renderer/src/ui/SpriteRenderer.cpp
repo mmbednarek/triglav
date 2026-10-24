@@ -136,6 +136,8 @@ void SpriteRenderer::prepare_frame(render_core::JobGraph& graph, const u32 frame
 
 void SpriteRenderer::build_data_update(render_core::BuildContext& ctx) const
 {
+   TG_DEBUG_LABEL(ctx, "SpriteRender", {0.1, 0.1, 0.6, 1.0f})
+
    ctx.declare_buffer("user_interface.sprite.insertion"_name, sizeof(SpriteWriteData) * g_insertion_buffer_size);
    ctx.declare_staging_buffer("user_interface.sprite.insertion.staging"_name, sizeof(SpriteWriteData) * g_insertion_buffer_size);
    ctx.declare_staging_buffer("user_interface.sprite.insertion.count"_name, sizeof(u32));
@@ -151,23 +153,29 @@ void SpriteRenderer::build_data_update(render_core::BuildContext& ctx) const
 
    ctx.declare_staging_buffer("user_interface.sprite.count"_name, sizeof(u32));
 
-   // Copy buffers
-   ctx.copy_buffer("user_interface.sprite.insertion.staging"_name, "user_interface.sprite.insertion"_name);
-   ctx.copy_buffer("user_interface.sprite.removal.staging"_name, "user_interface.sprite.removal"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "CopyBuffers", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.copy_buffer("user_interface.sprite.insertion.staging"_name, "user_interface.sprite.insertion"_name);
+      ctx.copy_buffer("user_interface.sprite.removal.staging"_name, "user_interface.sprite.removal"_name);
+   }
 
-   // Execute insertion
-   ctx.bind_compute_shader("shader/ui/sprite_insertion.cshader"_rc);
-   ctx.bind_uniform_buffer(0, "user_interface.sprite.insertion.count"_name);
-   ctx.bind_storage_buffer(1, "user_interface.sprite.insertion"_name);
-   ctx.bind_storage_buffer(2, "user_interface.sprite.draw_calls"_name);
-   ctx.dispatch_indirect("user_interface.sprite.insertion.indirect_buffer"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "Insert", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.bind_compute_shader("shader/ui/sprite_insertion.cshader"_rc);
+      ctx.bind_uniform_buffer(0, "user_interface.sprite.insertion.count"_name);
+      ctx.bind_storage_buffer(1, "user_interface.sprite.insertion"_name);
+      ctx.bind_storage_buffer(2, "user_interface.sprite.draw_calls"_name);
+      ctx.dispatch_indirect("user_interface.sprite.insertion.indirect_buffer"_name);
+   }
 
-   // Execute removal
-   ctx.bind_compute_shader("shader/ui/sprite_removal.cshader"_rc);
-   ctx.bind_uniform_buffer(0, "user_interface.sprite.removal.count"_name);
-   ctx.bind_storage_buffer(1, "user_interface.sprite.removal"_name);
-   ctx.bind_storage_buffer(2, "user_interface.sprite.draw_calls"_name);
-   ctx.dispatch_indirect("user_interface.sprite.removal.indirect_buffer"_name);
+   TG_DEBUG_LABEL_SCOPE(ctx, "Removal", {0.1, 0.1, 0.6, 1.0f})
+   {
+      ctx.bind_compute_shader("shader/ui/sprite_removal.cshader"_rc);
+      ctx.bind_uniform_buffer(0, "user_interface.sprite.removal.count"_name);
+      ctx.bind_storage_buffer(1, "user_interface.sprite.removal"_name);
+      ctx.bind_storage_buffer(2, "user_interface.sprite.draw_calls"_name);
+      ctx.dispatch_indirect("user_interface.sprite.removal.indirect_buffer"_name);
+   }
 
    ctx.export_buffer("user_interface.sprite.draw_calls"_name, graphics_api::PipelineStage::VertexShader,
                      graphics_api::BufferAccess::ShaderRead,

@@ -37,6 +37,7 @@ AmbientOcclusionStage::AmbientOcclusionStage(gapi::Device& device) :
    }
 
    auto cmd_list = GAPI_CHECK(m_device.create_command_list(graphics_api::WorkType::Transfer));
+   TG_SET_DEBUG_NAME(cmd_list, "AmbientOcclusionStage::AmbientOcclusionStage");
    GAPI_CHECK_STATUS(cmd_list.begin(graphics_api::SubmitType::OneTime));
 
    cmd_list.texture_barrier(graphics_api::PipelineStage::Entrypoint, graphics_api::PipelineStage::Transfer,
@@ -50,7 +51,7 @@ AmbientOcclusionStage::AmbientOcclusionStage(gapi::Device& device) :
 
    cmd_list.copy_buffer_to_texture(noise_stage, m_noise_texture);
 
-   cmd_list.texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::FragmentShader,
+   cmd_list.texture_barrier(graphics_api::PipelineStage::Transfer, graphics_api::PipelineStage::End,
                             graphics_api::TextureBarrierInfo{
                                .texture = &m_noise_texture,
                                .source_state = graphics_api::TextureState::TransferDst,
