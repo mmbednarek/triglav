@@ -637,8 +637,10 @@ inline void check_status(const Status status, const std::string_view message)
 #define GAPI_CHECK_STATUS(stmt) ::triglav::graphics_api::check_status(stmt, #stmt)
 
 #if defined(NDEBUG) || defined(TG_DISABLE_DEBUG_UTILS)
+#define TG_ENABLE_DEBUG_LABELS 0
 #define TG_SET_DEBUG_NAME(object, name)
 #else
+#define TG_ENABLE_DEBUG_LABELS 1
 #define TG_SET_DEBUG_NAME(object, name) (object).set_debug_name(name)
 #endif
 

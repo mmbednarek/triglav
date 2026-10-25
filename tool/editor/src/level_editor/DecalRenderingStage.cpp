@@ -46,7 +46,7 @@ void DecalRenderingStage::build_stage(render_core::BuildContext& ctx, const rend
 
    ctx.bind_uniform_buffer(1, &m_matrix_buffer);
 
-   const auto vertex_layout = render_core::vertex_layout_from_components(m_cube.ranges[0].components);
+   const auto vertex_layout = render_core::vertex_layout_from_components_for_depth_only(m_cube.ranges[0].components);
    ctx.bind_vertex_layout(vertex_layout);
 
    ctx.bind_fragment_shader("editor/shader/decal.fshader"_rc);

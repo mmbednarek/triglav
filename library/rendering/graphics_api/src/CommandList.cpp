@@ -534,8 +534,9 @@ void CommandList::end_query(const QueryPool& query_pool, const u32 query_index) 
    vkCmdEndQuery(m_command_buffer, query_pool.vulkan_query_pool(), query_index);
 }
 
-void CommandList::begin_debug_label(const std::string_view label, const Vector4 color) const
+void CommandList::begin_debug_label([[maybe_unused]] const std::string_view label, [[maybe_unused]] const Vector4 color) const
 {
+#if TG_ENABLE_DEBUG_LABELS
    VkDebugUtilsLabelEXT debug_utils_label{VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT};
    debug_utils_label.pLabelName = label.data();
    debug_utils_label.color[0] = color.x;
@@ -543,11 +544,14 @@ void CommandList::begin_debug_label(const std::string_view label, const Vector4 
    debug_utils_label.color[2] = color.z;
    debug_utils_label.color[3] = color.w;
    vulkan::vkCmdBeginDebugUtilsLabelEXT(m_command_buffer, &debug_utils_label);
+#endif
 }
 
 void CommandList::end_debug_label() const
 {
+#if TG_ENABLE_DEBUG_LABELS
    vulkan::vkCmdEndDebugUtilsLabelEXT(m_command_buffer);
+#endif
 }
 
 WorkTypeFlags CommandList::work_types() const
