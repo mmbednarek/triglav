@@ -11,6 +11,7 @@
 #include "triglav/project/ProjectManager.hpp"
 #include "triglav/render_objects/Armature.hpp"
 #include "triglav/render_objects/Material.hpp"
+#include "triglav/world/Archetypes.hpp"
 #include "triglav/world/Level.hpp"
 
 #include <print>
@@ -519,7 +520,7 @@ class LevelImporter
 
       const auto& glb_scene = m_glb_file.document->scenes[m_glb_file.document->scene];
 
-      world::LevelNode root_node("root");
+      world::Level level;
       std::queue<std::pair<u32, Transform3D>> nodes;
 
       for (const u32 node_id : glb_scene.nodes) {
@@ -559,18 +560,22 @@ class LevelImporter
                return false;
             }
 
-            world::StaticMesh mesh;
-            mesh.name = glb_node.name.value_or(std::format("static_mesh{}", node_id));
-            mesh.transform = transform;
-            mesh.mesh_name = *mesh_name;
-            mesh.armature_name = armature_name;
-
-            root_node.add_static_mesh(std::move(mesh));
+            if (armature_name.has_value()) {
+               level.create_archetype(world::SkeletalMesh{
+                  .label = glb_node.name.value_or(std::format("static_mesh{}", node_id)),
+                  .mesh_name = *mesh_name,
+                  .transform = transform,
+                  .armature_name = *armature_name,
+               });
+            } else {
+               level.create_archetype(world::StaticMesh{
+                  .label = glb_node.name.value_or(std::format("static_mesh{}", node_id)),
+                  .mesh_name = *mesh_name,
+                  .transform = transform,
+               });
+            }
          }
       }
-
-      world::Level level;
-      level.add_node("root"_name, std::move(root_node));
 
       // import animations
       for (u32 animation_id = 0; animation_id < m_glb_file.document->animations.size(); ++animation_id) {
