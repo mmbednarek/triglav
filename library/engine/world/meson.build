@@ -6,7 +6,6 @@ world_sources = files([
         'include/triglav/world/EntityStorage.hpp',
         'include/triglav/world/HierarchyTree.hpp',
         'include/triglav/world/Level.hpp',
-        'include/triglav/world/Terrain.hpp',
         'include/triglav/world/World.hpp',
         'src/Archetypes.cpp',
         'src/ComponentManager.cpp',
@@ -15,7 +14,6 @@ world_sources = files([
         'src/EntityStorage.cpp',
         'src/HierarchyTree.cpp',
         'src/Level.cpp',
-        'src/Terrain.cpp',
 # !END
                       ])
 

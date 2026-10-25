@@ -347,6 +347,24 @@ std::optional<Animation> decode_animation(io::IReader& reader)
    return animation;
 }
 
+bool encode_terrain(io::IWriter& writer, const geometry::Terrain& terrain)
+{
+   if (!write_header(writer, ResourceType::Terrain))
+      return false;
+   if (!terrain.serialize(writer))
+      return false;
+   return true;
+}
+
+std::optional<geometry::Terrain> decode_terrain(io::IReader& reader)
+{
+   auto header = decode_header(reader);
+   if (!header.has_value())
+      return std::nullopt;
+
+   return geometry::Terrain::deserialize(reader);
+}
+
 geometry::MeshData load_mesh_data(const io::Path& path)
 {
    const auto mesh_file_handle = io::open_file(path, io::FileMode::Read);

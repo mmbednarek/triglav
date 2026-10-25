@@ -1,6 +1,7 @@
 #pragma once
 
 #include "triglav/geometry/Mesh.hpp"
+#include "triglav/geometry/Terrain.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/io/Stream.hpp"
 #include "triglav/meta/Meta.hpp"
@@ -173,6 +174,9 @@ std::optional<DecodedTexture> decode_texture(io::IFile& stream);
 
 bool encode_animation(io::IWriter& writer, Animation& animation);
 std::optional<Animation> decode_animation(io::IReader& reader);
+
+bool encode_terrain(io::IWriter& writer, const geometry::Terrain& terrain);
+std::optional<geometry::Terrain> decode_terrain(io::IReader& reader);
 
 
 geometry::MeshData load_mesh_data(const io::Path& path);

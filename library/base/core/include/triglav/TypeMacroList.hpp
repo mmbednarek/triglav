@@ -26,8 +26,11 @@ class Typeface;
 
 namespace world {
 class Level;
-class Terrain;
 }// namespace world
+
+namespace geometry {
+class Terrain;
+}// namespace geometry
 
 }// namespace triglav
 
@@ -50,7 +53,7 @@ TG_RESOURCE_TYPE(name, extension, cpp_type, loading_stage)
    TG_RESOURCE_TYPE(Armature, "arm", ::triglav::render_objects::Armature, 0)                \
    TG_RESOURCE_TYPE(HullShader, "hshader", ::triglav::graphics_api::Shader, 0)              \
    TG_RESOURCE_TYPE(DomainShader, "dshader", ::triglav::graphics_api::Shader, 0)            \
-   TG_RESOURCE_TYPE(Terrain, "ter", ::triglav::world::Terrain, 0)
+   TG_RESOURCE_TYPE(Terrain, "ter", ::triglav::geometry::Terrain, 0)
 
 #define TG_RESOURCE_TYPE_LIST     \
    TG_RESOURCE_TYPE_LIST_LOADABLE \

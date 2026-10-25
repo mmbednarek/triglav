@@ -1,8 +1,8 @@
 #include "TerrainCanvas.hpp"
 
+#include "../../../../library/rendering/geometry/include/triglav/geometry/Terrain.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/world/Level.hpp"
-#include "triglav/world/Terrain.hpp"
 
 namespace triglav::editor {
 

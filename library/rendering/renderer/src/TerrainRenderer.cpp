@@ -1,8 +1,8 @@
 #include "TerrainRenderer.hpp"
 
+#include "../../geometry/include/triglav/geometry/Terrain.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/render_core/BuildContext.hpp"
-#include "triglav/world/Terrain.hpp"
 
 #include <memory>
 

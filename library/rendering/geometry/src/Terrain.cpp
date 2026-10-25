@@ -1,10 +1,8 @@
 #include "Terrain.hpp"
 
-#include "triglav/asset/Asset.hpp"
-#include "triglav/io/File.hpp"
 #include "triglav/io/Serializer.hpp"
 
-namespace triglav::world {
+namespace triglav::geometry {
 
 Terrain::Terrain(const Vector2u dimensions, const TextureName default_texture) :
     m_dimensions(dimensions)
@@ -45,15 +43,6 @@ std::vector<float>& Terrain::mut_heightmap()
 std::vector<Vector4b>& Terrain::mut_blending()
 {
    return m_blending;
-}
-
-void Terrain::save_to_file(const io::Path& path) const
-{
-   auto file = io::open_file(path, io::FileMode::Create | io::FileMode::Write);
-   assert(file.has_value());
-   assert(asset::write_header(**file, ResourceType::Terrain));
-
-   assert(this->serialize(**file));
 }
 
 bool Terrain::serialize(io::IWriter& writer) const
@@ -112,17 +101,4 @@ std::optional<Terrain> Terrain::deserialize(io::IReader& reader)
    return result;
 }
 
-std::optional<Terrain> Terrain::load_from_file(const io::Path& path)
-{
-   auto file = io::open_file(path, io::FileMode::Read);
-   if (!file.has_value())
-      return std::nullopt;
-
-   auto header = asset::decode_header(**file);
-   if (!header.has_value())
-      return std::nullopt;
-
-   return deserialize(**file);
-}
-
-}// namespace triglav::world
+}// namespace triglav::geometry

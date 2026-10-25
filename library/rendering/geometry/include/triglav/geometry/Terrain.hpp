@@ -1,12 +1,13 @@
 #pragma once
 
-#include "triglav/io/Path.hpp"
+#include "triglav/Math.hpp"
+#include "triglav/Name.hpp"
 #include "triglav/io/Stream.hpp"
-#include "triglav/meta/Meta.hpp"
 
+#include <optional>
 #include <vector>
 
-namespace triglav::world {
+namespace triglav::geometry {
 
 class Terrain
 {
@@ -21,11 +22,8 @@ class Terrain
    [[nodiscard]] std::vector<float>& mut_heightmap();
    [[nodiscard]] std::vector<Vector4b>& mut_blending();
 
-   void save_to_file(const io::Path& path) const;
-
    bool serialize(io::IWriter& writer) const;
    static std::optional<Terrain> deserialize(io::IReader& reader);
-   static std::optional<Terrain> load_from_file(const io::Path& path);
 
  private:
    Vector2u m_dimensions;
@@ -35,4 +33,4 @@ class Terrain
    std::vector<Vector4b> m_blending;
 };
 
-}// namespace triglav::world
+}// namespace triglav::geometry

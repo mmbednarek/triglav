@@ -5,6 +5,7 @@
 #include "LevelEditorSidePanel.hpp"
 #include "LevelViewport.hpp"
 
+#include "../../../../library/rendering/geometry/include/triglav/geometry/Terrain.hpp"
 #include "triglav/Ranges.hpp"
 #include "triglav/asset/Asset.hpp"
 #include "triglav/desktop_ui/CheckBox.hpp"
@@ -29,7 +30,6 @@
 #include "triglav/ui_core/widget/SizeLimit.hpp"
 #include "triglav/ui_core/widget/VerticalLayout.hpp"
 #include "triglav/world/Level.hpp"
-#include "triglav/world/Terrain.hpp"
 
 namespace triglav::editor {
 
@@ -713,7 +713,8 @@ void LevelEditor::save_level() const
    for (const auto& [entity_id, component] : m_level.all<world::TerrainComponent>()) {
       auto& terrain = engine::resource_manager().get(component.name);
       const auto path = project::PathManager::the().translate_path(component.name);
-      terrain.save_to_file(path);
+      auto out_file = io::open_file(path, io::FileMode::Write | io::FileMode::Create);
+      assert(asset::encode_terrain(**out_file, terrain));
    }
 }
 

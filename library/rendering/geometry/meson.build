@@ -7,6 +7,7 @@ geometry_sources = files([
         'include/triglav/geometry/MeshData.hpp',
         'include/triglav/geometry/Mesh.hpp',
         'include/triglav/geometry/Parser.hpp',
+        'include/triglav/geometry/Terrain.hpp',
         'include/triglav/geometry/VertexBuffer.hpp',
         'src/DebugMesh.cpp',
         'src/InternalMesh.cpp',
@@ -15,6 +16,7 @@ geometry_sources = files([
         'src/Mesh.cpp',
         'src/MeshData.cpp',
         'src/Parser.cpp',
+        'src/Terrain.cpp',
         'src/VertexBuffer.cpp',
 # !END
 ])

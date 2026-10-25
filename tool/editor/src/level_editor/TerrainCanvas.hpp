@@ -8,8 +8,12 @@
 
 namespace triglav::world {
 class Level;
-class Terrain;
 }// namespace triglav::world
+
+namespace triglav::geometry {
+class Terrain;
+}// namespace triglav::geometry
+
 
 namespace triglav::editor {
 
@@ -36,7 +40,7 @@ class TerrainCanvas
 
    world::Level& m_level;
    world::EntityID m_entity_id;
-   world::Terrain& m_terrain;
+   geometry::Terrain& m_terrain;
    float m_brush_size = 40.0f;
    i32 m_height_map_resolution = 1024;
    float m_world_size = 240.0f;
