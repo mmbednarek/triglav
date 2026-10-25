@@ -1,15 +1,5 @@
 #include "Renderer.hpp"
 
-#include "AnimationJob.hpp"
-#include "Config.hpp"
-#include "StatisticManager.hpp"
-#include "stage/AmbientOcclusionStage.hpp"
-#include "stage/GBufferStage.hpp"
-#include "stage/PostProcessStage.hpp"
-#include "stage/RayTracingStage.hpp"
-#include "stage/ShadingStage.hpp"
-#include "stage/ShadowMapStage.hpp"
-
 #include "triglav/Name.hpp"
 #include "triglav/desktop/ISurface.hpp"
 #include "triglav/engine/Engine.hpp"
@@ -17,6 +7,17 @@
 #include "triglav/render_core/RenderCore.hpp"
 #include "triglav/render_core/ResourceStorage.hpp"
 #include "triglav/resource/ResourceManager.hpp"
+
+#include "AnimationJob.hpp"
+#include "Config.hpp"
+#include "StatisticManager.hpp"
+#include "TerrainRenderer.hpp"
+#include "stage/AmbientOcclusionStage.hpp"
+#include "stage/GBufferStage.hpp"
+#include "stage/PostProcessStage.hpp"
+#include "stage/RayTracingStage.hpp"
+#include "stage/ShadingStage.hpp"
+#include "stage/ShadowMapStage.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -96,7 +97,8 @@ Renderer::Renderer(desktop::ISurface& desktop_surface, graphics_api::Surface& su
 
    m_rendering_job.emplace_stage<stage::GBufferStage>(m_device, m_bindless_scene);
    m_rendering_job.emplace_stage<stage::AmbientOcclusionStage>(m_device);
-   m_rendering_job.emplace_stage<stage::ShadowMapStage>(m_shadow_map_manager, m_bindless_scene, m_update_view_params_job);
+   m_rendering_job.emplace_stage<stage::ShadowMapStage>(m_shadow_map_manager, m_bindless_scene, m_update_view_params_job,
+                                                        engine::system<TerrainRenderer>());
    if (m_device.enabled_features() & DeviceFeature::RayTracing) {
       m_rendering_job.emplace_stage<stage::RayTracingStage>(*m_ray_tracing_scene, m_shadow_map_manager);
    }

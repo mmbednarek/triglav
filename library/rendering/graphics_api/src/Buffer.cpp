@@ -54,6 +54,11 @@ void* MappedMemory::ptr() const
    return m_pointer;
 }
 
+void* MappedMemory::offset_ptr(const mem_size offset) const
+{
+   return static_cast<u8*>(m_pointer) + offset;
+}
+
 void MappedMemory::write(const void* source, const size_t length) const
 {
    std::memcpy(m_pointer, source, length);

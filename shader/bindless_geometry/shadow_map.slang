@@ -3,16 +3,11 @@ import triglav.mesh;
 
 typealias DrawCall = triglav::mesh::DrawCall;
 
-struct ShadowMapProperties
-{
-    float4x4 view_proj;
-};
-
 [[vk::binding(0)]]
-uniform ConstantBuffer<ShadowMapProperties> shadowMapProps;
+uniform ConstantBuffer<float4x4> cb_view_proj_mat;
 
 [[vk::binding(1)]]
-uniform StructuredBuffer<DrawCall> DrawCalls;
+uniform StructuredBuffer<DrawCall> sb_draw_calls;
 
 #if MT_USE_BONES
 [[vk::binding(2)]]
@@ -34,7 +29,7 @@ struct VSInput
 [shader("vertex")]
 float4 vs_main(VSInput vsInput) : SV_Position
 {
-    DrawCall drawCall = DrawCalls[triglav::get_draw_index()];
+    DrawCall drawCall = sb_draw_calls[triglav::get_draw_index()];
 
 #if MT_USE_BONES
     const float4 vertex_position = float4(vsInput.position, 1);
@@ -51,7 +46,7 @@ float4 vs_main(VSInput vsInput) : SV_Position
     const float4 position = float4(vsInput.position, 1);
 #endif
 
-    return mul(shadowMapProps.view_proj, mul(drawCall.transform, position));
+    return mul(cb_view_proj_mat, mul(drawCall.transform, position));
 }
 
 [shader("fragment")]

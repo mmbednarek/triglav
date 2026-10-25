@@ -13,6 +13,7 @@
 #include "triglav/engine/Engine.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/project/PathManager.hpp"
+#include "triglav/renderer/TerrainRenderer.hpp"
 #include "triglav/renderer/stage/AmbientOcclusionStage.hpp"
 #include "triglav/renderer/stage/GBufferStage.hpp"
 #include "triglav/renderer/stage/PostProcessStage.hpp"
@@ -486,7 +487,8 @@ LevelEditor::LevelEditor(ui_core::Context& context, const State state, ui_core::
    m_rendering_job.emplace_stage<renderer::stage::GBufferStage>(m_state.root_window->device(), m_bindless_scene);
    m_decal_rendering_stage = &m_rendering_job.emplace_stage<DecalRenderingStage>(m_state.root_window->device());
    m_rendering_job.emplace_stage<renderer::stage::AmbientOcclusionStage>(m_state.root_window->device());
-   m_rendering_job.emplace_stage<renderer::stage::ShadowMapStage>(m_shadow_map_manager, m_bindless_scene, m_update_view_params_job);
+   m_rendering_job.emplace_stage<renderer::stage::ShadowMapStage>(m_shadow_map_manager, m_bindless_scene, m_update_view_params_job,
+                                                                  m_level.system<renderer::TerrainRenderer>());
    m_rendering_job.emplace_stage<renderer::stage::ShadingStage>();
    m_rendering_job.emplace_stage<renderer::stage::PostProcessStage>(nullptr, "post_process.out"_name);
 

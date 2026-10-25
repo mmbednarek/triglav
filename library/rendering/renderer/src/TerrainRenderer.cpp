@@ -136,7 +136,7 @@ void TerrainRenderer::on_modified_component(world::Level& level, Name /*componen
    }
 }
 
-void TerrainRenderer::build_commands(render_core::BuildContext& ctx)
+void TerrainRenderer::build_commands_gbuffer(render_core::BuildContext& ctx)
 {
    for (const auto& [entity_id, resources] : m_terrain_resources) {
       ctx.bind_vertex_shader("shader/terrain/vertex.vshader"_rc);
@@ -155,6 +155,32 @@ void TerrainRenderer::build_commands(render_core::BuildContext& ctx)
 
       ctx.bind_samplable_texture(4, "engine/texture/grass.tex"_rc);
       ctx.bind_samplable_texture(5, "engine/texture/dirt.tex"_rc);
+
+      ctx.set_vertex_topology(graphics_api::VertexTopology::PatchList);
+
+      ctx.bind_vertex_layout(terrain_layout);
+      ctx.bind_vertex_buffer(&m_patch_vertices);
+      ctx.set_tesselation_control_points(4);
+
+      ctx.draw_primitives(8 * 8 * 4, 0, 1, 0);
+   }
+}
+
+void TerrainRenderer::build_commands_shadow_map(render_core::BuildContext& ctx, render_core::BufferRef matrix_buffer, u32 matrix_offset)
+{
+   for (const auto& [entity_id, resources] : m_terrain_resources) {
+      ctx.bind_vertex_shader("shader/terrain/vertex.vshader"_rc);
+
+      ctx.bind_hull_shader("shader/terrain/hull.hshader"_rc);
+
+      ctx.bind_uniform_buffer(0, "core.view_properties"_external);
+
+      ctx.bind_domain_shader("shader/terrain/domain_shadow_map.dshader"_rc);
+
+      ctx.bind_uniform_buffer(1, matrix_buffer, matrix_offset, sizeof(Matrix4x4));
+      ctx.bind_samplable_texture(2, &resources.height_texture);
+
+      ctx.bind_fragment_shader("shader/bindless_geometry/shadow_map.fshader"_rc);
 
       ctx.set_vertex_topology(graphics_api::VertexTopology::PatchList);
 

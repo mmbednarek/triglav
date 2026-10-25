@@ -95,7 +95,7 @@ void GBufferStage::build_geometry(render_core::BuildContext& ctx) const
 void GBufferStage::build_terrain(render_core::BuildContext& ctx) const
 {
    auto& terrain_renderer = m_bindless_scene.level().system<TerrainRenderer>();
-   terrain_renderer.build_commands(ctx);
+   terrain_renderer.build_commands_gbuffer(ctx);
 }
 
 void GBufferStage::draw_objects_with_render_info(render_core::BuildContext& ctx,

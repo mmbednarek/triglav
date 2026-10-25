@@ -28,6 +28,7 @@ class MappedMemory
 
    [[nodiscard]] void* operator*() const;
    [[nodiscard]] void* ptr() const;
+   [[nodiscard]] void* offset_ptr(mem_size offset) const;
 
    template<typename T>
    [[nodiscard]] T& cast() const

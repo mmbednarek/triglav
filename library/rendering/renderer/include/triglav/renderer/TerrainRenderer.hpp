@@ -2,6 +2,7 @@
 
 #include "triglav/graphics_api/Buffer.hpp"
 #include "triglav/graphics_api/Texture.hpp"
+#include "triglav/render_core/RenderCore.hpp"
 #include "triglav/world/Level.hpp"
 
 #include <map>
@@ -36,7 +37,8 @@ class TerrainRenderer : public world::ISystem
    void on_modified_component(world::Level& level, Name component_name, world::ComponentID component_id,
                               std::span<const world::EntityID> entities) override;
 
-   void build_commands(render_core::BuildContext& ctx);
+   void build_commands_gbuffer(render_core::BuildContext& ctx);
+   void build_commands_shadow_map(render_core::BuildContext& ctx, render_core::BufferRef matrix_buffer, u32 matrix_offset);
 
  private:
    void add_terrain_resources(world::EntityID entity_id, TerrainName terrain_name);

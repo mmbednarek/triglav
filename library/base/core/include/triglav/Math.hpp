@@ -191,6 +191,12 @@ static_assert(sizeof(Transform3D) % 16 == 0);
    return size - offset + alignment;
 }
 
+template<std::integral TIntegral>
+constexpr TIntegral align_up(TIntegral x, size_t a) noexcept
+{
+   return TIntegral((x + (TIntegral(a) - 1)) & ~TIntegral(a - 1));
+}
+
 [[nodiscard]] Vector3 find_closest_point_between_lines(Vector3 origin_a, Vector3 dir_a, Vector3 origin_b, Vector3 dir_b);
 [[nodiscard]] Vector3 find_closest_point_on_line(Vector3 origin, Vector3 dir, Vector3 point);
 [[nodiscard]] Vector3 find_point_on_aa_surface(Vector3 origin, Vector3 dir, Axis axis_surface, float surface);

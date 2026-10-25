@@ -2,6 +2,9 @@
 
 #include "BindlessScene.hpp"
 #include "ShadowMapManager.hpp"
+#include "TerrainRenderer.hpp"
+#include "triglav/Ranges.hpp"
+#include "triglav/engine/Engine.hpp"
 
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
@@ -26,19 +29,25 @@ constexpr graphics_api::SamplerProperties g_shadow_map_props{
 constexpr Vector2i g_shadow_map_size{4096, 4096};
 
 ShadowMapStage::ShadowMapStage(ShadowMapManager& shadow_map_manager, BindlessScene& bindless_scene,
-                               UpdateViewParamsJob& update_view_params_job) :
+                               UpdateViewParamsJob& update_view_params_job, TerrainRenderer& terrain_renderer) :
     m_shadow_map_manager(shadow_map_manager),
     m_bindless_scene(bindless_scene),
+    m_terrain_renderer(terrain_renderer),
     TG_CONNECT(update_view_params_job, OnResourceDefinition, on_resource_definition),
     TG_CONNECT(update_view_params_job, OnViewPropertiesChanged, on_view_properties_changed),
     TG_CONNECT(update_view_params_job, OnViewPropertiesNotChanged, on_view_properties_not_changed),
     TG_CONNECT(update_view_params_job, OnFinalize, on_finalize),
     TG_CONNECT(update_view_params_job, OnPrepareFrame, on_prepare_frame)
 {
+   const auto& limits = engine::the().gfx_device()->limits();
+   m_matrix_buffer_stride = align_up(sizeof(Matrix4x4), limits.min_uniform_buffer_alignment);
+   assert(m_matrix_buffer_stride == sizeof(Matrix4x4));// fixme: In ShadingStage accept arbitrary alignment
 }
 
 void ShadowMapStage::build_stage(render_core::BuildContext& ctx, const Config& /*config*/) const
 {
+   TG_DEBUG_LABEL(ctx, "ShadowMapStage", {0.8f, 0.8f, 0.1f, 1.0f})
+
    ctx.declare_sized_depth_target("shadow_map.cascade0"_name, g_shadow_map_size, GAPI_FORMAT(D, Float32));
    ctx.declare_sized_depth_target("shadow_map.cascade1"_name, g_shadow_map_size, GAPI_FORMAT(D, Float32));
    ctx.declare_sized_depth_target("shadow_map.cascade2"_name, g_shadow_map_size, GAPI_FORMAT(D, Float32));
@@ -47,22 +56,24 @@ void ShadowMapStage::build_stage(render_core::BuildContext& ctx, const Config& /
    ctx.set_sampler_properties("shadow_map.cascade1"_name, g_shadow_map_props);
    ctx.set_sampler_properties("shadow_map.cascade2"_name, g_shadow_map_props);
 
-   this->render_cascade(ctx, "shadow_map.pass.cascade0"_name, "shadow_map.cascade0"_name, "shadow_map.view_properties.cascade0"_external);
-   this->render_cascade(ctx, "shadow_map.pass.cascade1"_name, "shadow_map.cascade1"_name, "shadow_map.view_properties.cascade1"_external);
-   this->render_cascade(ctx, "shadow_map.pass.cascade2"_name, "shadow_map.cascade2"_name, "shadow_map.view_properties.cascade2"_external);
+   this->render_cascade(ctx, "shadow_map.pass.cascade0"_name, "shadow_map.cascade0"_name, 0 * m_matrix_buffer_stride);
+   this->render_cascade(ctx, "shadow_map.pass.cascade1"_name, "shadow_map.cascade1"_name, 1 * m_matrix_buffer_stride);
+   this->render_cascade(ctx, "shadow_map.pass.cascade2"_name, "shadow_map.cascade2"_name, 2 * m_matrix_buffer_stride);
 }
 
 void ShadowMapStage::render_cascade(render_core::BuildContext& ctx, const Name pass_name, const Name target_name,
-                                    const render_core::BufferRef view_props) const
+                                    const u32 matrix_offset) const
 {
    render_core::RenderPassScope rt_scope(ctx, pass_name, target_name);
 
    for (const auto& layout_info : render_objects::VERTEX_LAYOUT_INFOS) {
-      this->render_geometry(ctx, view_props, layout_info);
+      this->render_geometry(ctx, "shadow_map.matrices"_external, matrix_offset, layout_info);
    }
+
+   m_terrain_renderer.build_commands_shadow_map(ctx, "shadow_map.matrices"_external, matrix_offset);
 }
 
-void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const render_core::BufferRef view_props,
+void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const render_core::BufferRef matrix_buffer, const u32 matrix_offset,
                                      const render_objects::MaterialVertexLayoutInfo& layout_info) const
 {
    ctx.bind_vertex_shader(layout_info.vertex_shader_shadow_map);
@@ -70,7 +81,7 @@ void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const rende
    const auto layout = render_core::vertex_layout_from_components_for_depth_only(layout_info.components);
    ctx.bind_vertex_layout(layout);
 
-   ctx.bind_uniform_buffer(0, view_props);
+   ctx.bind_uniform_buffer(0, matrix_buffer, matrix_offset, sizeof(Matrix4x4));
    ctx.bind_storage_buffer(1, render_core::External{layout_info.passthrough_buffer});
    if (layout_info.components & geometry::VertexComponent::Skeleton) {
       ctx.bind_storage_buffer(2, &m_bindless_scene.transform_matrix_buffer());
@@ -88,62 +99,33 @@ void ShadowMapStage::render_geometry(render_core::BuildContext& ctx, const rende
 
 void ShadowMapStage::on_resource_definition(render_core::BuildContext& ctx) const
 {
-   ctx.declare_buffer("shadow_map.matrices"_name, 3 * sizeof(Matrix4x4));
-   ctx.declare_staging_buffer("shadow_map.matrices.staging"_name, 3 * sizeof(Matrix4x4));
-
-   ctx.declare_buffer("shadow_map.view_properties.cascade0"_name, sizeof(Matrix4x4));
-   ctx.declare_staging_buffer("shadow_map.view_properties.cascade0.staging"_name, sizeof(Matrix4x4));
-   ctx.declare_buffer("shadow_map.view_properties.cascade1"_name, sizeof(Matrix4x4));
-   ctx.declare_staging_buffer("shadow_map.view_properties.cascade1.staging"_name, sizeof(Matrix4x4));
-   ctx.declare_buffer("shadow_map.view_properties.cascade2"_name, sizeof(Matrix4x4));
-   ctx.declare_staging_buffer("shadow_map.view_properties.cascade2.staging"_name, sizeof(Matrix4x4));
+   ctx.declare_buffer("shadow_map.matrices"_name, 3 * m_matrix_buffer_stride);
+   ctx.declare_staging_buffer("shadow_map.matrices.staging"_name, 3 * m_matrix_buffer_stride);
 }
 
 void ShadowMapStage::on_view_properties_changed(render_core::BuildContext& ctx) const
 {
    ctx.copy_buffer("shadow_map.matrices.staging"_name, "shadow_map.matrices"_name);
-   ctx.copy_buffer("shadow_map.view_properties.cascade0.staging"_name, "shadow_map.view_properties.cascade0"_name);
-   ctx.copy_buffer("shadow_map.view_properties.cascade1.staging"_name, "shadow_map.view_properties.cascade1"_name);
-   ctx.copy_buffer("shadow_map.view_properties.cascade2.staging"_name, "shadow_map.view_properties.cascade2"_name);
 }
 
 void ShadowMapStage::on_view_properties_not_changed(render_core::BuildContext& ctx) const
 {
    ctx.copy_buffer("shadow_map.matrices"_last_frame, "shadow_map.matrices"_name);
-   ctx.copy_buffer("shadow_map.view_properties.cascade0"_last_frame, "shadow_map.view_properties.cascade0"_name);
-   ctx.copy_buffer("shadow_map.view_properties.cascade1"_last_frame, "shadow_map.view_properties.cascade1"_name);
-   ctx.copy_buffer("shadow_map.view_properties.cascade2"_last_frame, "shadow_map.view_properties.cascade2"_name);
 }
 
 void ShadowMapStage::on_finalize(render_core::BuildContext& ctx) const
 {
    ctx.export_buffer("shadow_map.matrices"_name, gapi::PipelineStage::VertexShader, gapi::BufferAccess::UniformRead,
                      gapi::BufferUsage::UniformBuffer);
-   ctx.export_buffer("shadow_map.view_properties.cascade0"_name, gapi::PipelineStage::VertexShader, gapi::BufferAccess::UniformRead,
-                     gapi::BufferUsage::UniformBuffer);
-   ctx.export_buffer("shadow_map.view_properties.cascade1"_name, gapi::PipelineStage::VertexShader, gapi::BufferAccess::UniformRead,
-                     gapi::BufferUsage::UniformBuffer);
-   ctx.export_buffer("shadow_map.view_properties.cascade2"_name, gapi::PipelineStage::VertexShader, gapi::BufferAccess::UniformRead,
-                     gapi::BufferUsage::UniformBuffer);
 }
 
 void ShadowMapStage::on_prepare_frame(render_core::JobGraph& graph, const u32 frame_index) const
 {
    const auto mapped_mem = GAPI_CHECK(graph.resources().buffer("shadow_map.matrices.staging"_name, frame_index).map_memory());
-   auto& matrices = mapped_mem.cast<std::array<Matrix4x4, 3>>();
-   matrices[0] = m_shadow_map_manager.shadow_map_camera(0).view_projection_matrix();
-   matrices[1] = m_shadow_map_manager.shadow_map_camera(1).view_projection_matrix();
-   matrices[2] = m_shadow_map_manager.shadow_map_camera(2).view_projection_matrix();
-
-   const auto mapped_mem_view_props0 =
-      GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade0.staging"_name, frame_index).map_memory());
-   mapped_mem_view_props0.cast<Matrix4x4>() = m_shadow_map_manager.shadow_map_camera(0).view_projection_matrix();
-   const auto mapped_mem_view_props1 =
-      GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade1.staging"_name, frame_index).map_memory());
-   mapped_mem_view_props1.cast<Matrix4x4>() = m_shadow_map_manager.shadow_map_camera(1).view_projection_matrix();
-   const auto mapped_mem_view_props2 =
-      GAPI_CHECK(graph.resources().buffer("shadow_map.view_properties.cascade2.staging"_name, frame_index).map_memory());
-   mapped_mem_view_props2.cast<Matrix4x4>() = m_shadow_map_manager.shadow_map_camera(2).view_projection_matrix();
+   for (const u32 i : Range(0, 3)) {
+      *static_cast<Matrix4x4*>(mapped_mem.offset_ptr(i * m_matrix_buffer_stride)) =
+         m_shadow_map_manager.shadow_map_camera(i).view_projection_matrix();
+   }
 }
 
 }// namespace triglav::renderer::stage

@@ -55,6 +55,7 @@ resources:
   - "shader/terrain/fragment.fshader"
   - "shader/terrain/hull.hshader"
   - "shader/terrain/vertex.vshader"
+  - "shader/terrain/domain_shadow_map.dshader"
   # UI
   - "engine/texture/ui_atlas.tex"
   # Graphics
