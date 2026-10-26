@@ -998,14 +998,14 @@ Job BuildContext::build_job(PipelineCache& pipeline_cache, ResourceStorage& stor
 
       for (const auto enabled_flags : Range(0u, flag_count)) {
          auto command_list = GAPI_CHECK(m_device.create_command_list(m_work_types));
+         TG_SET_DEBUG_NAME(command_list, create_command_list_name(job_name, frame_index, enabled_flags));
+
          GAPI_CHECK_STATUS(command_list.begin(gapi::SubmitType::Normal));
 
          this->write_commands(storage, desc_storage, command_list, pipeline_cache, pool.has_value() ? &(*pool) : nullptr, frame_index,
                               enabled_flags);
 
          GAPI_CHECK_STATUS(command_list.finish());
-
-         TG_SET_DEBUG_NAME(command_list, create_command_list_name(job_name, frame_index, enabled_flags));
 
          command_lists.emplace_back(std::move(command_list));
       }
