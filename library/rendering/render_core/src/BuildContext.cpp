@@ -21,10 +21,12 @@ namespace {
 
 [[maybe_unused]] std::string create_command_list_name(const Name job_name, const u32 frame_index, const u32 enabled_flags)
 {
+   assert(job_name != 0);
    if (job_name == 0)
       return {};
 
    const auto resolved_name = resolve_name(job_name);
+   assert(!resolved_name.empty());
    if (resolved_name.empty())
       return {};
 

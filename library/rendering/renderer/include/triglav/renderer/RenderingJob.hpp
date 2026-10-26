@@ -18,7 +18,7 @@ class RenderingJob
 {
  public:
    explicit RenderingJob(Config config);
-   static constexpr auto JobName = make_name_id("job.rendering");
+   static constexpr auto JobName = make_name_id("job.rendering");// "job.rendering"_name
 
    void build_job(render_core::BuildContext& ctx) const;
    void set_config(Config config);

@@ -24,7 +24,7 @@ class UpdateUserInterfaceJob
  public:
    using Self = UpdateUserInterfaceJob;
 
-   static constexpr auto JobName = make_name_id("job.update_user_interface");
+   static constexpr auto JobName = make_name_id("job.update_user_interface");// "job.update_user_interface"_name
 
    explicit UpdateUserInterfaceJob(graphics_api::Device& device, render_core::GlyphCache& glyph_cache, ui_core::Viewport& viewport,
                                    resource::ResourceManager& resource_manager, render_core::IRenderer& renderer);

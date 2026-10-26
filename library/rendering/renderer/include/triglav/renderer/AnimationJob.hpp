@@ -19,7 +19,7 @@ class AnimationJob
 {
    TG_DEFINE_LOG_CATEGORY(Animation)
  public:
-   static constexpr auto JobName = make_name_id("job.animation");
+   static constexpr auto JobName = make_name_id("job.animation");// "job.animation"_name
 
    AnimationJob(AnimationManager& animation_manager, BindlessScene& bindless_scene);
 
