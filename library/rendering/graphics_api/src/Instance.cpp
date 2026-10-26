@@ -148,8 +148,6 @@ std::string_view vulkan_object_type_to_string(const VkObjectType type)
       return "cu_function_nvx";
    case VK_OBJECT_TYPE_DEBUG_UTILS_MESSENGER_EXT:
       return "debug_utils_messenger_ext";
-   case VK_OBJECT_TYPE_GPA_SESSION_AMD:
-      return "gpa_session_amd";
    case VK_OBJECT_TYPE_ACCELERATION_STRUCTURE_KHR:
       return "acceleration_structure_khr";
    case VK_OBJECT_TYPE_VALIDATION_CACHE_EXT:
@@ -184,8 +182,6 @@ std::string_view vulkan_object_type_to_string(const VkObjectType type)
       return "indirect_commands_layout_ext";
    case VK_OBJECT_TYPE_INDIRECT_EXECUTION_SET_EXT:
       return "indirect_execution_set_ext";
-   case VK_OBJECT_TYPE_SHADER_INSTRUMENTATION_ARM:
-      return "shader_instrumentation_arm";
    default:
       return "";
    }
