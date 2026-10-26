@@ -38,25 +38,31 @@ void cs_main(uint3 groupID: SV_GroupID, uint3 threadID : SV_GroupThreadID)
 
     AllMemoryBarrierWithGroupSync();
 
-    if (threadID.x >= g_sharedUpdateInfo.characterCount)
-        return;
+    bool is_active = threadID.x < g_sharedUpdateInfo.characterCount;
 
-    if (threadID.x == 0) {
-        g_position[threadID.x] = 0;
+    if (is_active) {
+        if (threadID.x == 0) {
+            g_position[threadID.x] = 0;
+        } else {
+            uint prevChar = g_charBuffer[g_sharedUpdateInfo.characterOffset + threadID.x - 1];
+            g_position[threadID.x] = g_glyphInfos[g_sharedUpdateInfo.glyphBufferOffset + prevChar].advance.x;
+        }
     } else {
-        uint prevChar = g_charBuffer[g_sharedUpdateInfo.characterOffset + threadID.x - 1];
-        g_position[threadID.x] = g_glyphInfos[g_sharedUpdateInfo.glyphBufferOffset + prevChar].advance.x;
+        g_position[threadID.x] = 0;
     }
 
     AllMemoryBarrierWithGroupSync();
 
     for (uint i = 2; i <= g_charCountNextPow2; i <<= 1) {
         const uint iHalf = i >> 1;
-        if ((threadID.x % i) >= iHalf) {
+        if (is_active && (threadID.x % i) >= iHalf) {
             g_position[threadID.x] += g_position[threadID.x - (threadID.x % iHalf) - 1];
         }
         AllMemoryBarrierWithGroupSync();
     }
+
+    if (!is_active)
+        return;
 
     triglav::ui::GlyphInfo glyph = g_glyphInfos[g_sharedUpdateInfo.glyphBufferOffset + g_charBuffer[g_sharedUpdateInfo.characterOffset + threadID.x]];
     const float left = g_position[threadID.x] + glyph.padding.x;
