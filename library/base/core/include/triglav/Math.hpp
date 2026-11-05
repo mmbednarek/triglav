@@ -201,6 +201,11 @@ constexpr TIntegral align_up(TIntegral x, size_t a) noexcept
 [[nodiscard]] Vector3 find_closest_point_on_line(Vector3 origin, Vector3 dir, Vector3 point);
 [[nodiscard]] Vector3 find_point_on_aa_surface(Vector3 origin, Vector3 dir, Axis axis_surface, float surface);
 
+[[nodiscard]] constexpr u32 calculate_mip_count(const Vector2u& dims)
+{
+   return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;
+}
+
 }// namespace triglav
 
 template<>

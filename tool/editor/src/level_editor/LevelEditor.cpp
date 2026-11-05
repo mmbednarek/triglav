@@ -861,12 +861,12 @@ void LevelEditor::on_mode_selected(const u32 id) const
    }
 }
 
-geometry::Ray LevelEditor::viewport_ray(const Vector2 position)
+geometry::Ray LevelEditor::viewport_ray(const Vector2 position, float distance)
 {
    const auto normalized_pos = position / rect_size(this->viewport().dimensions());
    auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
    viewport_coord.y *= -1.0f;
-   return this->view_context().camera().viewport_ray(viewport_coord);
+   return this->view_context().camera().viewport_ray(viewport_coord, distance);
 }
 
 DecalRenderingStage& LevelEditor::decal_rendering_stage() const

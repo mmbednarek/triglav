@@ -163,22 +163,32 @@ float TerrainCanvas::sample(const Vector2i coord) const
    return heightmap[coord.x + 1024 * coord.y];
 }
 
-std::optional<Vector3> TerrainCanvas::trace_ray(const geometry::Ray& ray) const
+std::optional<Vector2i> TerrainCanvas::trace_ray(const geometry::Ray& ray) const
 {
    if (ray.direction.z >= 0.0f || ray.origin.z <= 0.0f) {
       return std::nullopt;
    }
 
-   // TODO: Update to hi-z approach
-   const float ray_length = -ray.origin.z / ray.direction.z;
-   const auto ground_position = (ray.origin + ray.direction * ray_length).xy();
-   return Vector3{ground_position, 0};
+   const auto result = m_terrain.ray_cast(ray);
+   if (result.distance == INF)
+      return std::nullopt;
+
+   return result.coordinate;
 }
 
 Vector2i TerrainCanvas::world_pos_to_coord(const Vector3 pos) const
 {
    const auto ground_position = (pos / m_world_size * 2.0f).xy();
    return Vector2{static_cast<float>(m_height_map_resolution) * 0.5f * (ground_position + Vector2{1.0f, 1.0f})}.cast<Vector2i>();
+}
+
+Vector3 TerrainCanvas::coord_to_world(const Vector2i& pos) const
+{
+   auto ndc = 2.0f * (pos.cast<Vector2>() / static_cast<float>(m_height_map_resolution)) - Vector2{1};
+   return Vector3{
+      ndc * m_world_size / 2.0f,
+      m_terrain.heightmap()[pos.x + 1024 * pos.y] * m_height_scale,
+   };
 }
 
 float TerrainCanvas::height_to_world(const float height) const

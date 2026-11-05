@@ -29,8 +29,9 @@ class TerrainCanvas
    void paint(float strength, Vector2i coord) const;
 
    [[nodiscard]] float sample(Vector2i coord) const;
-   [[nodiscard]] std::optional<Vector3> trace_ray(const geometry::Ray& ray) const;
+   [[nodiscard]] std::optional<Vector2i> trace_ray(const geometry::Ray& ray) const;
    [[nodiscard]] Vector2i world_pos_to_coord(Vector3 pos) const;
+   [[nodiscard]] Vector3 coord_to_world(const Vector2i& pos) const;
    [[nodiscard]] float height_to_world(float height) const;
    [[nodiscard]] float distance_to_world(float distance) const;
    [[nodiscard]] float brush_size() const;

@@ -103,7 +103,7 @@ class LevelEditor final : public desktop_ui::DesktopProxyWidget, public desktop_
    [[nodiscard]] ui_core::IWidget& widget() override;
    [[nodiscard]] ResourceName asset_name() const override;
    void on_mode_selected(u32 id) const;
-   geometry::Ray viewport_ray(Vector2 position);
+   geometry::Ray viewport_ray(Vector2 position, float distance = 1000.0f);
    [[nodiscard]] DecalRenderingStage& decal_rendering_stage() const;
    void set_brush_size(float size);
    void set_brush_strength(float strength);

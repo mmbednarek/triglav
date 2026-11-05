@@ -172,7 +172,7 @@ void LevelViewport::on_mouse_pressed(const ui_core::Event& event, const ui_core:
       auto viewport_coord = 2.0f * normalized_pos - Vector2(1, 1);
       viewport_coord.y *= -1.0f;
 
-      const auto ray = m_level_editor.view_context().camera().viewport_ray(viewport_coord);
+      const auto ray = m_level_editor.view_context().camera().viewport_ray(viewport_coord, 1000.0f);
       if (!m_level_editor.tool().on_use_start(ray)) {
          m_level_editor.selection_tool().on_use_start(ray);
       }
