@@ -8,4 +8,4 @@ enum class AccelerationStructureType
    BottomLevel,
 };
 
-}
+}// namespace triglav::graphics_api::ray_tracing

@@ -70,7 +70,8 @@ MemorySize copy(IReader& input, IWriter& output)
          return total_copied;
       }
 
-      assert(output.write({copy_buffer.data(), *read_size}).has_value());
+      [[maybe_unused]] const auto write_res = output.write({copy_buffer.data(), *read_size});
+      assert(write_res.has_value());
       total_copied += *read_size;
       if (*read_size < copy_buffer_size) {
          return total_copied;

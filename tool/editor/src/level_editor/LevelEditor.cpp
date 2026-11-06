@@ -714,7 +714,8 @@ void LevelEditor::save_level() const
       auto& terrain = engine::resource_manager().get(component.name);
       const auto path = project::PathManager::the().translate_path(component.name);
       auto out_file = io::open_file(path, io::FileMode::Write | io::FileMode::Create);
-      assert(asset::encode_terrain(**out_file, terrain));
+      [[maybe_unused]] auto encode_result = asset::encode_terrain(**out_file, terrain);
+      assert(encode_result);
    }
 }
 

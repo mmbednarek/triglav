@@ -228,6 +228,8 @@ class BuildContext
 
    graphics_api::RenderingInfo create_rendering_info(ResourceStorage& storage, const detail::cmd::BeginRenderPass& begin_render_pass,
                                                      u32 frame_index) const;
+   [[nodiscard]] graphics_api::AttachmentAttributeFlags get_render_target_flags(Name rt_name, Name render_pass_name,
+                                                                                bool clears_image) const;
    const graphics_api::Texture& resolve_texture_ref(ResourceStorage& storage, TextureRef tex_ref, u32 frame_index) const;
    const graphics_api::TextureView& resolve_texture_view_ref(ResourceStorage& storage, TextureRef tex_ref, u32 frame_index) const;
    const graphics_api::Buffer& resolve_buffer_ref(ResourceStorage& storage, BufferRef buff_ref, u32 frame_index) const;

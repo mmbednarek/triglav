@@ -38,7 +38,7 @@ void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config&
    });
 
    ctx.bind_samplable_texture(0, "shading.color"_name);
-   ctx.bind_samplable_texture(1, "shading.blurred_bloom"_name);
+   ctx.bind_samplable_texture(1, "shading.bloom"_name);
 
    ctx.set_is_blending_enabled(false);
 

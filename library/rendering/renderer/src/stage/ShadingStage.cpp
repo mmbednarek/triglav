@@ -60,7 +60,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
    if (config.ambient_occlusion == AmbientOcclusionMethod::RayTraced) {
       ctx.bind_texture(4, "ray_tracing.ambient_occlusion.blurred"_name);
    } else {
-      ctx.bind_texture(4, "ambient_occlusion.blurred"_name);
+      ctx.bind_texture(4, "ambient_occlusion.target"_name);
    }
 
    std::array<render_core::TextureRef, 3> shadow_textures{"shadow_map.cascade0"_name, "shadow_map.cascade1"_name,
@@ -88,7 +88,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.end_render_pass();
 
-   blur_texture(ctx, "shading.bloom"_name, "shading.blurred_bloom"_name, GAPI_FORMAT(RGBA, Float16));
+   // blur_texture(ctx, "shading.bloom"_name, "shading.blurred_bloom"_name, GAPI_FORMAT(RGBA, Float16));
 }
 
 void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const

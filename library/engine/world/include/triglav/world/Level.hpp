@@ -143,8 +143,10 @@ class Level
       std::array<ComponentID, sizeof...(T)> comp_ids{};
       std::array<void*, sizeof...(T)> comp_ptrs{};
 
-      assert(ComponentManager::the().class_names_to_ids(comp_names, comp_ids));
-      assert(m_entity_storage.get_components(entity_id, comp_ids, comp_ptrs));
+      [[maybe_unused]] bool res = ComponentManager::the().class_names_to_ids(comp_names, comp_ids);
+      assert(res);
+      res = m_entity_storage.get_components(entity_id, comp_ids, comp_ptrs);
+      assert(res);
 
       return []<mem_size... Idx>(std::array<void*, sizeof...(T)>& ptrs, std::index_sequence<Idx...>) -> std::tuple<T&...> {
          return {*static_cast<T*>(ptrs[Idx])...};

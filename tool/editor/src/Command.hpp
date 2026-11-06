@@ -15,4 +15,4 @@ enum class Command
    ScaleTool,
 };
 
-}
+}// namespace triglav::editor

@@ -20,7 +20,8 @@ class OutputBuffer
 
    void Put(const char c) const
    {
-      assert(m_writer.write({reinterpret_cast<const u8*>(&c), 1}).has_value());
+      [[maybe_unused]] const auto write_res = m_writer.write({reinterpret_cast<const u8*>(&c), 1});
+      assert(write_res.has_value());
    }
 
    void PutUnsafe(const char c) const

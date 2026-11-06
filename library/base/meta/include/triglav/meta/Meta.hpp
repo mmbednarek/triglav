@@ -413,7 +413,7 @@ class ClassRef : public Ref
    template<typename TRet, typename... TArgs>
    TRet call(const Name name, TArgs&&... args) const
    {
-      const auto* member = this->find_member(name);
+      [[maybe_unused]] const auto* member = this->find_member(name);
       assert(member != nullptr && member->role_flags & MemberRole::Function);
       return reinterpret_cast<TRet (*)(void*, TArgs...)>(this->find_member(name)->function.pointer)(this->raw_handle(),
                                                                                                     std::forward<TArgs>(args)...);

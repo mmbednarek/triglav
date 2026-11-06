@@ -3,6 +3,7 @@
 #include "ApplyFlagConditionsPass.hpp"
 #include "BarrierInsertionPass.hpp"
 #include "GenerateCommandListPass.hpp"
+#include "detail/Commands.hpp"
 
 #include "triglav/Name.hpp"
 #include "triglav/NameResolution.hpp"
@@ -12,6 +13,7 @@
 #include "triglav/resource/ResourceManager.hpp"
 
 #include <cstring>
+#include <variant>
 
 namespace triglav::render_core {
 
@@ -73,8 +75,7 @@ void BuildContext::declare_proportional_texture(const Name tex_name, const graph
 void BuildContext::declare_render_target(const Name rt_name, gapi::ColorFormat rt_format)
 {
    this->m_render_targets.emplace(rt_name, detail::RenderTarget{gapi::ClearValue::color(gapi::ColorPalette::Black),
-                                                                gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage |
-                                                                   gapi::AttachmentAttribute::StoreImage});
+                                                                gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(rt_name, std::nullopt, rt_format, gapi::TextureUsage::ColorAttachment);
 }
 
@@ -95,8 +96,7 @@ void BuildContext::declare_proportional_depth_target(Name dt_name, graphics_api:
 void BuildContext::declare_sized_render_target(const Name rt_name, const Vector2i rt_dims, gapi::ColorFormat rt_format)
 {
    this->m_render_targets.emplace(rt_name, detail::RenderTarget{gapi::ClearValue::color(gapi::ColorPalette::Black),
-                                                                gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage |
-                                                                   gapi::AttachmentAttribute::StoreImage});
+                                                                gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(rt_name, rt_dims, rt_format, gapi::TextureUsage::ColorAttachment);
 }
 
@@ -340,8 +340,6 @@ void BuildContext::begin_render_pass_raw(const Name pass_name, const std::span<N
       }
    }
 
-   std::vector<Name> render_target_names(render_targets.size());
-   std::ranges::copy(render_targets, render_target_names.begin());
    this->add_command<detail::cmd::BeginRenderPass>(pass_name, std::move(pass_render_targets));
 }
 
@@ -527,16 +525,24 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
    gapi::RenderingInfo info{};
    gapi::Resolution resolution{};
 
-   for (const auto& render_target : begin_render_pass.render_targets) {
+   for (const auto& rt : begin_render_pass.render_targets) {
+      assert(m_render_targets.contains(rt.texture_name));
+
+      auto load_store_flags =
+         this->get_render_target_flags(rt.texture_name, begin_render_pass.pass_name, rt.flags & gapi::AttachmentAttribute::ClearImage);
+
       gapi::RenderAttachment attachment{};
-      attachment.texture = &storage.texture(render_target.texture_name, frame_index);
+      attachment.texture = &storage.texture(rt.texture_name, frame_index);
       attachment.state = gapi::TextureState::RenderTarget;
-      attachment.clear_value = render_target.clear_value;
-      attachment.flags = render_target.flags;
+      attachment.clear_value = rt.clear_value;
+      attachment.flags = rt.flags | load_store_flags;
+      if (attachment.flags & gapi::AttachmentAttribute::LoadImage) {
+         attachment.flags.remove_flag(gapi::AttachmentAttribute::ClearImage);
+      }
 
       resolution = attachment.texture->resolution();
 
-      if (render_target.flags & gapi::AttachmentAttribute::Depth) {
+      if (rt.flags & gapi::AttachmentAttribute::Depth) {
          info.depth_attachment = attachment;
       } else {
          info.color_attachments.emplace_back(attachment);
@@ -548,6 +554,154 @@ gapi::RenderingInfo BuildContext::create_rendering_info(ResourceStorage& storage
    info.render_area_extent = Vector2u{resolution.width, resolution.height}.cast<Vector2i>();
 
    return info;
+}
+
+gapi::AttachmentAttributeFlags BuildContext::get_render_target_flags(Name rt_name, Name render_pass_name, const bool /*clears_image*/) const
+{
+   enum class State
+   {
+      Before,
+      Inside,
+      After
+   };
+
+   State state = State::Before;
+   gapi::AttachmentAttributeFlags out_flags{};
+
+   for (const auto& cmd : m_commands) {
+      if (std::holds_alternative<detail::cmd::BeginRenderPass>(cmd)) {
+         const auto& render_pass = std::get<detail::cmd::BeginRenderPass>(cmd);
+         auto it = std::ranges::find_if(render_pass.render_targets,
+                                        [rt_name](const detail::PassRenderTarget& rt) { return rt.texture_name == rt_name; });
+         if (it == render_pass.render_targets.end())
+            continue;
+
+         if (render_pass.pass_name == render_pass_name) {
+            state = State::Inside;
+            continue;
+         }
+
+         if (state == State::Before) {
+            out_flags |= gapi::AttachmentAttribute::LoadImage;
+         } else if (state == State::After && !(it->flags & gapi::AttachmentAttribute::ClearImage)) {
+            out_flags |= gapi::AttachmentAttribute::StoreImage;
+         }
+      } else if (std::holds_alternative<detail::cmd::EndRenderPass>(cmd)) {
+         if (state == State::Inside) {
+            state = State::After;
+         }
+      } else if (std::holds_alternative<detail::cmd::CopyTextureToBuffer>(cmd)) {
+         const auto& copy_tex = std::get<detail::cmd::CopyTextureToBuffer>(cmd);
+         if (state == State::After) {
+            if (std::holds_alternative<Name>(copy_tex.src_texture) && std::get<Name>(copy_tex.src_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::StoreImage;
+            }
+         }
+      } else if (std::holds_alternative<detail::cmd::CopyBufferToTexture>(cmd)) {
+         const auto& copy_tex = std::get<detail::cmd::CopyBufferToTexture>(cmd);
+         if (state == State::Before) {
+            if (std::holds_alternative<Name>(copy_tex.dst_texture) && std::get<Name>(copy_tex.dst_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::LoadImage;
+            }
+         }
+      } else if (std::holds_alternative<detail::cmd::CopyTexture>(cmd)) {
+         const auto& copy_tex = std::get<detail::cmd::CopyTexture>(cmd);
+         if (state == State::After) {
+            if (std::holds_alternative<Name>(copy_tex.src_texture) && std::get<Name>(copy_tex.src_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::StoreImage;
+            }
+         } else if (state == State::Before) {
+            if (std::holds_alternative<Name>(copy_tex.dst_texture) && std::get<Name>(copy_tex.dst_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::LoadImage;
+            }
+         }
+      } else if (std::holds_alternative<detail::cmd::CopyTextureRegion>(cmd)) {
+         const auto& copy_tex = std::get<detail::cmd::CopyTextureRegion>(cmd);
+         if (state == State::After) {
+            if (std::holds_alternative<Name>(copy_tex.src_texture) && std::get<Name>(copy_tex.src_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::StoreImage;
+            }
+         } else if (state == State::Before) {
+            if (std::holds_alternative<Name>(copy_tex.dst_texture) && std::get<Name>(copy_tex.dst_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::LoadImage;
+            }
+         }
+      } else if (std::holds_alternative<detail::cmd::BlitTexture>(cmd)) {
+         const auto& copy_tex = std::get<detail::cmd::BlitTexture>(cmd);
+         if (state == State::After) {
+            if (std::holds_alternative<Name>(copy_tex.src_texture) && std::get<Name>(copy_tex.src_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::StoreImage;
+            }
+         } else if (state == State::Before) {
+            if (std::holds_alternative<Name>(copy_tex.dst_texture) && std::get<Name>(copy_tex.dst_texture) == rt_name) {
+               out_flags |= gapi::AttachmentAttribute::LoadImage;
+            }
+         }
+      } else if (std::holds_alternative<detail::cmd::ExportTexture>(cmd)) {
+         const auto& export_tex = std::get<detail::cmd::ExportTexture>(cmd);
+         if (export_tex.tex_name == rt_name) {
+            out_flags |= gapi::AttachmentAttribute::StoreImage;
+         }
+      } else if (std::holds_alternative<detail::cmd::BindDescriptors>(cmd)) {
+         const auto& bind_desc = std::get<detail::cmd::BindDescriptors>(cmd);
+         for (const auto& desc : bind_desc.descriptors) {
+            if (!desc.has_value())
+               continue;
+
+            if (std::holds_alternative<detail::descriptor::RWTexture>(desc->descriptor)) {
+               auto& rw_tex = std::get<detail::descriptor::RWTexture>(desc->descriptor);
+               if (!std::holds_alternative<Name>(rw_tex.tex_ref))
+                  continue;
+
+               if (std::get<Name>(rw_tex.tex_ref) == rt_name) {
+                  assert(state != State::Inside);// should not bind render target as a descriptor
+                  if (state == State::Before) {
+                     out_flags |= gapi::AttachmentAttribute::LoadImage;
+                  } else {
+                     out_flags |= gapi::AttachmentAttribute::StoreImage;
+                  }
+               }
+            } else if (std::holds_alternative<detail::descriptor::SamplableTexture>(desc->descriptor)) {
+               auto& samplable_tex = std::get<detail::descriptor::SamplableTexture>(desc->descriptor);
+               if (!std::holds_alternative<Name>(samplable_tex.tex_ref))
+                  continue;
+
+               if (std::get<Name>(samplable_tex.tex_ref) == rt_name) {
+                  assert(state != State::Inside);// should not bind render target as a descriptor
+                  if (state == State::After) {
+                     out_flags |= gapi::AttachmentAttribute::StoreImage;
+                  }
+               }
+            } else if (std::holds_alternative<detail::descriptor::Texture>(desc->descriptor)) {
+               auto& samplable_tex = std::get<detail::descriptor::Texture>(desc->descriptor);
+               if (!std::holds_alternative<Name>(samplable_tex.tex_ref))
+                  continue;
+
+               if (std::get<Name>(samplable_tex.tex_ref) == rt_name) {
+                  assert(state != State::Inside);// should not bind render target as a descriptor
+                  if (state == State::After) {
+                     out_flags |= gapi::AttachmentAttribute::StoreImage;
+                  }
+               }
+            } else if (std::holds_alternative<detail::descriptor::SampledTextureArray>(desc->descriptor)) {
+               auto& samplable_tex = std::get<detail::descriptor::SampledTextureArray>(desc->descriptor);
+               for (const TextureRef& ref : samplable_tex.tex_refs) {
+                  if (!std::holds_alternative<Name>(ref))
+                     continue;
+
+                  if (std::get<Name>(ref) == rt_name) {
+                     assert(state != State::Inside);// should not bind render target as a descriptor
+                     if (state == State::After) {
+                        out_flags |= gapi::AttachmentAttribute::StoreImage;
+                     }
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   return out_flags;
 }
 
 const gapi::Texture& BuildContext::resolve_texture_ref(ResourceStorage& storage, TextureRef tex_ref, u32 frame_index) const
@@ -630,7 +784,7 @@ void BuildContext::handle_pending_graphic_state()
    this->handle_descriptor_bindings();
 }
 
-void BuildContext::prepare_texture(const TextureRef tex_ref, const gapi::TextureState state, const gapi::TextureUsageFlags usage)
+void BuildContext::prepare_texture(const TextureRef tex_ref, const gapi::TextureState /*state*/, const gapi::TextureUsageFlags usage)
 {
    if (!std::holds_alternative<Name>(tex_ref) && !std::holds_alternative<FromLastFrame>(tex_ref) &&
        !std::holds_alternative<TextureMip>(tex_ref)) {
@@ -642,16 +796,6 @@ void BuildContext::prepare_texture(const TextureRef tex_ref, const gapi::Texture
                                                                           : std::get<TextureMip>(tex_ref).name;
 
    this->add_texture_usage(tex_name, usage);
-
-   if (gapi::to_memory_access(state) == gapi::MemoryAccess::Read && m_render_targets.contains(tex_name)) {
-      auto& render_target = m_render_targets.at(tex_name);
-      render_target.flags |= gapi::AttachmentAttribute::StoreImage;
-   }
-   if (gapi::to_memory_access(state) == gapi::MemoryAccess::Write && m_render_targets.contains(tex_name)) {
-      auto& render_target = m_render_targets.at(tex_name);
-      render_target.flags |= gapi::AttachmentAttribute::LoadImage;
-      render_target.flags.remove_flag(gapi::AttachmentAttribute::ClearImage);
-   }
 }
 
 void BuildContext::prepare_buffer(const BufferRef buff_ref, const gapi::BufferUsage usage)

@@ -2,6 +2,7 @@
 
 #include "../RenderCore.hpp"
 #include "Descriptors.hpp"
+#include "triglav/graphics_api/GraphicsApi.hpp"
 
 namespace triglav::render_core::detail {
 

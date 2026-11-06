@@ -91,7 +91,7 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
 
    ctx.end_render_pass();
 
-   blur_texture(ctx, "ambient_occlusion.target"_name, "ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
+   // blur_texture(ctx, "ambient_occlusion.target"_name, "ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
 
    // ctx.query_timestamp(1, true);
 }

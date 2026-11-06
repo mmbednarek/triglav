@@ -225,7 +225,7 @@ String to_string(TInt value)
 template<Numeric TInt>
 TInt from_string(const StringView value)
 {
-   TInt result;
+   TInt result{};
    std::from_chars(value.data(), value.data() + value.size(), result);
    return result;
 }
