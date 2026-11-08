@@ -53,8 +53,8 @@ void Engine::load_level(const LevelName level_name)
       m_pending_level->register_system(system.constructor(*m_pending_level), system.components);
    }
 
-
-   assert(m_pending_level->deserialize(**file));
+   [[maybe_unused]] const auto deserialize_result = m_pending_level->deserialize(**file);
+   assert(deserialize_result);
 
    std::vector<ResourceName> resource_list;
 

@@ -2,6 +2,7 @@
 
 #include "ComponentStorage.hpp"
 #include "HierarchyTree.hpp"
+#include "triglav/Logging.hpp"
 
 #include <span>
 
@@ -9,6 +10,7 @@ namespace triglav::world {
 
 class EntityStorage
 {
+   TG_DEFINE_LOG_CATEGORY(EntityStorage)
  public:
    void init();
    [[nodiscard]] void* get_component(EntityID entity_id, ComponentID component_id) const;

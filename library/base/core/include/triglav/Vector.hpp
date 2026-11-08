@@ -109,8 +109,11 @@
    [[nodiscard]] constexpr float dot(const Self& other) const; \
    [[nodiscard]] constexpr Self degrees() const;               \
    [[nodiscard]] constexpr Self radians() const;               \
-   [[nodiscard]] constexpr Self abs() const;
-
+   [[nodiscard]] constexpr Self abs() const;                   \
+   [[nodiscard]] constexpr Self floor() const;                 \
+   [[nodiscard]] constexpr Self ceil() const;                  \
+   [[nodiscard]] constexpr Self fmod(ComponentType rhs) const; \
+   [[nodiscard]] constexpr Self reciprocal() const;
 namespace triglav {
 
 struct Vector2i;

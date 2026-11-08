@@ -24,7 +24,7 @@ class BVHProvider
  public:
    explicit BVHProvider(world::Level& level);
 
-   geometry::MeshBVH& get_bottom_level(world::EntityID entity_id) const;
+   geometry::ITraversable* get_bottom_level(world::EntityID entity_id) const;
 
  private:
    world::Level& m_level;

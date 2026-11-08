@@ -10,7 +10,7 @@ namespace triglav::geometry {
 using PrimitiveID = u32;
 constexpr PrimitiveID NO_PRIMITIVE_ID = ~0u;
 
-class MeshBVH
+class MeshBVH : public ITraversable
 {
  public:
    struct Node
@@ -85,6 +85,9 @@ class MeshBVH
 
    [[nodiscard]] RayHit ray_cast(const Ray& ray) const;
    [[nodiscard]] SweepHit sweep_cast(const BoundingBox& bb, const Vector3& movement) const;
+
+   [[nodiscard]] geometry::SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) override;
+   [[nodiscard]] float generic_ray_cast(const Ray& ray) override;
 
    void clear();
 

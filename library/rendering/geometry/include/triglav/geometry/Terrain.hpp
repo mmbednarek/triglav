@@ -11,38 +11,33 @@
 
 namespace triglav::geometry {
 
-class Terrain
+class Terrain : public ITraversable
 {
  public:
    struct MipLevel
    {
       std::vector<float> level;
       Vector2u dimensions;
-      Vector2 fragment_dim;
 
-      void init(const Vector2u& dim)
+      void init(const Vector2u& dim);
+      void init_from_parent(const MipLevel& parent);
+
+      [[nodiscard]] float& get(const Vector2u& coord)
       {
-         this->dimensions = dim;
-         this->level.resize(dim.x * dim.y);
+         return this->level[coord.x + coord.y * this->dimensions.x];
       }
 
-      BoundingBox bounding_box(const Vector2u& offset) const
+      [[nodiscard]] float get(const Vector2u& coord) const
       {
-         const auto ndc_min = 2.0f * (offset.cast<Vector2>() / dimensions.cast<Vector2>()) - Vector2{1};
-         const auto ndc_max = 2.0f * ((offset.cast<Vector2>() + Vector2{1}) / dimensions.cast<Vector2>()) - Vector2{1};
-         return BoundingBox{
-            .min =
-               {
-                  ndc_min * Vector2{120.0f},
-                  -0.01f,
-               },
-            .max =
-               {
-                  ndc_max * Vector2{120.0f},
-                  level[offset.x + offset.y * this->dimensions.x] * 30.0f,
-               },
-         };
+         return this->level[coord.x + coord.y * this->dimensions.x];
       }
+
+      [[nodiscard]] float operator[](const u32 x, const u32 y) const
+      {
+         return this->get({x, y});
+      }
+
+      [[nodiscard]] BoundingBox bounding_box(const Terrain& terrain, const Vector2u& offset) const;
    };
 
    struct RayHit
@@ -64,6 +59,28 @@ class Terrain
       }
    };
 
+   struct SweepHit
+   {
+      float time{INF};
+      Vector3 normal{};
+      Vector2u coordinate{};
+
+      [[nodiscard]] explicit operator bool() const
+      {
+         return time < INF;
+      }
+
+      static SweepHit miss()
+      {
+         return SweepHit{};
+      }
+
+      [[nodiscard]] float score() const
+      {
+         return time;
+      }
+   };
+
    Terrain(Vector2u dimensions, TextureName default_texture);
 
    [[nodiscard]] Vector2u dimensions() const;
@@ -75,18 +92,26 @@ class Terrain
    [[nodiscard]] std::vector<Vector4b>& mut_blending();
 
    [[nodiscard]] RayHit ray_cast(const Ray& ray) const;
+   [[nodiscard]] SweepHit sweep_cast(const BoundingBox& dynamic_box, const Vector3& movement) const;
+   [[nodiscard]] BoundingBox bounding_box() const;
+
+   [[nodiscard]] geometry::SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) override;
+   [[nodiscard]] float generic_ray_cast(const Ray& ray) override;
+
+   [[nodiscard]] float sample_height(const Vector2& uv) const;
+   [[nodiscard]] Vector2 frag_uv() const;
 
    bool serialize(io::IWriter& writer) const;
    static std::optional<Terrain> deserialize(io::IReader& reader);
 
  private:
    RayHit ray_cast_visit_level(u32 mip, const Vector2u& base, Ray& ray) const;
+   SweepHit sweep_cast_visit_level(u32 mip, const Vector2u& base, const BoundingBox& dynamic_box, const Vector3& movement,
+                                   float& best_score) const;
    void generate_mip_levels();
 
-   Vector2u m_dimensions;
-   Vector2 m_world_dimensions{240.0f, 240.0f};
+   Vector3 m_half_world_size{120.0f, 120.0f, 30.0f};
    std::vector<TextureName> m_pallette;
-   std::vector<float> m_heightmap;
    std::vector<MipLevel> m_heightmap_mips;
    std::vector<Vector4b> m_material_indices;
    std::vector<Vector4b> m_blending;

@@ -5,6 +5,7 @@
 #include "MeshBVHStorage.hpp"
 #include "Physics.hpp"
 #include "triglav/engine/Engine.hpp"
+#include "triglav/geometry/Terrain.hpp"
 
 namespace triglav::physics {
 
@@ -71,14 +72,17 @@ struct LevelBVHRayTraversalTraits
    static Result test_leaf(const UserData* user_data, const Node* node, const geometry::Ray& ray, float& best_score)
    {
       assert(node->is_leaf_node);
-      auto& bottom_level = user_data->mesh_provider->get_bottom_level(node->leaf.entity_id);
-      const auto bl_ray = ray.to_local_space(node->leaf.inv_transform);
-      const auto bl_hit = bottom_level.ray_cast(bl_ray);
-      if (bl_hit.distance > best_score)
+      auto* bottom_level = user_data->mesh_provider->get_bottom_level(node->leaf.entity_id);
+      if (bottom_level == nullptr)
          return Result::miss();
 
-      best_score = bl_hit.distance;
-      return Result{bl_hit.distance, node->leaf.entity_id};
+      const auto bl_ray = ray.to_local_space(node->leaf.inv_transform);
+      const auto bl_hit_distance = bottom_level->generic_ray_cast(bl_ray);
+      if (bl_hit_distance > best_score)
+         return Result::miss();
+
+      best_score = bl_hit_distance;
+      return Result{bl_hit_distance, node->leaf.entity_id};
    }
 
    static IntersectionResult test_intersection(const UserData* /*user_data*/, const Node* node, const geometry::Ray& ray)
@@ -129,11 +133,14 @@ struct LevelBVHSweepTraversalTraits
          return Result::miss();
       }
 
-      auto& bottom_level = user_data->mesh_provider->get_bottom_level(node->leaf.entity_id);
+      auto* bottom_level = user_data->mesh_provider->get_bottom_level(node->leaf.entity_id);
+      if (bottom_level == nullptr)
+         return Result::miss();
+
       const auto ls_bb = traversary.bounding_box.transform(node->leaf.inv_transform);
       const auto ls_movement = node->leaf.inv_transform.shrink() * traversary.movement;
-      const auto result = bottom_level.sweep_cast(ls_bb, ls_movement);
-      if (result.primitive_id == ~0u) {
+      const auto result = bottom_level->generic_sweep_cast(ls_bb, ls_movement);
+      if (result.time > 1.0f) {
          return Result::miss();
       }
       if (result.time >= best_score) {
@@ -219,27 +226,42 @@ LevelBVH& LevelBVH::operator=(LevelBVH&& other) noexcept
 namespace {
 
 LevelBVH::Node* leaf_from_entity_id(const world::Level& level, const world::EntityID entity_id, const world::Mesh* mesh_comp = nullptr,
-                                    const Movement* movement_comp = nullptr)
+                                    const world::TerrainComponent* terrain_comp = nullptr, const Movement* movement_comp = nullptr)
 {
+   geometry::BoundingBox bounding_box{};
+
    if (mesh_comp == nullptr) {
       mesh_comp = level.component_opt<world::Mesh>(entity_id);
-      assert(mesh_comp != nullptr);
    }
+   if (mesh_comp != nullptr) {
+      const auto& mesh = engine::resource_manager().get(mesh_comp->name);
+      bounding_box = mesh.bounding_box;
+   }
+
+   if (terrain_comp == nullptr) {
+      terrain_comp = level.component_opt<world::TerrainComponent>(entity_id);
+   }
+   if (terrain_comp != nullptr) {
+      const auto& terrain = engine::resource_manager().get(terrain_comp->name);
+      bounding_box = terrain.bounding_box();
+   }
+
+   assert(mesh_comp || terrain_comp);
+
    if (movement_comp == nullptr) {
       movement_comp = level.component_opt<Movement>(entity_id);
    }
-   const auto& mesh = engine::resource_manager().get(mesh_comp->name);
    const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
    Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
    const auto transform_matrix = transform.to_matrix();
-   auto bb = mesh.bounding_box.transform(transform_matrix);
+   auto transformed_bb = bounding_box.transform(transform_matrix);
    if (movement_comp != nullptr) {
-      bb = bb.extend_by_movement(movement_comp->motion);
+      transformed_bb = transformed_bb.extend_by_movement(movement_comp->motion);
    }
 
    return new LevelBVH::Node{
       .parent = nullptr,
-      .bounding_box = bb,
+      .bounding_box = transformed_bb,
       .is_leaf_node = true,
       .leaf =
          {
@@ -257,16 +279,20 @@ struct EntityData
 
 EntityData get_entity_data(const world::Level& level, const world::EntityID entity_id)
 {
-   const auto* mesh_comp = level.component_opt<world::Mesh>(entity_id);
-   if (mesh_comp == nullptr) {
-      return {};
-   }
    const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
    Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
    Matrix4x4 matrix = transform.to_matrix();
 
-   const auto& mesh = engine::resource_manager().get(mesh_comp->name);
-   return {mesh.bounding_box.transform(matrix), matrix.inverse()};
+   if (const auto* mesh_comp = level.component_opt<world::Mesh>(entity_id); mesh_comp != nullptr) {
+      const auto& mesh = engine::resource_manager().get(mesh_comp->name);
+      return {mesh.bounding_box.transform(matrix), matrix.inverse()};
+   }
+   if (const auto* terrain_comp = level.component_opt<world::TerrainComponent>(entity_id); terrain_comp != nullptr) {
+      const auto& terrain = engine::resource_manager().get(terrain_comp->name);
+      return {terrain.bounding_box().transform(matrix), matrix.inverse()};
+   }
+
+   return {};
 }
 
 LevelBVH::Node* build_bvh(std::span<LevelBVH::Node*> nodes, LevelBVH::Node* parent)
@@ -415,6 +441,14 @@ void LevelBVH::build_static()
       nodes.emplace_back(node);
    }
 
+   for (const auto& [entity_id, terrain_comp] : m_level.all<world::TerrainComponent>()) {
+      if (m_level.has_component<Movement>(entity_id))
+         continue;
+      auto* node = leaf_from_entity_id(m_level, entity_id, nullptr, &terrain_comp);
+      m_leave_mapping[entity_id] = node;
+      nodes.emplace_back(node);
+   }
+
    m_root = build_bvh(nodes, nullptr);
 }
 
@@ -429,7 +463,7 @@ void LevelBVH::build_dynamic()
       const auto* mesh_comp = m_level.component_opt<world::Mesh>(entity_id);
       if (mesh_comp == nullptr)
          continue;
-      auto* node = leaf_from_entity_id(m_level, entity_id, mesh_comp, &movement_comp);
+      auto* node = leaf_from_entity_id(m_level, entity_id, mesh_comp, nullptr, &movement_comp);
       m_leave_mapping[entity_id] = node;
       nodes.emplace_back(node);
    }

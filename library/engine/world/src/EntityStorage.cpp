@@ -8,6 +8,7 @@ namespace triglav::world {
 
 void EntityStorage::init()
 {
+   log_warn("initializing storage, registered components: {}", ComponentManager::the().count());
    m_storage.reserve(ComponentManager::the().count());
    std::generate_n(std::back_inserter(m_storage), ComponentManager::the().count(), [i = 0]() mutable { return ComponentStorage(i++); });
 }

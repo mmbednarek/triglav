@@ -33,10 +33,15 @@ BVHProvider::BVHProvider(world::Level& level) :
 {
 }
 
-geometry::MeshBVH& BVHProvider::get_bottom_level(const world::EntityID entity_id) const
+geometry::ITraversable* BVHProvider::get_bottom_level(const world::EntityID entity_id) const
 {
-   const auto mesh_component = m_level.component<world::Mesh>(entity_id);
-   return MeshBVHStorage::the().get(mesh_component.name);
+   if (const auto* mesh_component = m_level.component_opt<world::Mesh>(entity_id); mesh_component != nullptr) {
+      return &MeshBVHStorage::the().get(mesh_component->name);
+   }
+   if (const auto* terrain_component = m_level.component_opt<world::TerrainComponent>(entity_id); terrain_component != nullptr) {
+      return &engine::resource_manager().get(terrain_component->name);
+   }
+   return nullptr;
 }
 
 }// namespace triglav::physics

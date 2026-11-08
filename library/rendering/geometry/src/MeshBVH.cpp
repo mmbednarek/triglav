@@ -325,6 +325,18 @@ MeshBVH::SweepHit MeshBVH::sweep_cast(const BoundingBox& bb, const Vector3& move
    return MeshBVHSweepTraverser::traverse(nullptr, m_root, {bb, movement}, best_score);
 }
 
+geometry::SweepHit MeshBVH::generic_sweep_cast(const BoundingBox& box, const Vector3& movement)
+{
+   const auto res = this->sweep_cast(box, movement);
+   return {res.time, res.normal};
+}
+
+float MeshBVH::generic_ray_cast(const Ray& ray)
+{
+   const auto res = this->ray_cast(ray);
+   return res.distance;
+}
+
 void MeshBVH::clear()
 {
    if (m_root == nullptr)

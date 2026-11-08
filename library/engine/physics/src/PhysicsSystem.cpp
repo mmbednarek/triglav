@@ -16,6 +16,7 @@ engine::SystemRegisterer PHYSICS_SYSTEM_REGISTERER{{
       std::vector<Name>{
          "triglav::Transform3D"_name,
          "triglav::world::Mesh"_name,
+         "triglav::world::TerrainComponent"_name,
       },
 }};
 
@@ -48,7 +49,7 @@ void PhysicsSystem::on_removed_entities(world::Level& /*level*/, std::span<const
 void PhysicsSystem::on_added_component(world::Level& level, Name component_name, world::ComponentID /*component_id*/,
                                        std::span<const world::EntityID> entities)
 {
-   if (component_name != "triglav::world::Mesh"_name)
+   if (component_name != "triglav::world::Mesh"_name && component_name != "triglav::world::TerrainComponent"_name)
       return;
 
    for (const auto entity_id : entities) {
@@ -65,7 +66,7 @@ void PhysicsSystem::on_modified_component(world::Level& level, Name /*component_
                                           std::span<const world::EntityID> entities)
 {
    for (const auto entity_id : entities) {
-      if (!level.has_component<world::Mesh>(entity_id))
+      if (!level.has_component<world::Mesh>(entity_id) && !level.has_component<world::TerrainComponent>(entity_id))
          continue;
       if (level.has_component<Movement>(entity_id)) {
          m_dynamic_bvh.update(entity_id);

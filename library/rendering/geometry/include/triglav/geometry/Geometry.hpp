@@ -395,6 +395,21 @@ struct BoundingBox
 
 constexpr double g_pi = 3.1415926535897932;
 
+struct SweepHit
+{
+   float time;
+   Vector3 normal;
+};
+
+class ITraversable
+{
+ public:
+   virtual ~ITraversable() = default;
+
+   [[nodiscard]] virtual SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) = 0;
+   [[nodiscard]] virtual float generic_ray_cast(const Ray& ray) = 0;
+};
+
 }// namespace triglav::geometry
 
 namespace std {

@@ -322,6 +322,38 @@ struct Vector4;
          result.components[i] = std::abs(this->components[i]);                 \
       }                                                                        \
       return result;                                                           \
+   }                                                                           \
+   constexpr vec_name vec_name::floor() const                                  \
+   {                                                                           \
+      Self result{};                                                           \
+      for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
+         result.components[i] = std::floor(this->components[i]);               \
+      }                                                                        \
+      return result;                                                           \
+   }                                                                           \
+   constexpr vec_name vec_name::ceil() const                                   \
+   {                                                                           \
+      Self result{};                                                           \
+      for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
+         result.components[i] = std::ceil(this->components[i]);                \
+      }                                                                        \
+      return result;                                                           \
+   }                                                                           \
+   constexpr vec_name vec_name::fmod(const ComponentType rhs) const            \
+   {                                                                           \
+      Self result{};                                                           \
+      for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
+         result.components[i] = std::fmod(this->components[i], rhs);           \
+      }                                                                        \
+      return result;                                                           \
+   }                                                                           \
+   constexpr vec_name vec_name::reciprocal() const                             \
+   {                                                                           \
+      Self result{};                                                           \
+      for (u32 i = 0; i < COMPONENT_COUNT; ++i) {                              \
+         result.components[i] = ComponentType{1} / this->components[i];        \
+      }                                                                        \
+      return result;                                                           \
    }
 
 #define TG_IMPLEMENT_VECTOR_LHS_BINARY_OVERLOAD(vector_type, binary_op)                                   \
