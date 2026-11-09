@@ -263,7 +263,10 @@ Terrain::RayHit Terrain::ray_cast_visit_level(const u32 mip, const Vector2u& bas
          };
       }
 
-      best_result = this->ray_cast_visit_level(mip - 1, base * 2u + offsets[index], ray);
+      const auto result = this->ray_cast_visit_level(mip - 1, base * 2u + offsets[index], ray);
+      if (result) {
+         best_result = result;
+      }
    }
 
    return best_result;
@@ -313,9 +316,11 @@ Terrain::SweepHit Terrain::sweep_cast_visit_level(const u32 mip, const Vector2u&
          };
       }
 
-      best_result = this->sweep_cast_visit_level(mip - 1, base * 2u + offsets[index], dynamic_box, movement, best_score);
+      const auto sweep_result = this->sweep_cast_visit_level(mip - 1, base * 2u + offsets[index], dynamic_box, movement, best_score);
+      if (sweep_result) {
+         best_result = sweep_result;
+      }
    }
-
    return best_result;
 }
 
