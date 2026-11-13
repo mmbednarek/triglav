@@ -399,6 +399,11 @@ struct SweepHit
 {
    float time;
    Vector3 normal;
+
+   [[nodiscard]] constexpr static SweepHit miss()
+   {
+      return {INF, {}};
+   }
 };
 
 class ITraversable
@@ -408,6 +413,20 @@ class ITraversable
 
    [[nodiscard]] virtual SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) = 0;
    [[nodiscard]] virtual float generic_ray_cast(const Ray& ray) = 0;
+};
+
+enum class TraversableKind {
+    Mesh,
+    Sphere,
+    Capsule,
+    AABB,
+    Terrain,
+    MaxValue
+};
+
+struct TraversableHeader {
+    TraversableKind kind;
+    BoundingBox bouding_box;
 };
 
 }// namespace triglav::geometry

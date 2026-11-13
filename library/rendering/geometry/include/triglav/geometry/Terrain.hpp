@@ -7,6 +7,7 @@
 #include "triglav/io/Stream.hpp"
 
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace triglav::geometry {
@@ -24,11 +25,17 @@ class Terrain : public ITraversable
 
       [[nodiscard]] float& get(const Vector2u& coord)
       {
+         if (coord.x >= dimensions.x || coord.y >= dimensions.y) {
+            assert(false && "trying to modify cell out of bounds");
+            std::unreachable();
+         }
          return this->level[coord.x + coord.y * this->dimensions.x];
       }
 
       [[nodiscard]] float get(const Vector2u& coord) const
       {
+         if (coord.x >= dimensions.x || coord.y >= dimensions.y)
+            return 0.0f;
          return this->level[coord.x + coord.y * this->dimensions.x];
       }
 
@@ -98,6 +105,7 @@ class Terrain : public ITraversable
    [[nodiscard]] geometry::SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) override;
    [[nodiscard]] float generic_ray_cast(const Ray& ray) override;
 
+   [[nodiscard]] Vector3 normal_at(const Vector2u& coord) const;
    [[nodiscard]] float sample_height(const Vector2& uv) const;
    [[nodiscard]] Vector2 frag_uv() const;
 

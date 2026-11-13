@@ -5,24 +5,6 @@
 
 namespace triglav::geometry {
 
-namespace {
-
-Vector3 calculate_normal(const Terrain& terrain, const Vector2 uv)
-{
-   const auto d = 2.0f * terrain.frag_uv();
-   const float hl = terrain.sample_height(uv + Vector2(-d.x, 0));
-   const float hr = terrain.sample_height(uv + Vector2(d.x, 0));
-   const float hb = terrain.sample_height(uv + Vector2(0, -d.y));
-   const float hf = terrain.sample_height(uv + Vector2(0, d.y));
-
-   const Vector3 tangent = Vector3(d.x * 240.0, 0.0, (hr - hl) * 30.0f).normalize();
-   const Vector3 bitangent = Vector3(0.0, d.y * 240.0, (hf - hb) * 30.0f).normalize();
-
-   return tangent.cross(bitangent).normalize();
-}
-
-}// namespace
-
 void Terrain::MipLevel::init(const Vector2u& dim)
 {
    this->dimensions = dim;
@@ -141,6 +123,21 @@ float Terrain::generic_ray_cast(const Ray& ray)
 {
    const auto res = this->ray_cast(ray);
    return res.distance;
+}
+
+Vector3 Terrain::normal_at(const Vector2u& coord) const
+{
+   const float hl = m_heightmap_mips[0].get(coord + Vector2i{-1, 0});
+   const float hr = m_heightmap_mips[0].get(coord + Vector2i{1, 0});
+   const float hb = m_heightmap_mips[0].get(coord + Vector2i{0, -1});
+   const float hf = m_heightmap_mips[0].get(coord + Vector2i{0, 1});
+
+   const Vector2 lengths = 4.0f * m_half_world_size.xy() / m_heightmap_mips[0].dimensions.cast<Vector2>();
+
+   const Vector3 tangent = Vector3(lengths.x, 0.0, (hr - hl) * m_half_world_size.z).normalize();
+   const Vector3 bitangent = Vector3(0.0, lengths.y, (hf - hb) * m_half_world_size.z).normalize();
+
+   return tangent.cross(bitangent).normalize();
 }
 
 float Terrain::sample_height(const Vector2& uv) const
@@ -308,10 +305,10 @@ Terrain::SweepHit Terrain::sweep_cast_visit_level(const u32 mip, const Vector2u&
       if (mip == 0) {
          best_score = hit.entry_time;
          const auto coord = base * 2u + offsets[index];
-         const auto uv = coord.cast<Vector2>() / m_heightmap_mips[0].dimensions.cast<Vector2>();
+         // const auto uv = coord.cast<Vector2>() / m_heightmap_mips[0].dimensions.cast<Vector2>();
          return SweepHit{
             .time = hit.entry_time,
-            .normal = calculate_normal(*this, uv),
+            .normal = this->normal_at(coord),
             .coordinate = base * 2u + offsets[index],
          };
       }
