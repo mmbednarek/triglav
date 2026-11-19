@@ -105,6 +105,12 @@ Terrain::SweepHit Terrain::sweep_cast(const BoundingBox& dynamic_box, const Vect
    return this->sweep_cast_visit_level(m_heightmap_mips.size() - 1, {0, 0}, dynamic_box, movement, best_score);
 }
 
+Terrain::SweepHit Terrain::sweep_cast_capsule(const Capsule& capsule, const Vector3& movement) const
+{
+   float best_score = INF;
+   return this->sweep_cast_capsule_visit_level(m_heightmap_mips.size() - 1, {0, 0}, capsule, movement, best_score);
+}
+
 BoundingBox Terrain::bounding_box() const
 {
    return {
@@ -113,13 +119,13 @@ BoundingBox Terrain::bounding_box() const
    };
 }
 
-geometry::SweepHit Terrain::generic_sweep_cast(const BoundingBox& box, const Vector3& movement)
+SweepHit Terrain::generic_sweep_cast(const BoundingBox& box, const Vector3& movement) const
 {
    const auto res = this->sweep_cast(box, movement);
    return {res.time, res.normal};
 }
 
-float Terrain::generic_ray_cast(const Ray& ray)
+float Terrain::generic_ray_cast(const Ray& ray) const
 {
    const auto res = this->ray_cast(ray);
    return res.distance;
@@ -286,9 +292,8 @@ Terrain::SweepHit Terrain::sweep_cast_visit_level(const u32 mip, const Vector2u&
                           [&](const Vector2u& offset) { return level.bounding_box(*this, 2u * base + offset); });
 
    std::array<std::pair<u32, BoundingBox::SweepResult>, 4> hits{};
-   std::ranges::transform(bounding_boxes, hits.begin(), [&, i = 0u](const BoundingBox& bb) mutable {
-      return std::make_pair(i++, bb.intersect_swept(dynamic_box, movement));
-   });
+   std::ranges::transform(bounding_boxes, hits.begin(),
+                          [&, i = 0u](const BoundingBox& bb) mutable { return std::make_pair(i++, bb.sweep_aabb(dynamic_box, movement)); });
 
    std::ranges::sort(hits, [](const std::pair<u32, BoundingBox::SweepResult>& lhs, const std::pair<u32, BoundingBox::SweepResult>& rhs) {
       return lhs.second.entry_time < rhs.second.entry_time;
@@ -314,6 +319,57 @@ Terrain::SweepHit Terrain::sweep_cast_visit_level(const u32 mip, const Vector2u&
       }
 
       const auto sweep_result = this->sweep_cast_visit_level(mip - 1, base * 2u + offsets[index], dynamic_box, movement, best_score);
+      if (sweep_result) {
+         best_result = sweep_result;
+      }
+   }
+   return best_result;
+}
+
+Terrain::SweepHit Terrain::sweep_cast_capsule_visit_level(u32 mip, const Vector2u& base, const Capsule& capsule, const Vector3& movement,
+                                                          float& best_score) const
+{
+   const auto& level = m_heightmap_mips[mip];
+
+   constexpr static std::array<Vector2u, 4> offsets{
+      Vector2u{0, 0},
+      Vector2u{1, 0},
+      Vector2u{0, 1},
+      Vector2u{1, 1},
+   };
+
+   std::array<BoundingBox, 4> bounding_boxes{};
+   std::ranges::transform(offsets, bounding_boxes.begin(),
+                          [&](const Vector2u& offset) { return level.bounding_box(*this, 2u * base + offset); });
+
+   std::array<std::pair<u32, BoundingBox::SweepResult>, 4> hits{};
+   std::ranges::transform(bounding_boxes, hits.begin(),
+                          [&, i = 0u](const BoundingBox& bb) mutable { return std::make_pair(i++, bb.sweep_capsule(capsule, movement)); });
+
+   std::ranges::sort(hits, [](const std::pair<u32, BoundingBox::SweepResult>& lhs, const std::pair<u32, BoundingBox::SweepResult>& rhs) {
+      return lhs.second.entry_time < rhs.second.entry_time;
+   });
+
+   auto best_result = SweepHit::miss();
+
+   for (const auto& [index, hit] : hits) {
+      if (!hit.has_hit())
+         break;
+      if (hit.entry_time > best_score)
+         break;
+
+      if (mip == 0) {
+         best_score = hit.entry_time;
+         const auto coord = base * 2u + offsets[index];
+         // const auto uv = coord.cast<Vector2>() / m_heightmap_mips[0].dimensions.cast<Vector2>();
+         return SweepHit{
+            .time = hit.entry_time,
+            .normal = this->normal_at(coord),
+            .coordinate = base * 2u + offsets[index],
+         };
+      }
+
+      const auto sweep_result = this->sweep_cast_capsule_visit_level(mip - 1, base * 2u + offsets[index], capsule, movement, best_score);
       if (sweep_result) {
          best_result = sweep_result;
       }

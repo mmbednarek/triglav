@@ -76,13 +76,12 @@ struct LevelBVHRayTraversalTraits
       if (bottom_level == nullptr)
          return Result::miss();
 
-      const auto bl_ray = ray.to_local_space(node->leaf.inv_transform);
-      const auto bl_hit_distance = bottom_level->generic_ray_cast(bl_ray);
-      if (bl_hit_distance > best_score)
+      const auto distance = ray_cast(bottom_level, ray);
+      if (distance > best_score)
          return Result::miss();
 
-      best_score = bl_hit_distance;
-      return Result{bl_hit_distance, node->leaf.entity_id};
+      best_score = distance;
+      return Result{distance, node->leaf.entity_id};
    }
 
    static IntersectionResult test_intersection(const UserData* /*user_data*/, const Node* node, const geometry::Ray& ray)
@@ -107,7 +106,7 @@ struct LevelBVHSweepTraversalTraits
    using Result = LevelBVH::SweepHit;
    struct Traversary
    {
-      const geometry::BoundingBox& bounding_box;
+      const TraversableObject* traversable;
       Vector3 movement;
    };
    struct UserData
@@ -128,18 +127,12 @@ struct LevelBVHSweepTraversalTraits
    static Result test_leaf(const UserData* user_data, const Node* node, const Traversary& traversary, float& best_score)
    {
       assert(node != nullptr && node->is_leaf_node);
-      const auto sweep_result = node->bounding_box.intersect_swept(traversary.bounding_box, traversary.movement);
-      if (!sweep_result.has_hit()) {
-         return Result::miss();
-      }
 
-      auto* bottom_level = user_data->mesh_provider->get_bottom_level(node->leaf.entity_id);
-      if (bottom_level == nullptr)
+      auto* collider = user_data->mesh_provider->get_bottom_level(node->leaf.entity_id);
+      if (collider == nullptr)
          return Result::miss();
 
-      const auto ls_bb = traversary.bounding_box.transform(node->leaf.inv_transform);
-      const auto ls_movement = node->leaf.inv_transform.shrink() * traversary.movement;
-      const auto result = bottom_level->generic_sweep_cast(ls_bb, ls_movement);
+      const auto result = sweep_cast(collider, traversary.traversable, traversary.movement);
       if (result.time > 1.0f) {
          return Result::miss();
       }
@@ -157,13 +150,25 @@ struct LevelBVHSweepTraversalTraits
 
    static IntersectionResult test_intersection(const UserData* /*user_data*/, const Node* node, const Traversary& traversary)
    {
-      return IntersectionResult{node->bounding_box.does_intersect_aabb(traversary.bounding_box.extend_by_movement(traversary.movement))};
+      TraversableObject node_object{
+         .kind = TraversableKind::AABB,
+         .inverse_transform = Matrix4x4::identity(),
+         .payload = &node->bounding_box,
+      };
+
+      return IntersectionResult{collision_test(&node_object, traversary.traversable, traversary.movement)};
    }
 
    static float test_hit_score(const UserData* /*user_data*/, const IntersectionResult& /*inter_result*/, const Node* node,
                                const Traversary& traversary)
    {
-      return node->bounding_box.intersect_swept(traversary.bounding_box, traversary.movement).entry_time;
+      TraversableObject node_object{
+         .kind = TraversableKind::AABB,
+         .inverse_transform = Matrix4x4::identity(),
+         .payload = &node->bounding_box,
+      };
+
+      return sweep_cast(&node_object, traversary.traversable, traversary.movement).time;
    }
 };
 
@@ -493,13 +498,13 @@ LevelBVH::RayHit LevelBVH::ray_cast(const geometry::Ray& ray) const
    return LevelBVHRayTraverser::traverse(&user_data, m_root, mut_ray, mut_ray.distance);
 }
 
-LevelBVH::SweepHit LevelBVH::sweep_cast(const geometry::BoundingBox& bb, const Vector3& movement) const
+LevelBVH::SweepHit LevelBVH::sweep_cast(const TraversableObject& object, const Vector3& movement) const
 {
    float hit_time = INF;
    LevelBVHSweepTraverser::UserData user_data{
       .mesh_provider = &m_mesh_provider,
    };
-   return LevelBVHSweepTraverser::traverse(&user_data, m_root, {bb, movement}, hit_time);
+   return LevelBVHSweepTraverser::traverse(&user_data, m_root, {&object, movement}, hit_time);
 }
 
 bool LevelBVH::contains(const world::EntityID entity_id) const

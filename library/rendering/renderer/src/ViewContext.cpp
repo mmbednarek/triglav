@@ -27,10 +27,10 @@ void ViewContext::update_orientation(const float delta_yaw, const float delta_pi
 {
    m_yaw += delta_yaw;
    while (m_yaw < 0) {
-      m_yaw += 2 * PI;
+      m_yaw += 2.0f * PI;
    }
-   while (m_yaw >= 2 * PI) {
-      m_yaw -= 2 * PI;
+   while (m_yaw >= 2.0f * PI) {
+      m_yaw -= 2.0f * PI;
    }
 
    m_pitch += delta_pitch;

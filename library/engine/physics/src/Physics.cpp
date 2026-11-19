@@ -20,4 +20,17 @@ world::ComponentRegisterer movement_registerer{{
    .name = "Movement",
 }};
 
+#define TG_TYPE(NS) NS(triglav, NS(physics, CapsuleComponent))
+TG_META_CLASS_BEGIN
+TG_META_PROPERTY(capsule, triglav::geometry::Capsule)
+TG_META_CLASS_END
+#undef TG_TYPE
+
+world::ComponentRegisterer capsule_component_registerer{{
+   .component_class = "triglav::physics::CapsuleComponent"_name,
+   .data_size = sizeof(CapsuleComponent),
+   .data_alignment = alignof(CapsuleComponent),
+   .name = "CapsuleComponent",
+}};
+
 }// namespace triglav::physics

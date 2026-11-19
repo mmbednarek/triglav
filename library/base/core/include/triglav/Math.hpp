@@ -130,6 +130,11 @@ struct Vector3_Aligned16B
    return a + (b - a) * t;
 }
 
+[[nodiscard]] constexpr float clamp(const float value)
+{
+   return value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+}
+
 [[nodiscard]] constexpr float sign(const float a)
 {
    return a > 0.0f ? 1.0f : -1.0f;

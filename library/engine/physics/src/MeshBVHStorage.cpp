@@ -33,13 +33,34 @@ BVHProvider::BVHProvider(world::Level& level) :
 {
 }
 
-geometry::ITraversable* BVHProvider::get_bottom_level(const world::EntityID entity_id) const
+const TraversableObject* BVHProvider::get_bottom_level(const world::EntityID entity_id) const
 {
+   const auto it = m_cache.find(entity_id);
+   if (it != m_cache.end()) {
+      return &it->second;
+   }
+
+   const auto& transform = m_level.component_opt<Transform3D>(entity_id, Transform3D::identity());
+
    if (const auto* mesh_component = m_level.component_opt<world::Mesh>(entity_id); mesh_component != nullptr) {
-      return &MeshBVHStorage::the().get(mesh_component->name);
+      const auto& bvh_mesh = MeshBVHStorage::the().get(mesh_component->name);
+      auto [emplace_it, ok] = m_cache.emplace(entity_id, TraversableObject{
+                                                            .kind = TraversableKind::Mesh,
+                                                            .inverse_transform = transform.to_matrix().inverse(),
+                                                            .payload = &bvh_mesh,
+                                                         });
+      assert(ok);
+      return &emplace_it->second;
    }
    if (const auto* terrain_component = m_level.component_opt<world::TerrainComponent>(entity_id); terrain_component != nullptr) {
-      return &engine::resource_manager().get(terrain_component->name);
+      const auto* terrain = &engine::resource_manager().get(terrain_component->name);
+      auto [emplace_it, ok] = m_cache.emplace(entity_id, TraversableObject{
+                                                            .kind = TraversableKind::Terrain,
+                                                            .inverse_transform = transform.to_matrix().inverse(),
+                                                            .payload = terrain,
+                                                         });
+      assert(ok);
+      return &emplace_it->second;
    }
    return nullptr;
 }

@@ -206,3 +206,12 @@ TEST(MathTest, QuaternionTest)
    const auto recon_from_matrix = Quaternion::from_rotation_matrix(rot_matrix);
    EXPECT_TRUE(quat_equals(quat, recon_from_matrix));
 }
+
+TEST(MathTest, ConstantTest)
+{
+   static constexpr float TOLERANCE = 1e-5f;
+   EXPECT_NEAR(static_cast<float>(PI), 3.141592f, TOLERANCE);
+   EXPECT_NEAR(static_cast<double>(PI), 3.141592, TOLERANCE);
+   EXPECT_NEAR(1.0f / PI, 0.31831f, TOLERANCE);
+   EXPECT_NEAR(1.0 / PI, 0.31831, TOLERANCE);
+}

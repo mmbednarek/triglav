@@ -156,7 +156,12 @@ LevelBVH::RayHit PhysicsSystem::ray_cast(const geometry::Ray& ray) const
 
 LevelBVH::SweepHit PhysicsSystem::sweep_cast(const geometry::BoundingBox& bb, const Vector3& movement) const
 {
-   return m_static_bvh.sweep_cast(bb, movement);
+   TraversableObject object{
+      .kind = TraversableKind::AABB,
+      .inverse_transform = Matrix4x4::identity(),
+      .payload = &bb,
+   };
+   return m_static_bvh.sweep_cast(object, movement);
 }
 
 }// namespace triglav::physics

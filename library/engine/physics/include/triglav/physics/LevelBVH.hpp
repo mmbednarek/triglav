@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SweepCallbacks.hpp"
 #include "triglav/Macros.hpp"
 #include "triglav/geometry/Geometry.hpp"
 #include "triglav/world/World.hpp"
@@ -95,7 +96,7 @@ class LevelBVH
    void build_dynamic();
    void clear();
    [[nodiscard]] RayHit ray_cast(const geometry::Ray& ray) const;
-   [[nodiscard]] SweepHit sweep_cast(const geometry::BoundingBox& bb, const Vector3& movement) const;
+   [[nodiscard]] SweepHit sweep_cast(const TraversableObject& object, const Vector3& movement) const;
    [[nodiscard]] bool contains(world::EntityID entity_id) const;
    [[nodiscard]] geometry::BoundingBox bounding_box(world::EntityID entity_id) const;
    void find_overlaps(std::vector<std::pair<world::EntityID, world::EntityID>>& out_overlaps) const;

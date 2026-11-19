@@ -66,7 +66,12 @@ CollisionResponse get_slide_response(const LevelBVH& bvh, geometry::BoundingBox 
       if (remaining.length_sq() < TOLERANCE)
          break;
 
-      const auto hit = bvh.sweep_cast(bounding_box, remaining);
+      TraversableObject object{
+         .kind = TraversableKind::AABB,
+         .inverse_transform = Matrix4x4::identity(),
+         .payload = &bounding_box,
+      };
+      const auto hit = bvh.sweep_cast(object, remaining);
       out_normal = hit.normal;
 
       if (hit.entity_id == world::NO_ENTITY || hit.time >= 1.0f) {

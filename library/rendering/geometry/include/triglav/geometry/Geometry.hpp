@@ -3,6 +3,7 @@
 #include "triglav/Math.hpp"
 #include "triglav/Name.hpp"
 #include "triglav/graphics_api/Array.hpp"
+#include "triglav/meta/Meta.hpp"
 
 #include <cmath>
 #include <optional>
@@ -170,6 +171,259 @@ struct Ray
    }
 };
 
+struct SweepHit
+{
+   float time;
+   Vector3 normal;
+
+   [[nodiscard]] constexpr static SweepHit miss()
+   {
+      return {INF, {}};
+   }
+};
+
+struct BoundingBox;
+struct Capsule;
+
+namespace detail {
+
+struct SegmentBoxClosest
+{
+   float distance_sq{};
+   Vector3 on_segment{};
+   Vector3 on_box{};
+};
+
+[[nodiscard]] constexpr SegmentBoxClosest closest_segment_box(const Vector3& a, const Vector3& b, const BoundingBox& box);
+
+// Closest point on triangle (a, b, c) to point p (Voronoi region test).
+[[nodiscard]] constexpr Vector3 closest_point_triangle(const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c)
+{
+   const Vector3 ab = b - a;
+   const Vector3 ac = c - a;
+
+   const Vector3 ap = p - a;
+   const float d1 = ab.dot(ap);
+   const float d2 = ac.dot(ap);
+   if (d1 <= 0.0f && d2 <= 0.0f)
+      return a;
+
+   const Vector3 bp = p - b;
+   const float d3 = ab.dot(bp);
+   const float d4 = ac.dot(bp);
+   if (d3 >= 0.0f && d4 <= d3)
+      return b;
+
+   const float vc = d1 * d4 - d3 * d2;
+   if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) {
+      return a + ab * (d1 / (d1 - d3));
+   }
+
+   const Vector3 cp = p - c;
+   const float d5 = ab.dot(cp);
+   const float d6 = ac.dot(cp);
+   if (d6 >= 0.0f && d5 <= d6)
+      return c;
+
+   const float vb = d5 * d2 - d1 * d6;
+   if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) {
+      return a + ac * (d2 / (d2 - d6));
+   }
+
+   const float va = d3 * d6 - d5 * d4;
+   if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 - d6) >= 0.0f) {
+      return b + (c - b) * ((d4 - d3) / ((d4 - d3) + (d5 - d6)));
+   }
+
+   const float inv = 1.0f / (va + vb + vc);
+   return a + ab * (vb * inv) + ac * (vc * inv);
+}
+
+// Closest points between segments [p1, q1] and [p2, q2].
+struct SegmentSegmentClosest
+{
+   Vector3 on_first{};
+   Vector3 on_second{};
+};
+
+[[nodiscard]] constexpr SegmentSegmentClosest closest_segment_segment(const Vector3& p1, const Vector3& q1, const Vector3& p2,
+                                                                      const Vector3& q2)
+{
+   const Vector3 d1 = q1 - p1;
+   const Vector3 d2 = q2 - p2;
+   const Vector3 r = p1 - p2;
+   const float a = d1.dot(d1);
+   const float e = d2.dot(d2);
+   const float f = d2.dot(r);
+
+   float s = 0.0f;
+   float t = 0.0f;
+   if (a <= EPSILON && e <= EPSILON) {
+      // Both degenerate to points
+   } else if (a <= EPSILON) {
+      t = clamp(f / e);
+   } else {
+      const float c = d1.dot(r);
+      if (e <= EPSILON) {
+         s = clamp(-c / a);
+      } else {
+         const float b = d1.dot(d2);
+         const float denom = a * e - b * b;
+         s = denom > EPSILON ? clamp((b * f - c * e) / denom) : 0.0f;
+         t = (b * s + f) / e;
+         if (t < 0.0f) {
+            t = 0.0f;
+            s = clamp(-c / a);
+         } else if (t > 1.0f) {
+            t = 1.0f;
+            s = clamp((b - c) / a);
+         }
+      }
+   }
+   return {p1 + d1 * s, p2 + d2 * t};
+}
+
+struct SegmentTriangleClosest
+{
+   float distance_sq{};
+   Vector3 on_segment{};
+   Vector3 on_triangle{};
+};
+
+// Closest points between segment [p, q] and triangle (a, b, c).
+// If the segment pierces the triangle the distance is 0. Otherwise the closest pair involves
+// either a segment endpoint vs. the triangle, or the segment vs. one of the triangle's edges.
+[[nodiscard]] constexpr SegmentTriangleClosest closest_segment_triangle(const Vector3& p, const Vector3& q, const Vector3& a,
+                                                                        const Vector3& b, const Vector3& c)
+{
+   // 1. Segment piercing the triangle's interior
+   const Vector3 normal = (b - a).cross(c - a);
+   const Vector3 d = q - p;
+   const float denom = normal.dot(d);
+   if (std::abs(denom) > EPSILON) {
+      const float t = normal.dot(a - p) / denom;
+      if (t >= 0.0f && t <= 1.0f) {
+         const Vector3 hit = p + d * t;
+         const bool inside = (b - a).cross(hit - a).dot(normal) >= 0.0f && (c - b).cross(hit - b).dot(normal) >= 0.0f &&
+                             (a - c).cross(hit - c).dot(normal) >= 0.0f;
+         if (inside) {
+            return {0.0f, hit, hit};
+         }
+      }
+   }
+
+   // 2. Best of: endpoints vs. triangle, segment vs. each edge
+   SegmentTriangleClosest best{INF, {}, {}};
+   const auto consider = [&](const Vector3& on_segment, const Vector3& on_triangle) {
+      const Vector3 diff = on_segment - on_triangle;
+      const float distance_sq = diff.dot(diff);
+      if (distance_sq < best.distance_sq) {
+         best = {distance_sq, on_segment, on_triangle};
+      }
+   };
+
+   consider(p, closest_point_triangle(p, a, b, c));
+   consider(q, closest_point_triangle(q, a, b, c));
+
+   const Vector3* const vertices[3] = {&a, &b, &c};
+   for (int i = 0; i < 3; ++i) {
+      const SegmentSegmentClosest edge = closest_segment_segment(p, q, *vertices[i], *vertices[(i + 1) % 3]);
+      consider(edge.on_first, edge.on_second);
+   }
+   return best;
+}
+
+}// namespace detail
+
+struct Capsule
+{
+   TG_META_STRUCT_BODY(Capsule)
+
+   Vector3 point_a{};
+   Vector3 point_b{};
+   float radius{};
+
+   [[nodiscard]] constexpr Vector3 axis() const
+   {
+      return point_b - point_a;
+   };
+   [[nodiscard]] constexpr Vector3 center() const
+   {
+      return (point_a + point_b) * 0.5f;
+   };
+   [[nodiscard]] constexpr float height() const
+   {
+      return (point_b - point_a).length() + 2.0f * radius;
+   };
+
+   [[nodiscard]] constexpr Capsule transform(const Matrix4x4& trans) const
+   {
+      const float max_scale = std::max({
+         trans[0].length(),
+         trans[1].length(),
+         trans[2].length(),
+      });
+
+      return {
+         .point_a = (trans * Vector4{this->point_a, 1.0f}).xyz(),
+         .point_b = (trans * Vector4{this->point_b, 1.0f}).xyz(),
+         .radius = this->radius * max_scale,
+      };
+   };
+
+   [[nodiscard]] constexpr Capsule extend_by_movement(const Vector3& movement) const
+   {
+      return {
+         .point_a = this->point_a + 0.5f * movement,
+         .point_b = this->point_b + 0.5f * movement,
+         .radius = this->radius + movement.length(),
+      };
+   };
+
+   [[nodiscard]] constexpr SweepHit sweep(const Capsule& capsule, const Vector3& movement) const
+   {
+      constexpr int MAX_ITERATIONS = 32;
+      constexpr float TOLERANCE = 1e-4f;
+
+      const float radius_sum = this->radius + capsule.radius;
+
+      float time = 0.0f;
+      for (int i = 0; i < MAX_ITERATIONS; ++i) {
+         const Vector3 a = capsule.point_a + movement * time;
+         const Vector3 b = capsule.point_b + movement * time;
+
+         const detail::SegmentSegmentClosest closest = detail::closest_segment_segment(a, b, this->point_a, this->point_b);
+         const Vector3 diff = closest.on_first - closest.on_second;
+         const float distance = std::sqrt(diff.dot(diff));
+         const float gap = distance - radius_sum;
+
+         // Segments intersect: no meaningful normal from closest points.
+         if (distance < EPSILON) {
+            return {INF, {}};
+         }
+
+         const Vector3 normal = diff * (1.0f / distance);
+         const float closing_speed = -movement.dot(normal);
+
+         if (gap <= TOLERANCE) {
+            // Touching or overlapping: hit only if actually moving toward the static capsule
+            return closing_speed > EPSILON ? SweepHit{time, normal} : SweepHit::miss();
+         }
+
+         if (closing_speed <= EPSILON) {
+            return {INF, {}};// Separating or moving parallel to the separating plane
+         }
+
+         time += gap / closing_speed;
+         if (time > 1.0f) {
+            return {INF, {}};
+         }
+      }
+
+      return {INF, {}};// Did not converge (grazing); treat as a miss
+   };
+};
+
 struct BoundingBox
 {
    alignas(16) Vector3 min;
@@ -250,7 +504,7 @@ struct BoundingBox
       return bb;
    }
 
-   [[nodiscard]] constexpr SweepResult intersect_swept(const BoundingBox& dynamic_box, const Vector3& movement) const
+   [[nodiscard]] constexpr SweepResult sweep_aabb(const BoundingBox& dynamic_box, const Vector3& movement) const
    {
       Vector3 inv_entry;
       Vector3 inv_exit;
@@ -314,6 +568,12 @@ struct BoundingBox
    [[nodiscard]] constexpr bool does_intersect_aabb(const BoundingBox& bb) const
    {
       return (this->max - bb.min).all(is_greater_or_equal<0.0f>) && (bb.max - this->min).all(is_greater_or_equal<0.0f>);
+   }
+
+   [[nodiscard]] constexpr bool does_intersect_capsule(const Capsule& capsule) const
+   {
+      const auto closest = detail::closest_segment_box(capsule.point_a, capsule.point_b, *this);
+      return closest.distance_sq <= (capsule.radius * capsule.radius);
    }
 
    [[nodiscard]] constexpr bool does_intersect(const Ray& ray) const
@@ -389,45 +649,283 @@ struct BoundingBox
    {
       return this->merge(extension).half_surface_area() - this->half_surface_area();
    }
+
+   [[nodiscard]] constexpr SweepResult sweep_capsule(const Capsule& dynamic_capsule, const Vector3& movement) const
+   {
+      constexpr int MAX_ITERATIONS = 32;
+      constexpr float TOLERANCE = 1e-4f;
+
+      float time = 0.0f;
+      for (int i = 0; i < MAX_ITERATIONS; ++i) {
+         const Vector3 a = dynamic_capsule.point_a + movement * time;
+         const Vector3 b = dynamic_capsule.point_b + movement * time;
+
+         const detail::SegmentBoxClosest closest = detail::closest_segment_box(a, b, *this);
+         const float distance = std::sqrt(closest.distance_sq);
+         const float gap = distance - dynamic_capsule.radius;
+
+         // Segment is inside the box: no meaningful normal from closest points.
+         if (distance < EPSILON) {
+            return {INF, {}};
+         }
+
+         const Vector3 normal = (closest.on_segment - closest.on_box) * (1.0f / distance);
+         const float closing_speed = -movement.dot(normal);
+
+         if (gap <= TOLERANCE) {
+            // Touching or overlapping: hit only if actually moving into the box
+            return closing_speed > EPSILON ? SweepResult{time, normal} : SweepResult{INF, {}};
+         }
+
+         if (closing_speed <= EPSILON) {
+            return {INF, {}};// Separating or moving parallel to the separating plane
+         }
+
+         time += gap / closing_speed;
+         if (time > 1.0f) {
+            return {INF, {}};
+         }
+      }
+
+      return {INF, {}};// Did not converge (grazing); treat as a miss
+   }
 };
+
+namespace detail {
+
+// Exact closest points between segment [a, b] and a box.
+// f(t) = |p(t) - clamp(p(t), box)|^2 is convex and piecewise quadratic. Between breakpoints
+// (where p(t) crosses a slab plane) the clamp state per axis is constant, so each piece is
+// minimised in closed form.
+[[nodiscard]] constexpr SegmentBoxClosest closest_segment_box(const Vector3& a, const Vector3& b, const BoundingBox& box)
+{
+   const Vector3 d = b - a;
+
+   float ts[8];
+   int count = 0;
+   ts[count++] = 0.0f;
+   ts[count++] = 1.0f;
+   for (const Axis axis : Vector3::AXES) {
+      if (std::abs(d[axis]) < EPSILON) {
+         continue;
+      }
+      const float t_min = (box.min[axis] - a[axis]) / d[axis];
+      const float t_max = (box.max[axis] - a[axis]) / d[axis];
+      if (t_min > 0.0f && t_min < 1.0f)
+         ts[count++] = t_min;
+      if (t_max > 0.0f && t_max < 1.0f)
+         ts[count++] = t_max;
+   }
+
+   for (int i = 1; i < count; ++i) {
+      const float key = ts[i];
+      int j = i - 1;
+      while (j >= 0 && ts[j] > key) {
+         ts[j + 1] = ts[j];
+         --j;
+      }
+      ts[j + 1] = key;
+   }
+
+   const auto evaluate = [&](const float t) {
+      SegmentBoxClosest result;
+      for (const Axis axis : Vector3::AXES) {
+         const float p = a[axis] + d[axis] * t;
+         const float q = p < box.min[axis] ? box.min[axis] : (p > box.max[axis] ? box.max[axis] : p);
+         result.on_segment[axis] = p;
+         result.on_box[axis] = q;
+         result.distance_sq += (p - q) * (p - q);
+      }
+      return result;
+   };
+
+   SegmentBoxClosest best = evaluate(0.0f);
+   for (int i = 0; i + 1 < count; ++i) {
+      const float t0 = ts[i];
+      const float t1 = ts[i + 1];
+      const float mid = 0.5f * (t0 + t1);
+
+      float numerator = 0.0f;
+      float denominator = 0.0f;
+      for (const Axis axis : Vector3::AXES) {
+         const float p = a[axis] + d[axis] * mid;
+         float bound;
+         if (p < box.min[axis]) {
+            bound = box.min[axis];
+         } else if (p > box.max[axis]) {
+            bound = box.max[axis];
+         } else {
+            continue;
+         }
+         numerator += d[axis] * (a[axis] - bound);
+         denominator += d[axis] * d[axis];
+      }
+
+      float t = t0;
+      if (denominator > 0.0f) {
+         t = -numerator / denominator;
+         t = t < t0 ? t0 : (t > t1 ? t1 : t);
+      }
+
+      const SegmentBoxClosest candidate = evaluate(t);
+      if (candidate.distance_sq < best.distance_sq) {
+         best = candidate;
+      }
+   }
+   return best;
+}
+}// namespace detail
 
 // static_assert(sizeof(BoundingBox) % 16 == 0);
 
-constexpr double g_pi = 3.1415926535897932;
-
-struct SweepHit
-{
-   float time;
-   Vector3 normal;
-
-   [[nodiscard]] constexpr static SweepHit miss()
-   {
-      return {INF, {}};
-   }
-};
+constexpr double g_pi = PI;
 
 class ITraversable
 {
  public:
    virtual ~ITraversable() = default;
 
-   [[nodiscard]] virtual SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) = 0;
-   [[nodiscard]] virtual float generic_ray_cast(const Ray& ray) = 0;
+   [[nodiscard]] virtual SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) const = 0;
+   [[nodiscard]] virtual float generic_ray_cast(const Ray& ray) const = 0;
 };
 
-enum class TraversableKind {
-    Mesh,
-    Sphere,
-    Capsule,
-    AABB,
-    Terrain,
-    MaxValue
-};
+[[nodiscard]] constexpr SweepHit sweep_triangle_aabb(const std::array<Vector3, 3>& triangle, const BoundingBox& bb, const Vector3& movement)
+{
+   constexpr static float TOLERANCE = 1e-8f;
 
-struct TraversableHeader {
-    TraversableKind kind;
-    BoundingBox bouding_box;
-};
+   // Work in box space: box centered at origin, triangle static.
+   const auto box_center = bb.centroid();
+   const Vector3 v[3] = {triangle[0] - box_center, triangle[1] - box_center, triangle[2] - box_center};
+   const Vector3 h = bb.half_extent();
+
+   const Vector3 e[3] = {v[1] - v[0], v[2] - v[1], v[0] - v[2]};
+   static constexpr std::array box_axes = {Vector3{1, 0, 0}, Vector3{0, 1, 0}, Vector3{0, 0, 1}};
+
+   // Build the 13 candidate axes.
+   Vector3 axes[13];
+   int n_axes = 0;
+   for (int i = 0; i < 3; ++i)
+      axes[n_axes++] = box_axes[i];
+   axes[n_axes++] = e[0].cross(e[1]);// triangle normal
+   for (int i = 0; i < 3; ++i)
+      for (int j = 0; j < 3; ++j)
+         axes[n_axes++] = box_axes[i].cross(e[j]);// edge x edge
+
+   float t_enter = -INF;// latest entry over all axes
+   float t_exit = INF;  // earliest exit over all axes
+   Vector3 enter_normal{};
+
+   // Fallback for initial overlap: axis with smallest penetration.
+   float best_depth = INF;
+   Vector3 mtv_normal{};
+
+   for (int i = 0; i < n_axes; ++i) {
+      if (axes[i].length_sq() < TOLERANCE)// degenerate (parallel edges, ...)
+         continue;
+      const Vector3 L = axes[i].normalize();
+
+      // Box radius on L, triangle interval on L, box velocity on L.
+      const float r = h.x * std::fabs(L.x) + h.y * std::fabs(L.y) + h.z * std::fabs(L.z);
+      const float d0 = v[0].dot(L), d1 = v[1].dot(L), d2 = v[2].dot(L);
+      const float tmin = std::min({d0, d1, d2});
+      const float tmax = std::max({d0, d1, d2});
+      const float s = movement.dot(L);
+
+      // Initial penetration depth on this axis (push box toward -L or +L).
+      const float push_neg = r - tmin;// box_max - tri_min
+      const float push_pos = tmax + r;// tri_max - box_min
+      if (push_neg < 0.0f || push_pos < 0.0f) {
+         // Separated at t = 0 on this axis.
+      } else {
+         const float depth = std::min(push_neg, push_pos);
+         if (depth < best_depth) {
+            best_depth = depth;
+            mtv_normal = (push_neg < push_pos) ? L * -1.0f : L;
+         }
+      }
+
+      if (std::fabs(s) < TOLERANCE) {
+         // No relative motion on this axis: permanently separated or overlapping.
+         if (tmin > r || tmax < -r)
+            return SweepHit::miss();
+         continue;
+      }
+
+      float enter, exit_;
+      Vector3 n;
+      if (s > 0.0f) {// box approaches from the -L side
+         enter = (tmin - r) / s;
+         exit_ = (tmax + r) / s;
+         n = L * -1.0f;
+      } else {// box approaches from the +L side
+         enter = (tmax + r) / s;
+         exit_ = (tmin - r) / s;
+         n = L;
+      }
+
+      if (enter > t_enter) {
+         t_enter = enter;
+         enter_normal = n;
+      }
+      t_exit = std::min(t_exit, exit_);
+
+      if (t_enter > t_exit || t_exit < 0.0f || t_enter >= 1.0f)
+         return SweepHit::miss();
+   }
+
+   if (t_enter < 0.0f) {
+      // Overlapping at t = 0 on every axis: report an immediate hit with the
+      // minimum-translation normal, but only if we're not already leaving.
+      if (best_depth == INF)
+         return SweepHit::miss();
+      if (movement.dot(mtv_normal) >= 0.0f)
+         return SweepHit::miss();
+
+      return {0.0f, mtv_normal};
+   }
+
+   return {t_enter, enter_normal};
+}
+
+[[nodiscard]] constexpr SweepHit sweep_triangle_capsule(const std::array<Vector3, 3>& triangle, const Capsule& dynamic_capsule,
+                                                        const Vector3& movement)
+{
+   constexpr int MAX_ITERATIONS = 32;
+   constexpr float TOLERANCE = 1e-4f;
+
+   float time = 0.0f;
+   for (int i = 0; i < MAX_ITERATIONS; ++i) {
+      const Vector3 a = dynamic_capsule.point_a + movement * time;
+      const Vector3 b = dynamic_capsule.point_b + movement * time;
+
+      const detail::SegmentTriangleClosest closest = detail::closest_segment_triangle(a, b, triangle[0], triangle[1], triangle[2]);
+      const float distance = std::sqrt(closest.distance_sq);
+      const float gap = distance - dynamic_capsule.radius;
+
+      // Segment touches or pierces the triangle: no meaningful normal from closest points.
+      if (distance < EPSILON) {
+         return SweepHit::miss();
+      }
+
+      const Vector3 normal = (closest.on_segment - closest.on_triangle) * (1.0f / distance);
+      const float closing_speed = -movement.dot(normal);
+
+      if (gap <= TOLERANCE) {
+         return closing_speed > EPSILON ? SweepHit{time, normal} : SweepHit{INF, {}};
+      }
+
+      if (closing_speed <= EPSILON) {
+         return SweepHit::miss();
+      }
+
+      time += gap / closing_speed;
+      if (time > 1.0f) {
+         return SweepHit::miss();
+      }
+   }
+
+   return SweepHit::miss();
+}
 
 }// namespace triglav::geometry
 

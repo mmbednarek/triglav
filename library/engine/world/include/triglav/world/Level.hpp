@@ -136,6 +136,20 @@ class Level
       return static_cast<T*>(m_entity_storage.get_component(id, *comp_id));
    }
 
+   template<meta::HasMetaName T>
+   const T& component_opt(const EntityID id, const T& default_val) const
+   {
+      const auto comp_id = ComponentManager::the().component_id_by_class_name(T::meta_name());
+      if (!comp_id.has_value())
+         return default_val;
+
+      const auto* component = static_cast<const T*>(m_entity_storage.get_component(id, *comp_id));
+      if (component == nullptr)
+         return default_val;
+
+      return *component;
+   }
+
    template<meta::HasMetaName... T>
    std::tuple<const T&...> components(const EntityID entity_id)
    {

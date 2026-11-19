@@ -100,10 +100,11 @@ class Terrain : public ITraversable
 
    [[nodiscard]] RayHit ray_cast(const Ray& ray) const;
    [[nodiscard]] SweepHit sweep_cast(const BoundingBox& dynamic_box, const Vector3& movement) const;
+   [[nodiscard]] SweepHit sweep_cast_capsule(const Capsule& capsule, const Vector3& movement) const;
    [[nodiscard]] BoundingBox bounding_box() const;
 
-   [[nodiscard]] geometry::SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) override;
-   [[nodiscard]] float generic_ray_cast(const Ray& ray) override;
+   [[nodiscard]] geometry::SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) const override;
+   [[nodiscard]] float generic_ray_cast(const Ray& ray) const override;
 
    [[nodiscard]] Vector3 normal_at(const Vector2u& coord) const;
    [[nodiscard]] float sample_height(const Vector2& uv) const;
@@ -116,6 +117,8 @@ class Terrain : public ITraversable
    RayHit ray_cast_visit_level(u32 mip, const Vector2u& base, Ray& ray) const;
    SweepHit sweep_cast_visit_level(u32 mip, const Vector2u& base, const BoundingBox& dynamic_box, const Vector3& movement,
                                    float& best_score) const;
+   SweepHit sweep_cast_capsule_visit_level(u32 mip, const Vector2u& base, const Capsule& capsule, const Vector3& movement,
+                                           float& best_score) const;
    void generate_mip_levels();
 
    Vector3 m_half_world_size{120.0f, 120.0f, 30.0f};
