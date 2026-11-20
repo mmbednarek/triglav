@@ -52,7 +52,7 @@ bool resolve_overlap(DynamicResolution& resolution, const RigidBox& a, const Rig
 
 }// namespace
 
-CollisionResponse get_slide_response(const LevelBVH& bvh, geometry::BoundingBox bounding_box, const Vector3& movement)
+CollisionResponse get_slide_response_aabb(const LevelBVH& bvh, geometry::BoundingBox bounding_box, const Vector3& movement)
 {
    static constexpr int MAX_ITER = 2;
 
@@ -71,7 +71,7 @@ CollisionResponse get_slide_response(const LevelBVH& bvh, geometry::BoundingBox 
          .inverse_transform = Matrix4x4::identity(),
          .payload = &bounding_box,
       };
-      const auto hit = bvh.sweep_cast(object, remaining);
+      const auto hit = bvh.sweep_cast(object, bounding_box, remaining);
       out_normal = hit.normal;
 
       if (hit.entity_id == world::NO_ENTITY || hit.time >= 1.0f) {
@@ -82,6 +82,68 @@ CollisionResponse get_slide_response(const LevelBVH& bvh, geometry::BoundingBox 
 
       const Vector3 advance = remaining * hit.time + hit.normal * SKIN_MARGIN;
       bounding_box.translate(advance);
+      total = total + advance;
+
+      const Vector3 leftover = remaining * (1.0f - hit.time);
+      Vector3 slide = leftover - hit.normal * leftover.dot(hit.normal);
+
+      for (mem_size plane_id = 0; plane_id < plane_count; ++plane_id) {
+         if (slide.dot(planes[plane_id]) < 0.0f) {
+            Vector3 crease = hit.normal.cross(planes[plane_id]);
+            if (crease.length_sq() < TOLERANCE) {
+               slide = Vector3{};
+               break;
+            }
+            crease = crease.normalize();
+            slide = crease * leftover.dot(crease);
+
+            for (mem_size j = 0; j < plane_count; ++j) {
+               if (j != plane_id && slide.dot(planes[j]) < 0.0f) {
+                  slide = {};
+                  break;
+               }
+            }
+            break;
+         }
+      }
+
+      planes[plane_count++] = hit.normal;
+      remaining = slide;
+   }
+
+   return {total, out_normal};
+}
+
+CollisionResponse get_slide_response_capsule(const LevelBVH& bvh, geometry::Capsule capsule, const Vector3& movement)
+{
+   static constexpr int MAX_ITER = 2;
+
+   Vector3 total{};
+   Vector3 remaining = movement;
+   Vector3 out_normal{};
+   std::array<Vector3, MAX_ITER> planes{};
+   mem_size plane_count = 0;
+
+   for (int iter = 0; iter < MAX_ITER; ++iter) {
+      if (remaining.length_sq() < TOLERANCE)
+         break;
+
+      TraversableObject object{
+         .kind = TraversableKind::Capsule,
+         .inverse_transform = Matrix4x4::identity(),
+         .payload = &capsule,
+      };
+      const auto hit = bvh.sweep_cast(object, capsule.bounding_box(), remaining);
+      out_normal = hit.normal;
+
+      if (hit.entity_id == world::NO_ENTITY || hit.time >= 1.0f) {
+         capsule.translate(remaining);
+         total = total + remaining;
+         break;
+      }
+
+      const Vector3 advance = remaining * hit.time + hit.normal * SKIN_MARGIN;
+      capsule.translate(advance);
       total = total + advance;
 
       const Vector3 leftover = remaining * (1.0f - hit.time);

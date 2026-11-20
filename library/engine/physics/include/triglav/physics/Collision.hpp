@@ -31,7 +31,8 @@ struct DynamicResolution
 constexpr float SKIN_MARGIN = 1e-4f;
 constexpr float TOLERANCE = 1e-8f;
 
-CollisionResponse get_slide_response(const LevelBVH& bvh, geometry::BoundingBox bounding_box, const Vector3& movement);
+CollisionResponse get_slide_response_aabb(const LevelBVH& bvh, geometry::BoundingBox bounding_box, const Vector3& movement);
+CollisionResponse get_slide_response_capsule(const LevelBVH& bvh, geometry::Capsule capsule, const Vector3& movement);
 DynamicResolution resolve_aabb_collision(const RigidBox& a, const RigidBox& b, float dt, float restitution = 0.0f);
 
 }// namespace triglav::physics

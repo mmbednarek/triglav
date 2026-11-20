@@ -194,7 +194,7 @@ struct MeshBVHCapsuleSweepTraversalTraits
    static float test_hit_score(const UserData* /*user_data*/, const IntersectionResult& /*inter_result*/, const Node* node,
                                const Traversary& traversary)
    {
-      return node->bounding_box.sweep_capsule(traversary.capsule, traversary.movement).entry_time;
+      return node->bounding_box.sweep_aabb(traversary.capsule.bounding_box(), traversary.movement).entry_time;
    }
 };
 

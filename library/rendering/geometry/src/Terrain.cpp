@@ -343,8 +343,15 @@ Terrain::SweepHit Terrain::sweep_cast_capsule_visit_level(u32 mip, const Vector2
                           [&](const Vector2u& offset) { return level.bounding_box(*this, 2u * base + offset); });
 
    std::array<std::pair<u32, BoundingBox::SweepResult>, 4> hits{};
-   std::ranges::transform(bounding_boxes, hits.begin(),
-                          [&, i = 0u](const BoundingBox& bb) mutable { return std::make_pair(i++, bb.sweep_capsule(capsule, movement)); });
+   if (mip == 0) {
+      std::ranges::transform(bounding_boxes, hits.begin(), [&, i = 0u](const BoundingBox& bb) mutable {
+         return std::make_pair(i++, bb.sweep_capsule(capsule, movement));
+      });
+   } else {
+      std::ranges::transform(bounding_boxes, hits.begin(), [&, i = 0u](const BoundingBox& bb) mutable {
+         return std::make_pair(i++, bb.sweep_aabb(capsule.bounding_box(), movement));
+      });
+   }
 
    std::ranges::sort(hits, [](const std::pair<u32, BoundingBox::SweepResult>& lhs, const std::pair<u32, BoundingBox::SweepResult>& rhs) {
       return lhs.second.entry_time < rhs.second.entry_time;

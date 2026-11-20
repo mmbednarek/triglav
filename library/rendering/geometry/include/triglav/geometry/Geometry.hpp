@@ -346,15 +346,17 @@ struct Capsule
    [[nodiscard]] constexpr Vector3 axis() const
    {
       return point_b - point_a;
-   };
+   }
+
    [[nodiscard]] constexpr Vector3 center() const
    {
       return (point_a + point_b) * 0.5f;
-   };
+   }
+
    [[nodiscard]] constexpr float height() const
    {
       return (point_b - point_a).length() + 2.0f * radius;
-   };
+   }
 
    [[nodiscard]] constexpr Capsule transform(const Matrix4x4& trans) const
    {
@@ -369,7 +371,7 @@ struct Capsule
          .point_b = (trans * Vector4{this->point_b, 1.0f}).xyz(),
          .radius = this->radius * max_scale,
       };
-   };
+   }
 
    [[nodiscard]] constexpr Capsule extend_by_movement(const Vector3& movement) const
    {
@@ -378,7 +380,15 @@ struct Capsule
          .point_b = this->point_b + 0.5f * movement,
          .radius = this->radius + movement.length(),
       };
-   };
+   }
+
+   [[nodiscard]] constexpr BoundingBox bounding_box() const;
+
+   constexpr void translate(const Vector3& translation)
+   {
+      this->point_a += translation;
+      this->point_b += translation;
+   }
 
    [[nodiscard]] constexpr SweepHit sweep(const Capsule& capsule, const Vector3& movement) const
    {
@@ -421,7 +431,7 @@ struct Capsule
       }
 
       return {INF, {}};// Did not converge (grazing); treat as a miss
-   };
+   }
 };
 
 struct BoundingBox
@@ -666,7 +676,7 @@ struct BoundingBox
 
          // Segment is inside the box: no meaningful normal from closest points.
          if (distance < EPSILON) {
-            return {INF, {}};
+            return SweepResult::miss();
          }
 
          const Vector3 normal = (closest.on_segment - closest.on_box) * (1.0f / distance);
@@ -674,22 +684,40 @@ struct BoundingBox
 
          if (gap <= TOLERANCE) {
             // Touching or overlapping: hit only if actually moving into the box
-            return closing_speed > EPSILON ? SweepResult{time, normal} : SweepResult{INF, {}};
+            return closing_speed > EPSILON ? SweepResult{time, normal} : SweepResult::miss();
          }
 
          if (closing_speed <= EPSILON) {
-            return {INF, {}};// Separating or moving parallel to the separating plane
+            return SweepResult::miss();// Separating or moving parallel to the separating plane
          }
 
          time += gap / closing_speed;
          if (time > 1.0f) {
-            return {INF, {}};
+            return SweepResult::miss();
          }
       }
 
-      return {INF, {}};// Did not converge (grazing); treat as a miss
+      return SweepResult::miss();// Did not converge (grazing); treat as a miss
    }
 };
+
+[[nodiscard]] constexpr BoundingBox Capsule::bounding_box() const
+{
+   return {
+      .min =
+         {
+            std::min(point_a.x - radius, point_b.x - radius),
+            std::min(point_a.y - radius, point_b.y - radius),
+            std::min(point_a.z - radius, point_b.z - radius),
+         },
+      .max =
+         {
+            std::max(point_a.x + radius, point_b.x + radius),
+            std::max(point_a.y + radius, point_b.y + radius),
+            std::max(point_a.z + radius, point_b.z + radius),
+         },
+   };
+}
 
 namespace detail {
 

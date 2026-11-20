@@ -53,6 +53,11 @@ void CharacterController::setup_character()
       .armature_name = "armature/simple_human_rig.arm"_rc,
    });
    level->insert_component<triglav::physics::Movement>(m_character_id)->motion = Vector3{};
+   level->insert_component<triglav::physics::CapsuleComponent>(m_character_id)->capsule = {
+      .point_a = {0, 0, 0},
+      .point_b = {0, 0, 2},
+      .radius = 1.0f,
+   };
 
    auto ball_transform = Transform3D::identity();
    ball_transform.translation = Vector3{10.0f, 0, 100.0f};

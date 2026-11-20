@@ -107,6 +107,7 @@ struct LevelBVHSweepTraversalTraits
    struct Traversary
    {
       const TraversableObject* traversable;
+      geometry::BoundingBox bounding_box;
       Vector3 movement;
    };
    struct UserData
@@ -150,25 +151,13 @@ struct LevelBVHSweepTraversalTraits
 
    static IntersectionResult test_intersection(const UserData* /*user_data*/, const Node* node, const Traversary& traversary)
    {
-      TraversableObject node_object{
-         .kind = TraversableKind::AABB,
-         .inverse_transform = Matrix4x4::identity(),
-         .payload = &node->bounding_box,
-      };
-
-      return IntersectionResult{collision_test(&node_object, traversary.traversable, traversary.movement)};
+      return {node->bounding_box.does_intersect_aabb(traversary.bounding_box.extend_by_movement(traversary.movement))};
    }
 
    static float test_hit_score(const UserData* /*user_data*/, const IntersectionResult& /*inter_result*/, const Node* node,
                                const Traversary& traversary)
    {
-      TraversableObject node_object{
-         .kind = TraversableKind::AABB,
-         .inverse_transform = Matrix4x4::identity(),
-         .payload = &node->bounding_box,
-      };
-
-      return sweep_cast(&node_object, traversary.traversable, traversary.movement).time;
+      return node->bounding_box.sweep_aabb(node->bounding_box, traversary.movement).entry_time;
    }
 };
 
@@ -231,7 +220,8 @@ LevelBVH& LevelBVH::operator=(LevelBVH&& other) noexcept
 namespace {
 
 LevelBVH::Node* leaf_from_entity_id(const world::Level& level, const world::EntityID entity_id, const world::Mesh* mesh_comp = nullptr,
-                                    const world::TerrainComponent* terrain_comp = nullptr, const Movement* movement_comp = nullptr)
+                                    const world::TerrainComponent* terrain_comp = nullptr, const CapsuleComponent* capsule_comp = nullptr,
+                                    const Movement* movement_comp = nullptr)
 {
    geometry::BoundingBox bounding_box{};
 
@@ -249,6 +239,13 @@ LevelBVH::Node* leaf_from_entity_id(const world::Level& level, const world::Enti
    if (terrain_comp != nullptr) {
       const auto& terrain = engine::resource_manager().get(terrain_comp->name);
       bounding_box = terrain.bounding_box();
+   }
+
+   if (capsule_comp == nullptr) {
+      capsule_comp = level.component_opt<CapsuleComponent>(entity_id);
+   }
+   if (capsule_comp != nullptr) {
+      bounding_box = capsule_comp->capsule.bounding_box();
    }
 
    assert(mesh_comp || terrain_comp);
@@ -284,10 +281,12 @@ struct EntityData
 
 EntityData get_entity_data(const world::Level& level, const world::EntityID entity_id)
 {
-   const auto* transform_ptr = level.component_opt<Transform3D>(entity_id);
-   Transform3D transform = transform_ptr == nullptr ? Transform3D::identity() : *transform_ptr;
+   Transform3D transform = level.component_opt<Transform3D>(entity_id, Transform3D::identity());
    Matrix4x4 matrix = transform.to_matrix();
 
+   if (const auto* capsule_comp = level.component_opt<CapsuleComponent>(entity_id); capsule_comp != nullptr) {
+      return {capsule_comp->capsule.bounding_box().transform(matrix), matrix.inverse()};
+   }
    if (const auto* mesh_comp = level.component_opt<world::Mesh>(entity_id); mesh_comp != nullptr) {
       const auto& mesh = engine::resource_manager().get(mesh_comp->name);
       return {mesh.bounding_box.transform(matrix), matrix.inverse()};
@@ -468,7 +467,7 @@ void LevelBVH::build_dynamic()
       const auto* mesh_comp = m_level.component_opt<world::Mesh>(entity_id);
       if (mesh_comp == nullptr)
          continue;
-      auto* node = leaf_from_entity_id(m_level, entity_id, mesh_comp, nullptr, &movement_comp);
+      auto* node = leaf_from_entity_id(m_level, entity_id, mesh_comp, nullptr, nullptr, &movement_comp);
       m_leave_mapping[entity_id] = node;
       nodes.emplace_back(node);
    }
@@ -498,13 +497,13 @@ LevelBVH::RayHit LevelBVH::ray_cast(const geometry::Ray& ray) const
    return LevelBVHRayTraverser::traverse(&user_data, m_root, mut_ray, mut_ray.distance);
 }
 
-LevelBVH::SweepHit LevelBVH::sweep_cast(const TraversableObject& object, const Vector3& movement) const
+LevelBVH::SweepHit LevelBVH::sweep_cast(const TraversableObject& object, const geometry::BoundingBox& bb, const Vector3& movement) const
 {
    float hit_time = INF;
    LevelBVHSweepTraverser::UserData user_data{
       .mesh_provider = &m_mesh_provider,
    };
-   return LevelBVHSweepTraverser::traverse(&user_data, m_root, {&object, movement}, hit_time);
+   return LevelBVHSweepTraverser::traverse(&user_data, m_root, {&object, bb, movement}, hit_time);
 }
 
 bool LevelBVH::contains(const world::EntityID entity_id) const

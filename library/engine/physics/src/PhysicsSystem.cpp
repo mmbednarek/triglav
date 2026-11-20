@@ -138,9 +138,15 @@ void PhysicsSystem::tick(const float delta_time)
          continue;
       }
 
-      auto bb = m_dynamic_bvh.bounding_box(entity_id);
+      CollisionResponse response{};
+      if (const auto* capsule_comp = m_level.component_opt<CapsuleComponent>(entity_id); capsule_comp != nullptr) {
+         const auto capsule = capsule_comp->capsule.transform(transform.to_matrix());
+         response = get_slide_response_capsule(m_static_bvh, capsule, movement_vec);
+      } else {
+         const auto bb = m_dynamic_bvh.bounding_box(entity_id);
+         response = get_slide_response_aabb(m_static_bvh, bb, movement_vec);
+      }
 
-      auto response = get_slide_response(m_static_bvh, bb, movement_vec);
       m_level.mut_component<Transform3D>(entity_id).translation += response.movement;
       if (response.normal.z > 0.0f) {
          movement_mut.is_on_ground = true;
@@ -161,7 +167,7 @@ LevelBVH::SweepHit PhysicsSystem::sweep_cast(const geometry::BoundingBox& bb, co
       .inverse_transform = Matrix4x4::identity(),
       .payload = &bb,
    };
-   return m_static_bvh.sweep_cast(object, movement);
+   return m_static_bvh.sweep_cast(object, bb, movement);
 }
 
 }// namespace triglav::physics
