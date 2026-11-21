@@ -107,6 +107,7 @@ class Terrain : public ITraversable
    [[nodiscard]] float generic_ray_cast(const Ray& ray) const override;
 
    [[nodiscard]] Vector3 normal_at(const Vector2u& coord) const;
+   [[nodiscard]] Vector3 coord_to_vertex(const Vector2u& coord, u32 mip_id) const;
    [[nodiscard]] float sample_height(const Vector2& uv) const;
    [[nodiscard]] Vector2 frag_uv() const;
 

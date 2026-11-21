@@ -125,14 +125,14 @@ void PhysicsSystem::tick(const float delta_time)
 
       auto& transform = m_level.mut_component<Transform3D>(entity_id);
 
-      if ((transform.translation.z + movement_vec.z) <= 3.5f) {
-         movement_mut.is_on_ground = true;
-         movement_mut.motion.z = 0.0f;
-         movement_vec.z = 0.0f;
-         transform.translation.z = 3.5f;
-      } else {
-         movement_mut.is_on_ground = false;
-      }
+      // if ((transform.translation.z + movement_vec.z) <= 3.5f) {
+      //    movement_mut.is_on_ground = true;
+      //    movement_mut.motion.z = 0.0f;
+      //    movement_vec.z = 0.0f;
+      //    transform.translation.z = 3.5f;
+      // } else {
+      //    movement_mut.is_on_ground = false;
+      // }
 
       if (movement_vec.length() <= TOLERANCE) {
          continue;
@@ -151,6 +151,8 @@ void PhysicsSystem::tick(const float delta_time)
       if (response.normal.z > 0.0f) {
          movement_mut.is_on_ground = true;
          movement_mut.motion.z = 0.0f;
+      } else {
+         movement_mut.is_on_ground = false;
       }
    }
 }

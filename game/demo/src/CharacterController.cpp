@@ -1,8 +1,8 @@
 #include "CharacterController.hpp"
 
-#include "../../../library/engine/physics/include/triglav/physics/PhysicsSystem.hpp"
 #include "triglav/engine/Engine.hpp"
 #include "triglav/physics/Physics.hpp"
+#include "triglav/physics/PhysicsSystem.hpp"
 #include "triglav/world/Archetypes.hpp"
 
 using namespace triglav::name_literals;
@@ -40,7 +40,7 @@ void CharacterController::setup_character()
    // };
 
    auto transform = Transform3D::identity();
-   transform.translation = {20.0f, 0.0f, 3.5f};
+   transform.translation = {20.0f, 0.0f, 10.0f};
    transform.scale *= 5.0f;
 
    auto* level = triglav::engine::level();
@@ -54,9 +54,9 @@ void CharacterController::setup_character()
    });
    level->insert_component<triglav::physics::Movement>(m_character_id)->motion = Vector3{};
    level->insert_component<triglav::physics::CapsuleComponent>(m_character_id)->capsule = {
-      .point_a = {0, 0, 0},
-      .point_b = {0, 0, 2},
-      .radius = 1.0f,
+      .point_a = {0, 0, -0.75f},
+      .point_b = {0, 0, 0.25f},
+      .radius = 0.5f,
    };
 
    auto ball_transform = Transform3D::identity();
@@ -69,6 +69,11 @@ void CharacterController::setup_character()
       .transform = ball_transform,
    });
    level->insert_component<triglav::physics::Movement>(m_table_id)->motion = Vector3{0.0f, 0.0f, 0.1f};
+   level->insert_component<triglav::physics::CapsuleComponent>(m_table_id)->capsule = {
+      .point_a = {0, 0, 0},
+      .point_b = {0, 0, 0},
+      .radius = 1.0f,
+   };
 
    triglav::engine::level()->flush();
 

@@ -180,6 +180,11 @@ struct SweepHit
    {
       return {INF, {}};
    }
+
+   [[nodiscard]] constexpr bool has_hit() const
+   {
+      return time < 1.0f;
+   }
 };
 
 struct BoundingBox;

@@ -146,6 +146,14 @@ Vector3 Terrain::normal_at(const Vector2u& coord) const
    return tangent.cross(bitangent).normalize();
 }
 
+Vector3 Terrain::coord_to_vertex(const Vector2u& coord, const u32 mip_id) const
+{
+   const Vector2 world_size_coord =
+      m_half_world_size.xy() *
+      (2.0f * coord.cast<Vector2>() / (m_heightmap_mips[mip_id].dimensions.cast<Vector2>() - Vector2{1}) - Vector2{1});
+   return Vector3{world_size_coord, m_heightmap_mips[mip_id].get(coord) * m_half_world_size.z};
+}
+
 float Terrain::sample_height(const Vector2& uv) const
 {
    const auto coord = uv * m_heightmap_mips[0].dimensions.cast<Vector2>();
@@ -329,8 +337,6 @@ Terrain::SweepHit Terrain::sweep_cast_visit_level(const u32 mip, const Vector2u&
 Terrain::SweepHit Terrain::sweep_cast_capsule_visit_level(u32 mip, const Vector2u& base, const Capsule& capsule, const Vector3& movement,
                                                           float& best_score) const
 {
-   const auto& level = m_heightmap_mips[mip];
-
    constexpr static std::array<Vector2u, 4> offsets{
       Vector2u{0, 0},
       Vector2u{1, 0},
@@ -338,24 +344,45 @@ Terrain::SweepHit Terrain::sweep_cast_capsule_visit_level(u32 mip, const Vector2
       Vector2u{1, 1},
    };
 
-   std::array<BoundingBox, 4> bounding_boxes{};
-   std::ranges::transform(offsets, bounding_boxes.begin(),
-                          [&](const Vector2u& offset) { return level.bounding_box(*this, 2u * base + offset); });
-
-   std::array<std::pair<u32, BoundingBox::SweepResult>, 4> hits{};
    if (mip == 0) {
-      std::ranges::transform(bounding_boxes, hits.begin(), [&, i = 0u](const BoundingBox& bb) mutable {
-         return std::make_pair(i++, bb.sweep_capsule(capsule, movement));
-      });
-   } else {
-      std::ranges::transform(bounding_boxes, hits.begin(), [&, i = 0u](const BoundingBox& bb) mutable {
-         return std::make_pair(i++, bb.sweep_aabb(capsule.bounding_box(), movement));
-      });
+      const std::array<Vector3, 3> triangle_a{
+         this->coord_to_vertex(base * 2u + offsets[0], 0),
+         this->coord_to_vertex(base * 2u + offsets[1], 0),
+         this->coord_to_vertex(base * 2u + offsets[2], 0),
+      };
+      const std::array<Vector3, 3> triangle_b{
+         this->coord_to_vertex(base * 2u + offsets[0], 0),
+         this->coord_to_vertex(base * 2u + offsets[2], 0),
+         this->coord_to_vertex(base * 2u + offsets[3], 0),
+      };
+
+      const auto result_a = sweep_triangle_capsule(triangle_a, capsule, movement);
+      const auto result_b = sweep_triangle_capsule(triangle_b, capsule, movement);
+
+      const bool hit_a = result_a.has_hit() && result_a.time <= best_score;
+      const bool hit_b = result_b.has_hit() && result_b.time <= best_score;
+
+      if (hit_a && (!hit_b || result_a.time < result_b.time)) {
+         best_score = result_a.time;
+         return {result_a.time, result_a.normal};
+      }
+      if (hit_b) {
+         best_score = result_b.time;
+         return {result_b.time, result_b.normal};
+      }
+      return SweepHit::miss();
    }
 
-   std::ranges::sort(hits, [](const std::pair<u32, BoundingBox::SweepResult>& lhs, const std::pair<u32, BoundingBox::SweepResult>& rhs) {
-      return lhs.second.entry_time < rhs.second.entry_time;
-   });
+   const auto& level = m_heightmap_mips[mip];
+
+   std::array<std::pair<u32, BoundingBox::SweepResult>, 4> hits{};
+   for (u32 i = 0; i < 4; ++i) {
+      const Vector2u child_coord = 2u * base + offsets[i];
+      const BoundingBox bb = level.bounding_box(*this, child_coord);
+      hits[i] = std::make_pair(i, bb.sweep_aabb(capsule.bounding_box(), movement));
+   }
+
+   std::ranges::sort(hits, [](const auto& lhs, const auto& rhs) { return lhs.second.entry_time < rhs.second.entry_time; });
 
    auto best_result = SweepHit::miss();
 
@@ -365,22 +392,13 @@ Terrain::SweepHit Terrain::sweep_cast_capsule_visit_level(u32 mip, const Vector2
       if (hit.entry_time > best_score)
          break;
 
-      if (mip == 0) {
-         best_score = hit.entry_time;
-         const auto coord = base * 2u + offsets[index];
-         // const auto uv = coord.cast<Vector2>() / m_heightmap_mips[0].dimensions.cast<Vector2>();
-         return SweepHit{
-            .time = hit.entry_time,
-            .normal = this->normal_at(coord),
-            .coordinate = base * 2u + offsets[index],
-         };
-      }
-
       const auto sweep_result = this->sweep_cast_capsule_visit_level(mip - 1, base * 2u + offsets[index], capsule, movement, best_score);
-      if (sweep_result) {
+      if (sweep_result && (!best_result || sweep_result.time < best_result.time)) {
          best_result = sweep_result;
+         best_score = std::min(best_score, sweep_result.time);
       }
    }
+
    return best_result;
 }
 
