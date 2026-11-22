@@ -8,6 +8,8 @@
 
 namespace triglav::renderer::stage {
 
+using render_core::Format;
+
 struct PostProcessingPushConstants
 {
    int enable_fxaa{};
@@ -24,7 +26,7 @@ PostProcessStage::PostProcessStage(UpdateUserInterfaceJob* update_user_interface
 
 void PostProcessStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
-   ctx.declare_render_target(m_output_render_target, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target(m_output_render_target, Format::BGRA_SRGB8);
    // ctx.declare_depth_target("ui.depth"_name, GAPI_FORMAT(D, UNorm16));
 
    // ctx.begin_render_pass("post_processing"_name, m_output_render_target, "ui.depth"_name);

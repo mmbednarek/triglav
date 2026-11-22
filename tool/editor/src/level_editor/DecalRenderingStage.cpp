@@ -8,6 +8,7 @@ namespace triglav::editor {
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 using BU = graphics_api::BufferUsage;
 
@@ -34,7 +35,7 @@ DecalRenderingStage::DecalRenderingStage(graphics_api::Device& device) :
 
 void DecalRenderingStage::build_stage(render_core::BuildContext& ctx, const renderer::Config& /*config*/) const
 {
-   ctx.declare_depth_target("decals.depth"_name, GAPI_FORMAT(D, Float32));
+   ctx.declare_depth_target("decals.depth"_name, Format::D_Float32);
    ctx.copy_texture("gbuffer.depth"_name, "decals.depth"_name);
 
    ctx.begin_render_pass("decals"_name, "gbuffer.albedo"_name, "gbuffer.material"_name, "decals.depth"_name);

@@ -9,11 +9,11 @@ namespace triglav::editor {
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 namespace {
 
-render_core::VertexLayout g_single_vertex_layout =
-   render_core::VertexLayout(sizeof(Vector3)).add("position"_name, GAPI_FORMAT(RGB, Float32), 0);
+render_core::VertexLayout g_single_vertex_layout = render_core::VertexLayout(sizeof(Vector3)).add("position"_name, Format::RGB_Float32, 0);
 
 void render_tool(render_core::BuildContext& ctx, const Name vertices, const Name indices, const u32 index, const u32 index_count,
                  MemorySize color_stride, MemorySize matrix_stride, const graphics_api::VertexTopology topology, bool enable_blending)
@@ -58,7 +58,7 @@ struct EditorOverlayUniformBuffer
 
 void RenderViewport::build_render_job(render_core::BuildContext& ctx)
 {
-   ctx.declare_render_target("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target("render_viewport.out"_name, Format::BGRA_SRGB8);
 
    const auto [vertices_box, indices_box] = create_box_mesh({0, 0, 0}, {1, 1, 1});
    ctx.init_buffer_raw("render_viewport.box_vertices"_name, vertices_box.data(), vertices_box.size() * sizeof(Vector3));

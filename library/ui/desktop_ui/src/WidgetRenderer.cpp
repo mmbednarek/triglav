@@ -3,6 +3,7 @@
 namespace triglav::desktop_ui {
 
 using namespace name_literals;
+using render_core::Format;
 
 WidgetRenderer::WidgetRenderer(PopupManager& popup_manager, desktop::ISurface& surface, render_core::GlyphCache& glyph_cache,
                                resource::ResourceManager& resource_manager, graphics_api::Device& device,
@@ -30,7 +31,7 @@ void WidgetRenderer::create_update_job(render_core::BuildContext& ctx) const
 
 void WidgetRenderer::create_render_job(render_core::BuildContext& ctx, Name output_render_target)
 {
-   ctx.declare_depth_target("viewport.ui.depth"_name, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_depth_target("viewport.ui.depth"_name, Format::D_UNorm16);
 
    ctx.begin_render_pass("dialog_render_ui"_name, output_render_target, "viewport.ui.depth"_name);
    // ctx.begin_render_pass("dialog_render_ui"_name, output_render_target);

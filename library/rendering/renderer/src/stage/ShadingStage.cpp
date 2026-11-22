@@ -1,7 +1,5 @@
 #include "stage/ShadingStage.hpp"
 
-#include "Util.hpp"
-
 #include "triglav/render_core/BuildContext.hpp"
 #include "triglav/render_core/JobGraph.hpp"
 
@@ -12,6 +10,7 @@ namespace triglav::renderer::stage {
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 struct Particle
 {
@@ -36,12 +35,12 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 {
    if (!ctx.is_ray_tracing_supported()) {
       // declare dummy shadows texture
-      ctx.declare_screen_size_texture("ray_tracing.shadows"_name, GAPI_FORMAT(R, UNorm8));
+      ctx.declare_screen_size_texture("ray_tracing.shadows"_name, Format::R_UNorm8);
    }
 
-   ctx.declare_render_target("shading.color"_name, GAPI_FORMAT(RGBA, UNorm8));
-   ctx.declare_render_target("shading.bloom"_name, GAPI_FORMAT(RGBA, UNorm8));
-   ctx.declare_depth_target("shading.depth"_name, GAPI_FORMAT(D, Float32));
+   ctx.declare_render_target("shading.color"_name, Format::RGBA_UNorm8);
+   ctx.declare_render_target("shading.bloom"_name, Format::RGBA_UNorm8);
+   ctx.declare_depth_target("shading.depth"_name, Format::D_Float32);
 
    // if (config.is_rendering_particles) {
    //    this->prepare_particles(ctx);
@@ -88,7 +87,7 @@ void ShadingStage::build_stage(render_core::BuildContext& ctx, const Config& con
 
    ctx.end_render_pass();
 
-   // blur_texture(ctx, "shading.bloom"_name, "shading.blurred_bloom"_name, GAPI_FORMAT(RGBA, Float16));
+   // blur_texture(ctx, "shading.bloom"_name, "shading.blurred_bloom"_name, Format::RGBA_Float16);
 }
 
 void ShadingStage::prepare_particles(render_core::BuildContext& ctx) const

@@ -10,7 +10,7 @@ struct Texture
 {
    Name tex_name{};
    std::optional<Vector2i> tex_dims{};// none means screen-size
-   graphics_api::ColorFormat tex_format{};
+   Format tex_format{};
    graphics_api::TextureUsageFlags tex_usage_flags{};
    bool create_mip_levels{false};
    std::optional<float> scaling{};

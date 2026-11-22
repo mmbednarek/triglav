@@ -5,6 +5,7 @@
 namespace triglav::editor {
 
 using namespace name_literals;
+using render_core::Format;
 
 void DefaultRenderOverlay::build_update_job(render_core::BuildContext& ctx)
 {
@@ -13,7 +14,7 @@ void DefaultRenderOverlay::build_update_job(render_core::BuildContext& ctx)
 
 void DefaultRenderOverlay::build_render_job(render_core::BuildContext& ctx)
 {
-   ctx.declare_render_target("render_viewport.out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target("render_viewport.out"_name, Format::BGRA_SRGB8);
 
    ctx.begin_render_pass("editor_tools"_name, "render_viewport.out"_name);
    ctx.clear_color("render_viewport.out"_name, {0, 0, 0, 1});

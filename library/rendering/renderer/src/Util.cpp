@@ -6,12 +6,11 @@ namespace triglav::renderer {
 
 using namespace name_literals;
 
-void blur_texture(render_core::BuildContext& ctx, const Name src_texture, const Name dst_texture,
-                  const graphics_api::ColorFormat dst_format)
+void blur_texture(render_core::BuildContext& ctx, const Name src_texture, const Name dst_texture, const render_core::Format dst_format)
 {
    ctx.declare_screen_size_texture(dst_texture, dst_format);
 
-   if (dst_format.channel_count() == 1) {
+   if (format_info(dst_format).channel_count == 1) {
       ctx.bind_compute_shader("shader/misc/blur_r.cshader"_rc);
    } else {
       ctx.bind_compute_shader("shader/misc/blur_rgba.cshader"_rc);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Format.hpp"
 #include "Job.hpp"
 #include "PipelineCache.hpp"
 #include "RenderCore.hpp"
@@ -64,16 +65,15 @@ class BuildContext
    BuildContext(graphics_api::Device& device, resource::ResourceManager& resource_manager, Vector2i screen_size);
 
    // Declarations
-   void declare_texture(Name tex_name, Vector2i tex_dims, graphics_api::ColorFormat tex_format = GAPI_FORMAT(RGBA, sRGB));
-   void declare_screen_size_texture(Name tex_name, graphics_api::ColorFormat tex_format = GAPI_FORMAT(RGBA, sRGB));
-   void declare_proportional_texture(Name tex_name, graphics_api::ColorFormat tex_format, float scale,
+   void declare_texture(Name tex_name, Vector2i tex_dims, Format tex_format = Format::RGBA_SRGB8);
+   void declare_screen_size_texture(Name tex_name, Format tex_format = Format::RGBA_SRGB8);
+   void declare_proportional_texture(Name tex_name, Format tex_format, float scale,
                                      bool create_mip_levels);// texture as a proportion of screen size
-   void declare_render_target(Name rt_name, graphics_api::ColorFormat rt_format = GAPI_FORMAT(RGBA, UNorm8));
-   void declare_depth_target(Name dt_name, graphics_api::ColorFormat rt_format = GAPI_FORMAT(RGBA, UNorm8));
-   void declare_proportional_depth_target(Name dt_name, graphics_api::ColorFormat rt_format = GAPI_FORMAT(RGBA, UNorm8),
-                                          float scale = 1.0f);
-   void declare_sized_render_target(Name rt_name, Vector2i rt_dims, graphics_api::ColorFormat rt_format = GAPI_FORMAT(RGBA, UNorm8));
-   void declare_sized_depth_target(Name dt_name, Vector2i dt_dims, graphics_api::ColorFormat rt_format = GAPI_FORMAT(D, UNorm16));
+   void declare_render_target(Name rt_name, Format rt_format = Format::RGBA_UNorm8);
+   void declare_depth_target(Name dt_name, Format rt_format = Format::RGBA_UNorm8);
+   void declare_proportional_depth_target(Name dt_name, Format rt_format = Format::RGBA_UNorm8, float scale = 1.0f);
+   void declare_sized_render_target(Name rt_name, Vector2i rt_dims, Format rt_format = Format::RGBA_UNorm8);
+   void declare_sized_depth_target(Name dt_name, Vector2i dt_dims, Format rt_format = Format::D_UNorm16);
    void declare_buffer(Name buff_name, MemorySize size);
    void declare_staging_buffer(Name buff_name, MemorySize size);
    void declare_proportional_buffer(Name buff_name, float scale, MemorySize stride);

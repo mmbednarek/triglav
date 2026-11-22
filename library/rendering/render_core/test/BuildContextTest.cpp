@@ -8,7 +8,6 @@
 #include "triglav/graphics_api/DescriptorLayoutCache.hpp"
 #include "triglav/graphics_api/ray_tracing/Geometry.hpp"
 #include "triglav/graphics_api/ray_tracing/InstanceBuilder.hpp"
-#include "triglav/graphics_api/ray_tracing/ShaderBindingTable.hpp"
 #include "triglav/io/File.hpp"
 #include "triglav/project/PathManager.hpp"
 #include "triglav/testing_core/GTest.hpp"
@@ -27,6 +26,7 @@ using triglav::Vector4;
 using triglav::render_core::BufferRef;
 using triglav::render_core::BuildContext;
 using triglav::render_core::DescriptorStorage;
+using triglav::render_core::Format;
 using triglav::render_core::PipelineCache;
 using triglav::render_core::RenderPassScope;
 using triglav::render_core::ResourceStorage;
@@ -159,7 +159,7 @@ TEST(BuildContext, BasicCompute)
    BuildContext build_context(RenderSupport::device(), RenderSupport::resource_manager(), DefaultSize);
 
    // Declare resources
-   build_context.declare_texture("test.basic_compute.pattern_texture"_name, {64, 64}, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_texture("test.basic_compute.pattern_texture"_name, {64, 64}, Format::RGBA_UNorm8);
    build_context.declare_staging_buffer("test.basic_compute.output_buffer"_name, 64 * 64 * sizeof(int));
 
    // Run compute
@@ -197,7 +197,7 @@ TEST(BuildContext, BasicGraphics)
    static constexpr triglav::MemorySize buffer_size = sizeof(int) * dims.x * dims.y;
 
    // Declare resources
-   build_context.declare_sized_render_target("test.basic_graphics.render_target"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_sized_render_target("test.basic_graphics.render_target"_name, dims, Format::RGBA_UNorm8);
    build_context.declare_staging_buffer("test.basic_graphics.output_buffer"_name, buffer_size);
    build_context.declare_buffer("test.basic_graphics.vertex_buffer"_name, 6 * sizeof(triglav::Vector4));
    build_context.declare_buffer("test.basic_graphics.uniform_buffer"_name, sizeof(triglav::Vector4));
@@ -222,7 +222,7 @@ TEST(BuildContext, BasicGraphics)
       build_context.bind_vertex_shader("testing/shader/basic/graphics.vshader"_rc);
 
       triglav::render_core::VertexLayout layout(sizeof(triglav::Vector4));
-      layout.add("position"_name, GAPI_FORMAT(RGBA, Float32), 0);
+      layout.add("position"_name, Format::RGBA_Float32, 0);
       build_context.bind_vertex_layout(layout);
 
       build_context.bind_vertex_buffer("test.basic_graphics.vertex_buffer"_name);
@@ -271,8 +271,8 @@ TEST(BuildContext, BasicDepth)
    const auto offset = Matrix4x4::translation(Vector3{-2.0f, -2.0f, 1.3f}) * transform;
 
    // Declare resources
-   build_context.declare_sized_render_target("test.basic_depth.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
-   build_context.declare_sized_depth_target("test.basic_depth.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
+   build_context.declare_sized_render_target("test.basic_depth.render_target"_name, dims, Format::RGBA_SRGB8);
+   build_context.declare_sized_depth_target("test.basic_depth.depth_target"_name, dims, Format::D_UNorm16);
    build_context.declare_staging_buffer("test.basic_depth.output_buffer"_name, buffer_size);
    build_context.declare_buffer("test.basic_depth.vertex_buffer"_name, box_mesh_data.vertex_buffer.size());
    build_context.declare_buffer("test.basic_depth.index_buffer"_name, box_mesh_data.index_buffer.size() * sizeof(u32));
@@ -341,7 +341,7 @@ TEST(BuildContext, BasicTexture)
    static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   build_context.declare_sized_render_target("test.basic_texture.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_sized_render_target("test.basic_texture.render_target"_name, dims, Format::RGBA_SRGB8);
    build_context.declare_staging_buffer("test.basic_texture.output_buffer"_name, buffer_size);
    build_context.declare_buffer("test.basic_texture.vertex_buffer"_name, 3 * sizeof(Vertex));
 
@@ -363,8 +363,8 @@ TEST(BuildContext, BasicTexture)
       build_context.bind_vertex_shader("testing/shader/basic/texture.vshader"_rc);
 
       triglav::render_core::VertexLayout layout(sizeof(Vertex));
-      layout.add("position"_name, GAPI_FORMAT(RG, Float32), offsetof(Vertex, position));
-      layout.add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(Vertex, uv));
+      layout.add("position"_name, Format::RG_Float32, offsetof(Vertex, position));
+      layout.add("uv"_name, Format::RG_Float32, offsetof(Vertex, uv));
       build_context.bind_vertex_layout(layout);
 
       build_context.bind_vertex_buffer("test.basic_texture.vertex_buffer"_name);
@@ -402,8 +402,8 @@ TEST(BuildContext, MultiplePasses)
    static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   build_context.declare_sized_render_target("test.multiple_passes.render_target.first"_name, dims, GAPI_FORMAT(RGBA, UNorm8));
-   build_context.declare_sized_render_target("test.multiple_passes.render_target.second"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_sized_render_target("test.multiple_passes.render_target.first"_name, dims, Format::RGBA_UNorm8);
+   build_context.declare_sized_render_target("test.multiple_passes.render_target.second"_name, dims, Format::RGBA_SRGB8);
    build_context.declare_staging_buffer("test.multiple_passes.output_buffer"_name, buffer_size);
 
    {
@@ -455,8 +455,8 @@ TEST(BuildContext, DepthTargetSample)
    static constexpr triglav::MemorySize buffer_size{sizeof(int) * dims.x * dims.y};
 
    // Declare resources
-   build_context.declare_sized_depth_target("test.depth_target_sample.depth_target"_name, dims, GAPI_FORMAT(D, UNorm16));
-   build_context.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, GAPI_FORMAT(RGBA, sRGB));
+   build_context.declare_sized_depth_target("test.depth_target_sample.depth_target"_name, dims, Format::D_UNorm16);
+   build_context.declare_sized_render_target("test.depth_target_sample.render_target"_name, dims, Format::RGBA_SRGB8);
    build_context.declare_staging_buffer("test.depth_target_sample.output_buffer"_name, buffer_size);
    build_context.declare_buffer("test.depth_target_sample.vertex_buffer"_name, box_mesh_data.vertex_buffer.size());
    build_context.declare_buffer("test.depth_target_sample.index_buffer"_name, box_mesh_data.index_buffer.size() * sizeof(triglav::u32));
@@ -723,7 +723,7 @@ TEST(BuildContext, BasicRayTracing)
 
    BuildContext build_context(RenderSupport::device(), RenderSupport::resource_manager(), DefaultSize);
 
-   build_context.declare_screen_size_texture("test.basic_ray_tracing.target"_name, GAPI_FORMAT(RGBA, UNorm8));
+   build_context.declare_screen_size_texture("test.basic_ray_tracing.target"_name, Format::RGBA_UNorm8);
    build_context.declare_staging_buffer("test.basic_ray_tracing.output"_name, buffer_size);
 
    const auto view = Matrix4x4::look_at(Vector3{2.0f, 2.0f, 2.0f}, Vector3{0, 0, 0}, Vector3{0, 0, -1.0f});

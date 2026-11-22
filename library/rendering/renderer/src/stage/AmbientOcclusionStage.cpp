@@ -13,6 +13,7 @@ namespace triglav::renderer::stage {
 using namespace name_literals;
 using namespace render_core::literals;
 namespace gapi = graphics_api;
+using render_core::Format;
 
 constexpr auto g_sample_count = 64;
 
@@ -69,11 +70,11 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
 {
    if (config.ambient_occlusion != AmbientOcclusionMethod::ScreenSpace) {
       if (config.ambient_occlusion != AmbientOcclusionMethod::RayTraced) {
-         ctx.declare_screen_size_texture("ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
+         ctx.declare_screen_size_texture("ambient_occlusion.blurred"_name, Format::R_Float16);
       }
       return;
    }
-   ctx.declare_render_target("ambient_occlusion.target"_name, GAPI_FORMAT(R, Float16));
+   ctx.declare_render_target("ambient_occlusion.target"_name, Format::R_Float16);
 
    // ctx.query_timestamp(0, false);
 
@@ -91,7 +92,7 @@ void AmbientOcclusionStage::build_stage(render_core::BuildContext& ctx, const Co
 
    ctx.end_render_pass();
 
-   // blur_texture(ctx, "ambient_occlusion.target"_name, "ambient_occlusion.blurred"_name, GAPI_FORMAT(R, Float16));
+   // blur_texture(ctx, "ambient_occlusion.target"_name, "ambient_occlusion.blurred"_name, Format::R_Float16);
 
    // ctx.query_timestamp(1, true);
 }

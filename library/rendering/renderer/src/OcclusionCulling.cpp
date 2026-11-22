@@ -11,6 +11,7 @@ namespace triglav::renderer {
 constexpr auto g_draw_call_size = 124;
 constexpr auto g_bindless_object_limit = 80;
 
+using render_core::Format;
 using namespace name_literals;
 using namespace render_core::literals;
 
@@ -27,7 +28,7 @@ void OcclusionCulling::on_resource_definition(render_core::BuildContext& ctx) co
 {
    // buffers
    ctx.declare_buffer("occlusion_culling.count_buffer"_name, render_objects::GEOMETRY_RENDER_INFOS.size() * sizeof(u32));
-   ctx.declare_proportional_texture("occlusion_culling.hierarchical_depth_buffer"_name, GAPI_FORMAT(R, UNorm16), 0.5f, true);
+   ctx.declare_proportional_texture("occlusion_culling.hierarchical_depth_buffer"_name, render_core::Format::R_UNorm16, 0.5f, true);
    ctx.declare_proportional_buffer("occlusion_culling.staging_depth_buffer"_name, 0.5f, sizeof(u16));
    ctx.declare_buffer("occlusion_culling.passthrough.count_buffer"_name, render_objects::VERTEX_LAYOUT_INFOS.size() * sizeof(u32));
 
@@ -40,7 +41,7 @@ void OcclusionCulling::on_resource_definition(render_core::BuildContext& ctx) co
    }
 
    // rts
-   ctx.declare_proportional_depth_target("occlusion_culling.depth_prepass_target"_name, GAPI_FORMAT(D, UNorm16), 0.5f);
+   ctx.declare_proportional_depth_target("occlusion_culling.depth_prepass_target"_name, Format::D_UNorm16, 0.5f);
 }
 
 void OcclusionCulling::on_view_properties_changed(render_core::BuildContext& ctx) const

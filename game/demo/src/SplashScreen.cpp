@@ -22,6 +22,7 @@ using triglav::graphics_api::Resolution;
 using triglav::graphics_api::Status;
 using triglav::graphics_api::Swapchain;
 using triglav::graphics_api::WorkType;
+using triglav::render_core::Format;
 
 constexpr triglav::Vector2u g_splash_screen_resolution{1024, 360};
 
@@ -116,8 +117,8 @@ void SplashScreen::on_close()
 
 void SplashScreen::build_rendering_job(triglav::render_core::BuildContext& ctx)
 {
-   ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
-   // ctx.declare_depth_target("ui.depth"_name, GAPI_FORMAT(D, UNorm16));
+   ctx.declare_render_target("core.color_out"_name, Format::BGRA_SRGB8);
+   // ctx.declare_depth_target("ui.depth"_name, Format::D_UNorm16);
 
    // ctx.begin_render_pass("splash_screen"_name, "core.color_out"_name, "ui.depth"_name);
    ctx.begin_render_pass("splash_screen"_name, "core.color_out"_name);

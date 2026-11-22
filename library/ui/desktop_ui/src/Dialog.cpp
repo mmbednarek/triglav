@@ -8,6 +8,7 @@ namespace triglav::desktop_ui {
 
 using namespace name_literals;
 using namespace string_literals;
+using render_core::Format;
 
 Dialog::Dialog(const graphics_api::Instance& instance, graphics_api::Device& device, desktop::IDisplay& display,
                render_core::GlyphCache& glyph_cache, resource::ResourceManager& resource_manager, PopupManager& popup_manager,
@@ -76,7 +77,7 @@ void Dialog::uninitialize() const
 
 void Dialog::build_rendering_job(render_core::BuildContext& ctx)
 {
-   ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target("core.color_out"_name, Format::BGRA_SRGB8);
    m_widget_renderer.create_render_job(ctx, "core.color_out"_name);
    ctx.export_texture("core.color_out"_name, graphics_api::PipelineStage::Transfer, graphics_api::TextureState::TransferSrc,
                       graphics_api::TextureUsage::TransferSrc);

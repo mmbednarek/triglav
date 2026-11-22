@@ -12,6 +12,7 @@ namespace triglav::renderer::stage {
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 namespace {
 
@@ -34,10 +35,10 @@ GBufferStage::GBufferStage(graphics_api::Device& device, BindlessScene& bindless
 
 void GBufferStage::build_stage(render_core::BuildContext& ctx, const Config& /*config*/) const
 {
-   ctx.declare_render_target("gbuffer.albedo"_name, GAPI_FORMAT(RGBA, UNorm8));
-   ctx.declare_render_target("gbuffer.material"_name, GAPI_FORMAT(RG, UNorm8));
-   ctx.declare_render_target("gbuffer.normal"_name, GAPI_FORMAT(RGBA, UNorm8));
-   ctx.declare_depth_target("gbuffer.depth"_name, GAPI_FORMAT(D, Float32));
+   ctx.declare_render_target("gbuffer.albedo"_name, Format::RGBA_UNorm8);
+   ctx.declare_render_target("gbuffer.material"_name, Format::RG_UNorm8);
+   ctx.declare_render_target("gbuffer.normal"_name, Format::RGBA_UNorm8);
+   ctx.declare_depth_target("gbuffer.depth"_name, Format::D_Float32);
 
    ctx.begin_render_pass("gbuffer"_name, "gbuffer.albedo"_name, "gbuffer.material"_name, "gbuffer.normal"_name, "gbuffer.depth"_name);
 

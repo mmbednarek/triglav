@@ -41,11 +41,9 @@ constexpr std::array<PipelineHash, 16> RAY_SHADER_GROUP_PRIMES = {
    42053233, 99472067, 58265849, 11079947, 32325577, 64498283, 88087333, 86433041,
 };
 
-PipelineHash hash_color_format(const graphics_api::ColorFormat& format)
+PipelineHash hash_color_format(const Format format)
 {
-   return 76037261 * static_cast<PipelineHash>(format.order) + 25809323 * static_cast<PipelineHash>(format.parts[0]) +
-          73029629 * static_cast<PipelineHash>(format.parts[1]) + 15383051 * static_cast<PipelineHash>(format.parts[2]) +
-          21467893 * static_cast<PipelineHash>(format.parts[3]);
+   return 76037261 * static_cast<PipelineHash>(format);
 }
 
 }// namespace
@@ -77,7 +75,7 @@ VertexLayout::VertexLayout(const u32 stride) :
 {
 }
 
-VertexLayout& VertexLayout::add(const Name name, const graphics_api::ColorFormat& format, const u32 offset)
+VertexLayout& VertexLayout::add(const Name name, const Format format, const u32 offset)
 {
    attributes.emplace_back(name, format, offset);
    return *this;
@@ -218,21 +216,21 @@ VertexLayout vertex_layout_from_components(const geometry::VertexComponentFlags 
 
    MemorySize offset = 0;
    if (flags & geometry::VertexComponent::Core) {
-      result.add("position"_name, GAPI_FORMAT(RGB, Float32), offset);
-      result.add("normal"_name, GAPI_FORMAT(RGB, Float32), offset + offsetof(geometry::VertexComponentCore, normal));
+      result.add("position"_name, Format::RGB_Float32, offset);
+      result.add("normal"_name, Format::RGB_Float32, offset + offsetof(geometry::VertexComponentCore, normal));
       offset += sizeof(geometry::VertexComponentCore);
    }
    if (flags & geometry::VertexComponent::Texture) {
-      result.add("uv"_name, GAPI_FORMAT(RG, Float32), offset);
+      result.add("uv"_name, Format::RG_Float32, offset);
       offset += sizeof(geometry::VertexComponentTexture);
    }
    if (flags & geometry::VertexComponent::NormalMap) {
-      result.add("tangent"_name, GAPI_FORMAT(RGBA, Float32), offset);
+      result.add("tangent"_name, Format::RGBA_Float32, offset);
       offset += sizeof(geometry::VertexComponentNormalMap);
    }
    if (flags & geometry::VertexComponent::Skeleton) {
-      result.add("indices"_name, GAPI_FORMAT(RGBA, SInt32), offset + offsetof(geometry::VertexComponentSkeleton, indices));
-      result.add("weights"_name, GAPI_FORMAT(RGBA, Float32), offset + offsetof(geometry::VertexComponentSkeleton, weights));
+      result.add("indices"_name, Format::RGBA_SInt32, offset + offsetof(geometry::VertexComponentSkeleton, indices));
+      result.add("weights"_name, Format::RGBA_Float32, offset + offsetof(geometry::VertexComponentSkeleton, weights));
       offset += sizeof(geometry::VertexComponentSkeleton);
    }
 
@@ -246,7 +244,7 @@ VertexLayout vertex_layout_from_components_for_depth_only(const geometry::Vertex
 
    MemorySize offset = 0;
    if (flags & geometry::VertexComponent::Core) {
-      result.add("position"_name, GAPI_FORMAT(RGB, Float32), offset);
+      result.add("position"_name, Format::RGB_Float32, offset);
       offset += sizeof(geometry::VertexComponentCore);
    }
    if (flags & geometry::VertexComponent::Texture) {
@@ -256,8 +254,8 @@ VertexLayout vertex_layout_from_components_for_depth_only(const geometry::Vertex
       offset += sizeof(geometry::VertexComponentNormalMap);
    }
    if (flags & geometry::VertexComponent::Skeleton) {
-      result.add("indices"_name, GAPI_FORMAT(RGBA, SInt32), offset + offsetof(geometry::VertexComponentSkeleton, indices));
-      result.add("weights"_name, GAPI_FORMAT(RGBA, Float32), offset + offsetof(geometry::VertexComponentSkeleton, weights));
+      result.add("indices"_name, Format::RGBA_SInt32, offset + offsetof(geometry::VertexComponentSkeleton, indices));
+      result.add("weights"_name, Format::RGBA_Float32, offset + offsetof(geometry::VertexComponentSkeleton, weights));
       offset += sizeof(geometry::VertexComponentSkeleton);
    }
 

@@ -12,6 +12,7 @@ namespace triglav::editor {
 using namespace name_literals;
 using namespace string_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 constexpr Vector2 DEFAULT_DIMENSIONS{1280, 720};
 
@@ -77,7 +78,7 @@ void RootWindow::uninitialize() const
 
 void RootWindow::build_rendering_job(render_core::BuildContext& ctx)
 {
-   ctx.declare_render_target("core.color_out"_name, GAPI_FORMAT(BGRA, sRGB));
+   ctx.declare_render_target("core.color_out"_name, Format::BGRA_SRGB8);
    m_widget_renderer.create_render_job(ctx, "core.color_out"_name);
 
    ctx.copy_texture_region("render_viewport.out"_external, {0, 0}, "core.color_out"_name,

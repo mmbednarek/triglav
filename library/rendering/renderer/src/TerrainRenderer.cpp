@@ -1,7 +1,7 @@
 #include "TerrainRenderer.hpp"
 
-#include "../../geometry/include/triglav/geometry/Terrain.hpp"
 #include "triglav/engine/Engine.hpp"
+#include "triglav/geometry/Terrain.hpp"
 #include "triglav/render_core/BuildContext.hpp"
 
 #include <memory>
@@ -10,6 +10,7 @@ namespace triglav::renderer {
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 engine::SystemRegisterer TERRAIN_RENDERER_REGISTERER{{
    .constructor = [](world::Level& /*level*/) -> std::unique_ptr<world::ISystem> { return std::make_unique<TerrainRenderer>(); },
@@ -66,12 +67,12 @@ graphics_api::Buffer generate_patch_vertices()
    return buffer;
 }
 
-graphics_api::Texture generate_terrain_texture(const graphics_api::ColorFormat format, const Vector2u dimensions, const u8* buffer_data)
+graphics_api::Texture generate_terrain_texture(const Format format, const Vector2u dimensions, const u8* buffer_data)
 {
    auto* device = engine::the().gfx_device();
    assert(device != nullptr);
 
-   auto out_texture = GAPI_CHECK(device->create_texture(format, graphics_api::Resolution{dimensions.x, dimensions.y}));
+   auto out_texture = GAPI_CHECK(device->create_texture(to_color_format(format), graphics_api::Resolution{dimensions.x, dimensions.y}));
 
    GAPI_CHECK_STATUS(out_texture.write(*device, buffer_data));
 
@@ -82,8 +83,8 @@ graphics_api::Texture generate_terrain_texture(const graphics_api::ColorFormat f
 }
 
 const render_core::VertexLayout terrain_layout = render_core::VertexLayout{sizeof(TerrainVertex)}
-                                                    .add("position"_name, GAPI_FORMAT(RGB, Float32), offsetof(TerrainVertex, position))
-                                                    .add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(TerrainVertex, uv));
+                                                    .add("position"_name, Format::RGB_Float32, offsetof(TerrainVertex, position))
+                                                    .add("uv"_name, Format::RG_Float32, offsetof(TerrainVertex, uv));
 
 }// namespace
 
@@ -198,11 +199,11 @@ void TerrainRenderer::add_terrain_resources(world::EntityID entity_id, const Ter
 
    m_terrain_resources.emplace(
       entity_id, TerrainResources{
-                    .height_texture = generate_terrain_texture(GAPI_FORMAT(R, Float32), terrain.dimensions(),
+                    .height_texture = generate_terrain_texture(Format::R_Float32, terrain.dimensions(),
                                                                reinterpret_cast<const u8*>(terrain.heightmap().data())),
-                    .blending_texture = generate_terrain_texture(GAPI_FORMAT(RGBA, UNorm8), terrain.dimensions(),
+                    .blending_texture = generate_terrain_texture(Format::RGBA_UNorm8, terrain.dimensions(),
                                                                  reinterpret_cast<const u8*>(terrain.blending().data())),
-                    .materials_texture = generate_terrain_texture(GAPI_FORMAT(RGBA, UNorm8), terrain.dimensions(),
+                    .materials_texture = generate_terrain_texture(Format::RGBA_UNorm8, terrain.dimensions(),
                                                                   reinterpret_cast<const u8*>(terrain.material_indices().data())),
                  });
 }

@@ -121,16 +121,16 @@ graphics_api::Pipeline PipelineCache::create_graphics_pso(const GraphicPipelineS
    if (state.vertex_layout.stride != 0) {
       builder.begin_vertex_layout_raw(state.vertex_layout.stride);
       for (const auto& attribute : state.vertex_layout.attributes) {
-         builder.vertex_attribute(attribute.format, attribute.offset);
+         builder.vertex_attribute(to_color_format(attribute.format), attribute.offset);
       }
       builder.end_vertex_layout();
    }
 
    for (const auto format : state.render_target_formats) {
-      builder.color_attachment(format);
+      builder.color_attachment(to_color_format(format));
    }
    if (state.depth_target_format.has_value()) {
-      builder.depth_attachment(*state.depth_target_format);
+      builder.depth_attachment(to_color_format(*state.depth_target_format));
       builder.enable_depth_test(true);
    }
    builder.vertex_topology(state.vertex_topology);

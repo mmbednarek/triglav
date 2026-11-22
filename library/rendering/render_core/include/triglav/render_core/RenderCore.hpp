@@ -1,5 +1,8 @@
 #pragma once
 
+#include "Format.hpp"
+
+
 #include <stdexcept>
 
 #include "triglav/Name.hpp"
@@ -50,7 +53,7 @@ struct DescriptorState
 struct VertexAttribute
 {
    Name name;
-   graphics_api::ColorFormat format;
+   Format format;
    u32 offset;
 
    [[nodiscard]] PipelineHash hash() const;
@@ -64,7 +67,7 @@ struct VertexLayout
    VertexLayout() = default;
    explicit VertexLayout(u32 stride);
 
-   VertexLayout& add(Name name, const graphics_api::ColorFormat& format, u32 offset);
+   VertexLayout& add(Name name, Format format, u32 offset);
 
    [[nodiscard]] PipelineHash hash() const;
 };
@@ -85,8 +88,8 @@ struct GraphicPipelineState
    std::optional<DomainShaderName> domain_shader;
    VertexLayout vertex_layout;
    DescriptorState descriptor_state;
-   std::vector<graphics_api::ColorFormat> render_target_formats;
-   std::optional<graphics_api::ColorFormat> depth_target_format;
+   std::vector<Format> render_target_formats;
+   std::optional<Format> depth_target_format;
    graphics_api::VertexTopology vertex_topology{graphics_api::VertexTopology::TriangleList};
    graphics_api::DepthTestMode depth_test_mode{graphics_api::DepthTestMode::Enabled};
    std::vector<PushConstantDesc> push_constants;

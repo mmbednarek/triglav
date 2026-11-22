@@ -5,6 +5,7 @@ render_core_sources = files([
   'include/triglav/render_core/ApplyFlagConditionsPass.hpp',
   'include/triglav/render_core/BarrierInsertionPass.hpp',
   'include/triglav/render_core/BuildContext.hpp',
+  'include/triglav/render_core/Format.hpp',
   'include/triglav/render_core/GenerateCommandListPass.hpp',
   'include/triglav/render_core/GlyphAtlas.hpp',
   'include/triglav/render_core/GlyphCache.hpp',
@@ -17,6 +18,7 @@ render_core_sources = files([
   'src/ApplyFlagConditionsPass.cpp',
   'src/BarrierInsertionPass.cpp',
   'src/BuildContext.cpp',
+  'src/Format.cpp',
   'src/GenerateCommandListPass.cpp',
   'src/GlyphAtlas.cpp',
   'src/GlyphCache.cpp',
@@ -27,7 +29,7 @@ render_core_sources = files([
   'src/ResourceStorage.cpp',
 ])
 
-render_core_deps = [graphics_api, core, geometry, font, io, resource]
+render_core_deps = [graphics_api, core, geometry, font, io, resource, meta]
 render_core_incl = include_directories(['include', 'include/triglav/render_core'])
 
 render_core_lib = static_library('render_core',

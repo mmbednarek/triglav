@@ -12,6 +12,7 @@ namespace triglav::renderer::stage {
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 
 namespace gapi = graphics_api;
 
@@ -23,12 +24,12 @@ RayTracingStage::RayTracingStage(RayTracingScene& rt_scene, ShadowMapManager& sh
 
 void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& config) const
 {
-   ctx.declare_screen_size_texture("ray_tracing.shadows"_name, GAPI_FORMAT(R, UNorm8));
+   ctx.declare_screen_size_texture("ray_tracing.shadows"_name, Format::R_UNorm8);
    if (!config.is_any_rt_feature_enabled()) {
       return;
    }
 
-   ctx.declare_screen_size_texture("ray_tracing.ambient_occlusion"_name, GAPI_FORMAT(R, UNorm8));
+   ctx.declare_screen_size_texture("ray_tracing.ambient_occlusion"_name, Format::R_UNorm8);
 
    ctx.set_bind_stages(gapi::PipelineStage::RayGenerationShader | gapi::PipelineStage::ClosestHitShader);
 
@@ -91,7 +92,7 @@ void RayTracingStage::build_stage(render_core::BuildContext& ctx, const Config& 
 
    ctx.trace_rays({ctx.screen_size().x, ctx.screen_size().y, 1});
 
-   blur_texture(ctx, "ray_tracing.ambient_occlusion"_name, "ray_tracing.ambient_occlusion.blurred"_name, GAPI_FORMAT(R, UNorm8));
+   blur_texture(ctx, "ray_tracing.ambient_occlusion"_name, "ray_tracing.ambient_occlusion.blurred"_name, Format::R_UNorm8);
 }
 
 }// namespace triglav::renderer::stage

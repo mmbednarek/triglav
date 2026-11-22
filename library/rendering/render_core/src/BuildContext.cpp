@@ -56,51 +56,51 @@ BuildContext::BuildContext(graphics_api::Device& device, resource::ResourceManag
 {
 }
 
-void BuildContext::declare_texture(const Name tex_name, const Vector2i tex_dims, gapi::ColorFormat tex_format)
+void BuildContext::declare_texture(const Name tex_name, const Vector2i tex_dims, Format tex_format)
 {
    this->add_declaration<detail::decl::Texture>(tex_name, tex_dims, tex_format);
 }
 
-void BuildContext::declare_screen_size_texture(const Name tex_name, const gapi::ColorFormat tex_format)
+void BuildContext::declare_screen_size_texture(const Name tex_name, const Format tex_format)
 {
    this->add_declaration<detail::decl::Texture>(tex_name, std::nullopt, tex_format);
 }
 
-void BuildContext::declare_proportional_texture(const Name tex_name, const graphics_api::ColorFormat tex_format, const float scale,
+void BuildContext::declare_proportional_texture(const Name tex_name, const Format tex_format, const float scale,
                                                 const bool create_mip_levels)
 {
    this->add_declaration<detail::decl::Texture>(tex_name, std::nullopt, tex_format, gapi::TextureUsage::None, create_mip_levels, scale);
 }
 
-void BuildContext::declare_render_target(const Name rt_name, gapi::ColorFormat rt_format)
+void BuildContext::declare_render_target(const Name rt_name, Format rt_format)
 {
    this->m_render_targets.emplace(rt_name, detail::RenderTarget{gapi::ClearValue::color(gapi::ColorPalette::Black),
                                                                 gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(rt_name, std::nullopt, rt_format, gapi::TextureUsage::ColorAttachment);
 }
 
-void BuildContext::declare_depth_target(Name dt_name, graphics_api::ColorFormat rt_format)
+void BuildContext::declare_depth_target(Name dt_name, Format rt_format)
 {
    this->m_render_targets.emplace(dt_name, detail::RenderTarget{gapi::ClearValue::depth_stencil(1.0f, 0),
                                                                 gapi::AttachmentAttribute::Depth | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(dt_name, std::nullopt, rt_format, gapi::TextureUsage::DepthStencilAttachment);
 }
 
-void BuildContext::declare_proportional_depth_target(Name dt_name, graphics_api::ColorFormat rt_format, float scale)
+void BuildContext::declare_proportional_depth_target(Name dt_name, Format rt_format, float scale)
 {
    this->m_render_targets.emplace(dt_name, detail::RenderTarget{gapi::ClearValue::depth_stencil(1.0f, 0),
                                                                 gapi::AttachmentAttribute::Depth | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(dt_name, std::nullopt, rt_format, gapi::TextureUsage::DepthStencilAttachment, false, scale);
 }
 
-void BuildContext::declare_sized_render_target(const Name rt_name, const Vector2i rt_dims, gapi::ColorFormat rt_format)
+void BuildContext::declare_sized_render_target(const Name rt_name, const Vector2i rt_dims, Format rt_format)
 {
    this->m_render_targets.emplace(rt_name, detail::RenderTarget{gapi::ClearValue::color(gapi::ColorPalette::Black),
                                                                 gapi::AttachmentAttribute::Color | gapi::AttachmentAttribute::ClearImage});
    this->add_declaration<detail::decl::Texture>(rt_name, rt_dims, rt_format, gapi::TextureUsage::ColorAttachment);
 }
 
-void BuildContext::declare_sized_depth_target(Name dt_name, Vector2i dt_dims, graphics_api::ColorFormat rt_format)
+void BuildContext::declare_sized_depth_target(Name dt_name, Vector2i dt_dims, Format rt_format)
 {
    this->m_render_targets.emplace(dt_name, detail::RenderTarget{gapi::ClearValue::depth_stencil(1.0f, 0),
                                                                 gapi::AttachmentAttribute::Depth | gapi::AttachmentAttribute::ClearImage});
@@ -1194,9 +1194,9 @@ void BuildContext::create_resources(ResourceStorage& storage)
                   if (decl.scaling.has_value()) {
                      size = (size.template cast<Vector2>() * decl.scaling.value()).template cast<Vector2i>();
                   }
-                  auto texture = GAPI_CHECK(m_device.create_texture(decl.tex_format, {static_cast<u32>(size.x), static_cast<u32>(size.y)},
-                                                                    decl.tex_usage_flags, gapi::TextureState::Undefined,
-                                                                    gapi::SampleCount::Single, decl.create_mip_levels ? 0 : 1));
+                  auto texture = GAPI_CHECK(m_device.create_texture(
+                     to_color_format(decl.tex_format), {static_cast<u32>(size.x), static_cast<u32>(size.y)}, decl.tex_usage_flags,
+                     gapi::TextureState::Undefined, gapi::SampleCount::Single, decl.create_mip_levels ? 0 : 1));
                   TG_SET_DEBUG_NAME(texture, create_object_name(decl.tex_name, frame_index));
 
                   texture.sampler_properties() = decl.sampler_properties;

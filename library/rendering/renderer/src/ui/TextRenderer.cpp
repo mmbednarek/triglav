@@ -16,6 +16,7 @@ constexpr u32 g_vertex_count_per_char = 6;
 
 using namespace name_literals;
 using namespace render_core::literals;
+using render_core::Format;
 using ui_core::TextId;
 
 struct TextUpdateInfo
@@ -210,8 +211,8 @@ void TextRenderer::build_render_ui(render_core::BuildContext& ctx)
    ctx.bind_sampled_texture_array(1, m_atlases);
 
    render_core::VertexLayout layout(sizeof(TextVertex));
-   layout.add("position"_name, GAPI_FORMAT(RG, Float32), offsetof(TextVertex, position));
-   layout.add("uv"_name, GAPI_FORMAT(RG, Float32), offsetof(TextVertex, uv));
+   layout.add("position"_name, Format::RG_Float32, offsetof(TextVertex, position));
+   layout.add("uv"_name, Format::RG_Float32, offsetof(TextVertex, uv));
    ctx.bind_vertex_layout(layout);
 
    ctx.bind_vertex_buffer(&m_vertex_buffer);
