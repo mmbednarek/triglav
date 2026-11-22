@@ -33,7 +33,7 @@ BVHProvider::BVHProvider(world::Level& level) :
 {
 }
 
-const TraversableObject* BVHProvider::get_bottom_level(const world::EntityID entity_id) const
+const ColliderRef* BVHProvider::get_bottom_level(const world::EntityID entity_id) const
 {
    const auto it = m_cache.find(entity_id);
    if (it != m_cache.end()) {
@@ -44,8 +44,8 @@ const TraversableObject* BVHProvider::get_bottom_level(const world::EntityID ent
 
    if (const auto* mesh_component = m_level.component_opt<world::Mesh>(entity_id); mesh_component != nullptr) {
       const auto& bvh_mesh = MeshBVHStorage::the().get(mesh_component->name);
-      auto [emplace_it, ok] = m_cache.emplace(entity_id, TraversableObject{
-                                                            .kind = TraversableKind::Mesh,
+      auto [emplace_it, ok] = m_cache.emplace(entity_id, ColliderRef{
+                                                            .kind = ColliderKind::Mesh,
                                                             .inverse_transform = transform.to_matrix().inverse(),
                                                             .payload = &bvh_mesh,
                                                          });
@@ -54,8 +54,8 @@ const TraversableObject* BVHProvider::get_bottom_level(const world::EntityID ent
    }
    if (const auto* terrain_component = m_level.component_opt<world::TerrainComponent>(entity_id); terrain_component != nullptr) {
       const auto* terrain = &engine::resource_manager().get(terrain_component->name);
-      auto [emplace_it, ok] = m_cache.emplace(entity_id, TraversableObject{
-                                                            .kind = TraversableKind::Terrain,
+      auto [emplace_it, ok] = m_cache.emplace(entity_id, ColliderRef{
+                                                            .kind = ColliderKind::Terrain,
                                                             .inverse_transform = transform.to_matrix().inverse(),
                                                             .payload = terrain,
                                                          });

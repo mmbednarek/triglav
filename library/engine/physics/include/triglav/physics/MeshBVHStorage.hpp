@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SweepCallbacks.hpp"
+#include "Collider.hpp"
 
 #include "triglav/geometry/MeshBVH.hpp"
 #include "triglav/world/World.hpp"
@@ -25,11 +25,11 @@ class BVHProvider
  public:
    explicit BVHProvider(world::Level& level);
 
-   [[nodiscard]] const TraversableObject* get_bottom_level(world::EntityID entity_id) const;
+   [[nodiscard]] const ColliderRef* get_bottom_level(world::EntityID entity_id) const;
 
  private:
    world::Level& m_level;
-   mutable std::map<world::EntityID, TraversableObject> m_cache;
+   mutable std::map<world::EntityID, ColliderRef> m_cache;
 };
 
 }// namespace triglav::physics

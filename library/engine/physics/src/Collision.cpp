@@ -4,9 +4,10 @@ namespace triglav::physics {
 
 namespace {
 
-void apply_impulse(DynamicResolution& resolution, const RigidBox& a, const RigidBox& b, const Vector3& normal, const float restitution)
+void apply_impulse(DynamicResolution& resolution, const float inv_mass_a, const float inv_mass_b, const Vector3& normal,
+                   const float restitution)
 {
-   const float inv_sum = a.inv_mass + b.inv_mass;
+   const float inv_sum = inv_mass_a + inv_mass_b;
    if (inv_sum <= 0.0f)
       return;
 
@@ -15,44 +16,40 @@ void apply_impulse(DynamicResolution& resolution, const RigidBox& a, const Rigid
       return;
 
    const float j = -(1.0f + restitution) * vn / inv_sum;
-   resolution.velocity_a += normal * (j * a.inv_mass);
-   resolution.velocity_b -= normal * (j * b.inv_mass);
+   resolution.velocity_a += normal * (j * inv_mass_a);
+   resolution.velocity_b -= normal * (j * inv_mass_b);
 }
 
-bool resolve_overlap(DynamicResolution& resolution, const RigidBox& a, const RigidBox& b, const float restitution)
+class TranslationGuard
 {
-   const Vector3 d = a.box.centroid() + resolution.movement_a - b.box.centroid() - resolution.movement_b;
-   const Vector3 ha = a.box.half_extent();
-   const Vector3 hb = b.box.half_extent();
-
-   Vector3 penetration{};
-   auto best = Axis::X;
-   for (const auto axis : Vector3::AXES) {
-      penetration[axis] = ha[axis] + hb[axis] - std::fabs(d[axis]);
-      if (penetration[axis] <= 0.0f)
-         return false;// separated on this axis
-      if (penetration[axis] < penetration[best])
-         best = axis;
+ public:
+   explicit TranslationGuard(Collider& collider) :
+       m_collider(collider)
+   {
    }
 
-   const float inv_sum = a.inv_mass + b.inv_mass;
-   if (inv_sum <= 0.0f)
-      return true;
+   TranslationGuard(const TranslationGuard&) = delete;
+   TranslationGuard& operator=(const TranslationGuard&) = delete;
 
-   const float sign = d[best] < 0.0f ? -1.0f : 1.0f;
-   Vector3 normal{};
-   normal[best] = sign;
-   const Vector3 push = normal * penetration[best];
+   void move(const Vector3& offset)
+   {
+      m_collider.translate(offset);
+      m_total = m_total + offset;
+   }
 
-   resolution.movement_a += push * (a.inv_mass / inv_sum);
-   resolution.movement_b += push * (-b.inv_mass / inv_sum);
-   apply_impulse(resolution, a, b, normal, restitution);
-   return true;
-}
+   ~TranslationGuard()
+   {
+      m_collider.translate(m_total * -1.0f);
+   }
+
+ private:
+   Collider& m_collider;
+   Vector3 m_total{};
+};
 
 }// namespace
 
-CollisionResponse get_slide_response_aabb(const LevelBVH& bvh, geometry::BoundingBox bounding_box, const Vector3& movement)
+CollisionResponse get_slide_response(const LevelBVH& bvh, Collider& collider, const Vector3& movement)
 {
    static constexpr int MAX_ITER = 2;
 
@@ -66,22 +63,17 @@ CollisionResponse get_slide_response_aabb(const LevelBVH& bvh, geometry::Boundin
       if (remaining.length_sq() < TOLERANCE)
          break;
 
-      TraversableObject object{
-         .kind = TraversableKind::AABB,
-         .inverse_transform = Matrix4x4::identity(),
-         .payload = &bounding_box,
-      };
-      const auto hit = bvh.sweep_cast(object, bounding_box, remaining);
+      const auto hit = bvh.sweep_cast(collider.to_const_ref(), remaining);
       out_normal = hit.normal;
 
       if (hit.entity_id == world::NO_ENTITY || hit.time >= 1.0f) {
-         bounding_box.translate(remaining);
+         collider.translate(remaining);
          total = total + remaining;
          break;
       }
 
       const Vector3 advance = remaining * hit.time + hit.normal * SKIN_MARGIN;
-      bounding_box.translate(advance);
+      collider.translate(advance);
       total = total + advance;
 
       const Vector3 leftover = remaining * (1.0f - hit.time);
@@ -114,131 +106,53 @@ CollisionResponse get_slide_response_aabb(const LevelBVH& bvh, geometry::Boundin
    return {total, out_normal};
 }
 
-CollisionResponse get_slide_response_capsule(const LevelBVH& bvh, geometry::Capsule capsule, const Vector3& movement)
+DynamicResolution resolve_collision(RigidBody& a, RigidBody& b, const float dt, const float restitution)
 {
    static constexpr int MAX_ITER = 2;
 
-   Vector3 total{};
-   Vector3 remaining = movement;
-   Vector3 out_normal{};
-   std::array<Vector3, MAX_ITER> planes{};
-   mem_size plane_count = 0;
-
-   for (int iter = 0; iter < MAX_ITER; ++iter) {
-      if (remaining.length_sq() < TOLERANCE)
-         break;
-
-      TraversableObject object{
-         .kind = TraversableKind::Capsule,
-         .inverse_transform = Matrix4x4::identity(),
-         .payload = &capsule,
-      };
-      const auto hit = bvh.sweep_cast(object, capsule.bounding_box(), remaining);
-      out_normal = hit.normal;
-
-      if (hit.entity_id == world::NO_ENTITY || hit.time >= 1.0f) {
-         capsule.translate(remaining);
-         total = total + remaining;
-         break;
-      }
-
-      const Vector3 advance = remaining * hit.time + hit.normal * SKIN_MARGIN;
-      capsule.translate(advance);
-      total = total + advance;
-
-      const Vector3 leftover = remaining * (1.0f - hit.time);
-      Vector3 slide = leftover - hit.normal * leftover.dot(hit.normal);
-
-      for (mem_size plane_id = 0; plane_id < plane_count; ++plane_id) {
-         if (slide.dot(planes[plane_id]) < 0.0f) {
-            Vector3 crease = hit.normal.cross(planes[plane_id]);
-            if (crease.length_sq() < TOLERANCE) {
-               slide = Vector3{};
-               break;
-            }
-            crease = crease.normalize();
-            slide = crease * leftover.dot(crease);
-
-            for (mem_size j = 0; j < plane_count; ++j) {
-               if (j != plane_id && slide.dot(planes[j]) < 0.0f) {
-                  slide = {};
-                  break;
-               }
-            }
-            break;
-         }
-      }
-
-      planes[plane_count++] = hit.normal;
-      remaining = slide;
-   }
-
-   return {total, out_normal};
-}
-
-DynamicResolution resolve_aabb_collision(const RigidBox& a, const RigidBox& b, const float dt, const float restitution)
-{
    DynamicResolution result{};
    result.velocity_a = a.velocity;
    result.velocity_b = b.velocity;
 
-   result.hit = resolve_overlap(result, a, b, restitution);
+   TranslationGuard guard_a(a.collider);
+   TranslationGuard guard_b(b.collider);
 
-   if (!result.hit) {
-      // Work in A's frame: B is stationary, A moves with the relative displacement.
-      const Vector3 disp = (a.velocity - b.velocity) * dt;
-      const Vector3 delta = b.box.centroid() + result.movement_a - a.box.centroid() - result.movement_b;
-      const Vector3 sum = a.box.half_extent() + b.box.half_extent();
+   float remaining_dt = dt;
 
-      float t_entry = -INF;
-      float t_exit = INF;
-      Vector3 normal;// points from B toward A
+   for (int iter = 0; iter < MAX_ITER && remaining_dt > 0.0f; ++iter) {
+      // Work in B's frame: B is stationary, A moves with the relative displacement.
+      const Vector3 relative = (result.velocity_a - result.velocity_b) * remaining_dt;
+      if (relative.length_sq() < TOLERANCE)
+         break;
 
-      for (const auto axis : Vector3::AXES) {
-         const float d = disp[axis];
-         const float dl = delta[axis];
-         const float s = sum[axis];
+      // Re-fetch refs every iteration, since the colliders were translated.
+      const ColliderRef ref_a = a.collider.to_const_ref();
+      const ColliderRef ref_b = b.collider.to_const_ref();
 
-         if (d == 0.0f) {
-            if (std::fabs(dl) >= s) {
-               t_entry = INF;
-               break;
-            }// parallel and outside the slab
-            continue;
-         }
+      const geometry::SweepHit hit = sweep_cast(ref_b, ref_a, relative);
+      if (hit.time >= 1.0f)
+         break;
 
-         float t1 = (dl - s) / d;
-         float t2 = (dl + s) / d;
-         if (t1 > t2)
-            std::swap(t1, t2);
+      result.hit = true;
 
-         if (t1 > t_entry) {
-            t_entry = t1;
-            // Opposes A's direction of travel on the entry axis.
-            normal = {};
-            normal[axis] = d > 0.0f ? -1.0f : 1.0f;
-         }
-         t_exit = std::min(t_exit, t2);
-      }
+      // Advance both bodies to the moment of impact (minus skin margin).
+      const float t_impact = std::max(0.0f, hit.time - SKIN_MARGIN);
+      const Vector3 step_a = result.velocity_a * (remaining_dt * t_impact);
+      const Vector3 step_b = result.velocity_b * (remaining_dt * t_impact);
+      guard_a.move(step_a);
+      guard_b.move(step_b);
+      result.movement_a += step_a;
+      result.movement_b += step_b;
 
-      result.hit = (t_entry <= t_exit) && (t_entry >= 0.0f) && (t_entry <= 1.0f);
-      if (result.hit) {
-         const float t_impact = std::max(0.0f, t_entry - SKIN_MARGIN);
-         result.movement_a += a.velocity * (dt * t_impact);
-         result.movement_b += b.velocity * (dt * t_impact);
+      // hit.normal points from B toward A.
+      apply_impulse(result, a.inv_mass, b.inv_mass, hit.normal, restitution);
 
-         apply_impulse(result, a, b, normal, restitution);
-
-         const float remaining = dt * (1.0f - t_impact);
-         result.movement_a += a.velocity * remaining;
-         result.movement_b += b.velocity * remaining;
-         return result;
-      }
+      remaining_dt *= (1.0f - t_impact);
    }
 
-   // No sweep hit (or overlap was just corrected): plain integration.
-   result.movement_a += a.velocity * dt;
-   result.movement_b += b.velocity * dt;
+   // Integrate whatever time is left with the post-impulse velocities.
+   result.movement_a += result.velocity_a * remaining_dt;
+   result.movement_b += result.velocity_b * remaining_dt;
    return result;
 }
 

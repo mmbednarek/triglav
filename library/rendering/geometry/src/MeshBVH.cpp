@@ -276,6 +276,13 @@ MeshBVH::SweepHit MeshBVH::sweep_cast_capsule(const Capsule& capsule, const Vect
    return MeshBVHCapsuleSweepTraverser::traverse(nullptr, m_root, {capsule, movement}, best_score);
 }
 
+BoundingBox MeshBVH::bounding_box() const
+{
+   if (m_root == nullptr)
+      return {};
+   return m_root->bounding_box;
+}
+
 geometry::SweepHit MeshBVH::generic_sweep_cast(const BoundingBox& box, const Vector3& movement) const
 {
    const auto res = this->sweep_cast(box, movement);

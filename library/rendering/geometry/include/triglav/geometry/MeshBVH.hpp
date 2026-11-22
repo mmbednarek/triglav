@@ -86,6 +86,7 @@ class MeshBVH : public ITraversable
    [[nodiscard]] RayHit ray_cast(const Ray& ray) const;
    [[nodiscard]] SweepHit sweep_cast(const BoundingBox& bb, const Vector3& movement) const;
    [[nodiscard]] SweepHit sweep_cast_capsule(const Capsule& cap, const Vector3& movement) const;
+   [[nodiscard]] BoundingBox bounding_box() const;
 
    [[nodiscard]] geometry::SweepHit generic_sweep_cast(const BoundingBox& box, const Vector3& movement) const override;
    [[nodiscard]] float generic_ray_cast(const Ray& ray) const override;

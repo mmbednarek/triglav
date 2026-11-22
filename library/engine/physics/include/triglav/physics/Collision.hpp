@@ -12,16 +12,16 @@ struct CollisionResponse
    Vector3 normal;
 };
 
-struct RigidBox
+struct RigidBody
 {
-   geometry::BoundingBox box{};
+   Collider collider;
    Vector3 velocity{};
    float inv_mass = 1.0f;
 };
 
 struct DynamicResolution
 {
-   bool hit;
+   bool hit{};
    Vector3 movement_a;
    Vector3 velocity_a;
    Vector3 movement_b;
@@ -31,8 +31,7 @@ struct DynamicResolution
 constexpr float SKIN_MARGIN = 1e-4f;
 constexpr float TOLERANCE = 1e-8f;
 
-CollisionResponse get_slide_response_aabb(const LevelBVH& bvh, geometry::BoundingBox bounding_box, const Vector3& movement);
-CollisionResponse get_slide_response_capsule(const LevelBVH& bvh, geometry::Capsule capsule, const Vector3& movement);
-DynamicResolution resolve_aabb_collision(const RigidBox& a, const RigidBox& b, float dt, float restitution = 0.0f);
+CollisionResponse get_slide_response(const LevelBVH& bvh, Collider& collider, const Vector3& movement);
+DynamicResolution resolve_collision(RigidBody& a, RigidBody& b, float dt, float restitution = 0.0f);
 
 }// namespace triglav::physics

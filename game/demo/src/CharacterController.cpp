@@ -148,11 +148,11 @@ void CharacterController::on_movement(const triglav::Vector2 value)
 
 void CharacterController::on_view(const Vector2 value)
 {
-   static constexpr float MIN_PITCH = -0.5f * triglav::PI;
-   static constexpr float MAX_PITCH = 0.5f * triglav::PI;
+   static constexpr float MIN_PITCH = -0.4f * triglav::PI;
+   static constexpr float MAX_PITCH = 0.4f * triglav::PI;
 
-   m_camera_yaw += value.x * 0.01f;
-   m_camera_pitch += value.y * 0.01f;
+   m_camera_yaw -= value.x * 0.005f;
+   m_camera_pitch -= value.y * 0.005f;
    m_camera_pitch = std::clamp(m_camera_pitch, MIN_PITCH, MAX_PITCH);
 
    m_camera_yaw = std::fmod(m_camera_yaw, 2.0f * triglav::PI);

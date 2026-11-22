@@ -76,7 +76,7 @@ struct LevelBVHRayTraversalTraits
       if (bottom_level == nullptr)
          return Result::miss();
 
-      const auto distance = ray_cast(bottom_level, ray);
+      const auto distance = ray_cast(*bottom_level, ray);
       if (distance > best_score)
          return Result::miss();
 
@@ -106,7 +106,7 @@ struct LevelBVHSweepTraversalTraits
    using Result = LevelBVH::SweepHit;
    struct Traversary
    {
-      const TraversableObject* traversable;
+      const ColliderRef* traversable;
       geometry::BoundingBox bounding_box;
       Vector3 movement;
    };
@@ -133,7 +133,7 @@ struct LevelBVHSweepTraversalTraits
       if (collider == nullptr)
          return Result::miss();
 
-      const auto result = sweep_cast(collider, traversary.traversable, traversary.movement);
+      const auto result = sweep_cast(*collider, *traversary.traversable, traversary.movement);
       if (result.time > 1.0f) {
          return Result::miss();
       }
@@ -497,13 +497,13 @@ LevelBVH::RayHit LevelBVH::ray_cast(const geometry::Ray& ray) const
    return LevelBVHRayTraverser::traverse(&user_data, m_root, mut_ray, mut_ray.distance);
 }
 
-LevelBVH::SweepHit LevelBVH::sweep_cast(const TraversableObject& object, const geometry::BoundingBox& bb, const Vector3& movement) const
+LevelBVH::SweepHit LevelBVH::sweep_cast(const ColliderRef& object, const Vector3& movement) const
 {
    float hit_time = INF;
    LevelBVHSweepTraverser::UserData user_data{
       .mesh_provider = &m_mesh_provider,
    };
-   return LevelBVHSweepTraverser::traverse(&user_data, m_root, {&object, bb, movement}, hit_time);
+   return LevelBVHSweepTraverser::traverse(&user_data, m_root, {&object, object.bounding_box(), movement}, hit_time);
 }
 
 bool LevelBVH::contains(const world::EntityID entity_id) const
@@ -519,6 +519,17 @@ geometry::BoundingBox LevelBVH::bounding_box(const world::EntityID entity_id) co
    }
 
    return it->second->bounding_box;
+}
+
+Collider LevelBVH::collider(const world::EntityID entity_id) const
+{
+   if (const auto* capsule_comp = m_level.component_opt<CapsuleComponent>(entity_id); capsule_comp != nullptr) {
+      const auto& transform = m_level.component_opt<Transform3D>(entity_id, Transform3D::identity());
+      auto collider = Collider::capsule(capsule_comp->capsule.transform(transform.to_matrix()));
+      return collider;
+   }
+
+   return Collider::aabb(this->bounding_box(entity_id));
 }
 
 namespace {

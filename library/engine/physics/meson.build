@@ -1,17 +1,17 @@
 physics_sources = files([
 # !GENERATED
+        'include/triglav/physics/Collider.hpp',
         'include/triglav/physics/Collision.hpp',
         'include/triglav/physics/LevelBVH.hpp',
         'include/triglav/physics/MeshBVHStorage.hpp',
         'include/triglav/physics/Physics.hpp',
         'include/triglav/physics/PhysicsSystem.hpp',
-        'include/triglav/physics/SweepCallbacks.hpp',
+        'src/Collider.cpp',
         'src/Collision.cpp',
         'src/LevelBVH.cpp',
         'src/MeshBVHStorage.cpp',
         'src/Physics.cpp',
         'src/PhysicsSystem.cpp',
-        'src/SweepCallbacks.cpp',
 # !END
                         ])
 

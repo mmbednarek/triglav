@@ -88,15 +88,15 @@ void PhysicsSystem::tick(const float delta_time)
       auto& mov_a = m_level.mut_component<Movement>(entity_a);
       auto& mov_b = m_level.mut_component<Movement>(entity_b);
 
-      RigidBox box_a{
-         .box = m_dynamic_bvh.bounding_box(entity_a),
+      RigidBody body_a{
+         .collider = m_dynamic_bvh.collider(entity_a),
          .velocity = mov_a.motion,
       };
-      RigidBox box_b{
-         .box = m_dynamic_bvh.bounding_box(entity_b),
+      RigidBody body_b{
+         .collider = m_dynamic_bvh.collider(entity_b),
          .velocity = mov_b.motion,
       };
-      const auto resolution = resolve_aabb_collision(box_a, box_b, delta_time);
+      const auto resolution = resolve_collision(body_a, body_b, delta_time);
       if (!resolution.hit)
          continue;
 
@@ -122,30 +122,12 @@ void PhysicsSystem::tick(const float delta_time)
       } else {
          movement_vec = delta_time * movement.motion;
       }
-
-      auto& transform = m_level.mut_component<Transform3D>(entity_id);
-
-      // if ((transform.translation.z + movement_vec.z) <= 3.5f) {
-      //    movement_mut.is_on_ground = true;
-      //    movement_mut.motion.z = 0.0f;
-      //    movement_vec.z = 0.0f;
-      //    transform.translation.z = 3.5f;
-      // } else {
-      //    movement_mut.is_on_ground = false;
-      // }
-
       if (movement_vec.length() <= TOLERANCE) {
          continue;
       }
 
-      CollisionResponse response{};
-      if (const auto* capsule_comp = m_level.component_opt<CapsuleComponent>(entity_id); capsule_comp != nullptr) {
-         const auto capsule = capsule_comp->capsule.transform(transform.to_matrix());
-         response = get_slide_response_capsule(m_static_bvh, capsule, movement_vec);
-      } else {
-         const auto bb = m_dynamic_bvh.bounding_box(entity_id);
-         response = get_slide_response_aabb(m_static_bvh, bb, movement_vec);
-      }
+      auto collider = m_dynamic_bvh.collider(entity_id);
+      CollisionResponse response = get_slide_response(m_static_bvh, collider, movement_vec);
 
       m_level.mut_component<Transform3D>(entity_id).translation += response.movement;
       if (response.normal.z > 0.0f) {
@@ -164,12 +146,7 @@ LevelBVH::RayHit PhysicsSystem::ray_cast(const geometry::Ray& ray) const
 
 LevelBVH::SweepHit PhysicsSystem::sweep_cast(const geometry::BoundingBox& bb, const Vector3& movement) const
 {
-   TraversableObject object{
-      .kind = TraversableKind::AABB,
-      .inverse_transform = Matrix4x4::identity(),
-      .payload = &bb,
-   };
-   return m_static_bvh.sweep_cast(object, bb, movement);
+   return m_static_bvh.sweep_cast(ColliderRef::aabb(bb), movement);
 }
 
 }// namespace triglav::physics
