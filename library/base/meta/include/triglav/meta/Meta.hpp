@@ -797,6 +797,7 @@ concept HasMetaName = requires() {
    TG_META_PRIMITIVE(triglav__u64, triglav::u64)               \
    TG_META_PRIMITIVE(float, float)                             \
    TG_META_PRIMITIVE(double, double)                           \
+   TG_META_PRIMITIVE(bool, bool)                               \
    TG_META_PRIMITIVE(std__string, std::string)                 \
    TG_META_PRIMITIVE(std__string_view, std::string_view)       \
    TG_META_PRIMITIVE(triglav__Vector2, triglav::Vector2)       \

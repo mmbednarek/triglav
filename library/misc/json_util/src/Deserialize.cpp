@@ -75,6 +75,7 @@ Quaternion read_quaternion(const rapidjson::Value& src)
 #define TG_JSON_GETTER_triglav__u64 val.GetUint64()
 #define TG_JSON_GETTER_float val.GetFloat()
 #define TG_JSON_GETTER_double val.GetDouble()
+#define TG_JSON_GETTER_bool val.GetBool()
 #define TG_JSON_GETTER_std__string val.GetString()
 #define TG_JSON_GETTER_std__string_view \
    std::string_view {}// shouldn't use string views for deserialization

@@ -109,6 +109,7 @@ void write_quaternion(TWriter& writer, Quaternion vec)
 #define TG_JSON_SETTER_triglav__u64(value) writer.Uint64(value)
 #define TG_JSON_SETTER_float(value) writer.Double(static_cast<double>(value))
 #define TG_JSON_SETTER_double(value) writer.Double(value)
+#define TG_JSON_SETTER_bool(value) writer.Bool(value)
 #define TG_JSON_SETTER_std__string(value) writer.String(value.data(), value.size(), true)
 #define TG_JSON_SETTER_std__string_view(value) \
    writer.String(value.data(), value.size(), true)// shouldn't use string views for deserialization

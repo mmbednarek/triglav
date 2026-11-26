@@ -61,7 +61,7 @@ class Device
    [[nodiscard]] Result<Swapchain> create_swapchain(const Surface& surface, ColorFormat color_format, ColorSpace color_space,
                                                     const Resolution& resolution, PresentMode present_mode,
                                                     Swapchain* old_swapchain = nullptr);
-   [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint, std::span<const char> code);
+   [[nodiscard]] Result<Shader> create_shader(PipelineStage stage, std::string_view entrypoint, std::span<const u8> code);
    [[nodiscard]] Result<CommandList> create_command_list(WorkTypeFlags flags = WorkType::Graphics) const;
    [[nodiscard]] Result<DescriptorPool> create_descriptor_pool(std::span<const std::pair<DescriptorType, u32>> descriptor_counts,
                                                                u32 max_descriptor_count);

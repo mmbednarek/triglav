@@ -14,3 +14,5 @@ compile_commands.json
 debug
 .zed
 .vscode
+library/external/slang/linux_x86_64
+library/external/slang/windows_x86_64

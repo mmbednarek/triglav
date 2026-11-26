@@ -157,7 +157,7 @@ Result<Swapchain> Device::create_swapchain(const Surface& surface, ColorFormat c
    return Swapchain(m_queue_manager, resolution, std::move(swapchain_textures), std::move(swapchain), color_format);
 }
 
-Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint, const std::span<const char> code)
+Result<Shader> Device::create_shader(const PipelineStage stage, const std::string_view entrypoint, const std::span<const u8> code)
 {
    VkShaderModuleCreateInfo shader_module_info{};
    shader_module_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

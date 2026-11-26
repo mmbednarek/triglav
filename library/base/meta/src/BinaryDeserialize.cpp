@@ -16,6 +16,7 @@ namespace triglav::meta {
 #define TG_BINARY_READER_triglav__u64 reader.read_u64()
 #define TG_BINARY_READER_float reader.read_float()
 #define TG_BINARY_READER_double reader.read_double()
+#define TG_BINARY_READER_bool reader.read_i8()
 #define TG_BINARY_READER_std__string reader.read_string()
 #define TG_BINARY_READER_std__string_view reader.read_string()
 #define TG_BINARY_READER_triglav__Vector2 reader.read_vec2()

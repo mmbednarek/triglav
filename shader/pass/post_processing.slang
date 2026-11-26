@@ -1,6 +1,3 @@
-#version 450
-
-
 struct FragIn
 {
     [[vk::location(0)]]
@@ -39,7 +36,7 @@ struct PushConstants
 [[vk::push_constant]]
 uniform ConstantBuffer<PushConstants> pc;
 
-vec3 calculate_fxaa(float2 texCoord)
+float3 calculate_fxaa(float2 texCoord)
 {
     uint2 texDimensions;
     uint lvlCount;

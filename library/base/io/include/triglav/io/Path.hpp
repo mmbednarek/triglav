@@ -18,6 +18,7 @@ class Path
    [[nodiscard]] bool exists() const;
    [[nodiscard]] std::string_view string() const;
    [[nodiscard]] std::string basename() const;
+   [[nodiscard]] bool is_empty() const;
 
  private:
    std::string m_path;

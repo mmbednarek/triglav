@@ -1,6 +1,8 @@
 asset_sources = files([
                          'include/triglav/asset/Asset.hpp',
+                         'include/triglav/asset/ShaderFormat.hpp',
                          'src/Asset.cpp',
+                         'src/ShaderFormat.cpp',
                      ])
 
 asset_lib = static_library('asset',

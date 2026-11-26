@@ -1,71 +1,59 @@
 subdir('library/triglav')
 
-slang_compiler = find_program('slangc')
-
-shader_opt_flags = ['-O3']
+shader_build_flags = ['--build', 'release']
 if get_option('disable_shader_opt').enabled()
-    shader_opt_flags = ['-g', '-O0']
+    shader_build_flags = ['--build', 'debug']
 endif
 
 shader_library_dir = meson.current_source_dir() + '/library'
 
 slang_cs_commands = [
-    slang_compiler,
-    '-target' , 'spirv',
-    '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency',
-    '-entry', 'cs_main',
-    '-stage', 'compute',
-    '-I', shader_library_dir,
-    shader_opt_flags,
+    shader_compiler,
     '@INPUT@',
+    shader_build_flags,
+    '-I', shader_library_dir,
+    '--entry', 'cs_main',
+    '--stage', 'compute',
     '-o', '@OUTPUT@'
 ]
 
 slang_fs_commands = [
-    slang_compiler,
-    '-target' , 'spirv',
-    '-profile', 'spirv_1_6+spvImageQuery+spvSparseResidency',
-    '-entry', 'fs_main',
-    '-stage', 'fragment',
-    '-I', shader_library_dir,
-    shader_opt_flags,
+    shader_compiler,
     '@INPUT@',
+    shader_build_flags,
+    '-I', shader_library_dir,
+    '--stage', 'fragment',
+    '--entry', 'fs_main',
     '-o', '@OUTPUT@'
 ]
 
 slang_vs_commands = [
-    slang_compiler,
-    '-target' , 'spirv',
-    '-profile', 'spirv_1_6',
-    '-entry', 'vs_main',
-    '-stage', 'vertex',
-    '-I', shader_library_dir,
-    shader_opt_flags,
+    shader_compiler,
     '@INPUT@',
+    shader_build_flags,
+    '-I', shader_library_dir,
+    '--stage', 'vertex',
+    '--entry', 'vs_main',
     '-o', '@OUTPUT@'
 ]
 
 slang_ds_commands = [
-    slang_compiler,
-    '-target' , 'spirv',
-    '-profile', 'spirv_1_6',
-    '-entry', 'ds_main',
-    '-stage', 'domain',
-    '-I', shader_library_dir,
-    shader_opt_flags,
+    shader_compiler,
     '@INPUT@',
+    shader_build_flags,
+    '-I', shader_library_dir,
+    '--stage', 'domain',
+    '--entry', 'ds_main',
     '-o', '@OUTPUT@'
 ]
 
 slang_hs_commands = [
-    slang_compiler,
-    '-target' , 'spirv',
-    '-profile', 'spirv_1_6',
-    '-entry', 'hs_main',
-    '-stage', 'hull',
-    '-I', shader_library_dir,
-    shader_opt_flags,
+    shader_compiler,
     '@INPUT@',
+    shader_build_flags,
+    '-I', shader_library_dir,
+    '--entry', 'hs_main',
+    '--stage', 'hull',
     '-o', '@OUTPUT@'
 ]
 
@@ -80,4 +68,4 @@ subdir('ray_tracing')
 subdir('terrain')
 subdir('ui')
 
-shaders = declare_dependency(sources: [shader_targets])
+shaders = declare_dependency(sources : [shader_targets])

@@ -178,7 +178,6 @@ std::optional<Animation> decode_animation(io::IReader& reader);
 bool encode_terrain(io::IWriter& writer, const geometry::Terrain& terrain);
 std::optional<geometry::Terrain> decode_terrain(io::IReader& reader);
 
-
 geometry::MeshData load_mesh_data(const io::Path& path);
 
 }// namespace triglav::asset

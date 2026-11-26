@@ -19,6 +19,7 @@ bool serialize_binary_property_ref(io::Serializer& writer, const PropertyRef& re
 #define TG_BINARY_WRITER_triglav__u64(value) writer.write_u64(value)
 #define TG_BINARY_WRITER_float(value) writer.write_float(value)
 #define TG_BINARY_WRITER_double(value) writer.write_double(value)
+#define TG_BINARY_WRITER_bool(value) writer.write_i8(value)
 #define TG_BINARY_WRITER_std__string(value) writer.write_string(value)
 #define TG_BINARY_WRITER_std__string_view(value) writer.write_string(value)
 #define TG_BINARY_WRITER_triglav__Vector2(value) writer.write_vec2(value)

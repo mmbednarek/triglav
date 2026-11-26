@@ -184,6 +184,38 @@ struct TextureBarrier
    u32 mip_level_count{1};
 };
 
+enum class ResourceAccess
+{
+   None = 0,
+   Read = (1 << 0),
+   Write = (1 << 1),
+
+   ReadWrite = Read | Write,
+};
+
+TRIGLAV_DECL_FLAGS(ResourceAccess)
+
+enum class ShaderStage
+{
+   Vertex,
+   Domain,
+   Hull,
+   Geometry,
+   Pixel,
+   Compute,
+   RayGeneration,
+   AnyHit,
+   ClosestHit,
+   Miss,
+   Intersection,
+   Callable,
+   Task,
+   Mesh,
+   MaxValue,
+
+   Fragment = Pixel,
+};
+
 inline u32 calculate_mip_count(const Vector2i& dims)
 {
    return static_cast<int>(std::floor(std::log2(std::max(dims.x, dims.y)))) + 1;

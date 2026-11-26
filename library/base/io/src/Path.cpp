@@ -32,6 +32,11 @@ std::string Path::basename() const
    return std::string{it.base(), m_path.end()};
 }
 
+bool Path::is_empty() const
+{
+   return m_path.empty();
+}
+
 Path Path::sub(const std::string_view value) const
 {
    return Path{sub_directory(this->m_path, value)};

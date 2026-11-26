@@ -44,4 +44,5 @@ render_core = declare_dependency(
   dependencies: render_core_deps,
 )
 
-subdir('test')
+# invoked after shader_compiler is available
+# subdir('test')

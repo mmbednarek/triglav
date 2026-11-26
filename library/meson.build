@@ -1,5 +1,6 @@
 subdir('external/mikktspace')
 subdir('external/stbi')
+subdir('external/slang')
 
 subdir('misc/testing_core')
 

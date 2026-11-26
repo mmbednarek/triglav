@@ -79,4 +79,5 @@ renderer = declare_dependency(
   dependencies: renderer_deps,
 )
 
-subdir('test')
+# invoked after shader_compiler is available
+# subdir('test')

@@ -48,6 +48,7 @@ if get_option('disable_debug_utils').enabled()
 endif
 
 fs = import('fs')
+cpp = meson.get_compiler('cpp')
 
 # Using system vulkan
 vulkan = dependency('vulkan')
@@ -64,9 +65,18 @@ if host_machine.system() == 'linux'
   wayland_client = dependency('wayland-client')
 endif
 
-subdir('shader')
+
 subdir('library')
-subdir('game/demo')
+subdir('tool/shader_compiler')
 subdir('tool/triglavcli')
+
+subdir('shader')
+
+# Test that depend on shader
+subdir('library/rendering/render_core/test')
+subdir('library/rendering/renderer/test')
+subdir('library/ui/desktop_ui/example')
+
 subdir('tool/editor')
+subdir('game/demo')
 

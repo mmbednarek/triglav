@@ -56,4 +56,5 @@ desktop_ui = declare_dependency(
     dependencies : desktop_ui_deps,
 )
 
-subdir('example')
+# invoked after shader_compiler is available
+# subdir('example')
